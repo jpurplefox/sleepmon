@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { maxIngredientSlots, maxSubSkillSlots } from "../constants";
 import type { Catalog, MemberInput } from "../types";
 import { LevelSelector } from "./LevelSelector";
+import { SpeciesSelect } from "./SpeciesSelect";
 
 interface Props {
   catalog: Catalog;
@@ -70,13 +71,7 @@ export function MemberForm({ catalog, onSubmit, pending, error }: Props) {
       <div className="form__row">
         <label>
           Especie
-          <select value={species} onChange={(e) => setSpecies(e.target.value)}>
-            {catalog.species.map((s) => (
-              <option key={s.name} value={s.name}>
-                {s.name} · {s.specialty}
-              </option>
-            ))}
-          </select>
+          <SpeciesSelect species={catalog.species} value={species} onChange={setSpecies} />
         </label>
 
         <label>

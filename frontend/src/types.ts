@@ -14,6 +14,7 @@ export interface SubSkill {
 
 export interface Species {
   name: string;
+  dex: number;
   specialty: string;
   berry: string;
   sleep_type: string;

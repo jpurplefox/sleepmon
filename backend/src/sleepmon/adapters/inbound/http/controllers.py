@@ -111,6 +111,7 @@ class CatalogController(Controller):
             species=[
                 SpeciesOut(
                     name=sp.name,
+                    dex=sp.dex,
                     specialty=sp.specialty.value,
                     berry=sp.berry.value,
                     sleep_type=sp.sleep_type.value,
