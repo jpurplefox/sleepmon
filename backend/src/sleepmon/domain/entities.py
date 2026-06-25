@@ -37,6 +37,11 @@ class TeamMember:
         if not self.species or not self.species.strip():
             raise ValidationError("La especie no puede estar vacía.")
 
+        # bool es subtipo de int (True == 1): rechazarlo explícitamente, igual que
+        # cualquier valor que no sea un entero real (p. ej. un float colado).
+        if isinstance(self.level, bool) or not isinstance(self.level, int):
+            raise ValidationError(f"El nivel debe ser un entero; llegó {self.level!r}.")
+
         if not 1 <= self.level <= MAX_LEVEL:
             raise ValidationError(f"El nivel debe estar entre 1 y {MAX_LEVEL}; llegó {self.level}.")
 

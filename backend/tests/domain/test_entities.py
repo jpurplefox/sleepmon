@@ -28,8 +28,21 @@ def test_empty_species_rejected() -> None:
         make(species="   ")
 
 
+def test_empty_string_species_rejected() -> None:
+    # String vacío "" (no whitespace): ejercita la rama `not self.species`.
+    with pytest.raises(ValidationError):
+        make(species="")
+
+
 @pytest.mark.parametrize("level", [0, -5, 101])
 def test_level_out_of_range_rejected(level: int) -> None:
+    with pytest.raises(ValidationError):
+        make(level=level)
+
+
+@pytest.mark.parametrize("level", [True, False, 30.0, 30.5])
+def test_non_int_level_rejected(level: object) -> None:
+    # bool (subtipo de int) y floats deben rechazarse como tipo inválido.
     with pytest.raises(ValidationError):
         make(level=level)
 

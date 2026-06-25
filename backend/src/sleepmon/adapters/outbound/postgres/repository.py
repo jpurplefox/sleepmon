@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum
 from typing import TypeVar
 from uuid import UUID
 
 from psycopg import Cursor
-from psycopg.rows import TupleRow
+from psycopg.rows import TupleRow, class_row
 from psycopg_pool import ConnectionPool
 
 from sleepmon.adapters.outbound.postgres import queries
@@ -17,6 +18,33 @@ from sleepmon.domain.ports import TeamRepository
 from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
 
 _E = TypeVar("_E", bound=Enum)
+
+
+@dataclass(frozen=True, slots=True)
+class _MemberRow:
+    """Fila de ``team_member`` (columnas: id, species, level, nature)."""
+
+    id: UUID
+    species: str
+    level: int
+    nature: str
+
+
+@dataclass(frozen=True, slots=True)
+class _SlotValueRow:
+    """Fila de un hijo filtrado por miembro (columnas: slot, value)."""
+
+    slot: int
+    value: str
+
+
+@dataclass(frozen=True, slots=True)
+class _MemberSlotValueRow:
+    """Fila de un hijo sin filtrar (columnas: member_id, slot, value)."""
+
+    member_id: UUID
+    slot: int
+    value: str
 
 
 def _decode(enum_cls: type[_E], value: str) -> _E:
@@ -43,31 +71,34 @@ class PostgresTeamRepository(TeamRepository):
             self._insert_children(cur, member)
 
     def get(self, member_id: UUID) -> TeamMember | None:
-        with self._pool.connection() as conn, conn.cursor() as cur:
-            cur.execute(queries.SELECT_MEMBER_BY_ID, (member_id,))
-            row = cur.fetchone()
+        with self._pool.connection() as conn:
+            with conn.cursor(row_factory=class_row(_MemberRow)) as cur:
+                cur.execute(queries.SELECT_MEMBER_BY_ID, (member_id,))
+                row = cur.fetchone()
             if row is None:
                 return None
-            cur.execute(queries.SELECT_SUBSKILLS_BY_MEMBER, (member_id,))
-            subs = tuple(_decode(SubSkill, value) for _slot, value in cur.fetchall())
-            cur.execute(queries.SELECT_INGREDIENTS_BY_MEMBER, (member_id,))
-            ings = tuple(_decode(Ingredient, value) for _slot, value in cur.fetchall())
-            return _build_member(row, subs, ings)
+            with conn.cursor(row_factory=class_row(_SlotValueRow)) as cur:
+                cur.execute(queries.SELECT_SUBSKILLS_BY_MEMBER, (member_id,))
+                subs = tuple(_decode(SubSkill, r.value) for r in cur.fetchall())
+                cur.execute(queries.SELECT_INGREDIENTS_BY_MEMBER, (member_id,))
+                ings = tuple(_decode(Ingredient, r.value) for r in cur.fetchall())
+        return _build_member(row, subs, ings)
 
     def list(self) -> list[TeamMember]:
-        with self._pool.connection() as conn, conn.cursor() as cur:
-            cur.execute(queries.SELECT_MEMBERS_ALL)
-            rows = cur.fetchall()
-            cur.execute(queries.SELECT_SUBSKILLS_ALL)
-            subs_by_member = _group(cur.fetchall())
-            cur.execute(queries.SELECT_INGREDIENTS_ALL)
-            ings_by_member = _group(cur.fetchall())
+        with self._pool.connection() as conn:
+            with conn.cursor(row_factory=class_row(_MemberRow)) as cur:
+                cur.execute(queries.SELECT_MEMBERS_ALL)
+                rows = cur.fetchall()
+            with conn.cursor(row_factory=class_row(_MemberSlotValueRow)) as cur:
+                cur.execute(queries.SELECT_SUBSKILLS_ALL)
+                subs_by_member = _group(cur.fetchall())
+                cur.execute(queries.SELECT_INGREDIENTS_ALL)
+                ings_by_member = _group(cur.fetchall())
 
         members: list[TeamMember] = []
         for row in rows:
-            member_id = row[0]
-            subs = tuple(_decode(SubSkill, v) for v in subs_by_member.get(member_id, []))
-            ings = tuple(_decode(Ingredient, v) for v in ings_by_member.get(member_id, []))
+            subs = tuple(_decode(SubSkill, v) for v in subs_by_member.get(row.id, []))
+            ings = tuple(_decode(Ingredient, v) for v in ings_by_member.get(row.id, []))
             members.append(_build_member(row, subs, ings))
         return members
 
@@ -102,25 +133,24 @@ class PostgresTeamRepository(TeamRepository):
         )
 
 
-def _group(rows: list[tuple[UUID, int, str]]) -> dict[UUID, list[str]]:
-    """Agrupa filas (member_id, slot, valor) por member_id, ya ordenadas por slot."""
+def _group(rows: list[_MemberSlotValueRow]) -> dict[UUID, list[str]]:
+    """Agrupa filas (member_id, slot, value) por member_id, ya ordenadas por slot."""
     grouped: dict[UUID, list[str]] = {}
-    for member_id, _slot, value in rows:
-        grouped.setdefault(member_id, []).append(value)
+    for row in rows:
+        grouped.setdefault(row.member_id, []).append(row.value)
     return grouped
 
 
 def _build_member(
-    row: tuple[UUID, str, int, str],
+    row: _MemberRow,
     sub_skills: tuple[SubSkill, ...],
     ingredients: tuple[Ingredient, ...],
 ) -> TeamMember:
-    member_id, species, level, nature = row
     return TeamMember(
-        id=member_id,
-        species=species,
-        level=level,
-        nature=_decode(Nature, nature),
+        id=row.id,
+        species=row.species,
+        level=row.level,
+        nature=_decode(Nature, row.nature),
         ingredients=ingredients,
         sub_skills=sub_skills,
     )
