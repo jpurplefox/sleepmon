@@ -66,9 +66,7 @@ export function MemberForm({ catalog, onSubmit, pending, error }: Props) {
   }
 
   return (
-    <form className="card form" onSubmit={handleSubmit}>
-      <h2>Agregar Pokémon</h2>
-
+    <form className="form" onSubmit={handleSubmit}>
       <div className="form__row">
         <label>
           Especie
