@@ -421,9 +421,11 @@ select:focus {
 .nature-dropdown {
   position: absolute;
   top: calc(100% + 6px);
-  left: 0;
-  /* Más ancho que el campo (media fila) para entrar ~2 columnas como RaenonX. */
-  width: max(100%, 320px);
+  /* Anclado a la derecha del campo: crece hacia adentro del modal en vez de
+     desbordarlo. Más ancho que el campo (media fila) para entrar ~2 columnas. */
+  right: 0;
+  left: auto;
+  width: max(100%, 384px);
   z-index: 30;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -457,7 +459,7 @@ select:focus {
 
 .nature-group__items {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   gap: 0.35rem;
 }
 
@@ -478,6 +480,13 @@ select:focus {
 
 .nature-option__name {
   font-weight: 600;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/* El grupo de íconos ↑/↓ siempre pegado a la derecha de la opción. */
+.nature-option .nature-effect {
+  margin-left: auto;
 }
 
 .nature-option:hover {
