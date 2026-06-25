@@ -52,14 +52,20 @@ export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
     else if (value.length < MAX_SUB_SKILLS) onChange([...value, name]);
   };
 
+  // Orden de variante dentro de una familia: primero S, luego M, luego L.
+  const variantRank = (name: string) =>
+    name.endsWith(" S") ? 0 : name.endsWith(" M") ? 1 : name.endsWith(" L") ? 2 : 0;
+  const sorted = (items: SubSkill[]) =>
+    [...items].sort((a, b) => variantRank(a.name) - variantRank(b.name));
+
   const used = new Set<string>();
   const familyGroups = FAMILIES.map((f) => {
     const items = subSkills.filter((s) => s.name.startsWith(f.prefix));
     items.forEach((s) => used.add(s.name));
-    return { title: f.title, items };
+    return { title: f.title, items: sorted(items) };
   });
   const groups = [
-    { title: "Otros", items: subSkills.filter((s) => !used.has(s.name)) },
+    { title: "Otros", items: sorted(subSkills.filter((s) => !used.has(s.name))) },
     ...familyGroups,
   ];
 
