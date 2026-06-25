@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { NATURE_GROUP_ORDER, statGlyph, statLabel } from "../natures";
+import { NATURE_GROUP_ORDER, statIcon, statLabel } from "../natures";
 import type { Nature } from "../types";
 
 interface Props {
@@ -9,16 +9,27 @@ interface Props {
   onChange: (name: string) => void;
 }
 
-// Badges ↑/↓ con el símbolo del stat. Para las neutras se muestra el glifo "⊗".
+// Círculo con X para las naturalezas neutras (mismo criterio que RaenonX).
+function XCircle() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9 9l6 6M15 9l-6 6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// Badges ↑/↓: chevron de color (rojo sube, azul baja) + ícono del stat. Para las
+// neutras se muestra el círculo con X en ambos lados.
 function NatureEffect({ nature }: { nature: Nature }) {
   if (nature.neutral) {
     return (
       <span className="nature-effect">
         <span className="nat-stat nat-stat--up" title="Sin efecto">
-          {statGlyph(null)}
+          <XCircle />
         </span>
         <span className="nat-stat nat-stat--down" title="Sin efecto">
-          {statGlyph(null)}
+          <XCircle />
         </span>
       </span>
     );
@@ -26,10 +37,10 @@ function NatureEffect({ nature }: { nature: Nature }) {
   return (
     <span className="nature-effect">
       <span className="nat-stat nat-stat--up" title={`Sube: ${statLabel(nature.increased)}`}>
-        {statGlyph(nature.increased)}
+        <img src={statIcon(nature.increased!)} alt="" />
       </span>
       <span className="nat-stat nat-stat--down" title={`Baja: ${statLabel(nature.decreased)}`}>
-        {statGlyph(nature.decreased)}
+        <img src={statIcon(nature.decreased!)} alt="" />
       </span>
     </span>
   );
@@ -92,7 +103,7 @@ export function NatureSelect({ natures, value, onChange }: Props) {
               <div key={g.title || "neutral"} className="nature-group">
                 {g.title && (
                   <div className="nature-group__title">
-                    <span className="nat-stat nat-stat--up">{statGlyph(g.title)}</span>
+                    <img className="nature-group__icon" src={statIcon(g.title)} alt="" />
                     {statLabel(g.title)}
                   </div>
                 )}

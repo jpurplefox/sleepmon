@@ -1,16 +1,18 @@
 // Metadatos de los 5 stats que una naturaleza puede subir/bajar. La clave es el
 // valor exacto que manda el backend (NatureStat: "Speed of Help", etc.).
+// Los íconos son los mismos que usa RaenonX (public/images/generic), servidos
+// desde /public/nature.
 export interface NatureStatMeta {
-  glyph: string; // símbolo corto para los badges del selector
-  label: string; // nombre legible (es) para tooltips
+  icon: string; // nombre del archivo en /public/nature
+  label: string; // nombre legible (es) para tooltips y títulos de grupo
 }
 
 export const NATURE_STATS: Record<string, NatureStatMeta> = {
-  "Energy Recovery": { glyph: "☺", label: "Recuperación de energía" },
-  "EXP Gains": { glyph: "EXP", label: "Ganancia de EXP" },
-  "Speed of Help": { glyph: "≫", label: "Velocidad de ayuda" },
-  "Main Skill Chance": { glyph: "⚡", label: "Prob. de skill principal" },
-  "Ingredient Finding": { glyph: "🍎", label: "Búsqueda de ingredientes" },
+  "Energy Recovery": { icon: "mood", label: "Recuperación de energía" },
+  "EXP Gains": { icon: "exp", label: "Ganancia de EXP" },
+  "Speed of Help": { icon: "speed", label: "Velocidad de ayuda" },
+  "Main Skill Chance": { icon: "mainSkill", label: "Prob. de skill principal" },
+  "Ingredient Finding": { icon: "ingredient", label: "Búsqueda de ingredientes" },
 };
 
 // Orden de los grupos en el selector (por stat que la naturaleza *sube*), igual
@@ -23,9 +25,8 @@ export const NATURE_GROUP_ORDER = [
   "Ingredient Finding",
 ];
 
-export function statGlyph(stat: string | null): string {
-  if (!stat) return "⊗";
-  return NATURE_STATS[stat]?.glyph ?? stat;
+export function statIcon(stat: string): string {
+  return `/nature/${NATURE_STATS[stat]?.icon ?? "exp"}.png`;
 }
 
 export function statLabel(stat: string | null): string {

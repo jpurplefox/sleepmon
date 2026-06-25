@@ -373,23 +373,33 @@ select:focus {
 
 .nat-stat {
   position: relative;
-  display: inline-grid;
-  place-items: center;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  height: 24px;
+  padding: 0 5px;
   border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--surface);
-  font-size: 0.72rem;
-  font-weight: 700;
   line-height: 1;
 }
 
-/* Marca arriba/abajo con un caret de color, igual que RaenonX (rojo sube, azul baja). */
+/* Ícono del stat (blanco, los mismos PNG de RaenonX). El SVG de la X usa currentColor. */
+.nat-stat img {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+}
+
+.nat-stat svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Marca arriba/abajo con un chevron de color, igual que RaenonX (rojo sube, azul baja). */
 .nat-stat::before {
-  font-size: 0.6rem;
-  margin-right: 1px;
+  font-size: 0.62rem;
+  font-weight: 700;
 }
 
 .nat-stat--up {
@@ -410,7 +420,7 @@ select:focus {
 
 .nature-dropdown {
   position: absolute;
-  bottom: calc(100% + 6px);
+  top: calc(100% + 6px);
   left: 0;
   /* Más ancho que el campo (media fila) para entrar ~2 columnas como RaenonX. */
   width: max(100%, 320px);
@@ -418,7 +428,7 @@ select:focus {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
   padding: 0.6rem;
   max-height: 360px;
   overflow-y: auto;
@@ -437,6 +447,12 @@ select:focus {
   color: var(--muted);
   margin-bottom: 0.4rem;
   font-weight: 700;
+}
+
+.nature-group__icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
 }
 
 .nature-group__items {
