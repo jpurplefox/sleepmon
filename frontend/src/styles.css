@@ -552,6 +552,12 @@ select:focus {
   object-fit: contain;
 }
 
+/* Ingrediente de un slot que el nivel todavía no desbloqueó: más oscuro. */
+.ingredient-row__icon--locked {
+  filter: brightness(0.4);
+  opacity: 0.7;
+}
+
 .member-card__head h3 {
   margin: 0;
 }

@@ -1,3 +1,4 @@
+import { INGREDIENT_UNLOCK_LEVELS } from "../constants";
 import { ingredientIcon } from "../ingredients";
 import { spriteUrl } from "../sprites";
 import type { Member, Nature } from "../types";
@@ -42,16 +43,21 @@ export function MemberCard({ member, nature, dex, onDelete }: Props) {
         <div>
           <dt>Ingredientes</dt>
           <dd className="ingredient-row">
-            {member.ingredients.map((ing, idx) => (
-              <img
-                key={`${ing}-${idx}`}
-                className="ingredient-row__icon"
-                src={ingredientIcon(ing)}
-                alt={ing}
-                title={ing}
-                loading="lazy"
-              />
-            ))}
+            {member.ingredients.map((ing, idx) => {
+              const locked = member.level < (INGREDIENT_UNLOCK_LEVELS[idx] ?? 1);
+              return (
+                <img
+                  key={`${ing}-${idx}`}
+                  className={
+                    "ingredient-row__icon" + (locked ? " ingredient-row__icon--locked" : "")
+                  }
+                  src={ingredientIcon(ing)}
+                  alt={ing}
+                  title={locked ? `${ing} (se desbloquea a nivel ${INGREDIENT_UNLOCK_LEVELS[idx]})` : ing}
+                  loading="lazy"
+                />
+              );
+            })}
           </dd>
         </div>
         <div>
