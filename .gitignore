@@ -19,6 +19,10 @@ build/
 node_modules/
 frontend/dist/
 *.local
+*.tsbuildinfo
+# Artefactos si alguien corre `tsc -b` sobre la config de Vite
+frontend/vite.config.js
+frontend/vite.config.d.ts
 
 # OS
 .DS_Store
