@@ -40,6 +40,7 @@ class SubSkillOut(msgspec.Struct):
 
 class SpeciesOut(msgspec.Struct):
     name: str
+    dex: int
     specialty: str
     berry: str
     sleep_type: str

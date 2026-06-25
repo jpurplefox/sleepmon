@@ -80,6 +80,12 @@ def test_species_ingredient_slots_grow_monotonically() -> None:
         assert sp.ingredient_slots[1] <= sp.ingredient_slots[2], sp.name
 
 
+def test_every_species_has_a_unique_positive_dex() -> None:
+    dexes = [sp.dex for sp in SEED_SPECIES]
+    assert all(d > 0 for d in dexes), dexes
+    assert len(set(dexes)) == len(dexes)  # sin repetidos
+
+
 def test_max_ingredient_slots_scales_with_level() -> None:
     assert INGREDIENT_UNLOCK_LEVELS == (1, 30, 60)
     assert max_ingredient_slots(1) == 1
