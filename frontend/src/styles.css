@@ -336,6 +336,168 @@ select:focus {
   cursor: default;
 }
 
+/* --- Selector de naturaleza (inline, mismo patrón que sub skills) --- */
+.nature-select {
+  position: relative;
+  width: 100%;
+}
+
+.nature-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.nature-trigger:hover {
+  border-color: var(--primary);
+}
+
+.nature-trigger__name {
+  font-weight: 600;
+}
+
+/* Badges ↑/↓ con el símbolo del stat. Reusados en trigger, opciones y títulos. */
+.nature-effect {
+  display: inline-flex;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.nat-stat {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  height: 24px;
+  padding: 0 5px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  line-height: 1;
+}
+
+/* Ícono del stat (blanco, los mismos PNG de RaenonX). El SVG de la X usa currentColor. */
+.nat-stat img {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+}
+
+.nat-stat svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Marca arriba/abajo con un chevron de color, igual que RaenonX (rojo sube, azul baja). */
+.nat-stat::before {
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.nat-stat--up {
+  color: #f87171;
+}
+
+.nat-stat--up::before {
+  content: "▲";
+}
+
+.nat-stat--down {
+  color: #60a5fa;
+}
+
+.nat-stat--down::before {
+  content: "▼";
+}
+
+.nature-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  /* Anclado a la derecha del campo: crece hacia adentro del modal en vez de
+     desbordarlo. Más ancho que el campo (media fila) para entrar ~2 columnas. */
+  right: 0;
+  left: auto;
+  width: max(100%, 384px);
+  z-index: 30;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  padding: 0.6rem;
+  max-height: 360px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.nature-group__title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+  font-weight: 700;
+}
+
+.nature-group__icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.nature-group__items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 0.35rem;
+}
+
+.nature-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.4rem 0.5rem;
+  color: var(--text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.nature-option__name {
+  font-weight: 600;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+/* El grupo de íconos ↑/↓ siempre pegado a la derecha de la opción. */
+.nature-option .nature-effect {
+  margin-left: auto;
+}
+
+.nature-option:hover {
+  border-color: var(--primary);
+}
+
+.nature-option--selected {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
 /* Sprite */
 .sprite {
   width: 32px;

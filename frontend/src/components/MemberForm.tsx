@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Catalog, MemberInput } from "../types";
 import { IngredientSlots } from "./IngredientSlots";
 import { LevelSelector } from "./LevelSelector";
+import { NatureSelect } from "./NatureSelect";
 import { SpeciesSelect } from "./SpeciesSelect";
 import { SubSkillSelect } from "./SubSkillSelect";
 
@@ -53,14 +54,7 @@ export function MemberForm({ catalog, onSubmit, pending, error }: Props) {
 
         <label>
           Naturaleza
-          <select value={nature} onChange={(e) => setNature(e.target.value)}>
-            {catalog.natures.map((n) => (
-              <option key={n.name} value={n.name}>
-                {n.name}
-                {n.neutral ? " (neutra)" : ` (↑${n.increased} ↓${n.decreased})`}
-              </option>
-            ))}
-          </select>
+          <NatureSelect natures={catalog.natures} value={nature} onChange={setNature} />
         </label>
       </div>
 
