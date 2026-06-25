@@ -42,7 +42,9 @@ def create_app(
     catalog: SpeciesCatalog | None = None,
     settings: Settings | None = None,
 ) -> Litestar:
-    on_shutdown: list[Callable[[], Any]] = []
+    # ``object`` y no ``Any``: el valor de retorno de los hooks se descarta, pero
+    # ``Any`` apagaría el chequeo de tipos sobre el cuerpo de cada callback.
+    on_shutdown: list[Callable[[], object]] = []
 
     if catalog is None:
         catalog = StaticSpeciesCatalog()
