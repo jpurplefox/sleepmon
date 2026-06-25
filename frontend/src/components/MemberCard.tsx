@@ -19,8 +19,7 @@ export function MemberCard({ member, nature, dex, onDelete }: Props) {
             <img className="member-card__sprite" src={spriteUrl(dex)} alt="" loading="lazy" />
           )}
           <div>
-            <h3>{member.nickname ?? member.species}</h3>
-            {member.nickname && <span className="muted">{member.species}</span>}
+            <h3>{member.species}</h3>
           </div>
         </div>
         <span className="badge">Nv. {member.level}</span>

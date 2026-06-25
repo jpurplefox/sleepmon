@@ -34,7 +34,6 @@ def _to_out(member: TeamMember) -> MemberOut:
         nature=member.nature.value,
         ingredients=[i.value for i in member.ingredients],
         sub_skills=[s.value for s in member.sub_skills],
-        nickname=member.nickname,
     )
 
 
@@ -55,7 +54,6 @@ def _to_input(payload: MemberIn) -> TeamMemberInput:
         nature=payload.nature,
         ingredients=payload.ingredients,
         sub_skills=payload.sub_skills,
-        nickname=payload.nickname,
     )
 
 

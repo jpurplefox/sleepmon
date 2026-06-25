@@ -123,7 +123,6 @@ class DefaultTeamService(TeamService):
                 nature=nature,
                 ingredients=ingredients,
                 sub_skills=sub_skills,
-                nickname=data.nickname,
             )
         return TeamMember(
             id=member_id,
@@ -132,5 +131,4 @@ class DefaultTeamService(TeamService):
             nature=nature,
             ingredients=ingredients,
             sub_skills=sub_skills,
-            nickname=data.nickname,
         )

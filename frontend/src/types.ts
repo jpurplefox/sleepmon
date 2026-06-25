@@ -36,7 +36,6 @@ export interface Member {
   nature: string;
   ingredients: string[];
   sub_skills: string[];
-  nickname: string | null;
 }
 
 export interface MemberInput {
@@ -45,7 +44,6 @@ export interface MemberInput {
   nature: string;
   ingredients: string[];
   sub_skills: string[];
-  nickname: string | null;
 }
 
 export interface Distributions {

@@ -5,7 +5,6 @@
 CREATE TABLE IF NOT EXISTS team_member (
     id          UUID PRIMARY KEY,
     species     TEXT        NOT NULL,
-    nickname    TEXT,
     level       INTEGER     NOT NULL,
     nature      TEXT        NOT NULL,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()

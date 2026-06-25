@@ -19,7 +19,6 @@ class TeamMemberInput:
     nature: str
     ingredients: list[str]
     sub_skills: list[str] = field(default_factory=list)
-    nickname: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
