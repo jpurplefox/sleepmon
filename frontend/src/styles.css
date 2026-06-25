@@ -275,6 +275,7 @@ select:focus {
 .ingredient-slots {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.75rem;
 }
 
@@ -283,11 +284,11 @@ select:focus {
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
-  flex: 1 1 110px;
+  flex: 0 0 auto;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 0.5rem 0.6rem;
+  padding: 0.5rem 0.75rem;
 }
 
 .ingredient-slot--locked {
@@ -303,7 +304,7 @@ select:focus {
 
 .ingredient-slot__options {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.35rem;
   justify-content: center;
 }
