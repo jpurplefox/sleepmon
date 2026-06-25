@@ -29,3 +29,7 @@ frontend/vite.config.d.ts
 
 # Claude Code (local-only overrides; keep shared config tracked)
 .claude/settings.local.json
+
+# Coverage
+.coverage
+htmlcov/

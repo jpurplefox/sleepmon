@@ -105,14 +105,12 @@ class DefaultTeamService(TeamService):
         sub_skills = tuple(_parse_enum(SubSkill, s, "sub_skill") for s in data.sub_skills)
         ingredients = tuple(_parse_enum(Ingredient, i, "ingredient") for i in data.ingredients)
 
-        max_slots = len(species.ingredient_slots)
-        if len(ingredients) > max_slots:
-            raise ValidationError(
-                f"{species.name} tiene {max_slots} slots de ingrediente; "
-                f"llegaron {len(ingredients)}."
-            )
-
+        slot_count = len(species.ingredient_slots)
         for slot, ingredient in enumerate(ingredients):
+            if slot >= slot_count:
+                raise ValidationError(
+                    f"{species.name} solo tiene {slot_count} slots de ingrediente."
+                )
             if not species.allows_ingredient(slot, ingredient):
                 allowed = ", ".join(sorted(i.value for i in species.ingredient_slots[slot]))
                 raise ValidationError(
@@ -120,15 +118,23 @@ class DefaultTeamService(TeamService):
                     f"{slot + 1}. Válidos: {allowed}."
                 )
 
-        # El constructor de TeamMember aplica las invariantes que dependen del nivel.
-        kwargs: dict[str, object] = {
-            "species": species.name,
-            "level": data.level,
-            "nature": nature,
-            "ingredients": ingredients,
-            "sub_skills": sub_skills,
-            "nickname": data.nickname,
-        }
-        if member_id is not None:
-            kwargs["id"] = member_id
-        return TeamMember(**kwargs)  # type: ignore[arg-type]
+        # El constructor de TeamMember aplica las invariantes que dependen del nivel,
+        # incluida la cota de ingredientes según el nivel del miembro.
+        if member_id is None:
+            return TeamMember(
+                species=species.name,
+                level=data.level,
+                nature=nature,
+                ingredients=ingredients,
+                sub_skills=sub_skills,
+                nickname=data.nickname,
+            )
+        return TeamMember(
+            id=member_id,
+            species=species.name,
+            level=data.level,
+            nature=nature,
+            ingredients=ingredients,
+            sub_skills=sub_skills,
+            nickname=data.nickname,
+        )
