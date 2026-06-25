@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { maxIngredientSlots, maxSubSkillSlots } from "../constants";
+import { maxSubSkillSlots } from "../constants";
 import type { Catalog, MemberInput } from "../types";
+import { IngredientSlots } from "./IngredientSlots";
 import { LevelSelector } from "./LevelSelector";
 import { SpeciesSelect } from "./SpeciesSelect";
 
@@ -25,26 +26,19 @@ export function MemberForm({ catalog, onSubmit, pending, error }: Props) {
     [catalog.species, species],
   );
 
-  const ingSlots = maxIngredientSlots(level);
   const subSlots = maxSubSkillSlots(level);
 
-  // Al cambiar especie o cantidad de slots, reseteamos los ingredientes a la
-  // primera opción válida de cada slot.
+  // Al cambiar de especie, default cada slot de ingrediente a su primera opción
+  // válida. Se cargan los 3 sin importar el nivel: ya están definidos.
   useEffect(() => {
     if (!selectedSpecies) return;
-    setIngredients(
-      Array.from({ length: ingSlots }, (_, i) => selectedSpecies.ingredient_slots[i]?.[0] ?? ""),
-    );
-  }, [selectedSpecies, ingSlots]);
+    setIngredients(selectedSpecies.ingredient_slots.map((opts) => opts[0] ?? ""));
+  }, [selectedSpecies]);
 
   // Recortamos sub skills si bajó el nivel.
   useEffect(() => {
     setSubSkills((prev) => prev.slice(0, subSlots));
   }, [subSlots]);
-
-  function setIngredient(slot: number, value: string) {
-    setIngredients((prev) => prev.map((v, i) => (i === slot ? value : v)));
-  }
 
   function setSubSkill(slot: number, value: string) {
     setSubSkills((prev) => {
@@ -97,21 +91,13 @@ export function MemberForm({ catalog, onSubmit, pending, error }: Props) {
       </div>
 
       <fieldset>
-        <legend>Ingredientes ({ingSlots} slot{ingSlots !== 1 ? "s" : ""})</legend>
-        <div className="form__row">
-          {Array.from({ length: ingSlots }, (_, i) => (
-            <label key={i}>
-              Slot {i + 1}
-              <select value={ingredients[i] ?? ""} onChange={(e) => setIngredient(i, e.target.value)}>
-                {(selectedSpecies?.ingredient_slots[i] ?? []).map((ing) => (
-                  <option key={ing} value={ing}>
-                    {ing}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ))}
-        </div>
+        <legend>Ingredientes</legend>
+        <IngredientSlots
+          species={selectedSpecies}
+          level={level}
+          value={ingredients}
+          onChange={setIngredients}
+        />
       </fieldset>
 
       <fieldset>

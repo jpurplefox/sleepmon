@@ -271,6 +271,72 @@ select:focus {
   padding: 0.6rem 0.7rem;
 }
 
+/* Ingredient slots (selector con íconos) */
+.ingredient-slots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.ingredient-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+}
+
+.ingredient-slot--locked {
+  opacity: 0.45;
+}
+
+.ingredient-slot__label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.ingredient-slot__options {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.35rem;
+  justify-content: center;
+}
+
+.ingredient-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 4px;
+}
+
+.ingredient-icon__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ingredient-icon:hover {
+  border-color: var(--primary);
+}
+
+.ingredient-icon--active {
+  border-color: var(--primary);
+  background: rgba(99, 102, 241, 0.18);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
 /* Level selector */
 .level-selector {
   display: flex;
@@ -458,6 +524,38 @@ select:focus {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+}
+
+.member-card__title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.member-card__sprite {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.ingredient-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.ingredient-row__icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+/* Ingrediente de un slot que el nivel todavía no desbloqueó: más oscuro. */
+.ingredient-row__icon--locked {
+  filter: brightness(0.4);
+  opacity: 0.7;
 }
 
 .member-card__head h3 {

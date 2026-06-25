@@ -1,18 +1,27 @@
+import { INGREDIENT_UNLOCK_LEVELS } from "../constants";
+import { ingredientIcon } from "../ingredients";
+import { spriteUrl } from "../sprites";
 import type { Member, Nature } from "../types";
 
 interface Props {
   member: Member;
   nature?: Nature;
+  dex?: number;
   onDelete: (id: string) => void;
 }
 
-export function MemberCard({ member, nature, onDelete }: Props) {
+export function MemberCard({ member, nature, dex, onDelete }: Props) {
   return (
     <article className="card member-card">
       <header className="member-card__head">
-        <div>
-          <h3>{member.nickname ?? member.species}</h3>
-          {member.nickname && <span className="muted">{member.species}</span>}
+        <div className="member-card__title">
+          {dex !== undefined && (
+            <img className="member-card__sprite" src={spriteUrl(dex)} alt="" loading="lazy" />
+          )}
+          <div>
+            <h3>{member.nickname ?? member.species}</h3>
+            {member.nickname && <span className="muted">{member.species}</span>}
+          </div>
         </div>
         <span className="badge">Nv. {member.level}</span>
       </header>
@@ -33,12 +42,22 @@ export function MemberCard({ member, nature, onDelete }: Props) {
         </div>
         <div>
           <dt>Ingredientes</dt>
-          <dd className="chips">
-            {member.ingredients.map((i, idx) => (
-              <span className="chip chip--ingredient" key={`${i}-${idx}`}>
-                {i}
-              </span>
-            ))}
+          <dd className="ingredient-row">
+            {member.ingredients.map((ing, idx) => {
+              const locked = member.level < (INGREDIENT_UNLOCK_LEVELS[idx] ?? 1);
+              return (
+                <img
+                  key={`${ing}-${idx}`}
+                  className={
+                    "ingredient-row__icon" + (locked ? " ingredient-row__icon--locked" : "")
+                  }
+                  src={ingredientIcon(ing)}
+                  alt={ing}
+                  title={locked ? `${ing} (se desbloquea a nivel ${INGREDIENT_UNLOCK_LEVELS[idx]})` : ing}
+                  loading="lazy"
+                />
+              );
+            })}
           </dd>
         </div>
         <div>
