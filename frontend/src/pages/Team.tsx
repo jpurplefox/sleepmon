@@ -47,6 +47,9 @@ export function Team() {
 
   const natureByName = new Map((catalog.data?.natures ?? []).map((n) => [n.name, n]));
   const speciesByName = new Map((catalog.data?.species ?? []).map((s) => [s.name, s]));
+  const subSkillTiers = Object.fromEntries(
+    (catalog.data?.sub_skills ?? []).map((s) => [s.name, s.tier]),
+  );
 
   if (catalog.isLoading) return <p className="muted">Cargando catálogo…</p>;
   if (catalog.isError || !catalog.data)
@@ -81,6 +84,7 @@ export function Team() {
               member={m}
               nature={natureByName.get(m.nature)}
               dex={speciesByName.get(m.species)?.dex}
+              subSkillTiers={subSkillTiers}
               onDelete={(id) => remove.mutate(id)}
             />
           ))}

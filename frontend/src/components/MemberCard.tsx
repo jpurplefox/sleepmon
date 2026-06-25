@@ -4,14 +4,17 @@ import { spriteUrl } from "../sprites";
 import { subSkillIcon } from "../subskills";
 import type { Member, Nature } from "../types";
 
+const TIER_CLASS: Record<string, string> = { Gold: "gold", Blue: "blue", Regular: "regular" };
+
 interface Props {
   member: Member;
   nature?: Nature;
   dex?: number;
+  subSkillTiers?: Record<string, string>;
   onDelete: (id: string) => void;
 }
 
-export function MemberCard({ member, nature, dex, onDelete }: Props) {
+export function MemberCard({ member, nature, dex, subSkillTiers, onDelete }: Props) {
   return (
     <article className="card member-card">
       <header className="member-card__head">
@@ -68,17 +71,15 @@ export function MemberCard({ member, nature, dex, onDelete }: Props) {
             {member.sub_skills.map((s, idx) => {
               const unlock = SUB_SKILL_UNLOCK_LEVELS[idx] ?? 999;
               const locked = member.level < unlock;
+              const tier = TIER_CLASS[subSkillTiers?.[s] ?? "Regular"];
               return (
-                <img
+                <span
                   key={`${s}-${idx}`}
-                  className={
-                    "ingredient-row__icon" + (locked ? " ingredient-row__icon--locked" : "")
-                  }
-                  src={subSkillIcon(s)}
-                  alt={s}
+                  className={`ss-icon ss-icon--${tier}` + (locked ? " is-locked" : "")}
                   title={locked ? `${s} (se desbloquea a nivel ${unlock})` : s}
-                  loading="lazy"
-                />
+                >
+                  <img src={subSkillIcon(s)} alt={s} loading="lazy" />
+                </span>
               );
             })}
           </dd>

@@ -719,6 +719,17 @@ select:focus {
   opacity: 0.7;
 }
 
+/* Sub skills en la card: marco coloreado por tier (mismo ss-icon que el selector). */
+.ingredient-row .ss-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.ingredient-row .ss-icon img {
+  width: 22px;
+  height: 22px;
+}
+
 .member-card__head h3 {
   margin: 0;
 }
