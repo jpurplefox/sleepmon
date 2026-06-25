@@ -65,16 +65,16 @@ SEED_SPECIES: tuple[Species, ...] = (
                {I.MOOMOO_MILK, I.SOOTHING_CACAO, I.BEAN_SAUSAGE}),
     ),
     Species(
-        "Pikachu", Specialty.BERRIES, Berry.GREPA, SleepType.DOZING,
+        "Pikachu", Specialty.BERRIES, Berry.GREPA, SleepType.SNOOZING,
         "Charge Strength S",
-        _slots({I.FANCY_APPLE}, {I.FANCY_APPLE, I.WARMING_GINGER},
-               {I.FANCY_APPLE, I.WARMING_GINGER}),
+        _slots({I.FANCY_APPLE}, {I.FANCY_APPLE, I.FANCY_EGG, I.WARMING_GINGER},
+               {I.FANCY_APPLE, I.FANCY_EGG, I.WARMING_GINGER}),
     ),
     Species(
-        "Pichu", Specialty.BERRIES, Berry.GREPA, SleepType.DOZING,
+        "Pichu", Specialty.BERRIES, Berry.GREPA, SleepType.SLUMBERING,
         "Charge Strength S",
-        _slots({I.FANCY_APPLE}, {I.FANCY_APPLE, I.WARMING_GINGER},
-               {I.FANCY_APPLE, I.WARMING_GINGER}),
+        _slots({I.FANCY_APPLE}, {I.FANCY_APPLE, I.FANCY_EGG, I.WARMING_GINGER},
+               {I.FANCY_APPLE, I.FANCY_EGG, I.WARMING_GINGER}),
     ),
     Species(
         "Gastly", Specialty.SKILLS, Berry.BLUK, SleepType.SLUMBERING,
@@ -83,9 +83,10 @@ SEED_SPECIES: tuple[Species, ...] = (
                {I.FIERY_HERB, I.BEAN_SAUSAGE, I.TASTY_MUSHROOM}),
     ),
     Species(
-        "Caterpie", Specialty.INGREDIENTS, Berry.LUM, SleepType.SNOOZING,
+        "Caterpie", Specialty.BERRIES, Berry.LUM, SleepType.DOZING,
         "Ingredient Magnet S",
-        _slots({I.HONEY}, {I.HONEY, I.FANCY_EGG}, {I.HONEY, I.FANCY_EGG}),
+        _slots({I.HONEY}, {I.HONEY, I.SNOOZY_TOMATO, I.GREENGRASS_SOYBEANS},
+               {I.HONEY, I.SNOOZY_TOMATO, I.GREENGRASS_SOYBEANS}),
     ),
     Species(
         "Diglett", Specialty.INGREDIENTS, Berry.FIGY, SleepType.DOZING,
@@ -95,9 +96,9 @@ SEED_SPECIES: tuple[Species, ...] = (
     ),
     Species(
         "Slowpoke", Specialty.SKILLS, Berry.ORAN, SleepType.DOZING,
-        "Energy for Everyone S",
-        _slots({I.SLOWPOKE_TAIL}, {I.SLOWPOKE_TAIL, I.SOOTHING_CACAO},
-               {I.SLOWPOKE_TAIL, I.SOOTHING_CACAO}),
+        "Energizing Cheer S",
+        _slots({I.SOOTHING_CACAO}, {I.SOOTHING_CACAO, I.SLOWPOKE_TAIL, I.SNOOZY_TOMATO},
+               {I.SOOTHING_CACAO, I.SLOWPOKE_TAIL, I.SNOOZY_TOMATO}),
     ),
     Species(
         "Clefairy", Specialty.SKILLS, Berry.PECHA, SleepType.SNOOZING,
@@ -106,22 +107,21 @@ SEED_SPECIES: tuple[Species, ...] = (
                {I.FANCY_EGG, I.MOOMOO_MILK, I.SOOTHING_CACAO}),
     ),
     Species(
-        "Vulpix", Specialty.SKILLS, Berry.LEPPA, SleepType.DOZING,
-        "Charge Energy S",
-        _slots({I.WARMING_GINGER}, {I.WARMING_GINGER, I.FIERY_HERB},
-               {I.WARMING_GINGER, I.FIERY_HERB}),
+        "Vulpix", Specialty.BERRIES, Berry.LEPPA, SleepType.SNOOZING,
+        "Energizing Cheer S",
+        _slots({I.GREENGRASS_SOYBEANS}, {I.GREENGRASS_SOYBEANS, I.GREENGRASS_CORN, I.SOFT_POTATO},
+               {I.GREENGRASS_SOYBEANS, I.GREENGRASS_CORN, I.SOFT_POTATO}),
     ),
     Species(
-        "Geodude", Specialty.BERRIES, Berry.SITRUS, SleepType.SLUMBERING,
+        "Geodude", Specialty.INGREDIENTS, Berry.SITRUS, SleepType.SLUMBERING,
         "Charge Strength S",
-        _slots({I.SOFT_POTATO}, {I.SOFT_POTATO, I.TASTY_MUSHROOM},
-               {I.SOFT_POTATO, I.TASTY_MUSHROOM}),
+        _slots({I.GREENGRASS_SOYBEANS}, {I.GREENGRASS_SOYBEANS, I.TASTY_MUSHROOM, I.SOFT_POTATO},
+               {I.GREENGRASS_SOYBEANS, I.TASTY_MUSHROOM, I.SOFT_POTATO}),
     ),
     Species(
-        "Mareep", Specialty.BERRIES, Berry.GREPA, SleepType.DOZING,
+        "Mareep", Specialty.SKILLS, Berry.GREPA, SleepType.SNOOZING,
         "Charge Strength M",
-        _slots({I.FANCY_EGG}, {I.FANCY_EGG, I.WARMING_GINGER},
-               {I.FANCY_EGG, I.WARMING_GINGER}),
+        _slots({I.FIERY_HERB}, {I.FIERY_HERB, I.FANCY_EGG}, {I.FIERY_HERB, I.FANCY_EGG}),
     ),
     Species(
         "Kangaskhan", Specialty.INGREDIENTS, Berry.PERSIM, SleepType.SNOOZING,
@@ -130,9 +130,9 @@ SEED_SPECIES: tuple[Species, ...] = (
                {I.WARMING_GINGER, I.SOFT_POTATO, I.BEAN_SAUSAGE}),
     ),
     Species(
-        "Eevee", Specialty.SKILLS, Berry.PERSIM, SleepType.DOZING,
+        "Eevee", Specialty.SKILLS, Berry.PERSIM, SleepType.SNOOZING,
         "Ingredient Magnet S",
-        _slots({I.MOOMOO_MILK}, {I.MOOMOO_MILK, I.SOOTHING_CACAO},
-               {I.MOOMOO_MILK, I.SOOTHING_CACAO}),
+        _slots({I.MOOMOO_MILK}, {I.MOOMOO_MILK, I.SOOTHING_CACAO, I.BEAN_SAUSAGE},
+               {I.MOOMOO_MILK, I.SOOTHING_CACAO, I.BEAN_SAUSAGE}),
     ),
 )

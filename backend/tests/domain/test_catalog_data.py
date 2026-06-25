@@ -6,6 +6,7 @@ from sleepmon.domain.catalog_data import (
     max_ingredient_slots,
     max_sub_skill_slots,
 )
+from sleepmon.domain.species import SEED_SPECIES
 from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
 
 
@@ -46,6 +47,23 @@ def test_max_sub_skill_slots_scales_with_level() -> None:
     assert max_sub_skill_slots(69) == 3
     assert max_sub_skill_slots(80) == 5
     assert max_sub_skill_slots(100) == 5
+
+
+def test_every_species_has_three_non_empty_ingredient_slots() -> None:
+    for sp in SEED_SPECIES:
+        assert len(sp.ingredient_slots) == 3, sp.name
+        for slot, options in enumerate(sp.ingredient_slots):
+            assert options, f"{sp.name} slot {slot} vacío"
+
+
+def test_species_primary_ingredient_is_single_and_present_downstream() -> None:
+    # El slot 1 (nivel 1) es un único ingrediente fijo, y debe seguir siendo
+    # válido en los slots posteriores.
+    for sp in SEED_SPECIES:
+        assert len(sp.ingredient_slots[0]) == 1, sp.name
+        primary = next(iter(sp.ingredient_slots[0]))
+        assert primary in sp.ingredient_slots[1], sp.name
+        assert primary in sp.ingredient_slots[2], sp.name
 
 
 def test_max_ingredient_slots_scales_with_level() -> None:

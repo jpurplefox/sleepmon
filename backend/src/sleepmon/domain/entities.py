@@ -40,6 +40,9 @@ class TeamMember:
         if not self.species or not self.species.strip():
             raise ValidationError("La especie no puede estar vacía.")
 
+        if self.nickname is not None and not self.nickname.strip():
+            raise ValidationError("El apodo no puede ser vacío o solo espacios.")
+
         if not 1 <= self.level <= MAX_LEVEL:
             raise ValidationError(f"El nivel debe estar entre 1 y {MAX_LEVEL}; llegó {self.level}.")
 

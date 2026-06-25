@@ -87,5 +87,3 @@ DELETE_INGREDIENTS_BY_MEMBER = (
 )
 
 DELETE_MEMBER = Query.from_(member).where(member.id == _P).delete().get_sql()
-
-SELECT_MEMBER_EXISTS = Query.from_(member).select(member.id).where(member.id == _P).get_sql()

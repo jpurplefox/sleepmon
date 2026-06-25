@@ -28,6 +28,11 @@ def test_empty_species_rejected() -> None:
         make(species="   ")
 
 
+def test_blank_nickname_rejected() -> None:
+    with pytest.raises(ValidationError):
+        make(nickname="   ")
+
+
 @pytest.mark.parametrize("level", [0, -5, 101])
 def test_level_out_of_range_rejected(level: int) -> None:
     with pytest.raises(ValidationError):
