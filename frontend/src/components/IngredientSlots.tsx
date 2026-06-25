@@ -42,7 +42,12 @@ export function IngredientSlots({ species, level, value, onChange }: Props) {
                   aria-label={ing}
                   aria-pressed={value[i] === ing}
                 >
-                  <span className="ingredient-icon__emoji">{ingredientIcon(ing)}</span>
+                  <img
+                    className="ingredient-icon__img"
+                    src={ingredientIcon(ing)}
+                    alt={ing}
+                    loading="lazy"
+                  />
                 </button>
               ))}
             </div>
