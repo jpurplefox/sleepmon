@@ -12,12 +12,14 @@ import pytest
 from litestar.testing import TestClient
 
 from sleepmon.adapters.inbound.http.app import create_app
+from sleepmon.config import Settings
 
 pytestmark = pytest.mark.integration
 
 
-def test_app_lifespan_closes_pool_cleanly() -> None:
-    app = create_app()
+def test_app_lifespan_closes_pool_cleanly(test_dsn: str) -> None:
+    # Base de test dedicada, nunca la de desarrollo.
+    app = create_app(settings=Settings(database_url=test_dsn))
     # El context manager del TestClient corre on_startup y on_shutdown.
     with TestClient(app=app) as client:
         assert client.get("/catalog").status_code == 200

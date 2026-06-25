@@ -29,7 +29,8 @@ jobs:
           --health-retries 10
 
     env:
-      DATABASE_URL: postgresql://sleepmon:sleepmon@localhost:5432/sleepmon
+      # Los tests de integración usan una base dedicada (se crea sola en el servicio).
+      TEST_DATABASE_URL: postgresql://sleepmon:sleepmon@localhost:5432/sleepmon_test
 
     steps:
       - uses: actions/checkout@v4
