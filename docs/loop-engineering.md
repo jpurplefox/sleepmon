@@ -1,7 +1,7 @@
 # Loop engineering con Claude Code
 
 Cuatro herramientas para correr trabajo "en bucle", de menos a más autónomas.
-Todas operan sobre el sustrato Python de este repo.
+Todas operan sobre el backend de este repo (`backend/src/sleepmon`).
 
 ## 1. Subagentes (`.claude/agents/`)
 
@@ -9,8 +9,8 @@ Un loop interno: el agente principal delega una tarea acotada a un subagente con
 su propio contexto y devuelve solo la conclusión. Útil para fan-out (revisar N
 archivos en paralelo) sin contaminar tu contexto.
 
-- Definición de ejemplo: [`sleep-data-reviewer`](../.claude/agents/sleep-data-reviewer.md).
-- Probalo: pedile a Claude *"usá el subagente sleep-data-reviewer sobre analyzer.py"*.
+- Definición de ejemplo: [`team-domain-reviewer`](../.claude/agents/team-domain-reviewer.md).
+- Probalo: pedile a Claude *"usá el subagente team-domain-reviewer sobre el dominio"*.
 
 ## 2. Workflows (`.claude/workflows/`)
 
@@ -18,8 +18,9 @@ Orquestación multi-agente **determinista**: un script JS que decide qué corre 
 paralelo, qué se verifica y qué se sintetiza. El control de flujo es código, no
 lo decide el modelo.
 
-- Ejemplo: [`audit.js`](../.claude/workflows/audit.js) — revisa en 3 dimensiones
-  y verifica adversarialmente cada hallazgo (patrón find → verify).
+- Ejemplo: [`audit.js`](../.claude/workflows/audit.js) — revisa el backend en 4
+  dimensiones (correctness, fronteras hexagonales, tests, typing) y verifica
+  adversarialmente cada hallazgo (patrón find → verify).
 - Probalo: *"corré el workflow audit"* (requiere opt-in explícito a orquestación
   multi-agente).
 - Patrones clave: `pipeline()` (sin barrera, por defecto), `parallel()` (barrera),
@@ -46,7 +47,8 @@ cerrada. Ej: una auditoría nocturna del repo.
 
 ## Idea de progresión para experimentar
 
-1. **Subagente** sobre `analyzer.py` → entendé el fan-out de contexto.
+1. **Subagente** sobre el dominio (`backend/src/sleepmon/domain`) → entendé el
+   fan-out de contexto.
 2. **Workflow `audit`** → mismo objetivo pero orquestado y verificado.
 3. **`/loop`** → meté un bug a propósito y loopeá *"arreglá lo que rompa pytest"*.
 4. **`/schedule`** → automatizá la auditoría para que corra sola.

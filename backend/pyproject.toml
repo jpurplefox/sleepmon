@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sleepmon"
+version = "0.1.0"
+description = "Gestor del equipo de Pokémon Sleep (backend Litestar, arquitectura hexagonal)."
+requires-python = ">=3.11"
+dependencies = [
+    "litestar[standard]>=2.12",
+    "psycopg[binary,pool]>=3.2",
+    "pypika>=0.48",
+    "msgspec>=0.18",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "httpx>=0.27",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "integration: tests que requieren una base Postgres real (docker compose).",
+]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["sleepmon"]
+mypy_path = "src"

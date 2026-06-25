@@ -1,37 +1,67 @@
 # sleepmon
 
-Sandbox para experimentar con **loop engineering** usando el tooling de Claude Code.
+Gestor web de tu **equipo en Pokémon Sleep**, usado también como sandbox de
+**loop engineering** con el tooling de Claude Code.
 
 ## Qué es esto
 
-Un proyecto Python mínimo (`src/sleepmon`) que sirve de sustrato: tiene la lógica
-justa para que valga la pena auditarlo, refactorizarlo o ampliarlo **en bucle**.
-El objetivo no es el código de sueño en sí, sino practicar los loops.
+Una app full-stack para registrar los Pokémon de tu equipo —con su **naturaleza**,
+sus **sub skills** y sus **ingredientes**— y ver la **distribución agregada** del
+equipo. El backend es un sustrato realista (arquitectura hexagonal, validación de
+dominio rica) sobre el que practicar loops: auditarlo, refactorizarlo o ampliarlo
+en bucle. Ver [`docs/loop-engineering.md`](docs/loop-engineering.md).
 
 ## Stack
 
-- Python ≥ 3.11, sin dependencias de runtime.
-- Dev: `pytest`, `ruff`.
+- **Backend**: Python ≥ 3.11, **Litestar**, **PostgreSQL** con **psycopg3** directo
+  (sin ORM) y **PyPika** para construir queries. Arquitectura **hexagonal** + SOLID.
+- **Frontend**: **React** + TypeScript (Vite), TanStack Query, Recharts.
+- **Infra**: Docker Compose (db + backend + frontend).
+- Dev backend: `pytest`, `ruff`, `mypy` (strict).
 
 ## Comandos
 
 ```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
+# Todo el stack
+docker compose up --build         # db + backend(:8000) + frontend(:5173)
 
-pytest          # tests
-ruff check .    # lint
+# Backend (local)
+cd backend && python3 -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+pytest -m "not integration"   # dominio + aplicación + HTTP (sin DB)
+pytest -m integration         # repo Postgres (necesita la DB del compose)
+mypy src && ruff check .
+
+# Frontend (local)
+cd frontend && npm install && npm run dev
 ```
 
 ## Estructura
 
-- `src/sleepmon/analyzer.py` — lógica de análisis (el sustrato).
-- `tests/` — pytest.
-- `.claude/agents/` — subagentes custom para los loops.
-- `.claude/workflows/` — scripts de orquestación multi-agente.
-- `docs/loop-engineering.md` — guía de las 4 herramientas de loop.
+- `backend/src/sleepmon/domain/` — núcleo: entidades, value objects (enums del
+  juego), reglas (`catalog_data.py`), catálogo de especies (`species.py`),
+  puertos (`ports.py`), distribuciones (`analytics.py`). **No importa
+  infraestructura.**
+- `backend/src/sleepmon/application/` — casos de uso (`TeamService`) + DTOs.
+  Depende solo de los puertos.
+- `backend/src/sleepmon/adapters/outbound/` — Postgres (psycopg + PyPika) y
+  catálogo estático.
+- `backend/src/sleepmon/adapters/inbound/http/` — controllers Litestar +
+  composition root (`app.py`).
+- `backend/tests/` — `domain/`, `application/`, `http/` (sin DB) e `integration/`
+  (Postgres, marcados `integration`).
+- `frontend/src/` — app React (Team page, formulario dependiente del catálogo,
+  gráficos de distribución).
+- `.claude/agents/`, `.claude/workflows/` — tooling de loops apuntando al backend.
 
 ## Convenciones
 
-- Type hints estrictos, dataclasses frozen donde aplique.
+- **Hexagonal estricto**: el dominio no conoce Litestar/psycopg/pypika; la
+  aplicación depende de abstracciones (puertos), no de implementaciones.
+- Type hints estrictos (mypy strict), dataclasses frozen donde aplique, enums
+  cerrados para los datos del juego.
+- Queries siempre parametrizadas (placeholders `%s` de psycopg); nunca interpolar
+  datos del usuario.
 - Cada cambio de comportamiento lleva su test.
+- El catálogo de especies (`domain/species.py`) es un subconjunto curado v1;
+  ampliarlo/corregirlo es agregar entradas.
