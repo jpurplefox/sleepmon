@@ -336,6 +336,143 @@ select:focus {
   cursor: default;
 }
 
+/* --- Selector de naturaleza (inline, mismo patrón que sub skills) --- */
+.nature-select {
+  position: relative;
+  width: 100%;
+}
+
+.nature-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.nature-trigger:hover {
+  border-color: var(--primary);
+}
+
+.nature-trigger__name {
+  font-weight: 600;
+}
+
+/* Badges ↑/↓ con el símbolo del stat. Reusados en trigger, opciones y títulos. */
+.nature-effect {
+  display: inline-flex;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.nat-stat {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 4px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Marca arriba/abajo con un caret de color, igual que RaenonX (rojo sube, azul baja). */
+.nat-stat::before {
+  font-size: 0.6rem;
+  margin-right: 1px;
+}
+
+.nat-stat--up {
+  color: #f87171;
+}
+
+.nat-stat--up::before {
+  content: "▲";
+}
+
+.nat-stat--down {
+  color: #60a5fa;
+}
+
+.nat-stat--down::before {
+  content: "▼";
+}
+
+.nature-dropdown {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  /* Más ancho que el campo (media fila) para entrar ~2 columnas como RaenonX. */
+  width: max(100%, 320px);
+  z-index: 30;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.45);
+  padding: 0.6rem;
+  max-height: 360px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.nature-group__title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+  font-weight: 700;
+}
+
+.nature-group__items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.35rem;
+}
+
+.nature-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.4rem 0.5rem;
+  color: var(--text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.nature-option__name {
+  font-weight: 600;
+}
+
+.nature-option:hover {
+  border-color: var(--primary);
+}
+
+.nature-option--selected {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
 /* Sprite */
 .sprite {
   width: 32px;
