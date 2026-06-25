@@ -46,10 +46,23 @@ export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
 
   const tierOf = (name: string) => subSkills.find((s) => s.name === name)?.tier ?? "Regular";
 
-  // Primer click: al primer slot libre (append). Re-click: limpia ese slot.
+  // Slots de posición fija (con huecos). value puede traer "" en un slot vacío.
+  const slots = Array.from({ length: MAX_SUB_SKILLS }, (_, i) => value[i] ?? "");
+  const count = slots.filter(Boolean).length;
+
+  // Primer click: al primer slot libre. Re-click: limpia ESE slot (deja el hueco,
+  // sin reacomodar los demás).
   const toggle = (name: string) => {
-    if (value.includes(name)) onChange(value.filter((s) => s !== name));
-    else if (value.length < MAX_SUB_SKILLS) onChange([...value, name]);
+    const next = [...slots];
+    const idx = next.indexOf(name);
+    if (idx !== -1) {
+      next[idx] = "";
+    } else {
+      const empty = next.indexOf("");
+      if (empty === -1) return;
+      next[empty] = name;
+    }
+    onChange(next);
   };
 
   // Orden de variante dentro de una familia: primero S, luego M, luego L.
@@ -80,7 +93,7 @@ export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
       >
         <div className="subskill-slots">
           {Array.from({ length: MAX_SUB_SKILLS }, (_, i) => {
-            const name = value[i];
+            const name = slots[i];
             const unlock = SUB_SKILL_UNLOCK_LEVELS[i];
             const locked = level < unlock;
             const tier = name ? TIER_CLASS[tierOf(name)] : "empty";
@@ -88,7 +101,7 @@ export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
               <span
                 key={i}
                 className={`ss-icon ss-icon--${tier}` + (locked ? " is-locked" : "")}
-                data-tooltip={name ?? `Slot de nivel ${unlock}`}
+                data-tooltip={name || `Slot de nivel ${unlock}`}
               >
                 {name && <img src={subSkillIcon(name)} alt={name} />}
                 <span className="ss-icon__lv">{unlock}</span>
@@ -96,7 +109,7 @@ export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
             );
           })}
         </div>
-        <span className="subskill-trigger__hint">{value.length}/5 · elegir</span>
+        <span className="subskill-trigger__hint">{count}/5 · elegir</span>
       </button>
 
       {open && (
@@ -107,9 +120,9 @@ export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
                 <div className="subskill-group__title">{g.title}</div>
                 <div className="subskill-group__items">
                   {g.items.map((s) => {
-                    const idx = value.indexOf(s.name);
+                    const idx = slots.indexOf(s.name);
                     const selected = idx !== -1;
-                    const disabled = !selected && value.length >= MAX_SUB_SKILLS;
+                    const disabled = !selected && count >= MAX_SUB_SKILLS;
                     return (
                       <button
                         type="button"
