@@ -61,6 +61,18 @@ def test_unknown_species_returns_400(client: TestClient) -> None:
     assert "Mewtwo" in res.json()["detail"]
 
 
+def test_too_many_ingredients_returns_400(client: TestClient) -> None:
+    # Más ingredientes que slots de la especie: 400 limpio, no 500.
+    res = client.post(
+        "/team",
+        json=valid_payload(
+            level=60,
+            ingredients=["Fancy Apple", "Warming Ginger", "Fancy Apple", "Warming Ginger"],
+        ),
+    )
+    assert res.status_code == 400
+
+
 def test_get_missing_member_returns_404(client: TestClient) -> None:
     res = client.get("/team/00000000-0000-0000-0000-000000000000")
     assert res.status_code == 404

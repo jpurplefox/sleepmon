@@ -63,6 +63,28 @@ def test_ingredient_not_valid_for_species_slot_rejected(service: DefaultTeamServ
         service.add_member(valid_input(ingredients=["Large Leek"]))
 
 
+def test_invalid_sub_skill_value_rejected(service: DefaultTeamService) -> None:
+    with pytest.raises(ValidationError):
+        service.add_member(valid_input(sub_skills=["Mega Helper XL"]))
+
+
+def test_more_ingredients_than_species_slots_rejected(service: DefaultTeamService) -> None:
+    # Pikachu tiene 3 slots; cuatro ingredientes debe dar ValidationError, no reventar.
+    with pytest.raises(ValidationError):
+        service.add_member(
+            valid_input(
+                level=60,
+                ingredients=["Fancy Apple", "Warming Ginger", "Fancy Apple", "Warming Ginger"],
+            )
+        )
+
+
+def test_too_many_ingredients_for_level_rejected(service: DefaultTeamService) -> None:
+    # Nivel 1 solo tiene 1 slot de ingrediente desbloqueado.
+    with pytest.raises(ValidationError):
+        service.add_member(valid_input(level=1, ingredients=["Fancy Apple", "Warming Ginger"]))
+
+
 def test_get_missing_member_raises(service: DefaultTeamService) -> None:
     with pytest.raises(TeamMemberNotFoundError):
         service.get_member(uuid4())

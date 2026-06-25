@@ -105,6 +105,13 @@ class DefaultTeamService(TeamService):
         sub_skills = tuple(_parse_enum(SubSkill, s, "sub_skill") for s in data.sub_skills)
         ingredients = tuple(_parse_enum(Ingredient, i, "ingredient") for i in data.ingredients)
 
+        max_slots = len(species.ingredient_slots)
+        if len(ingredients) > max_slots:
+            raise ValidationError(
+                f"{species.name} tiene {max_slots} slots de ingrediente; "
+                f"llegaron {len(ingredients)}."
+            )
+
         for slot, ingredient in enumerate(ingredients):
             if not species.allows_ingredient(slot, ingredient):
                 allowed = ", ".join(sorted(i.value for i in species.ingredient_slots[slot]))

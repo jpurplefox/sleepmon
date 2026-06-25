@@ -2,14 +2,30 @@
 
 from __future__ import annotations
 
+from enum import Enum
+from typing import TypeVar
 from uuid import UUID
 
 from psycopg_pool import ConnectionPool
 
 from ....domain.entities import TeamMember
+from ....domain.errors import ValidationError
 from ....domain.ports import TeamRepository
 from ....domain.value_objects import Ingredient, Nature, SubSkill
 from . import queries
+
+_E = TypeVar("_E", bound=Enum)
+
+
+def _decode(enum_cls: type[_E], value: str) -> _E:
+    """Convierte un valor crudo de la DB a su enum, fallando con error de dominio
+    si la base quedó con un valor que ya no existe en el juego."""
+    try:
+        return enum_cls(value)
+    except ValueError as exc:
+        raise ValidationError(
+            f"Valor inválido en la base: {value!r} para {enum_cls.__name__}."
+        ) from exc
 
 
 class PostgresTeamRepository(TeamRepository):
@@ -31,9 +47,9 @@ class PostgresTeamRepository(TeamRepository):
             if row is None:
                 return None
             cur.execute(queries.SELECT_SUBSKILLS_BY_MEMBER, (member_id,))
-            subs = tuple(SubSkill(value) for _slot, value in cur.fetchall())
+            subs = tuple(_decode(SubSkill, value) for _slot, value in cur.fetchall())
             cur.execute(queries.SELECT_INGREDIENTS_BY_MEMBER, (member_id,))
-            ings = tuple(Ingredient(value) for _slot, value in cur.fetchall())
+            ings = tuple(_decode(Ingredient, value) for _slot, value in cur.fetchall())
             return _build_member(row, subs, ings)
 
     def list(self) -> list[TeamMember]:
@@ -48,8 +64,8 @@ class PostgresTeamRepository(TeamRepository):
         members: list[TeamMember] = []
         for row in rows:
             member_id = row[0]
-            subs = tuple(SubSkill(v) for v in subs_by_member.get(member_id, []))
-            ings = tuple(Ingredient(v) for v in ings_by_member.get(member_id, []))
+            subs = tuple(_decode(SubSkill, v) for v in subs_by_member.get(member_id, []))
+            ings = tuple(_decode(Ingredient, v) for v in ings_by_member.get(member_id, []))
             members.append(_build_member(row, subs, ings))
         return members
 
@@ -104,7 +120,7 @@ def _build_member(
         species=species,
         nickname=nickname,
         level=level,
-        nature=Nature(nature),
+        nature=_decode(Nature, nature),
         ingredients=ingredients,
         sub_skills=sub_skills,
     )
