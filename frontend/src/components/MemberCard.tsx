@@ -76,7 +76,7 @@ export function MemberCard({ member, nature, dex, subSkillTiers, onDelete }: Pro
                 <span
                   key={`${s}-${idx}`}
                   className={`ss-icon ss-icon--${tier}` + (locked ? " is-locked" : "")}
-                  title={locked ? `${s} (se desbloquea a nivel ${unlock})` : s}
+                  data-tooltip={locked ? `${s} (se desbloquea a nivel ${unlock})` : s}
                 >
                   <img src={subSkillIcon(s)} alt={s} loading="lazy" />
                 </span>

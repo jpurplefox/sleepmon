@@ -82,7 +82,7 @@ export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
               <span
                 key={i}
                 className={`ss-icon ss-icon--${tier}` + (locked ? " is-locked" : "")}
-                title={name ?? `Slot de nivel ${unlock}`}
+                data-tooltip={name ?? `Slot de nivel ${unlock}`}
               >
                 {name && <img src={subSkillIcon(name)} alt={name} />}
                 <span className="ss-icon__lv">{unlock}</span>
