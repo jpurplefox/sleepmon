@@ -46,6 +46,7 @@ export function Team() {
   };
 
   const natureByName = new Map((catalog.data?.natures ?? []).map((n) => [n.name, n]));
+  const speciesByName = new Map((catalog.data?.species ?? []).map((s) => [s.name, s]));
 
   if (catalog.isLoading) return <p className="muted">Cargando catálogo…</p>;
   if (catalog.isError || !catalog.data)
@@ -79,6 +80,7 @@ export function Team() {
               key={m.id}
               member={m}
               nature={natureByName.get(m.nature)}
+              dex={speciesByName.get(m.species)?.dex}
               onDelete={(id) => remove.mutate(id)}
             />
           ))}

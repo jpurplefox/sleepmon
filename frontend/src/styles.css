@@ -526,6 +526,32 @@ select:focus {
   align-items: flex-start;
 }
 
+.member-card__title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.member-card__sprite {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.ingredient-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.ingredient-row__icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
 .member-card__head h3 {
   margin: 0;
 }
