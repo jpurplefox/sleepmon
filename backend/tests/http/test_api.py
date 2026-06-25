@@ -36,6 +36,15 @@ def test_catalog_endpoint_lists_reference_data(client: TestClient) -> None:
     assert len(body["ingredients"]) == 19
     assert any(sp["name"] == "Pikachu" for sp in body["species"])
 
+    # Los slots de ingrediente viajan EN ORDEN de juego (1º, 2º, 3º), como
+    # prefijos crecientes — no alfabéticos. Caterpie: miel, luego tomate, luego beans.
+    caterpie = next(sp for sp in body["species"] if sp["name"] == "Caterpie")
+    assert caterpie["ingredient_slots"] == [
+        ["Honey"],
+        ["Honey", "Snoozy Tomato"],
+        ["Honey", "Snoozy Tomato", "Greengrass Soybeans"],
+    ]
+
 
 def test_create_and_list_member(client: TestClient) -> None:
     res = client.post("/team", json=valid_payload())

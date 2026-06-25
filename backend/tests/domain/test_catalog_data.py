@@ -83,7 +83,26 @@ def test_species_primary_ingredient_is_single_and_present_downstream() -> None:
 def test_species_ingredient_slots_grow_monotonically() -> None:
     # Lo desbloqueado en el slot 2 (nivel 30) sigue disponible en el slot 3 (nivel 60).
     for sp in SEED_SPECIES:
-        assert sp.ingredient_slots[1] <= sp.ingredient_slots[2], sp.name
+        assert set(sp.ingredient_slots[1]) <= set(sp.ingredient_slots[2]), sp.name
+
+
+def test_ingredient_slots_are_ordered_prefixes_of_the_ingredient_list() -> None:
+    # Cada slot expone exactamente un prefijo de los ingredientes de la especie,
+    # en el orden del juego (1º, 2º, 3º). Esto fija el orden de display y deja al
+    # 1º siempre primero.
+    for sp in SEED_SPECIES:
+        for slot, options in enumerate(sp.ingredient_slots):
+            assert options == sp.ingredients[: slot + 1], sp.name
+
+
+def test_lv30_slot_never_offers_the_third_ingredient() -> None:
+    # Regresión: el slot de nivel 30 solo puede ser el 1º o el 2º ingrediente,
+    # nunca el 3º (p. ej. Caterpie: miel o tomate, jamás los beans).
+    for sp in SEED_SPECIES:
+        if len(sp.ingredients) < 3:
+            continue
+        third = sp.ingredients[2]
+        assert third not in sp.ingredient_slots[1], sp.name
 
 
 def test_every_species_has_a_unique_positive_dex() -> None:
