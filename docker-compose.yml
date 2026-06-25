@@ -36,8 +36,10 @@ services:
     depends_on:
       - backend
     volumes:
-      - ./frontend/src:/app/src
-      - ./frontend/index.html:/app/index.html
+      # Montamos todo el directorio (sobrevive a git checkout y a reemplazos de
+      # archivos), y un volumen anónimo preserva el node_modules de la imagen.
+      - ./frontend:/app
+      - /app/node_modules
 
 volumes:
   pgdata:
