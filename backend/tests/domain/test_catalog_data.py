@@ -7,7 +7,7 @@ from sleepmon.domain.catalog_data import (
     max_sub_skill_slots,
 )
 from sleepmon.domain.species import SEED_SPECIES
-from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
+from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill, SubSkillTier
 
 
 def test_closed_sets_have_expected_sizes() -> None:
@@ -35,6 +35,12 @@ def test_non_neutral_natures_change_two_distinct_stats() -> None:
 
 def test_every_sub_skill_has_a_tier() -> None:
     assert set(SUB_SKILL_TIERS) == set(SubSkill)
+
+
+def test_inventory_up_m_and_l_are_blue() -> None:
+    # Inventory Up M y L son blue (no gold), como en el juego.
+    assert SUB_SKILL_TIERS[SubSkill.INVENTORY_UP_M] is SubSkillTier.BLUE
+    assert SUB_SKILL_TIERS[SubSkill.INVENTORY_UP_L] is SubSkillTier.BLUE
 
 
 def test_sub_skill_unlock_levels_updated_to_new_patch() -> None:

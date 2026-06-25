@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 
-from sleepmon.domain.catalog_data import MAX_INGREDIENTS, MAX_LEVEL, max_sub_skill_slots
+from sleepmon.domain.catalog_data import MAX_INGREDIENTS, MAX_LEVEL, MAX_SUB_SKILLS
 from sleepmon.domain.errors import ValidationError
 from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
 
@@ -19,11 +19,11 @@ class TeamMember:
     que cruza con el catálogo de especies (ingredientes válidos para *esta* especie)
     vive en la capa de aplicación.
 
-    Los ingredientes son una tupla ordenada por slot (slot 0 = nivel 1, slot 1 =
-    nivel 30, slot 2 = nivel 60). El ingrediente de cada slot ya está definido para
-    el individuo desde el inicio, así que se registran los 3 sin importar el nivel
-    (el nivel solo determina cuáles están *activos*). Las sub skills, en cambio, sí
-    se acotan por el nivel de desbloqueo (10/25/50/70/80).
+    Tanto los ingredientes (slots de nivel 1/30/60) como las sub skills (slots de
+    nivel 10/25/50/70/80) ya están definidos para el individuo desde el inicio, así
+    que se registran completos (hasta 3 y hasta 5) sin importar el nivel; el nivel
+    solo determina cuáles están *activos*. Lo único que se valida acá es la cantidad
+    máxima y que las sub skills no se repitan.
     """
 
     species: str
@@ -53,11 +53,12 @@ class TeamMember:
                 f"llegaron {len(self.ingredients)}."
             )
 
-        allowed_subs = max_sub_skill_slots(self.level)
-        if len(self.sub_skills) > allowed_subs:
+        # Las sub skills tampoco se acotan por nivel: el individuo ya las tiene
+        # definidas, así que se registran hasta las 5 sin importar el nivel.
+        if len(self.sub_skills) > MAX_SUB_SKILLS:
             raise ValidationError(
-                f"Un Pokémon de nivel {self.level} tiene hasta {allowed_subs} "
-                f"sub skill(s); llegaron {len(self.sub_skills)}."
+                f"Un Pokémon tiene hasta {MAX_SUB_SKILLS} sub skills; "
+                f"llegaron {len(self.sub_skills)}."
             )
         if len(set(self.sub_skills)) != len(self.sub_skills):
             raise ValidationError("Las sub skills no pueden repetirse.")

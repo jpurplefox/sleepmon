@@ -152,6 +152,146 @@ select:focus {
   border-color: #f87171;
 }
 
+/* Sub skill selector */
+.subskill-select {
+  position: relative;
+  width: 100%;
+}
+
+.subskill-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.45rem 0.6rem;
+  cursor: pointer;
+}
+
+.subskill-trigger:hover {
+  border-color: var(--primary);
+}
+
+.subskill-slots {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.subskill-slot {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+}
+
+.subskill-slot--empty {
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+.subskill-slot__icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.subskill-trigger__hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.subskill-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  padding: 0.5rem;
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.subskill-group {
+  border-left: 3px solid var(--tier, var(--border));
+  padding-left: 0.5rem;
+}
+
+.subskill-group--gold {
+  --tier: #f59e0b;
+}
+
+.subskill-group--blue {
+  --tier: #60a5fa;
+}
+
+.subskill-group--regular {
+  --tier: #94a3b8;
+}
+
+.subskill-group__title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--tier, var(--muted));
+  margin-bottom: 0.35rem;
+  font-weight: 700;
+}
+
+.subskill-group__items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.3rem;
+}
+
+.subskill-option {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.3rem 0.45rem;
+  color: var(--text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.subskill-option:hover:not(:disabled) {
+  border-color: var(--tier, var(--primary));
+}
+
+.subskill-option--selected {
+  border-color: var(--tier, var(--primary));
+  box-shadow: inset 0 0 0 1px var(--tier, var(--primary));
+}
+
+.subskill-option:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.subskill-option__icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 /* Sprite */
 .sprite {
   width: 32px;

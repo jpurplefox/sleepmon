@@ -1,6 +1,7 @@
-import { INGREDIENT_UNLOCK_LEVELS } from "../constants";
+import { INGREDIENT_UNLOCK_LEVELS, SUB_SKILL_UNLOCK_LEVELS } from "../constants";
 import { ingredientIcon } from "../ingredients";
 import { spriteUrl } from "../sprites";
+import { subSkillIcon } from "../subskills";
 import type { Member, Nature } from "../types";
 
 interface Props {
@@ -62,13 +63,24 @@ export function MemberCard({ member, nature, dex, onDelete }: Props) {
         </div>
         <div>
           <dt>Sub skills</dt>
-          <dd className="chips">
+          <dd className="ingredient-row">
             {member.sub_skills.length === 0 && <span className="muted">—</span>}
-            {member.sub_skills.map((s, idx) => (
-              <span className="chip chip--subskill" key={`${s}-${idx}`}>
-                {s}
-              </span>
-            ))}
+            {member.sub_skills.map((s, idx) => {
+              const unlock = SUB_SKILL_UNLOCK_LEVELS[idx] ?? 999;
+              const locked = member.level < unlock;
+              return (
+                <img
+                  key={`${s}-${idx}`}
+                  className={
+                    "ingredient-row__icon" + (locked ? " ingredient-row__icon--locked" : "")
+                  }
+                  src={subSkillIcon(s)}
+                  alt={s}
+                  title={locked ? `${s} (se desbloquea a nivel ${unlock})` : s}
+                  loading="lazy"
+                />
+              );
+            })}
           </dd>
         </div>
       </dl>

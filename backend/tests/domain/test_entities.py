@@ -48,10 +48,15 @@ def test_max_level_is_accepted() -> None:
     assert make(level=100).level == 100
 
 
-def test_sub_skills_below_first_unlock_rejected() -> None:
-    # Nivel < 10 no tiene slots de sub skill desbloqueados (allowed_subs == 0).
-    with pytest.raises(ValidationError):
-        make(level=5, ingredients=(Ingredient.FANCY_APPLE,), sub_skills=(SubSkill.HELPING_SPEED_S,))
+def test_low_level_can_have_sub_skills() -> None:
+    # Las sub skills ya están definidas para el individuo: se registran aunque el
+    # nivel todavía no las haya desbloqueado.
+    member = make(
+        level=5,
+        ingredients=(Ingredient.FANCY_APPLE,),
+        sub_skills=(SubSkill.HELPING_SPEED_S, SubSkill.INVENTORY_UP_S),
+    )
+    assert len(member.sub_skills) == 2
 
 
 def test_zero_ingredients_rejected() -> None:
@@ -83,15 +88,17 @@ def test_more_than_three_ingredients_rejected() -> None:
         )
 
 
-def test_too_many_sub_skills_for_level_rejected() -> None:
-    # Nivel 30 permite 2 sub skills (desbloqueos 10 y 25).
+def test_more_than_five_sub_skills_rejected() -> None:
     with pytest.raises(ValidationError):
         make(
-            level=30,
+            level=80,
             sub_skills=(
                 SubSkill.HELPING_SPEED_S,
                 SubSkill.INVENTORY_UP_S,
                 SubSkill.SKILL_TRIGGER_S,
+                SubSkill.INGREDIENT_FINDER_S,
+                SubSkill.BERRY_FINDING_S,
+                SubSkill.HELPING_BONUS,
             ),
         )
 
