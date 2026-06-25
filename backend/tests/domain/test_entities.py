@@ -43,6 +43,17 @@ def test_level_out_of_range_rejected(level: int) -> None:
         make(level=level)
 
 
+def test_max_level_is_accepted() -> None:
+    # Borde superior: nivel 100 (MAX_LEVEL) NO debe rechazarse.
+    assert make(level=100).level == 100
+
+
+def test_sub_skills_below_first_unlock_rejected() -> None:
+    # Nivel < 10 no tiene slots de sub skill desbloqueados (allowed_subs == 0).
+    with pytest.raises(ValidationError):
+        make(level=5, ingredients=(Ingredient.FANCY_APPLE,), sub_skills=(SubSkill.HELPING_SPEED_S,))
+
+
 def test_zero_ingredients_rejected() -> None:
     with pytest.raises(ValidationError):
         make(ingredients=())

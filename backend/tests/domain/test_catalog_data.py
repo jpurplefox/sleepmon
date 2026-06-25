@@ -74,6 +74,12 @@ def test_species_primary_ingredient_is_single_and_present_downstream() -> None:
         assert primary in sp.ingredient_slots[2], sp.name
 
 
+def test_species_ingredient_slots_grow_monotonically() -> None:
+    # Lo desbloqueado en el slot 2 (nivel 30) sigue disponible en el slot 3 (nivel 60).
+    for sp in SEED_SPECIES:
+        assert sp.ingredient_slots[1] <= sp.ingredient_slots[2], sp.name
+
+
 def test_max_ingredient_slots_scales_with_level() -> None:
     assert INGREDIENT_UNLOCK_LEVELS == (1, 30, 60)
     assert max_ingredient_slots(1) == 1

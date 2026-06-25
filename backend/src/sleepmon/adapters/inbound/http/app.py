@@ -7,6 +7,7 @@ Postgres + catálogo estático). En tests se le inyecta un ``service`` y un
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 from litestar import Litestar, Request, Response
@@ -41,7 +42,7 @@ def create_app(
     catalog: SpeciesCatalog | None = None,
     settings: Settings | None = None,
 ) -> Litestar:
-    on_shutdown = []
+    on_shutdown: list[Callable[[], Any]] = []
 
     if catalog is None:
         catalog = StaticSpeciesCatalog()

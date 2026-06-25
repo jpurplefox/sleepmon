@@ -103,6 +103,28 @@ def test_update_missing_member_raises(service: DefaultTeamService) -> None:
         service.update_member(uuid4(), valid_input())
 
 
+def test_update_with_invalid_ingredient_rejected(service: DefaultTeamService) -> None:
+    # La revalidación vía _build_member(member_id=...) también rechaza datos inválidos.
+    member = service.add_member(valid_input())
+    with pytest.raises(ValidationError):
+        service.update_member(member.id, valid_input(ingredients=["Large Leek"]))
+
+
+def test_distributions_empty_team(service: DefaultTeamService) -> None:
+    dist = service.distributions()
+    assert dist.natures == {}
+    assert dist.ingredients == {}
+    assert dist.sub_skills == {}
+    # nature_stats nunca es {}: trae todos los stats en 0.
+    assert dist.nature_stats == {
+        "Speed of Help": 0,
+        "Ingredient Finding": 0,
+        "Energy Recovery": 0,
+        "EXP Gains": 0,
+        "Main Skill Chance": 0,
+    }
+
+
 def test_delete_member(service: DefaultTeamService) -> None:
     member = service.add_member(valid_input())
     service.delete_member(member.id)
