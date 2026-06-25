@@ -51,6 +51,9 @@ def test_max_sub_skill_slots_scales_with_level() -> None:
     assert max_sub_skill_slots(1) == 0
     assert max_sub_skill_slots(10) == 1
     assert max_sub_skill_slots(69) == 3
+    # Borde del 4º slot: se desbloquea en el nivel 70 y rige hasta el 79.
+    assert max_sub_skill_slots(70) == 4
+    assert max_sub_skill_slots(79) == 4
     assert max_sub_skill_slots(80) == 5
     assert max_sub_skill_slots(100) == 5
 
@@ -68,6 +71,14 @@ def test_allows_ingredient_rejects_out_of_range_slot() -> None:
     assert species.allows_ingredient(0, primary) is True
     assert species.allows_ingredient(-1, primary) is False
     assert species.allows_ingredient(99, primary) is False
+
+
+def test_allows_ingredient_rejects_ingredient_absent_from_a_valid_slot() -> None:
+    # Slot en rango pero el ingrediente no pertenece a ese slot: la otra rama False.
+    species = SEED_SPECIES[0]
+    primary = next(iter(species.ingredient_slots[0]))  # único ingrediente del slot 0
+    absent = next(i for i in Ingredient if i != primary)
+    assert species.allows_ingredient(0, absent) is False
 
 
 def test_species_primary_ingredient_is_single_and_present_downstream() -> None:
@@ -103,6 +114,15 @@ def test_lv30_slot_never_offers_the_third_ingredient() -> None:
             continue
         third = sp.ingredients[2]
         assert third not in sp.ingredient_slots[1], sp.name
+
+
+def test_short_species_still_reports_three_ingredient_slots() -> None:
+    # Mareep tiene solo 2 ingredientes, pero ingredient_slots siempre devuelve 3
+    # slots (el último repite el prefijo completo). slot_count derivado = 3.
+    mareep = next(sp for sp in SEED_SPECIES if sp.name == "Mareep")
+    assert len(mareep.ingredients) == 2
+    assert len(mareep.ingredient_slots) == 3
+    assert mareep.ingredient_slots[2] == mareep.ingredients  # el último slot no agrega nada
 
 
 def test_every_species_has_a_unique_positive_dex() -> None:

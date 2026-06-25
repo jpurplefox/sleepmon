@@ -114,8 +114,11 @@ class DefaultTeamService(TeamService):
                     f"{slot + 1}. Válidos: {allowed}."
                 )
 
-        # El constructor de TeamMember aplica las invariantes que dependen del nivel,
-        # incluida la cota de ingredientes según el nivel del miembro.
+        # El constructor de TeamMember aplica las invariantes absolutas (rango de
+        # nivel, topes MAX_INGREDIENTS/MAX_SUB_SKILLS, sub skills sin repetir). NO
+        # acota por nivel: un miembro lleva todos sus ingredientes/sub skills ya
+        # definidos desde nivel 1 (en el juego quedan inactivos hasta su nivel de
+        # desbloqueo, pero el dato se guarda completo).
         if member_id is None:
             return TeamMember(
                 species=species.name,
