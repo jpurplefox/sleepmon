@@ -152,6 +152,111 @@ select:focus {
   border-color: #f87171;
 }
 
+/* Level selector */
+.level-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0.75rem 0;
+}
+
+.level-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+}
+
+.level-stepper__label {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-right: auto;
+}
+
+.level-stepper__btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.level-stepper__btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.level-stepper__btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.level-stepper__input {
+  width: 3.5ch;
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 700;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  padding: 0;
+}
+
+.level-stepper__input:focus {
+  outline: none;
+}
+
+/* Ocultar las flechas nativas del number input (usamos las nuestras). */
+.level-stepper__input::-webkit-outer-spin-button,
+.level-stepper__input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.level-stepper__input {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.level-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.level-chip {
+  min-width: 34px;
+  height: 30px;
+  padding: 0 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.level-chip:hover {
+  border-color: var(--primary);
+  color: var(--text);
+}
+
+.level-chip--active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
 /* Members */
 .members {
   display: flex;

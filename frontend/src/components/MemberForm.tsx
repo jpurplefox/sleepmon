@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { maxIngredientSlots, maxSubSkillSlots, MAX_LEVEL } from "../constants";
+import { maxIngredientSlots, maxSubSkillSlots } from "../constants";
 import type { Catalog, MemberInput } from "../types";
+import { LevelSelector } from "./LevelSelector";
 
 interface Props {
   catalog: Catalog;
@@ -81,19 +82,6 @@ export function MemberForm({ catalog, onSubmit, pending, error }: Props) {
         </label>
 
         <label>
-          Nivel
-          <input
-            type="number"
-            min={1}
-            max={MAX_LEVEL}
-            value={level}
-            onChange={(e) => setLevel(Number(e.target.value))}
-          />
-        </label>
-      </div>
-
-      <div className="form__row">
-        <label>
           Naturaleza
           <select value={nature} onChange={(e) => setNature(e.target.value)}>
             {catalog.natures.map((n) => (
@@ -104,7 +92,11 @@ export function MemberForm({ catalog, onSubmit, pending, error }: Props) {
             ))}
           </select>
         </label>
+      </div>
 
+      <LevelSelector value={level} onChange={setLevel} />
+
+      <div className="form__row">
         <label>
           Apodo (opcional)
           <input value={nickname} onChange={(e) => setNickname(e.target.value)} />
