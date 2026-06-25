@@ -56,6 +56,14 @@ def test_every_species_has_three_non_empty_ingredient_slots() -> None:
             assert options, f"{sp.name} slot {slot} vacío"
 
 
+def test_allows_ingredient_rejects_out_of_range_slot() -> None:
+    species = SEED_SPECIES[0]
+    primary = next(iter(species.ingredient_slots[0]))
+    assert species.allows_ingredient(0, primary) is True
+    assert species.allows_ingredient(-1, primary) is False
+    assert species.allows_ingredient(99, primary) is False
+
+
 def test_species_primary_ingredient_is_single_and_present_downstream() -> None:
     # El slot 1 (nivel 1) es un único ingrediente fijo, y debe seguir siendo
     # válido en los slots posteriores.

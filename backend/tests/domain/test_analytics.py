@@ -19,6 +19,8 @@ def test_empty_team_distributions_are_empty() -> None:
     assert analytics.nature_distribution([]) == {}
     assert analytics.ingredient_distribution([]) == {}
     assert analytics.sub_skill_distribution([]) == {}
+    # nature_stat_balance no devuelve {} sino todos los stats en 0.
+    assert analytics.nature_stat_balance([]) == {stat: 0 for stat in NatureStat}
 
 
 def test_ingredient_distribution_counts_all_slots() -> None:

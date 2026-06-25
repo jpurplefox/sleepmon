@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TypeVar
+from typing import Any, TypeVar
 from uuid import UUID
 
+from psycopg import Cursor
 from psycopg_pool import ConnectionPool
 
 from ....domain.entities import TeamMember
@@ -88,14 +89,13 @@ class PostgresTeamRepository(TeamRepository):
             return cur.rowcount > 0
 
     @staticmethod
-    def _insert_children(cur: object, member: TeamMember) -> None:
-        # ``cur`` es un psycopg Cursor; se tipa laxo para no acoplar la firma.
+    def _insert_children(cur: Cursor[Any], member: TeamMember) -> None:
         if member.sub_skills:
-            cur.executemany(  # type: ignore[attr-defined]
+            cur.executemany(
                 queries.INSERT_SUBSKILL,
                 [(member.id, slot, s.value) for slot, s in enumerate(member.sub_skills)],
             )
-        cur.executemany(  # type: ignore[attr-defined]
+        cur.executemany(
             queries.INSERT_INGREDIENT,
             [(member.id, slot, i.value) for slot, i in enumerate(member.ingredients)],
         )

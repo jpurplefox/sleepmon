@@ -121,3 +121,6 @@ def test_distributions_aggregate_team(service: DefaultTeamService) -> None:
     assert dist.natures["Adamant"] == 2
     assert dist.ingredients["Fancy Apple"] == 1
     assert dist.sub_skills["Helping Speed S"] == 1
+    # Adamant: +Speed of Help, -Ingredient Finding; dos miembros Adamant.
+    assert dist.nature_stats["Speed of Help"] == 2
+    assert dist.nature_stats["Ingredient Finding"] == -2

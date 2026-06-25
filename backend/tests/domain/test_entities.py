@@ -33,6 +33,10 @@ def test_blank_nickname_rejected() -> None:
         make(nickname="   ")
 
 
+def test_valid_nickname_is_kept() -> None:
+    assert make(nickname="Sparky").nickname == "Sparky"
+
+
 @pytest.mark.parametrize("level", [0, -5, 101])
 def test_level_out_of_range_rejected(level: int) -> None:
     with pytest.raises(ValidationError):
