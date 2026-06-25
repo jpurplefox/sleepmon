@@ -79,10 +79,16 @@ def test_more_ingredients_than_species_slots_rejected(service: DefaultTeamServic
         )
 
 
-def test_too_many_ingredients_for_level_rejected(service: DefaultTeamService) -> None:
-    # Nivel 1 solo tiene 1 slot de ingrediente desbloqueado.
-    with pytest.raises(ValidationError):
-        service.add_member(valid_input(level=1, ingredients=["Fancy Apple", "Warming Ginger"]))
+def test_level_1_can_have_all_three_ingredients(service: DefaultTeamService) -> None:
+    # Los ingredientes ya están definidos: se registran los 3 aunque sea nivel 1.
+    member = service.add_member(
+        valid_input(
+            level=1,
+            ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+            sub_skills=[],  # nivel 1 no tiene slots de sub skill todavía
+        )
+    )
+    assert len(member.ingredients) == 3
 
 
 def test_get_missing_member_raises(service: DefaultTeamService) -> None:

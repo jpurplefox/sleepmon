@@ -59,10 +59,28 @@ def test_zero_ingredients_rejected() -> None:
         make(ingredients=())
 
 
-def test_too_many_ingredients_for_level_rejected() -> None:
-    # Nivel 10 solo tiene 1 slot de ingrediente.
+def test_low_level_can_have_all_three_ingredients() -> None:
+    # Los ingredientes ya están definidos para el individuo: se registran los 3
+    # aunque el Pokémon sea de nivel bajo (no se acotan por nivel).
+    member = make(
+        level=1,
+        ingredients=(Ingredient.FANCY_APPLE, Ingredient.WARMING_GINGER, Ingredient.FANCY_EGG),
+        sub_skills=(),  # nivel 1 no tiene slots de sub skill todavía
+    )
+    assert len(member.ingredients) == 3
+
+
+def test_more_than_three_ingredients_rejected() -> None:
     with pytest.raises(ValidationError):
-        make(level=10, ingredients=(Ingredient.FANCY_APPLE, Ingredient.WARMING_GINGER))
+        make(
+            level=60,
+            ingredients=(
+                Ingredient.FANCY_APPLE,
+                Ingredient.WARMING_GINGER,
+                Ingredient.FANCY_EGG,
+                Ingredient.HONEY,
+            ),
+        )
 
 
 def test_too_many_sub_skills_for_level_rejected() -> None:
