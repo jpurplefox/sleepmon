@@ -10,8 +10,8 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from uuid import UUID
 
-from .entities import TeamMember
-from .species import Species
+from sleepmon.domain.entities import TeamMember
+from sleepmon.domain.species import Species
 
 
 class SpeciesCatalog(ABC):

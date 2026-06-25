@@ -37,7 +37,11 @@ line-length = 100
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
+select = ["E", "F", "I", "UP", "B", "SIM", "TID"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+# Imports absolutos en todo el paquete: `from sleepmon.domain... import`, nunca `from ....`.
+ban-relative-imports = "all"
 
 [tool.mypy]
 python_version = "3.11"

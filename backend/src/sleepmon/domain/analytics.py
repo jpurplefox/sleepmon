@@ -9,9 +9,9 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Iterable
 
-from .catalog_data import NATURE_EFFECTS
-from .entities import TeamMember
-from .value_objects import Ingredient, Nature, NatureStat, SubSkill
+from sleepmon.domain.catalog_data import NATURE_EFFECTS
+from sleepmon.domain.entities import TeamMember
+from sleepmon.domain.value_objects import Ingredient, Nature, NatureStat, SubSkill
 
 
 def nature_distribution(members: Iterable[TeamMember]) -> dict[Nature, int]:

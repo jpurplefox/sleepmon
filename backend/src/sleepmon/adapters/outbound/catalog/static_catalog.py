@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from ....domain.ports import SpeciesCatalog
-from ....domain.species import SEED_SPECIES, Species
+from sleepmon.domain.ports import SpeciesCatalog
+from sleepmon.domain.species import SEED_SPECIES, Species
 
 
 class StaticSpeciesCatalog(SpeciesCatalog):

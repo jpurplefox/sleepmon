@@ -13,16 +13,12 @@ from enum import Enum
 from typing import TypeVar
 from uuid import UUID
 
-from ..domain import analytics
-from ..domain.entities import TeamMember
-from ..domain.errors import (
-    SpeciesNotFoundError,
-    TeamMemberNotFoundError,
-    ValidationError,
-)
-from ..domain.ports import SpeciesCatalog, TeamRepository
-from ..domain.value_objects import Ingredient, Nature, SubSkill
-from .dto import Distributions, TeamMemberInput
+from sleepmon.application.dto import Distributions, TeamMemberInput
+from sleepmon.domain import analytics
+from sleepmon.domain.entities import TeamMember
+from sleepmon.domain.errors import SpeciesNotFoundError, TeamMemberNotFoundError, ValidationError
+from sleepmon.domain.ports import SpeciesCatalog, TeamRepository
+from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
 
 E = TypeVar("E", bound=Enum)
 

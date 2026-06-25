@@ -10,11 +10,11 @@ from psycopg import Cursor
 from psycopg.rows import TupleRow
 from psycopg_pool import ConnectionPool
 
-from ....domain.entities import TeamMember
-from ....domain.errors import ValidationError
-from ....domain.ports import TeamRepository
-from ....domain.value_objects import Ingredient, Nature, SubSkill
-from . import queries
+from sleepmon.adapters.outbound.postgres import queries
+from sleepmon.domain.entities import TeamMember
+from sleepmon.domain.errors import ValidationError
+from sleepmon.domain.ports import TeamRepository
+from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
 
 _E = TypeVar("_E", bound=Enum)
 

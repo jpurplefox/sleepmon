@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .value_objects import Nature, NatureStat, SubSkill, SubSkillTier
+from sleepmon.domain.value_objects import Nature, NatureStat, SubSkill, SubSkillTier
 
 # Niveles en los que se desbloquean los slots. Actualizado en el último parche:
 # las sub skills pasaron a 10/25/50/70/80.

@@ -15,15 +15,15 @@ from litestar.config.cors import CORSConfig
 from litestar.di import Provide
 from litestar.status_codes import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-from ....application.services import DefaultTeamService, TeamService
-from ....config import Settings
-from ....domain.errors import TeamMemberNotFoundError, ValidationError
-from ....domain.ports import SpeciesCatalog
-from ...outbound.catalog.static_catalog import StaticSpeciesCatalog
-from ...outbound.postgres.pool import create_pool
-from ...outbound.postgres.repository import PostgresTeamRepository
-from .controllers import CatalogController, TeamController
-from .schemas import ErrorOut
+from sleepmon.adapters.inbound.http.controllers import CatalogController, TeamController
+from sleepmon.adapters.inbound.http.schemas import ErrorOut
+from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
+from sleepmon.adapters.outbound.postgres.pool import create_pool
+from sleepmon.adapters.outbound.postgres.repository import PostgresTeamRepository
+from sleepmon.application.services import DefaultTeamService, TeamService
+from sleepmon.config import Settings
+from sleepmon.domain.errors import TeamMemberNotFoundError, ValidationError
+from sleepmon.domain.ports import SpeciesCatalog
 
 
 def _validation_handler(_: Request[Any, Any, Any], exc: ValidationError) -> Response[ErrorOut]:
@@ -52,7 +52,9 @@ def create_app(
         pool = create_pool(settings.database_url)
         repository = PostgresTeamRepository(pool)
         service = DefaultTeamService(repository, catalog)
-        on_shutdown.append(pool.close)
+        # Litestar pasa el app a los hooks que aceptan un argumento; sin el lambda,
+        # `pool.close` recibiría el app como su parámetro `timeout` y reventaría.
+        on_shutdown.append(lambda: pool.close())
 
     # Singletons inyectados por DI (sync_to_thread=False: solo devuelven la instancia).
     bound_service = service

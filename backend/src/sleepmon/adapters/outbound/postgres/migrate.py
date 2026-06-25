@@ -9,7 +9,7 @@ from pathlib import Path
 
 import psycopg
 
-from ....config import Settings
+from sleepmon.config import Settings
 
 SCHEMA_PATH = Path(__file__).parent / "schema.sql"
 
