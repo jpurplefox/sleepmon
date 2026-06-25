@@ -1,6 +1,7 @@
 """Tests del adapter Postgres. Requieren una base real (docker compose).
 
-Se saltan solos si no hay Postgres accesible. Marcados ``integration``.
+Corren contra la base de test dedicada (ver ``conftest.py``), nunca contra la de
+desarrollo. Se saltan solos si no hay Postgres accesible. Marcados ``integration``.
 """
 
 from __future__ import annotations
@@ -9,10 +10,8 @@ from collections.abc import Iterator
 
 import pytest
 
-from sleepmon.adapters.outbound.postgres import migrate
 from sleepmon.adapters.outbound.postgres.pool import create_pool
 from sleepmon.adapters.outbound.postgres.repository import PostgresTeamRepository
-from sleepmon.config import Settings
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
 
@@ -20,14 +19,8 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
-def repo() -> Iterator[PostgresTeamRepository]:
-    dsn = Settings.from_env().database_url
-    try:
-        migrate.run(dsn)
-        pool = create_pool(dsn)
-    except Exception as exc:  # noqa: BLE001 — sin DB, el test no aplica
-        pytest.skip(f"Postgres no disponible: {exc}")
-
+def repo(test_dsn: str) -> Iterator[PostgresTeamRepository]:
+    pool = create_pool(test_dsn)
     with pool.connection() as conn:
         conn.execute("TRUNCATE team_member CASCADE")
     try:
