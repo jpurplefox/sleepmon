@@ -38,7 +38,7 @@ class PostgresTeamRepository(TeamRepository):
         with self._pool.connection() as conn, conn.cursor() as cur:
             cur.execute(
                 queries.INSERT_MEMBER,
-                (member.id, member.species, member.nickname, member.level, member.nature.value),
+                (member.id, member.species, member.level, member.nature.value),
             )
             self._insert_children(cur, member)
 
@@ -75,7 +75,7 @@ class PostgresTeamRepository(TeamRepository):
         with self._pool.connection() as conn, conn.cursor() as cur:
             cur.execute(
                 queries.UPDATE_MEMBER,
-                (member.species, member.nickname, member.level, member.nature.value, member.id),
+                (member.species, member.level, member.nature.value, member.id),
             )
             if cur.rowcount == 0:
                 return False
@@ -111,15 +111,14 @@ def _group(rows: list[tuple[UUID, int, str]]) -> dict[UUID, list[str]]:
 
 
 def _build_member(
-    row: tuple[UUID, str, str | None, int, str],
+    row: tuple[UUID, str, int, str],
     sub_skills: tuple[SubSkill, ...],
     ingredients: tuple[Ingredient, ...],
 ) -> TeamMember:
-    member_id, species, nickname, level, nature = row
+    member_id, species, level, nature = row
     return TeamMember(
         id=member_id,
         species=species,
-        nickname=nickname,
         level=level,
         nature=_decode(Nature, nature),
         ingredients=ingredients,

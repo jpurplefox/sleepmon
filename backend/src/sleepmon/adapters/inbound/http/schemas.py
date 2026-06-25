@@ -13,7 +13,6 @@ class MemberIn(msgspec.Struct, forbid_unknown_fields=True):
     nature: str
     ingredients: list[str]
     sub_skills: list[str] = []
-    nickname: str | None = None
 
 
 class MemberOut(msgspec.Struct):
@@ -23,7 +22,6 @@ class MemberOut(msgspec.Struct):
     nature: str
     ingredients: list[str]
     sub_skills: list[str]
-    nickname: str | None = None
 
 
 class NatureOut(msgspec.Struct):

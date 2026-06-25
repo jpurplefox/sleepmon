@@ -17,7 +17,6 @@ export function MemberForm({ catalog, onSubmit, pending, error }: Props) {
   const [species, setSpecies] = useState(catalog.species[0]?.name ?? "");
   const [level, setLevel] = useState(30);
   const [nature, setNature] = useState(catalog.natures[0]?.name ?? "");
-  const [nickname, setNickname] = useState("");
   const [ingredients, setIngredients] = useState<string[]>([]);
   const [subSkills, setSubSkills] = useState<string[]>([]);
 
@@ -39,7 +38,6 @@ export function MemberForm({ catalog, onSubmit, pending, error }: Props) {
       species,
       level,
       nature,
-      nickname: nickname.trim() || null,
       ingredients: ingredients.filter(Boolean),
       sub_skills: subSkills.filter(Boolean),
     });
@@ -67,13 +65,6 @@ export function MemberForm({ catalog, onSubmit, pending, error }: Props) {
       </div>
 
       <LevelSelector value={level} onChange={setLevel} />
-
-      <div className="form__row">
-        <label>
-          Apodo (opcional)
-          <input value={nickname} onChange={(e) => setNickname(e.target.value)} />
-        </label>
-      </div>
 
       <fieldset>
         <legend>Ingredientes</legend>
