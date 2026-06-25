@@ -116,6 +116,48 @@ def test_update_with_invalid_ingredient_rejected(service: DefaultTeamService) ->
         service.update_member(member.id, valid_input(ingredients=["Large Leek"]))
 
 
+def test_update_changing_species_revalidates_ingredients_against_new_slots(
+    service: DefaultTeamService,
+) -> None:
+    # Fancy Apple es válido para Pikachu pero NO para Squirtle: al cambiar de
+    # especie en el update, los ingredientes se revalidan contra los slots nuevos.
+    member = service.add_member(valid_input(species="Pikachu", ingredients=["Fancy Apple"]))
+    with pytest.raises(ValidationError):
+        service.update_member(
+            member.id, valid_input(species="Squirtle", ingredients=["Fancy Apple"])
+        )
+
+
+def test_update_changing_species_preserves_id_and_accepts_valid_ingredients(
+    service: DefaultTeamService,
+) -> None:
+    member = service.add_member(valid_input(species="Pikachu", ingredients=["Fancy Apple"]))
+    updated = service.update_member(
+        member.id, valid_input(species="Squirtle", ingredients=["Moomoo Milk"])
+    )
+    assert updated.id == member.id  # el id se preserva pese al cambio de especie
+    assert updated.species == "Squirtle"
+    assert [i.value for i in updated.ingredients] == ["Moomoo Milk"]
+
+
+def test_short_species_reports_three_slots_and_rejects_overflow(
+    service: DefaultTeamService,
+) -> None:
+    # Mareep tiene 2 ingredientes pero igual ofrece 3 slots: 3 se aceptan,
+    # 4 disparan el error con el conteo correcto.
+    member = service.add_member(
+        valid_input(species="Mareep", ingredients=["Fiery Herb", "Fancy Egg", "Fancy Egg"])
+    )
+    assert len(member.ingredients) == 3
+    with pytest.raises(ValidationError, match="solo tiene 3 slots"):
+        service.add_member(
+            valid_input(
+                species="Mareep",
+                ingredients=["Fiery Herb", "Fancy Egg", "Fancy Egg", "Fancy Egg"],
+            )
+        )
+
+
 def test_distributions_empty_team(service: DefaultTeamService) -> None:
     dist = service.distributions()
     assert dist.natures == {}
