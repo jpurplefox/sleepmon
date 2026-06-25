@@ -42,6 +42,29 @@ body {
   font-size: 0.9rem;
 }
 
+/* Tooltip simple (CSS) para íconos con data-tooltip. */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.72rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  z-index: 100;
+}
+
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -150,6 +173,167 @@ select:focus {
 .btn--ghost:hover {
   color: #f87171;
   border-color: #f87171;
+}
+
+/* Sub skill selector */
+.subskill-select {
+  position: relative;
+  width: 100%;
+}
+
+.subskill-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.45rem 0.6rem;
+  cursor: pointer;
+}
+
+.subskill-trigger:hover {
+  border-color: var(--primary);
+}
+
+.subskill-slots {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.subskill-trigger__hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Ícono con marco coloreado por tier + badge de nivel. Reusado en trigger y opciones. */
+.ss-icon {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 2px solid var(--tier, var(--border));
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.ss-icon img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.ss-icon--gold {
+  --tier: #f59e0b;
+}
+
+.ss-icon--blue {
+  --tier: #60a5fa;
+}
+
+.ss-icon--regular {
+  --tier: #cbd5e1;
+}
+
+.ss-icon--empty {
+  --tier: var(--border);
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+.ss-icon.is-locked {
+  filter: brightness(0.45);
+}
+
+.ss-icon__lv {
+  position: absolute;
+  bottom: -7px;
+  right: -7px;
+  min-width: 16px;
+  text-align: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.6rem;
+  line-height: 1.4;
+  padding: 0 3px;
+  color: var(--muted);
+}
+
+.subskill-dropdown {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.45);
+  padding: 0.6rem;
+  max-height: 340px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.subskill-group__title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+  font-weight: 700;
+}
+
+.subskill-group__items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.35rem;
+}
+
+.subskill-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.3rem 0.45rem;
+  color: var(--text);
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.subskill-option .ss-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.subskill-option .ss-icon img {
+  width: 20px;
+  height: 20px;
+}
+
+.subskill-option:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+
+.subskill-option--selected {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.subskill-option:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 /* Sprite */
@@ -556,6 +740,17 @@ select:focus {
 .ingredient-row__icon--locked {
   filter: brightness(0.4);
   opacity: 0.7;
+}
+
+/* Sub skills en la card: marco coloreado por tier (mismo ss-icon que el selector). */
+.ingredient-row .ss-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.ingredient-row .ss-icon img {
+  width: 22px;
+  height: 22px;
 }
 
 .member-card__head h3 {

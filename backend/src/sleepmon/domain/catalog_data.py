@@ -77,8 +77,6 @@ SUB_SKILL_TIERS: dict[SubSkill, SubSkillTier] = {
     SubSkill.SLEEP_EXP_BONUS: SubSkillTier.GOLD,
     SubSkill.SKILL_LEVEL_UP_M: SubSkillTier.GOLD,
     SubSkill.RESEARCH_EXP_BONUS: SubSkillTier.GOLD,
-    SubSkill.INVENTORY_UP_M: SubSkillTier.GOLD,
-    SubSkill.INVENTORY_UP_L: SubSkillTier.GOLD,
     SubSkill.HELPING_BONUS: SubSkillTier.GOLD,
     SubSkill.ENERGY_RECOVERY_BONUS: SubSkillTier.GOLD,
     SubSkill.DREAM_SHARD_BONUS: SubSkillTier.GOLD,
@@ -88,6 +86,8 @@ SUB_SKILL_TIERS: dict[SubSkill, SubSkillTier] = {
     SubSkill.SKILL_LEVEL_UP_S: SubSkillTier.BLUE,
     SubSkill.INGREDIENT_FINDER_M: SubSkillTier.BLUE,
     SubSkill.HELPING_SPEED_M: SubSkillTier.BLUE,
+    SubSkill.INVENTORY_UP_M: SubSkillTier.BLUE,
+    SubSkill.INVENTORY_UP_L: SubSkillTier.BLUE,
     # Regular
     SubSkill.SKILL_TRIGGER_S: SubSkillTier.REGULAR,
     SubSkill.INVENTORY_UP_S: SubSkillTier.REGULAR,

@@ -1,16 +1,20 @@
-import { INGREDIENT_UNLOCK_LEVELS } from "../constants";
+import { INGREDIENT_UNLOCK_LEVELS, SUB_SKILL_UNLOCK_LEVELS } from "../constants";
 import { ingredientIcon } from "../ingredients";
 import { spriteUrl } from "../sprites";
+import { subSkillIcon } from "../subskills";
 import type { Member, Nature } from "../types";
+
+const TIER_CLASS: Record<string, string> = { Gold: "gold", Blue: "blue", Regular: "regular" };
 
 interface Props {
   member: Member;
   nature?: Nature;
   dex?: number;
+  subSkillTiers?: Record<string, string>;
   onDelete: (id: string) => void;
 }
 
-export function MemberCard({ member, nature, dex, onDelete }: Props) {
+export function MemberCard({ member, nature, dex, subSkillTiers, onDelete }: Props) {
   return (
     <article className="card member-card">
       <header className="member-card__head">
@@ -62,13 +66,22 @@ export function MemberCard({ member, nature, dex, onDelete }: Props) {
         </div>
         <div>
           <dt>Sub skills</dt>
-          <dd className="chips">
+          <dd className="ingredient-row">
             {member.sub_skills.length === 0 && <span className="muted">—</span>}
-            {member.sub_skills.map((s, idx) => (
-              <span className="chip chip--subskill" key={`${s}-${idx}`}>
-                {s}
-              </span>
-            ))}
+            {member.sub_skills.map((s, idx) => {
+              const unlock = SUB_SKILL_UNLOCK_LEVELS[idx] ?? 999;
+              const locked = member.level < unlock;
+              const tier = TIER_CLASS[subSkillTiers?.[s] ?? "Regular"];
+              return (
+                <span
+                  key={`${s}-${idx}`}
+                  className={`ss-icon ss-icon--${tier}` + (locked ? " is-locked" : "")}
+                  data-tooltip={locked ? `${s} (se desbloquea a nivel ${unlock})` : s}
+                >
+                  <img src={subSkillIcon(s)} alt={s} loading="lazy" />
+                </span>
+              );
+            })}
           </dd>
         </div>
       </dl>
