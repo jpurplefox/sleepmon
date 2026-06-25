@@ -1,18 +1,30 @@
 import { useEffect, useRef, useState } from "react";
 
+import { SUB_SKILL_UNLOCK_LEVELS } from "../constants";
 import { subSkillIcon } from "../subskills";
 import type { SubSkill } from "../types";
 
-const TIER_ORDER = ["Gold", "Blue", "Regular"] as const;
 const MAX_SUB_SKILLS = 5;
+
+// Grupos por familia, en el orden pedido. "Otros" = los que no tienen variantes S/M/L.
+const FAMILIES = [
+  { title: "Helping Speed", prefix: "Helping Speed " },
+  { title: "Inventario", prefix: "Inventory Up " },
+  { title: "Skill Level Up", prefix: "Skill Level Up " },
+  { title: "Ingrediente", prefix: "Ingredient Finder " },
+  { title: "Skill Trigger", prefix: "Skill Trigger " },
+];
+
+const TIER_CLASS: Record<string, string> = { Gold: "gold", Blue: "blue", Regular: "regular" };
 
 interface Props {
   subSkills: SubSkill[];
   value: string[];
+  level: number;
   onChange: (next: string[]) => void;
 }
 
-export function SubSkillSelect({ subSkills, value, onChange }: Props) {
+export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -32,14 +44,24 @@ export function SubSkillSelect({ subSkills, value, onChange }: Props) {
     };
   }, [open]);
 
+  const tierOf = (name: string) => subSkills.find((s) => s.name === name)?.tier ?? "Regular";
+
   // Primer click: al primer slot libre (append). Re-click: limpia ese slot.
   const toggle = (name: string) => {
-    if (value.includes(name)) {
-      onChange(value.filter((s) => s !== name));
-    } else if (value.length < MAX_SUB_SKILLS) {
-      onChange([...value, name]);
-    }
+    if (value.includes(name)) onChange(value.filter((s) => s !== name));
+    else if (value.length < MAX_SUB_SKILLS) onChange([...value, name]);
   };
+
+  const used = new Set<string>();
+  const familyGroups = FAMILIES.map((f) => {
+    const items = subSkills.filter((s) => s.name.startsWith(f.prefix));
+    items.forEach((s) => used.add(s.name));
+    return { title: f.title, items };
+  });
+  const groups = [
+    { title: "Otros", items: subSkills.filter((s) => !used.has(s.name)) },
+    ...familyGroups,
+  ];
 
   return (
     <div className="subskill-select" ref={ref}>
@@ -53,15 +75,17 @@ export function SubSkillSelect({ subSkills, value, onChange }: Props) {
         <div className="subskill-slots">
           {Array.from({ length: MAX_SUB_SKILLS }, (_, i) => {
             const name = value[i];
+            const unlock = SUB_SKILL_UNLOCK_LEVELS[i];
+            const locked = level < unlock;
+            const tier = name ? TIER_CLASS[tierOf(name)] : "empty";
             return (
               <span
                 key={i}
-                className={"subskill-slot" + (name ? "" : " subskill-slot--empty")}
-                title={name ?? "Vacío"}
+                className={`ss-icon ss-icon--${tier}` + (locked ? " is-locked" : "")}
+                title={name ?? `Slot de nivel ${unlock}`}
               >
-                {name && (
-                  <img className="subskill-slot__icon" src={subSkillIcon(name)} alt={name} />
-                )}
+                {name && <img src={subSkillIcon(name)} alt={name} />}
+                <span className="ss-icon__lv">{unlock}</span>
               </span>
             );
           })}
@@ -71,15 +95,14 @@ export function SubSkillSelect({ subSkills, value, onChange }: Props) {
 
       {open && (
         <div className="subskill-dropdown" role="dialog" aria-label="Elegir sub skills">
-          {TIER_ORDER.map((tier) => {
-            const items = subSkills.filter((s) => s.tier === tier);
-            if (items.length === 0) return null;
-            return (
-              <div key={tier} className={`subskill-group subskill-group--${tier.toLowerCase()}`}>
-                <div className="subskill-group__title">{tier}</div>
+          {groups.map((g) =>
+            g.items.length === 0 ? null : (
+              <div key={g.title} className="subskill-group">
+                <div className="subskill-group__title">{g.title}</div>
                 <div className="subskill-group__items">
-                  {items.map((s) => {
-                    const selected = value.includes(s.name);
+                  {g.items.map((s) => {
+                    const idx = value.indexOf(s.name);
+                    const selected = idx !== -1;
                     const disabled = !selected && value.length >= MAX_SUB_SKILLS;
                     return (
                       <button
@@ -92,15 +115,20 @@ export function SubSkillSelect({ subSkills, value, onChange }: Props) {
                         disabled={disabled}
                         aria-pressed={selected}
                       >
-                        <img className="subskill-option__icon" src={subSkillIcon(s.name)} alt="" />
+                        <span className={`ss-icon ss-icon--${TIER_CLASS[s.tier]}`}>
+                          <img src={subSkillIcon(s.name)} alt="" />
+                          {selected && (
+                            <span className="ss-icon__lv">{SUB_SKILL_UNLOCK_LEVELS[idx]}</span>
+                          )}
+                        </span>
                         <span>{s.name}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
-            );
-          })}
+            ),
+          )}
         </div>
       )}
     </div>

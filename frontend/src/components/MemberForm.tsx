@@ -90,6 +90,7 @@ export function MemberForm({ catalog, onSubmit, pending, error }: Props) {
         <SubSkillSelect
           subSkills={catalog.sub_skills}
           value={subSkills}
+          level={level}
           onChange={setSubSkills}
         />
       </fieldset>

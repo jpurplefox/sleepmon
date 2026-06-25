@@ -177,28 +177,7 @@ select:focus {
 
 .subskill-slots {
   display: flex;
-  gap: 0.35rem;
-}
-
-.subskill-slot {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  display: grid;
-  place-items: center;
-}
-
-.subskill-slot--empty {
-  border-style: dashed;
-  opacity: 0.6;
-}
-
-.subskill-slot__icon {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
+  gap: 0.5rem;
 }
 
 .subskill-trigger__hint {
@@ -207,60 +186,99 @@ select:focus {
   white-space: nowrap;
 }
 
+/* Ícono con marco coloreado por tier + badge de nivel. Reusado en trigger y opciones. */
+.ss-icon {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 2px solid var(--tier, var(--border));
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.ss-icon img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.ss-icon--gold {
+  --tier: #f59e0b;
+}
+
+.ss-icon--blue {
+  --tier: #60a5fa;
+}
+
+.ss-icon--regular {
+  --tier: #cbd5e1;
+}
+
+.ss-icon--empty {
+  --tier: var(--border);
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+.ss-icon.is-locked {
+  filter: brightness(0.45);
+}
+
+.ss-icon__lv {
+  position: absolute;
+  bottom: -7px;
+  right: -7px;
+  min-width: 16px;
+  text-align: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.6rem;
+  line-height: 1.4;
+  padding: 0 3px;
+  color: var(--muted);
+}
+
 .subskill-dropdown {
   position: absolute;
-  top: calc(100% + 4px);
+  bottom: calc(100% + 6px);
   left: 0;
   right: 0;
   z-index: 30;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
-  padding: 0.5rem;
-  max-height: 320px;
+  box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.45);
+  padding: 0.6rem;
+  max-height: 340px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-}
-
-.subskill-group {
-  border-left: 3px solid var(--tier, var(--border));
-  padding-left: 0.5rem;
-}
-
-.subskill-group--gold {
-  --tier: #f59e0b;
-}
-
-.subskill-group--blue {
-  --tier: #60a5fa;
-}
-
-.subskill-group--regular {
-  --tier: #94a3b8;
+  gap: 0.7rem;
 }
 
 .subskill-group__title {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--tier, var(--muted));
-  margin-bottom: 0.35rem;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
   font-weight: 700;
 }
 
 .subskill-group__items {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 0.3rem;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.35rem;
 }
 
 .subskill-option {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -271,25 +289,28 @@ select:focus {
   text-align: left;
 }
 
+.subskill-option .ss-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.subskill-option .ss-icon img {
+  width: 20px;
+  height: 20px;
+}
+
 .subskill-option:hover:not(:disabled) {
-  border-color: var(--tier, var(--primary));
+  border-color: var(--primary);
 }
 
 .subskill-option--selected {
-  border-color: var(--tier, var(--primary));
-  box-shadow: inset 0 0 0 1px var(--tier, var(--primary));
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
 }
 
 .subskill-option:disabled {
   opacity: 0.4;
   cursor: default;
-}
-
-.subskill-option__icon {
-  width: 22px;
-  height: 22px;
-  object-fit: contain;
-  flex-shrink: 0;
 }
 
 /* Sprite */
