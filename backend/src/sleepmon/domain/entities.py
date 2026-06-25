@@ -5,13 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 
-from .catalog_data import (
-    MAX_LEVEL,
-    max_ingredient_slots,
-    max_sub_skill_slots,
-)
-from .errors import ValidationError
-from .value_objects import Ingredient, Nature, SubSkill
+from sleepmon.domain.catalog_data import MAX_LEVEL, max_ingredient_slots, max_sub_skill_slots
+from sleepmon.domain.errors import ValidationError
+from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
 
 
 @dataclass(frozen=True, slots=True)

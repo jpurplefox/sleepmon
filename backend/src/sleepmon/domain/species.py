@@ -14,7 +14,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from .value_objects import Berry, Ingredient, SleepType, Specialty
+from sleepmon.domain.value_objects import Berry, Ingredient, SleepType, Specialty
 
 I = Ingredient  # noqa: E741 — alias local para que el dataset se lea compacto
 

@@ -9,13 +9,7 @@ from litestar.di import NamedDependency
 from litestar.params import FromPath
 from litestar.status_codes import HTTP_201_CREATED
 
-from ....application.dto import TeamMemberInput
-from ....application.services import TeamService
-from ....domain.catalog_data import NATURE_EFFECTS, SUB_SKILL_TIERS
-from ....domain.entities import TeamMember
-from ....domain.ports import SpeciesCatalog
-from ....domain.value_objects import Ingredient, Nature, SubSkill
-from .schemas import (
+from sleepmon.adapters.inbound.http.schemas import (
     CatalogOut,
     DistributionsOut,
     MemberIn,
@@ -24,6 +18,12 @@ from .schemas import (
     SpeciesOut,
     SubSkillOut,
 )
+from sleepmon.application.dto import TeamMemberInput
+from sleepmon.application.services import TeamService
+from sleepmon.domain.catalog_data import NATURE_EFFECTS, SUB_SKILL_TIERS
+from sleepmon.domain.entities import TeamMember
+from sleepmon.domain.ports import SpeciesCatalog
+from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
 
 
 def _to_out(member: TeamMember) -> MemberOut:
