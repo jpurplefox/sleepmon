@@ -5,10 +5,12 @@ import { api } from "../api/client";
 import { DistributionChart } from "../components/DistributionChart";
 import { MemberCard } from "../components/MemberCard";
 import { MemberForm } from "../components/MemberForm";
+import { Modal } from "../components/Modal";
 import type { MemberInput } from "../types";
 
 export function Team() {
   const qc = useQueryClient();
+  const [formOpen, setFormOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
@@ -27,6 +29,7 @@ export function Team() {
     mutationFn: (data: MemberInput) => api.createMember(data),
     onSuccess: () => {
       setFormError(null);
+      setFormOpen(false);
       invalidate();
     },
     onError: (err: Error) => setFormError(err.message),
@@ -37,6 +40,11 @@ export function Team() {
     onSuccess: invalidate,
   });
 
+  const openForm = () => {
+    setFormError(null);
+    setFormOpen(true);
+  };
+
   const natureByName = new Map((catalog.data?.natures ?? []).map((n) => [n.name, n]));
 
   if (catalog.isLoading) return <p className="muted">Cargando catálogo…</p>;
@@ -46,45 +54,40 @@ export function Team() {
   return (
     <div className="layout">
       <header className="hero">
-        <h1>🌙 Mi equipo de Pokémon Sleep</h1>
+        <h1>🌙 Mi caja de Pokémon Sleep</h1>
         <p className="muted">
           Registrá tus Pokémon con su naturaleza, sub skills e ingredientes, y mirá la
-          distribución de todo el equipo.
+          distribución de toda la caja.
         </p>
       </header>
 
-      <div className="grid">
-        <div className="col">
-          <MemberForm
-            catalog={catalog.data}
-            onSubmit={(data) => create.mutate(data)}
-            pending={create.isPending}
-            error={formError}
-          />
+      <section>
+        <div className="section-head">
+          <h2>Caja {members.data ? `(${members.data.length})` : ""}</h2>
+          <button className="btn btn--primary" onClick={openForm}>
+            + Agregar Pokémon
+          </button>
         </div>
 
-        <div className="col">
-          <h2>
-            Equipo {members.data ? `(${members.data.length})` : ""}
-          </h2>
-          {members.isLoading && <p className="muted">Cargando equipo…</p>}
-          {members.data?.length === 0 && <p className="muted">Todavía no agregaste Pokémon.</p>}
-          <div className="members">
-            {members.data?.map((m) => (
-              <MemberCard
-                key={m.id}
-                member={m}
-                nature={natureByName.get(m.nature)}
-                onDelete={(id) => remove.mutate(id)}
-              />
-            ))}
-          </div>
+        {members.isLoading && <p className="muted">Cargando caja…</p>}
+        {members.data?.length === 0 && (
+          <p className="muted">La caja está vacía. Agregá tu primer Pokémon.</p>
+        )}
+        <div className="members">
+          {members.data?.map((m) => (
+            <MemberCard
+              key={m.id}
+              member={m}
+              nature={natureByName.get(m.nature)}
+              onDelete={(id) => remove.mutate(id)}
+            />
+          ))}
         </div>
-      </div>
+      </section>
 
       {distributions.data && (
         <section className="distributions">
-          <h2>Distribución del equipo</h2>
+          <h2>Distribución de la caja</h2>
           <div className="grid grid--3">
             <DistributionChart
               title="Ingredientes"
@@ -103,6 +106,17 @@ export function Team() {
             />
           </div>
         </section>
+      )}
+
+      {formOpen && (
+        <Modal title="Agregar Pokémon" onClose={() => setFormOpen(false)}>
+          <MemberForm
+            catalog={catalog.data}
+            onSubmit={(data) => create.mutate(data)}
+            pending={create.isPending}
+            error={formError}
+          />
+        </Modal>
       )}
     </div>
   );
