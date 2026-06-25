@@ -11,17 +11,18 @@ Son datos del *juego*, estables, parte del núcleo del dominio.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Final
 
 from sleepmon.domain.value_objects import Nature, NatureStat, SubSkill, SubSkillTier
 
 # Niveles en los que se desbloquean los slots. Actualizado en el último parche:
 # las sub skills pasaron a 10/25/50/70/80.
-SUB_SKILL_UNLOCK_LEVELS: tuple[int, ...] = (10, 25, 50, 70, 80)
-INGREDIENT_UNLOCK_LEVELS: tuple[int, ...] = (1, 30, 60)
+SUB_SKILL_UNLOCK_LEVELS: Final[tuple[int, ...]] = (10, 25, 50, 70, 80)
+INGREDIENT_UNLOCK_LEVELS: Final[tuple[int, ...]] = (1, 30, 60)
 
-MAX_SUB_SKILLS = len(SUB_SKILL_UNLOCK_LEVELS)
-MAX_INGREDIENTS = len(INGREDIENT_UNLOCK_LEVELS)
-MAX_LEVEL = 100
+MAX_SUB_SKILLS: Final[int] = len(SUB_SKILL_UNLOCK_LEVELS)
+MAX_INGREDIENTS: Final[int] = len(INGREDIENT_UNLOCK_LEVELS)
+MAX_LEVEL: Final[int] = 100
 
 
 @dataclass(frozen=True, slots=True)

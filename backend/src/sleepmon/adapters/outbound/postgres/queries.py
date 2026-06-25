@@ -36,9 +36,11 @@ SELECT_MEMBER_BY_ID = (
     Query.from_(member).select(*_MEMBER_COLS).where(member.id == _P).get_sql()
 )
 
+# El valor (sub_skill / ingredient) se aliasea a ``value`` para que ambas tablas
+# de hijos compartan la misma forma de fila tipada en el repositorio.
 SELECT_SUBSKILLS_ALL = (
     Query.from_(subskill)
-    .select(subskill.member_id, subskill.slot, subskill.sub_skill)
+    .select(subskill.member_id, subskill.slot, subskill.sub_skill.as_("value"))
     .orderby(subskill.member_id)
     .orderby(subskill.slot)
     .get_sql()
@@ -46,7 +48,7 @@ SELECT_SUBSKILLS_ALL = (
 
 SELECT_SUBSKILLS_BY_MEMBER = (
     Query.from_(subskill)
-    .select(subskill.slot, subskill.sub_skill)
+    .select(subskill.slot, subskill.sub_skill.as_("value"))
     .where(subskill.member_id == _P)
     .orderby(subskill.slot)
     .get_sql()
@@ -54,7 +56,7 @@ SELECT_SUBSKILLS_BY_MEMBER = (
 
 SELECT_INGREDIENTS_ALL = (
     Query.from_(ingredient)
-    .select(ingredient.member_id, ingredient.slot, ingredient.ingredient)
+    .select(ingredient.member_id, ingredient.slot, ingredient.ingredient.as_("value"))
     .orderby(ingredient.member_id)
     .orderby(ingredient.slot)
     .get_sql()
@@ -62,7 +64,7 @@ SELECT_INGREDIENTS_ALL = (
 
 SELECT_INGREDIENTS_BY_MEMBER = (
     Query.from_(ingredient)
-    .select(ingredient.slot, ingredient.ingredient)
+    .select(ingredient.slot, ingredient.ingredient.as_("value"))
     .where(ingredient.member_id == _P)
     .orderby(ingredient.slot)
     .get_sql()

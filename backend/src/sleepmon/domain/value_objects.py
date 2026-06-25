@@ -81,8 +81,6 @@ class SubSkill(StrEnum):
     SLEEP_EXP_BONUS = "Sleep EXP Bonus"
     SKILL_LEVEL_UP_M = "Skill Level Up M"
     RESEARCH_EXP_BONUS = "Research EXP Bonus"
-    INVENTORY_UP_M = "Inventory Up M"
-    INVENTORY_UP_L = "Inventory Up L"
     HELPING_BONUS = "Helping Bonus"
     ENERGY_RECOVERY_BONUS = "Energy Recovery Bonus"
     DREAM_SHARD_BONUS = "Dream Shard Bonus"
@@ -92,6 +90,8 @@ class SubSkill(StrEnum):
     SKILL_LEVEL_UP_S = "Skill Level Up S"
     INGREDIENT_FINDER_M = "Ingredient Finder M"
     HELPING_SPEED_M = "Helping Speed M"
+    INVENTORY_UP_M = "Inventory Up M"
+    INVENTORY_UP_L = "Inventory Up L"
     # Regular
     SKILL_TRIGGER_S = "Skill Trigger S"
     INVENTORY_UP_S = "Inventory Up S"
