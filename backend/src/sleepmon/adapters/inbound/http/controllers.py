@@ -115,7 +115,7 @@ class CatalogController(Controller):
                     sleep_type=sp.sleep_type.value,
                     main_skill=sp.main_skill,
                     ingredient_slots=[
-                        sorted(ing.value for ing in slot) for slot in sp.ingredient_slots
+                        [ing.value for ing in slot] for slot in sp.ingredient_slots
                     ],
                 )
                 for sp in catalog.all()

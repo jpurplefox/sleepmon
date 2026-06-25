@@ -108,7 +108,7 @@ class DefaultTeamService(TeamService):
                     f"{species.name} solo tiene {slot_count} slots de ingrediente."
                 )
             if not species.allows_ingredient(slot, ingredient):
-                allowed = ", ".join(sorted(i.value for i in species.ingredient_slots[slot]))
+                allowed = ", ".join(i.value for i in species.ingredient_slots[slot])
                 raise ValidationError(
                     f"{ingredient.value} no es válido para {species.name} en el slot "
                     f"{slot + 1}. Válidos: {allowed}."
