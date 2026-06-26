@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRef, useState } from "react";
 
 import { api } from "../api/client";
 import { MemberForm } from "../components/MemberForm";
@@ -8,36 +8,73 @@ import { ProductionCard } from "../components/ProductionCard";
 import { spriteUrl } from "../sprites";
 import type { Member, MemberInput } from "../types";
 
+// Tope de la comparación: el máximo del equipo en el juego.
+const MAX_COMPARE = 5;
+
+// Una card de comparación, con el origen opcional en la Caja (sourceId) y el
+// estado efímero del guardado, así el feedback sigue a la card aunque se quiten
+// otras.
+type SaveStatus = { state: "idle" | "saving" | "saved" | "error"; error?: string | null };
+
+type CompareEntry = {
+  uid: number; // id local estable para seguir la card aunque se reordenen otras
+  config: MemberInput;
+  sourceId?: string;
+  save?: SaveStatus;
+};
+
 export function Production() {
+  const qc = useQueryClient();
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
   const members = useQuery({ queryKey: ["members"], queryFn: api.listMembers });
 
-  const [configs, setConfigs] = useState<MemberInput[]>([]);
+  const [entries, setEntries] = useState<CompareEntry[]>([]);
   const [modal, setModal] = useState<"form" | "box" | null>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
+  const nextUid = useRef(0);
 
   const speciesList = catalog.data?.species ?? [];
 
-  // Inserta (o reemplaza si estábamos editando) y cierra el modal.
+  const atMax = entries.length >= MAX_COMPARE;
+
+  const makeEntry = (config: MemberInput, sourceId?: string): CompareEntry => ({
+    uid: nextUid.current++,
+    config,
+    sourceId,
+  });
+
+  // Inserta una card nueva (sin origen) o reemplaza la config de la que estábamos
+  // editando, manteniendo su sourceId. Cierra el modal.
   const upsert = (config: MemberInput) => {
-    setConfigs((prev) =>
+    setEntries((prev) =>
       editIndex === null
-        ? [...prev, config]
-        : prev.map((c, i) => (i === editIndex ? config : c)),
+        ? prev.length >= MAX_COMPARE
+          ? prev
+          : [...prev, makeEntry(config)]
+        : prev.map((e, i) => (i === editIndex ? { ...e, config } : e)),
     );
     setModal(null);
     setEditIndex(null);
   };
 
+  // Duplica una card como una variante nueva: el clon NO hereda el origen.
+  const cloneAt = (i: number) =>
+    setEntries((prev) =>
+      prev.length >= MAX_COMPARE ? prev : [...prev, makeEntry(prev[i].config)],
+    );
+
   const pickMember = (m: Member) => {
     const slots = speciesList.find((s) => s.name === m.species)?.ingredient_slots ?? [];
-    upsert({
+    const config: MemberInput = {
       species: m.species,
       level: m.level,
       nature: m.nature,
       ingredients: slots.map((opts, i) => m.ingredients[i] ?? opts[0] ?? ""),
       sub_skills: m.sub_skills,
-    });
+    };
+    setEntries((prev) => (prev.length >= MAX_COMPARE ? prev : [...prev, makeEntry(config, m.id)]));
+    setModal(null);
+    setEditIndex(null);
   };
 
   const openAdd = (which: "form" | "box") => {
@@ -48,7 +85,38 @@ export function Production() {
     setEditIndex(i);
     setModal("form");
   };
-  const removeAt = (i: number) => setConfigs((prev) => prev.filter((_, j) => j !== i));
+  const removeAt = (i: number) => setEntries((prev) => prev.filter((_, j) => j !== i));
+
+  // Mutación de guardado a la Caja. Identificamos la card por su uid estable (no
+  // por referencia ni índice), así el feedback sigue a la card correcta aunque el
+  // propio guardado reemplace el objeto del entry o se quiten otras.
+  const setSave = (uid: number, save: SaveStatus, sourceId?: string) =>
+    setEntries((prev) =>
+      prev.map((e) =>
+        e.uid === uid ? { ...e, save, ...(sourceId !== undefined ? { sourceId } : {}) } : e,
+      ),
+    );
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["members"] });
+    qc.invalidateQueries({ queryKey: ["distributions"] });
+  };
+
+  const save = useMutation({
+    mutationFn: (entry: CompareEntry) =>
+      entry.sourceId
+        ? api.updateMember(entry.sourceId, entry.config)
+        : api.createMember(entry.config),
+    onMutate: (entry) => setSave(entry.uid, { state: "saving" }),
+    onSuccess: (member, entry) => {
+      // Una card nueva pasa a estar "en la caja" con el id recién creado.
+      setSave(entry.uid, { state: "saved" }, entry.sourceId ?? member.id);
+      invalidate();
+    },
+    onError: (err: Error, entry) => setSave(entry.uid, { state: "error", error: err.message }),
+  });
+
+  const saveToBox = (i: number) => save.mutate(entries[i]);
 
   if (catalog.isLoading) return <p className="muted">Cargando catálogo…</p>;
   if (catalog.isError || !catalog.data)
@@ -57,36 +125,58 @@ export function Production() {
   return (
     <div className="layout">
       <header className="hero">
-        <h1>Producción diaria</h1>
+        <h1>Comparación</h1>
         <p className="muted">
-          Estimá la producción de un día (15.5h de día + 8.5h de noche) con el bonus de energía
-          máxima. Agregá Pokémon —de tu caja o desde cero— y comparalos lado a lado.
+          Estimá la producción de un día (15.5h despierto + 8.5h de sueño) con el bonus de energía
+          máxima. Agregá Pokémon —de tu caja o nuevos— y comparalos lado a lado.
         </p>
       </header>
 
       <section className="prod-source">
-        <button type="button" className="btn btn--primary" onClick={() => openAdd("form")}>
-          + Desde cero
+        <button
+          type="button"
+          className="btn btn--primary"
+          onClick={() => openAdd("form")}
+          disabled={atMax}
+        >
+          + Nuevo
         </button>
-        <button type="button" className="btn btn--ghost" onClick={() => openAdd("box")}>
-          + Desde la caja
+        <button
+          type="button"
+          className="btn btn--ghost"
+          onClick={() => openAdd("box")}
+          disabled={atMax}
+        >
+          + Caja
         </button>
       </section>
 
-      {configs.length === 0 ? (
+      {atMax && (
+        <p className="muted">
+          Ya hay 5 Pokémon: es el máximo del equipo en el juego. Quitá uno para agregar otro.
+        </p>
+      )}
+
+      {entries.length === 0 ? (
         <p className="muted">
           Usá los botones de arriba para agregar un Pokémon —desde tu caja o configurando uno
           nuevo— y comparar su producción lado a lado.
         </p>
       ) : (
         <div className="prod-cards">
-          {configs.map((config, i) => (
+          {entries.map((e, i) => (
             <ProductionCard
-              key={i}
-              config={config}
+              key={e.uid}
+              config={e.config}
               catalog={catalog.data}
               onEdit={() => openEdit(i)}
+              onClone={() => cloneAt(i)}
               onRemove={() => removeAt(i)}
+              onSaveToBox={() => saveToBox(i)}
+              cloneDisabled={atMax}
+              inBox={e.sourceId !== undefined}
+              saveState={e.save?.state ?? "idle"}
+              saveError={e.save?.error ?? null}
             />
           ))}
         </div>
@@ -105,8 +195,7 @@ export function Production() {
             pending={false}
             error={null}
             submitLabel={editIndex !== null ? "Guardar" : "Agregar a la comparación"}
-            initial={editIndex !== null ? configs[editIndex] : undefined}
-            natureOptional
+            initial={editIndex !== null ? entries[editIndex].config : undefined}
             onSubmit={upsert}
             footer={
               editIndex === null ? (

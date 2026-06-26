@@ -4,7 +4,7 @@ from sleepmon.domain.value_objects import Ingredient, Nature, NatureStat, SubSki
 
 
 def member(
-    nature: Nature, ingredients: tuple[Ingredient, ...], subs: tuple[SubSkill, ...]
+    nature: Nature | None, ingredients: tuple[Ingredient, ...], subs: tuple[SubSkill, ...]
 ) -> TeamMember:
     return TeamMember(
         species="Pikachu",
@@ -56,6 +56,29 @@ def test_nature_distribution_counts_members() -> None:
     dist = analytics.nature_distribution(team)
     assert dist[Nature.ADAMANT] == 2
     assert dist[Nature.BOLD] == 1
+
+
+def test_nature_distribution_ignores_members_without_nature() -> None:
+    # Los miembros sin naturaleza (None) no se cuentan en la distribución.
+    team = [
+        member(Nature.ADAMANT, (Ingredient.FANCY_APPLE,), ()),
+        member(None, (Ingredient.FANCY_APPLE,), ()),
+        member(None, (Ingredient.FANCY_APPLE,), ()),
+    ]
+    dist = analytics.nature_distribution(team)
+    assert dist == {Nature.ADAMANT: 1}
+
+
+def test_nature_stat_balance_ignores_members_without_nature() -> None:
+    # Un miembro sin naturaleza no aporta nada al balance.
+    team = [
+        member(Nature.ADAMANT, (Ingredient.FANCY_APPLE,), ()),
+        member(None, (Ingredient.FANCY_APPLE,), ()),
+    ]
+    balance = analytics.nature_stat_balance(team)
+    # Solo Adamant cuenta: +Speed of Help, -Ingredient Finding.
+    assert balance[NatureStat.SPEED_OF_HELP] == 1
+    assert balance[NatureStat.INGREDIENT_FINDING] == -1
 
 
 def test_nature_stat_balance_nets_up_and_down() -> None:

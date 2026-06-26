@@ -34,7 +34,7 @@ def _to_out(member: TeamMember) -> MemberOut:
         id=str(member.id),
         species=member.species,
         level=member.level,
-        nature=member.nature.value,
+        nature=member.nature.value if member.nature else "",
         ingredients=[i.value for i in member.ingredients],
         sub_skills=[s.value for s in member.sub_skills],
     )

@@ -10,8 +10,8 @@ class MemberIn(msgspec.Struct, forbid_unknown_fields=True):
 
     species: str
     level: int
-    nature: str
     ingredients: list[str]
+    nature: str = ""  # vacío = sin naturaleza
     sub_skills: list[str] = []
 
 

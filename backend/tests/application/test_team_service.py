@@ -52,6 +52,14 @@ def test_invalid_nature_rejected(service: DefaultTeamService) -> None:
         service.add_member(valid_input(nature="Sleepy"))
 
 
+def test_add_member_without_nature(service: DefaultTeamService) -> None:
+    # naturaleza opcional: nature="" se traduce a None ("sin naturaleza").
+    member = service.add_member(valid_input(nature=""))
+    assert member.nature is None
+    # No aporta a la distribución de naturalezas.
+    assert service.distributions().natures == {}
+
+
 def test_invalid_ingredient_value_rejected(service: DefaultTeamService) -> None:
     with pytest.raises(ValidationError):
         service.add_member(valid_input(ingredients=["Pizza"]))

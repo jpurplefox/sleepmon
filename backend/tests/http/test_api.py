@@ -57,6 +57,30 @@ def test_create_and_list_member(client: TestClient) -> None:
     assert listing[0]["id"] == created["id"]
 
 
+def test_create_member_without_nature(client: TestClient) -> None:
+    # naturaleza opcional: nature="" = "sin naturaleza".
+    res = client.post("/team", json=valid_payload(nature=""))
+    assert res.status_code == 201
+    created = res.json()
+    assert created["nature"] == ""
+
+    listing = client.get("/team").json()
+    assert listing[0]["nature"] == ""
+
+    # No aparece en la distribución de naturalezas.
+    dist = client.get("/team/distributions").json()
+    assert dist["natures"] == {}
+
+
+def test_create_member_nature_omitted_defaults_to_empty(client: TestClient) -> None:
+    # El campo nature es opcional en el payload (default vacío).
+    payload = valid_payload()
+    del payload["nature"]
+    res = client.post("/team", json=payload)
+    assert res.status_code == 201
+    assert res.json()["nature"] == ""
+
+
 def test_distributions_endpoint(client: TestClient) -> None:
     client.post("/team", json=valid_payload())
     dist = client.get("/team/distributions").json()

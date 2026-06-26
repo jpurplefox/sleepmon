@@ -15,6 +15,7 @@ import {
   IconHourglass,
   IconMoon,
   IconPackage,
+  IconSaveBox,
   IconSparkle,
 } from "./icons";
 
@@ -34,10 +35,27 @@ interface Props {
   config: MemberInput;
   catalog: Catalog;
   onEdit: () => void;
+  onClone: () => void;
   onRemove: () => void;
+  onSaveToBox: () => void;
+  cloneDisabled?: boolean;
+  inBox?: boolean;
+  saveState?: "idle" | "saving" | "saved" | "error";
+  saveError?: string | null;
 }
 
-export function ProductionCard({ config, catalog, onEdit, onRemove }: Props) {
+export function ProductionCard({
+  config,
+  catalog,
+  onEdit,
+  onClone,
+  onRemove,
+  onSaveToBox,
+  cloneDisabled,
+  inBox,
+  saveState = "idle",
+  saveError,
+}: Props) {
   const species = catalog.species.find((s) => s.name === config.species);
   const nature = catalog.natures.find((n) => n.name === config.nature);
   const tierClass = (name: string) =>
@@ -81,6 +99,29 @@ export function ProductionCard({ config, catalog, onEdit, onRemove }: Props) {
                 <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
               </svg>
             </button>
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={onClone}
+              disabled={cloneDisabled}
+              title={cloneDisabled ? "Máximo 5 en la comparación" : "Clonar"}
+              aria-label="Clonar"
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <rect x="8" y="8" width="14" height="14" rx="2" ry="2" />
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={onSaveToBox}
+              disabled={saveState === "saving"}
+              title={inBox ? "Guardar cambios en la caja" : "Guardar en la caja"}
+              aria-label={inBox ? "Guardar cambios en la caja" : "Guardar en la caja"}
+            >
+              <IconSaveBox />
+            </button>
             <button type="button" className="icon-btn" onClick={onRemove} title="Quitar" aria-label="Quitar">
               ×
             </button>
@@ -89,6 +130,11 @@ export function ProductionCard({ config, catalog, onEdit, onRemove }: Props) {
         <div className="prod-card__title">
           <strong>{config.species}</strong> <span className="muted">Nv.&nbsp;{config.level}</span>
         </div>
+        {saveState === "saving" && <p className="prod-card__save muted">Guardando…</p>}
+        {saveState === "saved" && <p className="prod-card__save prod-card__save--ok">Guardado ✓</p>}
+        {saveState === "error" && (
+          <p className="prod-card__save error">{saveError ?? "No se pudo guardar."}</p>
+        )}
       </header>
 
       <div className="prod-card__tags">
@@ -206,17 +252,17 @@ export function ProductionCard({ config, catalog, onEdit, onRemove }: Props) {
               <IconMoon className="prod-card__moon" />
               {d.night_skill_chances.length >= 2 ? (
                 <>
-                  <span title="Probabilidad de exactamente 1 activación de noche">
+                  <span title="Probabilidad de exactamente 1 activación al dormir">
                     <span className="muted">1 disparo</span>{" "}
                     {pct((d.night_skill_chances[0] - d.night_skill_chances[1]) * 100)}
                   </span>
-                  <span title="Probabilidad de 2 activaciones de noche (el tope)">
+                  <span title="Probabilidad de 2 activaciones al dormir (el tope)">
                     <span className="muted">2 disparos</span> {pct(d.night_skill_chances[1] * 100)}
                   </span>
                 </>
               ) : (
-                <span title="Probabilidad de disparar la skill de noche">
-                  <span className="muted">skill de noche</span> {pct(d.night_skill_chances[0] * 100)}
+                <span title="Probabilidad de disparar la skill al dormir">
+                  <span className="muted">skill al dormir</span> {pct(d.night_skill_chances[0] * 100)}
                 </span>
               )}
             </div>
