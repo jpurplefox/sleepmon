@@ -15,6 +15,7 @@ import {
   IconHourglass,
   IconMoon,
   IconPackage,
+  IconSaveBox,
   IconSparkle,
 } from "./icons";
 
@@ -36,10 +37,25 @@ interface Props {
   onEdit: () => void;
   onClone: () => void;
   onRemove: () => void;
+  onSaveToBox: () => void;
   cloneDisabled?: boolean;
+  inBox?: boolean;
+  saveState?: "idle" | "saving" | "saved" | "error";
+  saveError?: string | null;
 }
 
-export function ProductionCard({ config, catalog, onEdit, onClone, onRemove, cloneDisabled }: Props) {
+export function ProductionCard({
+  config,
+  catalog,
+  onEdit,
+  onClone,
+  onRemove,
+  onSaveToBox,
+  cloneDisabled,
+  inBox,
+  saveState = "idle",
+  saveError,
+}: Props) {
   const species = catalog.species.find((s) => s.name === config.species);
   const nature = catalog.natures.find((n) => n.name === config.nature);
   const tierClass = (name: string) =>
@@ -96,6 +112,16 @@ export function ProductionCard({ config, catalog, onEdit, onClone, onRemove, clo
                 <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
               </svg>
             </button>
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={onSaveToBox}
+              disabled={saveState === "saving"}
+              title={inBox ? "Guardar cambios en la caja" : "Guardar en la caja"}
+              aria-label={inBox ? "Guardar cambios en la caja" : "Guardar en la caja"}
+            >
+              <IconSaveBox />
+            </button>
             <button type="button" className="icon-btn" onClick={onRemove} title="Quitar" aria-label="Quitar">
               ×
             </button>
@@ -104,6 +130,11 @@ export function ProductionCard({ config, catalog, onEdit, onClone, onRemove, clo
         <div className="prod-card__title">
           <strong>{config.species}</strong> <span className="muted">Nv.&nbsp;{config.level}</span>
         </div>
+        {saveState === "saving" && <p className="prod-card__save muted">Guardando…</p>}
+        {saveState === "saved" && <p className="prod-card__save prod-card__save--ok">Guardado ✓</p>}
+        {saveState === "error" && (
+          <p className="prod-card__save error">{saveError ?? "No se pudo guardar."}</p>
+        )}
       </header>
 
       <div className="prod-card__tags">

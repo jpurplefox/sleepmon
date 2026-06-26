@@ -78,3 +78,14 @@ export function IconMoon(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+// Guardar en la caja (una caja con una flecha que entra hacia adentro).
+export function IconSaveBox(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+      <path d="M12 7v6" />
+      <path d="m9 10 3 3 3-3" />
+    </svg>
+  );
+}

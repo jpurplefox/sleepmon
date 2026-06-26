@@ -1300,6 +1300,16 @@ select:focus {
   flex-shrink: 0;
 }
 
+/* Feedback discreto del guardado a la Caja, bajo el header de la card. */
+.prod-card__save {
+  font-size: var(--text-xs);
+  margin: 0;
+}
+
+.prod-card__save--ok {
+  color: var(--moon);
+}
+
 .icon-btn {
   background: transparent;
   border: none;
