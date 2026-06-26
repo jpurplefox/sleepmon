@@ -70,23 +70,24 @@ export function ProductionCard({ config, catalog, onEdit, onRemove }: Props) {
   return (
     <article className="prod-card">
       <header className="prod-card__head">
-        {species && (
-          <img className="prod-card__sprite" src={spriteUrl(species.dex)} alt="" loading="lazy" />
-        )}
-        <div className="prod-card__title">
-          <strong>{config.species}</strong>
-          <span className="muted">Nv. {config.level}</span>
+        <div className="prod-card__topline">
+          {species && (
+            <img className="prod-card__sprite" src={spriteUrl(species.dex)} alt="" loading="lazy" />
+          )}
+          <div className="prod-card__actions">
+            <button type="button" className="icon-btn" onClick={onEdit} title="Editar" aria-label="Editar">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+              </svg>
+            </button>
+            <button type="button" className="icon-btn" onClick={onRemove} title="Quitar" aria-label="Quitar">
+              ×
+            </button>
+          </div>
         </div>
-        <div className="prod-card__actions">
-          <button type="button" className="icon-btn" onClick={onEdit} title="Editar" aria-label="Editar">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M12 20h9" />
-              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-            </svg>
-          </button>
-          <button type="button" className="icon-btn" onClick={onRemove} title="Quitar" aria-label="Quitar">
-            ×
-          </button>
+        <div className="prod-card__title">
+          <strong>{config.species}</strong> <span className="muted">Nv.&nbsp;{config.level}</span>
         </div>
       </header>
 

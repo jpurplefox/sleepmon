@@ -1257,35 +1257,41 @@ select:focus {
   gap: 0.55rem;
 }
 
+/* Header en dos filas: arriba sprite + acciones; el nombre a todo el ancho
+   debajo, así nunca se trunca ni se parte en una card comparativa angosta. */
 .prod-card__head {
   display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.prod-card__topline {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
 }
 
 .prod-card__sprite {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   image-rendering: pixelated;
+  flex-shrink: 0;
 }
 
 .prod-card__title {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.2;
-  flex: 1;
-  min-width: 0;
+  line-height: 1.3;
 }
 
 .prod-card__title strong {
-  font-size: var(--text-lg);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: var(--text-base);
+  font-weight: 700;
 }
 
+/* "Nv. X" inline al nombre: mismo tamaño secundario, sin heredar el bold. */
 .prod-card__title .muted {
   font-size: var(--text-sm);
+  font-weight: 400;
 }
 
 .prod-card__actions {
