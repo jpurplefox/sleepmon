@@ -206,17 +206,17 @@ export function ProductionCard({ config, catalog, onEdit, onRemove }: Props) {
               <IconMoon className="prod-card__moon" />
               {d.night_skill_chances.length >= 2 ? (
                 <>
-                  <span title="Probabilidad de exactamente 1 activación de noche">
+                  <span title="Probabilidad de exactamente 1 activación al dormir">
                     <span className="muted">1 disparo</span>{" "}
                     {pct((d.night_skill_chances[0] - d.night_skill_chances[1]) * 100)}
                   </span>
-                  <span title="Probabilidad de 2 activaciones de noche (el tope)">
+                  <span title="Probabilidad de 2 activaciones al dormir (el tope)">
                     <span className="muted">2 disparos</span> {pct(d.night_skill_chances[1] * 100)}
                   </span>
                 </>
               ) : (
-                <span title="Probabilidad de disparar la skill de noche">
-                  <span className="muted">skill de noche</span> {pct(d.night_skill_chances[0] * 100)}
+                <span title="Probabilidad de disparar la skill al dormir">
+                  <span className="muted">skill al dormir</span> {pct(d.night_skill_chances[0] * 100)}
                 </span>
               )}
             </div>

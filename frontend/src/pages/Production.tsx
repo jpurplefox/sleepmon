@@ -59,7 +59,7 @@ export function Production() {
       <header className="hero">
         <h1>Comparación</h1>
         <p className="muted">
-          Estimá la producción de un día (15.5h de día + 8.5h de noche) con el bonus de energía
+          Estimá la producción de un día (15.5h despierto + 8.5h de sueño) con el bonus de energía
           máxima. Agregá Pokémon —de tu caja o nuevos— y comparalos lado a lado.
         </p>
       </header>
