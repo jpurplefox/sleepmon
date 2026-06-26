@@ -98,8 +98,11 @@ espaciado: la grilla de 4px es guía mental.
 - **Team**: el badge de nivel (`Nv. XX`) es el único elemento dorado de la card
   (`color: var(--moon)`, `border-color: var(--moon-dim)`). Resalta el dato clave
   de un vistazo.
-- **Production**: el `berry_amount` es el KPI de la comparación → `--text-xl` +
-  `color: var(--moon)`. El resto de números van en `--text-base` / `--text`.
+- **Production**: bayas, ingredientes y skill tienen **igual jerarquía** (tres
+  bloques equivalentes, mismo tamaño de número) — ninguno es "lo principal". Cada
+  dato lleva su **ícono de línea** representativo (reloj, mano, mochila, reloj de
+  arena, destello, luna), sin emojis. La luna del bloque de skill va en `--moon`:
+  el único toque de identidad de la pantalla.
 
 ## Anti-objetivos
 

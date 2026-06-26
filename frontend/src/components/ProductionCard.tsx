@@ -9,6 +9,14 @@ import { statIcon } from "../natures";
 import { spriteUrl } from "../sprites";
 import { subSkillIcon } from "../subskills";
 import type { Catalog, MemberInput } from "../types";
+import {
+  IconClock,
+  IconHelp,
+  IconHourglass,
+  IconMoon,
+  IconPackage,
+  IconSparkle,
+} from "./icons";
 
 const fmt = (n: number) => n.toFixed(2);
 const pct = (n: number) => `${n.toFixed(1)}%`;
@@ -139,27 +147,35 @@ export function ProductionCard({ config, catalog, onEdit, onRemove }: Props) {
       ) : (
         <>
           <div className="prod-card__line">
-            <span title="Frecuencia de ayuda">
-              <span className="muted">cadencia</span> {mmss(d.seconds_per_help)}
+            <span title="Cadencia de ayuda">
+              <IconClock /> {mmss(d.seconds_per_help)}
             </span>
             <span title="Ayudas por día">
-              <span className="muted">ayudas/día</span> {fmt(d.helps_per_day)}
+              <IconHelp /> {fmt(d.helps_per_day)}
             </span>
           </div>
 
           <div className="prod-card__line">
             <span title="Inventario">
-              <span className="muted">inv.</span> {d.inventory}
+              <IconPackage /> {d.inventory}
             </span>
-            <span className="muted">se llena en {hms(d.inventory_fill_hours)}</span>
+            <span title="Se llena en">
+              <IconHourglass /> {hms(d.inventory_fill_hours)}
+            </span>
           </div>
 
-          <div className="prod-card__line prod-card__berry">
-            {species && (
-              <img className="mini-icon" src={berryIcon(species.berry)} alt={d.berry} title={d.berry} />
-            )}
-            <strong>{fmt(d.berry_amount)}</strong>
-            <span className="muted">bayas</span>
+          <div className="prod-card__block">
+            <div className="prod-card__block-head">
+              Bayas <span className="muted">{pct(d.berry_percentage)}</span>
+            </div>
+            <ul className="prod-card__ings">
+              <li>
+                {species && (
+                  <img className="mini-icon" src={berryIcon(species.berry)} alt={d.berry} title={d.berry} />
+                )}
+                <strong>{fmt(d.berry_amount)}</strong>
+              </li>
+            </ul>
           </div>
 
           <div className="prod-card__block">
@@ -181,16 +197,27 @@ export function ProductionCard({ config, catalog, onEdit, onRemove }: Props) {
               Skill <span className="muted">{pct(d.effective_skill_percentage)}</span>
             </div>
             <div className="prod-card__line">
-              <span title="Skill triggers por día">
-                <span className="muted">skill/día</span> {fmt(d.skill_triggers)}
+              <span title="Activaciones de skill por día">
+                <IconSparkle /> {fmt(d.skill_triggers)}
               </span>
             </div>
             <div className="prod-card__night">
-              {d.night_skill_chances.map((c, i) => (
-                <span key={i} className="muted">
-                  noche ≥{i + 1}: {pct(c * 100)}
+              <IconMoon className="prod-card__moon" />
+              {d.night_skill_chances.length >= 2 ? (
+                <>
+                  <span title="Probabilidad de exactamente 1 activación de noche">
+                    <span className="muted">1 disparo</span>{" "}
+                    {pct((d.night_skill_chances[0] - d.night_skill_chances[1]) * 100)}
+                  </span>
+                  <span title="Probabilidad de 2 activaciones de noche (el tope)">
+                    <span className="muted">2 disparos</span> {pct(d.night_skill_chances[1] * 100)}
+                  </span>
+                </>
+              ) : (
+                <span title="Probabilidad de disparar la skill de noche">
+                  <span className="muted">skill de noche</span> {pct(d.night_skill_chances[0] * 100)}
                 </span>
-              ))}
+              )}
             </div>
           </div>
         </>

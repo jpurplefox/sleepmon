@@ -1,0 +1,80 @@
+import type { SVGProps } from "react";
+
+/**
+ * Íconos de línea coherentes (trazo currentColor, mismo estilo que el lápiz de
+ * editar). Resumen cada métrica de la card sin recurrir a emojis. Tamaño por
+ * defecto 14px; se puede sobreescribir vía props.
+ */
+const base = {
+  viewBox: "0 0 24 24",
+  width: 14,
+  height: 14,
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+  "aria-hidden": true,
+};
+
+// Cadencia / frecuencia de ayuda.
+export function IconClock(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
+// Ayudas (la mano que recolecta).
+export function IconHelp(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M11 12h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 14" />
+      <path d="m7 18 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9" />
+      <path d="m2 13 6 6" />
+    </svg>
+  );
+}
+
+// Inventario.
+export function IconPackage(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+      <path d="m3.3 7 8.7 5 8.7-5" />
+      <path d="M12 22V12" />
+    </svg>
+  );
+}
+
+// Tiempo en llenarse el inventario.
+export function IconHourglass(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M5 22h14" />
+      <path d="M5 2h14" />
+      <path d="M17 22v-4.2a2 2 0 0 0-.6-1.4L12 12l-4.4 4.4a2 2 0 0 0-.6 1.4V22" />
+      <path d="M7 2v4.2a2 2 0 0 0 .6 1.4L12 12l4.4-4.4a2 2 0 0 0 .6-1.4V2" />
+    </svg>
+  );
+}
+
+// Skill / activación de la habilidad principal.
+export function IconSparkle(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="m12 3 1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3Z" />
+    </svg>
+  );
+}
+
+// Noche (refuerza la identidad "Luz de luna").
+export function IconMoon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+    </svg>
+  );
+}
