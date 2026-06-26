@@ -9,3 +9,6 @@ código). El norte **visual** transversal está en
   de verdad, más la distribución agregada de la caja.
 - [Comparación](./comparacion.md) — pone varios Pokémon lado a lado y compara su
   producción diaria estimada. Análisis efímero (con guardado a la Caja opcional).
+- [Formulario de Pokémon](./formulario-pokemon.md) — el modal compartido para
+  crear/editar un Pokémon (especie, naturaleza, nivel, ingredientes, sub skills);
+  lo usan la Caja y Comparación.

@@ -17,7 +17,8 @@ en ingredientes / sub skills / naturalezas?"*.
 ## Qué hace (alcance)
 
 - **Listar** los Pokémon guardados, cada uno con su config completa.
-- **Agregar / editar / eliminar** un Pokémon (persistido vía API). El borrado se
+- **Agregar / editar / eliminar** un Pokémon (persistido vía API). El alta y la
+  edición usan el [Formulario de Pokémon](./formulario-pokemon.md). El borrado se
   confirma en dos pasos; la edición es en el lugar.
 - **Distribución de la caja**: gráficos agregados de ingredientes, sub skills y
   naturalezas.
