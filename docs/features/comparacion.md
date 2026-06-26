@@ -34,8 +34,6 @@ Responde a: *"de estas configuraciones, ¿cuál rinde más y por qué?"*.
 
 - Un día = **15.5 h despierto** (atendés al Pokémon: vaciás su inventario, etc.)
   **+ 8.5 h de sueño** (no lo atendés: el inventario se llena y puede desbordar).
-  El período relevante es **el sueño**, no "la noche": lo que importa es que
-  mientras dormís no podés atender al Pokémon.
 - La **skill mientras dormís** tiene **tope de activaciones**: 1 para Pokémon
   no-skill, 2 para los de especialidad Skill. Se comunica como **probabilidad**
   (para los de skill: P(exactamente 1) y P(2)).
@@ -61,20 +59,3 @@ Responde a: *"de estas configuraciones, ¿cuál rinde más y por qué?"*.
 
 No es una calculadora de optimización (no sugiere la "mejor" config), sólo estima
 y compara. El registro del equipo es la [Caja](./caja-equipo.md).
-
-## Estado
-
-Este documento es la **dirección a seguir**; parte todavía no está implementada.
-
-**Hoy**: agregar (desde la caja / desde cero), estimar y mostrar las métricas,
-editar y quitar cards, jerarquía igual entre bloques, skill al dormir como
-P(exactamente 1) y P(2).
-
-**Pendiente**:
-- Renombrar la pestaña a **Comparación** (hoy "Producción") y los botones a
-  **Nuevo** / **Caja** (hoy "Desde cero" / "Desde la caja").
-- Wording **sueño / al dormir** en vez de "noche" (sólo en lo visible al usuario;
-  el dominio mantiene sus nombres internos `night_*`).
-- **Clonar** una card.
-- **Guardar** una config en la Caja / **editar** el Pokémon de origen.
-- **Tope de 5** Pokémon en la comparación.
