@@ -30,7 +30,7 @@ export default function App() {
           className={"tab" + (tab === "production" ? " tab--active" : "")}
           onClick={() => setTab("production")}
         >
-          Producción
+          Comparación
         </button>
       </nav>
       {tab === "team" ? <Team /> : <Production />}
