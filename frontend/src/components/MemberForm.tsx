@@ -5,6 +5,7 @@ import type { Catalog, MemberInput } from "../types";
 import { IngredientSlots } from "./IngredientSlots";
 import { LevelSelector } from "./LevelSelector";
 import { NatureSelect } from "./NatureSelect";
+import { RibbonSelect } from "./RibbonSelect";
 import { SpeciesSelect } from "./SpeciesSelect";
 import { SubSkillSelect } from "./SubSkillSelect";
 
@@ -39,6 +40,7 @@ export function MemberForm({
   const [nature, setNature] = useState(initial?.nature ?? "");
   const [ingredients, setIngredients] = useState<string[]>(initial?.ingredients ?? []);
   const [subSkills, setSubSkills] = useState<string[]>(initial?.sub_skills ?? []);
+  const [ribbon, setRibbon] = useState(initial?.ribbon ?? "");
 
   const selectedSpecies = useMemo(
     () => catalog.species.find((s) => s.name === species),
@@ -66,6 +68,7 @@ export function MemberForm({
       nature,
       ingredients: ingredients.filter(Boolean),
       sub_skills: subSkills.filter(Boolean),
+      ribbon,
     });
   }
 
@@ -108,6 +111,11 @@ export function MemberForm({
           level={level}
           onChange={setSubSkills}
         />
+      </fieldset>
+
+      <fieldset>
+        <legend>Listón</legend>
+        <RibbonSelect value={ribbon} onChange={setRibbon} />
       </fieldset>
 
       {error && <p className="error">{error}</p>}

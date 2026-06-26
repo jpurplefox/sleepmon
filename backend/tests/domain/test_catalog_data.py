@@ -1,3 +1,5 @@
+import pytest
+
 from sleepmon.domain.catalog_data import (
     INGREDIENT_UNLOCK_LEVELS,
     NATURE_EFFECTS,
@@ -5,12 +7,15 @@ from sleepmon.domain.catalog_data import (
     SUB_SKILL_UNLOCK_LEVELS,
     max_ingredient_slots,
     max_sub_skill_slots,
+    ribbon_inventory_bonus,
+    ribbon_speed_bonus,
 )
 from sleepmon.domain.species import SEED_SPECIES, Species
 from sleepmon.domain.value_objects import (
     Berry,
     Ingredient,
     Nature,
+    Ribbon,
     SleepType,
     Specialty,
     SubSkill,
@@ -191,6 +196,88 @@ def test_berry_matches_the_type_to_berry_mapping_via_known_anchors() -> None:
     }
     for name, berry in anchors.items():
         assert _by_name(name).berry is berry, name
+
+
+def test_pity_helps_fixed_for_non_skill_specialists() -> None:
+    # Ingrediente/baya: umbral fijo de 78 ayudas, sin importar la frecuencia.
+    bulbasaur = _by_name("Bulbasaur")  # ingredientes
+    assert bulbasaur.specialty is not Specialty.SKILLS
+    assert bulbasaur.pity_helps == 78
+
+
+def test_pity_helps_scales_with_base_frequency_for_skill_specialists() -> None:
+    # Especialistas en skill: 140000 / frecuencia base (los rápidos toleran más).
+    raikou = _by_name("Raikou")  # rápido (2100s)
+    bonsly = _by_name("Bonsly")  # lentísimo (6300s)
+    assert raikou.specialty is Specialty.SKILLS
+    assert raikou.pity_helps == round(140_000 / raikou.help_frequency_seconds) == 67
+    assert bonsly.pity_helps == round(140_000 / bonsly.help_frequency_seconds) == 22
+    assert raikou.pity_helps > bonsly.pity_helps
+
+
+def test_evolution_stage_matches_known_lines() -> None:
+    # Etapa de evolución (nitoyon evolutionCount): 0 base, 1 primera, 2 segunda.
+    assert _by_name("Bulbasaur").evolution_stage == 0
+    assert _by_name("Ivysaur").evolution_stage == 1
+    assert _by_name("Venusaur").evolution_stage == 2
+    # Las formas que no evolucionan quedan en 0.
+    assert _by_name("Ditto").evolution_stage == 0
+    assert _by_name("Farfetch'd").evolution_stage == 0
+
+
+def test_evolutions_remaining_is_line_minus_stage() -> None:
+    # Lo que define el bonus de velocidad del listón: cuántas evoluciones le quedan.
+    assert _by_name("Bulbasaur").evolutions_remaining == 2  # puede evolucionar 2 veces
+    assert _by_name("Ivysaur").evolutions_remaining == 1  # puede 1 vez
+    assert _by_name("Venusaur").evolutions_remaining == 0  # forma final: ninguna
+    assert _by_name("Ditto").evolutions_remaining == 0  # no evoluciona
+
+
+def test_carry_limit_adds_evolution_bonus_to_base_inventory() -> None:
+    # base_inventory queda intacto; carry_limit le suma +5 por evolución.
+    bulbasaur, ivysaur, venusaur = map(_by_name, ("Bulbasaur", "Ivysaur", "Venusaur"))
+    bases = (bulbasaur.base_inventory, ivysaur.base_inventory, venusaur.base_inventory)
+    assert bases == (11, 14, 17)  # base_inventory sin tocar
+    assert bulbasaur.carry_limit == 11  # sin evolucionar: sin bonus
+    assert ivysaur.carry_limit == 19  # 14 + 5
+    assert venusaur.carry_limit == 27  # 17 + 10
+
+
+def test_evolution_stage_defaults_to_zero_and_rejects_out_of_range() -> None:
+    base = Species(
+        "Solo", 1, Specialty.BERRIES, Berry.ORAN, SleepType.DOZING, "Skill",
+        (Ingredient.HONEY,), 3600, 20.0, 5.0, ((1,), (1,), (1,)), 10,
+    )
+    assert base.evolution_stage == 0
+    assert base.carry_limit == 10
+    with pytest.raises(ValueError, match="evolution_stage"):
+        Species(
+            "Bad", 1, Specialty.BERRIES, Berry.ORAN, SleepType.DOZING, "Skill",
+            (Ingredient.HONEY,), 3600, 20.0, 5.0, ((1,), (1,), (1,)), 10,
+            evolution_stage=3,
+        )
+
+
+def test_ribbon_inventory_bonus_is_cumulative() -> None:
+    # Acumulativo: +1, +2, +3, +2 -> totales 1, 3, 6, 8.
+    assert ribbon_inventory_bonus(Ribbon.NONE) == 0
+    assert ribbon_inventory_bonus(Ribbon.SLEEP_200) == 1
+    assert ribbon_inventory_bonus(Ribbon.SLEEP_500) == 3
+    assert ribbon_inventory_bonus(Ribbon.SLEEP_1000) == 6
+    assert ribbon_inventory_bonus(Ribbon.SLEEP_2000) == 8
+
+
+def test_ribbon_speed_bonus_is_cumulative_and_scales_with_remaining_evolutions() -> None:
+    # El 2º argumento son las evoluciones que le QUEDAN al Pokémon. Solo 500h/2000h
+    # aportan velocidad, pero se acumulan: a las 1000h sigue el aporte de 500h, y a
+    # las 2000h se suman ambos. Una forma final (0 pendientes) no recibe nada.
+    assert ribbon_speed_bonus(Ribbon.SLEEP_200, 2) == 0.0
+    assert ribbon_speed_bonus(Ribbon.SLEEP_500, 0) == 0.0  # totalmente evolucionado
+    assert ribbon_speed_bonus(Ribbon.SLEEP_500, 1) == pytest.approx(0.05)
+    assert ribbon_speed_bonus(Ribbon.SLEEP_500, 2) == pytest.approx(0.11)
+    assert ribbon_speed_bonus(Ribbon.SLEEP_1000, 2) == pytest.approx(0.11)  # arrastra 500h
+    assert ribbon_speed_bonus(Ribbon.SLEEP_2000, 1) == pytest.approx(0.12)  # 0.05 + 0.07
+    assert ribbon_speed_bonus(Ribbon.SLEEP_2000, 2) == pytest.approx(0.25)  # 0.11 + 0.14
 
 
 def test_max_ingredient_slots_scales_with_level() -> None:

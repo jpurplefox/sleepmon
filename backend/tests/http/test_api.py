@@ -81,6 +81,33 @@ def test_create_member_nature_omitted_defaults_to_empty(client: TestClient) -> N
     assert res.json()["nature"] == ""
 
 
+def test_create_member_with_ribbon_roundtrips(client: TestClient) -> None:
+    res = client.post("/team", json=valid_payload(ribbon="500h"))
+    assert res.status_code == 201
+    assert res.json()["ribbon"] == "500h"
+    assert client.get("/team").json()[0]["ribbon"] == "500h"
+
+
+def test_ribbon_defaults_to_empty_when_omitted(client: TestClient) -> None:
+    res = client.post("/team", json=valid_payload())
+    assert res.status_code == 201
+    assert res.json()["ribbon"] == ""
+
+
+def test_production_ribbon_raises_inventory(client: TestClient) -> None:
+    body = {
+        "species": "Pikachu",
+        "level": 60,
+        "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+    }
+    base = client.post("/production", json=body).json()
+    ribboned = client.post("/production", json={**body, "ribbon": "500h"}).json()
+    # Acumulativo: a las 500h ya se ganaron 200h(+1) y 500h(+2) -> +3 de inventario;
+    # en una línea de 3 etapas (Pikachu) además acelera la ayuda.
+    assert ribboned["inventory"] == base["inventory"] + 3
+    assert ribboned["seconds_per_help"] < base["seconds_per_help"]
+
+
 def test_distributions_endpoint(client: TestClient) -> None:
     client.post("/team", json=valid_payload())
     dist = client.get("/team/distributions").json()

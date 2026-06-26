@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 
-import { INGREDIENT_UNLOCK_LEVELS, SUB_SKILL_UNLOCK_LEVELS } from "../constants";
+import { INGREDIENT_UNLOCK_LEVELS, RIBBONS, SUB_SKILL_UNLOCK_LEVELS } from "../constants";
 import { ingredientIcon } from "../ingredients";
 import { spriteUrl } from "../sprites";
 import { subSkillIcon } from "../subskills";
 import type { Member, Nature } from "../types";
+import { RibbonIcon } from "./RibbonIcon";
 
 const TIER_CLASS: Record<string, string> = { Gold: "gold", Blue: "blue", Regular: "regular" };
 
@@ -47,7 +48,15 @@ export function MemberCard({ member, nature, dex, subSkillTiers, onEdit, onDelet
             <h3>{member.species}</h3>
           </div>
         </div>
-        <span className="badge badge--level">Nv. {member.level}</span>
+        <div className="member-card__head-right">
+          {(() => {
+            const idx = RIBBONS.findIndex((r) => r.name === member.ribbon);
+            return idx > 0 ? (
+              <RibbonIcon index={idx} size={22} title={`Listón ${RIBBONS[idx].hours} h`} />
+            ) : null;
+          })()}
+          <span className="badge badge--level">Nv. {member.level}</span>
+        </div>
       </header>
 
       <dl className="member-card__body">

@@ -153,3 +153,19 @@ class Berry(StrEnum):
     YACHE = "Yache"
     BELUE = "Belue"
     RABUTA = "Rabuta"
+
+
+class Ribbon(StrEnum):
+    """Listón ganado por horas de sueño acumuladas con un Pokémon.
+
+    El valor es la marca de horas (cadena estable que se persiste igual que la
+    naturaleza). ``NONE`` (cadena vacía) = sin listón. Cada listón sube el
+    inventario y, a las 500h/2000h, además acelera la frecuencia de ayuda según
+    las evoluciones de la línea (ver ``catalog_data``).
+    """
+
+    NONE = ""
+    SLEEP_200 = "200h"
+    SLEEP_500 = "500h"
+    SLEEP_1000 = "1000h"
+    SLEEP_2000 = "2000h"

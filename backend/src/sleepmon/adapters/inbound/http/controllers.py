@@ -37,6 +37,7 @@ def _to_out(member: TeamMember) -> MemberOut:
         nature=member.nature.value if member.nature else "",
         ingredients=[i.value for i in member.ingredients],
         sub_skills=[s.value for s in member.sub_skills],
+        ribbon=member.ribbon.value,
     )
 
 
@@ -57,6 +58,7 @@ def _to_input(payload: MemberIn) -> TeamMemberInput:
         nature=payload.nature,
         ingredients=payload.ingredients,
         sub_skills=payload.sub_skills,
+        ribbon=payload.ribbon,
     )
 
 
@@ -112,6 +114,7 @@ class ProductionController(Controller):
                 ingredients=data.ingredients,
                 nature=data.nature,
                 sub_skills=data.sub_skills,
+                ribbon=data.ribbon,
             )
         )
         return ProductionOut(

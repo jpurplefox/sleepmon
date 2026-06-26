@@ -4,7 +4,15 @@ import pytest
 
 from sleepmon.domain.production import daily_production
 from sleepmon.domain.species import Species
-from sleepmon.domain.value_objects import Berry, Ingredient, Nature, SleepType, Specialty, SubSkill
+from sleepmon.domain.value_objects import (
+    Berry,
+    Ingredient,
+    Nature,
+    Ribbon,
+    SleepType,
+    Specialty,
+    SubSkill,
+)
 
 I = Ingredient  # noqa: E741 — alias local para que el dataset se lea compacto
 
@@ -25,6 +33,8 @@ def _species(
     skill_percentage: float = 5,
     ingredient_amounts: tuple[tuple[int, ...], ...] = _AMOUNTS,
     base_inventory: int = 100_000,  # alto: por defecto no se llena (producción plena)
+    evolution_stage: int = 0,
+    line_evolutions: int = 2,  # línea de 3 etapas por defecto (≥ evolution_stage)
 ) -> Species:
     return Species(
         "Tester",
@@ -39,6 +49,8 @@ def _species(
         skill_percentage,
         ingredient_amounts,
         base_inventory,
+        evolution_stage,
+        line_evolutions,
     )
 
 
@@ -109,9 +121,10 @@ def test_level_30_unlocks_the_second_slot() -> None:
     assert len(daily_production(_species(), _INGREDIENTS, level=30).ingredients) == 2
 
 
-def _eff(p: float) -> float:
-    """Tasa efectiva con pity proc (N=78), espejo del dominio."""
-    return p / (1 - (1 - p) ** 78)
+def _eff(p: float, n: int = 78) -> float:
+    """Tasa efectiva con pity proc (N ayudas), espejo del dominio. N=78 por defecto
+    (no especialistas); los especialistas en skill tienen su propio N."""
+    return p / (1 - (1 - p) ** n)
 
 
 def _capped(lam: float, cap: int) -> float:
@@ -150,14 +163,18 @@ def test_skill_specialist_caps_skill_at_two_without_touching_berries() -> None:
         _INGREDIENTS,
         level=1,
     )
-    eff = _eff(0.50)
+    # Especialista en skill con freq base 8000 -> pity propio round(140000/8000)=18.
+    eff = _eff(0.50, 18)
     assert prod.skill_triggers == pytest.approx(15.5 * eff + _capped(8.5 * eff, 2))
     # Skill independiente: el tope NO suma a bayas; baya = 1 - ing = 0.80, 24 ayudas.
     assert prod.berry_amount == pytest.approx(24 * 0.80 * 1)
 
 
 def test_night_skill_chances_reported_per_cap() -> None:
-    lam = 8.5 * _eff(0.50)  # freq 8000 a nivel 1 -> 8.5 ayudas de noche
+    # freq 8000 a nivel 1 -> 8.5 ayudas de noche. El no-skill usa pity 78; el
+    # especialista en skill usa su pity propio round(140000/8000)=18.
+    lam_ns = 8.5 * _eff(0.50)
+    lam_sk = 8.5 * _eff(0.50, 18)
     non_skill = daily_production(
         _species(
             specialty=Specialty.INGREDIENTS,
@@ -180,11 +197,11 @@ def test_night_skill_chances_reported_per_cap() -> None:
     )
     # No-skill (tope 1): una sola chance P(>=1). Skill (tope 2): P(>=1) y P(>=2).
     assert len(non_skill.night_skill_chances) == 1
-    assert non_skill.night_skill_chances[0] == pytest.approx(1 - math.exp(-lam))
+    assert non_skill.night_skill_chances[0] == pytest.approx(1 - math.exp(-lam_ns))
     assert len(skill.night_skill_chances) == 2
-    assert skill.night_skill_chances[0] == pytest.approx(1 - math.exp(-lam))
+    assert skill.night_skill_chances[0] == pytest.approx(1 - math.exp(-lam_sk))
     assert skill.night_skill_chances[1] == pytest.approx(
-        1 - math.exp(-lam) - lam * math.exp(-lam)
+        1 - math.exp(-lam_sk) - lam_sk * math.exp(-lam_sk)
     )
 
 
@@ -210,6 +227,31 @@ def test_pity_proc_raises_low_skill_rate() -> None:
     prod = daily_production(_species(skill_percentage=1.9), _INGREDIENTS, level=60)
     assert prod.skill_percentage == 1.9
     assert prod.effective_skill_percentage == pytest.approx(2.45, abs=0.05)
+
+
+def test_skill_specialist_uses_own_pity_cap_from_base_frequency() -> None:
+    # Un especialista en skill rápido (freq base 2100 -> pity 67) llega al pity más
+    # seguido que un no-especialista (pity fijo 78), así que con la MISMA tasa base
+    # baja su tasa efectiva es mayor. Caso Raikou: 1.9% -> ~2.6%.
+    common = dict(skill_percentage=1.9, help_frequency_seconds=2100)
+    skill = daily_production(
+        _species(specialty=Specialty.SKILLS, **common), _INGREDIENTS, level=60
+    )
+    non_skill = daily_production(
+        _species(specialty=Specialty.INGREDIENTS, **common), _INGREDIENTS, level=60
+    )
+    assert skill.effective_skill_percentage == pytest.approx(2.6, abs=0.1)
+    assert skill.effective_skill_percentage > non_skill.effective_skill_percentage
+
+
+def test_high_base_rate_skill_specialist_barely_uses_pity() -> None:
+    # Tasa base alta (12.5%): la skill procea sola antes del pity, así que efectiva ≈ base.
+    prod = daily_production(
+        _species(specialty=Specialty.SKILLS, skill_percentage=12.5, help_frequency_seconds=3400),
+        _INGREDIENTS,
+        level=60,
+    )
+    assert prod.effective_skill_percentage == pytest.approx(12.5, abs=0.2)
 
 
 def test_inventory_overflow_at_night_converts_helps_to_berries() -> None:
@@ -256,6 +298,80 @@ def test_low_inventory_overflow_boosts_berries() -> None:
     high = daily_production(_species(base_inventory=100_000), _INGREDIENTS, level=60)
     low = daily_production(_species(base_inventory=2), _INGREDIENTS, level=60)
     assert low.berry_amount > high.berry_amount
+
+
+def test_evolution_bonus_adds_to_effective_inventory() -> None:
+    # El inventario efectivo parte de carry_limit = base + 5*evoluciones. Sin sub
+    # skills, con una evolución el tope sube +5 respecto a la forma base.
+    base = daily_production(_species(base_inventory=11, evolution_stage=0), _INGREDIENTS, level=60)
+    once = daily_production(_species(base_inventory=11, evolution_stage=1), _INGREDIENTS, level=60)
+    twice = daily_production(_species(base_inventory=11, evolution_stage=2), _INGREDIENTS, level=60)
+    assert base.inventory == 11
+    assert once.inventory == 16
+    assert twice.inventory == 21
+
+
+@pytest.mark.parametrize(
+    ("ribbon", "expected"),
+    [
+        (Ribbon.NONE, 11),
+        (Ribbon.SLEEP_200, 12),  # +1
+        (Ribbon.SLEEP_500, 14),  # +1+2
+        (Ribbon.SLEEP_1000, 17),  # +1+2+3
+        (Ribbon.SLEEP_2000, 19),  # +1+2+3+2 (acumulativo)
+    ],
+)
+def test_ribbon_raises_inventory_by_tier(ribbon: Ribbon, expected: int) -> None:
+    prod = daily_production(
+        _species(base_inventory=11), _INGREDIENTS, level=60, ribbon=ribbon
+    )
+    assert prod.inventory == expected
+
+
+def test_ribbon_speed_bonus_scales_with_evolutions_remaining() -> None:
+    # 500h acelera según las evoluciones que le QUEDAN: 5% si puede 1 vez, 11% si
+    # puede 2. Una forma sin evoluciones pendientes no recibe nada.
+    def helps(remaining: int, ribbon: Ribbon = Ribbon.SLEEP_500) -> float:
+        # stage 0 + line=remaining -> le quedan `remaining` evoluciones.
+        sp = _species(help_frequency_seconds=3600, evolution_stage=0, line_evolutions=remaining)
+        return daily_production(sp, _INGREDIENTS, level=1, ribbon=ribbon).helps_per_day
+
+    no_ribbon = helps(2, Ribbon.NONE)
+    assert helps(0) == no_ribbon  # sin evoluciones pendientes: el listón no acelera
+    assert helps(1) > no_ribbon  # 5%
+    assert helps(2) > helps(1)  # 11% > 5%
+
+
+def test_fully_evolved_pokemon_gets_no_ribbon_speed_bonus() -> None:
+    # Regresión: una forma final (stage == line, p. ej. Venusaur) no recibe velocidad
+    # del listón, aunque su línea tenga 2 evoluciones. Sí mantiene el bonus de inventario.
+    sp = _species(help_frequency_seconds=3600, evolution_stage=2, line_evolutions=2)
+    no_ribbon = daily_production(sp, _INGREDIENTS, level=1, ribbon=Ribbon.NONE)
+    ribboned = daily_production(sp, _INGREDIENTS, level=1, ribbon=Ribbon.SLEEP_2000)
+    assert ribboned.seconds_per_help == no_ribbon.seconds_per_help  # misma velocidad
+    assert ribboned.inventory > no_ribbon.inventory  # pero más inventario
+
+
+def test_ribbon_and_helping_speed_combine_multiplicatively() -> None:
+    # Caso Ivysaur Nv.60 (le queda 1 evolución): freq base 3300, Helping Speed S (0.07)
+    # y listón 2000h (acumulado 0.05+0.07 = 0.12). El listón es un factor APARTE, no se
+    # suma con las sub skills: (1-0.07)*(1-0.12) = 0.8184, no (1-0.19) = 0.81.
+    #   floor(3300 * 0.882 * 0.8184 / (2+2/9)) = 1071 s = 17:51 (igual que RaenonX),
+    #   no 1060 s = 17:40 (que daría el modelo aditivo).
+    sp = _species(help_frequency_seconds=3300, evolution_stage=1, line_evolutions=2)
+    prod = daily_production(
+        sp, _INGREDIENTS, level=60, sub_skills=(SubSkill.HELPING_SPEED_S,), ribbon=Ribbon.SLEEP_2000
+    )
+    assert prod.seconds_per_help == 1071
+
+
+def test_ribbon_2000h_speed_stronger_than_500h() -> None:
+    sp = _species(help_frequency_seconds=3600, line_evolutions=2)
+    base = daily_production(sp, _INGREDIENTS, level=1, ribbon=Ribbon.NONE)
+    h500 = daily_production(sp, _INGREDIENTS, level=1, ribbon=Ribbon.SLEEP_500)
+    h2000 = daily_production(sp, _INGREDIENTS, level=1, ribbon=Ribbon.SLEEP_2000)
+    # 14% (2000h) acelera más que 11% (500h), y ambos más rápido que sin listón.
+    assert h2000.seconds_per_help < h500.seconds_per_help < base.seconds_per_help
 
 
 def test_result_exposes_inventory_and_percentages() -> None:

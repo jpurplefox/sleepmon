@@ -19,6 +19,7 @@ class TeamMemberInput:
     nature: str
     ingredients: list[str]
     sub_skills: list[str] = field(default_factory=list)
+    ribbon: str = ""  # vacío = sin listón
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,6 +41,7 @@ class ProductionInput:
     ingredients: list[str]
     nature: str = ""  # vacío = sin naturaleza (sin efecto)
     sub_skills: list[str] = field(default_factory=list)
+    ribbon: str = ""  # vacío = sin listón
 
 
 @dataclass(frozen=True, slots=True)

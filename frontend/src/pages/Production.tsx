@@ -49,6 +49,7 @@ export function Production() {
           ingredients: e.config.ingredients,
           nature: e.config.nature,
           sub_skills: e.config.sub_skills,
+          ribbon: e.config.ribbon,
         }),
     })),
   });
@@ -109,6 +110,7 @@ export function Production() {
       nature: m.nature,
       ingredients: slots.map((opts, i) => m.ingredients[i] ?? opts[0] ?? ""),
       sub_skills: m.sub_skills,
+      ribbon: m.ribbon,
     };
     setEntries((prev) => (prev.length >= MAX_COMPARE ? prev : [...prev, makeEntry(config, m.id)]));
     setModal(null);

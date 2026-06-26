@@ -1513,3 +1513,87 @@ select:focus {
   gap: 0.1rem 0.6rem;
   font-size: var(--text-sm);
 }
+
+/* ---- Listón (ribbon) ---------------------------------------------------- */
+.member-card__head-right {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.ribbon-icon {
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+/* Sin listón: la imagen del nivel 1 en gris y atenuada. */
+.ribbon-icon--empty {
+  filter: grayscale(1);
+  opacity: 0.4;
+}
+
+/* Listón inline en el título de la card de comparación: solo el ícono. */
+.prod-card__title .ribbon-icon {
+  vertical-align: middle;
+  margin-left: 0.15rem;
+}
+
+/* Stepper del formulario: ‹ ícono+horas ›. */
+.ribbon-select {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.ribbon-step {
+  flex: 0 0 auto;
+  width: 2.4rem;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.ribbon-step:hover:not(:disabled) {
+  background: var(--surface-3, var(--surface-2));
+  border-color: var(--accent);
+}
+
+.ribbon-step:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.ribbon-display {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.7rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+.ribbon-display__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.ribbon-display__label {
+  color: var(--text);
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
+.ribbon-display__effect {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}

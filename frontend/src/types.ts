@@ -40,6 +40,7 @@ export interface Member {
   nature: string;
   ingredients: string[];
   sub_skills: string[];
+  ribbon: string;
 }
 
 export interface MemberInput {
@@ -48,6 +49,7 @@ export interface MemberInput {
   nature: string;
   ingredients: string[];
   sub_skills: string[];
+  ribbon: string;
 }
 
 export interface Distributions {
@@ -63,6 +65,7 @@ export interface ProductionInput {
   ingredients: string[];
   nature: string;
   sub_skills: string[];
+  ribbon: string;
 }
 
 export interface SlotProduction {

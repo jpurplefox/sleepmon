@@ -15,19 +15,20 @@ from sleepmon.adapters.outbound.postgres import queries
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.errors import ValidationError
 from sleepmon.domain.ports import TeamRepository
-from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
+from sleepmon.domain.value_objects import Ingredient, Nature, Ribbon, SubSkill
 
 _E = TypeVar("_E", bound=Enum)
 
 
 @dataclass(frozen=True, slots=True)
 class _MemberRow:
-    """Fila de ``team_member`` (columnas: id, species, level, nature)."""
+    """Fila de ``team_member`` (columnas: id, species, level, nature, ribbon)."""
 
     id: UUID
     species: str
     level: int
     nature: str
+    ribbon: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,6 +72,7 @@ class PostgresTeamRepository(TeamRepository):
                     member.species,
                     member.level,
                     member.nature.value if member.nature else "",
+                    member.ribbon.value,
                 ),
             )
             self._insert_children(cur, member)
@@ -115,6 +117,7 @@ class PostgresTeamRepository(TeamRepository):
                     member.species,
                     member.level,
                     member.nature.value if member.nature else "",
+                    member.ribbon.value,
                     member.id,
                 ),
             )
@@ -163,4 +166,5 @@ def _build_member(
         nature=_decode(Nature, row.nature) if row.nature else None,
         ingredients=ingredients,
         sub_skills=sub_skills,
+        ribbon=_decode(Ribbon, row.ribbon),
     )
