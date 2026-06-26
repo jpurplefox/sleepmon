@@ -29,9 +29,12 @@ export function MemberForm({
   initial,
   footer,
 }: Props) {
+  // La especie arranca vacía (sin preselección): así nadie agrega por error la
+  // primera del catálogo creyendo que eligió. El submit queda bloqueado hasta
+  // que se elige una. Al editar, viene la del miembro.
   // La naturaleza es opcional siempre: arranca en "Sin naturaleza" salvo que se
   // edite un miembro que ya tenía una.
-  const [species, setSpecies] = useState(initial?.species ?? catalog.species[0]?.name ?? "");
+  const [species, setSpecies] = useState(initial?.species ?? "");
   const [level, setLevel] = useState(initial?.level ?? 30);
   const [nature, setNature] = useState(initial?.nature ?? "");
   const [ingredients, setIngredients] = useState<string[]>(initial?.ingredients ?? []);
@@ -111,7 +114,7 @@ export function MemberForm({
 
       {footer}
 
-      <button className="btn btn--primary" type="submit" disabled={pending}>
+      <button className="btn btn--primary" type="submit" disabled={pending || !species}>
         {pending ? "Guardando…" : submitLabel}
       </button>
     </form>

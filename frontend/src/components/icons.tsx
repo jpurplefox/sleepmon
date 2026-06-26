@@ -79,6 +79,20 @@ export function IconMoon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+// Agarre para arrastrar y reordenar (dos columnas de puntos).
+export function IconGrip(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="9" cy="6" r="1" />
+      <circle cx="9" cy="12" r="1" />
+      <circle cx="9" cy="18" r="1" />
+      <circle cx="15" cy="6" r="1" />
+      <circle cx="15" cy="12" r="1" />
+      <circle cx="15" cy="18" r="1" />
+    </svg>
+  );
+}
+
 // Guardar en la caja (una caja con una flecha que entra hacia adentro).
 export function IconSaveBox(props: SVGProps<SVGSVGElement>) {
   return (
