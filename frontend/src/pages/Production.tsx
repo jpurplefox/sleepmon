@@ -91,12 +91,13 @@ export function Production() {
 
       {modal === "form" && (
         <Modal
-          title={editIndex !== null ? "Editar Pokémon" : "Crear Pokémon (no se guarda en la caja)"}
+          title={editIndex !== null ? "Editar Pokémon" : "Agregar Pokémon"}
           onClose={() => {
             setModal(null);
             setEditIndex(null);
           }}
         >
+          {editIndex === null && <p className="muted">No se guarda en tu caja.</p>}
           <MemberForm
             catalog={catalog.data}
             pending={false}
@@ -117,7 +118,9 @@ export function Production() {
             setEditIndex(null);
           }}
         >
-          {members.data && members.data.length > 0 ? (
+          {members.isLoading ? (
+            <p className="muted">Cargando caja…</p>
+          ) : members.data && members.data.length > 0 ? (
             <ul className="prod-box-list">
               {members.data.map((m) => (
                 <li key={m.id}>

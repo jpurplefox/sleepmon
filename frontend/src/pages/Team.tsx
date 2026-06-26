@@ -74,6 +74,7 @@ export function Team() {
         </div>
 
         {members.isLoading && <p className="muted">Cargando caja…</p>}
+        {members.isError && <p className="error">No se pudo cargar la caja. Reintentá.</p>}
         {members.data?.length === 0 && (
           <p className="muted">La caja está vacía. Agregá tu primer Pokémon.</p>
         )}
@@ -91,6 +92,13 @@ export function Team() {
         </div>
       </section>
 
+      {distributions.isError && (
+        <section className="distributions">
+          <h2>Distribución de la caja</h2>
+          <p className="error">No se pudo cargar la distribución. Reintentá.</p>
+        </section>
+      )}
+
       {distributions.data && (
         <section className="distributions">
           <h2>Distribución de la caja</h2>
@@ -98,7 +106,7 @@ export function Team() {
             <DistributionChart
               title="Ingredientes"
               data={distributions.data.ingredients}
-              color="#f59e0b"
+              color="#d4a017"
             />
             <DistributionChart
               title="Sub skills"

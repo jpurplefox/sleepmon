@@ -67,6 +67,7 @@ export function SpeciesSelect({ species, value, onChange }: Props) {
           <input
             className="species-search"
             autoFocus
+            aria-label="Buscar especie"
             placeholder="Buscar especie…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

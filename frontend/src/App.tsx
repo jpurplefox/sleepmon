@@ -15,18 +15,22 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <nav className="tabs">
+      <nav className="tabs" role="tablist">
         <button
+          role="tab"
+          aria-selected={tab === "team"}
           className={"tab" + (tab === "team" ? " tab--active" : "")}
           onClick={() => setTab("team")}
         >
-          🌙 Equipo
+          Equipo
         </button>
         <button
+          role="tab"
+          aria-selected={tab === "production"}
           className={"tab" + (tab === "production" ? " tab--active" : "")}
           onClick={() => setTab("production")}
         >
-          📊 Producción
+          Producción
         </button>
       </nav>
       {tab === "team" ? <Team /> : <Production />}

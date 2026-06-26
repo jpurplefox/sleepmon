@@ -128,9 +128,11 @@ export function ProductionCard({ config, catalog, onEdit, onRemove }: Props) {
       </div>
 
       {!d ? (
-        <p className="muted">
-          {production.isError ? (production.error as Error).message : "Calculando…"}
-        </p>
+        production.isError ? (
+          <p className="error">{(production.error as Error).message}</p>
+        ) : (
+          <p className="muted">Calculando…</p>
+        )
       ) : (
         <>
           <div className="prod-card__line">

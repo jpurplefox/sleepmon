@@ -88,7 +88,7 @@ export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
         type="button"
         className="subskill-trigger"
         onClick={() => setOpen((o) => !o)}
-        aria-haspopup="dialog"
+        aria-haspopup="listbox"
         aria-expanded={open}
       >
         <div className="subskill-slots">
@@ -109,7 +109,9 @@ export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
             );
           })}
         </div>
-        <span className="subskill-trigger__hint">{count}/5 · elegir</span>
+        <span className="subskill-trigger__hint">
+          {count >= MAX_SUB_SKILLS ? "5/5 · cambiar" : `${count}/5 · elegir`}
+        </span>
       </button>
 
       {open && (
@@ -133,6 +135,8 @@ export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
                         onClick={() => toggle(s.name)}
                         disabled={disabled}
                         aria-pressed={selected}
+                        title={selected ? `Quitar ${s.name}` : s.name}
+                        aria-label={selected ? `Quitar ${s.name}` : s.name}
                       >
                         <span className={`ss-icon ss-icon--${TIER_CLASS[s.tier]}`}>
                           <img src={subSkillIcon(s.name)} alt="" />
