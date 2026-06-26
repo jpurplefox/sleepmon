@@ -6,8 +6,20 @@ from sleepmon.domain.catalog_data import (
     max_ingredient_slots,
     max_sub_skill_slots,
 )
-from sleepmon.domain.species import SEED_SPECIES
-from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill, SubSkillTier
+from sleepmon.domain.species import SEED_SPECIES, Species
+from sleepmon.domain.value_objects import (
+    Berry,
+    Ingredient,
+    Nature,
+    SleepType,
+    Specialty,
+    SubSkill,
+    SubSkillTier,
+)
+
+
+def _by_name(name: str) -> Species:
+    return next(sp for sp in SEED_SPECIES if sp.name == name)
 
 
 def test_closed_sets_have_expected_sizes() -> None:
@@ -125,10 +137,60 @@ def test_short_species_still_reports_three_ingredient_slots() -> None:
     assert mareep.ingredient_slots[2] == mareep.ingredients  # el último slot no agrega nada
 
 
-def test_every_species_has_a_unique_positive_dex() -> None:
-    dexes = [sp.dex for sp in SEED_SPECIES]
-    assert all(d > 0 for d in dexes), dexes
-    assert len(set(dexes)) == len(dexes)  # sin repetidos
+def test_every_species_has_a_positive_dex() -> None:
+    # El dex puede repetirse entre formas/variantes (Alolan Vulpix, Pikachu de evento,
+    # Toxtricity Amped/Low Key, tamaños de Pumpkaboo/Gourgeist… comparten el dex
+    # nacional con su base, que es justo para qué sirve el dex: el sprite).
+    assert all(sp.dex > 0 for sp in SEED_SPECIES)
+
+
+def test_species_names_are_unique() -> None:
+    # El nombre (case-insensitive) es la clave real del catálogo: debe ser único
+    # aunque varias formas compartan dex.
+    names = [sp.name.casefold() for sp in SEED_SPECIES]
+    assert len(set(names)) == len(names)
+
+
+def test_catalog_covers_the_full_helper_roster() -> None:
+    # Dataset completo del juego (nitoyon cruzado con nerolis-lab), salvo Mew/Darkrai
+    # (especialistas "All" con cantidades de ingrediente no publicadas).
+    assert len(SEED_SPECIES) == 230
+    assert {sp.specialty for sp in SEED_SPECIES} == {
+        Specialty.BERRIES,
+        Specialty.INGREDIENTS,
+        Specialty.SKILLS,
+    }
+    assert {sp.sleep_type for sp in SEED_SPECIES} == set(SleepType)
+
+
+def test_known_species_have_the_correct_real_data() -> None:
+    # Datos reales cruzados (nitoyon + nerolis-lab): regresión sobre correcciones a la
+    # seed v1 vieja (Charmander era ingredient specialist, no berry; Bulbasaur es Dozing).
+    charmander = _by_name("Charmander")
+    assert charmander.specialty is Specialty.INGREDIENTS
+    assert charmander.main_skill == "Ingredient Magnet S"
+    assert charmander.berry is Berry.LEPPA
+    assert _by_name("Bulbasaur").sleep_type is SleepType.DOZING
+
+
+def test_berry_matches_the_type_to_berry_mapping_via_known_anchors() -> None:
+    # La baya sale del tipo del Pokémon (bijección fija del juego), validada contra
+    # nerolis-lab. Anclas representativas por tipo.
+    anchors = {
+        "Charizard": Berry.LEPPA,  # fire
+        "Squirtle": Berry.ORAN,  # water
+        "Pikachu": Berry.GREPA,  # electric
+        "Venusaur": Berry.DURIN,  # grass
+        "Glaceon": Berry.RAWST,  # ice
+        "Mankey": Berry.CHERI,  # fighting
+        "Ekans": Berry.CHESTO,  # poison
+        "Dragonite": Berry.YACHE,  # dragon
+        "Umbreon": Berry.WIKI,  # dark
+        "Magnemite": Berry.BELUE,  # steel
+        "Clefairy": Berry.PECHA,  # fairy
+    }
+    for name, berry in anchors.items():
+        assert _by_name(name).berry is berry, name
 
 
 def test_max_ingredient_slots_scales_with_level() -> None:
