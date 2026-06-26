@@ -88,10 +88,36 @@ espaciado: la grilla de 4px es guía mental.
 ## "Voz" visual
 
 - **Quieta y directa**: sin animaciones salvo transiciones de color en hover (≤120ms).
-- **Jerarquía por peso, no por color**: el dorado se reserva para los valores que
-  importan (KPI de producción, nivel). El índigo solo para activo/selección.
+- **Jerarquía por peso, no por color**: el dorado se reserva para muy pocos
+  acentos de identidad (el badge de nivel en Team, la luna del bloque de skill).
+  NO se usa para crear un "KPI" donde no lo hay: en Producción los bloques son de
+  igual jerarquía. El índigo solo para activo/selección.
 - **Los sprites y los íconos del juego son el dibujo de la app**; tipografía y
   componentes son el marco neutro que los sostiene.
+
+## Sistema de íconos
+
+Dos lenguajes de íconos que no se mezclan:
+
+- **Contenido del juego** → sprites y los íconos oficiales (ingredientes, sub
+  skills, bayas, stats). Son "el dibujo" y van con su color real.
+- **Métricas y acciones de UI** → íconos de línea propios en
+  `src/components/icons.tsx`: `currentColor`, `stroke-width: 2`, viewBox `24`,
+  14px por defecto. Heredan el color del contexto (atenuados en `--muted`,
+  dorados con `--moon` cuando representan "la noche"). **Nunca emojis.**
+
+Un ícono nuevo de UI se suma a `icons.tsx` siguiendo ese mismo trazo; no se
+introducen íconos sueltos ad-hoc en los componentes.
+
+## Estados visuales
+
+- **No desbloqueado todavía por nivel** (slots de ingrediente / sub skill): se
+  **atenúa** (`opacity ~0.45`) pero sigue **interactivo** — el dato ya está
+  asignado al Pokémon aunque todavía no haya llegado al nivel. NO usar
+  `pointer-events: none` ni `disabled` para este caso.
+- **Foco**: outline `2px solid var(--accent)` unificado en todo lo interactivo.
+- **Destructivo**: el rojo (`--error`) solo en el hover de la acción de borrar;
+  el resto de los hover son neutros.
 
 ## Micro-decisión por pantalla
 
@@ -103,6 +129,9 @@ espaciado: la grilla de 4px es guía mental.
   dato lleva su **ícono de línea** representativo (reloj, mano, mochila, reloj de
   arena, destello, luna), sin emojis. La luna del bloque de skill va en `--moon`:
   el único toque de identidad de la pantalla.
+- **Cards comparativas angostas** (Production): el header va en **dos filas**
+  (sprite + acciones arriba, nombre a todo el ancho debajo) para que los nombres
+  largos no se trunquen ni se partan a la mitad.
 
 ## Anti-objetivos
 
