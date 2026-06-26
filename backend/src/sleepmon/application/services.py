@@ -27,7 +27,7 @@ from sleepmon.domain.errors import SpeciesNotFoundError, TeamMemberNotFoundError
 from sleepmon.domain.ports import SpeciesCatalog, TeamRepository
 from sleepmon.domain.production import daily_production
 from sleepmon.domain.species import Species
-from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
+from sleepmon.domain.value_objects import Ingredient, Nature, Ribbon, SubSkill
 
 E = TypeVar("E", bound=Enum)
 
@@ -140,7 +140,8 @@ class DefaultTeamService(TeamService):
 
         nature = _parse_enum(Nature, data.nature, "nature") if data.nature else None
         sub_skills = tuple(_parse_enum(SubSkill, s, "sub_skill") for s in data.sub_skills)
-        result = daily_production(species, ingredients, data.level, nature, sub_skills)
+        ribbon = _parse_enum(Ribbon, data.ribbon, "ribbon")
+        result = daily_production(species, ingredients, data.level, nature, sub_skills, ribbon)
         return ProductionResult(
             helps_per_day=result.helps_per_day,
             seconds_per_help=result.seconds_per_help,
@@ -167,6 +168,7 @@ class DefaultTeamService(TeamService):
 
         nature = _parse_enum(Nature, data.nature, "nature") if data.nature else None
         sub_skills = tuple(_parse_enum(SubSkill, s, "sub_skill") for s in data.sub_skills)
+        ribbon = _parse_enum(Ribbon, data.ribbon, "ribbon")
         ingredients = tuple(_parse_enum(Ingredient, i, "ingredient") for i in data.ingredients)
 
         _validate_ingredients(species, ingredients)
@@ -183,6 +185,7 @@ class DefaultTeamService(TeamService):
                 nature=nature,
                 ingredients=ingredients,
                 sub_skills=sub_skills,
+                ribbon=ribbon,
             )
         return TeamMember(
             id=member_id,
@@ -191,4 +194,5 @@ class DefaultTeamService(TeamService):
             nature=nature,
             ingredients=ingredients,
             sub_skills=sub_skills,
+            ribbon=ribbon,
         )

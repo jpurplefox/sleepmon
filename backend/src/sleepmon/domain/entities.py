@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 
 from sleepmon.domain.catalog_data import MAX_INGREDIENTS, MAX_LEVEL, MAX_SUB_SKILLS
 from sleepmon.domain.errors import ValidationError
-from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
+from sleepmon.domain.value_objects import Ingredient, Nature, Ribbon, SubSkill
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,6 +31,7 @@ class TeamMember:
     nature: Nature | None
     ingredients: tuple[Ingredient, ...]
     sub_skills: tuple[SubSkill, ...] = ()
+    ribbon: Ribbon = Ribbon.NONE
     id: UUID = field(default_factory=uuid4)
 
     def __post_init__(self) -> None:

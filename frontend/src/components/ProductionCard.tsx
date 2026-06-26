@@ -1,12 +1,13 @@
 import { useMemo, useRef } from "react";
 
 import { berryIcon } from "../berries";
-import { INGREDIENT_UNLOCK_LEVELS, SUB_SKILL_UNLOCK_LEVELS } from "../constants";
+import { INGREDIENT_UNLOCK_LEVELS, RIBBONS, SUB_SKILL_UNLOCK_LEVELS } from "../constants";
 import { ingredientIcon } from "../ingredients";
 import { statIcon } from "../natures";
 import { spriteUrl } from "../sprites";
 import { subSkillIcon } from "../subskills";
 import type { Catalog, MemberInput, Production } from "../types";
+import { RibbonIcon } from "./RibbonIcon";
 import {
   IconClock,
   IconGrip,
@@ -196,6 +197,12 @@ export function ProductionCard({
         </div>
         <div className="prod-card__title">
           <strong>{config.species}</strong> <span className="muted">Nv.&nbsp;{config.level}</span>
+          {(() => {
+            const idx = RIBBONS.findIndex((r) => r.name === config.ribbon);
+            return idx > 0 ? (
+              <RibbonIcon index={idx} size={20} title={`Listón ${RIBBONS[idx].hours} h`} />
+            ) : null;
+          })()}
           {isBase && (
             <span className="prod-card__base-tag" title="Base de la comparación: el resto se mide contra esta card">
               base

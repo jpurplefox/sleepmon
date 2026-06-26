@@ -13,6 +13,7 @@ class MemberIn(msgspec.Struct, forbid_unknown_fields=True):
     ingredients: list[str]
     nature: str = ""  # vacío = sin naturaleza
     sub_skills: list[str] = []
+    ribbon: str = ""  # vacío = sin listón
 
 
 class MemberOut(msgspec.Struct):
@@ -22,6 +23,7 @@ class MemberOut(msgspec.Struct):
     nature: str
     ingredients: list[str]
     sub_skills: list[str]
+    ribbon: str
 
 
 class NatureOut(msgspec.Struct):
@@ -70,6 +72,7 @@ class ProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     ingredients: list[str]
     nature: str = ""  # vacío = sin naturaleza
     sub_skills: list[str] = msgspec.field(default_factory=list)
+    ribbon: str = ""  # vacío = sin listón
 
 
 class SlotProductionOut(msgspec.Struct):

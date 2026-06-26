@@ -13,7 +13,7 @@ import pytest
 from sleepmon.adapters.outbound.postgres.pool import create_pool
 from sleepmon.adapters.outbound.postgres.repository import PostgresTeamRepository
 from sleepmon.domain.entities import TeamMember
-from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
+from sleepmon.domain.value_objects import Ingredient, Nature, Ribbon, SubSkill
 
 pytestmark = pytest.mark.integration
 
@@ -38,6 +38,7 @@ def sample() -> TeamMember:
         nature=Nature.ADAMANT,
         ingredients=(Ingredient.FANCY_APPLE, Ingredient.WARMING_GINGER),
         sub_skills=(SubSkill.HELPING_SPEED_S, SubSkill.INVENTORY_UP_S),
+        ribbon=Ribbon.SLEEP_500,
     )
 
 
@@ -64,6 +65,7 @@ def test_update_replaces_children(repo: PostgresTeamRepository) -> None:
         nature=Nature.MODEST,
         ingredients=(Ingredient.FANCY_APPLE,),
         sub_skills=(SubSkill.HELPING_BONUS,),
+        ribbon=Ribbon.SLEEP_2000,
     )
     assert repo.update(changed) is True
     fetched = repo.get(member.id)
@@ -71,6 +73,7 @@ def test_update_replaces_children(repo: PostgresTeamRepository) -> None:
     assert fetched.nature is Nature.MODEST
     assert fetched.ingredients == (Ingredient.FANCY_APPLE,)
     assert fetched.sub_skills == (SubSkill.HELPING_BONUS,)
+    assert fetched.ribbon is Ribbon.SLEEP_2000
 
 
 def test_delete_removes_member(repo: PostgresTeamRepository) -> None:

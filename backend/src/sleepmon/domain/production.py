@@ -28,12 +28,21 @@ from sleepmon.domain.catalog_data import (
     MAX_INGREDIENTS,
     NATURE_EFFECTS,
     NIGHT_HOURS,
-    SKILL_PITY_HELPS,
     SUB_SKILL_UNLOCK_LEVELS,
     max_ingredient_slots,
+    ribbon_inventory_bonus,
+    ribbon_speed_bonus,
 )
 from sleepmon.domain.species import Species
-from sleepmon.domain.value_objects import Berry, Ingredient, Nature, NatureStat, Specialty, SubSkill
+from sleepmon.domain.value_objects import (
+    Berry,
+    Ingredient,
+    Nature,
+    NatureStat,
+    Ribbon,
+    Specialty,
+    SubSkill,
+)
 
 _BERRY_PER_HELP_SPECIALTY = 2
 _BERRY_PER_HELP_OTHER = 1
@@ -83,13 +92,13 @@ def _nature_factor(nature: Nature | None, stat: NatureStat, up: float, down: flo
     return 1.0
 
 
-def _effective_skill_rate(base_rate: float) -> float:
-    """Tasa efectiva de skill considerando el pity proc (activación garantizada a
-    las ``SKILL_PITY_HELPS`` ayudas). Es ``1 / E`` con ``E`` el promedio de ayudas
-    por activación de una geométrica truncada: ``E = (1 - (1-p)^N) / p``."""
+def _effective_skill_rate(base_rate: float, pity_helps: int) -> float:
+    """Tasa efectiva de skill considerando el pity proc (activación garantizada a las
+    ``pity_helps`` ayudas, propio de la especie). Es ``1 / E`` con ``E`` el promedio de
+    ayudas por activación de una geométrica truncada: ``E = (1 - (1-p)^N) / p``."""
     if base_rate <= 0:
         return 0.0
-    return base_rate / (1 - (1 - base_rate) ** SKILL_PITY_HELPS)
+    return base_rate / (1 - (1 - base_rate) ** pity_helps)
 
 
 def _skill_chances(lam: float, cap: int) -> tuple[float, ...]:
@@ -146,6 +155,7 @@ def daily_production(
     level: int,
     nature: Nature | None = None,
     sub_skills: tuple[SubSkill, ...] = (),
+    ribbon: Ribbon = Ribbon.NONE,
 ) -> DailyProduction:
     """Estima la producción diaria con ingredientes, nivel, naturaleza y sub skills.
 
@@ -166,19 +176,27 @@ def daily_production(
         if i < len(SUB_SKILL_UNLOCK_LEVELS) and level >= SUB_SKILL_UNLOCK_LEVELS[i]
     )
 
-    # Las sub skills SUMAN entre sí; la naturaleza se COMPONE (multiplica) por encima.
+    # Las sub skills de velocidad SUMAN entre sí; la naturaleza y el listón se COMPONEN
+    # (multiplican) por encima, cada uno como un factor aparte (no se suman con las sub
+    # skills). El listón solo da velocidad si al Pokémon le quedan evoluciones (las
+    # formas finales no reciben), y a las 500h/2000h.
     speed_ss = sum(_SPEED_SUBSKILLS.get(s, 0.0) for s in active)
+    ribbon_factor = 1 - ribbon_speed_bonus(ribbon, species.evolutions_remaining)
     ingredient_ss = sum(_INGREDIENT_SUBSKILLS.get(s, 0.0) for s in active)
     skill_ss = sum(_SKILL_SUBSKILLS.get(s, 0.0) for s in active)
     inventory_bonus = sum(_INVENTORY_SUBSKILLS.get(s, 0) for s in active)
     berry_finding = _BERRY_FINDING_S_BONUS if SubSkill.BERRY_FINDING_S in active else 0
 
     # Frecuencia: baja con el nivel (-0.2%/nivel), con las sub skills de velocidad
-    # ((1 − Σ)) y con la naturaleza (factor compuesto). El intervalo (ya con el bonus
-    # de energía) se trunca a segundos enteros —"cada mm:ss"— y de ahí salen las ayudas.
+    # ((1 − Σ)), con la naturaleza (factor compuesto) y con el listón (otro factor
+    # compuesto). El intervalo (ya con el bonus de energía) se trunca a segundos
+    # enteros —"cada mm:ss"— y de ahí salen las ayudas.
     level_factor = 1 - FREQUENCY_REDUCTION_PER_LEVEL * (level - 1)
     speed_factor = max(
-        0.05, (1 - speed_ss) * _nature_factor(nature, NatureStat.SPEED_OF_HELP, *_NATURE_SPEED)
+        0.05,
+        (1 - speed_ss)
+        * ribbon_factor
+        * _nature_factor(nature, NatureStat.SPEED_OF_HELP, *_NATURE_SPEED),
     )
     seconds_per_help = math.floor(
         species.help_frequency_seconds * level_factor * speed_factor / MAX_ENERGY_BONUS
@@ -203,10 +221,11 @@ def daily_production(
             / 100
             * (1 + skill_ss)
             * _nature_factor(nature, NatureStat.MAIN_SKILL_CHANCE, *_NATURE_SKILL),
-        )
+        ),
+        species.pity_helps,
     )
 
-    inventory = species.base_inventory + inventory_bonus
+    inventory = species.carry_limit + inventory_bonus + ribbon_inventory_bonus(ribbon)
 
     # Cantidades por slot desbloqueado (según el ingrediente elegido en cada uno).
     unlocked = max_ingredient_slots(level)
