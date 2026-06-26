@@ -6,11 +6,12 @@ import { DistributionChart } from "../components/DistributionChart";
 import { MemberCard } from "../components/MemberCard";
 import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
-import type { MemberInput } from "../types";
+import type { Member, MemberInput } from "../types";
 
 export function Team() {
   const qc = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<Member | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
@@ -35,6 +36,17 @@ export function Team() {
     onError: (err: Error) => setFormError(err.message),
   });
 
+  const update = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: MemberInput }) =>
+      api.updateMember(id, data),
+    onSuccess: () => {
+      setFormError(null);
+      setEditing(null);
+      invalidate();
+    },
+    onError: (err: Error) => setFormError(err.message),
+  });
+
   const remove = useMutation({
     mutationFn: (id: string) => api.deleteMember(id),
     onSuccess: invalidate,
@@ -43,6 +55,11 @@ export function Team() {
   const openForm = () => {
     setFormError(null);
     setFormOpen(true);
+  };
+
+  const openEdit = (member: Member) => {
+    setFormError(null);
+    setEditing(member);
   };
 
   const natureByName = new Map((catalog.data?.natures ?? []).map((n) => [n.name, n]));
@@ -58,7 +75,7 @@ export function Team() {
   return (
     <div className="layout">
       <header className="hero">
-        <h1>🌙 Mi caja de Pokémon Sleep</h1>
+        <h1>Mi caja de Pokémon Sleep</h1>
         <p className="muted">
           Registrá tus Pokémon con su naturaleza, sub skills e ingredientes, y mirá la
           distribución de toda la caja.
@@ -86,6 +103,7 @@ export function Team() {
               nature={natureByName.get(m.nature)}
               dex={speciesByName.get(m.species)?.dex}
               subSkillTiers={subSkillTiers}
+              onEdit={() => openEdit(m)}
               onDelete={(id) => remove.mutate(id)}
             />
           ))}
@@ -116,7 +134,7 @@ export function Team() {
             <DistributionChart
               title="Naturalezas"
               data={distributions.data.natures}
-              color="#10b981"
+              color="#58a6ff"
             />
           </div>
         </section>
@@ -128,6 +146,19 @@ export function Team() {
             catalog={catalog.data}
             onSubmit={(data) => create.mutate(data)}
             pending={create.isPending}
+            error={formError}
+          />
+        </Modal>
+      )}
+
+      {editing && (
+        <Modal title="Editar Pokémon" onClose={() => setEditing(null)}>
+          <MemberForm
+            catalog={catalog.data}
+            initial={editing}
+            submitLabel="Guardar cambios"
+            onSubmit={(data) => update.mutate({ id: editing.id, data })}
+            pending={update.isPending}
             error={formError}
           />
         </Modal>

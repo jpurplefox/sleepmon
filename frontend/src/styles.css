@@ -66,7 +66,7 @@ body {
 
 .error {
   color: var(--error);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
 }
 
 /* Tooltip simple (CSS) para íconos con data-tooltip. */
@@ -157,7 +157,7 @@ select {
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   padding: 0.5rem 0.6rem;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
 }
 
 input:focus,
@@ -166,11 +166,23 @@ select:focus {
   outline-offset: 0;
 }
 
+/* Foco visible unificado para interactivos custom (botones/triggers sin outline propio). */
+.subskill-trigger:focus-visible,
+.nature-trigger:focus-visible,
+.species-trigger:focus-visible,
+.icon-btn:focus-visible,
+.level-stepper__btn:focus-visible,
+.modal-close:focus-visible,
+.level-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .btn {
   border: none;
   border-radius: var(--r-md);
   padding: 0.6rem 1rem;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   cursor: pointer;
   font-weight: 600;
 }
@@ -231,7 +243,7 @@ select:focus {
 }
 
 .subskill-trigger__hint {
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   color: var(--muted);
   white-space: nowrap;
 }
@@ -241,7 +253,7 @@ select:focus {
   position: relative;
   width: 36px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   border: 2px solid var(--tier, var(--border));
   background: var(--surface);
   display: grid;
@@ -286,7 +298,7 @@ select:focus {
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 999px;
-  font-size: 0.6rem;
+  font-size: var(--text-xs);
   line-height: 1.4;
   padding: 0 3px;
   color: var(--muted);
@@ -311,7 +323,7 @@ select:focus {
 }
 
 .subskill-group__title {
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--muted);
@@ -334,7 +346,7 @@ select:focus {
   border-radius: var(--r-sm);
   padding: 0.3rem 0.45rem;
   color: var(--text);
-  font-size: 0.82rem;
+  font-size: var(--text-sm);
   cursor: pointer;
   text-align: left;
 }
@@ -405,7 +417,7 @@ select:focus {
   gap: 1px;
   height: 24px;
   padding: 0 5px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--border);
   background: var(--surface);
   line-height: 1;
@@ -470,7 +482,7 @@ select:focus {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--muted);
@@ -500,7 +512,7 @@ select:focus {
   border-radius: var(--r-sm);
   padding: 0.4rem 0.5rem;
   color: var(--text);
-  font-size: 0.82rem;
+  font-size: var(--text-sm);
   cursor: pointer;
   text-align: left;
 }
@@ -549,7 +561,7 @@ select:focus {
   border-radius: var(--r-md);
   padding: 0.3rem 0.6rem;
   color: var(--text);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   cursor: pointer;
   text-align: left;
 }
@@ -564,7 +576,7 @@ select:focus {
 
 .species-trigger__meta {
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
 }
 
 .species-trigger__chevron {
@@ -618,12 +630,13 @@ select:focus {
   border-radius: var(--r-sm);
   padding: 0.3rem 0.5rem;
   color: var(--text);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   cursor: pointer;
   text-align: left;
 }
 
-.species-option:hover {
+.species-option:hover,
+.species-option--highlight {
   background: var(--surface-2);
 }
 
@@ -638,7 +651,7 @@ select:focus {
 .species-option__meta {
   margin-left: auto;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
 }
 
 .species-empty {
@@ -661,7 +674,7 @@ select:focus {
   flex: 0 0 auto;
   background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--r-md);
   padding: 0.5rem 0.75rem;
 }
 
@@ -671,10 +684,16 @@ select:focus {
 }
 
 .ingredient-slot__label {
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--muted);
+}
+
+/* Aviso de desbloqueo visible aun con el slot bloqueado (pointer-events: none). */
+.ingredient-slot__lock {
+  font-size: var(--text-xs);
+  text-align: center;
 }
 
 .ingredient-slot__options {
@@ -687,7 +706,7 @@ select:focus {
 .ingredient-icon {
   width: 44px;
   height: 44px;
-  border-radius: 10px;
+  border-radius: var(--r-sm);
   border: 1px solid var(--border);
   background: var(--surface);
   cursor: pointer;
@@ -726,7 +745,7 @@ select:focus {
   gap: 0.5rem;
   background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--r-md);
   padding: 0.5rem 0.75rem;
 }
 
@@ -801,7 +820,7 @@ select:focus {
   border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
 }
@@ -876,7 +895,7 @@ select:focus {
   cursor: pointer;
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
 }
 
 .modal-close:hover {
@@ -949,7 +968,7 @@ select:focus {
 }
 
 .member-card__head .muted {
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
 }
 
 .badge {
@@ -973,7 +992,7 @@ select:focus {
 }
 
 .member-card__body dt {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--muted);
@@ -991,6 +1010,22 @@ select:focus {
   color: var(--down);
 }
 
+/* Acciones de la card (Editar / Eliminar) lado a lado. */
+.member-card__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.member-card__actions .btn {
+  flex: 1;
+}
+
+/* El botón de editar usa el acento (no el rojo del borrar). */
+.member-card__actions .btn--edit:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -998,9 +1033,9 @@ select:focus {
 }
 
 .chip {
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   padding: 0.2rem 0.5rem;
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   border: 1px solid var(--border);
 }
 
@@ -1020,7 +1055,7 @@ select:focus {
 }
 
 .chart-card h3 {
-  font-size: 1rem;
+  font-size: var(--text-lg);
 }
 
 /* Tabs de navegación */
@@ -1036,10 +1071,10 @@ select:focus {
   background: transparent;
   border: 1px solid transparent;
   color: var(--muted);
-  font-size: 1rem;
+  font-size: var(--text-lg);
   font-weight: 600;
   padding: 0.55rem 1rem;
-  border-radius: 10px;
+  border-radius: var(--r-md);
   cursor: pointer;
 }
 
@@ -1068,9 +1103,9 @@ select:focus {
   background: var(--surface-2);
   border: 1px solid var(--border);
   color: var(--text);
-  border-radius: 8px;
+  border-radius: var(--r-md);
   padding: 0.55rem 0.6rem;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
 }
 
 .prod-results {
@@ -1088,7 +1123,7 @@ select:focus {
 
 .prod-stat__label {
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
 }
 
 .prod-stat__value {
@@ -1099,7 +1134,7 @@ select:focus {
 
 .prod-stat__meta {
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
 }
 
 .prod-ingredients {
@@ -1131,7 +1166,7 @@ select:focus {
 
 .prod-ingredient__name {
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   text-align: center;
 }
 
@@ -1186,7 +1221,7 @@ select:focus {
   background: var(--surface-2);
   border: 1px solid var(--border);
   color: var(--text);
-  border-radius: 10px;
+  border-radius: var(--r-sm);
   padding: 0.5rem 0.75rem;
   cursor: pointer;
 }
@@ -1240,11 +1275,11 @@ select:focus {
 }
 
 .prod-card__title strong {
-  font-size: 1rem;
+  font-size: var(--text-lg);
 }
 
 .prod-card__title .muted {
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
 }
 
 .prod-card__actions {
@@ -1257,9 +1292,12 @@ select:focus {
   border: none;
   color: var(--muted);
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   padding: 0.2rem;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .icon-btn:hover {
@@ -1280,7 +1318,7 @@ select:focus {
   align-items: center;
   flex-wrap: wrap;
   gap: 0.3rem;
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
 }
 
 .mini-icon {
@@ -1298,7 +1336,7 @@ select:focus {
 .prod-card .ss-icon {
   width: 26px;
   height: 26px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
 }
 
 .prod-card .ss-icon img {
@@ -1319,11 +1357,11 @@ select:focus {
   justify-content: space-between;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.9rem;
+  font-size: var(--text-xs);
 }
 
 .prod-card__berry {
-  font-size: 1.05rem;
+  font-size: var(--text-base);
 }
 
 .prod-card__berry strong {
@@ -1340,7 +1378,7 @@ select:focus {
 }
 
 .prod-card__block-head {
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -1360,12 +1398,12 @@ select:focus {
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  font-size: 0.95rem;
+  font-size: var(--text-sm);
 }
 
 .prod-card__night {
   display: flex;
   flex-wrap: wrap;
   gap: 0.1rem 0.6rem;
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
 }

@@ -36,8 +36,9 @@ producción nocturna — todo lo valioso es cálido dentro de lo oscuro.
 --accent-dim:    rgba(99, 102, 241, 0.15);
 
 /* Acento identidad — dorado lunar (único color "caliente" permitido) */
---moon:     #d4a017;
---moon-dim: rgba(212, 160, 23, 0.15);
+--moon:        #d4a017;
+--moon-dim:    rgba(212, 160, 23, 0.15);
+--moon-border: rgba(212, 160, 23, 0.4);
 
 /* Semántico — naturalezas y errores */
 --up:    #3fb950;   /* stat que sube */

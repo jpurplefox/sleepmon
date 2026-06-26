@@ -101,7 +101,7 @@ export function NatureSelect({ natures, value, onChange, allowNone }: Props) {
       </button>
 
       {open && (
-        <div className="nature-dropdown" role="dialog" aria-label="Elegir naturaleza">
+        <div className="nature-dropdown" role="listbox" aria-label="Elegir naturaleza">
           {allowNone && (
             <div className="nature-group">
               <div className="nature-group__items">

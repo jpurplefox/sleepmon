@@ -29,6 +29,11 @@ export function IngredientSlots({ species, level, value, onChange }: Props) {
             className={"ingredient-slot" + (locked ? " ingredient-slot--locked" : "")}
           >
             <span className="ingredient-slot__label">Lv {unlock}</span>
+            {locked && (
+              <span className="muted ingredient-slot__lock">
+                Lv {unlock} para desbloquear
+              </span>
+            )}
             <div className="ingredient-slot__options">
               {options.map((ing, j) => {
                 // Cantidad de ESTE ingrediente en este slot (depende del ingrediente).

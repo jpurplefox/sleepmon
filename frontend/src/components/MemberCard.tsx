@@ -13,10 +13,11 @@ interface Props {
   nature?: Nature;
   dex?: number;
   subSkillTiers?: Record<string, string>;
+  onEdit?: () => void;
   onDelete: (id: string) => void;
 }
 
-export function MemberCard({ member, nature, dex, subSkillTiers, onDelete }: Props) {
+export function MemberCard({ member, nature, dex, subSkillTiers, onEdit, onDelete }: Props) {
   // Confirmación en dos pasos: el primer click pide confirmar; si pasan ~3s sin
   // confirmar, vuelve al estado normal.
   const [confirming, setConfirming] = useState(false);
@@ -105,9 +106,16 @@ export function MemberCard({ member, nature, dex, subSkillTiers, onDelete }: Pro
         </div>
       </dl>
 
-      <button className="btn btn--ghost" onClick={handleDelete}>
-        {confirming ? "Confirmar" : "Eliminar"}
-      </button>
+      <div className="member-card__actions">
+        {onEdit && (
+          <button className="btn btn--ghost btn--edit" onClick={onEdit}>
+            Editar
+          </button>
+        )}
+        <button className="btn btn--ghost" onClick={handleDelete}>
+          {confirming ? "Confirmar" : "Eliminar"}
+        </button>
+      </div>
     </article>
   );
 }

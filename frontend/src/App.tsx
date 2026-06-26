@@ -15,7 +15,7 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <nav className="tabs" role="tablist">
+      <nav className="tabs" role="tablist" aria-label="Navegación principal">
         <button
           role="tab"
           aria-selected={tab === "team"}

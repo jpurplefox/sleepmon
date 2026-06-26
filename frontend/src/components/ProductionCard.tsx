@@ -70,8 +70,11 @@ export function ProductionCard({ config, catalog, onEdit, onRemove }: Props) {
           <span className="muted">Nv. {config.level}</span>
         </div>
         <div className="prod-card__actions">
-          <button type="button" className="icon-btn" onClick={onEdit} title="Editar">
-            ✏️
+          <button type="button" className="icon-btn" onClick={onEdit} title="Editar" aria-label="Editar">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+            </svg>
           </button>
           <button type="button" className="icon-btn" onClick={onRemove} title="Quitar">
             ✕
@@ -136,12 +139,18 @@ export function ProductionCard({ config, catalog, onEdit, onRemove }: Props) {
       ) : (
         <>
           <div className="prod-card__line">
-            <span title="Frecuencia de ayuda">⏱ {mmss(d.seconds_per_help)}</span>
-            <span title="Ayudas por día">🤝 {fmt(d.helps_per_day)}</span>
+            <span title="Frecuencia de ayuda">
+              <span className="muted">cadencia</span> {mmss(d.seconds_per_help)}
+            </span>
+            <span title="Ayudas por día">
+              <span className="muted">ayudas/día</span> {fmt(d.helps_per_day)}
+            </span>
           </div>
 
           <div className="prod-card__line">
-            <span title="Inventario">🎒 {d.inventory}</span>
+            <span title="Inventario">
+              <span className="muted">inv.</span> {d.inventory}
+            </span>
             <span className="muted">se llena en {hms(d.inventory_fill_hours)}</span>
           </div>
 
@@ -172,7 +181,9 @@ export function ProductionCard({ config, catalog, onEdit, onRemove }: Props) {
               Skill <span className="muted">{pct(d.effective_skill_percentage)}</span>
             </div>
             <div className="prod-card__line">
-              <span>⚡ {fmt(d.skill_triggers)} / día</span>
+              <span title="Skill triggers por día">
+                <span className="muted">skill/día</span> {fmt(d.skill_triggers)}
+              </span>
             </div>
             <div className="prod-card__night">
               {d.night_skill_chances.map((c, i) => (

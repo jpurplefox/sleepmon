@@ -57,7 +57,7 @@ export function Production() {
   return (
     <div className="layout">
       <header className="hero">
-        <h1>📊 Producción diaria</h1>
+        <h1>Producción diaria</h1>
         <p className="muted">
           Estimá la producción de un día (15.5h de día + 8.5h de noche) con el bonus de energía
           máxima. Agregá Pokémon —de tu caja o desde cero— y comparalos lado a lado.
@@ -74,7 +74,10 @@ export function Production() {
       </section>
 
       {configs.length === 0 ? (
-        <p className="muted">Agregá un Pokémon para ver y comparar su producción.</p>
+        <p className="muted">
+          Usá los botones de arriba para agregar un Pokémon —desde tu caja o configurando uno
+          nuevo— y comparar su producción lado a lado.
+        </p>
       ) : (
         <div className="prod-cards">
           {configs.map((config, i) => (
@@ -97,7 +100,11 @@ export function Production() {
             setEditIndex(null);
           }}
         >
-          {editIndex === null && <p className="muted">No se guarda en tu caja.</p>}
+          {editIndex === null ? (
+            <p className="muted">No se guarda en tu caja.</p>
+          ) : (
+            <p className="muted">Los cambios son solo para la comparación.</p>
+          )}
           <MemberForm
             catalog={catalog.data}
             pending={false}
@@ -120,6 +127,8 @@ export function Production() {
         >
           {members.isLoading ? (
             <p className="muted">Cargando caja…</p>
+          ) : members.isError ? (
+            <p className="error">No se pudo cargar la caja. Reintentá.</p>
           ) : members.data && members.data.length > 0 ? (
             <ul className="prod-box-list">
               {members.data.map((m) => (
