@@ -8,6 +8,9 @@ import { ProductionCard } from "../components/ProductionCard";
 import { spriteUrl } from "../sprites";
 import type { Member, MemberInput } from "../types";
 
+// Tope de la comparación: el máximo del equipo en el juego.
+const MAX_COMPARE = 5;
+
 export function Production() {
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
   const members = useQuery({ queryKey: ["members"], queryFn: api.listMembers });
@@ -18,16 +21,24 @@ export function Production() {
 
   const speciesList = catalog.data?.species ?? [];
 
+  const atMax = configs.length >= MAX_COMPARE;
+
   // Inserta (o reemplaza si estábamos editando) y cierra el modal.
   const upsert = (config: MemberInput) => {
     setConfigs((prev) =>
       editIndex === null
-        ? [...prev, config]
+        ? prev.length >= MAX_COMPARE
+          ? prev
+          : [...prev, config]
         : prev.map((c, i) => (i === editIndex ? config : c)),
     );
     setModal(null);
     setEditIndex(null);
   };
+
+  // Duplica una card como una nueva config (respeta el tope).
+  const cloneAt = (i: number) =>
+    setConfigs((prev) => (prev.length >= MAX_COMPARE ? prev : [...prev, prev[i]]));
 
   const pickMember = (m: Member) => {
     const slots = speciesList.find((s) => s.name === m.species)?.ingredient_slots ?? [];
@@ -65,13 +76,29 @@ export function Production() {
       </header>
 
       <section className="prod-source">
-        <button type="button" className="btn btn--primary" onClick={() => openAdd("form")}>
+        <button
+          type="button"
+          className="btn btn--primary"
+          onClick={() => openAdd("form")}
+          disabled={atMax}
+        >
           + Nuevo
         </button>
-        <button type="button" className="btn btn--ghost" onClick={() => openAdd("box")}>
+        <button
+          type="button"
+          className="btn btn--ghost"
+          onClick={() => openAdd("box")}
+          disabled={atMax}
+        >
           + Caja
         </button>
       </section>
+
+      {atMax && (
+        <p className="muted">
+          Ya hay 5 Pokémon: es el máximo del equipo en el juego. Quitá uno para agregar otro.
+        </p>
+      )}
 
       {configs.length === 0 ? (
         <p className="muted">
@@ -86,7 +113,9 @@ export function Production() {
               config={config}
               catalog={catalog.data}
               onEdit={() => openEdit(i)}
+              onClone={() => cloneAt(i)}
               onRemove={() => removeAt(i)}
+              cloneDisabled={atMax}
             />
           ))}
         </div>

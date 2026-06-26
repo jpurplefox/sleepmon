@@ -34,10 +34,12 @@ interface Props {
   config: MemberInput;
   catalog: Catalog;
   onEdit: () => void;
+  onClone: () => void;
   onRemove: () => void;
+  cloneDisabled?: boolean;
 }
 
-export function ProductionCard({ config, catalog, onEdit, onRemove }: Props) {
+export function ProductionCard({ config, catalog, onEdit, onClone, onRemove, cloneDisabled }: Props) {
   const species = catalog.species.find((s) => s.name === config.species);
   const nature = catalog.natures.find((n) => n.name === config.nature);
   const tierClass = (name: string) =>
@@ -79,6 +81,19 @@ export function ProductionCard({ config, catalog, onEdit, onRemove }: Props) {
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <path d="M12 20h9" />
                 <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={onClone}
+              disabled={cloneDisabled}
+              title={cloneDisabled ? "Máximo 5 en la comparación" : "Clonar"}
+              aria-label="Clonar"
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <rect x="8" y="8" width="14" height="14" rx="2" ry="2" />
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
               </svg>
             </button>
             <button type="button" className="icon-btn" onClick={onRemove} title="Quitar" aria-label="Quitar">

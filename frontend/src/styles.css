@@ -1313,9 +1313,24 @@ select:focus {
   justify-content: center;
 }
 
-.icon-btn:hover {
+.icon-btn:hover:not(:disabled) {
   background: var(--surface-2);
   color: var(--text);
+}
+
+.icon-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.btn--ghost:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.btn--ghost:disabled:hover {
+  color: var(--muted);
+  border-color: var(--border);
 }
 
 .prod-card__tags {
