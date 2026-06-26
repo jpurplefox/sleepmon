@@ -1,16 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 
-import { api } from "../api/client";
 import { berryIcon } from "../berries";
 import { INGREDIENT_UNLOCK_LEVELS, SUB_SKILL_UNLOCK_LEVELS } from "../constants";
 import { ingredientIcon } from "../ingredients";
 import { statIcon } from "../natures";
 import { spriteUrl } from "../sprites";
 import { subSkillIcon } from "../subskills";
-import type { Catalog, MemberInput } from "../types";
+import type { Catalog, MemberInput, Production } from "../types";
 import {
   IconClock,
+  IconGrip,
   IconHelp,
   IconHourglass,
   IconMoon,
@@ -31,9 +30,31 @@ const hms = (hours: number) => {
   return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 };
 
+// Diferencia de un valor contra la base (la primera card). Verde si esta config
+// rinde más, rojo si rinde menos. No se muestra en la card base ni cuando no hay
+// un valor base comparable (p. ej. un ingrediente que la base no produce).
+function Delta({ value, base }: { value: number; base: number | null | undefined }) {
+  if (base == null) return null;
+  const diff = value - base;
+  if (Math.abs(diff) < 0.005) return <span className="prod-delta prod-delta--same">=</span>;
+  const cls = diff > 0 ? "prod-delta--up" : "prod-delta--down";
+  return (
+    <span className={`prod-delta ${cls}`}>
+      {diff > 0 ? "+" : "−"}
+      {fmt(Math.abs(diff))}
+    </span>
+  );
+}
+
 interface Props {
   config: MemberInput;
   catalog: Catalog;
+  production: Production | null;
+  productionError: Error | null;
+  // Datos de la card base (índice 0) para calcular los deltas; null/undefined si
+  // esta es la base.
+  base?: Production | null;
+  isBase?: boolean;
   onEdit: () => void;
   onClone: () => void;
   onRemove: () => void;
@@ -42,11 +63,22 @@ interface Props {
   inBox?: boolean;
   saveState?: "idle" | "saving" | "saved" | "error";
   saveError?: string | null;
+  // Reordenamiento por arrastre (cambia cuál card es la base).
+  dragging?: boolean;
+  dragOver?: boolean;
+  onDragStart?: () => void;
+  onDragEnter?: () => void;
+  onDrop?: () => void;
+  onDragEnd?: () => void;
 }
 
 export function ProductionCard({
   config,
   catalog,
+  production,
+  productionError,
+  base,
+  isBase,
   onEdit,
   onClone,
   onRemove,
@@ -55,44 +87,79 @@ export function ProductionCard({
   inBox,
   saveState = "idle",
   saveError,
+  dragging,
+  dragOver,
+  onDragStart,
+  onDragEnter,
+  onDrop,
+  onDragEnd,
 }: Props) {
+  const cardRef = useRef<HTMLElement>(null);
   const species = catalog.species.find((s) => s.name === config.species);
   const nature = catalog.natures.find((n) => n.name === config.nature);
   const tierClass = (name: string) =>
     TIER_CLASS[catalog.sub_skills.find((s) => s.name === name)?.tier ?? "Regular"];
 
-  const production = useQuery({
-    queryKey: ["production", config],
-    queryFn: () =>
-      api.computeProduction({
-        species: config.species,
-        level: config.level,
-        ingredients: config.ingredients,
-        nature: config.nature,
-        sub_skills: config.sub_skills,
-      }),
-  });
+  const d = production;
 
   // Si dos slots dan el mismo ingrediente, se muestra una vez sumando.
   const grouped = useMemo(() => {
-    if (!production.data) return [];
+    if (!d) return [];
     const map = new Map<string, number>();
-    for (const s of production.data.ingredients) {
+    for (const s of d.ingredients) {
       map.set(s.ingredient, (map.get(s.ingredient) ?? 0) + s.amount);
     }
     return [...map.entries()].map(([ingredient, amount]) => ({ ingredient, amount }));
-  }, [production.data]);
+  }, [d]);
 
-  const d = production.data;
+  // Mismo agrupado para la base: permite el delta por ingrediente cuando ambas
+  // cards comparten ese ingrediente (el caso típico al clonar una variante).
+  const baseIng = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const s of base?.ingredients ?? []) {
+      map.set(s.ingredient, (map.get(s.ingredient) ?? 0) + s.amount);
+    }
+    return map;
+  }, [base]);
 
   return (
-    <article className="prod-card">
+    <article
+      ref={cardRef}
+      className={
+        "prod-card" +
+        (isBase ? " prod-card--base" : "") +
+        (dragging ? " prod-card--dragging" : "") +
+        (dragOver ? " prod-card--dragover" : "")
+      }
+      onDragEnter={onDragEnter}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        onDrop?.();
+      }}
+    >
       <header className="prod-card__head">
         <div className="prod-card__topline">
           {species && (
             <img className="prod-card__sprite" src={spriteUrl(species.dex)} alt="" loading="lazy" />
           )}
           <div className="prod-card__actions">
+            <button
+              type="button"
+              className="icon-btn prod-card__grip"
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData("text/plain", config.species);
+                if (cardRef.current) e.dataTransfer.setDragImage(cardRef.current, 20, 20);
+                onDragStart?.();
+              }}
+              onDragEnd={onDragEnd}
+              title="Arrastrar para reordenar (la primera card es la base)"
+              aria-label="Arrastrar para reordenar"
+            >
+              <IconGrip />
+            </button>
             <button type="button" className="icon-btn" onClick={onEdit} title="Editar" aria-label="Editar">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <path d="M12 20h9" />
@@ -129,9 +196,14 @@ export function ProductionCard({
         </div>
         <div className="prod-card__title">
           <strong>{config.species}</strong> <span className="muted">Nv.&nbsp;{config.level}</span>
+          {isBase && (
+            <span className="prod-card__base-tag" title="Base de la comparación: el resto se mide contra esta card">
+              base
+            </span>
+          )}
         </div>
         {saveState === "saving" && <p className="prod-card__save muted">Guardando…</p>}
-        {saveState === "saved" && <p className="prod-card__save prod-card__save--ok">Guardado ✓</p>}
+        {saveState === "saved" && <p className="prod-card__save prod-card__save--ok">Guardado</p>}
         {saveState === "error" && (
           <p className="prod-card__save error">{saveError ?? "No se pudo guardar."}</p>
         )}
@@ -186,8 +258,8 @@ export function ProductionCard({
       </div>
 
       {!d ? (
-        production.isError ? (
-          <p className="error">{(production.error as Error).message}</p>
+        productionError ? (
+          <p className="error">{productionError.message}</p>
         ) : (
           <p className="muted">Calculando…</p>
         )
@@ -198,7 +270,7 @@ export function ProductionCard({
               <IconClock /> {mmss(d.seconds_per_help)}
             </span>
             <span title="Ayudas por día">
-              <IconHelp /> {fmt(d.helps_per_day)}
+              <IconHelp /> {fmt(d.helps_per_day)} <Delta value={d.helps_per_day} base={base?.helps_per_day} />
             </span>
           </div>
 
@@ -221,6 +293,7 @@ export function ProductionCard({
                   <img className="mini-icon" src={berryIcon(species.berry)} alt={d.berry} title={d.berry} />
                 )}
                 <strong>{fmt(d.berry_amount)}</strong>
+                <Delta value={d.berry_amount} base={base?.berry_amount} />
               </li>
             </ul>
           </div>
@@ -234,6 +307,7 @@ export function ProductionCard({
                 <li key={g.ingredient}>
                   <img className="mini-icon" src={ingredientIcon(g.ingredient)} alt={g.ingredient} title={g.ingredient} />
                   <strong>{fmt(g.amount)}</strong>
+                  <Delta value={g.amount} base={baseIng.get(g.ingredient)} />
                 </li>
               ))}
             </ul>
@@ -245,24 +319,24 @@ export function ProductionCard({
             </div>
             <div className="prod-card__line">
               <span title="Activaciones de skill por día">
-                <IconSparkle /> {fmt(d.skill_triggers)}
+                <IconSparkle /> {fmt(d.skill_triggers)} <Delta value={d.skill_triggers} base={base?.skill_triggers} />
               </span>
             </div>
             <div className="prod-card__night">
               <IconMoon className="prod-card__moon" />
               {d.night_skill_chances.length >= 2 ? (
                 <>
-                  <span title="Probabilidad de exactamente 1 activación al dormir">
-                    <span className="muted">1 disparo</span>{" "}
+                  <span title="Probabilidad de activar la skill exactamente 1 vez mientras dormís">
+                    <span className="muted">1 vez</span>{" "}
                     {pct((d.night_skill_chances[0] - d.night_skill_chances[1]) * 100)}
                   </span>
-                  <span title="Probabilidad de 2 activaciones al dormir (el tope)">
-                    <span className="muted">2 disparos</span> {pct(d.night_skill_chances[1] * 100)}
+                  <span title="Probabilidad de activar la skill 2 veces mientras dormís (el tope)">
+                    <span className="muted">2 veces</span> {pct(d.night_skill_chances[1] * 100)}
                   </span>
                 </>
               ) : (
-                <span title="Probabilidad de disparar la skill al dormir">
-                  <span className="muted">skill al dormir</span> {pct(d.night_skill_chances[0] * 100)}
+                <span title="Probabilidad de activar la skill mientras dormís">
+                  <span className="muted">al dormir</span> {pct(d.night_skill_chances[0] * 100)}
                 </span>
               )}
             </div>

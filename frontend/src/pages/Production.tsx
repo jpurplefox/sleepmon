@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 
 import { api } from "../api/client";
@@ -31,11 +31,49 @@ export function Production() {
   const [entries, setEntries] = useState<CompareEntry[]>([]);
   const [modal, setModal] = useState<"form" | "box" | null>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
+  // Reordenamiento por arrastre: la card que se arrastra y el destino actual.
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const nextUid = useRef(0);
+
+  // El cálculo de cada card vive en el padre (una query por entry) para poder
+  // comparar contra la base (la primera) y mostrar los deltas. La cache de
+  // react-query (keyed por config) evita recalcular al reordenar.
+  const productions = useQueries({
+    queries: entries.map((e) => ({
+      queryKey: ["production", e.config],
+      queryFn: () =>
+        api.computeProduction({
+          species: e.config.species,
+          level: e.config.level,
+          ingredients: e.config.ingredients,
+          nature: e.config.nature,
+          sub_skills: e.config.sub_skills,
+        }),
+    })),
+  });
+  const baseProduction = productions[0]?.data ?? null;
 
   const speciesList = catalog.data?.species ?? [];
 
   const atMax = entries.length >= MAX_COMPARE;
+
+  // Mueve una card a otra posición (reordenar arrastrando). Cambiar la primera
+  // card cambia la base de la comparación.
+  const moveEntry = (from: number, to: number) =>
+    setEntries((prev) => {
+      if (from === to || from < 0 || to < 0 || to >= prev.length) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+
+  const onCardDrop = (to: number) => {
+    if (dragIndex !== null) moveEntry(dragIndex, to);
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
 
   const makeEntry = (config: MemberInput, sourceId?: string): CompareEntry => ({
     uid: nextUid.current++,
@@ -127,8 +165,9 @@ export function Production() {
       <header className="hero">
         <h1>Comparación</h1>
         <p className="muted">
-          Estimá la producción de un día (15.5h despierto + 8.5h de sueño) con el bonus de energía
-          máxima. Agregá Pokémon —de tu caja o nuevos— y comparalos lado a lado.
+          Agregá Pokémon —de tu caja o nuevos— y compará su producción lado a lado. La primera card
+          es la base: el resto muestra la diferencia contra ella. Arrastrá las cards para elegir otra
+          base. Los cálculos asumen un día de 15.5h despierto + 8.5h de sueño con energía máxima.
         </p>
       </header>
 
@@ -147,7 +186,7 @@ export function Production() {
           onClick={() => openAdd("box")}
           disabled={atMax}
         >
-          + Caja
+          + Mis Pokémon
         </button>
       </section>
 
@@ -169,6 +208,10 @@ export function Production() {
               key={e.uid}
               config={e.config}
               catalog={catalog.data}
+              production={productions[i]?.data ?? null}
+              productionError={(productions[i]?.error as Error | null) ?? null}
+              base={i === 0 ? null : baseProduction}
+              isBase={i === 0}
               onEdit={() => openEdit(i)}
               onClone={() => cloneAt(i)}
               onRemove={() => removeAt(i)}
@@ -177,6 +220,15 @@ export function Production() {
               inBox={e.sourceId !== undefined}
               saveState={e.save?.state ?? "idle"}
               saveError={e.save?.error ?? null}
+              dragging={dragIndex === i}
+              dragOver={dragOverIndex === i && dragIndex !== i}
+              onDragStart={() => setDragIndex(i)}
+              onDragEnter={() => setDragOverIndex(i)}
+              onDrop={() => onCardDrop(i)}
+              onDragEnd={() => {
+                setDragIndex(null);
+                setDragOverIndex(null);
+              }}
             />
           ))}
         </div>
