@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
 interface Props {
@@ -8,6 +8,8 @@ interface Props {
 }
 
 export function Modal({ title, onClose, children }: Props) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
   // Cerrar con Escape y bloquear el scroll del fondo mientras está abierto.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -21,6 +23,17 @@ export function Modal({ title, onClose, children }: Props) {
     };
   }, [onClose]);
 
+  // Al abrir, mover el foco al primer elemento interactivo del panel; al cerrar,
+  // devolver el foco al elemento que abrió el modal.
+  useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    const first = panelRef.current?.querySelector<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    first?.focus();
+    return () => opener?.focus();
+  }, []);
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
@@ -28,6 +41,7 @@ export function Modal({ title, onClose, children }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        ref={panelRef}
         onClick={(e) => e.stopPropagation()}
       >
         <header className="modal-head">

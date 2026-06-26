@@ -91,7 +91,7 @@ export function NatureSelect({ natures, value, onChange, allowNone }: Props) {
         type="button"
         className="nature-trigger"
         onClick={() => setOpen((o) => !o)}
-        aria-haspopup="dialog"
+        aria-haspopup="listbox"
         aria-expanded={open}
       >
         <span className="nature-trigger__name">
@@ -101,7 +101,7 @@ export function NatureSelect({ natures, value, onChange, allowNone }: Props) {
       </button>
 
       {open && (
-        <div className="nature-dropdown" role="dialog" aria-label="Elegir naturaleza">
+        <div className="nature-dropdown" role="listbox" aria-label="Elegir naturaleza">
           {allowNone && (
             <div className="nature-group">
               <div className="nature-group__items">

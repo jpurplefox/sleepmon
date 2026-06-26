@@ -31,7 +31,15 @@ export function DistributionChart({ title, data, color = "#6366f1" }: Props) {
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis type="number" allowDecimals={false} stroke="var(--muted)" />
             <YAxis type="category" dataKey="name" width={140} stroke="var(--muted)" />
-            <Tooltip />
+            <Tooltip
+              contentStyle={{
+                background: "var(--surface-2)",
+                border: "1px solid var(--border)",
+                color: "var(--text)",
+                borderRadius: "var(--r-sm)",
+              }}
+              cursor={{ fill: "var(--accent-dim)" }}
+            />
             <Bar dataKey="value" fill={color} radius={[0, 4, 4, 0]} />
           </BarChart>
         </ResponsiveContainer>

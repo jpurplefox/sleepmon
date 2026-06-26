@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { SUB_SKILL_UNLOCK_LEVELS } from "../constants";
+import { maxSubSkillSlots, SUB_SKILL_UNLOCK_LEVELS } from "../constants";
 import { subSkillIcon } from "../subskills";
 import type { SubSkill } from "../types";
 
@@ -49,6 +49,8 @@ export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
   // Slots de posición fija (con huecos). value puede traer "" en un slot vacío.
   const slots = Array.from({ length: MAX_SUB_SKILLS }, (_, i) => value[i] ?? "");
   const count = slots.filter(Boolean).length;
+  // Slots realmente disponibles al nivel actual (el resto se desbloquea al subir).
+  const available = maxSubSkillSlots(level);
 
   // Primer click: al primer slot libre. Re-click: limpia ESE slot (deja el hueco,
   // sin reacomodar los demás).
@@ -88,7 +90,7 @@ export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
         type="button"
         className="subskill-trigger"
         onClick={() => setOpen((o) => !o)}
-        aria-haspopup="dialog"
+        aria-haspopup="listbox"
         aria-expanded={open}
       >
         <div className="subskill-slots">
@@ -109,11 +111,20 @@ export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
             );
           })}
         </div>
-        <span className="subskill-trigger__hint">{count}/5 · elegir</span>
+        <span
+          className="subskill-trigger__hint"
+          title={
+            available < MAX_SUB_SKILLS
+              ? `${available} de ${MAX_SUB_SKILLS} slots disponibles al nivel ${level}; el resto se desbloquea al subir de nivel`
+              : "Los 5 slots están disponibles"
+          }
+        >
+          {count >= available ? `${count}/${available} · cambiar` : `${count}/${available} · elegir`}
+        </span>
       </button>
 
       {open && (
-        <div className="subskill-dropdown" role="dialog" aria-label="Elegir sub skills">
+        <div className="subskill-dropdown" role="listbox" aria-label="Elegir sub skills">
           {groups.map((g) =>
             g.items.length === 0 ? null : (
               <div key={g.title} className="subskill-group">
@@ -133,6 +144,8 @@ export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
                         onClick={() => toggle(s.name)}
                         disabled={disabled}
                         aria-pressed={selected}
+                        title={selected ? `Quitar ${s.name}` : s.name}
+                        aria-label={selected ? `Quitar ${s.name}` : s.name}
                       >
                         <span className={`ss-icon ss-icon--${TIER_CLASS[s.tier]}`}>
                           <img src={subSkillIcon(s.name)} alt="" />

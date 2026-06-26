@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import { INGREDIENT_UNLOCK_LEVELS, SUB_SKILL_UNLOCK_LEVELS } from "../constants";
 import { ingredientIcon } from "../ingredients";
 import { spriteUrl } from "../sprites";
@@ -11,10 +13,29 @@ interface Props {
   nature?: Nature;
   dex?: number;
   subSkillTiers?: Record<string, string>;
+  onEdit?: () => void;
   onDelete: (id: string) => void;
 }
 
-export function MemberCard({ member, nature, dex, subSkillTiers, onDelete }: Props) {
+export function MemberCard({ member, nature, dex, subSkillTiers, onEdit, onDelete }: Props) {
+  // Confirmación en dos pasos: el primer click pide confirmar; si pasan ~3s sin
+  // confirmar, vuelve al estado normal.
+  const [confirming, setConfirming] = useState(false);
+
+  useEffect(() => {
+    if (!confirming) return;
+    const timer = setTimeout(() => setConfirming(false), 3000);
+    return () => clearTimeout(timer);
+  }, [confirming]);
+
+  const handleDelete = () => {
+    if (confirming) {
+      onDelete(member.id);
+    } else {
+      setConfirming(true);
+    }
+  };
+
   return (
     <article className="card member-card">
       <header className="member-card__head">
@@ -26,7 +47,7 @@ export function MemberCard({ member, nature, dex, subSkillTiers, onDelete }: Pro
             <h3>{member.species}</h3>
           </div>
         </div>
-        <span className="badge">Nv. {member.level}</span>
+        <span className="badge badge--level">Nv. {member.level}</span>
       </header>
 
       <dl className="member-card__body">
@@ -85,9 +106,16 @@ export function MemberCard({ member, nature, dex, subSkillTiers, onDelete }: Pro
         </div>
       </dl>
 
-      <button className="btn btn--ghost" onClick={() => onDelete(member.id)}>
-        Eliminar
-      </button>
+      <div className="member-card__actions">
+        {onEdit && (
+          <button className="btn btn--ghost btn--edit" onClick={onEdit}>
+            Editar
+          </button>
+        )}
+        <button className="btn btn--ghost btn--danger" onClick={handleDelete}>
+          {confirming ? "Confirmar" : "Eliminar"}
+        </button>
+      </div>
     </article>
   );
 }
