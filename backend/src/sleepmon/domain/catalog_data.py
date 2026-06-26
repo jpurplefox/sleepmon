@@ -24,6 +24,26 @@ MAX_SUB_SKILLS: Final[int] = len(SUB_SKILL_UNLOCK_LEVELS)
 MAX_INGREDIENTS: Final[int] = len(INGREDIENT_UNLOCK_LEVELS)
 MAX_LEVEL: Final[int] = 100
 
+# Segundos en un día: ventana total sobre la que se estima la producción.
+SECONDS_PER_DAY = 86_400
+# Reparto día/noche: de noche el inventario no se vacía, así que una vez lleno solo
+# se juntan bayas. De día se asume que nunca se llena.
+NIGHT_HOURS = 8.5
+DAY_HOURS = 24 - NIGHT_HOURS
+
+# La frecuencia de ayuda baja con el nivel (el Pokémon ayuda más rápido): cada nivel
+# por encima de 1 resta 0.2% de la frecuencia base -> freq = base * (1 - 0.002*(lvl-1)).
+FREQUENCY_REDUCTION_PER_LEVEL = 0.002
+
+# "Pity proc": si pasan SKILL_PITY_HELPS ayudas seguidas sin disparar la main skill,
+# la siguiente la dispara sí o sí. Sube la tasa efectiva de skill por encima de la
+# base (clave en especies de tasa baja). 78 es el umbral para especialistas de
+# ingrediente/baya; para tasas altas el pity casi no incide, así que se usa para todas.
+SKILL_PITY_HELPS = 78
+# Bonus de frecuencia de ayuda por energía máxima. La producción siempre lo asume
+# (el Pokémon ayuda 2+2/9 ≈ 2.2222x más rápido que su frecuencia base).
+MAX_ENERGY_BONUS = 2 + 2 / 9
+
 
 @dataclass(frozen=True, slots=True)
 class NatureEffect:

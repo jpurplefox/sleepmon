@@ -3,7 +3,7 @@ from uuid import uuid4
 import pytest
 
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
-from sleepmon.application.dto import TeamMemberInput
+from sleepmon.application.dto import ProductionInput, TeamMemberInput
 from sleepmon.application.services import DefaultTeamService
 from sleepmon.domain.errors import (
     SpeciesNotFoundError,
@@ -154,6 +154,75 @@ def test_short_species_reports_three_slots_and_rejects_overflow(
             valid_input(
                 species="Mareep",
                 ingredients=["Fiery Herb", "Fancy Egg", "Fancy Egg", "Fancy Egg"],
+            )
+        )
+
+
+def test_compute_production_returns_estimate(service: DefaultTeamService) -> None:
+    result = service.compute_production(
+        ProductionInput(
+            species="Pikachu", level=60, ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"]
+        )
+    )
+    assert result.helps_per_day > 0
+    assert result.berry == "Grepa"  # baya de Pikachu
+    assert [s.ingredient for s in result.ingredients] == [
+        "Fancy Apple",
+        "Warming Ginger",
+        "Fancy Egg",
+    ]
+
+
+def test_compute_production_only_unlocked_slots_at_low_level(service: DefaultTeamService) -> None:
+    # Nivel 1: solo el primer slot de ingrediente desbloqueado.
+    result = service.compute_production(
+        ProductionInput(
+            species="Pikachu", level=1, ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"]
+        )
+    )
+    assert [s.ingredient for s in result.ingredients] == ["Fancy Apple"]
+
+
+def test_compute_production_unknown_species_rejected(service: DefaultTeamService) -> None:
+    with pytest.raises(SpeciesNotFoundError):
+        service.compute_production(
+            ProductionInput(
+                species="Mewtwo",
+                level=60,
+                ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+            )
+        )
+
+
+def test_compute_production_requires_three_ingredients(service: DefaultTeamService) -> None:
+    with pytest.raises(ValidationError):
+        service.compute_production(
+            ProductionInput(
+                species="Pikachu", level=30, ingredients=["Fancy Apple", "Warming Ginger"]
+            )
+        )
+
+
+def test_compute_production_invalid_level_rejected(service: DefaultTeamService) -> None:
+    with pytest.raises(ValidationError):
+        service.compute_production(
+            ProductionInput(
+                species="Pikachu",
+                level=0,
+                ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+            )
+        )
+
+
+def test_compute_production_invalid_ingredient_for_slot_rejected(
+    service: DefaultTeamService,
+) -> None:
+    with pytest.raises(ValidationError):
+        service.compute_production(
+            ProductionInput(
+                species="Pikachu",
+                level=60,
+                ingredients=["Large Leek", "Warming Ginger", "Fancy Egg"],
             )
         )
 

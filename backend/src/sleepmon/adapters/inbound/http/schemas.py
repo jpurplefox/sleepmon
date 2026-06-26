@@ -44,6 +44,8 @@ class SpeciesOut(msgspec.Struct):
     sleep_type: str
     main_skill: str
     ingredient_slots: list[list[str]]
+    ingredient_amounts: list[list[int]]
+    base_inventory: int
 
 
 class CatalogOut(msgspec.Struct):
@@ -58,6 +60,37 @@ class DistributionsOut(msgspec.Struct):
     ingredients: dict[str, int]
     sub_skills: dict[str, int]
     nature_stats: dict[str, int]
+
+
+class ProductionIn(msgspec.Struct, forbid_unknown_fields=True):
+    """Payload para estimar producción: especie, nivel, ingredientes, naturaleza y sub skills."""
+
+    species: str
+    level: int
+    ingredients: list[str]
+    nature: str = ""  # vacío = sin naturaleza
+    sub_skills: list[str] = msgspec.field(default_factory=list)
+
+
+class SlotProductionOut(msgspec.Struct):
+    ingredient: str
+    amount: float
+
+
+class ProductionOut(msgspec.Struct):
+    helps_per_day: float
+    seconds_per_help: int
+    berry: str
+    berry_amount: float
+    berry_percentage: float
+    ingredient_percentage: float
+    skill_percentage: float
+    effective_skill_percentage: float
+    ingredients: list[SlotProductionOut]
+    skill_triggers: float
+    night_skill_chances: list[float]
+    inventory: int
+    inventory_fill_hours: float
 
 
 class ErrorOut(msgspec.Struct):
