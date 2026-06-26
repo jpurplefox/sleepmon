@@ -29,3 +29,41 @@ class Distributions:
     ingredients: dict[str, int]
     sub_skills: dict[str, int]
     nature_stats: dict[str, int]
+
+
+@dataclass(frozen=True, slots=True)
+class ProductionInput:
+    """Datos crudos para estimar la producción de un Pokémon (no se persiste)."""
+
+    species: str
+    level: int
+    ingredients: list[str]
+    nature: str = ""  # vacío = sin naturaleza (sin efecto)
+    sub_skills: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class SlotAmount:
+    """Producción diaria de un slot de ingrediente, lista para serializar."""
+
+    ingredient: str
+    amount: float
+
+
+@dataclass(frozen=True, slots=True)
+class ProductionResult:
+    """Producción estimada de un Pokémon en un día."""
+
+    helps_per_day: float
+    seconds_per_help: int
+    berry: str
+    berry_amount: float
+    berry_percentage: float
+    ingredient_percentage: float
+    skill_percentage: float
+    effective_skill_percentage: float
+    ingredients: list[SlotAmount]
+    skill_triggers: float
+    night_skill_chances: list[float]
+    inventory: int
+    inventory_fill_hours: float

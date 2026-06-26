@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { Catalog, MemberInput } from "../types";
 import { IngredientSlots } from "./IngredientSlots";
@@ -12,14 +12,29 @@ interface Props {
   onSubmit: (data: MemberInput) => void;
   pending: boolean;
   error: string | null;
+  submitLabel?: string;
+  // Valores iniciales para editar un Pokémon ya elegido.
+  initial?: MemberInput;
+  // Permite "Sin naturaleza" y arranca sin ella (comparador de producción).
+  natureOptional?: boolean;
 }
 
-export function MemberForm({ catalog, onSubmit, pending, error }: Props) {
-  const [species, setSpecies] = useState(catalog.species[0]?.name ?? "");
-  const [level, setLevel] = useState(30);
-  const [nature, setNature] = useState(catalog.natures[0]?.name ?? "");
-  const [ingredients, setIngredients] = useState<string[]>([]);
-  const [subSkills, setSubSkills] = useState<string[]>([]);
+export function MemberForm({
+  catalog,
+  onSubmit,
+  pending,
+  error,
+  submitLabel = "Agregar al equipo",
+  initial,
+  natureOptional,
+}: Props) {
+  // Sin naturaleza por defecto en el comparador; en la caja, la primera del catálogo.
+  const defaultNature = natureOptional ? "" : catalog.natures[0]?.name ?? "";
+  const [species, setSpecies] = useState(initial?.species ?? catalog.species[0]?.name ?? "");
+  const [level, setLevel] = useState(initial?.level ?? 30);
+  const [nature, setNature] = useState(initial?.nature ?? defaultNature);
+  const [ingredients, setIngredients] = useState<string[]>(initial?.ingredients ?? []);
+  const [subSkills, setSubSkills] = useState<string[]>(initial?.sub_skills ?? []);
 
   const selectedSpecies = useMemo(
     () => catalog.species.find((s) => s.name === species),
@@ -27,11 +42,17 @@ export function MemberForm({ catalog, onSubmit, pending, error }: Props) {
   );
 
   // Al cambiar de especie, default cada slot de ingrediente a su primera opción
-  // válida. Se cargan los 3 sin importar el nivel: ya están definidos.
+  // válida. En el primer render conservamos los ingredientes iniciales (edición).
+  // Usamos un ref con la especie ya aplicada (robusto al doble efecto de StrictMode).
+  const appliedSpecies = useRef<string | null>(null);
   useEffect(() => {
     if (!selectedSpecies) return;
+    if (appliedSpecies.current === species) return;
+    const isFirst = appliedSpecies.current === null;
+    appliedSpecies.current = species;
+    if (isFirst && initial?.ingredients?.length) return; // conservar lo inicial
     setIngredients(selectedSpecies.ingredient_slots.map((opts) => opts[0] ?? ""));
-  }, [selectedSpecies]);
+  }, [selectedSpecies, species, initial]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -54,7 +75,12 @@ export function MemberForm({ catalog, onSubmit, pending, error }: Props) {
 
         <label>
           Naturaleza
-          <NatureSelect natures={catalog.natures} value={nature} onChange={setNature} />
+          <NatureSelect
+            natures={catalog.natures}
+            value={nature}
+            onChange={setNature}
+            allowNone={natureOptional}
+          />
         </label>
       </div>
 
@@ -83,7 +109,7 @@ export function MemberForm({ catalog, onSubmit, pending, error }: Props) {
       {error && <p className="error">{error}</p>}
 
       <button className="btn btn--primary" type="submit" disabled={pending}>
-        {pending ? "Guardando…" : "Agregar al equipo"}
+        {pending ? "Guardando…" : submitLabel}
       </button>
     </form>
   );

@@ -1,4 +1,11 @@
-import type { Catalog, Distributions, Member, MemberInput } from "../types";
+import type {
+  Catalog,
+  Distributions,
+  Member,
+  MemberInput,
+  Production,
+  ProductionInput,
+} from "../types";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
@@ -30,4 +37,6 @@ export const api = {
   updateMember: (id: string, data: MemberInput) =>
     request<Member>(`/team/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   deleteMember: (id: string) => request<void>(`/team/${id}`, { method: "DELETE" }),
+  computeProduction: (data: ProductionInput) =>
+    request<Production>("/production", { method: "POST", body: JSON.stringify(data) }),
 };

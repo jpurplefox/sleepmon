@@ -7,6 +7,8 @@ interface Props {
   natures: Nature[];
   value: string;
   onChange: (name: string) => void;
+  // Permite la opción "Sin naturaleza" (valor ""), p. ej. en el comparador.
+  allowNone?: boolean;
 }
 
 // Círculo con X para las naturalezas neutras (mismo criterio que RaenonX).
@@ -46,7 +48,7 @@ function NatureEffect({ nature }: { nature: Nature }) {
   );
 }
 
-export function NatureSelect({ natures, value, onChange }: Props) {
+export function NatureSelect({ natures, value, onChange, allowNone }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -92,12 +94,28 @@ export function NatureSelect({ natures, value, onChange }: Props) {
         aria-haspopup="dialog"
         aria-expanded={open}
       >
-        <span className="nature-trigger__name">{selected?.name ?? "Elegir naturaleza"}</span>
+        <span className="nature-trigger__name">
+          {selected?.name ?? (allowNone ? "Sin naturaleza" : "Elegir naturaleza")}
+        </span>
         {selected && <NatureEffect nature={selected} />}
       </button>
 
       {open && (
         <div className="nature-dropdown" role="dialog" aria-label="Elegir naturaleza">
+          {allowNone && (
+            <div className="nature-group">
+              <div className="nature-group__items">
+                <button
+                  type="button"
+                  className={"nature-option" + (value === "" ? " nature-option--selected" : "")}
+                  onClick={() => pick("")}
+                  aria-pressed={value === ""}
+                >
+                  <span className="nature-option__name">Sin naturaleza</span>
+                </button>
+              </div>
+            </div>
+          )}
           {groups.map((g) =>
             g.items.length === 0 ? null : (
               <div key={g.title || "neutral"} className="nature-group">

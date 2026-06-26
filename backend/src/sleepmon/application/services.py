@@ -13,11 +13,20 @@ from enum import Enum
 from typing import TypeVar
 from uuid import UUID
 
-from sleepmon.application.dto import Distributions, TeamMemberInput
+from sleepmon.application.dto import (
+    Distributions,
+    ProductionInput,
+    ProductionResult,
+    SlotAmount,
+    TeamMemberInput,
+)
 from sleepmon.domain import analytics
+from sleepmon.domain.catalog_data import MAX_INGREDIENTS, MAX_LEVEL
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.errors import SpeciesNotFoundError, TeamMemberNotFoundError, ValidationError
 from sleepmon.domain.ports import SpeciesCatalog, TeamRepository
+from sleepmon.domain.production import daily_production
+from sleepmon.domain.species import Species
 from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
 
 E = TypeVar("E", bound=Enum)
@@ -29,6 +38,20 @@ def _parse_enum(enum_cls: type[E], value: str, field: str) -> E:
     except ValueError as exc:
         valid = ", ".join(e.value for e in enum_cls)
         raise ValidationError(f"{field} inválido: {value!r}. Opciones: {valid}.") from exc
+
+
+def _validate_ingredients(species: Species, ingredients: tuple[Ingredient, ...]) -> None:
+    """Valida que cada ingrediente sea posible para la especie en su slot."""
+    slot_count = len(species.ingredient_slots)
+    for slot, ingredient in enumerate(ingredients):
+        if slot >= slot_count:
+            raise ValidationError(f"{species.name} solo tiene {slot_count} slots de ingrediente.")
+        if not species.allows_ingredient(slot, ingredient):
+            allowed = ", ".join(i.value for i in species.ingredient_slots[slot])
+            raise ValidationError(
+                f"{ingredient.value} no es válido para {species.name} en el slot "
+                f"{slot + 1}. Válidos: {allowed}."
+            )
 
 
 class TeamService(ABC):
@@ -51,6 +74,9 @@ class TeamService(ABC):
 
     @abstractmethod
     def distributions(self) -> Distributions: ...
+
+    @abstractmethod
+    def compute_production(self, data: ProductionInput) -> ProductionResult: ...
 
 
 class DefaultTeamService(TeamService):
@@ -92,6 +118,48 @@ class DefaultTeamService(TeamService):
             nature_stats={k.value: v for k, v in analytics.nature_stat_balance(members).items()},
         )
 
+    def compute_production(self, data: ProductionInput) -> ProductionResult:
+        # Stateless: no toca el repo, así sirve igual para un Pokémon de la caja o
+        # uno armado desde cero.
+        species = self._catalog.get(data.species)
+        if species is None:
+            raise SpeciesNotFoundError(f"Especie desconocida: {data.species!r}.")
+
+        if not 1 <= data.level <= MAX_LEVEL:
+            raise ValidationError(
+                f"El nivel debe estar entre 1 y {MAX_LEVEL}; llegó {data.level}."
+            )
+
+        ingredients = tuple(_parse_enum(Ingredient, i, "ingredient") for i in data.ingredients)
+        if len(ingredients) != MAX_INGREDIENTS:
+            raise ValidationError(
+                f"La producción requiere {MAX_INGREDIENTS} ingredientes (uno por slot); "
+                f"llegaron {len(ingredients)}."
+            )
+        _validate_ingredients(species, ingredients)
+
+        nature = _parse_enum(Nature, data.nature, "nature") if data.nature else None
+        sub_skills = tuple(_parse_enum(SubSkill, s, "sub_skill") for s in data.sub_skills)
+        result = daily_production(species, ingredients, data.level, nature, sub_skills)
+        return ProductionResult(
+            helps_per_day=result.helps_per_day,
+            seconds_per_help=result.seconds_per_help,
+            berry=result.berry.value,
+            berry_amount=result.berry_amount,
+            berry_percentage=result.berry_percentage,
+            ingredient_percentage=result.ingredient_percentage,
+            skill_percentage=result.skill_percentage,
+            effective_skill_percentage=result.effective_skill_percentage,
+            ingredients=[
+                SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
+                for slot in result.ingredients
+            ],
+            skill_triggers=result.skill_triggers,
+            night_skill_chances=list(result.night_skill_chances),
+            inventory=result.inventory,
+            inventory_fill_hours=result.inventory_fill_hours,
+        )
+
     def _build_member(self, data: TeamMemberInput, member_id: UUID | None = None) -> TeamMember:
         species = self._catalog.get(data.species)
         if species is None:
@@ -101,18 +169,7 @@ class DefaultTeamService(TeamService):
         sub_skills = tuple(_parse_enum(SubSkill, s, "sub_skill") for s in data.sub_skills)
         ingredients = tuple(_parse_enum(Ingredient, i, "ingredient") for i in data.ingredients)
 
-        slot_count = len(species.ingredient_slots)
-        for slot, ingredient in enumerate(ingredients):
-            if slot >= slot_count:
-                raise ValidationError(
-                    f"{species.name} solo tiene {slot_count} slots de ingrediente."
-                )
-            if not species.allows_ingredient(slot, ingredient):
-                allowed = ", ".join(i.value for i in species.ingredient_slots[slot])
-                raise ValidationError(
-                    f"{ingredient.value} no es válido para {species.name} en el slot "
-                    f"{slot + 1}. Válidos: {allowed}."
-                )
+        _validate_ingredients(species, ingredients)
 
         # El constructor de TeamMember aplica las invariantes absolutas (rango de
         # nivel, topes MAX_INGREDIENTS/MAX_SUB_SKILLS, sub skills sin repetir). NO

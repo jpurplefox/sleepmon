@@ -988,3 +988,349 @@ select:focus {
 .chart-card h3 {
   font-size: 1rem;
 }
+
+/* Tabs de navegación */
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem 0;
+}
+
+.tab {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--text);
+  background: var(--surface);
+}
+
+.tab--active {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+/* Producción */
+.prod-source {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.prod-member-select {
+  display: block;
+  margin-top: 0.35rem;
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 0.55rem 0.6rem;
+  font-size: 0.95rem;
+}
+
+.prod-results {
+  margin-top: 1.5rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.prod-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
+}
+
+.prod-stat__label {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.prod-stat__value {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.prod-stat__meta {
+  color: var(--blue);
+  font-size: 0.85rem;
+}
+
+.prod-ingredients {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.prod-ingredient {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 84px;
+}
+
+.prod-ingredient .ingredient-icon__img {
+  width: 40px;
+  height: 40px;
+}
+
+.prod-ingredient__amount {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.prod-ingredient__name {
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+/* Cantidad por ayuda de cada ingrediente: pill en la esquina inferior derecha del ícono */
+.ingredient-option {
+  position: relative;
+  display: inline-flex;
+}
+
+.ingredient-option__amount {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.12rem 0.3rem;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+/* Pokémon actualmente seleccionado en Producción */
+.prod-current {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.prod-current__name {
+  font-weight: 700;
+}
+
+/* Lista de la caja dentro del modal de Producción */
+.prod-box-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.prod-box-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  text-align: left;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+}
+
+.prod-box-item:hover {
+  border-color: var(--primary);
+}
+
+.prod-box-item__name {
+  font-weight: 600;
+  flex: 1;
+}
+
+/* Comparación de producción: hasta 5 cards por fila (luego envuelven) */
+.prod-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  align-items: start;
+}
+
+.prod-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.prod-card__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.prod-card__sprite {
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+}
+
+.prod-card__title {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  flex: 1;
+  min-width: 0;
+}
+
+.prod-card__title strong {
+  font-size: 1rem;
+}
+
+.prod-card__title .muted {
+  font-size: 0.78rem;
+}
+
+.prod-card__actions {
+  display: flex;
+  gap: 0.15rem;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.2rem;
+  border-radius: 6px;
+}
+
+.icon-btn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.prod-card__tags {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.icon-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+}
+
+.mini-icon {
+  height: 22px;
+  width: auto;
+}
+
+/* Ingrediente/sub skill todavía no activo por nivel */
+.mini-icon--locked {
+  opacity: 0.3;
+  filter: grayscale(0.6);
+}
+
+/* Sub skills en la card de producción: marco coloreado por tier, tamaño compacto */
+.prod-card .ss-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+}
+
+.prod-card .ss-icon img {
+  width: 18px;
+  height: 18px;
+}
+
+.prod-card__nature .up {
+  color: #34d399;
+}
+
+.prod-card__nature .down {
+  color: #f87171;
+}
+
+.prod-card__line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.prod-card__berry {
+  font-size: 1.05rem;
+}
+
+.prod-card__berry strong {
+  color: var(--gold);
+}
+
+.prod-card__block {
+  border-top: 1px solid var(--border);
+  padding-top: 0.55rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.prod-card__block-head {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+
+.prod-card__ings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+}
+
+.prod-card__ings li {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.95rem;
+}
+
+.prod-card__night {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.6rem;
+  font-size: 0.75rem;
+}

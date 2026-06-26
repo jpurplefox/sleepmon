@@ -15,7 +15,11 @@ from litestar.config.cors import CORSConfig
 from litestar.di import Provide
 from litestar.status_codes import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-from sleepmon.adapters.inbound.http.controllers import CatalogController, TeamController
+from sleepmon.adapters.inbound.http.controllers import (
+    CatalogController,
+    ProductionController,
+    TeamController,
+)
 from sleepmon.adapters.inbound.http.schemas import ErrorOut
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.adapters.outbound.postgres.pool import create_pool
@@ -61,7 +65,7 @@ def create_app(
     bound_catalog = catalog
 
     return Litestar(
-        route_handlers=[TeamController, CatalogController],
+        route_handlers=[TeamController, CatalogController, ProductionController],
         dependencies={
             "service": Provide(lambda: bound_service, sync_to_thread=False),
             "catalog": Provide(lambda: bound_catalog, sync_to_thread=False),

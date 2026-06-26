@@ -82,6 +82,49 @@ def test_too_many_ingredients_returns_400(client: TestClient) -> None:
     assert res.status_code == 400
 
 
+def test_production_endpoint_returns_estimate(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Pikachu",
+            "level": 60,
+            "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+        },
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["helps_per_day"] > 0
+    assert body["berry"] == "Grepa"  # baya de Pikachu
+    # Skill independiente: baya + ingrediente = 100; el skill va aparte.
+    assert body["berry_percentage"] + body["ingredient_percentage"] == pytest.approx(100)
+    assert [s["ingredient"] for s in body["ingredients"]] == [
+        "Fancy Apple",
+        "Warming Ginger",
+        "Fancy Egg",
+    ]
+    assert body["skill_triggers"] >= 0
+
+
+def test_production_unknown_species_returns_400(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Mewtwo",
+            "level": 60,
+            "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+        },
+    )
+    assert res.status_code == 400
+
+
+def test_production_requires_three_ingredients(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={"species": "Pikachu", "level": 30, "ingredients": ["Fancy Apple", "Warming Ginger"]},
+    )
+    assert res.status_code == 400
+
+
 def test_get_missing_member_returns_404(client: TestClient) -> None:
     res = client.get("/team/00000000-0000-0000-0000-000000000000")
     assert res.status_code == 404
