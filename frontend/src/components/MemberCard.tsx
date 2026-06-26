@@ -112,7 +112,7 @@ export function MemberCard({ member, nature, dex, subSkillTiers, onEdit, onDelet
             Editar
           </button>
         )}
-        <button className="btn btn--ghost" onClick={handleDelete}>
+        <button className="btn btn--ghost btn--danger" onClick={handleDelete}>
           {confirming ? "Confirmar" : "Eliminar"}
         </button>
       </div>

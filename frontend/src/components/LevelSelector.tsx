@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { LEVEL_SHORTCUTS, MAX_LEVEL } from "../constants";
 
@@ -14,6 +14,7 @@ function clamp(n: number, min: number, max: number): number {
 }
 
 export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL }: Props) {
+  const inputId = useId();
   // Draft local para permitir escribir libremente (incluido borrar el campo).
   const [draft, setDraft] = useState(String(value));
   useEffect(() => setDraft(String(value)), [value]);
@@ -30,7 +31,9 @@ export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL }: Pro
   return (
     <div className="level-selector">
       <div className="level-stepper">
-        <span className="level-stepper__label">Nivel</span>
+        <label className="level-stepper__label" htmlFor={inputId}>
+          Nivel
+        </label>
         <button
           type="button"
           className="level-stepper__btn"
@@ -41,6 +44,7 @@ export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL }: Pro
           ‹
         </button>
         <input
+          id={inputId}
           type="number"
           className="level-stepper__input"
           inputMode="numeric"
@@ -49,7 +53,6 @@ export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL }: Pro
           value={draft}
           onChange={(e) => handleInput(e.target.value)}
           onBlur={() => setDraft(String(value))}
-          aria-label="Nivel"
         />
         <button
           type="button"

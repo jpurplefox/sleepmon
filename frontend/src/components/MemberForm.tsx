@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 
 import type { Catalog, MemberInput } from "../types";
 import { IngredientSlots } from "./IngredientSlots";
@@ -17,6 +18,8 @@ interface Props {
   initial?: MemberInput;
   // Permite "Sin naturaleza" y arranca sin ella (comparador de producción).
   natureOptional?: boolean;
+  // Nota al pie del form, justo antes del botón de submit.
+  footer?: ReactNode;
 }
 
 export function MemberForm({
@@ -27,6 +30,7 @@ export function MemberForm({
   submitLabel = "Agregar al equipo",
   initial,
   natureOptional,
+  footer,
 }: Props) {
   // Sin naturaleza por defecto en el comparador; en la caja, la primera del catálogo.
   const defaultNature = natureOptional ? "" : catalog.natures[0]?.name ?? "";
@@ -107,6 +111,8 @@ export function MemberForm({
       </fieldset>
 
       {error && <p className="error">{error}</p>}
+
+      {footer}
 
       <button className="btn btn--primary" type="submit" disabled={pending}>
         {pending ? "Guardando…" : submitLabel}

@@ -100,11 +100,6 @@ export function Production() {
             setEditIndex(null);
           }}
         >
-          {editIndex === null ? (
-            <p className="muted">No se guarda en tu caja.</p>
-          ) : (
-            <p className="muted">Los cambios son solo para la comparación.</p>
-          )}
           <MemberForm
             catalog={catalog.data}
             pending={false}
@@ -113,6 +108,13 @@ export function Production() {
             initial={editIndex !== null ? configs[editIndex] : undefined}
             natureOptional
             onSubmit={upsert}
+            footer={
+              editIndex === null ? (
+                <p className="muted">No se guarda en tu caja.</p>
+              ) : (
+                <p className="muted">Los cambios son solo para la comparación.</p>
+              )
+            }
           />
         </Modal>
       )}

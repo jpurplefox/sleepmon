@@ -76,8 +76,8 @@ export function ProductionCard({ config, catalog, onEdit, onRemove }: Props) {
               <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
             </svg>
           </button>
-          <button type="button" className="icon-btn" onClick={onRemove} title="Quitar">
-            ✕
+          <button type="button" className="icon-btn" onClick={onRemove} title="Quitar" aria-label="Quitar">
+            ×
           </button>
         </div>
       </header>
