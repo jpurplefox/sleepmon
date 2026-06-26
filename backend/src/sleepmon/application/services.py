@@ -165,7 +165,7 @@ class DefaultTeamService(TeamService):
         if species is None:
             raise SpeciesNotFoundError(f"Especie desconocida: {data.species!r}.")
 
-        nature = _parse_enum(Nature, data.nature, "nature")
+        nature = _parse_enum(Nature, data.nature, "nature") if data.nature else None
         sub_skills = tuple(_parse_enum(SubSkill, s, "sub_skill") for s in data.sub_skills)
         ingredients = tuple(_parse_enum(Ingredient, i, "ingredient") for i in data.ingredients)
 

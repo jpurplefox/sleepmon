@@ -66,7 +66,12 @@ class PostgresTeamRepository(TeamRepository):
         with self._pool.connection() as conn, conn.cursor() as cur:
             cur.execute(
                 queries.INSERT_MEMBER,
-                (member.id, member.species, member.level, member.nature.value),
+                (
+                    member.id,
+                    member.species,
+                    member.level,
+                    member.nature.value if member.nature else "",
+                ),
             )
             self._insert_children(cur, member)
 
@@ -106,7 +111,12 @@ class PostgresTeamRepository(TeamRepository):
         with self._pool.connection() as conn, conn.cursor() as cur:
             cur.execute(
                 queries.UPDATE_MEMBER,
-                (member.species, member.level, member.nature.value, member.id),
+                (
+                    member.species,
+                    member.level,
+                    member.nature.value if member.nature else "",
+                    member.id,
+                ),
             )
             if cur.rowcount == 0:
                 return False
@@ -150,7 +160,7 @@ def _build_member(
         id=row.id,
         species=row.species,
         level=row.level,
-        nature=_decode(Nature, row.nature),
+        nature=_decode(Nature, row.nature) if row.nature else None,
         ingredients=ingredients,
         sub_skills=sub_skills,
     )

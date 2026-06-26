@@ -16,8 +16,6 @@ interface Props {
   submitLabel?: string;
   // Valores iniciales para editar un Pokémon ya elegido.
   initial?: MemberInput;
-  // Permite "Sin naturaleza" y arranca sin ella (comparador de producción).
-  natureOptional?: boolean;
   // Nota al pie del form, justo antes del botón de submit.
   footer?: ReactNode;
 }
@@ -29,14 +27,13 @@ export function MemberForm({
   error,
   submitLabel = "Agregar al equipo",
   initial,
-  natureOptional,
   footer,
 }: Props) {
-  // Sin naturaleza por defecto en el comparador; en la caja, la primera del catálogo.
-  const defaultNature = natureOptional ? "" : catalog.natures[0]?.name ?? "";
+  // La naturaleza es opcional siempre: arranca en "Sin naturaleza" salvo que se
+  // edite un miembro que ya tenía una.
   const [species, setSpecies] = useState(initial?.species ?? catalog.species[0]?.name ?? "");
   const [level, setLevel] = useState(initial?.level ?? 30);
-  const [nature, setNature] = useState(initial?.nature ?? defaultNature);
+  const [nature, setNature] = useState(initial?.nature ?? "");
   const [ingredients, setIngredients] = useState<string[]>(initial?.ingredients ?? []);
   const [subSkills, setSubSkills] = useState<string[]>(initial?.sub_skills ?? []);
 
@@ -83,7 +80,7 @@ export function MemberForm({
             natures={catalog.natures}
             value={nature}
             onChange={setNature}
-            allowNone={natureOptional}
+            allowNone
           />
         </label>
       </div>

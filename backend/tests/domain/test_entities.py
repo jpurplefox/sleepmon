@@ -23,6 +23,12 @@ def test_valid_member_constructs() -> None:
     assert member.id is not None
 
 
+def test_member_without_nature_is_valid() -> None:
+    # naturaleza opcional: None = "sin naturaleza", sin efecto.
+    member = make(nature=None)
+    assert member.nature is None
+
+
 def test_empty_species_rejected() -> None:
     with pytest.raises(ValidationError):
         make(species="   ")

@@ -135,7 +135,6 @@ export function Production() {
             error={null}
             submitLabel={editIndex !== null ? "Guardar" : "Agregar a la comparación"}
             initial={editIndex !== null ? configs[editIndex] : undefined}
-            natureOptional
             onSubmit={upsert}
             footer={
               editIndex === null ? (

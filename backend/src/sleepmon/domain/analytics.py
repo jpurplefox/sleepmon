@@ -15,8 +15,12 @@ from sleepmon.domain.value_objects import Ingredient, Nature, NatureStat, SubSki
 
 
 def nature_distribution(members: Iterable[TeamMember]) -> dict[Nature, int]:
-    """Cuántos miembros del equipo tienen cada naturaleza."""
-    counter: Counter[Nature] = Counter(member.nature for member in members)
+    """Cuántos miembros del equipo tienen cada naturaleza.
+
+    Los miembros sin naturaleza (``None`` = "sin naturaleza") no se cuentan."""
+    counter: Counter[Nature] = Counter(
+        member.nature for member in members if member.nature is not None
+    )
     return dict(counter)
 
 
@@ -41,6 +45,8 @@ def nature_stat_balance(members: Iterable[TeamMember]) -> dict[NatureStat, int]:
     que lo baja. Da una lectura rápida de hacia dónde está sesgado el equipo."""
     balance: dict[NatureStat, int] = {stat: 0 for stat in NatureStat}
     for member in members:
+        if member.nature is None:
+            continue
         effect = NATURE_EFFECTS[member.nature]
         if effect.increased is not None:
             balance[effect.increased] += 1

@@ -28,7 +28,7 @@ class TeamMember:
 
     species: str
     level: int
-    nature: Nature
+    nature: Nature | None
     ingredients: tuple[Ingredient, ...]
     sub_skills: tuple[SubSkill, ...] = ()
     id: UUID = field(default_factory=uuid4)
