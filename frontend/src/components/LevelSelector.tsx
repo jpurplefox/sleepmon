@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { LEVEL_SHORTCUTS, MAX_LEVEL } from "../constants";
 
@@ -17,7 +17,14 @@ export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL }: Pro
   const inputId = useId();
   // Draft local para permitir escribir libremente (incluido borrar el campo).
   const [draft, setDraft] = useState(String(value));
-  useEffect(() => setDraft(String(value)), [value]);
+  // Sincronizamos el draft desde value SOLO cuando el cambio viene de afuera
+  // (stepper, shortcuts) y no mientras el usuario tipea: si no, un valor que
+  // clampa (p.ej. "150" → 100) reescribiría el draft bajo los dedos y no se
+  // podría corregir a "15".
+  const focused = useRef(false);
+  useEffect(() => {
+    if (!focused.current) setDraft(String(value));
+  }, [value]);
 
   const set = (n: number) => onChange(clamp(Math.round(n), min, max));
 
@@ -25,6 +32,13 @@ export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL }: Pro
   // Enter, para que el input nunca quede mostrando vacío mientras se envía el
   // último value válido (desync visual).
   const reconcile = () => setDraft(String(value));
+
+  // Al perder foco marcamos el input como no enfocado (así el efecto vuelve a
+  // sincronizar con value) y reponemos el draft.
+  const handleBlur = () => {
+    focused.current = false;
+    reconcile();
+  };
 
   function handleInput(raw: string) {
     setDraft(raw);
@@ -62,9 +76,12 @@ export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL }: Pro
           min={min}
           max={max}
           value={draft}
+          onFocus={() => {
+            focused.current = true;
+          }}
           onChange={(e) => handleInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          onBlur={reconcile}
+          onBlur={handleBlur}
         />
         <button
           type="button"

@@ -22,9 +22,10 @@ interface Props {
   value: string[];
   level: number;
   onChange: (next: string[]) => void;
+  ariaLabel?: string;
 }
 
-export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
+export function SubSkillSelect({ subSkills, value, level, onChange, ariaLabel }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -100,6 +101,7 @@ export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
+        aria-label={ariaLabel}
       >
         <div className="subskill-slots">
           {Array.from({ length: MAX_SUB_SKILLS }, (_, i) => {
@@ -123,11 +125,13 @@ export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
           className="subskill-trigger__hint"
           title={
             available < MAX_SUB_SKILLS
-              ? `${available} de ${MAX_SUB_SKILLS} slots disponibles al nivel ${level}; el resto se desbloquea al subir de nivel`
-              : "Los 5 slots están disponibles"
+              ? `El kit guarda hasta ${MAX_SUB_SKILLS}; al nivel ${level} ${available} de ${MAX_SUB_SKILLS} slots están activos, el resto se activa al subir de nivel`
+              : "Los 5 slots están activos"
           }
         >
-          {count >= available ? `${count}/${available} · cambiar` : `${count}/${available} · elegir`}
+          {count >= MAX_SUB_SKILLS
+            ? `${count}/${MAX_SUB_SKILLS} · cambiar`
+            : `${count}/${MAX_SUB_SKILLS} · elegir`}
         </span>
       </button>
 

@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Production } from "./pages/Production";
 import { Team } from "./pages/Team";
 
@@ -29,7 +30,8 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <nav className="tabs" role="tablist" aria-label="Navegación principal">
+      <ErrorBoundary>
+        <nav className="tabs" role="tablist" aria-label="Navegación principal">
         <button
           id="tab-team"
           type="button"
@@ -71,6 +73,7 @@ export default function App() {
           <Production />
         </div>
       )}
+      </ErrorBoundary>
     </QueryClientProvider>
   );
 }

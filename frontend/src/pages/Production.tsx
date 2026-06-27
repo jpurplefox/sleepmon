@@ -57,6 +57,10 @@ export function Production() {
       // El resultado de una config es estable: no re-pedir ni reflashear
       // "Calculando…" al reordenar o revisitar una card ya calculada.
       staleTime: 60_000,
+      // POST /production puede devolver 400 (determinista): reintentar con el
+      // backoff por defecto solo retrasa ~7s la aparición del error. Sin
+      // reintentos aquí (no global: members/catalog sí reintentan ante red).
+      retry: false,
     })),
   });
   const baseProduction = productions[0]?.data ?? null;

@@ -66,6 +66,11 @@ export function MemberForm({
   // las 3 posiciones estén completas.
   const ingredientsComplete = ingredients.filter(Boolean).length === 3;
 
+  // Al editar un miembro cuya especie no está en el catálogo cargado,
+  // selectedSpecies es undefined: el fieldset de Ingredientes no se renderiza y
+  // no se puede validar/editar el kit. Bloqueamos el submit y avisamos.
+  const speciesUnknown = !!species && !selectedSpecies;
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     onSubmit({
@@ -126,6 +131,7 @@ export function MemberForm({
           value={subSkills}
           level={level}
           onChange={setSubSkills}
+          ariaLabel="Sub skills"
         />
       </fieldset>
 
@@ -133,6 +139,12 @@ export function MemberForm({
         <legend>Listón</legend>
         <RibbonSelect value={ribbon} onChange={setRibbon} />
       </fieldset>
+
+      {speciesUnknown && (
+        <p className="error" role="alert">
+          La especie «{species}» no está en el catálogo cargado; no se puede editar.
+        </p>
+      )}
 
       {error && (
         <p className="error" role="alert">
@@ -145,7 +157,7 @@ export function MemberForm({
       <button
         className="btn btn--primary"
         type="submit"
-        disabled={pending || !species || !ingredientsComplete}
+        disabled={pending || !species || speciesUnknown || !ingredientsComplete}
       >
         {pending ? "Guardando…" : submitLabel}
       </button>

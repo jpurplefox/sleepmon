@@ -134,7 +134,6 @@ export function MemberCard({ member, nature, dex, subSkillTiers, onEdit, onDelet
         <button
           className="btn btn--ghost btn--danger"
           onClick={handleDelete}
-          aria-live="polite"
           aria-label={
             confirming
               ? `Confirmar eliminación de ${member.species} — pulsá de nuevo para confirmar`
@@ -143,6 +142,11 @@ export function MemberCard({ member, nature, dex, subSkillTiers, onEdit, onDelet
         >
           {confirming ? "Confirmar" : "Eliminar"}
         </button>
+        {/* El anuncio del estado de confirmación vive en un status separado: el
+            aria-live sobre el propio botón cuyo label cambia es poco fiable. */}
+        <span className="sr-only" role="status" aria-live="polite">
+          {confirming ? `Pulsá de nuevo para confirmar la eliminación de ${member.species}` : ""}
+        </span>
       </div>
     </article>
   );
