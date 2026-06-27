@@ -258,6 +258,42 @@ def test_evolution_stage_defaults_to_zero_and_rejects_out_of_range() -> None:
         )
 
 
+def test_line_evolutions_out_of_range_rejected() -> None:
+    # line_evolutions debe estar entre evolution_stage y MAX_EVOLUTION_STAGE (2).
+    with pytest.raises(ValueError, match="line_evolutions"):
+        Species(
+            "Bad", 1, Specialty.BERRIES, Berry.ORAN, SleepType.DOZING, "Skill",
+            (Ingredient.HONEY,), 3600, 20.0, 5.0, ((1,), (1,), (1,)), 10,
+            line_evolutions=3,  # > MAX_EVOLUTION_STAGE
+        )
+    with pytest.raises(ValueError, match="line_evolutions"):
+        Species(
+            "Bad", 1, Specialty.BERRIES, Berry.ORAN, SleepType.DOZING, "Skill",
+            (Ingredient.HONEY,), 3600, 20.0, 5.0, ((1,), (1,), (1,)), 10,
+            evolution_stage=2, line_evolutions=1,  # línea más corta que la etapa actual
+        )
+
+
+def test_ingredient_amounts_wrong_slot_count_rejected() -> None:
+    # ingredient_amounts debe tener exactamente MAX_INGREDIENTS (3) slots.
+    with pytest.raises(ValueError, match="ingredient_amounts"):
+        Species(
+            "Bad", 1, Specialty.BERRIES, Berry.ORAN, SleepType.DOZING, "Skill",
+            (Ingredient.HONEY,), 3600, 20.0, 5.0, ((1,), (1,)), 10,  # solo 2 slots
+        )
+
+
+def test_ingredient_amounts_slot_width_mismatch_rejected() -> None:
+    # Cada slot debe tener tantas cantidades como opciones (la forma de
+    # ingredient_amounts debe coincidir con ingredient_slots, de anchos 1/2/3).
+    with pytest.raises(ValueError, match="opciones"):
+        Species(
+            "Bad", 1, Specialty.INGREDIENTS, Berry.ORAN, SleepType.DOZING, "Skill",
+            (Ingredient.HONEY, Ingredient.SNOOZY_TOMATO, Ingredient.SOFT_POTATO),
+            3600, 20.0, 5.0, ((2,), (5,), (7, 7, 6)), 10,  # slot 1: 2 opciones, 1 cantidad
+        )
+
+
 def test_ribbon_inventory_bonus_is_cumulative() -> None:
     # Acumulativo: +1, +2, +3, +2 -> totales 1, 3, 6, 8.
     assert ribbon_inventory_bonus(Ribbon.NONE) == 0
