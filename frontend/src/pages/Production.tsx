@@ -163,7 +163,7 @@ export function Production() {
     return <p className="error">No se pudo cargar el catálogo. ¿Está el backend en :8000?</p>;
 
   return (
-    <div className="layout">
+    <div className="layout layout--wide">
       <header className="hero">
         <h1>Comparación</h1>
         <p className="muted">
@@ -173,68 +173,59 @@ export function Production() {
         </p>
       </header>
 
-      <section className="prod-source">
-        <button
-          type="button"
-          className="btn btn--primary"
-          onClick={() => openAdd("form")}
-          disabled={atMax}
-        >
-          + Nuevo
-        </button>
-        <button
-          type="button"
-          className="btn btn--ghost"
-          onClick={() => openAdd("box")}
-          disabled={atMax}
-        >
-          + Mis Pokémon
-        </button>
-      </section>
-
       {atMax && (
         <p className="muted">
           Ya hay 5 Pokémon: es el máximo del equipo en el juego. Quitá uno para agregar otro.
         </p>
       )}
 
-      {entries.length === 0 ? (
-        <p className="muted">
-          Usá los botones de arriba para agregar un Pokémon —desde tu caja o configurando uno
-          nuevo— y comparar su producción lado a lado.
-        </p>
-      ) : (
-        <div className="prod-cards">
-          {entries.map((e, i) => (
-            <ProductionCard
-              key={e.uid}
-              config={e.config}
-              catalog={catalog.data}
-              production={productions[i]?.data ?? null}
-              productionError={(productions[i]?.error as Error | null) ?? null}
-              base={i === 0 ? null : baseProduction}
-              isBase={i === 0}
-              onEdit={() => openEdit(i)}
-              onClone={() => cloneAt(i)}
-              onRemove={() => removeAt(i)}
-              onSaveToBox={() => saveToBox(i)}
-              cloneDisabled={atMax}
-              inBox={e.sourceId !== undefined}
-              saveState={e.save?.state ?? "idle"}
-              saveError={e.save?.error ?? null}
-              dragging={dragIndex === i}
-              dragOver={dragOverIndex === i && dragIndex !== i}
-              onDragStart={() => setDragIndex(i)}
-              onDragEnter={() => setDragOverIndex(i)}
-              onDrop={() => onCardDrop(i)}
-              onDragEnd={() => {
-                setDragIndex(null);
-                setDragOverIndex(null);
-              }}
-            />
-          ))}
-        </div>
-      )}
+      <div className="prod-cards">
+        {entries.map((e, i) => (
+          <ProductionCard
+            key={e.uid}
+            config={e.config}
+            catalog={catalog.data}
+            production={productions[i]?.data ?? null}
+            productionError={(productions[i]?.error as Error | null) ?? null}
+            base={i === 0 ? null : baseProduction}
+            onEdit={() => openEdit(i)}
+            onClone={() => cloneAt(i)}
+            onRemove={() => removeAt(i)}
+            onSaveToBox={() => saveToBox(i)}
+            cloneDisabled={atMax}
+            inBox={e.sourceId !== undefined}
+            saveState={e.save?.state ?? "idle"}
+            saveError={e.save?.error ?? null}
+            dragging={dragIndex === i}
+            dragOver={dragOverIndex === i && dragIndex !== i}
+            onDragStart={() => setDragIndex(i)}
+            onDragEnter={() => setDragOverIndex(i)}
+            onDrop={() => onCardDrop(i)}
+            onDragEnd={() => {
+              setDragIndex(null);
+              setDragOverIndex(null);
+            }}
+          />
+        ))}
+
+        {!atMax && (
+          <article className="prod-card prod-card--add">
+            <p className="muted prod-add__hint">
+              {entries.length === 0
+                ? "Agregá un Pokémon —de tu caja o configurando uno nuevo— para comparar su producción lado a lado."
+                : "Agregá otro Pokémon para sumarlo a la comparación."}
+            </p>
+            <div className="prod-add__actions">
+              <button type="button" className="btn btn--primary" onClick={() => openAdd("form")}>
+                + Nuevo
+              </button>
+              <button type="button" className="btn btn--ghost" onClick={() => openAdd("box")}>
+                + Mis Pokémon
+              </button>
+            </div>
+          </article>
+        )}
+      </div>
 
       {modal === "form" && (
         <Modal

@@ -55,7 +55,6 @@ interface Props {
   // Datos de la card base (índice 0) para calcular los deltas; null/undefined si
   // esta es la base.
   base?: Production | null;
-  isBase?: boolean;
   onEdit: () => void;
   onClone: () => void;
   onRemove: () => void;
@@ -79,7 +78,6 @@ export function ProductionCard({
   production,
   productionError,
   base,
-  isBase,
   onEdit,
   onClone,
   onRemove,
@@ -128,7 +126,6 @@ export function ProductionCard({
       ref={cardRef}
       className={
         "prod-card" +
-        (isBase ? " prod-card--base" : "") +
         (dragging ? " prod-card--dragging" : "") +
         (dragOver ? " prod-card--dragover" : "")
       }
@@ -141,9 +138,15 @@ export function ProductionCard({
     >
       <header className="prod-card__head">
         <div className="prod-card__topline">
-          {species && (
-            <img className="prod-card__sprite" src={spriteUrl(species.dex)} alt="" loading="lazy" />
-          )}
+          <div className="prod-card__title">
+            <strong>{config.species}</strong> <span className="muted">Nv.&nbsp;{config.level}</span>
+            {(() => {
+              const idx = RIBBONS.findIndex((r) => r.name === config.ribbon);
+              return idx > 0 ? (
+                <RibbonIcon index={idx} size={20} title={`Listón ${RIBBONS[idx].hours} h`} />
+              ) : null;
+            })()}
+          </div>
           <div className="prod-card__actions">
             <button
               type="button"
@@ -195,20 +198,9 @@ export function ProductionCard({
             </button>
           </div>
         </div>
-        <div className="prod-card__title">
-          <strong>{config.species}</strong> <span className="muted">Nv.&nbsp;{config.level}</span>
-          {(() => {
-            const idx = RIBBONS.findIndex((r) => r.name === config.ribbon);
-            return idx > 0 ? (
-              <RibbonIcon index={idx} size={20} title={`Listón ${RIBBONS[idx].hours} h`} />
-            ) : null;
-          })()}
-          {isBase && (
-            <span className="prod-card__base-tag" title="Base de la comparación: el resto se mide contra esta card">
-              base
-            </span>
-          )}
-        </div>
+        {species && (
+          <img className="prod-card__sprite" src={spriteUrl(species.dex)} alt="" loading="lazy" />
+        )}
         {saveState === "saving" && <p className="prod-card__save muted">Guardando…</p>}
         {saveState === "saved" && <p className="prod-card__save prod-card__save--ok">Guardado</p>}
         {saveState === "error" && (
@@ -290,7 +282,7 @@ export function ProductionCard({
             </span>
           </div>
 
-          <div className="prod-card__block">
+          <div className="prod-card__block prod-card__block--berry">
             <div className="prod-card__block-head">
               Bayas <span className="muted">{pct(d.berry_percentage)}</span>
             </div>
@@ -305,7 +297,7 @@ export function ProductionCard({
             </ul>
           </div>
 
-          <div className="prod-card__block">
+          <div className="prod-card__block prod-card__block--ing">
             <div className="prod-card__block-head">
               Ingredientes <span className="muted">{pct(d.ingredient_percentage)}</span>
             </div>
@@ -320,7 +312,7 @@ export function ProductionCard({
             </ul>
           </div>
 
-          <div className="prod-card__block">
+          <div className="prod-card__block prod-card__block--skill">
             <div className="prod-card__block-head">
               Skill <span className="muted">{pct(d.effective_skill_percentage)}</span>
             </div>
@@ -330,19 +322,21 @@ export function ProductionCard({
               </span>
             </div>
             <div className="prod-card__night">
-              <IconMoon className="prod-card__moon" />
               {d.night_skill_chances.length >= 2 ? (
                 <>
                   <span title="Probabilidad de activar la skill exactamente 1 vez mientras dormís">
+                    <IconMoon className="prod-card__moon" />
                     <span className="muted">1 vez</span>{" "}
                     {pct((d.night_skill_chances[0] - d.night_skill_chances[1]) * 100)}
                   </span>
                   <span title="Probabilidad de activar la skill 2 veces mientras dormís (el tope)">
+                    <IconMoon className="prod-card__moon" />
                     <span className="muted">2 veces</span> {pct(d.night_skill_chances[1] * 100)}
                   </span>
                 </>
               ) : (
                 <span title="Probabilidad de activar la skill mientras dormís">
+                  <IconMoon className="prod-card__moon" />
                   <span className="muted">al dormir</span> {pct(d.night_skill_chances[0] * 100)}
                 </span>
               )}
