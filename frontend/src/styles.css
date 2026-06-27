@@ -812,8 +812,17 @@ select:focus {
   padding: 0;
 }
 
-.level-stepper__input:focus {
+/* Sin anillo al hacer click (look limpio dentro del stepper), pero con foco
+   visible al navegar por teclado (WCAG 2.4.7): el input se tipea, así que el
+   usuario de teclado necesita ver dónde está el cursor. */
+.level-stepper__input:focus:not(:focus-visible) {
   outline: none;
+}
+
+.level-stepper__input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
 }
 
 /* Ocultar las flechas nativas del number input (usamos las nuestras). */
