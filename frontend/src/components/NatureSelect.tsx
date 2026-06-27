@@ -60,11 +60,19 @@ export function NatureSelect({ natures, value, onChange, allowNone }: Props) {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
+    // Cerrar al tabular fuera del componente, así el dropdown no queda suspendido
+    // con navegación por teclado.
+    const onFocusOut = (e: FocusEvent) => {
+      if (ref.current && !ref.current.contains(e.relatedTarget as Node)) setOpen(false);
+    };
     document.addEventListener("mousedown", onDoc);
     document.addEventListener("keydown", onKey);
+    const node = ref.current;
+    node?.addEventListener("focusout", onFocusOut);
     return () => {
       document.removeEventListener("mousedown", onDoc);
       document.removeEventListener("keydown", onKey);
+      node?.removeEventListener("focusout", onFocusOut);
     };
   }, [open]);
 

@@ -93,6 +93,35 @@ export function IconGrip(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+// Cerrar / quitar (cruz de línea, mismo trazo que el resto).
+export function IconClose(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  );
+}
+
+// Editar (lápiz).
+export function IconEdit(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
+// Clonar (dos rectángulos superpuestos).
+export function IconCopy(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="8" y="8" width="14" height="14" rx="2" ry="2" />
+      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+    </svg>
+  );
+}
+
 // Guardar en la caja (una caja con una flecha que entra hacia adentro).
 export function IconSaveBox(props: SVGProps<SVGSVGElement>) {
   return (

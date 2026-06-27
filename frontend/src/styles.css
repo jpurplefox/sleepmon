@@ -66,6 +66,13 @@ body {
   font-size: var(--text-xl);
 }
 
+/* Nota secundaria del hero (supuestos de cálculo): más chica y separada del
+   párrafo principal. */
+.hero__note {
+  font-size: var(--text-sm);
+  margin-top: 0.35rem;
+}
+
 .muted {
   color: var(--muted);
 }
@@ -320,14 +327,14 @@ select:focus {
 
 .subskill-dropdown {
   position: absolute;
-  bottom: calc(100% + 6px);
+  top: calc(100% + 6px);
   left: 0;
   right: 0;
   z-index: 30;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
-  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   padding: 0.6rem;
   max-height: 340px;
   overflow-y: auto;
@@ -870,6 +877,7 @@ select:focus {
   padding: 2rem 1rem;
   overflow-y: auto;
   z-index: 50;
+  animation: overlay-in 0.12s ease-out;
 }
 
 .modal-panel {
@@ -880,6 +888,29 @@ select:focus {
   max-width: 560px;
   margin: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modal-in 0.12s ease-out;
+}
+
+/* Presencia del modal: aparición corta que hace legible el cambio de estado
+   (abrir/cerrar es frecuente en el flujo de comparación) sin ser decorativa. */
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .modal-head {
@@ -899,8 +930,8 @@ select:focus {
   background: transparent;
   border: none;
   color: var(--muted);
-  font-size: var(--text-xl);
-  line-height: 1;
+  display: grid;
+  place-items: center;
   cursor: pointer;
   width: 32px;
   height: 32px;
@@ -1105,8 +1136,14 @@ select:focus {
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 0.9rem;
+  gap: 1rem;
   border-style: dashed;
+  transition: border-color 0.12s;
+}
+
+/* La invitación a agregar responde al hover como cualquier elemento interactivo. */
+.prod-card--add:hover {
+  border-color: var(--accent);
 }
 
 .prod-add__hint {
@@ -1255,13 +1292,34 @@ select:focus {
   cursor: pointer;
 }
 
-.prod-box-item:hover {
+.prod-box-item:hover:not(:disabled) {
   border-color: var(--accent);
+}
+
+/* Miembro que ya está en la comparación: no se puede volver a agregar. Se marca
+   con borde punteado y el nombre atenuado, no con opacidad global (que dejaría el
+   tag ilegible). */
+.prod-box-item:disabled {
+  cursor: default;
+  border-style: dashed;
+}
+
+.prod-box-item:disabled .prod-box-item__name {
+  color: var(--muted);
 }
 
 .prod-box-item__name {
   font-weight: 600;
   flex: 1;
+}
+
+/* Estado neutro (no es identidad ni acción): chip atenuado con borde, legible. */
+.prod-box-item__tag {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 0.05rem 0.4rem;
 }
 
 /* Comparación de producción: hasta 5 cards por fila (luego envuelven) */
@@ -1286,12 +1344,66 @@ select:focus {
   }
 }
 
-/* Cuando la empty state es la única card (sin Pokémon todavía) no tiene sentido
+/* Cada item de la grilla es una celda: la barra de acciones arriba (fuera de la
+   card) + la card. La card crece para igualar el alto de la fila (align stretch),
+   así las barras quedan arriba alineadas y los cuerpos de card también. */
+.prod-card-cell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.prod-card-cell > .prod-card {
+  flex: 1;
+}
+
+/* La barra y la card comparten superficie: la barra es la "tapa" (misma surface y
+   borde, sin borde inferior ni radios abajo) y la card aplana sus radios de arriba.
+   Juntas se leen como una sola pieza, no como dos elementos sueltos. */
+.prod-card-cell > .prod-card:not(.prod-card--add) {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* Barra de accionables, arriba de la card, alineada a la derecha. min-height
+   reserva su alto para que el placeholder vacío de la card de "agregar" mantenga
+   los cuerpos de card alineados. */
+.prod-card__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  min-height: 26px;
+  padding: 0 0.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+
+/* Feedback de guardado a la izquierda de la barra: ocupa el espacio libre y empuja
+   los íconos a la derecha. Trunca si el mensaje (p. ej. un error) es largo. */
+.prod-card__toolbar-status {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding-left: 0.15rem;
+}
+
+/* Placeholder de la card de "agregar": sin superficie (esa card es un CTA con
+   borde punteado propio), solo reserva el alto. */
+.prod-card__toolbar--empty {
+  background: none;
+  border: none;
+}
+
+/* Cuando la empty state es la única celda (sin Pokémon todavía) no tiene sentido
    que quede angosta y arrinconada a la izquierda: la dejamos abarcar la fila,
    la acotamos y la centramos. */
-.prod-card--add:only-child {
+.prod-card-cell:only-child {
   grid-column: 1 / -1;
-  max-width: 420px;
+  max-width: 460px;
   justify-self: center;
 }
 
@@ -1303,6 +1415,87 @@ select:focus {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
+}
+
+/* Aparición al sumar una card: amortigua el salto de layout en una grilla con
+   hasta 5 cards. La clase se aplica solo al montar y se quita al terminar (ver
+   ProductionCard), así reordenar/intercambiar no la reinicia. */
+.prod-card--enter {
+  animation: prod-card-in 0.15s ease-out;
+}
+
+@keyframes prod-card-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* La card base lleva el borde lunar: marca discreta de cuál es la referencia. */
+.prod-card--base {
+  border-color: var(--moon-border);
+}
+
+/* Fila de altura reservada para el chip/botón de base: aunque haya una sola card
+   (sin chip), reserva el alto para que ninguna salte al pasar de 1 a 2. */
+.prod-card__base-row {
+  display: flex;
+  min-height: 1.4rem;
+}
+
+/* Chip "Base" (estado) y botón "Hacer base" (acción), bajo el topline. */
+.prod-card__base-tag {
+  align-self: flex-start;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--r-sm);
+}
+
+span.prod-card__base-tag {
+  color: var(--moon);
+  background: var(--moon-dim);
+  border: 1px solid var(--moon-border);
+}
+
+button.prod-card__base-tag--action {
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+}
+
+button.prod-card__base-tag--action:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+/* La acción destructiva respira un poco respecto del grupo de acciones positivas. */
+.prod-card__remove {
+  margin-left: 0.25rem;
+}
+
+/* Hover destructivo en rojo (lo que pide el concepto para la acción de borrar). */
+.prod-card__remove:hover:not(:disabled) {
+  color: var(--error);
+  background: transparent;
+}
+
+/* El estado de carga reserva el alto aproximado de las métricas, así la card no
+   pega un salto cuando el cálculo llega. */
+.prod-card__calc {
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 /* Mientras se arrastra una card para reordenar. */
@@ -1330,6 +1523,9 @@ select:focus {
   font-size: var(--text-xs);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  /* Al cambiar la base, los deltas se recalculan en bloque: la transición de
+     color hace legible que algo cambió sin ser ostentosa. */
+  transition: color 0.15s ease-out;
 }
 
 .prod-delta--up {
@@ -1352,31 +1548,34 @@ select:focus {
   gap: 0.35rem;
 }
 
+/* Fila 1: grip de arrastre (izquierda) + nombre/nivel/listón ocupando el resto. */
 .prod-card__topline {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
 
-/* El sprite va debajo del nombre, centrado, como foco visual de la card. */
+/* El sprite es el foco visual de la card: centrado bajo el nombre, generoso. */
 .prod-card__sprite {
-  width: 48px;
-  height: 48px;
+  width: 88px;
+  height: 88px;
   image-rendering: pixelated;
   flex-shrink: 0;
   align-self: center;
 }
 
-/* Nombre + nivel: primera fila de la card, alineados a la izquierda con las
-   acciones a la derecha (el topline las reparte con space-between). */
+/* Nombre + nivel + listón: fila propia a todo el ancho, sin competir con las
+   acciones, así nunca se trunca ni parte en una card angosta. */
 .prod-card__title {
-  line-height: 1.3;
-  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  line-height: 1.4;
 }
 
 .prod-card__title strong {
-  font-size: var(--text-base);
+  font-size: var(--text-lg);
   font-weight: 700;
 }
 
@@ -1386,20 +1585,36 @@ select:focus {
   font-weight: 400;
 }
 
-.prod-card__actions {
-  display: flex;
-  gap: 0.15rem;
-  flex-shrink: 0;
-}
 
-/* Feedback discreto del guardado a la Caja, bajo el header de la card. */
+/* Feedback discreto del guardado a la Caja, dentro de la barra de acciones. */
 .prod-card__save {
   font-size: var(--text-xs);
   margin: 0;
 }
 
+/* Pulso suave del botón de guardar mientras está en curso: hace visible el
+   estado sin depender del texto chico de feedback. */
+.icon-btn--saving {
+  animation: icon-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes icon-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* Éxito = verde semántico (el dorado queda reservado a la identidad "luna"). */
 .prod-card__save--ok {
-  color: var(--moon);
+  color: var(--up);
+}
+
+.prod-card__save--error {
+  color: var(--error);
 }
 
 .icon-btn {
@@ -1408,7 +1623,7 @@ select:focus {
   color: var(--muted);
   cursor: pointer;
   font-size: var(--text-base);
-  padding: 0.2rem;
+  padding: 0.3rem;
   border-radius: var(--r-sm);
   display: inline-flex;
   align-items: center;
@@ -1423,6 +1638,12 @@ select:focus {
 .icon-btn:disabled {
   opacity: 0.35;
   cursor: default;
+}
+
+/* Pokémon que ya existe en la caja: el guardar tiñe a acento para señalar que
+   ESCRIBE sobre el existente (vs crear uno nuevo). */
+.icon-btn--inbox {
+  color: var(--accent);
 }
 
 .btn--ghost:disabled {
@@ -1482,11 +1703,11 @@ select:focus {
   height: 18px;
 }
 
-.prod-card__nature .up {
+.prod-card__nature .nat-up {
   color: var(--up);
 }
 
-.prod-card__nature .down {
+.prod-card__nature .nat-down {
   color: var(--down);
 }
 
@@ -1529,7 +1750,7 @@ select:focus {
   font-size: var(--text-sm);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   color: var(--muted);
 }
 
@@ -1588,10 +1809,10 @@ select:focus {
   opacity: 0.4;
 }
 
-/* Listón inline en el título de la card de comparación: solo el ícono. */
+/* Listón inline en el título de la card de comparación: solo el ícono. El título
+   es flex con baseline, así que centramos el ícono respecto del texto. */
 .prod-card__title .ribbon-icon {
-  vertical-align: middle;
-  margin-left: 0.15rem;
+  align-self: center;
 }
 
 /* Stepper del formulario: ‹ ícono+horas ›. */
@@ -1608,14 +1829,14 @@ select:focus {
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
-  font-size: 1.4rem;
+  font-size: var(--text-xl);
   line-height: 1;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
 
 .ribbon-step:hover:not(:disabled) {
-  background: var(--surface-3, var(--surface-2));
+  background: var(--surface-2);
   border-color: var(--accent);
 }
 
@@ -1651,4 +1872,20 @@ select:focus {
 .ribbon-display__effect {
   color: var(--muted);
   font-size: var(--text-sm);
+}
+
+/* Respeta a quien prefiere menos movimiento: nada de animaciones de presencia. */
+@media (prefers-reduced-motion: reduce) {
+  .prod-card--enter,
+  .modal-panel,
+  .modal-overlay,
+  .icon-btn--saving {
+    animation: none;
+  }
+
+  .prod-delta,
+  .prod-card--add,
+  button.prod-card__base-tag--action {
+    transition: none;
+  }
 }

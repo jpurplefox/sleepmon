@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { berryIcon } from "../berries";
 import { INGREDIENT_UNLOCK_LEVELS, RIBBONS, SUB_SKILL_UNLOCK_LEVELS } from "../constants";
@@ -10,6 +10,9 @@ import type { Catalog, MemberInput, Production } from "../types";
 import { RibbonIcon } from "./RibbonIcon";
 import {
   IconClock,
+  IconClose,
+  IconCopy,
+  IconEdit,
   IconGrip,
   IconHelp,
   IconHourglass,
@@ -37,7 +40,7 @@ const hms = (hours: number) => {
 function Delta({ value, base }: { value: number; base: number | null | undefined }) {
   if (base == null) return null;
   const diff = value - base;
-  if (Math.abs(diff) < 0.005) return <span className="prod-delta prod-delta--same">=</span>;
+  if (Math.abs(diff) < 0.005) return <span className="prod-delta prod-delta--same">≈</span>;
   const cls = diff > 0 ? "prod-delta--up" : "prod-delta--down";
   return (
     <span className={`prod-delta ${cls}`}>
@@ -55,9 +58,14 @@ interface Props {
   // Datos de la card base (índice 0) para calcular los deltas; null/undefined si
   // esta es la base.
   base?: Production | null;
+  // True cuando esta card es la base y hay más de una en comparación: muestra el
+  // chip "Base" y el borde lunar. comparing controla si se ofrece "Hacer base".
+  isBase?: boolean;
+  comparing?: boolean;
   onEdit: () => void;
   onClone: () => void;
   onRemove: () => void;
+  onMakeBase: () => void;
   onSaveToBox: () => void;
   cloneDisabled?: boolean;
   inBox?: boolean;
@@ -78,9 +86,12 @@ export function ProductionCard({
   production,
   productionError,
   base,
+  isBase,
+  comparing,
   onEdit,
   onClone,
   onRemove,
+  onMakeBase,
   onSaveToBox,
   cloneDisabled,
   inBox,
@@ -94,6 +105,11 @@ export function ProductionCard({
   onDragEnd,
 }: Props) {
   const cardRef = useRef<HTMLElement>(null);
+  // La animación de entrada solo debe correr al montar (al agregar una card). Al
+  // reordenar/intercambiar, el navegador reinicia las animaciones CSS de los nodos
+  // movidos aunque React no los desmonte; por eso la clase de entrada se quita al
+  // terminar, y los reordenamientos posteriores ya no la reinician.
+  const [entering, setEntering] = useState(true);
   const species = catalog.species.find((s) => s.name === config.species);
   const nature = catalog.natures.find((n) => n.name === config.nature);
   const tierClass = (name: string) =>
@@ -122,32 +138,81 @@ export function ProductionCard({
   }, [base]);
 
   return (
-    <article
-      ref={cardRef}
-      className={
-        "prod-card" +
-        (dragging ? " prod-card--dragging" : "") +
-        (dragOver ? " prod-card--dragover" : "")
-      }
-      onDragEnter={onDragEnter}
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => {
-        e.preventDefault();
-        onDrop?.();
-      }}
-    >
-      <header className="prod-card__head">
-        <div className="prod-card__topline">
-          <div className="prod-card__title">
-            <strong>{config.species}</strong> <span className="muted">Nv.&nbsp;{config.level}</span>
-            {(() => {
-              const idx = RIBBONS.findIndex((r) => r.name === config.ribbon);
-              return idx > 0 ? (
-                <RibbonIcon index={idx} size={20} title={`Listón ${RIBBONS[idx].hours} h`} />
-              ) : null;
-            })()}
-          </div>
-          <div className="prod-card__actions">
+    <div className="prod-card-cell">
+      {/* Acciones fuera del cuerpo de la card, en una barra arriba: liberan la
+          primera fila de la card para el nombre / nivel / listón. */}
+      <div className="prod-card__toolbar">
+        {/* Feedback del guardado, junto al botón que lo dispara. */}
+        <span className="prod-card__toolbar-status">
+          {saveState === "saving" && <span className="prod-card__save muted">Guardando…</span>}
+          {saveState === "saved" && (
+            <span className="prod-card__save prod-card__save--ok">Guardado</span>
+          )}
+          {saveState === "error" && (
+            <span className="prod-card__save prod-card__save--error">
+              {saveError ?? "No se pudo guardar."}
+            </span>
+          )}
+        </span>
+        <button type="button" className="icon-btn" onClick={onEdit} title="Editar" aria-label="Editar">
+          <IconEdit />
+        </button>
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={onClone}
+          disabled={cloneDisabled}
+          title={cloneDisabled ? "Máximo 5 en la comparación" : "Clonar"}
+          aria-label="Clonar"
+        >
+          <IconCopy />
+        </button>
+        <button
+          type="button"
+          className={
+            "icon-btn" +
+            (inBox ? " icon-btn--inbox" : "") +
+            (saveState === "saving" ? " icon-btn--saving" : "")
+          }
+          onClick={onSaveToBox}
+          disabled={saveState === "saving"}
+          title={inBox ? "Actualizar este Pokémon en tu caja" : "Guardar como nuevo en tu caja"}
+          aria-label={inBox ? "Actualizar este Pokémon en tu caja" : "Guardar como nuevo en tu caja"}
+        >
+          <IconSaveBox />
+        </button>
+        <button
+          type="button"
+          className="icon-btn prod-card__remove"
+          onClick={onRemove}
+          title="Quitar"
+          aria-label="Quitar"
+        >
+          <IconClose />
+        </button>
+      </div>
+      <article
+        ref={cardRef}
+        className={
+          "prod-card" +
+          (entering ? " prod-card--enter" : "") +
+          (isBase ? " prod-card--base" : "") +
+          (dragging ? " prod-card--dragging" : "") +
+          (dragOver ? " prod-card--dragover" : "")
+        }
+        onAnimationEnd={(e) => {
+          if (e.animationName === "prod-card-in") setEntering(false);
+        }}
+        onDragEnter={onDragEnter}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          onDrop?.();
+        }}
+      >
+        <header className="prod-card__head">
+          {/* Fila 1: solo el grip de arrastre + nombre / nivel / listón. */}
+          <div className="prod-card__topline">
             <button
               type="button"
               className="icon-btn prod-card__grip"
@@ -161,52 +226,44 @@ export function ProductionCard({
               onDragEnd={onDragEnd}
               title="Arrastrar para reordenar (la primera card es la base)"
               aria-label="Arrastrar para reordenar"
+              tabIndex={-1}
             >
               <IconGrip />
             </button>
-            <button type="button" className="icon-btn" onClick={onEdit} title="Editar" aria-label="Editar">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <path d="M12 20h9" />
-                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className="icon-btn"
-              onClick={onClone}
-              disabled={cloneDisabled}
-              title={cloneDisabled ? "Máximo 5 en la comparación" : "Clonar"}
-              aria-label="Clonar"
-            >
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                <rect x="8" y="8" width="14" height="14" rx="2" ry="2" />
-                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className="icon-btn"
-              onClick={onSaveToBox}
-              disabled={saveState === "saving"}
-              title={inBox ? "Guardar cambios en la caja" : "Guardar en la caja"}
-              aria-label={inBox ? "Guardar cambios en la caja" : "Guardar en la caja"}
-            >
-              <IconSaveBox />
-            </button>
-            <button type="button" className="icon-btn" onClick={onRemove} title="Quitar" aria-label="Quitar">
-              ×
-            </button>
+            <div className="prod-card__title">
+              <strong>{config.species}</strong> <span className="muted">Nv.&nbsp;{config.level}</span>
+              {(() => {
+                const idx = RIBBONS.findIndex((r) => r.name === config.ribbon);
+                return idx > 0 ? (
+                  <RibbonIcon index={idx} size={16} title={`Listón ${RIBBONS[idx].hours} h`} />
+                ) : null;
+              })()}
+            </div>
           </div>
-        </div>
-        {species && (
-          <img className="prod-card__sprite" src={spriteUrl(species.dex)} alt="" loading="lazy" />
-        )}
-        {saveState === "saving" && <p className="prod-card__save muted">Guardando…</p>}
-        {saveState === "saved" && <p className="prod-card__save prod-card__save--ok">Guardado</p>}
-        {saveState === "error" && (
-          <p className="prod-card__save error">{saveError ?? "No se pudo guardar."}</p>
-        )}
-      </header>
+          {/* Fila de altura reservada: evita que las cards salten al pasar de 1 a 2
+              (cuando aparecen el chip "Base" / el botón "Hacer base"). */}
+          <div className="prod-card__base-row">
+            {comparing &&
+              (isBase ? (
+                <span className="prod-card__base-tag" title="El resto se compara contra esta card">
+                  Base
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  className="prod-card__base-tag prod-card__base-tag--action"
+                  onClick={onMakeBase}
+                  title="Usar esta card como base de la comparación"
+                >
+                  Hacer base
+                </button>
+              ))}
+          </div>
+          {/* Sprite centrado: foco visual de la card. */}
+          {species && (
+            <img className="prod-card__sprite" src={spriteUrl(species.dex)} alt="" loading="lazy" />
+          )}
+        </header>
 
       <div className="prod-card__tags">
         <div className="icon-row">
@@ -244,9 +301,9 @@ export function ProductionCard({
             <span className="muted">Sin naturaleza</span>
           ) : nature && !nature.neutral && nature.increased && nature.decreased ? (
             <>
-              <span className="up">↑</span>
+              <span className="nat-up">↑</span>
               <img className="mini-icon" src={statIcon(nature.increased)} alt={nature.increased} title={nature.increased} />
-              <span className="down">↓</span>
+              <span className="nat-down">↓</span>
               <img className="mini-icon" src={statIcon(nature.decreased)} alt={nature.decreased} title={nature.decreased} />
               <span className="muted">{config.nature}</span>
             </>
@@ -258,9 +315,9 @@ export function ProductionCard({
 
       {!d ? (
         productionError ? (
-          <p className="error">{productionError.message}</p>
+          <p className="error prod-card__calc">{productionError.message}</p>
         ) : (
-          <p className="muted">Calculando…</p>
+          <p className="muted prod-card__calc">Calculando…</p>
         )
       ) : (
         <>
@@ -325,18 +382,18 @@ export function ProductionCard({
               {d.night_skill_chances.length >= 2 ? (
                 <>
                   <span title="Probabilidad de activar la skill exactamente 1 vez mientras dormís">
-                    <IconMoon className="prod-card__moon" />
+                    <IconMoon />
                     <span className="muted">1 vez</span>{" "}
                     {pct((d.night_skill_chances[0] - d.night_skill_chances[1]) * 100)}
                   </span>
                   <span title="Probabilidad de activar la skill 2 veces mientras dormís (el tope)">
-                    <IconMoon className="prod-card__moon" />
+                    <IconMoon />
                     <span className="muted">2 veces</span> {pct(d.night_skill_chances[1] * 100)}
                   </span>
                 </>
               ) : (
                 <span title="Probabilidad de activar la skill mientras dormís">
-                  <IconMoon className="prod-card__moon" />
+                  <IconMoon />
                   <span className="muted">al dormir</span> {pct(d.night_skill_chances[0] * 100)}
                 </span>
               )}
@@ -344,6 +401,7 @@ export function ProductionCard({
           </div>
         </>
       )}
-    </article>
+      </article>
+    </div>
   );
 }
