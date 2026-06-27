@@ -9,6 +9,9 @@ interface Props {
   onChange: (name: string) => void;
   // Permite la opción "Sin naturaleza" (valor ""), p. ej. en el comparador.
   allowNone?: boolean;
+  // Nombre accesible para el botón disparador (el <label> que lo envuelve no
+  // nombra un control nativo).
+  ariaLabel?: string;
 }
 
 // Círculo con X para las naturalezas neutras (mismo criterio que RaenonX).
@@ -48,9 +51,12 @@ function NatureEffect({ nature }: { nature: Nature }) {
   );
 }
 
-export function NatureSelect({ natures, value, onChange, allowNone }: Props) {
+export function NatureSelect({ natures, value, onChange, allowNone, ariaLabel }: Props) {
   const [open, setOpen] = useState(false);
+  // Opción resaltada para la navegación con flechas dentro del dropdown.
+  const [activeIndex, setActiveIndex] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -88,9 +94,46 @@ export function NatureSelect({ natures, value, onChange, allowNone }: Props) {
     })),
   ];
 
+  // Lista plana de valores de opción en el mismo orden visual, para mapear el
+  // índice activo de la navegación con flechas a una opción concreta. Incluye la
+  // opción "Sin naturaleza" (valor "") al frente cuando allowNone.
+  const optionValues = [
+    ...(allowNone ? [""] : []),
+    ...groups.flatMap((g) => g.items.map((n) => n.name)),
+  ];
+
+  // Al abrir, resaltar la opción seleccionada (o la primera) y mover el foco al
+  // listbox para que la navegación con flechas funcione de inmediato.
+  useEffect(() => {
+    if (!open) return;
+    const i = optionValues.indexOf(value);
+    setActiveIndex(i === -1 ? 0 : i);
+    listRef.current?.focus();
+    // optionValues se recalcula en cada render; basta con value/open como deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, value]);
+
+  const optionId = (name: string) => `nature-opt-${name === "" ? "none" : name}`;
+
   const pick = (name: string) => {
     onChange(name);
     setOpen(false);
+  };
+
+  // Flechas mueven el resaltado; Enter selecciona la opción activa.
+  const onListKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (optionValues.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => (i + 1) % optionValues.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => (i - 1 + optionValues.length) % optionValues.length);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const name = optionValues[activeIndex];
+      if (name !== undefined) pick(name);
+    }
   };
 
   return (
@@ -101,6 +144,7 @@ export function NatureSelect({ natures, value, onChange, allowNone }: Props) {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
+        aria-label={ariaLabel}
       >
         <span className="nature-trigger__name">
           {selected?.name ?? (allowNone ? "Sin naturaleza" : "Elegir naturaleza")}
@@ -109,15 +153,35 @@ export function NatureSelect({ natures, value, onChange, allowNone }: Props) {
       </button>
 
       {open && (
-        <div className="nature-dropdown" role="listbox" aria-label="Elegir naturaleza">
+        <div
+          ref={listRef}
+          className="nature-dropdown"
+          role="listbox"
+          aria-label="Elegir naturaleza"
+          tabIndex={0}
+          aria-activedescendant={
+            optionValues[activeIndex] !== undefined
+              ? optionId(optionValues[activeIndex])
+              : undefined
+          }
+          onKeyDown={onListKey}
+        >
           {allowNone && (
             <div className="nature-group">
               <div className="nature-group__items">
                 <button
                   type="button"
-                  className={"nature-option" + (value === "" ? " nature-option--selected" : "")}
+                  id={optionId("")}
+                  role="option"
+                  aria-selected={value === ""}
+                  className={
+                    "nature-option" +
+                    (value === "" ? " nature-option--selected" : "") +
+                    (optionValues[activeIndex] === "" ? " nature-option--highlight" : "")
+                  }
                   onClick={() => pick("")}
-                  aria-pressed={value === ""}
+                  onMouseEnter={() => setActiveIndex(0)}
+                  tabIndex={-1}
                 >
                   <span className="nature-option__name">Sin naturaleza</span>
                 </button>
@@ -138,11 +202,17 @@ export function NatureSelect({ natures, value, onChange, allowNone }: Props) {
                     <button
                       type="button"
                       key={n.name}
+                      id={optionId(n.name)}
+                      role="option"
+                      aria-selected={n.name === value}
                       className={
-                        "nature-option" + (n.name === value ? " nature-option--selected" : "")
+                        "nature-option" +
+                        (n.name === value ? " nature-option--selected" : "") +
+                        (optionValues[activeIndex] === n.name ? " nature-option--highlight" : "")
                       }
                       onClick={() => pick(n.name)}
-                      aria-pressed={n.name === value}
+                      onMouseEnter={() => setActiveIndex(optionValues.indexOf(n.name))}
+                      tabIndex={-1}
                     >
                       <span className="nature-option__name">{n.name}</span>
                       <NatureEffect nature={n} />

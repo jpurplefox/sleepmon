@@ -13,6 +13,9 @@ export function Team() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Member | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  // Error de borrado (DELETE): se muestra junto a la lista, separado del error
+  // del formulario de alta/edición.
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
   const members = useQuery({ queryKey: ["members"], queryFn: api.listMembers });
@@ -49,7 +52,11 @@ export function Team() {
 
   const remove = useMutation({
     mutationFn: (id: string) => api.deleteMember(id),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      setDeleteError(null);
+      invalidate();
+    },
+    onError: (err: Error) => setDeleteError(err.message),
   });
 
   const openForm = () => {
@@ -84,14 +91,36 @@ export function Team() {
 
       <section>
         <div className="section-head">
-          <h2>Caja {members.data ? `(${members.data.length})` : ""}</h2>
+          <h2>
+            Caja {members.data ? `(${members.data.length})` : ""}
+            {/* Refetch en segundo plano (p. ej. tras editar): feedback sutil de que
+                los datos visibles se están actualizando, sin bloquear la lista. */}
+            {members.isFetching && !members.isLoading && (
+              <span className="muted" role="status">
+                {" "}
+                Actualizando…
+              </span>
+            )}
+          </h2>
           <button className="btn btn--primary" onClick={openForm}>
             + Agregar Pokémon
           </button>
         </div>
 
         {members.isLoading && <p className="muted">Cargando caja…</p>}
-        {members.isError && <p className="error">No se pudo cargar la caja. Reintentá.</p>}
+        {members.isError && (
+          <p className="error" role="alert">
+            No se pudo cargar la caja.{" "}
+            <button type="button" className="btn btn--ghost" onClick={() => members.refetch()}>
+              Reintentar
+            </button>
+          </p>
+        )}
+        {deleteError && (
+          <p className="error" role="alert">
+            No se pudo eliminar: {deleteError}
+          </p>
+        )}
         {members.data?.length === 0 && (
           <p className="muted">La caja está vacía. Agregá tu primer Pokémon.</p>
         )}
@@ -113,7 +142,16 @@ export function Team() {
       {distributions.isError && (
         <section className="distributions">
           <h2>Distribución de la caja</h2>
-          <p className="error">No se pudo cargar la distribución. Reintentá.</p>
+          <p className="error" role="alert">
+            No se pudo cargar la distribución.{" "}
+            <button
+              type="button"
+              className="btn btn--ghost"
+              onClick={() => distributions.refetch()}
+            >
+              Reintentar
+            </button>
+          </p>
         </section>
       )}
 

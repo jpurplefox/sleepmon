@@ -558,6 +558,12 @@ select:focus {
   box-shadow: inset 0 0 0 1px var(--accent);
 }
 
+/* Opción resaltada por la navegación con flechas (foco de teclado en el listbox). */
+.nature-option--highlight {
+  border-color: var(--accent);
+  background: var(--surface-3, var(--surface-2));
+}
+
 /* Sprite */
 .sprite {
   width: 32px;
@@ -806,8 +812,17 @@ select:focus {
   padding: 0;
 }
 
-.level-stepper__input:focus {
+/* Sin anillo al hacer click (look limpio dentro del stepper), pero con foco
+   visible al navegar por teclado (WCAG 2.4.7): el input se tipea, así que el
+   usuario de teclado necesita ver dónde está el cursor. */
+.level-stepper__input:focus:not(:focus-visible) {
   outline: none;
+}
+
+.level-stepper__input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
 }
 
 /* Ocultar las flechas nativas del number input (usamos las nuestras). */
@@ -1518,6 +1533,13 @@ button.prod-card__base-tag--action:hover {
   cursor: grabbing;
 }
 
+/* Botones de reorden por teclado (alternativa al arrastre): compactos, junto al grip. */
+.prod-card__move {
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0 0.25rem;
+}
+
 /* Diferencia contra la base, junto al valor. Verde = rinde más, rojo = menos. */
 .prod-delta {
   font-size: var(--text-xs);
@@ -1888,4 +1910,32 @@ button.prod-card__base-tag--action:hover {
   button.prod-card__base-tag--action {
     transition: none;
   }
+}
+
+/* Fallback del ErrorBoundary cuando una excepción de render rompe una vista. */
+.error-boundary {
+  max-width: 32rem;
+  margin: 3rem auto;
+  padding: 2rem;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.error-boundary h2 {
+  margin-top: 0;
+}
+
+/* Visualmente oculto pero accesible a lectores de pantalla (live regions, etc.). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

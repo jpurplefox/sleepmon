@@ -1,7 +1,12 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { berryIcon } from "../berries";
-import { INGREDIENT_UNLOCK_LEVELS, RIBBONS, SUB_SKILL_UNLOCK_LEVELS } from "../constants";
+import {
+  INGREDIENT_UNLOCK_LEVELS,
+  RIBBONS,
+  SUB_SKILL_NEVER_UNLOCKS,
+  SUB_SKILL_UNLOCK_LEVELS,
+} from "../constants";
 import { ingredientIcon } from "../ingredients";
 import { statIcon } from "../natures";
 import { spriteUrl } from "../sprites";
@@ -67,6 +72,10 @@ interface Props {
   onRemove: () => void;
   onMakeBase: () => void;
   onSaveToBox: () => void;
+  // Reordenamiento accesible por teclado: intercambia esta card con la anterior
+  // / siguiente. undefined en los extremos (deshabilita el botón).
+  onMoveLeft?: () => void;
+  onMoveRight?: () => void;
   cloneDisabled?: boolean;
   inBox?: boolean;
   saveState?: "idle" | "saving" | "saved" | "error";
@@ -93,6 +102,8 @@ export function ProductionCard({
   onRemove,
   onMakeBase,
   onSaveToBox,
+  onMoveLeft,
+  onMoveRight,
   cloneDisabled,
   inBox,
   saveState = "idle",
@@ -110,6 +121,16 @@ export function ProductionCard({
   // movidos aunque React no los desmonte; por eso la clase de entrada se quita al
   // terminar, y los reordenamientos posteriores ya no la reinician.
   const [entering, setEntering] = useState(true);
+
+  // Fallback para bajar la clase de entrada aunque onAnimationEnd no dispare:
+  // bajo prefers-reduced-motion la animación es `none` y el evento nunca llega,
+  // así que la clase quedaría pegada. Un timeout la limpia igual.
+  useEffect(() => {
+    if (!entering) return;
+    const t = window.setTimeout(() => setEntering(false), 250);
+    return () => window.clearTimeout(t);
+  }, [entering]);
+
   const species = catalog.species.find((s) => s.name === config.species);
   const nature = catalog.natures.find((n) => n.name === config.nature);
   const tierClass = (name: string) =>
@@ -129,10 +150,16 @@ export function ProductionCard({
 
   // Mismo agrupado para la base: permite el delta por ingrediente cuando ambas
   // cards comparten ese ingrediente (el caso típico al clonar una variante).
+  // Las entradas con cantidad 0 NO se incluyen: "0" y "ausente" deben tratarse
+  // igual para el delta (si no, un ingrediente que la base produce en 0 mostraría
+  // un delta positivo grande, distinto de uno que la base no produce).
   const baseIng = useMemo(() => {
     const map = new Map<string, number>();
     for (const s of base?.ingredients ?? []) {
       map.set(s.ingredient, (map.get(s.ingredient) ?? 0) + s.amount);
+    }
+    for (const [k, v] of map) {
+      if (v === 0) map.delete(k);
     }
     return map;
   }, [base]);
@@ -143,7 +170,7 @@ export function ProductionCard({
           primera fila de la card para el nombre / nivel / listón. */}
       <div className="prod-card__toolbar">
         {/* Feedback del guardado, junto al botón que lo dispara. */}
-        <span className="prod-card__toolbar-status">
+        <span className="prod-card__toolbar-status" role="status" aria-live="polite">
           {saveState === "saving" && <span className="prod-card__save muted">Guardando…</span>}
           {saveState === "saved" && (
             <span className="prod-card__save prod-card__save--ok">Guardado</span>
@@ -211,7 +238,7 @@ export function ProductionCard({
         }}
       >
         <header className="prod-card__head">
-          {/* Fila 1: solo el grip de arrastre + nombre / nivel / listón. */}
+          {/* Fila 1: grip de arrastre + reordenar por teclado + nombre / nivel / listón. */}
           <div className="prod-card__topline">
             <button
               type="button"
@@ -224,11 +251,40 @@ export function ProductionCard({
                 onDragStart?.();
               }}
               onDragEnd={onDragEnd}
-              title="Arrastrar para reordenar (la primera card es la base)"
-              aria-label="Arrastrar para reordenar"
-              tabIndex={-1}
+              onKeyDown={(e) => {
+                // Alternativa de teclado al arrastre: flechas mueven la card.
+                if (e.key === "ArrowLeft" && onMoveLeft) {
+                  e.preventDefault();
+                  onMoveLeft();
+                } else if (e.key === "ArrowRight" && onMoveRight) {
+                  e.preventDefault();
+                  onMoveRight();
+                }
+              }}
+              title="Arrastrar (o usar ← / → con foco) para reordenar; la primera card es la base"
+              aria-label="Reordenar: arrastrar, o flechas izquierda y derecha"
             >
               <IconGrip />
+            </button>
+            <button
+              type="button"
+              className="icon-btn prod-card__move"
+              onClick={onMoveLeft}
+              disabled={!onMoveLeft}
+              title="Mover a la izquierda"
+              aria-label="Mover a la izquierda"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              className="icon-btn prod-card__move"
+              onClick={onMoveRight}
+              disabled={!onMoveRight}
+              title="Mover a la derecha"
+              aria-label="Mover a la derecha"
+            >
+              ›
             </button>
             <div className="prod-card__title">
               <strong>{config.species}</strong> <span className="muted">Nv.&nbsp;{config.level}</span>
@@ -283,13 +339,18 @@ export function ProductionCard({
         <div className="icon-row">
           {config.sub_skills.length === 0 && <span className="muted">sin sub skills</span>}
           {config.sub_skills.map((s, i) => {
-            const unlock = SUB_SKILL_UNLOCK_LEVELS[i] ?? 999;
+            const unlock = SUB_SKILL_UNLOCK_LEVELS[i] ?? SUB_SKILL_NEVER_UNLOCKS;
             const locked = config.level < unlock;
+            const title = !locked
+              ? s
+              : Number.isFinite(unlock)
+                ? `${s} (se activa a nivel ${unlock})`
+                : `${s} (slot no disponible)`;
             return (
               <span
                 key={i}
                 className={`ss-icon ss-icon--${tierClass(s)}` + (locked ? " is-locked" : "")}
-                title={locked ? `${s} (se activa a nivel ${unlock})` : s}
+                title={title}
               >
                 <img src={subSkillIcon(s)} alt={s} />
               </span>
@@ -315,7 +376,9 @@ export function ProductionCard({
 
       {!d ? (
         productionError ? (
-          <p className="error prod-card__calc">{productionError.message}</p>
+          <p className="error prod-card__calc" role="alert">
+            {productionError.message}
+          </p>
         ) : (
           <p className="muted prod-card__calc">Calculando…</p>
         )
@@ -391,10 +454,15 @@ export function ProductionCard({
                     <span className="muted">2 veces</span> {pct(d.night_skill_chances[1] * 100)}
                   </span>
                 </>
-              ) : (
+              ) : d.night_skill_chances.length === 1 ? (
                 <span title="Probabilidad de activar la skill mientras dormís">
                   <IconMoon />
                   <span className="muted">al dormir</span> {pct(d.night_skill_chances[0] * 100)}
+                </span>
+              ) : (
+                <span title="Probabilidad de activar la skill mientras dormís">
+                  <IconMoon />
+                  <span className="muted">al dormir</span> —
                 </span>
               )}
             </div>
