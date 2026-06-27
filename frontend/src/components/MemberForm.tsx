@@ -93,15 +93,17 @@ export function MemberForm({
 
       <LevelSelector value={level} onChange={setLevel} />
 
-      <fieldset>
-        <legend>Ingredientes</legend>
-        <IngredientSlots
-          species={selectedSpecies}
-          level={level}
-          value={ingredients}
-          onChange={setIngredients}
-        />
-      </fieldset>
+      {selectedSpecies && (
+        <fieldset>
+          <legend>Ingredientes</legend>
+          <IngredientSlots
+            species={selectedSpecies}
+            level={level}
+            value={ingredients}
+            onChange={setIngredients}
+          />
+        </fieldset>
+      )}
 
       <fieldset>
         <legend>Sub skills</legend>
