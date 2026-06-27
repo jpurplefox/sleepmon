@@ -10,6 +10,7 @@ Son datos del *juego*, estables, parte del núcleo del dominio.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final
 
@@ -31,16 +32,14 @@ INVENTORY_BONUS_PER_EVOLUTION: Final[int] = 5
 # Una especie evoluciona como mucho dos veces (línea de tres formas).
 MAX_EVOLUTION_STAGE: Final[int] = 2
 
-# Segundos en un día: ventana total sobre la que se estima la producción.
-SECONDS_PER_DAY = 86_400
 # Reparto día/noche: de noche el inventario no se vacía, así que una vez lleno solo
 # se juntan bayas. De día se asume que nunca se llena.
-NIGHT_HOURS = 8.5
-DAY_HOURS = 24 - NIGHT_HOURS
+NIGHT_HOURS: Final[float] = 8.5
+DAY_HOURS: Final[float] = 24 - NIGHT_HOURS
 
 # La frecuencia de ayuda baja con el nivel (el Pokémon ayuda más rápido): cada nivel
 # por encima de 1 resta 0.2% de la frecuencia base -> freq = base * (1 - 0.002*(lvl-1)).
-FREQUENCY_REDUCTION_PER_LEVEL = 0.002
+FREQUENCY_REDUCTION_PER_LEVEL: Final[float] = 0.002
 
 # "Pity proc": si pasan N ayudas seguidas sin disparar la main skill, la siguiente la
 # dispara sí o sí. Sube la tasa efectiva de skill por encima de la base (clave en
@@ -50,11 +49,11 @@ FREQUENCY_REDUCTION_PER_LEVEL = 0.002
 #     fuerza la skill tras ~140000 s de tiempo base sin activarla, así que el límite
 #     en ayudas es 140000 / frecuencia_base (los rápidos toleran más ayudas, los
 #     lentos menos). Ver ``Species.pity_helps``.
-SKILL_PITY_HELPS = 78
-SKILL_SPECIALIST_PITY_SECONDS = 140_000
+SKILL_PITY_HELPS: Final[int] = 78
+SKILL_SPECIALIST_PITY_SECONDS: Final[int] = 140_000
 # Bonus de frecuencia de ayuda por energía máxima. La producción siempre lo asume
 # (el Pokémon ayuda 2+2/9 ≈ 2.2222x más rápido que su frecuencia base).
-MAX_ENERGY_BONUS = 2 + 2 / 9
+MAX_ENERGY_BONUS: Final[float] = 2 + 2 / 9
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,7 +70,7 @@ class NatureEffect:
 
 _S = NatureStat
 
-NATURE_EFFECTS: dict[Nature, NatureEffect] = {
+NATURE_EFFECTS: Final[Mapping[Nature, NatureEffect]] = {
     # Speed of Help ↑
     Nature.LONELY: NatureEffect(_S.SPEED_OF_HELP, _S.ENERGY_RECOVERY),
     Nature.ADAMANT: NatureEffect(_S.SPEED_OF_HELP, _S.INGREDIENT_FINDING),
@@ -105,7 +104,7 @@ NATURE_EFFECTS: dict[Nature, NatureEffect] = {
     Nature.SERIOUS: NatureEffect(None, None),
 }
 
-SUB_SKILL_TIERS: dict[SubSkill, SubSkillTier] = {
+SUB_SKILL_TIERS: Final[Mapping[SubSkill, SubSkillTier]] = {
     # Gold
     SubSkill.SLEEP_EXP_BONUS: SubSkillTier.GOLD,
     SubSkill.SKILL_LEVEL_UP_M: SubSkillTier.GOLD,
@@ -134,7 +133,7 @@ SUB_SKILL_TIERS: dict[SubSkill, SubSkillTier] = {
 # sus efectos se suman. Cada listón sube el inventario; los de 500h y 2000h además
 # aceleran la frecuencia de ayuda, pero ese bonus solo aplica si al Pokémon le quedan
 # evoluciones (1 o 2): una forma totalmente evolucionada no lo recibe.
-RIBBON_HOURS: dict[Ribbon, int] = {
+RIBBON_HOURS: Final[Mapping[Ribbon, int]] = {
     Ribbon.NONE: 0,
     Ribbon.SLEEP_200: 200,
     Ribbon.SLEEP_500: 500,
@@ -143,7 +142,7 @@ RIBBON_HOURS: dict[Ribbon, int] = {
 }
 # Aporte INCREMENTAL de cada listón (lo que suma respecto al anterior). El total de
 # un listón es la suma de su escalón y los de todos los listones por debajo.
-_RIBBON_INVENTORY_STEP: dict[Ribbon, int] = {
+_RIBBON_INVENTORY_STEP: Final[Mapping[Ribbon, int]] = {
     Ribbon.NONE: 0,
     Ribbon.SLEEP_200: 1,
     Ribbon.SLEEP_500: 2,
@@ -153,14 +152,16 @@ _RIBBON_INVENTORY_STEP: dict[Ribbon, int] = {
 # Reducción de frecuencia (fracción) que aporta cada listón, según cuántas
 # evoluciones le QUEDAN al Pokémon. Solo 500h y 2000h dan velocidad; una forma sin
 # evoluciones pendientes (0) no recibe nada.
-_RIBBON_SPEED_STEP: dict[Ribbon, dict[int, float]] = {
+_RIBBON_SPEED_STEP: Final[Mapping[Ribbon, Mapping[int, float]]] = {
     Ribbon.SLEEP_500: {1: 0.05, 2: 0.11},
     Ribbon.SLEEP_2000: {1: 0.07, 2: 0.14},
 }
 
 # Listones ordenados por horas (ascendente): define qué listones quedan "incluidos"
 # al acumular hasta uno dado.
-_RIBBON_ORDER: tuple[Ribbon, ...] = tuple(sorted(RIBBON_HOURS, key=lambda r: RIBBON_HOURS[r]))
+_RIBBON_ORDER: Final[tuple[Ribbon, ...]] = tuple(
+    sorted(RIBBON_HOURS, key=lambda r: RIBBON_HOURS[r])
+)
 
 
 def _ribbons_up_to(ribbon: Ribbon) -> tuple[Ribbon, ...]:
