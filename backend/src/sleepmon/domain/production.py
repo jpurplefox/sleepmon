@@ -19,13 +19,16 @@ Modelo:
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import Final
 
 from sleepmon.domain.catalog_data import (
     DAY_HOURS,
     FREQUENCY_REDUCTION_PER_LEVEL,
     MAX_ENERGY_BONUS,
     MAX_INGREDIENTS,
+    MAX_LEVEL,
     NATURE_EFFECTS,
     NIGHT_HOURS,
     SUB_SKILL_UNLOCK_LEVELS,
@@ -44,37 +47,37 @@ from sleepmon.domain.value_objects import (
     SubSkill,
 )
 
-_BERRY_PER_HELP_SPECIALTY = 2
-_BERRY_PER_HELP_OTHER = 1
-_SECONDS_PER_HOUR = 3600
+_BERRY_PER_HELP_SPECIALTY: Final[int] = 2
+_BERRY_PER_HELP_OTHER: Final[int] = 1
+_SECONDS_PER_HOUR: Final[int] = 3600
 
 # Efectos de sub skills sobre la producción (magnitudes de RaenonX).
-_SPEED_SUBSKILLS = {
+_SPEED_SUBSKILLS: Final[Mapping[SubSkill, float]] = {
     SubSkill.HELPING_SPEED_M: 0.14,
     SubSkill.HELPING_SPEED_S: 0.07,
     SubSkill.HELPING_BONUS: 0.05,  # comparador: solo cuenta para sí mismo, no ×equipo
 }
-_INGREDIENT_SUBSKILLS = {
+_INGREDIENT_SUBSKILLS: Final[Mapping[SubSkill, float]] = {
     SubSkill.INGREDIENT_FINDER_M: 0.36,
     SubSkill.INGREDIENT_FINDER_S: 0.18,
 }
-_SKILL_SUBSKILLS = {
+_SKILL_SUBSKILLS: Final[Mapping[SubSkill, float]] = {
     SubSkill.SKILL_TRIGGER_M: 0.36,
     SubSkill.SKILL_TRIGGER_S: 0.18,
 }
-_INVENTORY_SUBSKILLS = {
+_INVENTORY_SUBSKILLS: Final[Mapping[SubSkill, int]] = {
     SubSkill.INVENTORY_UP_S: 6,
     SubSkill.INVENTORY_UP_M: 12,
     SubSkill.INVENTORY_UP_L: 18,
 }
-_BERRY_FINDING_S_BONUS = 1  # +1 baya por ayuda de baya
+_BERRY_FINDING_S_BONUS: Final[int] = 1  # +1 baya por ayuda de baya
 
 # Factores MULTIPLICATIVOS de naturaleza por stat (sube, baja). La naturaleza NO se
 # suma con las sub skills: se compone (multiplica) por encima. Energy/EXP se ignoran.
 # Para velocidad, <1 = ayuda más rápido (intervalo menor).
-_NATURE_SPEED = (0.90, 1.075)  # sube speed -> freq ×0.90 ; baja -> ×1.075
-_NATURE_INGREDIENT = (1.20, 0.80)
-_NATURE_SKILL = (1.20, 0.80)
+_NATURE_SPEED: Final[tuple[float, float]] = (0.90, 1.075)  # sube speed -> ×0.90 ; baja -> ×1.075
+_NATURE_INGREDIENT: Final[tuple[float, float]] = (1.20, 0.80)
+_NATURE_SKILL: Final[tuple[float, float]] = (1.20, 0.80)
 
 
 def _nature_factor(nature: Nature | None, stat: NatureStat, up: float, down: float) -> float:
@@ -167,6 +170,12 @@ def daily_production(
         raise ValueError(
             f"Se esperaban {MAX_INGREDIENTS} ingredientes; llegaron {len(ingredients)}."
         )
+    # Función de dominio reusable: reguarda el rango de nivel por su cuenta (igual que
+    # el conteo de ingredientes), para no rendir un cálculo silenciosamente erróneo si
+    # se la invoca sin pasar antes por validate_level. level<=0 dispararía level_factor>1
+    # y max_ingredient_slots(0)=0.
+    if not 1 <= level <= MAX_LEVEL:
+        raise ValueError(f"El nivel debe estar entre 1 y {MAX_LEVEL}; llegó {level}.")
 
     # Solo cuentan las sub skills DESBLOQUEADAS al nivel (cada slot abre a 10/25/50/
     # 70/80); las que el nivel todavía no activó se ignoran.
@@ -227,10 +236,11 @@ def daily_production(
 
     inventory = species.carry_limit + inventory_bonus + ribbon_inventory_bonus(ribbon)
 
-    # Cantidades por slot desbloqueado (según el ingrediente elegido en cada uno).
+    # Cantidades por slot desbloqueado (según el ingrediente elegido en cada uno). El
+    # primer slot abre a nivel 1, así que con el rango de nivel ya validado unlocked >= 1.
     unlocked = max_ingredient_slots(level)
     slot_amounts = [species.ingredient_amount(i, ingredients[i]) for i in range(unlocked)]
-    avg_amount = sum(slot_amounts) / unlocked if unlocked else 0.0
+    avg_amount = sum(slot_amounts) / unlocked
 
     # Ítems que ocupan inventario por ayuda (bayas + ingredientes; skills no).
     items_per_help = berry_rate * berry_per_help + ingredient_rate * avg_amount
@@ -265,7 +275,7 @@ def daily_production(
     # En el overflow nocturno TODAS las ayudas producen bayas.
     berry_amount = (normal_helps * berry_rate + overflow_helps) * berry_per_help
 
-    helps_per_slot = normal_helps * ingredient_rate / unlocked if unlocked else 0.0
+    helps_per_slot = normal_helps * ingredient_rate / unlocked
     slots = tuple(
         SlotProduction(ingredient=ingredients[i], amount=helps_per_slot * slot_amounts[i])
         for i in range(unlocked)

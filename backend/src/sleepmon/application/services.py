@@ -9,7 +9,7 @@ cada ingrediente sea válido para la especie en su slot.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from enum import Enum
+from enum import StrEnum
 from typing import TypeVar
 from uuid import UUID
 
@@ -21,15 +21,19 @@ from sleepmon.application.dto import (
     TeamMemberInput,
 )
 from sleepmon.domain import analytics
-from sleepmon.domain.catalog_data import MAX_INGREDIENTS, MAX_LEVEL
-from sleepmon.domain.entities import TeamMember
+from sleepmon.domain.entities import (
+    TeamMember,
+    validate_ingredient_count,
+    validate_level,
+    validate_sub_skills,
+)
 from sleepmon.domain.errors import SpeciesNotFoundError, TeamMemberNotFoundError, ValidationError
 from sleepmon.domain.ports import SpeciesCatalog, TeamRepository
 from sleepmon.domain.production import daily_production
 from sleepmon.domain.species import Species
 from sleepmon.domain.value_objects import Ingredient, Nature, Ribbon, SubSkill
 
-E = TypeVar("E", bound=Enum)
+E = TypeVar("E", bound=StrEnum)
 
 
 def _parse_enum(enum_cls: type[E], value: str, field: str) -> E:
@@ -125,22 +129,20 @@ class DefaultTeamService(TeamService):
         if species is None:
             raise SpeciesNotFoundError(f"Especie desconocida: {data.species!r}.")
 
-        if not 1 <= data.level <= MAX_LEVEL:
-            raise ValidationError(
-                f"El nivel debe estar entre 1 y {MAX_LEVEL}; llegó {data.level}."
-            )
-
         ingredients = tuple(_parse_enum(Ingredient, i, "ingredient") for i in data.ingredients)
-        if len(ingredients) != MAX_INGREDIENTS:
-            raise ValidationError(
-                f"La producción requiere {MAX_INGREDIENTS} ingredientes (uno por slot); "
-                f"llegaron {len(ingredients)}."
-            )
-        _validate_ingredients(species, ingredients)
-
         nature = _parse_enum(Nature, data.nature, "nature") if data.nature else None
         sub_skills = tuple(_parse_enum(SubSkill, s, "sub_skill") for s in data.sub_skills)
         ribbon = _parse_enum(Ribbon, data.ribbon, "ribbon")
+
+        # Mismas invariantes de miembro que add_member/update_member (que las aplican
+        # vía el constructor de TeamMember): nivel entero en rango, exactamente un
+        # ingrediente por slot y sub skills sin repetir dentro del tope. compute_production
+        # no construye un TeamMember, así que las reusa explícitamente para no divergir.
+        validate_level(data.level)
+        validate_ingredient_count(ingredients)
+        validate_sub_skills(sub_skills)
+        _validate_ingredients(species, ingredients)
+
         result = daily_production(species, ingredients, data.level, nature, sub_skills, ribbon)
         return ProductionResult(
             helps_per_day=result.helps_per_day,

@@ -10,7 +10,7 @@ def make(**overrides: object) -> TeamMember:
         "species": "Pikachu",
         "level": 30,
         "nature": Nature.ADAMANT,
-        "ingredients": (Ingredient.FANCY_APPLE, Ingredient.WARMING_GINGER),
+        "ingredients": (Ingredient.FANCY_APPLE, Ingredient.WARMING_GINGER, Ingredient.FANCY_EGG),
         "sub_skills": (SubSkill.HELPING_SPEED_S,),
     }
     defaults.update(overrides)
@@ -63,7 +63,7 @@ def test_low_level_can_have_sub_skills() -> None:
     # nivel todavía no las haya desbloqueado.
     member = make(
         level=5,
-        ingredients=(Ingredient.FANCY_APPLE,),
+        ingredients=(Ingredient.FANCY_APPLE, Ingredient.WARMING_GINGER, Ingredient.FANCY_EGG),
         sub_skills=(SubSkill.HELPING_SPEED_S, SubSkill.INVENTORY_UP_S),
     )
     assert len(member.sub_skills) == 2
@@ -72,6 +72,22 @@ def test_low_level_can_have_sub_skills() -> None:
 def test_zero_ingredients_rejected() -> None:
     with pytest.raises(ValidationError):
         make(ingredients=())
+
+
+@pytest.mark.parametrize(
+    "ingredients",
+    [
+        (Ingredient.FANCY_APPLE,),
+        (Ingredient.FANCY_APPLE, Ingredient.WARMING_GINGER),
+    ],
+)
+def test_fewer_than_three_ingredients_rejected(
+    ingredients: tuple[Ingredient, ...],
+) -> None:
+    # Los ingredientes están definidos para los tres slots: ni más ni menos. Un
+    # miembro con 1 o 2 ingredientes es inválido (no solo 0 o 4+).
+    with pytest.raises(ValidationError, match="exactamente"):
+        make(ingredients=ingredients)
 
 
 def test_low_level_can_have_all_three_ingredients() -> None:
@@ -121,7 +137,7 @@ def test_duplicate_sub_skills_rejected() -> None:
 def test_five_sub_skills_allowed_at_level_80() -> None:
     member = make(
         level=80,
-        ingredients=(Ingredient.FANCY_APPLE, Ingredient.WARMING_GINGER),
+        ingredients=(Ingredient.FANCY_APPLE, Ingredient.WARMING_GINGER, Ingredient.FANCY_EGG),
         sub_skills=(
             SubSkill.HELPING_SPEED_S,
             SubSkill.INVENTORY_UP_S,

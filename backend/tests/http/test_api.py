@@ -20,7 +20,7 @@ def valid_payload(**overrides: object) -> dict[str, object]:
         "species": "Pikachu",
         "level": 30,
         "nature": "Adamant",
-        "ingredients": ["Fancy Apple", "Warming Ginger"],
+        "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
         "sub_skills": ["Helping Speed S"],
     }
     payload.update(overrides)

@@ -36,7 +36,7 @@ def sample() -> TeamMember:
         species="Pikachu",
         level=60,
         nature=Nature.ADAMANT,
-        ingredients=(Ingredient.FANCY_APPLE, Ingredient.WARMING_GINGER),
+        ingredients=(Ingredient.FANCY_APPLE, Ingredient.WARMING_GINGER, Ingredient.FANCY_EGG),
         sub_skills=(SubSkill.HELPING_SPEED_S, SubSkill.INVENTORY_UP_S),
         ribbon=Ribbon.SLEEP_500,
     )
@@ -63,7 +63,7 @@ def test_update_replaces_children(repo: PostgresTeamRepository) -> None:
         species="Pikachu",
         level=30,
         nature=Nature.MODEST,
-        ingredients=(Ingredient.FANCY_APPLE,),
+        ingredients=(Ingredient.FANCY_APPLE, Ingredient.WARMING_GINGER, Ingredient.FANCY_EGG),
         sub_skills=(SubSkill.HELPING_BONUS,),
         ribbon=Ribbon.SLEEP_2000,
     )
@@ -71,7 +71,11 @@ def test_update_replaces_children(repo: PostgresTeamRepository) -> None:
     fetched = repo.get(member.id)
     assert fetched is not None
     assert fetched.nature is Nature.MODEST
-    assert fetched.ingredients == (Ingredient.FANCY_APPLE,)
+    assert fetched.ingredients == (
+        Ingredient.FANCY_APPLE,
+        Ingredient.WARMING_GINGER,
+        Ingredient.FANCY_EGG,
+    )
     assert fetched.sub_skills == (SubSkill.HELPING_BONUS,)
     assert fetched.ribbon is Ribbon.SLEEP_2000
 

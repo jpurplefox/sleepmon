@@ -293,6 +293,18 @@ def test_fill_helps_round_up() -> None:
     assert prod.inventory_fill_hours == pytest.approx(3.0)
 
 
+def test_inventory_never_fills_without_items_per_help() -> None:
+    # Caso degenerado: 100% ingrediente (berry_rate=0) con cantidades de ingrediente
+    # nulas -> items_per_help=0. El inventario no se llena nunca, así que el tiempo de
+    # llenado toma la noche entera (rama else de `items_per_help > 0`).
+    prod = daily_production(
+        _species(ingredient_percentage=100, ingredient_amounts=((0,), (0, 0), (0, 0, 0))),
+        _INGREDIENTS,
+        level=60,
+    )
+    assert prod.inventory_fill_hours == pytest.approx(8.5)  # NIGHT_HOURS: no se llena
+
+
 def test_low_inventory_overflow_boosts_berries() -> None:
     # Menos inventario -> más overflow nocturno -> más bayas (mismas demás variables).
     high = daily_production(_species(base_inventory=100_000), _INGREDIENTS, level=60)
@@ -400,6 +412,41 @@ def test_requires_exactly_three_ingredients() -> None:
         daily_production(_species(), (I.HONEY, I.SNOOZY_TOMATO), level=60)
 
 
+@pytest.mark.parametrize("level", [0, -50, 101])
+def test_level_out_of_range_rejected(level: int) -> None:
+    # Función pura reusable: reguarda el rango de nivel por su cuenta (no rinde un
+    # cálculo silenciosamente erróneo con level<=0).
+    with pytest.raises(ValueError, match="nivel"):
+        daily_production(_species(), _INGREDIENTS, level=level)
+
+
+def test_zero_skill_rate_yields_zero_effective_skill() -> None:
+    # base_rate <= 0 (skill_percentage=0): la tasa efectiva es 0 directo, sin pity proc.
+    prod = daily_production(_species(skill_percentage=0), _INGREDIENTS, level=60)
+    assert prod.effective_skill_percentage == 0
+    assert prod.skill_triggers == pytest.approx(0)
+
+
+def test_sub_skills_beyond_five_slots_are_ignored() -> None:
+    # Corte POSICIONAL: la 6ta sub skill (índice >= len(SUB_SKILL_UNLOCK_LEVELS)) se
+    # descarta sin reventar, aunque a nivel 80 todos los slots por nivel estén abiertos.
+    five = (
+        SubSkill.HELPING_SPEED_M,
+        SubSkill.INVENTORY_UP_S,
+        SubSkill.SKILL_TRIGGER_S,
+        SubSkill.INGREDIENT_FINDER_S,
+        SubSkill.BERRY_FINDING_S,
+    )
+    base = daily_production(
+        _species(help_frequency_seconds=8000), _INGREDIENTS, level=80, sub_skills=five
+    )
+    with_sixth = daily_production(
+        _species(help_frequency_seconds=8000), _INGREDIENTS, level=80,
+        sub_skills=(*five, SubSkill.HELPING_SPEED_S),  # la 6ta (otra speed) se ignora
+    )
+    assert with_sixth.seconds_per_help == base.seconds_per_help
+
+
 def test_result_carries_species_berry() -> None:
     prod = daily_production(_species(), _INGREDIENTS, level=60)
     assert prod.berry is Berry.ORAN
@@ -434,6 +481,41 @@ def test_speed_of_help_nature_lowers_interval() -> None:
         _species(help_frequency_seconds=8000), _INGREDIENTS, level=1, nature=Nature.ADAMANT
     )
     assert prod.seconds_per_help == 3240  # floor(8000 * 0.90 / (2+2/9))
+
+
+def test_speed_lowering_nature_raises_interval() -> None:
+    # Modest BAJA Speed of Help: freq * 1.075 -> intervalo mayor (rama 'decreased').
+    base = daily_production(_species(help_frequency_seconds=8000), _INGREDIENTS, level=1)
+    slow = daily_production(
+        _species(help_frequency_seconds=8000), _INGREDIENTS, level=1, nature=Nature.MODEST
+    )
+    assert slow.seconds_per_help == math.floor(8000 * 1.075 / BONUS)
+    assert slow.seconds_per_help > base.seconds_per_help
+
+
+def test_ingredient_lowering_nature_reduces_ingredient_percentage() -> None:
+    # Adamant BAJA Ingredient Finding (×0.80) (rama 'decreased').
+    prod = daily_production(
+        _species(ingredient_percentage=20), _INGREDIENTS, level=60, nature=Nature.ADAMANT
+    )
+    assert prod.ingredient_percentage == pytest.approx(20 * 0.80)  # 16
+
+
+def test_main_skill_chance_nature_scales_effective_skill() -> None:
+    # _NATURE_SKILL en ambos sentidos: Calm SUBE Main Skill Chance (×1.20) y Naughty
+    # la BAJA (×0.80). El factor entra antes del pity proc.
+    base = daily_production(_species(skill_percentage=5), _INGREDIENTS, level=60)
+    up = daily_production(_species(skill_percentage=5), _INGREDIENTS, level=60, nature=Nature.CALM)
+    down = daily_production(
+        _species(skill_percentage=5), _INGREDIENTS, level=60, nature=Nature.NAUGHTY
+    )
+    assert up.effective_skill_percentage == pytest.approx(_eff(0.05 * 1.20) * 100)
+    assert down.effective_skill_percentage == pytest.approx(_eff(0.05 * 0.80) * 100)
+    assert (
+        down.effective_skill_percentage
+        < base.effective_skill_percentage
+        < up.effective_skill_percentage
+    )
 
 
 def test_ingredient_finder_subskills_boost_ingredient_percentage() -> None:
