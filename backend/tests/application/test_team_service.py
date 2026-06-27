@@ -23,7 +23,7 @@ def valid_input(**overrides: object) -> TeamMemberInput:
         "species": "Pikachu",
         "level": 30,
         "nature": "Adamant",
-        "ingredients": ["Fancy Apple", "Warming Ginger"],
+        "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
         "sub_skills": ["Helping Speed S"],
     }
     defaults.update(overrides)
@@ -66,14 +66,21 @@ def test_invalid_ingredient_value_rejected(service: DefaultTeamService) -> None:
 
 
 def test_ingredient_not_valid_for_species_slot_rejected(service: DefaultTeamService) -> None:
-    # Large Leek no es un ingrediente válido para Pikachu.
+    # Large Leek no es un ingrediente válido para Pikachu (en el primer slot).
     with pytest.raises(ValidationError):
-        service.add_member(valid_input(ingredients=["Large Leek"]))
+        service.add_member(
+            valid_input(ingredients=["Large Leek", "Warming Ginger", "Fancy Egg"])
+        )
 
 
 def test_invalid_sub_skill_value_rejected(service: DefaultTeamService) -> None:
     with pytest.raises(ValidationError):
         service.add_member(valid_input(sub_skills=["Mega Helper XL"]))
+
+
+def test_invalid_ribbon_value_rejected(service: DefaultTeamService) -> None:
+    with pytest.raises(ValidationError):
+        service.add_member(valid_input(ribbon="9999h"))
 
 
 def test_more_ingredients_than_species_slots_rejected(service: DefaultTeamService) -> None:
@@ -121,7 +128,9 @@ def test_update_with_invalid_ingredient_rejected(service: DefaultTeamService) ->
     # La revalidación vía _build_member(member_id=...) también rechaza datos inválidos.
     member = service.add_member(valid_input())
     with pytest.raises(ValidationError):
-        service.update_member(member.id, valid_input(ingredients=["Large Leek"]))
+        service.update_member(
+            member.id, valid_input(ingredients=["Large Leek", "Warming Ginger", "Fancy Egg"])
+        )
 
 
 def test_update_changing_species_revalidates_ingredients_against_new_slots(
@@ -129,23 +138,31 @@ def test_update_changing_species_revalidates_ingredients_against_new_slots(
 ) -> None:
     # Fancy Apple es válido para Pikachu pero NO para Squirtle: al cambiar de
     # especie en el update, los ingredientes se revalidan contra los slots nuevos.
-    member = service.add_member(valid_input(species="Pikachu", ingredients=["Fancy Apple"]))
+    member = service.add_member(
+        valid_input(species="Pikachu", ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"])
+    )
     with pytest.raises(ValidationError):
         service.update_member(
-            member.id, valid_input(species="Squirtle", ingredients=["Fancy Apple"])
+            member.id,
+            valid_input(
+                species="Squirtle", ingredients=["Fancy Apple", "Soothing Cacao", "Bean Sausage"]
+            ),
         )
 
 
 def test_update_changing_species_preserves_id_and_accepts_valid_ingredients(
     service: DefaultTeamService,
 ) -> None:
-    member = service.add_member(valid_input(species="Pikachu", ingredients=["Fancy Apple"]))
+    member = service.add_member(
+        valid_input(species="Pikachu", ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"])
+    )
+    squirtle_ingredients = ["Moomoo Milk", "Soothing Cacao", "Bean Sausage"]
     updated = service.update_member(
-        member.id, valid_input(species="Squirtle", ingredients=["Moomoo Milk"])
+        member.id, valid_input(species="Squirtle", ingredients=squirtle_ingredients)
     )
     assert updated.id == member.id  # el id se preserva pese al cambio de especie
     assert updated.species == "Squirtle"
-    assert [i.value for i in updated.ingredients] == ["Moomoo Milk"]
+    assert [i.value for i in updated.ingredients] == squirtle_ingredients
 
 
 def test_short_species_reports_three_slots_and_rejects_overflow(
@@ -222,6 +239,51 @@ def test_compute_production_invalid_level_rejected(service: DefaultTeamService) 
         )
 
 
+def test_compute_production_rejects_duplicate_sub_skills(service: DefaultTeamService) -> None:
+    # Mismas invariantes que add_member: las sub skills repetidas se rechazan (antes
+    # se colaban y sesgaban el cálculo sumando el bonus dos veces).
+    with pytest.raises(ValidationError, match="repetir"):
+        service.compute_production(
+            ProductionInput(
+                species="Pikachu",
+                level=80,
+                ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+                sub_skills=["Helping Speed M", "Helping Speed M"],
+            )
+        )
+
+
+def test_compute_production_rejects_too_many_sub_skills(service: DefaultTeamService) -> None:
+    with pytest.raises(ValidationError):
+        service.compute_production(
+            ProductionInput(
+                species="Pikachu",
+                level=80,
+                ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+                sub_skills=[
+                    "Helping Speed M",
+                    "Inventory Up S",
+                    "Skill Trigger S",
+                    "Ingredient Finder S",
+                    "Berry Finding S",
+                    "Helping Bonus",
+                ],  # 6 > 5
+            )
+        )
+
+
+def test_compute_production_rejects_non_int_level(service: DefaultTeamService) -> None:
+    # bool es subtipo de int (True == 1): se rechaza igual que en TeamMember.
+    with pytest.raises(ValidationError):
+        service.compute_production(
+            ProductionInput(
+                species="Pikachu",
+                level=True,  # type: ignore[arg-type]
+                ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+            )
+        )
+
+
 def test_compute_production_invalid_ingredient_for_slot_rejected(
     service: DefaultTeamService,
 ) -> None:
@@ -263,7 +325,13 @@ def test_delete_missing_member_raises(service: DefaultTeamService) -> None:
 
 def test_distributions_aggregate_team(service: DefaultTeamService) -> None:
     service.add_member(valid_input())
-    service.add_member(valid_input(species="Squirtle", ingredients=["Moomoo Milk"], sub_skills=[]))
+    service.add_member(
+        valid_input(
+            species="Squirtle",
+            ingredients=["Moomoo Milk", "Soothing Cacao", "Bean Sausage"],
+            sub_skills=[],
+        )
+    )
     dist = service.distributions()
     assert dist.natures["Adamant"] == 2
     assert dist.ingredients["Fancy Apple"] == 1
