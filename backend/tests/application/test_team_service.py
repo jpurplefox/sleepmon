@@ -272,6 +272,21 @@ def test_compute_production_rejects_too_many_sub_skills(service: DefaultTeamServ
         )
 
 
+def test_compute_production_accepts_nature_and_ribbon(service: DefaultTeamService) -> None:
+    # Cubre el parseo de nature y ribbon no-vacíos por la ruta de compute_production
+    # (las demás llamadas usan los defaults vacíos).
+    result = service.compute_production(
+        ProductionInput(
+            species="Pikachu",
+            level=60,
+            ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+            nature="Adamant",
+            ribbon="500h",
+        )
+    )
+    assert result.helps_per_day > 0
+
+
 def test_compute_production_rejects_non_int_level(service: DefaultTeamService) -> None:
     # bool es subtipo de int (True == 1): se rechaza igual que en TeamMember.
     with pytest.raises(ValidationError):

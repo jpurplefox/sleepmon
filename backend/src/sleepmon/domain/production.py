@@ -26,6 +26,7 @@ from sleepmon.domain.catalog_data import (
     FREQUENCY_REDUCTION_PER_LEVEL,
     MAX_ENERGY_BONUS,
     MAX_INGREDIENTS,
+    MAX_LEVEL,
     NATURE_EFFECTS,
     NIGHT_HOURS,
     SUB_SKILL_UNLOCK_LEVELS,
@@ -167,6 +168,12 @@ def daily_production(
         raise ValueError(
             f"Se esperaban {MAX_INGREDIENTS} ingredientes; llegaron {len(ingredients)}."
         )
+    # Función de dominio reusable: reguarda el rango de nivel por su cuenta (igual que
+    # el conteo de ingredientes), para no rendir un cálculo silenciosamente erróneo si
+    # se la invoca sin pasar antes por validate_level. level<=0 dispararía level_factor>1
+    # y max_ingredient_slots(0)=0.
+    if not 1 <= level <= MAX_LEVEL:
+        raise ValueError(f"El nivel debe estar entre 1 y {MAX_LEVEL}; llegó {level}.")
 
     # Solo cuentan las sub skills DESBLOQUEADAS al nivel (cada slot abre a 10/25/50/
     # 70/80); las que el nivel todavía no activó se ignoran.

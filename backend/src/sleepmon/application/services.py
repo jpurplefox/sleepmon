@@ -9,7 +9,7 @@ cada ingrediente sea válido para la especie en su slot.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from enum import Enum
+from enum import StrEnum
 from typing import TypeVar
 from uuid import UUID
 
@@ -33,7 +33,7 @@ from sleepmon.domain.production import daily_production
 from sleepmon.domain.species import Species
 from sleepmon.domain.value_objects import Ingredient, Nature, Ribbon, SubSkill
 
-E = TypeVar("E", bound=Enum)
+E = TypeVar("E", bound=StrEnum)
 
 
 def _parse_enum(enum_cls: type[E], value: str, field: str) -> E:
