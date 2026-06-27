@@ -60,13 +60,21 @@ export function MemberForm({
     setIngredients(selectedSpecies.ingredient_slots.map((opts) => opts[0] ?? ""));
   }, [selectedSpecies, species, initial]);
 
+  // El contrato del backend exige exactamente 3 ingredientes (uno por slot). El
+  // useEffect que puebla los slots corre tras el paint, así que durante esa
+  // ventana ingredients puede tener <3 entradas; bloqueamos el submit hasta que
+  // las 3 posiciones estén completas.
+  const ingredientsComplete = ingredients.filter(Boolean).length === 3;
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     onSubmit({
       species,
       level,
       nature,
-      ingredients: ingredients.filter(Boolean),
+      // No filtrar: las 3 posiciones viajan tal cual (el contrato exige 3).
+      ingredients,
+      // Las sub skills sí son opcionales: descartamos los slots vacíos.
       sub_skills: subSkills.filter(Boolean),
       ribbon,
     });
@@ -77,7 +85,12 @@ export function MemberForm({
       <div className="form__row">
         <label>
           Especie
-          <SpeciesSelect species={catalog.species} value={species} onChange={setSpecies} />
+          <SpeciesSelect
+            species={catalog.species}
+            value={species}
+            onChange={setSpecies}
+            ariaLabel="Especie"
+          />
         </label>
 
         <label>
@@ -87,6 +100,7 @@ export function MemberForm({
             value={nature}
             onChange={setNature}
             allowNone
+            ariaLabel="Naturaleza"
           />
         </label>
       </div>
@@ -120,11 +134,19 @@ export function MemberForm({
         <RibbonSelect value={ribbon} onChange={setRibbon} />
       </fieldset>
 
-      {error && <p className="error">{error}</p>}
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
 
       {footer}
 
-      <button className="btn btn--primary" type="submit" disabled={pending || !species}>
+      <button
+        className="btn btn--primary"
+        type="submit"
+        disabled={pending || !species || !ingredientsComplete}
+      >
         {pending ? "Guardando…" : submitLabel}
       </button>
     </form>

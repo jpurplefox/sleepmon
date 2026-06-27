@@ -132,7 +132,12 @@ export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
       </button>
 
       {open && (
-        <div className="subskill-dropdown" role="listbox" aria-label="Elegir sub skills">
+        <div
+          className="subskill-dropdown"
+          role="listbox"
+          aria-multiselectable
+          aria-label="Elegir sub skills"
+        >
           {groups.map((g) =>
             g.items.length === 0 ? null : (
               <div key={g.title} className="subskill-group">
@@ -146,12 +151,13 @@ export function SubSkillSelect({ subSkills, value, level, onChange }: Props) {
                       <button
                         type="button"
                         key={s.name}
+                        role="option"
+                        aria-selected={selected}
                         className={
                           "subskill-option" + (selected ? " subskill-option--selected" : "")
                         }
                         onClick={() => toggle(s.name)}
                         disabled={disabled}
-                        aria-pressed={selected}
                         title={selected ? `Quitar ${s.name}` : s.name}
                         aria-label={selected ? `Quitar ${s.name}` : s.name}
                       >

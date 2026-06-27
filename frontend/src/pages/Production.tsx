@@ -34,6 +34,9 @@ export function Production() {
   // Reordenamiento por arrastre: la card que se arrastra y el destino actual.
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  // Aviso al usuario cuando una acción no se pudo concretar (p. ej. agregar una
+  // especie que no está en el catálogo cargado).
+  const [notice, setNotice] = useState<string | null>(null);
   const nextUid = useRef(0);
 
   // El cálculo de cada card vive en el padre (una query por entry) para poder
@@ -111,7 +114,17 @@ export function Production() {
     );
 
   const pickMember = (m: Member) => {
-    const slots = speciesList.find((s) => s.name === m.species)?.ingredient_slots ?? [];
+    // Si la especie del miembro no está en el catálogo cargado, sus slots de
+    // ingrediente quedarían vacíos y la card se armaría con ingredients: [] →
+    // 400 al calcular/guardar y sprite en dex 0. Mejor no agregarla y avisar.
+    const species = speciesList.find((s) => s.name === m.species);
+    if (!species || species.ingredient_slots.length === 0) {
+      setNotice(`No se pudo agregar ${m.species}: la especie no está en el catálogo cargado.`);
+      setModal(null);
+      setEditIndex(null);
+      return;
+    }
+    const slots = species.ingredient_slots;
     const config: MemberInput = {
       species: m.species,
       level: m.level,
@@ -120,6 +133,7 @@ export function Production() {
       sub_skills: m.sub_skills,
       ribbon: m.ribbon,
     };
+    setNotice(null);
     setEntries((prev) => (prev.length >= MAX_COMPARE ? prev : [...prev, makeEntry(config, m.id)]));
     setModal(null);
     setEditIndex(null);
@@ -177,7 +191,14 @@ export function Production() {
 
   if (catalog.isLoading) return <p className="muted">Cargando catálogo…</p>;
   if (catalog.isError || !catalog.data)
-    return <p className="error">No se pudo cargar el catálogo. ¿Está el backend en :8000?</p>;
+    return (
+      <p className="error" role="alert">
+        No se pudo cargar el catálogo. ¿Está el backend en :8000?{" "}
+        <button type="button" className="btn btn--ghost" onClick={() => catalog.refetch()}>
+          Reintentar
+        </button>
+      </p>
+    );
 
   return (
     <div className="layout layout--wide">
@@ -190,6 +211,11 @@ export function Production() {
         <p className="muted hero__note">
           Los cálculos asumen un día de 15.5 h despierto + 8.5 h de sueño con energía máxima.
         </p>
+        {notice && (
+          <p className="error" role="alert">
+            {notice}
+          </p>
+        )}
       </header>
 
       <div className="prod-cards">
@@ -207,6 +233,8 @@ export function Production() {
             onClone={() => cloneAt(i)}
             onRemove={() => removeAt(i)}
             onMakeBase={() => swapEntries(i, 0)}
+            onMoveLeft={i > 0 ? () => swapEntries(i, i - 1) : undefined}
+            onMoveRight={i < entries.length - 1 ? () => swapEntries(i, i + 1) : undefined}
             onSaveToBox={() => saveToBox(i)}
             cloneDisabled={atMax}
             inBox={e.sourceId !== undefined}

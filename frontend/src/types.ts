@@ -33,22 +33,39 @@ export interface Catalog {
   species: Species[];
 }
 
+// Invariantes del contrato del backend (ver MemberInput):
+//  - ingredients: EXACTAMENTE 3, uno por slot (el backend rechaza con 400 != 3).
+//  - sub_skills: hasta 5, sin repetir.
+//  - nature / ribbon: opcionales; "" significa "ninguno".
+//  - level: entero 1..100.
 export interface Member {
   id: string;
   species: string;
+  // Entero 1..100.
   level: number;
+  // "" = sin naturaleza.
   nature: string;
+  // Exactamente 3, uno por slot.
   ingredients: string[];
+  // Hasta 5, sin repetir.
   sub_skills: string[];
+  // "" = sin listón.
   ribbon: string;
 }
 
+// Payload de alta/edición. Mismas invariantes que Member (el backend valida y
+// devuelve 400 {detail} si se violan).
 export interface MemberInput {
   species: string;
+  // Entero 1..100.
   level: number;
+  // "" = sin naturaleza.
   nature: string;
+  // Exactamente 3, uno por slot (NO filtrar antes de enviar).
   ingredients: string[];
+  // Hasta 5, sin repetir.
   sub_skills: string[];
+  // "" = sin listón.
   ribbon: string;
 }
 

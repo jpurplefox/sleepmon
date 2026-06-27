@@ -21,11 +21,22 @@ export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL }: Pro
 
   const set = (n: number) => onChange(clamp(Math.round(n), min, max));
 
+  // Repone el draft al value vigente. Se usa al perder foco y al confirmar con
+  // Enter, para que el input nunca quede mostrando vacío mientras se envía el
+  // último value válido (desync visual).
+  const reconcile = () => setDraft(String(value));
+
   function handleInput(raw: string) {
     setDraft(raw);
     if (raw.trim() === "") return; // dejá el campo vacío mientras se edita
     const n = Number(raw);
     if (Number.isFinite(n)) set(n);
+  }
+
+  // Enter dentro del input de nivel no debe enviar el form mostrando vacío: si el
+  // draft está vacío, lo reponemos al value vigente antes de que burbujee el submit.
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" && draft.trim() === "") reconcile();
   }
 
   return (
@@ -52,7 +63,8 @@ export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL }: Pro
           max={max}
           value={draft}
           onChange={(e) => handleInput(e.target.value)}
-          onBlur={() => setDraft(String(value))}
+          onKeyDown={handleKeyDown}
+          onBlur={reconcile}
         />
         <button
           type="button"

@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 
-import { INGREDIENT_UNLOCK_LEVELS, RIBBONS, SUB_SKILL_UNLOCK_LEVELS } from "../constants";
+import {
+  INGREDIENT_UNLOCK_LEVELS,
+  RIBBONS,
+  SUB_SKILL_NEVER_UNLOCKS,
+  SUB_SKILL_UNLOCK_LEVELS,
+} from "../constants";
 import { ingredientIcon } from "../ingredients";
 import { spriteUrl } from "../sprites";
 import { subSkillIcon } from "../subskills";
@@ -98,14 +103,19 @@ export function MemberCard({ member, nature, dex, subSkillTiers, onEdit, onDelet
           <dd className="ingredient-row">
             {member.sub_skills.length === 0 && <span className="muted">—</span>}
             {member.sub_skills.map((s, idx) => {
-              const unlock = SUB_SKILL_UNLOCK_LEVELS[idx] ?? 999;
+              const unlock = SUB_SKILL_UNLOCK_LEVELS[idx] ?? SUB_SKILL_NEVER_UNLOCKS;
               const locked = member.level < unlock;
               const tier = TIER_CLASS[subSkillTiers?.[s] ?? "Regular"];
+              const tooltip = !locked
+                ? s
+                : Number.isFinite(unlock)
+                  ? `${s} (se desbloquea a nivel ${unlock})`
+                  : `${s} (slot no disponible)`;
               return (
                 <span
                   key={`${s}-${idx}`}
                   className={`ss-icon ss-icon--${tier}` + (locked ? " is-locked" : "")}
-                  data-tooltip={locked ? `${s} (se desbloquea a nivel ${unlock})` : s}
+                  data-tooltip={tooltip}
                 >
                   <img src={subSkillIcon(s)} alt={s} loading="lazy" />
                 </span>
@@ -121,7 +131,16 @@ export function MemberCard({ member, nature, dex, subSkillTiers, onEdit, onDelet
             Editar
           </button>
         )}
-        <button className="btn btn--ghost btn--danger" onClick={handleDelete}>
+        <button
+          className="btn btn--ghost btn--danger"
+          onClick={handleDelete}
+          aria-live="polite"
+          aria-label={
+            confirming
+              ? `Confirmar eliminación de ${member.species} — pulsá de nuevo para confirmar`
+              : `Eliminar ${member.species}`
+          }
+        >
           {confirming ? "Confirmar" : "Eliminar"}
         </button>
       </div>

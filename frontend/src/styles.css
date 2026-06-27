@@ -558,6 +558,12 @@ select:focus {
   box-shadow: inset 0 0 0 1px var(--accent);
 }
 
+/* Opción resaltada por la navegación con flechas (foco de teclado en el listbox). */
+.nature-option--highlight {
+  border-color: var(--accent);
+  background: var(--surface-3, var(--surface-2));
+}
+
 /* Sprite */
 .sprite {
   width: 32px;
@@ -1516,6 +1522,13 @@ button.prod-card__base-tag--action:hover {
 
 .prod-card__grip:active {
   cursor: grabbing;
+}
+
+/* Botones de reorden por teclado (alternativa al arrastre): compactos, junto al grip. */
+.prod-card__move {
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0 0.25rem;
 }
 
 /* Diferencia contra la base, junto al valor. Verde = rinde más, rojo = menos. */

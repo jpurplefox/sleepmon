@@ -5,6 +5,10 @@ export const SUB_SKILL_UNLOCK_LEVELS = [10, 25, 50, 70, 80];
 export const INGREDIENT_UNLOCK_LEVELS = [1, 30, 60];
 export const MAX_LEVEL = 100;
 
+// Fallback de nivel de desbloqueo para slots de sub skill fuera de los 5 conocidos:
+// un slot inexistente nunca se desbloquea. Evita mostrar un "nivel 999" mágico.
+export const SUB_SKILL_NEVER_UNLOCKS = Infinity;
+
 // Listones por horas de sueño acumuladas (espejo de sleepmon.domain.value_objects
 // Ribbon + catalog_data). `name` es el valor que viaja al backend ("" = sin listón).
 // Los bonos son ACUMULATIVOS: cada listón implica los anteriores. `inventoryBonus`

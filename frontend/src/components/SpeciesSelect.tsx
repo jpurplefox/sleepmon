@@ -7,9 +7,12 @@ interface Props {
   species: Species[];
   value: string;
   onChange: (name: string) => void;
+  // Nombre accesible para el botón disparador (el <label> que lo envuelve no
+  // nombra un control nativo).
+  ariaLabel?: string;
 }
 
-export function SpeciesSelect({ species, value, onChange }: Props) {
+export function SpeciesSelect({ species, value, onChange, ariaLabel }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   // Opción resaltada para la navegación con flechas dentro del dropdown.
@@ -70,8 +73,9 @@ export function SpeciesSelect({ species, value, onChange }: Props) {
         type="button"
         className="species-trigger"
         onClick={() => setOpen((o) => !o)}
-        aria-haspopup="listbox"
+        aria-haspopup="dialog"
         aria-expanded={open}
+        aria-label={ariaLabel}
       >
         {selected ? (
           <>
