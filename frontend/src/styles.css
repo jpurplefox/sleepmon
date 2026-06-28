@@ -188,7 +188,8 @@ select:focus {
 .modal-close:focus-visible,
 .level-chip:focus-visible,
 .btn:focus-visible,
-.tab:focus-visible {
+.tab:focus-visible,
+.prod-box-item:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -570,6 +571,8 @@ select:focus {
   height: 32px;
   object-fit: contain;
   flex-shrink: 0;
+  /* Sprites pixel-art: nítidos al escalar, como el resto del sistema. */
+  image-rendering: pixelated;
 }
 
 /* Species combobox (buscador + imágenes) */
@@ -1402,26 +1405,56 @@ select:focus {
 }
 
 /* Lista de la caja dentro del modal de Producción */
+/* Campo de búsqueda del picker: fijo en el tope del modal, flush contra los
+   bordes del modal-body (que tiene 1.25rem de padding). Mismo tratamiento que
+   .species-search pero a lo ancho del panel. */
+.prod-box-search {
+  display: block;
+  width: calc(100% + 2 * 1.25rem);
+  margin: -1.25rem -1.25rem 0.75rem;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--surface-2);
+  padding: 0.55rem 1.25rem;
+  color: var(--text);
+  font-size: var(--text-base);
+}
+
+.prod-box-search:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.prod-box-empty {
+  margin: 0;
+  padding: 0.5rem 0;
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
 .prod-box-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
+/* Ítem del picker: dos filas (topline con identidad + config con iconos), la
+   "Caja en miniatura". El radio sube a --r-md porque ya es una card, no un chip. */
 .prod-box-item {
   display: flex;
-  align-items: center;
-  gap: 0.6rem;
+  flex-direction: column;
+  gap: 0.4rem;
   width: 100%;
   text-align: left;
   background: var(--surface-2);
   border: 1px solid var(--border);
   color: var(--text);
-  border-radius: var(--r-sm);
-  padding: 0.5rem 0.75rem;
+  border-radius: var(--r-md);
+  padding: 0.6rem 0.75rem;
   cursor: pointer;
 }
 
@@ -1429,30 +1462,123 @@ select:focus {
   border-color: var(--accent);
 }
 
-/* Miembro que ya está en la comparación: no se puede volver a agregar. Se marca
-   con borde punteado y el nombre atenuado, no con opacidad global (que dejaría el
-   tag ilegible). */
+/* Ya en la comparación: no se puede volver a agregar. Borde punteado + atenuado
+   uniforme (incluida la fila de iconos), que el tag sigue siendo legible. */
 .prod-box-item:disabled {
   cursor: default;
   border-style: dashed;
+  opacity: 0.5;
 }
 
-.prod-box-item:disabled .prod-box-item__name {
-  color: var(--muted);
+/* Fila 1: sprite + nombre + listón + tag + nivel. */
+.prod-box-item__topline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+/* Fila 2: lo que distingue a un ejemplar — naturaleza, ingredientes, sub skills,
+   nivel de skill. */
+.prod-box-item__config {
+  display: flex;
+  align-items: center;
+  /* Separación entre grupos (naturaleza / ingredientes / sub skills / skill)
+     mayor que la separación interna de cada grupo de iconos, para leer dónde
+     termina uno y empieza el otro. */
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.prod-box-item__config .ingredient-row {
+  gap: 0.25rem;
+}
+
+/* Grupo título: nombre con ellipsis + listón pegado a su derecha. El grupo crece
+   (flex:1) y empuja el tag y el badge de nivel al extremo derecho. */
+.prod-box-item__title {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 0;
 }
 
 .prod-box-item__name {
   font-weight: 600;
-  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Estado neutro (no es identidad ni acción): chip atenuado con borde, legible. */
+.prod-box-item__title .ribbon-icon {
+  flex-shrink: 0;
+}
+
+.prod-box-item__nature {
+  font-size: var(--text-xs);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Naturaleza con íconos de stat, mismo lenguaje que la comparación. */
+.prod-box-item__nature .nat-up {
+  color: var(--up);
+}
+
+.prod-box-item__nature .nat-down {
+  color: var(--down);
+}
+
+/* Ingredientes y sub skills a la misma escala compacta de las prod-cards (26px),
+   no la de la Caja (28/30px): así la fila de config queda a una sola altura. */
+.prod-box-item .ss-icon {
+  width: 26px;
+  height: 26px;
+}
+
+.prod-box-item .ss-icon img {
+  width: 18px;
+  height: 18px;
+}
+
+.prod-box-item .ingredient-row__icon {
+  width: 26px;
+  height: 26px;
+}
+
+/* Chip neutro (no es identidad ni acción): atenuado con borde, legible. */
 .prod-box-item__tag {
   font-size: var(--text-xs);
   color: var(--muted);
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   padding: 0.05rem 0.4rem;
+}
+
+/* Nivel de main skill: el ícono propio de la skill + "Lv. N", sin chip. Color
+   neutro: el dorado se reserva para el nivel del Pokémon (badge del topline). */
+.prod-box-item__skill-lv {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: var(--text-xs);
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.prod-box-item__skill-lv svg,
+.prod-box-item__skill-lv img {
+  width: 14px;
+  height: 14px;
+}
+
+/* Ítem resaltado por teclado (flechas) o por el mouse: mismo acento que el hover. */
+.prod-box-item.is-highlighted:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-dim);
 }
 
 /* Comparación de producción: hasta 5 cards por fila (luego envuelven) */

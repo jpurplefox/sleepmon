@@ -2,11 +2,11 @@ import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/rea
 import { useRef, useState } from "react";
 
 import { api } from "../api/client";
+import { BoxPicker } from "../components/BoxPicker";
 import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
 import { ProductionCard } from "../components/ProductionCard";
 import { useI18n } from "../i18n";
-import { spriteUrl } from "../sprites";
 import type { Member, MemberInput } from "../types";
 
 // Tope de la comparación: el máximo del equipo en el juego.
@@ -322,42 +322,15 @@ export function Production() {
             setEditIndex(null);
           }}
         >
-          {members.isLoading ? (
-            <p className="muted">{t("team.loadingBox")}</p>
-          ) : members.isError ? (
-            <p className="error">{t("prod.boxErrorRetry")}</p>
-          ) : members.data && members.data.length > 0 ? (
-            <ul className="prod-box-list">
-              {members.data.map((m) => {
-                const already = inComparison.has(m.id);
-                return (
-                  <li key={m.id}>
-                    <button
-                      type="button"
-                      className="prod-box-item"
-                      onClick={() => pickMember(m)}
-                      disabled={already}
-                    >
-                      <img
-                        className="sprite"
-                        src={spriteUrl(speciesList.find((s) => s.name === m.species)?.dex ?? 0)}
-                        alt=""
-                        loading="lazy"
-                      />
-                      <span className="prod-box-item__name">{m.species}</span>
-                      {already ? (
-                        <span className="prod-box-item__tag">{t("prod.alreadyIn")}</span>
-                      ) : (
-                        <span className="muted">{t("common.level", { level: m.level })}</span>
-                      )}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p className="muted">{t("prod.boxEmptyTab")}</p>
-          )}
+          <BoxPicker
+            members={members.data}
+            isLoading={members.isLoading}
+            isError={members.isError}
+            onRetry={() => members.refetch()}
+            catalog={catalog.data}
+            inComparison={inComparison as Set<string>}
+            onPick={pickMember}
+          />
         </Modal>
       )}
     </div>
