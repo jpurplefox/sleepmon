@@ -188,7 +188,8 @@ select:focus {
 .modal-close:focus-visible,
 .level-chip:focus-visible,
 .btn:focus-visible,
-.tab:focus-visible {
+.tab:focus-visible,
+.prod-box-item:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -1480,8 +1481,15 @@ select:focus {
 .prod-box-item__config {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  /* Separación entre grupos (naturaleza / ingredientes / sub skills / skill)
+     mayor que la separación interna de cada grupo de iconos, para leer dónde
+     termina uno y empieza el otro. */
+  gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+.prod-box-item__config .ingredient-row {
+  gap: 0.25rem;
 }
 
 .prod-box-item__name {
@@ -1496,9 +1504,11 @@ select:focus {
 .prod-box-item__nature {
   font-size: var(--text-xs);
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
-/* Sub skills al tamaño compacto de las prod-cards, no al de la Caja. */
+/* Ingredientes y sub skills a la misma escala compacta de las prod-cards (26px),
+   no la de la Caja (28/30px): así la fila de config queda a una sola altura. */
 .prod-box-item .ss-icon {
   width: 26px;
   height: 26px;
@@ -1507,6 +1517,11 @@ select:focus {
 .prod-box-item .ss-icon img {
   width: 18px;
   height: 18px;
+}
+
+.prod-box-item .ingredient-row__icon {
+  width: 26px;
+  height: 26px;
 }
 
 /* Estado neutro (no es identidad ni acción): chip atenuado con borde, legible. */

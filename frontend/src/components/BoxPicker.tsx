@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
+import type { KeyboardEvent } from "react";
 
 import {
   INGREDIENT_UNLOCK_LEVELS,
@@ -50,6 +51,28 @@ export function BoxPicker({
 }: Props) {
   const { t, nature: natureLabel, ingredient, subSkill } = useI18n();
   const [search, setSearch] = useState("");
+  const listId = useId();
+
+  // Navegación con flechas entre ítems (además de Tab), útil cuando la caja es
+  // grande: ↓/↑ mueven el foco al siguiente/anterior ítem seleccionable, con wrap.
+  const onListKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+    const btns = Array.from(
+      e.currentTarget.querySelectorAll<HTMLButtonElement>("button.prod-box-item:not([disabled])"),
+    );
+    if (btns.length === 0) return;
+    e.preventDefault();
+    const i = btns.indexOf(document.activeElement as HTMLButtonElement);
+    const next =
+      e.key === "ArrowDown"
+        ? i < 0
+          ? 0
+          : (i + 1) % btns.length
+        : i <= 0
+          ? btns.length - 1
+          : i - 1;
+    btns[next].focus();
+  };
 
   // Mapa especie→dex (sprite) y sub skill→tier, una sola vez por catálogo.
   const dexBySpecies = useMemo(
@@ -99,16 +122,24 @@ export function BoxPicker({
         className="prod-box-search"
         placeholder={t("prod.boxSearch")}
         aria-label={t("prod.boxSearchAria")}
+        aria-controls={listId}
+        aria-autocomplete="list"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
+
+      {/* Anuncio del conteo de resultados al filtrar, para lectores de pantalla;
+          el caso 0 lo cubre el mensaje visible de vacío (también role=status). */}
+      <span className="sr-only" role="status" aria-live="polite">
+        {search && filtered.length > 0 ? t("prod.boxResultCount", { count: filtered.length }) : ""}
+      </span>
 
       {filtered.length === 0 ? (
         <p className="muted prod-box-empty" role="status">
           {t("prod.boxSearchEmpty", { query: search })}
         </p>
       ) : (
-        <ul className="prod-box-list">
+        <ul id={listId} className="prod-box-list" onKeyDown={onListKeyDown}>
           {filtered.map((m) => {
             const already = inComparison.has(m.id);
             const nature = natureByName.get(m.nature);
@@ -129,6 +160,7 @@ export function BoxPicker({
                       loading="lazy"
                     />
                     <span className="prod-box-item__name">{m.species}</span>
+                    {already && <span className="prod-box-item__tag">{t("prod.alreadyIn")}</span>}
                     {ribbonIdx > 0 && (
                       <RibbonIcon
                         index={ribbonIdx}
@@ -136,7 +168,8 @@ export function BoxPicker({
                         title={t("member.ribbon", { hours: RIBBONS[ribbonIdx].hours })}
                       />
                     )}
-                    {already && <span className="prod-box-item__tag">{t("prod.alreadyIn")}</span>}
+                    {/* El nivel (único dorado del topline) queda siempre al extremo
+                        derecho, independientemente de listón o tag. */}
                     <span className="badge badge--level">
                       {t("common.level", { level: m.level })}
                     </span>
@@ -179,11 +212,16 @@ export function BoxPicker({
                           const unlock = SUB_SKILL_UNLOCK_LEVELS[idx] ?? SUB_SKILL_NEVER_UNLOCKS;
                           const locked = m.level < unlock;
                           const tier = TIER_CLASS[tierBySubSkill.get(s) ?? "Regular"];
+                          const tooltip = !locked
+                            ? subSkill(s)
+                            : Number.isFinite(unlock)
+                              ? t("member.subSkillLocked", { name: subSkill(s), level: unlock })
+                              : t("member.subSkillSlotUnavailable", { name: subSkill(s) });
                           return (
                             <span
                               key={`${s}-${idx}`}
                               className={`ss-icon ss-icon--${tier}` + (locked ? " is-locked" : "")}
-                              data-tooltip={subSkill(s)}
+                              data-tooltip={tooltip}
                             >
                               <img src={subSkillIcon(s)} alt={subSkill(s)} loading="lazy" />
                             </span>
