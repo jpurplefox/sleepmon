@@ -1099,45 +1099,45 @@ select:focus {
 /* Orden: select + dirección como un único control segmentado (pegados, borde
    compartido, mismo alto, sin gap). El trigger del campo es un FilterPopover; el
    botón de dirección va pegado a su derecha. */
+/* Control de orden = una sola pieza segmentada: UN borde exterior en el wrapper,
+   los hijos (trigger del dropdown + botón de dirección) sin borde propio, con un
+   único divisor entre ellos. Así se lee inequívocamente como un control conectado. */
 .sort-control {
   display: inline-flex;
   align-items: stretch;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--surface-2);
 }
 
-/* El wrapper del FilterPopover (.filter-control) debe estirarse a lo alto del
-   control segmentado para que el trigger y el botón de dirección queden a la misma
-   altura, y su trigger ocupar todo el alto disponible. */
+.sort-control:has(.filter-btn--open) {
+  border-color: var(--accent);
+}
+
 .sort-control .filter-control {
   align-items: stretch;
 }
 
-/* El trigger del dropdown de orden cuadra su lado derecho para pegarse al botón
-   de dirección (esquinas internas planas, sin gap). */
-.sort-control__trigger {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
+/* Trigger del dropdown: sin borde/radio/fondo propios (los pone el wrapper). Se
+   sube la especificidad (.sort-control .filter-btn) para ganarle a `.filter-btn`,
+   que se define después en el archivo y si no le devolvería su borde (doble borde). */
+.sort-control .filter-btn.sort-control__trigger {
+  border: none;
+  border-radius: 0;
+  background: transparent;
 }
 
+/* Botón de dirección: sin borde propio salvo el divisor a la izquierda. */
 .sort-control__dir {
   display: inline-flex;
   align-items: center;
   padding: 0 0.6rem;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  /* Comparte el borde con el trigger: sin borde izquierdo propio para no doblarlo. */
-  border-left: none;
-  border-top-right-radius: var(--r-md);
-  border-bottom-right-radius: var(--r-md);
+  background: transparent;
+  border: none;
+  border-left: 1px solid var(--border);
   color: var(--text);
   cursor: pointer;
-}
-
-/* Cuando el dropdown de orden está abierto, su trigger pinta el borde de acento;
-   el botón de dirección acompaña ese estado en su borde para que el control
-   segmentado se lea como una sola pieza resaltada. */
-.sort-control:has(.filter-btn--open) .sort-control__dir,
-.sort-control__dir:hover {
-  border-color: var(--accent);
 }
 
 .sort-control__dir:hover {
@@ -1430,9 +1430,10 @@ select:focus {
 .box-entry {
   display: grid;
   /* identidad · config · producción (bayas+ingredientes) · skill · acciones.
-     La columna de skill es `auto`: misma ancho/posición en todas las filas, así
-     los disparos quedan alineados sin importar cuántos ingredientes tenga cada uno. */
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1.6fr) auto auto;
+     La columna de skill tiene ANCHO FIJO: cada card es un grid independiente, así
+     que sólo con un ancho fijo (no `auto`/contenido) los disparos quedan alineados
+     entre filas, sin importar cuántos ingredientes tenga cada Pokémon. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1.6fr) 8rem auto;
   align-items: center;
   gap: 1rem 1.25rem;
 }
