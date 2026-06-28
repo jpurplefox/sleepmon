@@ -13,8 +13,8 @@ _P = Parameter("%s")
 
 INSERT_MEMBER = (
     Query.into(member)
-    .columns("id", "species", "level", "nature", "ribbon")
-    .insert(_P, _P, _P, _P, _P)
+    .columns("id", "species", "level", "nature", "ribbon", "skill_level")
+    .insert(_P, _P, _P, _P, _P, _P)
     .get_sql()
 )
 
@@ -26,7 +26,14 @@ INSERT_INGREDIENT = (
     Query.into(ingredient).columns("member_id", "slot", "ingredient").insert(_P, _P, _P).get_sql()
 )
 
-_MEMBER_COLS = (member.id, member.species, member.level, member.nature, member.ribbon)
+_MEMBER_COLS = (
+    member.id,
+    member.species,
+    member.level,
+    member.nature,
+    member.ribbon,
+    member.skill_level,
+)
 
 SELECT_MEMBERS_ALL = (
     Query.from_(member).select(*_MEMBER_COLS).orderby(member.created_at, order=Order.asc).get_sql()
@@ -76,6 +83,7 @@ UPDATE_MEMBER = (
     .set(member.level, _P)
     .set(member.nature, _P)
     .set(member.ribbon, _P)
+    .set(member.skill_level, _P)
     .where(member.id == _P)
     .get_sql()
 )

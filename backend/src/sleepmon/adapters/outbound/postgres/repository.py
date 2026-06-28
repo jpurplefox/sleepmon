@@ -22,13 +22,14 @@ _E = TypeVar("_E", bound=Enum)
 
 @dataclass(frozen=True, slots=True)
 class _MemberRow:
-    """Fila de ``team_member`` (columnas: id, species, level, nature, ribbon)."""
+    """Fila de ``team_member`` (columnas: id, species, level, nature, ribbon, skill_level)."""
 
     id: UUID
     species: str
     level: int
     nature: str
     ribbon: str
+    skill_level: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,6 +74,7 @@ class PostgresTeamRepository(TeamRepository):
                     member.level,
                     member.nature.value if member.nature else "",
                     member.ribbon.value,
+                    member.skill_level,
                 ),
             )
             self._insert_children(cur, member)
@@ -118,6 +120,7 @@ class PostgresTeamRepository(TeamRepository):
                     member.level,
                     member.nature.value if member.nature else "",
                     member.ribbon.value,
+                    member.skill_level,
                     member.id,
                 ),
             )
@@ -167,4 +170,5 @@ def _build_member(
         ingredients=ingredients,
         sub_skills=sub_skills,
         ribbon=_decode(Ribbon, row.ribbon),
+        skill_level=row.skill_level,
     )

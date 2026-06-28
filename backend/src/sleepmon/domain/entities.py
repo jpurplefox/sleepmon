@@ -5,7 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 
-from sleepmon.domain.catalog_data import MAX_INGREDIENTS, MAX_LEVEL, MAX_SUB_SKILLS
+from sleepmon.domain.catalog_data import (
+    MAX_INGREDIENTS,
+    MAX_LEVEL,
+    MAX_SKILL_LEVEL_ABSOLUTE,
+    MAX_SUB_SKILLS,
+)
 from sleepmon.domain.errors import ValidationError
 from sleepmon.domain.value_objects import Ingredient, Nature, Ribbon, SubSkill
 
@@ -48,6 +53,21 @@ def validate_sub_skills(sub_skills: tuple[SubSkill, ...]) -> None:
         raise ValidationError("Las sub skills no pueden repetirse.")
 
 
+def validate_skill_level(skill_level: int) -> None:
+    """Nivel de main skill: entero real (bool/float fuera) en ``[1, MAX_SKILL_LEVEL_ABSOLUTE]``.
+
+    Es la cota absoluta entre todas las skills (Dream Shard Magnet S llega a 8); el tope
+    real por skill lo decide cada tabla en ``domain/skills.py``.
+    """
+    if isinstance(skill_level, bool) or not isinstance(skill_level, int):
+        raise ValidationError(f"El nivel de skill debe ser un entero; llegó {skill_level!r}.")
+    if not 1 <= skill_level <= MAX_SKILL_LEVEL_ABSOLUTE:
+        raise ValidationError(
+            f"El nivel de skill debe estar entre 1 y {MAX_SKILL_LEVEL_ABSOLUTE}; "
+            f"llegó {skill_level}."
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class TeamMember:
     """Un Pokémon de tu equipo, con su naturaleza, sub skills e ingredientes.
@@ -70,11 +90,16 @@ class TeamMember:
     ingredients: tuple[Ingredient, ...]
     sub_skills: tuple[SubSkill, ...] = ()
     ribbon: Ribbon = Ribbon.NONE
+    # Nivel de la main skill (1..MAX_SKILL_LEVEL): se sube aparte del nivel del
+    # Pokémon (caramelos, sub skills de Skill Level Up). Determina la salida de las
+    # skills que escalan por nivel, como Ingredient Draw S.
+    skill_level: int = 1
     id: UUID = field(default_factory=uuid4)
 
     def __post_init__(self) -> None:
         if not self.species or not self.species.strip():
             raise ValidationError("La especie no puede estar vacía.")
         validate_level(self.level)
+        validate_skill_level(self.skill_level)
         validate_ingredient_count(self.ingredients)
         validate_sub_skills(self.sub_skills)

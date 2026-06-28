@@ -51,6 +51,8 @@ export interface Member {
   sub_skills: string[];
   // "" = sin listón.
   ribbon: string;
+  // Nivel de la main skill (1..7); se sube aparte del nivel del Pokémon.
+  skill_level: number;
 }
 
 // Payload de alta/edición. Mismas invariantes que Member (el backend valida y
@@ -67,6 +69,8 @@ export interface MemberInput {
   sub_skills: string[];
   // "" = sin listón.
   ribbon: string;
+  // Nivel de la main skill (1..7).
+  skill_level: number;
 }
 
 export interface Distributions {
@@ -83,6 +87,7 @@ export interface ProductionInput {
   nature: string;
   sub_skills: string[];
   ribbon: string;
+  skill_level: number;
 }
 
 export interface SlotProduction {
@@ -101,6 +106,36 @@ export interface Production {
   effective_skill_percentage: number;
   ingredients: SlotProduction[];
   skill_triggers: number;
+  // Ingredientes/día que aporta la main skill (Ingredient Draw S), uno por
+  // ingrediente del pool. Vacío si la skill de la especie no produce ingredientes.
+  skill_ingredients: SlotProduction[];
+  // Energía/día que la main skill restaura a CADA compañero (Energy for Everyone S).
+  // null si la skill de la especie no restaura energía al equipo.
+  skill_energy: number | null;
+  // Ingredientes/día (de cualquier tipo, al azar) que consigue la main skill
+  // (Ingredient Magnet S), como total sin desglosar. null si no aplica.
+  skill_ingredient_total: number | null;
+  // Ingredientes extra de pote/día que aporta la main skill (Cooking Power-Up S).
+  // null si la skill de la especie no agranda el pote.
+  skill_cooking_ingredients: number | null;
+  // Fuerza/día que la main skill suma a Snorlax (Charge Strength S / M). Para los
+  // montos aleatorios es el valor esperado (punto medio). null si no aplica.
+  skill_strength: number | null;
+  // Energía/día que la main skill restaura al PROPIO Pokémon (Charge Energy S).
+  // null si la skill de la especie no carga energía al usuario.
+  skill_self_energy: number | null;
+  // Fragmentos de sueño/día que consigue la main skill (Dream Shard Magnet S). Para
+  // los montos aleatorios es el valor esperado (punto medio). null si no aplica.
+  skill_dream_shards: number | null;
+  // Aumento de Extra Tasty (en %) por activación de la main skill (Tasty Chance S).
+  // Es el valor del nivel, no un total por día. null si la skill no lo da.
+  skill_tasty_chance: number | null;
+  // Multiplicador de ayuda total del día por la main skill (Extra Helpful S):
+  // disparos × ×N_del_nivel. null si la skill no da ayuda instantánea.
+  skill_extra_helpful: number | null;
+  // Energía/día que la main skill reparte al equipo, a un compañero al azar cada
+  // disparo (Energizing Cheer S). null si la skill no lo da.
+  skill_random_energy: number | null;
   night_skill_chances: number[];
   inventory: number;
   inventory_fill_hours: number;

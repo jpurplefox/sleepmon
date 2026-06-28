@@ -20,6 +20,7 @@ class TeamMemberInput:
     ingredients: list[str]
     sub_skills: list[str] = field(default_factory=list)
     ribbon: str = ""  # vacío = sin listón
+    skill_level: int = 1  # nivel de la main skill (1..MAX_SKILL_LEVEL)
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,6 +43,7 @@ class ProductionInput:
     nature: str = ""  # vacío = sin naturaleza (sin efecto)
     sub_skills: list[str] = field(default_factory=list)
     ribbon: str = ""  # vacío = sin listón
+    skill_level: int = 1  # nivel de la main skill (1..MAX_SKILL_LEVEL)
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,6 +68,16 @@ class ProductionResult:
     effective_skill_percentage: float
     ingredients: list[SlotAmount]
     skill_triggers: float
+    skill_ingredients: list[SlotAmount]
+    skill_energy: float | None
+    skill_ingredient_total: float | None
+    skill_cooking_ingredients: float | None
+    skill_strength: float | None
+    skill_self_energy: float | None
+    skill_dream_shards: float | None
+    skill_tasty_chance: float | None
+    skill_extra_helpful: float | None
+    skill_random_energy: float | None
     night_skill_chances: list[float]
     inventory: int
     inventory_fill_hours: float

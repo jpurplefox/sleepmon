@@ -4,6 +4,8 @@
 export const SUB_SKILL_UNLOCK_LEVELS = [10, 25, 50, 70, 80];
 export const INGREDIENT_UNLOCK_LEVELS = [1, 30, 60];
 export const MAX_LEVEL = 100;
+// Nivel máximo de una main skill (espejo de sleepmon.domain.catalog_data).
+export const MAX_SKILL_LEVEL = 7;
 
 // Fallback de nivel de desbloqueo para slots de sub skill fuera de los 5 conocidos:
 // un slot inexistente nunca se desbloquea. Evita mostrar un "nivel 999" mágico.

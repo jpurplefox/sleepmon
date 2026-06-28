@@ -24,6 +24,14 @@ INGREDIENT_UNLOCK_LEVELS: Final[tuple[int, ...]] = (1, 30, 60)
 MAX_SUB_SKILLS: Final[int] = len(SUB_SKILL_UNLOCK_LEVELS)
 MAX_INGREDIENTS: Final[int] = len(INGREDIENT_UNLOCK_LEVELS)
 MAX_LEVEL: Final[int] = 100
+# Nivel máximo "habitual" de una main skill (se sube aparte del nivel del Pokémon,
+# con caramelos y sub skills de Skill Level Up). La mayoría de las skills toman este
+# tope; define el largo de sus tablas de salida (ver domain/skills.py).
+MAX_SKILL_LEVEL: Final[int] = 7
+# Algunas skills llegan más alto (Dream Shard Magnet S: nivel 8) y otras topan antes
+# (E4E / Charge Energy: nivel 6). Esta es la cota ABSOLUTA que valida la entidad y la
+# aplicación; el tope real por skill lo decide cada tabla.
+MAX_SKILL_LEVEL_ABSOLUTE: Final[int] = 8
 
 # Cada evolución sube el carry limit (inventario base) en una cantidad fija: el
 # inventario base del catálogo es el de la forma sin evolucionar y se le suma este

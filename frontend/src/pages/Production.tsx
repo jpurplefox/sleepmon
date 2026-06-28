@@ -53,6 +53,7 @@ export function Production() {
           nature: e.config.nature,
           sub_skills: e.config.sub_skills,
           ribbon: e.config.ribbon,
+          skill_level: e.config.skill_level,
         }),
       // El resultado de una config es estable: no re-pedir ni reflashear
       // "Calculando…" al reordenar o revisitar una card ya calculada.
@@ -136,6 +137,7 @@ export function Production() {
       ingredients: slots.map((opts, i) => m.ingredients[i] ?? opts[0] ?? ""),
       sub_skills: m.sub_skills,
       ribbon: m.ribbon,
+      skill_level: m.skill_level,
     };
     setNotice(null);
     setEntries((prev) => (prev.length >= MAX_COMPARE ? prev : [...prev, makeEntry(config, m.id)]));

@@ -147,3 +147,24 @@ def test_five_sub_skills_allowed_at_level_80() -> None:
         ),
     )
     assert len(member.sub_skills) == 5
+
+
+def test_default_skill_level_is_one() -> None:
+    assert make().skill_level == 1
+
+
+def test_skill_level_within_range_is_valid() -> None:
+    # 8 es válido: Dream Shard Magnet S llega a nivel 8 (cota absoluta).
+    assert make(skill_level=8).skill_level == 8
+
+
+@pytest.mark.parametrize("bad", [0, 9, -1])
+def test_skill_level_out_of_range_rejected(bad: int) -> None:
+    with pytest.raises(ValidationError):
+        make(skill_level=bad)
+
+
+def test_skill_level_bool_rejected() -> None:
+    # bool es subtipo de int (True == 1): se rechaza explícitamente.
+    with pytest.raises(ValidationError):
+        make(skill_level=True)

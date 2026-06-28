@@ -25,6 +25,7 @@ from sleepmon.domain.entities import (
     TeamMember,
     validate_ingredient_count,
     validate_level,
+    validate_skill_level,
     validate_sub_skills,
 )
 from sleepmon.domain.errors import SpeciesNotFoundError, TeamMemberNotFoundError, ValidationError
@@ -135,15 +136,19 @@ class DefaultTeamService(TeamService):
         ribbon = _parse_enum(Ribbon, data.ribbon, "ribbon")
 
         # Mismas invariantes de miembro que add_member/update_member (que las aplican
-        # vía el constructor de TeamMember): nivel entero en rango, exactamente un
-        # ingrediente por slot y sub skills sin repetir dentro del tope. compute_production
-        # no construye un TeamMember, así que las reusa explícitamente para no divergir.
+        # vía el constructor de TeamMember): nivel entero en rango, nivel de skill en
+        # rango, exactamente un ingrediente por slot y sub skills sin repetir dentro del
+        # tope. compute_production no construye un TeamMember, así que las reusa
+        # explícitamente para no divergir.
         validate_level(data.level)
+        validate_skill_level(data.skill_level)
         validate_ingredient_count(ingredients)
         validate_sub_skills(sub_skills)
         _validate_ingredients(species, ingredients)
 
-        result = daily_production(species, ingredients, data.level, nature, sub_skills, ribbon)
+        result = daily_production(
+            species, ingredients, data.level, nature, sub_skills, ribbon, data.skill_level
+        )
         return ProductionResult(
             helps_per_day=result.helps_per_day,
             seconds_per_help=result.seconds_per_help,
@@ -158,6 +163,19 @@ class DefaultTeamService(TeamService):
                 for slot in result.ingredients
             ],
             skill_triggers=result.skill_triggers,
+            skill_ingredients=[
+                SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
+                for slot in result.skill_ingredients
+            ],
+            skill_energy=result.skill_energy,
+            skill_ingredient_total=result.skill_ingredient_total,
+            skill_cooking_ingredients=result.skill_cooking_ingredients,
+            skill_strength=result.skill_strength,
+            skill_self_energy=result.skill_self_energy,
+            skill_dream_shards=result.skill_dream_shards,
+            skill_tasty_chance=result.skill_tasty_chance,
+            skill_extra_helpful=result.skill_extra_helpful,
+            skill_random_energy=result.skill_random_energy,
             night_skill_chances=list(result.night_skill_chances),
             inventory=result.inventory,
             inventory_fill_hours=result.inventory_fill_hours,
@@ -188,6 +206,7 @@ class DefaultTeamService(TeamService):
                 ingredients=ingredients,
                 sub_skills=sub_skills,
                 ribbon=ribbon,
+                skill_level=data.skill_level,
             )
         return TeamMember(
             id=member_id,
@@ -197,4 +216,5 @@ class DefaultTeamService(TeamService):
             ingredients=ingredients,
             sub_skills=sub_skills,
             ribbon=ribbon,
+            skill_level=data.skill_level,
         )

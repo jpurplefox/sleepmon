@@ -190,3 +190,288 @@ def test_update_and_delete_flow(client: TestClient) -> None:
 
     assert client.delete(f"/team/{member_id}").status_code == 204
     assert client.get("/team").json() == []
+
+
+def test_member_skill_level_roundtrips_and_defaults(client: TestClient) -> None:
+    # Omitido -> default 1.
+    created = client.post("/team", json=valid_payload()).json()
+    assert created["skill_level"] == 1
+    # Explícito -> se preserva.
+    with_skill = client.post("/team", json=valid_payload(skill_level=5)).json()
+    assert with_skill["skill_level"] == 5
+    assert client.get(f"/team/{with_skill['id']}").json()["skill_level"] == 5
+
+
+def test_production_exposes_skill_ingredients_for_ingredient_draw(client: TestClient) -> None:
+    body = {
+        "species": "Crustle",
+        "level": 60,
+        "ingredients": ["Glossy Avocado", "Soft Potato", "Pure Oil"],
+        "skill_level": 7,
+    }
+    res = client.post("/production", json=body)
+    assert res.status_code == 200
+    payload = res.json()
+    pool = {s["ingredient"] for s in payload["skill_ingredients"]}
+    assert pool == {"Glossy Avocado", "Soft Potato", "Pure Oil"}
+    each = payload["skill_triggers"] * 18 / 3
+    assert all(s["amount"] == pytest.approx(each) for s in payload["skill_ingredients"])
+
+
+def test_production_skill_ingredients_empty_for_other_skills(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Pikachu",
+            "level": 60,
+            "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+        },
+    )
+    assert res.status_code == 200
+    assert res.json()["skill_ingredients"] == []
+
+
+def test_production_invalid_skill_level_returns_400(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Crustle",
+            "level": 60,
+            "ingredients": ["Glossy Avocado", "Soft Potato", "Pure Oil"],
+            "skill_level": 9,
+        },
+    )
+    assert res.status_code == 400
+
+
+def test_production_exposes_skill_energy_for_e4e(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Sylveon",
+            "level": 60,
+            "ingredients": ["Moomoo Milk", "Soothing Cacao", "Bean Sausage"],
+            "skill_level": 6,
+        },
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["skill_energy"] == pytest.approx(body["skill_triggers"] * 18)
+    assert body["skill_ingredients"] == []
+
+
+def test_production_skill_energy_null_for_non_e4e(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Crustle",
+            "level": 60,
+            "ingredients": ["Glossy Avocado", "Soft Potato", "Pure Oil"],
+        },
+    )
+    assert res.status_code == 200
+    assert res.json()["skill_energy"] is None
+
+
+def test_production_exposes_skill_ingredient_total_for_magnet(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Bulbasaur",
+            "level": 60,
+            "ingredients": ["Honey", "Snoozy Tomato", "Soft Potato"],
+            "skill_level": 7,
+        },
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["skill_ingredient_total"] == pytest.approx(body["skill_triggers"] * 24)
+    assert body["skill_ingredients"] == []
+    assert body["skill_energy"] is None
+
+
+def test_production_skill_ingredient_total_null_for_non_magnet(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Sylveon",
+            "level": 60,
+            "ingredients": ["Moomoo Milk", "Soothing Cacao", "Bean Sausage"],
+        },
+    )
+    assert res.status_code == 200
+    assert res.json()["skill_ingredient_total"] is None
+
+
+def test_production_exposes_skill_cooking_ingredients_for_cooking_power_up(
+    client: TestClient,
+) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Flareon",
+            "level": 60,
+            "ingredients": ["Moomoo Milk", "Soothing Cacao", "Bean Sausage"],
+            "skill_level": 7,
+        },
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["skill_cooking_ingredients"] == pytest.approx(body["skill_triggers"] * 31)
+    assert body["skill_ingredients"] == []
+    assert body["skill_energy"] is None
+    assert body["skill_ingredient_total"] is None
+
+
+def test_production_skill_cooking_null_for_non_cooking_skill(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Crustle",
+            "level": 60,
+            "ingredients": ["Glossy Avocado", "Soft Potato", "Pure Oil"],
+        },
+    )
+    assert res.status_code == 200
+    assert res.json()["skill_cooking_ingredients"] is None
+
+
+def test_production_exposes_skill_strength_for_charge_strength(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Pikachu",
+            "level": 60,
+            "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+            "skill_level": 7,
+        },
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["skill_strength"] == pytest.approx(body["skill_triggers"] * 3212)
+
+
+def test_production_skill_strength_null_for_non_charge(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Crustle",
+            "level": 60,
+            "ingredients": ["Glossy Avocado", "Soft Potato", "Pure Oil"],
+        },
+    )
+    assert res.status_code == 200
+    assert res.json()["skill_strength"] is None
+
+
+def test_production_exposes_skill_self_energy_for_charge_energy(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Rattata",
+            "level": 60,
+            "ingredients": ["Fancy Apple", "Greengrass Soybeans", "Bean Sausage"],
+            "skill_level": 6,
+        },
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["skill_self_energy"] == pytest.approx(body["skill_triggers"] * 43)
+    assert body["skill_energy"] is None
+
+
+def test_production_exposes_tasty_chance_for_tasty_chance_skill(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Sneasel",
+            "level": 60,
+            "ingredients": ["Bean Sausage", "Bean Sausage", "Bean Sausage"],
+            "skill_level": 6,
+        },
+    )
+    assert res.status_code == 200
+    body = res.json()
+    # Se acumula con los disparos (× 10% del nivel 6), sin tope.
+    assert body["skill_tasty_chance"] == pytest.approx(body["skill_triggers"] * 10)
+
+
+def test_production_tasty_chance_null_for_other_skills(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Crustle",
+            "level": 60,
+            "ingredients": ["Glossy Avocado", "Soft Potato", "Pure Oil"],
+        },
+    )
+    assert res.status_code == 200
+    assert res.json()["skill_tasty_chance"] is None
+
+
+def test_production_exposes_extra_helpful_multiplier(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Jolteon",
+            "level": 60,
+            "ingredients": ["Moomoo Milk", "Moomoo Milk", "Moomoo Milk"],
+            "skill_level": 7,
+        },
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["skill_extra_helpful"] == pytest.approx(body["skill_triggers"] * 12)
+
+
+def test_production_exposes_random_energy_for_energizing_cheer(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Vulpix",
+            "level": 60,
+            "ingredients": ["Greengrass Soybeans", "Greengrass Soybeans", "Greengrass Soybeans"],
+            "skill_level": 6,
+        },
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["skill_random_energy"] == pytest.approx(body["skill_triggers"] * 50)
+    assert body["skill_energy"] is None
+    assert body["skill_self_energy"] is None
+
+
+def test_production_plusle_magnet_plus_total(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Plusle",
+            "level": 60,
+            "ingredients": ["Rousing Coffee", "Rousing Coffee", "Rousing Coffee"],
+            "skill_level": 7,
+        },
+    )
+    assert res.status_code == 200
+    body = res.json()
+    # Base al azar (18 a nivel 7) en el total; el bonus específico (café) va a
+    # skill_ingredients (sección Ingredientes).
+    assert body["skill_ingredient_total"] == pytest.approx(body["skill_triggers"] * 18)
+    assert body["skill_ingredients"] == [
+        {"ingredient": "Rousing Coffee", "amount": pytest.approx(body["skill_triggers"] * 12)}
+    ]
+
+
+def test_production_minun_pot_and_random_energy(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Minun",
+            "level": 60,
+            "ingredients": ["Honey", "Honey", "Honey"],
+            "skill_level": 7,
+        },
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["skill_cooking_ingredients"] == pytest.approx(body["skill_triggers"] * 24)
+    assert body["skill_random_energy"] == pytest.approx(body["skill_triggers"] * 35)

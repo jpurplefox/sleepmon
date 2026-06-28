@@ -21,13 +21,18 @@ import {
   IconGrip,
   IconHelp,
   IconHourglass,
+  IconMagnifier,
   IconMoon,
   IconPackage,
+  IconPot,
   IconSaveBox,
   IconSparkle,
+  IconStrength,
 } from "./icons";
 
 const fmt = (n: number) => n.toFixed(2);
+// Magnitudes grandes (fuerza, fragmentos de sueño): enteros con separador de miles.
+const fmtInt = (n: number) => Math.round(n).toLocaleString("en-US");
 const pct = (n: number) => `${n.toFixed(1)}%`;
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 const TIER_CLASS: Record<string, string> = { Gold: "gold", Blue: "blue", Regular: "regular" };
@@ -148,7 +153,37 @@ export function ProductionCard({
     return [...map.entries()].map(([ingredient, amount]) => ({ ingredient, amount }));
   }, [d]);
 
-  // Mismo agrupado para la base: permite el delta por ingrediente cuando ambas
+  // Ingredientes que aporta la main skill (Ingredient Draw S), por ingrediente del
+  // pool. Vacío para la enorme mayoría de especies (la skill no produce ingredientes).
+  const skillIng = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const s of d?.skill_ingredients ?? []) {
+      map.set(s.ingredient, (map.get(s.ingredient) ?? 0) + s.amount);
+    }
+    return map;
+  }, [d]);
+
+  // Total por ingrediente = mecánica normal (slots) + skill. El pool de la skill
+  // puede incluir ingredientes que ningún slot normal produce (slots bloqueados a
+  // bajo nivel), así que se agregan al final conservando el orden.
+  const combined = useMemo(() => {
+    const normal = new Map<string, number>();
+    const order: string[] = [];
+    for (const g of grouped) {
+      normal.set(g.ingredient, g.amount);
+      order.push(g.ingredient);
+    }
+    for (const ing of skillIng.keys()) {
+      if (!normal.has(ing)) order.push(ing);
+    }
+    return order.map((ingredient) => {
+      const fromNormal = normal.get(ingredient) ?? 0;
+      const fromSkill = skillIng.get(ingredient) ?? 0;
+      return { ingredient, total: fromNormal + fromSkill, fromNormal, fromSkill };
+    });
+  }, [grouped, skillIng]);
+
+  // Mismo total combinado para la base: permite el delta por ingrediente cuando ambas
   // cards comparten ese ingrediente (el caso típico al clonar una variante).
   // Las entradas con cantidad 0 NO se incluyen: "0" y "ausente" deben tratarse
   // igual para el delta (si no, un ingrediente que la base produce en 0 mostraría
@@ -156,6 +191,9 @@ export function ProductionCard({
   const baseIng = useMemo(() => {
     const map = new Map<string, number>();
     for (const s of base?.ingredients ?? []) {
+      map.set(s.ingredient, (map.get(s.ingredient) ?? 0) + s.amount);
+    }
+    for (const s of base?.skill_ingredients ?? []) {
       map.set(s.ingredient, (map.get(s.ingredient) ?? 0) + s.amount);
     }
     for (const [k, v] of map) {
@@ -419,14 +457,25 @@ export function ProductionCard({
 
           <div className="prod-card__block prod-card__block--ing">
             <div className="prod-card__block-head">
-              Ingredientes <span className="muted">{pct(d.ingredient_percentage)}</span>
+              Ingredientes{" "}
+              <span className="muted">
+                {pct(d.ingredient_percentage)}
+                {skillIng.size > 0 && " + skill"}
+              </span>
             </div>
             <ul className="prod-card__ings">
-              {grouped.map((g) => (
+              {combined.map((g) => (
                 <li key={g.ingredient}>
                   <img className="mini-icon" src={ingredientIcon(g.ingredient)} alt={g.ingredient} title={g.ingredient} />
-                  <strong>{fmt(g.amount)}</strong>
-                  <Delta value={g.amount} base={baseIng.get(g.ingredient)} />
+                  <strong>{fmt(g.total)}</strong>
+                  <Delta value={g.total} base={baseIng.get(g.ingredient)} />
+                  {g.fromSkill > 0 && (
+                    <span className="prod-ing__breakdown" title="Aporte de la mecánica normal y de la main skill">
+                      <img src={statIcon("Ingredient Finding")} alt="" title="Por la mecánica normal de ingredientes" />{" "}
+                      {fmt(g.fromNormal)}
+                      <img src={statIcon("Main Skill Chance")} alt="" title="Por la main skill" /> {fmt(g.fromSkill)}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -441,6 +490,90 @@ export function ProductionCard({
                 <IconSparkle /> {fmt(d.skill_triggers)} <Delta value={d.skill_triggers} base={base?.skill_triggers} />
               </span>
             </div>
+            {d.skill_energy != null && (
+              <div className="prod-card__line">
+                <span title="Energía que la skill recupera por día a cada compañero del equipo">
+                  <img className="mini-icon" src={statIcon("Energy Recovery")} alt="Energía" />{" "}
+                  {fmt(d.skill_energy)} <Delta value={d.skill_energy} base={base?.skill_energy ?? null} />
+                  <span className="muted"> a cada compañero</span>
+                </span>
+              </div>
+            )}
+            {d.skill_ingredient_total != null && (
+              <div className="prod-card__line">
+                <span title="Ingredientes por día que consigue la skill (de cualquier tipo, al azar)">
+                  <img className="mini-icon" src={statIcon("Ingredient Finding")} alt="Ingredientes" />{" "}
+                  {fmt(d.skill_ingredient_total)}{" "}
+                  <Delta value={d.skill_ingredient_total} base={base?.skill_ingredient_total ?? null} />
+                  <span className="muted"> ingredientes al azar</span>
+                </span>
+              </div>
+            )}
+            {d.skill_cooking_ingredients != null && (
+              <div className="prod-card__line">
+                <span title="Ingredientes extra de pote por día para cocinar (Cooking Power-Up S)">
+                  <IconPot /> {fmt(d.skill_cooking_ingredients)}{" "}
+                  <Delta value={d.skill_cooking_ingredients} base={base?.skill_cooking_ingredients ?? null} />
+                  <span className="muted"> ingredientes extra al pote</span>
+                </span>
+              </div>
+            )}
+            {d.skill_strength != null && (
+              <div className="prod-card__line">
+                <span title="Fuerza por día que la skill suma a Snorlax (promedio si el monto es aleatorio)">
+                  <IconStrength /> {fmtInt(d.skill_strength)}{" "}
+                  <Delta value={d.skill_strength} base={base?.skill_strength ?? null} />
+                  <span className="muted"> de fuerza</span>
+                </span>
+              </div>
+            )}
+            {d.skill_dream_shards != null && (
+              <div className="prod-card__line">
+                <span title="Fragmentos de sueño por día que consigue la skill (promedio si el monto es aleatorio)">
+                  <img className="mini-icon" src="/shard.png" alt="Fragmento de sueño" />{" "}
+                  {fmtInt(d.skill_dream_shards)}{" "}
+                  <Delta value={d.skill_dream_shards} base={base?.skill_dream_shards ?? null} />
+                  <span className="muted"> fragmentos de sueño</span>
+                </span>
+              </div>
+            )}
+            {d.skill_tasty_chance != null && (
+              <div className="prod-card__line">
+                <span title="Aumento acumulado de Extra Tasty por día (disparos × % del nivel) — Tasty Chance S">
+                  <img className="mini-icon" src="/extra-tasty.png" alt="Extra Tasty" />{" "}
+                  +{fmtInt(d.skill_tasty_chance)}%{" "}
+                  <Delta value={d.skill_tasty_chance} base={base?.skill_tasty_chance ?? null} />
+                  <span className="muted"> Extra Tasty</span>
+                </span>
+              </div>
+            )}
+            {d.skill_extra_helpful != null && (
+              <div className="prod-card__line">
+                <span title="Multiplicador de ayuda total del día (disparos × ×N del nivel) — Extra Helpful S">
+                  <IconMagnifier /> ×{fmt(d.skill_extra_helpful)}{" "}
+                  <Delta value={d.skill_extra_helpful} base={base?.skill_extra_helpful ?? null} />
+                  <span className="muted"> de ayuda</span>
+                </span>
+              </div>
+            )}
+            {d.skill_self_energy != null && (
+              <div className="prod-card__line">
+                <span title="Energía que la skill recupera por día al propio Pokémon (Charge Energy S)">
+                  <img className="mini-icon" src={statIcon("Energy Recovery")} alt="Energía" />{" "}
+                  {fmt(d.skill_self_energy)} <Delta value={d.skill_self_energy} base={base?.skill_self_energy ?? null} />
+                  <span className="muted"> de energía a sí mismo</span>
+                </span>
+              </div>
+            )}
+            {d.skill_random_energy != null && (
+              <div className="prod-card__line">
+                <span title="Energía por día que la skill reparte al equipo, a un compañero al azar cada activación (Energizing Cheer S)">
+                  <img className="mini-icon" src={statIcon("Energy Recovery")} alt="Energía" />{" "}
+                  {fmt(d.skill_random_energy)} <Delta value={d.skill_random_energy} base={base?.skill_random_energy ?? null} />
+                  <span className="muted"> de energía a un compañero al azar</span>
+                </span>
+              </div>
+            )}
             <div className="prod-card__night">
               {d.night_skill_chances.length >= 2 ? (
                 <>

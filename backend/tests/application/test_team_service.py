@@ -354,3 +354,210 @@ def test_distributions_aggregate_team(service: DefaultTeamService) -> None:
     # Adamant: +Speed of Help, -Ingredient Finding; dos miembros Adamant.
     assert dist.nature_stats["Speed of Help"] == 2
     assert dist.nature_stats["Ingredient Finding"] == -2
+
+
+def test_skill_level_persists_through_service(service: DefaultTeamService) -> None:
+    member = service.add_member(valid_input(skill_level=6))
+    assert member.skill_level == 6
+    assert service.get_member(member.id).skill_level == 6
+
+
+def test_skill_level_defaults_to_one(service: DefaultTeamService) -> None:
+    assert service.add_member(valid_input()).skill_level == 1
+
+
+def test_skill_level_out_of_range_rejected_on_add(service: DefaultTeamService) -> None:
+    with pytest.raises(ValidationError):
+        service.add_member(valid_input(skill_level=9))
+
+
+def test_production_skill_level_out_of_range_rejected(service: DefaultTeamService) -> None:
+    with pytest.raises(ValidationError):
+        service.compute_production(
+            ProductionInput(
+                species="Crustle",
+                level=60,
+                ingredients=["Glossy Avocado", "Soft Potato", "Pure Oil"],
+                skill_level=0,
+            )
+        )
+
+
+def test_compute_production_includes_skill_ingredients_for_crustle(
+    service: DefaultTeamService,
+) -> None:
+    result = service.compute_production(
+        ProductionInput(
+            species="Crustle",
+            level=60,
+            ingredients=["Glossy Avocado", "Soft Potato", "Pure Oil"],
+            skill_level=7,
+        )
+    )
+    pool = {s.ingredient for s in result.skill_ingredients}
+    assert pool == {"Glossy Avocado", "Soft Potato", "Pure Oil"}
+    expected_each = result.skill_triggers * 18 / 3
+    for slot in result.skill_ingredients:
+        assert slot.amount == pytest.approx(expected_each)
+
+
+def test_compute_production_no_skill_ingredients_for_non_draw_species(
+    service: DefaultTeamService,
+) -> None:
+    result = service.compute_production(
+        ProductionInput(
+            species="Pikachu",
+            level=60,
+            ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+        )
+    )
+    assert result.skill_ingredients == []
+
+
+def test_compute_production_includes_skill_energy_for_sylveon(
+    service: DefaultTeamService,
+) -> None:
+    result = service.compute_production(
+        ProductionInput(
+            species="Sylveon",
+            level=60,
+            ingredients=["Moomoo Milk", "Soothing Cacao", "Bean Sausage"],
+            skill_level=6,
+        )
+    )
+    assert result.skill_energy is not None
+    assert result.skill_energy == pytest.approx(result.skill_triggers * 18)
+    assert result.skill_ingredients == []  # E4E no produce ingredientes
+
+
+def test_compute_production_no_skill_energy_for_non_e4e(service: DefaultTeamService) -> None:
+    result = service.compute_production(
+        ProductionInput(
+            species="Crustle",
+            level=60,
+            ingredients=["Glossy Avocado", "Soft Potato", "Pure Oil"],
+            skill_level=7,
+        )
+    )
+    assert result.skill_energy is None
+
+
+def test_compute_production_includes_skill_ingredient_total_for_magnet(
+    service: DefaultTeamService,
+) -> None:
+    result = service.compute_production(
+        ProductionInput(
+            species="Bulbasaur",  # Ingredient Magnet S
+            level=60,
+            ingredients=["Honey", "Snoozy Tomato", "Soft Potato"],
+            skill_level=7,
+        )
+    )
+    assert result.skill_ingredient_total is not None
+    assert result.skill_ingredient_total == pytest.approx(result.skill_triggers * 24)
+    assert result.skill_ingredients == []  # no se desglosa por tipo
+    assert result.skill_energy is None
+
+
+def test_compute_production_no_skill_ingredient_total_for_non_magnet(
+    service: DefaultTeamService,
+) -> None:
+    result = service.compute_production(
+        ProductionInput(
+            species="Crustle",
+            level=60,
+            ingredients=["Glossy Avocado", "Soft Potato", "Pure Oil"],
+        )
+    )
+    assert result.skill_ingredient_total is None
+
+
+def test_compute_production_includes_cooking_ingredients_for_flareon(
+    service: DefaultTeamService,
+) -> None:
+    result = service.compute_production(
+        ProductionInput(
+            species="Flareon",  # Cooking Power-Up S
+            level=60,
+            ingredients=["Moomoo Milk", "Soothing Cacao", "Bean Sausage"],
+            skill_level=7,
+        )
+    )
+    assert result.skill_cooking_ingredients is not None
+    assert result.skill_cooking_ingredients == pytest.approx(result.skill_triggers * 31)
+    assert result.skill_ingredients == []
+    assert result.skill_energy is None
+    assert result.skill_ingredient_total is None
+
+
+def test_compute_production_includes_skill_strength_for_charge_strength(
+    service: DefaultTeamService,
+) -> None:
+    # Pikachu tiene Charge Strength S (monto fijo).
+    result = service.compute_production(
+        ProductionInput(
+            species="Pikachu",
+            level=60,
+            ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+            skill_level=7,
+        )
+    )
+    assert result.skill_strength is not None
+    assert result.skill_strength == pytest.approx(result.skill_triggers * 3212)
+
+
+def test_compute_production_charge_strength_m(service: DefaultTeamService) -> None:
+    # Mareep tiene Charge Strength M.
+    result = service.compute_production(
+        ProductionInput(
+            species="Mareep",
+            level=60,
+            ingredients=["Fiery Herb", "Fancy Egg", "Fancy Egg"],
+            skill_level=7,
+        )
+    )
+    assert result.skill_strength == pytest.approx(result.skill_triggers * 6858)
+
+
+def test_compute_production_no_skill_strength_for_non_charge(service: DefaultTeamService) -> None:
+    result = service.compute_production(
+        ProductionInput(
+            species="Crustle",
+            level=60,
+            ingredients=["Glossy Avocado", "Soft Potato", "Pure Oil"],
+        )
+    )
+    assert result.skill_strength is None
+
+
+def test_compute_production_includes_self_energy_for_charge_energy(
+    service: DefaultTeamService,
+) -> None:
+    # Rattata tiene Charge Energy S.
+    result = service.compute_production(
+        ProductionInput(
+            species="Rattata",
+            level=60,
+            ingredients=["Fancy Apple", "Greengrass Soybeans", "Bean Sausage"],
+            skill_level=6,
+        )
+    )
+    assert result.skill_self_energy is not None
+    assert result.skill_self_energy == pytest.approx(result.skill_triggers * 43)
+    assert result.skill_energy is None  # no es energía al equipo
+
+
+def test_compute_production_includes_dream_shards_for_meowth(
+    service: DefaultTeamService,
+) -> None:
+    # Meowth tiene Dream Shard Magnet S (monto fijo). Nivel de skill 8.
+    result = service.compute_production(
+        ProductionInput(
+            species="Meowth",
+            level=60,
+            ingredients=["Moomoo Milk", "Moomoo Milk", "Moomoo Milk"],
+            skill_level=8,
+        )
+    )
+    assert result.skill_dream_shards is not None
+    assert result.skill_dream_shards == pytest.approx(result.skill_triggers * 2500)
