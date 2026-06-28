@@ -190,22 +190,20 @@ export function Team({ onCompare }: TeamProps) {
 
       <section>
         <div className="section-head">
-          <h2>
-            {t("team.box")}{" "}
+          <div className="section-head__title">
+            <h2>{t("team.box")}</h2>
+            {/* Conteo y refetch viven FUERA del <h2> (encabezado estable) y como
+                live-regions siempre montadas: así el cambio de texto se anuncia sin
+                re-leer el título. */}
             <span className="muted" role="status" aria-live="polite">
               {hasFilters
                 ? t("box.showing", { shown: visible.length, total: allMembers.length })
                 : `(${allMembers.length})`}
             </span>
-            {/* Refetch en segundo plano (p. ej. tras editar): feedback sutil de que
-                los datos visibles se están actualizando, sin bloquear la lista. */}
-            {members.isFetching && !members.isLoading && (
-              <span className="muted" role="status">
-                {" "}
-                {t("team.updating")}
-              </span>
-            )}
-          </h2>
+            <span className="muted" role="status" aria-live="polite">
+              {members.isFetching && !members.isLoading ? t("team.updating") : ""}
+            </span>
+          </div>
           <button className="btn btn--primary" onClick={openForm}>
             {t("team.add")}
           </button>
@@ -222,12 +220,24 @@ export function Team({ onCompare }: TeamProps) {
         )}
         {deleteError && (
           <p className="error" role="alert">
-            {t("team.deleteError", { error: deleteError })}
+            {t("team.deleteError", { error: deleteError })}{" "}
+            <button
+              type="button"
+              className="btn btn--ghost"
+              onClick={() => setDeleteError(null)}
+            >
+              {t("common.close")}
+            </button>
           </p>
         )}
-        {members.data?.length === 0 && <p className="muted">{t("team.boxEmpty")}</p>}
+        {members.data?.length === 0 && (
+          <p className="muted" role="status">
+            {t("team.boxEmpty")}
+          </p>
+        )}
 
-        {allMembers.length > 0 && (
+        {/* Con un solo Pokémon, ordenar y filtrar no aporta: se oculta la barra. */}
+        {allMembers.length > 1 && (
           <BoxToolbar
             sortKey={sortKey}
             sortDir={sortDir}
@@ -297,7 +307,11 @@ export function Team({ onCompare }: TeamProps) {
       {deleting && (
         <Modal
           title={t("member.deleteModalTitle", { species: deleting.species })}
-          onClose={() => setDeleting(null)}
+          onClose={() => {
+            // No cerrar mientras el borrado está en vuelo: evita perder de vista qué
+            // Pokémon se está eliminando si la mutación falla.
+            if (!remove.isPending) setDeleting(null);
+          }}
         >
           <p className="muted">{t("member.deleteModalBody")}</p>
           <div className="modal-actions">
@@ -306,6 +320,7 @@ export function Team({ onCompare }: TeamProps) {
               className="btn btn--ghost"
               data-autofocus
               onClick={() => setDeleting(null)}
+              disabled={remove.isPending}
             >
               {t("common.cancel")}
             </button>
@@ -315,7 +330,7 @@ export function Team({ onCompare }: TeamProps) {
               onClick={() => remove.mutate(deleting.id)}
               disabled={remove.isPending}
             >
-              {t("member.delete")}
+              {remove.isPending ? t("member.deleting") : t("member.delete")}
             </button>
           </div>
         </Modal>

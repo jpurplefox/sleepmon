@@ -144,6 +144,26 @@ export function IconChevronDown(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+// Dirección de orden ascendente: flecha hacia arriba (mismo trazo que el resto).
+export function IconArrowUp(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 19V5" />
+      <path d="m5 12 7-7 7 7" />
+    </svg>
+  );
+}
+
+// Dirección de orden descendente: flecha hacia abajo.
+export function IconArrowDown(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 5v14" />
+      <path d="m19 12-7 7-7-7" />
+    </svg>
+  );
+}
+
 // Más acciones (menú overflow): tres puntos horizontales.
 export function IconMore(props: SVGProps<SVGSVGElement>) {
   return (

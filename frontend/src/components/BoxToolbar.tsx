@@ -16,7 +16,7 @@ import {
   restoresTeamEnergy,
 } from "../skills";
 import type { Catalog } from "../types";
-import { IconChevronDown } from "./icons";
+import { IconArrowDown, IconArrowUp, IconChevronDown } from "./icons";
 
 export type SortKey = "dex" | "level" | "berries" | "ingredients";
 export type SortDir = "asc" | "desc";
@@ -153,7 +153,7 @@ function gridKeyDown(e: React.KeyboardEvent<HTMLElement>) {
 function SkillIconView({ skill }: { skill: string | undefined }) {
   const icon = mainSkillIcon(skill || undefined);
   return icon.kind === "img" ? (
-    <img className="mini-icon" src={icon.src} alt="" />
+    <img className="mini-icon" src={icon.src} alt="" aria-hidden="true" />
   ) : (
     <icon.Component />
   );
@@ -310,7 +310,7 @@ export function BoxToolbar({
             aria-label={t(sortDir === "asc" ? "box.sortAsc" : "box.sortDesc")}
             title={t(sortDir === "asc" ? "box.sortAsc" : "box.sortDesc")}
           >
-            {sortDir === "asc" ? "↑" : "↓"}
+            {sortDir === "asc" ? <IconArrowUp /> : <IconArrowDown />}
           </button>
         </span>
       </div>
@@ -332,6 +332,7 @@ export function BoxToolbar({
                       className="mini-icon"
                       src={berryIcon(typeBerry.get(tp) ?? "")}
                       alt=""
+                      aria-hidden="true"
                     />
                   ))}
                 </span>
@@ -355,7 +356,7 @@ export function BoxToolbar({
                   title={type(tp)}
                   onClick={() => onToggle("type", tp)}
                 >
-                  <img className="mini-icon" src={berryIcon(berry)} alt="" />
+                  <img className="mini-icon" src={berryIcon(berry)} alt="" aria-hidden="true" />
                   <span className="filter-grid__label">{type(tp)}</span>
                 </button>
               );
@@ -374,7 +375,13 @@ export function BoxToolbar({
               <span className="filter-btn__value">
                 <span className="filter-btn__icons">
                   {filters.ingredient.slice(0, 3).map((ing) => (
-                    <img key={ing} className="mini-icon" src={ingredientIcon(ing)} alt="" />
+                    <img
+                      key={ing}
+                      className="mini-icon"
+                      src={ingredientIcon(ing)}
+                      alt=""
+                      aria-hidden="true"
+                    />
                   ))}
                 </span>
                 <span>
@@ -405,7 +412,7 @@ export function BoxToolbar({
                   title={ingredient(ing)}
                   onClick={() => onToggle("ingredient", ing)}
                 >
-                  <img className="mini-icon" src={ingredientIcon(ing)} alt="" />
+                  <img className="mini-icon" src={ingredientIcon(ing)} alt="" aria-hidden="true" />
                   <span className="filter-grid__label">{ingredient(ing)}</span>
                 </button>
               );
@@ -486,7 +493,7 @@ export function BoxToolbar({
       </div>
 
       {chips.length > 0 && (
-        <div className="box-toolbar__active" role="group" aria-label="Filtros activos">
+        <div className="box-toolbar__active" role="group" aria-label={t("box.activeFilters")}>
           {chips.map((c) => (
             <button
               key={`${c.key}:${c.value}`}
@@ -495,7 +502,9 @@ export function BoxToolbar({
               onClick={() => onRemove(c.key, c.value)}
               aria-label={t("box.removeFilter", { filter: c.label })}
             >
-              {c.icon && <img className="box-filter-chip__icon" src={c.icon} alt="" />}
+              {c.icon && (
+                <img className="box-filter-chip__icon" src={c.icon} alt="" aria-hidden="true" />
+              )}
               {c.label} <span aria-hidden="true">×</span>
             </button>
           ))}
