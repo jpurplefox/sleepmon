@@ -132,6 +132,12 @@ introducen íconos sueltos ad-hoc en los componentes.
 - **Cards comparativas angostas** (Production): el header va en **dos filas**
   (sprite + acciones arriba, nombre a todo el ancho debajo) para que los nombres
   largos no se trunquen ni se partan a la mitad.
+- **Caja (overview)**: las tres métricas de producción por Pokémon (bayas,
+  ingredientes, disparos de habilidad) tienen **igual jerarquía** —mismo peso
+  tipográfico, en `var(--text)`, ninguna es "el KPI". El **único dorado** de cada
+  entrada sigue siendo el badge de nivel. La sección de **cobertura** (bayas /
+  ingredientes) usa el estado de ícono **inactivo** (`opacity` + `grayscale`) ya
+  establecido para los slots bloqueados, sin colores nuevos.
 
 ## Anti-objetivos
 

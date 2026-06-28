@@ -17,6 +17,8 @@ export interface Species {
   dex: number;
   specialty: string;
   berry: string;
+  // Tipo elemental (1:1 con la baya); habilita filtrar por tipo en la Caja.
+  type: string;
   sleep_type: string;
   main_skill: string;
   ingredient_slots: string[][];
@@ -38,6 +40,28 @@ export interface Catalog {
 //  - sub_skills: hasta 5, sin repetir.
 //  - nature / ribbon: opcionales; "" significa "ninguno".
 //  - level: entero 1..100.
+// Producción diaria resumida de un miembro, para el overview de la Caja. Viene en
+// el listado (/team); ausente en respuestas de un solo miembro.
+export interface MemberProduction {
+  berries: number;
+  ingredients: SlotProduction[];
+  ingredients_total: number;
+  skill_triggers: number;
+  // Ingredientes que aporta la main skill: específicos (Ingredient Draw, p. ej.
+  // Crustle) y/o total al azar (Ingredient Magnet, p. ej. Plusle).
+  skill_ingredients: SlotProduction[];
+  skill_ingredient_total: number | null;
+  // Otras salidas de la main skill (una por especie según su tipo; el resto null).
+  skill_energy: number | null;
+  skill_cooking_ingredients: number | null;
+  skill_strength: number | null;
+  skill_self_energy: number | null;
+  skill_dream_shards: number | null;
+  skill_tasty_chance: number | null;
+  skill_extra_helpful: number | null;
+  skill_random_energy: number | null;
+}
+
 export interface Member {
   id: string;
   species: string;
@@ -53,6 +77,8 @@ export interface Member {
   ribbon: string;
   // Nivel de la main skill (1..7); se sube aparte del nivel del Pokémon.
   skill_level: number;
+  // Producción del overview (presente en el listado de la caja).
+  production?: MemberProduction;
 }
 
 // Payload de alta/edición. Mismas invariantes que Member (el backend valida y

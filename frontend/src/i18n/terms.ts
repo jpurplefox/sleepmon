@@ -169,6 +169,29 @@ export const tIngredient = (name: string, lang: Lang) => pick(INGREDIENTS_ES, na
 export const tSubSkill = (name: string, lang: Lang) => pick(SUB_SKILLS_ES, name, lang);
 export const tSpecialty = (name: string, lang: Lang) => pick(SPECIALTIES_ES, name, lang);
 
+// Tipos elementales (nombres oficiales en español).
+const TYPES_ES: Record<string, string> = {
+  Normal: "Normal",
+  Fire: "Fuego",
+  Water: "Agua",
+  Electric: "Eléctrico",
+  Grass: "Planta",
+  Ice: "Hielo",
+  Fighting: "Lucha",
+  Poison: "Veneno",
+  Ground: "Tierra",
+  Flying: "Volador",
+  Psychic: "Psíquico",
+  Bug: "Bicho",
+  Rock: "Roca",
+  Ghost: "Fantasma",
+  Dragon: "Dragón",
+  Dark: "Siniestro",
+  Steel: "Acero",
+  Fairy: "Hada",
+};
+export const tType = (name: string, lang: Lang) => pick(TYPES_ES, name, lang);
+
 // Baya: en inglés el backend manda solo "Oran" (sin "Berry"); en español se muestra
 // "Baya Aranja".
 export const tBerry = (name: string, lang: Lang) =>

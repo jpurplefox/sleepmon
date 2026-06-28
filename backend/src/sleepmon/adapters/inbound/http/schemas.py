@@ -17,6 +17,28 @@ class MemberIn(msgspec.Struct, forbid_unknown_fields=True):
     skill_level: int = 1  # nivel de la main skill
 
 
+class MemberProductionOut(msgspec.Struct):
+    """Producción diaria resumida de un miembro (overview de la Caja)."""
+
+    berries: float
+    ingredients: list[SlotProductionOut]
+    ingredients_total: float
+    skill_triggers: float
+    # Ingredientes por la main skill: específicos (Ingredient Draw) y/o total al
+    # azar (Ingredient Magnet). Vacío/None si la skill no produce ingredientes.
+    skill_ingredients: list[SlotProductionOut]
+    skill_ingredient_total: float | None
+    # Otras salidas de la main skill (una por especie; el resto None).
+    skill_energy: float | None
+    skill_cooking_ingredients: float | None
+    skill_strength: float | None
+    skill_self_energy: float | None
+    skill_dream_shards: float | None
+    skill_tasty_chance: float | None
+    skill_extra_helpful: float | None
+    skill_random_energy: float | None
+
+
 class MemberOut(msgspec.Struct):
     id: str
     species: str
@@ -26,6 +48,9 @@ class MemberOut(msgspec.Struct):
     sub_skills: list[str]
     ribbon: str
     skill_level: int
+    # Producción del overview. Presente en el listado (/team); None en respuestas
+    # de un solo miembro (alta/edición/detalle), donde no hace falta.
+    production: MemberProductionOut | None = None
 
 
 class NatureOut(msgspec.Struct):
@@ -45,6 +70,7 @@ class SpeciesOut(msgspec.Struct):
     dex: int
     specialty: str
     berry: str
+    type: str
     sleep_type: str
     main_skill: str
     ingredient_slots: list[list[str]]

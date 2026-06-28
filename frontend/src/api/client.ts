@@ -1,11 +1,4 @@
-import type {
-  Catalog,
-  Distributions,
-  Member,
-  MemberInput,
-  Production,
-  ProductionInput,
-} from "../types";
+import type { Catalog, Member, MemberInput, Production, ProductionInput } from "../types";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
@@ -31,7 +24,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   getCatalog: () => request<Catalog>("/catalog"),
   listMembers: () => request<Member[]>("/team"),
-  getDistributions: () => request<Distributions>("/team/distributions"),
   createMember: (data: MemberInput) =>
     request<Member>("/team", { method: "POST", body: JSON.stringify(data) }),
   updateMember: (id: string, data: MemberInput) =>

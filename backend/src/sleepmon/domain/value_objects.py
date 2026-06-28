@@ -155,6 +155,60 @@ class Berry(StrEnum):
     RABUTA = "Rabuta"
 
 
+class Type(StrEnum):
+    """Tipo elemental del Pokémon (los 18 tipos del juego principal).
+
+    En Pokémon Sleep el tipo está en **bijección con la baya** que carga la especie;
+    se modela aparte porque a veces es más fácil identificar el tipo que la baya, y
+    habilita filtrar la Caja por tipo. El tipo de una especie se deriva de su baya
+    vía ``BERRY_TYPE`` (no se almacena duplicado por especie)."""
+
+    NORMAL = "Normal"
+    FIRE = "Fire"
+    WATER = "Water"
+    ELECTRIC = "Electric"
+    GRASS = "Grass"
+    ICE = "Ice"
+    FIGHTING = "Fighting"
+    POISON = "Poison"
+    GROUND = "Ground"
+    FLYING = "Flying"
+    PSYCHIC = "Psychic"
+    BUG = "Bug"
+    ROCK = "Rock"
+    GHOST = "Ghost"
+    DRAGON = "Dragon"
+    DARK = "Dark"
+    STEEL = "Steel"
+    FAIRY = "Fairy"
+
+
+# Bijección tipo↔baya del juego: cada baya pertenece a un único tipo. Se valida
+# contra el catálogo (todas las especies de una misma baya comparten tipo) en los
+# tests del dominio. ``Berry.RABUTA`` no la carga ninguna especie del catálogo
+# curado, así que no tiene tipo asignado (la derivación nunca la consulta).
+BERRY_TYPE: dict[Berry, Type] = {
+    Berry.PERSIM: Type.NORMAL,
+    Berry.LEPPA: Type.FIRE,
+    Berry.ORAN: Type.WATER,
+    Berry.GREPA: Type.ELECTRIC,
+    Berry.DURIN: Type.GRASS,
+    Berry.RAWST: Type.ICE,
+    Berry.CHERI: Type.FIGHTING,
+    Berry.CHESTO: Type.POISON,
+    Berry.FIGY: Type.GROUND,
+    Berry.PAMTRE: Type.FLYING,
+    Berry.MAGO: Type.PSYCHIC,
+    Berry.LUM: Type.BUG,
+    Berry.SITRUS: Type.ROCK,
+    Berry.BLUK: Type.GHOST,
+    Berry.YACHE: Type.DRAGON,
+    Berry.WIKI: Type.DARK,
+    Berry.BELUE: Type.STEEL,
+    Berry.PECHA: Type.FAIRY,
+}
+
+
 class Ribbon(StrEnum):
     """Listón ganado por horas de sueño acumuladas con un Pokémon.
 

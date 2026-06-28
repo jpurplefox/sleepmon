@@ -189,6 +189,8 @@ select:focus {
 .level-chip:focus-visible,
 .btn:focus-visible,
 .tab:focus-visible,
+.filter-btn:focus-visible,
+.specialty-toggle__btn:focus-visible,
 .prod-box-item:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -230,10 +232,17 @@ select:focus {
   border-color: var(--muted);
 }
 
-/* El rojo se reserva para la acción destructiva (eliminar un miembro). */
+/* El rojo se reserva para la acción destructiva (confirmar eliminar un miembro):
+   botón sólido en el modal de confirmación. */
+.btn--danger {
+  background: var(--error);
+  /* Borde propio (la base es `border: none`) para igualar la caja del botón ghost. */
+  border: 1px solid var(--error);
+  color: #fff;
+}
+
 .btn--danger:hover {
-  color: var(--error);
-  border-color: var(--error);
+  filter: brightness(0.9);
 }
 
 /* Sub skill selector */
@@ -287,6 +296,14 @@ select:focus {
   width: 24px;
   height: 24px;
   object-fit: contain;
+}
+
+/* Slot de sub skill vacío (no cargado): cuadrado tenue, mismo tamaño que un
+   ss-icon, para que la fila quede alineada entre Pokémon. */
+.ss-icon--empty {
+  border-color: var(--border);
+  background: transparent;
+  opacity: 0.4;
 }
 
 .ss-icon--gold {
@@ -562,7 +579,7 @@ select:focus {
 /* Opción resaltada por la navegación con flechas (foco de teclado en el listbox). */
 .nature-option--highlight {
   border-color: var(--accent);
-  background: var(--surface-3, var(--surface-2));
+  background: var(--surface-2);
 }
 
 /* Sprite */
@@ -1037,6 +1054,21 @@ select:focus {
   padding: 1.25rem;
 }
 
+/* Footer de acciones de un modal (p. ej. confirmación de borrado). */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+/* Los botones del footer no arrastran el margin-top que usan en otros contextos
+   (form), para que Cancelar y Eliminar queden del mismo alto y alineados. */
+.modal-actions .btn {
+  margin-top: 0;
+}
+
 /* Members */
 .members {
   display: flex;
@@ -1044,23 +1076,574 @@ select:focus {
   gap: 1rem;
 }
 
-.member-card__head {
+/* Entrada de overview de la Caja: tres zonas horizontales (identidad · config ·
+   producción) + acciones. En pantalla angosta colapsa a columna. */
+/* Barra de orden y filtros del overview. */
+.box-toolbar {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+  /* Más gap de columna para separar visualmente el grupo de orden del de filtros
+     sin agregar separadores. */
+  gap: 0.5rem 1.5rem;
+  margin-bottom: 1rem;
 }
 
-.member-card__title {
+.box-toolbar__order {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--text-sm);
+}
+
+/* Orden: select + dirección como un único control segmentado (pegados, borde
+   compartido, mismo alto, sin gap). El trigger del campo es un FilterPopover; el
+   botón de dirección va pegado a su derecha. */
+/* Control de orden = una sola pieza segmentada: UN borde exterior en el wrapper,
+   los hijos (trigger del dropdown + botón de dirección) sin borde propio, con un
+   único divisor entre ellos. Así se lee inequívocamente como un control conectado. */
+.sort-control {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.sort-control:has(.filter-btn--open) {
+  border-color: var(--accent);
+}
+
+.sort-control .filter-control {
+  align-items: stretch;
+}
+
+/* Trigger del dropdown: sin borde/radio/fondo propios (los pone el wrapper). Se
+   sube la especificidad (.sort-control .filter-btn) para ganarle a `.filter-btn`,
+   que se define después en el archivo y si no le devolvería su borde (doble borde). */
+.sort-control .filter-btn.sort-control__trigger {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* Botón de dirección: sin borde propio salvo el divisor a la izquierda. */
+.sort-control__dir {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.6rem;
+  background: transparent;
+  border: none;
+  border-left: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.sort-control__dir:hover {
+  color: var(--accent);
+}
+
+.box-toolbar__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* Fila de chips de filtros activos: a lo ancho, debajo de los controles. */
+.box-toolbar__active {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  flex-basis: 100%;
+}
+
+/* Chip de filtro activo: acento funcional (índigo), con × para quitar. */
+.box-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: var(--text-xs);
+  color: var(--text);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-sm);
+  padding: 0.1rem 0.5rem;
+  cursor: pointer;
+  align-self: center;
+}
+
+/* "Limpiar": neutraliza el margin-top del btn--ghost para alinearlo con los chips
+   y lo empuja al final de la fila. */
+.box-toolbar__clear {
+  font-size: var(--text-sm);
+  margin-top: 0;
+  margin-left: auto;
+  padding: 0.15rem 0.6rem;
+  align-self: center;
+}
+
+/* Ícono dentro del chip de filtro activo (tipo→baya, ingrediente). */
+.box-filter-chip__icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+/* --- Filtros con íconos --------------------------------------------------- */
+
+/* Control de filtro (trigger + panel desplegable). */
+.filter-control {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Trigger de un filtro: ícono del valor activo (o placeholder) + chevron. Mismo
+   lenguaje que los <select> nativos de la barra. */
+.filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text);
+  font-size: var(--text-sm);
+  padding: 0.35rem 0.55rem;
+  cursor: pointer;
+}
+
+.filter-btn:hover,
+.filter-btn--open {
+  border-color: var(--accent);
+}
+
+.filter-btn__value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.filter-btn__value .mini-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Íconos de los valores seleccionados en un trigger multi-select (tipo / ingrediente).
+   Se solapan ligeramente para no estirar el botón cuando hay varios. */
+.filter-btn__icons {
+  display: inline-flex;
+  align-items: center;
+}
+
+.filter-btn__icons .mini-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.filter-btn__icons .mini-icon + .mini-icon {
+  margin-left: -6px;
+}
+
+.filter-btn__placeholder {
+  color: var(--muted);
+}
+
+.filter-btn__chevron {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+/* Panel desplegable del filtro. */
+.filter-pop {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  z-index: 20;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-dropdown);
+  padding: 0.5rem;
+}
+
+/* Scrollbar estilizado para los paneles desplegables (grilla y lista). */
+.filter-grid,
+.filter-list {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.filter-grid::-webkit-scrollbar,
+.filter-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filter-grid::-webkit-scrollbar-thumb,
+.filter-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+
+.filter-grid::-webkit-scrollbar-track,
+.filter-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Grilla de íconos (bayas / ingredientes). */
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 0.25rem;
+  width: min(20rem, 72vw);
+  max-height: 18rem;
+  overflow-y: auto;
+}
+
+/* Lista vertical de texto (orden / skill). Mismo shell que la grilla via .filter-pop. */
+.filter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  width: min(16rem, 72vw);
+  max-height: 18rem;
+  overflow-y: auto;
+}
+
+.filter-list__item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-size: var(--text-sm);
+  text-align: left;
+  padding: 0.35rem 0.5rem;
+  cursor: pointer;
+}
+
+.filter-list__item .mini-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.filter-list__item:hover {
+  background: var(--surface);
+}
+
+.filter-list__item.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.filter-list__label {
+  line-height: 1.2;
+}
+
+/* Grupos de subcategoría dentro del dropdown de skill. El primero no lleva margen
+   superior; los siguientes se separan del grupo anterior. */
+.filter-list__group + .filter-list__group {
+  margin-top: 0.35rem;
+}
+
+/* Encabezado no seleccionable de cada subcategoría: label uppercase atenuado, en
+   la escala más chica. No es interactivo (role="presentation"). */
+.filter-list__heading {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  padding: 0.25rem 0.5rem 0.15rem;
+}
+
+.filter-grid__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-size: var(--text-xs);
+  padding: 0.35rem 0.2rem;
+  cursor: pointer;
+}
+
+.filter-grid__item .mini-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.filter-grid__item:hover {
+  background: var(--surface);
+}
+
+.filter-grid__item.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.filter-grid__label {
+  text-align: center;
+  line-height: 1.1;
+}
+
+/* Especialidad: grupo de toggle-buttons segmentados. */
+.specialty-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.specialty-toggle__btn {
+  background: var(--surface-2);
+  border: none;
+  border-left: 1px solid var(--border);
+  color: var(--muted);
+  font-size: var(--text-sm);
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+}
+
+.specialty-toggle__btn:first-child {
+  border-left: none;
+}
+
+.specialty-toggle__btn:hover {
+  color: var(--text);
+}
+
+.specialty-toggle__btn.is-on {
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.box-entry {
+  display: grid;
+  /* identidad · config · producción (bayas+ingredientes) · skill · acciones.
+     La columna de skill tiene ANCHO FIJO: cada card es un grid independiente, así
+     que sólo con un ancho fijo (no `auto`/contenido) los disparos quedan alineados
+     entre filas, sin importar cuántos ingredientes tenga cada Pokémon. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1.6fr) 8rem auto;
+  align-items: center;
+  gap: 1rem 1.25rem;
+}
+
+@media (max-width: 720px) {
+  .box-entry {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+}
+
+/* Zona 1 — Identidad: sprite + nombre + listón a la izquierda, nivel a la derecha. */
+.box-entry__identity {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  min-width: 0;
 }
 
-.member-card__sprite {
+.box-entry__sprite {
   width: 48px;
   height: 48px;
   object-fit: contain;
   flex-shrink: 0;
+}
+
+.box-entry__title {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.box-entry__name {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.box-entry__title .ribbon-icon {
+  flex-shrink: 0;
+}
+
+/* Zona 2 — Config: reusa .prod-box-item__config; atenuada para retroceder frente
+   a las métricas (la producción es el dato central del overview). */
+.box-entry__config {
+  opacity: 0.85;
+}
+
+/* En ancho, la config NO envuelve: así "Lv. N" de la skill se queda en la misma
+   línea que el resto en vez de caer a una segunda fila. En angosto vuelve a
+   envolver (ver el media query de abajo). */
+.box-entry__config {
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+/* Zona 3 — Producción: tres métricas de IGUAL jerarquía (mismo peso, números
+   neutros; el único dorado de la entrada es el badge de nivel). */
+.box-entry__production {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  flex-shrink: 0;
+}
+
+/* Zona 4 — Skill: disparos + aporte, apilados; en su propia columna del grid para
+   alinear los disparos entre filas. */
+.box-entry__skill {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.box-entry__metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.box-entry__metric .mini-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.box-entry__metric-value {
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+/* Producción de TODOS los ingredientes desbloqueados: fila de pares [icono + nº],
+   envuelve si no entran. Crece dentro de la zona 3 (es la métrica con más datos). */
+.box-entry__ingredients {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.7rem;
+  min-width: 0;
+}
+
+.box-entry__ing-pair {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.box-entry__ing-pair .mini-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Aporte de la main skill a ese ingrediente: marcador chico junto al número. */
+.box-entry__ing-skill {
+  width: 11px;
+  height: 11px;
+  opacity: 0.8;
+}
+
+/* Producción de la skill junto a los disparos: ingredientes al azar (Ingredient
+   Magnet). Ícono de ingrediente + texto muted; separado de los disparos con un
+   pequeño respiro a la izquierda. */
+.box-entry__skill-yield {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.box-entry__skill-yield .mini-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.box-entry__skill-yield svg {
+  width: 16px;
+  height: 16px;
+}
+
+.box-entry__skill-yield .box-entry__metric-value {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.box-entry__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+/* Menú overflow "···" para comparar/editar/eliminar. */
+.box-entry__menu {
+  position: relative;
+}
+
+.box-entry__menu-btn {
+  font-size: var(--text-lg);
+  line-height: 1;
+}
+
+.box-entry__menu-pop {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-width: 9rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-dropdown);
+  padding: 0.25rem;
+}
+
+.box-entry__menu-item {
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: var(--text-sm);
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+
+.box-entry__menu-item:hover {
+  background: var(--surface);
+}
+
+/* Ítems del menú neutros en reposo; el color aparece solo en hover (índigo en
+   Comparar, rojo en Eliminar). Así ninguna acción "grita" estando en reposo. */
+.box-entry__menu-item--compare:hover {
+  color: var(--accent);
+}
+
+.box-entry__menu-item--danger:hover {
+  color: var(--error);
+}
+
+/* En angosto la entrada colapsa a columna: la config vuelve a poder envolver. */
+@media (max-width: 720px) {
+  .box-entry__config {
+    flex-wrap: wrap;
+  }
 }
 
 .ingredient-row {
@@ -1093,14 +1676,6 @@ select:focus {
   height: 22px;
 }
 
-.member-card__head h3 {
-  margin: 0;
-}
-
-.member-card__head .muted {
-  font-size: var(--text-sm);
-}
-
 .badge {
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -1114,46 +1689,12 @@ select:focus {
   border-color: var(--moon-dim);
 }
 
-.member-card__body {
-  margin: 0.75rem 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.member-card__body dt {
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-}
-
-.member-card__body dd {
-  margin: 0.2rem 0 0;
-}
-
 .nature-effect .up {
   color: var(--up);
 }
 
 .nature-effect .down {
   color: var(--down);
-}
-
-/* Acciones de la card (Editar / Eliminar) lado a lado. */
-.member-card__actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.member-card__actions .btn {
-  flex: 1;
-}
-
-/* El botón de editar usa el acento (no el rojo del borrar). */
-.member-card__actions .btn--edit:hover {
-  color: var(--accent);
-  border-color: var(--accent);
 }
 
 .chips {
@@ -1184,8 +1725,48 @@ select:focus {
   margin-top: 2.5rem;
 }
 
-.chart-card h3 {
-  font-size: var(--text-lg);
+/* Cobertura del equipo: bloques apilados; íconos cubiertos vs. atenuados. */
+.coverage-block {
+  margin-bottom: 1rem;
+}
+
+.coverage-block__head {
+  font-size: var(--text-base);
+  margin: 0 0 0.6rem;
+}
+
+.specialties-count {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.specialties-count__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.specialties-count__number {
+  font-size: var(--text-xl);
+  font-weight: 700;
+}
+
+.coverage-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.coverage-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+/* Hueco de cobertura: mismo lenguaje que los slots bloqueados (atenuado + gris). */
+.coverage-icon--missing {
+  opacity: 0.3;
+  filter: grayscale(1);
 }
 
 /* Tabs de navegación */
@@ -1529,6 +2110,12 @@ select:focus {
 
 .prod-box-item__nature .nat-down {
   color: var(--down);
+}
+
+/* Flechas de una naturaleza neutra / sin cargar: en muted (sin verde/rojo). */
+.prod-box-item__nature .nat-up--muted,
+.prod-box-item__nature .nat-down--muted {
+  color: var(--muted);
 }
 
 /* Ingredientes y sub skills a la misma escala compacta de las prod-cards (26px),
@@ -1951,6 +2538,19 @@ button.prod-card__base-tag--action:hover {
   width: auto;
 }
 
+/* Placeholder de stat de naturaleza (neutra / sin naturaleza): cuadradito tenue
+   que ocupa el lugar del ícono de stat, para alinear con una naturaleza con ↑/↓. */
+.mini-icon--empty {
+  display: inline-block;
+  /* Mismo tamaño que el ícono de stat (mini-icon = 22px) para que una naturaleza
+     neutra/sin cargar ocupe el mismo ancho que una con ↑/↓ y la fila quede alineada. */
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  opacity: 0.4;
+}
+
 /* Ingrediente/sub skill todavía no activo por nivel */
 .mini-icon--locked {
   opacity: 0.3;
@@ -2076,13 +2676,6 @@ button.prod-card__base-tag--action:hover {
 }
 
 /* ---- Listón (ribbon) ---------------------------------------------------- */
-.member-card__head-right {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  flex-shrink: 0;
-}
-
 .ribbon-icon {
   flex-shrink: 0;
   object-fit: contain;

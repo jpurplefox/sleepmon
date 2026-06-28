@@ -37,6 +37,24 @@ def test_add_member_persists_and_returns(service: DefaultTeamService) -> None:
     assert len(service.list_members()) == 1
 
 
+def test_list_members_with_production(service: DefaultTeamService) -> None:
+    member = service.add_member(valid_input())
+    rows = service.list_members_with_production()
+    assert len(rows) == 1
+    m, production = rows[0]
+    assert m.id == member.id
+    assert production is not None
+    # Producción real, derivada del mismo cálculo del dominio que /production.
+    assert production.berries > 0
+    assert production.skill_triggers >= 0
+    # La producción cuenta solo los slots de ingrediente desbloqueados por nivel
+    # (a nivel 30, slots 1 y 2): puede ser menos que los 3 ingredientes cargados.
+    assert 1 <= len(production.ingredients) <= len(member.ingredients)
+    assert production.ingredients_total == pytest.approx(
+        sum(s.amount for s in production.ingredients)
+    )
+
+
 def test_species_lookup_is_case_insensitive(service: DefaultTeamService) -> None:
     member = service.add_member(valid_input(species="pikachu"))
     assert member.species == "Pikachu"  # se normaliza al nombre canónico del catálogo

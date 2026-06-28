@@ -2,47 +2,98 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { api } from "../api/client";
-import { DistributionChart } from "../components/DistributionChart";
-import { MemberCard } from "../components/MemberCard";
+import { BoxEntry } from "../components/BoxEntry";
+import {
+  BoxToolbar,
+  EMPTY_FILTERS,
+  type BoxFilters,
+  type SortDir,
+  type SortKey,
+} from "../components/BoxToolbar";
+import { BoxCoverage } from "../components/BoxCoverage";
 import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
 import { useI18n } from "../i18n";
-import type { Member, MemberInput } from "../types";
+import { totalIngredients } from "../ingredientProduction";
+import type { Catalog, Member, MemberInput, Species } from "../types";
 
-// El backend devuelve la distribución con claves en inglés (nombres del juego).
-// Las traducimos antes de graficarlas, construyendo un nuevo objeto con las keys
-// ya traducidas (las claves del juego son únicas, no deberían colapsar).
-function translateKeys(
-  data: Record<string, number>,
-  translate: (key: string) => string,
-): Record<string, number> {
-  const out: Record<string, number> = {};
-  for (const [key, value] of Object.entries(data)) {
-    out[translate(key)] = value;
-  }
-  return out;
+// Orden + filtros del overview, en el cliente (la producción ya viene en /team).
+function sortAndFilter(
+  members: Member[],
+  speciesByName: Map<string, Species>,
+  sortKey: SortKey,
+  sortDir: SortDir,
+  filters: BoxFilters,
+): Member[] {
+  const matches = (m: Member): boolean => {
+    const sp = speciesByName.get(m.species);
+    // Tipo/baya e ingrediente son multi-selección: OR dentro de la dimensión
+    // (matchea si el array está vacío o si hay intersección), AND entre dimensiones.
+    if (filters.type.length > 0 && !(sp && filters.type.includes(sp.type))) return false;
+    if (
+      filters.ingredient.length > 0 &&
+      !filters.ingredient.some((ing) => m.ingredients.includes(ing))
+    )
+      return false;
+    // Skill y especialidad siguen siendo single-select (string).
+    if (filters.skill && sp?.main_skill !== filters.skill) return false;
+    if (filters.specialty && sp?.specialty !== filters.specialty) return false;
+    return true;
+  };
+  const value = (m: Member): number => {
+    switch (sortKey) {
+      case "level":
+        return m.level;
+      case "berries":
+        return m.production?.berries ?? 0;
+      case "ingredients":
+        return m.production ? totalIngredients(m.production) : 0;
+      default:
+        return speciesByName.get(m.species)?.dex ?? 0;
+    }
+  };
+  const dir = sortDir === "asc" ? 1 : -1;
+  return members
+    .filter(matches)
+    .sort((a, b) => (value(a) - value(b)) * dir || a.species.localeCompare(b.species));
 }
 
-export function Team() {
+// Opciones de cada filtro, derivadas del catálogo (únicas).
+function filterOptions(catalog: Catalog) {
+  const uniq = (xs: string[]) => [...new Set(xs)];
+  return {
+    types: uniq(catalog.species.map((s) => s.type)).sort(),
+    ingredients: catalog.ingredients,
+    skills: uniq(catalog.species.map((s) => s.main_skill)).sort(),
+    specialties: uniq(catalog.species.map((s) => s.specialty)).sort(),
+  };
+}
+
+interface TeamProps {
+  // Abre Comparación con ese Pokémon como base (lo cablea App).
+  onCompare: (memberId: string) => void;
+}
+
+export function Team({ onCompare }: TeamProps) {
   const qc = useQueryClient();
-  const { t, ingredient, subSkill, nature } = useI18n();
+  const { t } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Member | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   // Error de borrado (DELETE): se muestra junto a la lista, separado del error
   // del formulario de alta/edición.
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  // Pokémon pendiente de confirmar borrado (abre el modal de confirmación).
+  const [deleting, setDeleting] = useState<Member | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("dex");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [filters, setFilters] = useState<BoxFilters>(EMPTY_FILTERS);
 
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
   const members = useQuery({ queryKey: ["members"], queryFn: api.listMembers });
-  const distributions = useQuery({
-    queryKey: ["distributions"],
-    queryFn: api.getDistributions,
-  });
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["members"] });
-    qc.invalidateQueries({ queryKey: ["distributions"] });
   };
 
   const create = useMutation({
@@ -70,33 +121,68 @@ export function Team() {
     mutationFn: (id: string) => api.deleteMember(id),
     onSuccess: () => {
       setDeleteError(null);
+      setDeleting(null);
       invalidate();
     },
-    onError: (err: Error) => setDeleteError(err.message),
+    onError: (err: Error) => {
+      setDeleting(null);
+      setDeleteError(err.message);
+    },
   });
 
   const openForm = () => {
     setFormError(null);
+    setDeleteError(null);
     setFormOpen(true);
   };
 
   const openEdit = (member: Member) => {
     setFormError(null);
+    setDeleteError(null);
     setEditing(member);
   };
 
   const natureByName = new Map((catalog.data?.natures ?? []).map((n) => [n.name, n]));
   const speciesByName = new Map((catalog.data?.species ?? []).map((s) => [s.name, s]));
-  const subSkillTiers = Object.fromEntries(
-    (catalog.data?.sub_skills ?? []).map((s) => [s.name, s.tier]),
-  );
+  const tierBySubSkill = new Map((catalog.data?.sub_skills ?? []).map((s) => [s.name, s.tier]));
 
   if (catalog.isLoading) return <p className="muted">{t("common.loadingCatalog")}</p>;
   if (catalog.isError || !catalog.data)
     return <p className="error">{t("common.catalogError")}</p>;
 
+  const allMembers = members.data ?? [];
+  const visible = sortAndFilter(allMembers, speciesByName, sortKey, sortDir, filters);
+  const options = filterOptions(catalog.data);
+  // Hay filtros activos si alguna dimensión single tiene valor o alguna multi
+  // (arrays) tiene al menos un elemento.
+  const hasFilters =
+    filters.skill !== "" ||
+    filters.specialty !== "" ||
+    filters.type.length > 0 ||
+    filters.ingredient.length > 0;
+  // Single-select (skill / specialty): set directo.
+  const setFilter = (key: "skill" | "specialty", value: string) =>
+    setFilters((f) => ({ ...f, [key]: value }));
+  // Multi-select (type / ingredient): toggle del valor dentro del array.
+  const toggleFilter = (key: "type" | "ingredient", value: string) =>
+    setFilters((f) => {
+      const current = f[key];
+      const next = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+      return { ...f, [key]: next };
+    });
+  // Quita un valor concreto de cualquier dimensión (para el × de cada chip).
+  const removeFilter = (key: keyof BoxFilters, value: string) =>
+    setFilters((f) => {
+      if (key === "type" || key === "ingredient") {
+        return { ...f, [key]: f[key].filter((v) => v !== value) };
+      }
+      return { ...f, [key]: "" };
+    });
+
   return (
-    <div className="layout">
+    <div className="layout layout--wide">
       <header className="hero">
         <h1>{t("team.title")}</h1>
         <p className="muted">{t("team.subtitle")}</p>
@@ -105,7 +191,12 @@ export function Team() {
       <section>
         <div className="section-head">
           <h2>
-            {t("team.box")} {members.data ? `(${members.data.length})` : ""}
+            {t("team.box")}{" "}
+            <span className="muted" role="status" aria-live="polite">
+              {hasFilters
+                ? t("box.showing", { shown: visible.length, total: allMembers.length })
+                : `(${allMembers.length})`}
+            </span>
             {/* Refetch en segundo plano (p. ej. tras editar): feedback sutil de que
                 los datos visibles se están actualizando, sin bloquear la lista. */}
             {members.isFetching && !members.isLoading && (
@@ -134,62 +225,50 @@ export function Team() {
             {t("team.deleteError", { error: deleteError })}
           </p>
         )}
-        {members.data?.length === 0 && (
-          <p className="muted">{t("team.boxEmpty")}</p>
+        {members.data?.length === 0 && <p className="muted">{t("team.boxEmpty")}</p>}
+
+        {allMembers.length > 0 && (
+          <BoxToolbar
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSortKey={setSortKey}
+            onToggleDir={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+            filters={filters}
+            onFilter={setFilter}
+            onToggle={toggleFilter}
+            onRemove={removeFilter}
+            onClear={() => setFilters(EMPTY_FILTERS)}
+            options={options}
+            catalog={catalog.data}
+          />
         )}
+
+        {allMembers.length > 0 && visible.length === 0 && (
+          <p className="muted" role="status">
+            {t("box.noMatch")}{" "}
+            <button type="button" className="btn btn--ghost" onClick={() => setFilters(EMPTY_FILTERS)}>
+              {t("box.clearFilters")}
+            </button>
+          </p>
+        )}
+
         <div className="members">
-          {members.data?.map((m) => (
-            <MemberCard
+          {visible.map((m) => (
+            <BoxEntry
               key={m.id}
               member={m}
+              species={speciesByName.get(m.species)}
               nature={natureByName.get(m.nature)}
-              dex={speciesByName.get(m.species)?.dex}
-              subSkillTiers={subSkillTiers}
+              tierBySubSkill={(name) => tierBySubSkill.get(name)}
               onEdit={() => openEdit(m)}
-              onDelete={(id) => remove.mutate(id)}
+              onDelete={() => setDeleting(m)}
+              onCompare={() => onCompare(m.id)}
             />
           ))}
         </div>
       </section>
 
-      {distributions.isError && (
-        <section className="distributions">
-          <h2>{t("team.distribution")}</h2>
-          <p className="error" role="alert">
-            {t("team.distributionError")}{" "}
-            <button
-              type="button"
-              className="btn btn--ghost"
-              onClick={() => distributions.refetch()}
-            >
-              {t("common.retry")}
-            </button>
-          </p>
-        </section>
-      )}
-
-      {distributions.data && (
-        <section className="distributions">
-          <h2>{t("team.distribution")}</h2>
-          <div className="grid grid--3">
-            <DistributionChart
-              title={t("chart.ingredients")}
-              data={translateKeys(distributions.data.ingredients, ingredient)}
-              color="#d4a017"
-            />
-            <DistributionChart
-              title={t("chart.subSkills")}
-              data={translateKeys(distributions.data.sub_skills, subSkill)}
-              color="#6366f1"
-            />
-            <DistributionChart
-              title={t("chart.natures")}
-              data={translateKeys(distributions.data.natures, nature)}
-              color="#58a6ff"
-            />
-          </div>
-        </section>
-      )}
+      {allMembers.length > 0 && <BoxCoverage members={allMembers} catalog={catalog.data} />}
 
       {formOpen && (
         <Modal title={t("team.modalAdd")} onClose={() => setFormOpen(false)}>
@@ -212,6 +291,33 @@ export function Team() {
             pending={update.isPending}
             error={formError}
           />
+        </Modal>
+      )}
+
+      {deleting && (
+        <Modal
+          title={t("member.deleteModalTitle", { species: deleting.species })}
+          onClose={() => setDeleting(null)}
+        >
+          <p className="muted">{t("member.deleteModalBody")}</p>
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="btn btn--ghost"
+              data-autofocus
+              onClick={() => setDeleting(null)}
+            >
+              {t("common.cancel")}
+            </button>
+            <button
+              type="button"
+              className="btn btn--danger"
+              onClick={() => remove.mutate(deleting.id)}
+              disabled={remove.isPending}
+            >
+              {t("member.delete")}
+            </button>
+          </div>
         </Modal>
       )}
     </div>

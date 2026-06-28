@@ -10,6 +10,7 @@ import {
   tNatureStat,
   tSpecialty,
   tSubSkill,
+  tType,
 } from "./terms";
 import type { Lang } from "./terms";
 
@@ -42,6 +43,7 @@ interface I18n {
   subSkill: (name: string) => string;
   specialty: (name: string) => string;
   mainSkill: (name: string) => string;
+  type: (name: string) => string;
 }
 
 const Ctx = createContext<I18n | null>(null);
@@ -87,6 +89,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       subSkill: (n) => tSubSkill(n, lang),
       specialty: (n) => tSpecialty(n, lang),
       mainSkill: (n) => tMainSkill(n, lang),
+      type: (n) => tType(n, lang),
     }),
     [lang, setLang, t],
   );
