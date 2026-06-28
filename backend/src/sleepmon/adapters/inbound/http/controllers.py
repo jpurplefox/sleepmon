@@ -168,6 +168,7 @@ class CatalogController(Controller):
                     dex=sp.dex,
                     specialty=sp.specialty.value,
                     berry=sp.berry.value,
+                    type=sp.type.value,
                     sleep_type=sp.sleep_type.value,
                     main_skill=sp.main_skill,
                     ingredient_slots=[

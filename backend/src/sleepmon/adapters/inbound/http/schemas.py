@@ -45,6 +45,7 @@ class SpeciesOut(msgspec.Struct):
     dex: int
     specialty: str
     berry: str
+    type: str
     sleep_type: str
     main_skill: str
     ingredient_slots: list[list[str]]

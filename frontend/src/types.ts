@@ -17,6 +17,8 @@ export interface Species {
   dex: number;
   specialty: string;
   berry: string;
+  // Tipo elemental (1:1 con la baya); habilita filtrar por tipo en la Caja.
+  type: string;
   sleep_type: string;
   main_skill: string;
   ingredient_slots: string[][];

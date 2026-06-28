@@ -29,7 +29,14 @@ from sleepmon.domain.catalog_data import (
     SKILL_PITY_HELPS,
     SKILL_SPECIALIST_PITY_SECONDS,
 )
-from sleepmon.domain.value_objects import Berry, Ingredient, SleepType, Specialty
+from sleepmon.domain.value_objects import (
+    BERRY_TYPE,
+    Berry,
+    Ingredient,
+    SleepType,
+    Specialty,
+    Type,
+)
 
 I = Ingredient  # noqa: E741 — alias local para que el dataset se lea compacto
 
@@ -92,6 +99,11 @@ class Species:
                     f"{self.name}: el slot {slot} tiene {len(options)} opciones pero "
                     f"{len(self.ingredient_amounts[slot])} cantidades."
                 )
+
+    @property
+    def type(self) -> Type:
+        """Tipo elemental, derivado de la baya (bijección fija del juego, ``BERRY_TYPE``)."""
+        return BERRY_TYPE[self.berry]
 
     @property
     def carry_limit(self) -> int:
