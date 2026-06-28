@@ -1577,7 +1577,8 @@ select:focus {
   gap: 0.3rem;
 }
 
-.box-entry__metric .mini-icon {
+.box-entry__metric .mini-icon,
+.box-entry__metric svg {
   width: 18px;
   height: 18px;
 }
@@ -1616,23 +1617,14 @@ select:focus {
   opacity: 0.8;
 }
 
-/* Producción de la skill junto a los disparos: ingredientes al azar (Ingredient
-   Magnet). Ícono de ingrediente + texto muted; separado de los disparos con un
-   pequeño respiro a la izquierda. */
+/* Producción de la skill junto a los disparos: energía, ingredientes al azar, etc.
+   Sin ícono propio (sería el mismo que el de la skill, ya visible en la línea de
+   nivel): texto muted sangrado el ancho de un ícono + su gap, para que el número
+   quede alineado con los de las líneas de nivel y disparos. */
 .box-entry__skill-yield {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-}
-
-.box-entry__skill-yield .mini-icon {
-  width: 18px;
-  height: 18px;
-}
-
-.box-entry__skill-yield svg {
-  width: 18px;
-  height: 18px;
+  padding-left: calc(18px + 0.3rem);
 }
 
 .box-entry__skill-yield .box-entry__metric-value {

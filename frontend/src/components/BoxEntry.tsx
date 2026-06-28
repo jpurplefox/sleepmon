@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { ReactNode } from "react";
 
 import { berryIcon } from "../berries";
 import { RIBBONS } from "../constants";
@@ -8,8 +7,8 @@ import { ingredientIcon } from "../ingredients";
 import { statIcon } from "../natures";
 import { spriteUrl } from "../sprites";
 import type { Member, Nature, Species } from "../types";
-import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON, mainSkillIcon } from "../skillIcons";
-import { IconMagnifier, IconMore, IconSparkle } from "./icons";
+import { CHARGE_STRENGTH_ICON, mainSkillIcon } from "../skillIcons";
+import { IconMore, IconSparkle } from "./icons";
 import { IngredientLineup } from "./IngredientLineup";
 import { MemberConfig } from "./MemberConfig";
 import { RibbonIcon } from "./RibbonIcon";
@@ -148,36 +147,35 @@ export function BoxEntry({
   }, [prod]);
 
   // Aporte de la main skill, para mostrarlo junto a sus disparos. Una especie
-  // produce una sola de estas salidas (las demás vienen null). Mismos íconos que
-  // ProductionCard. Los ingredientes específicos (Ingredient Draw) NO van acá: ya
-  // se ven en la columna de ingredientes (combinados).
-  const skillYield = useMemo<{ icon: ReactNode; text: string; title: string } | null>(() => {
+  // produce una sola de estas salidas (las demás vienen null). NO lleva ícono: sería
+  // siempre el mismo que el de la skill (que ya se muestra en la línea de nivel), así
+  // que se omite y el número se alinea con un sangrado. Los ingredientes específicos
+  // (Ingredient Draw) NO van acá: ya se ven en la columna de ingredientes.
+  const skillYield = useMemo<{ text: string; title: string } | null>(() => {
     if (!prod) return null;
-    const img = (src: string) => <img className="mini-icon" src={src} alt="" aria-hidden="true" />;
     if (prod.skill_ingredient_total != null && prod.skill_ingredient_total > 0) {
       const v = fmt(prod.skill_ingredient_total);
       return {
-        icon: img(statIcon("Ingredient Finding")),
         text: t("box.randomIngredients", { value: v }),
         title: t("box.randomIngredientsTitle", { value: v }),
       };
     }
     if (prod.skill_energy != null)
-      return { icon: img(statIcon("Energy Recovery")), text: fmt(prod.skill_energy), title: t("card.energyEachTitle") };
+      return { text: fmt(prod.skill_energy), title: t("card.energyEachTitle") };
     if (prod.skill_self_energy != null)
-      return { icon: img(statIcon("Energy Recovery")), text: fmt(prod.skill_self_energy), title: t("card.selfEnergyTitle") };
+      return { text: fmt(prod.skill_self_energy), title: t("card.selfEnergyTitle") };
     if (prod.skill_random_energy != null)
-      return { icon: img(statIcon("Energy Recovery")), text: fmt(prod.skill_random_energy), title: t("card.randomEnergy") };
+      return { text: fmt(prod.skill_random_energy), title: t("card.randomEnergy") };
     // La fuerza por Charge Strength NO va acá: se suma a la fuerza directa de las
     // bayas y se muestra en la zona de producción (junto a las bayas).
     if (prod.skill_dream_shards != null)
-      return { icon: img("/shard.png"), text: fmtInt(prod.skill_dream_shards), title: t("card.dreamShardsTitle") };
+      return { text: fmtInt(prod.skill_dream_shards), title: t("card.dreamShardsTitle") };
     if (prod.skill_cooking_ingredients != null)
-      return { icon: img(POT_EXPANSION_ICON), text: fmt(prod.skill_cooking_ingredients), title: t("card.cookingTitle") };
+      return { text: fmt(prod.skill_cooking_ingredients), title: t("card.cookingTitle") };
     if (prod.skill_tasty_chance != null)
-      return { icon: img("/extra-tasty.png"), text: `+${fmtInt(prod.skill_tasty_chance)}%`, title: t("card.extraTastyTitle") };
+      return { text: `+${fmtInt(prod.skill_tasty_chance)}%`, title: t("card.extraTastyTitle") };
     if (prod.skill_extra_helpful != null)
-      return { icon: <IconMagnifier aria-hidden="true" />, text: `×${fmt(prod.skill_extra_helpful)}`, title: t("card.helpMultTitle") };
+      return { text: `×${fmt(prod.skill_extra_helpful)}`, title: t("card.helpMultTitle") };
     return null;
   }, [prod, t]);
 
@@ -372,10 +370,11 @@ export function BoxEntry({
             })}
           </span>
         </div>
-        {/* Aporte de la main skill: energía, fuerza, ingredientes al azar, etc. */}
+        {/* Aporte de la main skill: energía, ingredientes al azar, etc. Sin ícono
+            (sería el mismo que el de la skill, ya visible arriba): solo el número,
+            sangrado para alinearse con las líneas de nivel y disparos. */}
         {skillYield && (
           <span className="box-entry__skill-yield" title={skillYield.title}>
-            {skillYield.icon}
             <span className="box-entry__metric-value">{skillYield.text}</span>
             {/* El valor ya está en el texto visible; el sr-only solo aporta la
                 descripción (que de otro modo solo se vería en el title al hover). */}
