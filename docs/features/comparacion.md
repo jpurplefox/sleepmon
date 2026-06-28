@@ -20,7 +20,9 @@ Responde a: *"de estas configuraciones, ¿cuál rinde más y por qué?"*.
 - **Agregar** Pokémon a comparar, de tres formas:
   - **Nuevo**: una configuración ad-hoc, con el
     [Formulario de Pokémon](./formulario-pokemon.md).
-  - **Caja**: trae una config ya guardada (copiándola).
+  - **Caja**: trae una config ya guardada (copiándola). Cómo se busca e identifica
+    un ejemplar en ese picker está en
+    [Selección desde la Caja](./seleccion-desde-caja.md).
   - **Clonar**: duplica una card ya presente. Pensado para comparar **variantes
     de un Pokémon similar** (cambiar nivel, una sub skill o un ingrediente y ver
     el efecto).
