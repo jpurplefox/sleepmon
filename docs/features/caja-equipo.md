@@ -48,8 +48,10 @@ desde la Caja** ([`BoxPicker`](../../frontend/src/components/BoxPicker.tsx)) per
   - **Producción de ingredientes** (por día; total y/o por ingrediente).
   - **Cantidad de disparos de habilidad** (skill triggers por día).
 
-> El cálculo de producción es **el mismo del dominio** que usa Comparación
-> (`POST /production`); la Caja **presenta**, no reimplementa la fórmula.
+> El cálculo de producción es **el mismo del dominio** que usa Comparación; la Caja
+> **presenta**, no reimplementa la fórmula. Estas métricas llegan **en la misma
+> respuesta del endpoint de la caja** (sin llamadas extra por Pokémon; ver
+> *Decisiones tomadas*).
 
 ### 2. Orden y filtros
 
@@ -62,7 +64,7 @@ Para hacer el panorama navegable cuando la caja crece:
   - Producción total de su **ingrediente principal** (el que **más genera** de los
     ingredientes disponibles de la especie).
 - **Filtrar por**:
-  - **Tipo** (ver *Decisiones abiertas*: hoy no está en el catálogo).
+  - **Tipo** (elemental). Se agrega al catálogo de especies (ver *Decisiones tomadas*).
   - **Baya**.
   - **Ingrediente**.
   - **Skill** (main skill).
@@ -105,19 +107,18 @@ solo frecuencias:
   (hexagonal); la UI no la reimplementa ni la contradice.
 - **Guiar siempre.** Estados de carga, error y vacío explícitos.
 
-## Decisiones abiertas / dependencias
+## Decisiones tomadas / dependencias
 
-1. **"Tipo" (elemental) no existe en el catálogo.** `species.py` tiene `specialty`,
-   `berry`, `sleep_type`, `main_skill`, `ingredients` — pero no el tipo elemental.
-   En Pokémon Sleep la **baya es 1:1 con el tipo**. Opciones: (a) agregar el tipo a
-   `species.py` y filtrar por él; (b) usar la **baya como proxy** del tipo y no
-   sumar el campo. **A definir** antes de implementar el filtro por tipo.
-2. **Producción de toda la caja.** Hoy solo Comparación computa producción
-   (`POST /production` por config). El overview la necesita para **todos** los
-   miembros (para mostrarla y para ordenar por producción). Evaluar: calcular por
-   miembro (N llamadas) vs. un **endpoint batch** de producción de la caja.
-   Decisión de arquitectura (fuera de este doc de producto, pero condiciona el
-   orden por producción).
+1. **Tipo en el catálogo.** Se **agrega el tipo elemental** a `species.py`. Aunque
+   en Pokémon Sleep el tipo es **1:1 con la baya**, se modela explícito porque a
+   veces es más fácil saber el tipo que la baya, y habilita el filtro por tipo. Se
+   puede poblar/validar con el mapa tipo→baya y las fuentes del catálogo.
+2. **Producción en la respuesta de la caja.** El endpoint que lista los Pokémon de
+   la caja (`/team`) **devuelve también la producción** que el overview necesita
+   (bayas, ingredientes, disparos de habilidad) por Pokémon. Así **no hay llamadas
+   extra** al backend y el orden por producción se resuelve en el cliente sin
+   pedidos adicionales. El cálculo sigue siendo el del dominio, reutilizado del
+   lado del backend (el mismo que alimenta Comparación).
 3. **Especialidad.** El catálogo curado actual tiene **Bayas / Ingredientes /
    Skills** (sin "All-Rounder"); los filtros y la distribución se ciñen a eso.
 
