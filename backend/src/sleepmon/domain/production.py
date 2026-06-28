@@ -36,6 +36,34 @@ from sleepmon.domain.catalog_data import (
     ribbon_inventory_bonus,
     ribbon_speed_bonus,
 )
+from sleepmon.domain.skills import (
+    boosts_tasty_chance,
+    charge_energy_amount,
+    charge_strength_amount,
+    charges_self_energy,
+    cheers_random_energy,
+    cooking_minus_energy_amount,
+    cooking_minus_pot_amount,
+    cooking_power_up_amount,
+    draws_ingredients,
+    dream_shard_amount,
+    energizing_cheer_amount,
+    energy_for_everyone_amount,
+    extra_helpful_amount,
+    ingredient_draw_amount,
+    ingredient_draw_pool,
+    ingredient_magnet_amount,
+    is_cooking_minus,
+    is_extra_helpful,
+    is_magnet_plus,
+    magnet_plus_base_amount,
+    magnet_plus_bonus_amount,
+    magnet_plus_bonus_ingredient,
+    magnets_ingredients,
+    powers_up_cooking,
+    restores_team_energy,
+    tasty_chance_amount,
+)
 from sleepmon.domain.species import Species
 from sleepmon.domain.value_objects import (
     Berry,
@@ -142,6 +170,38 @@ class DailyProduction:
     effective_skill_percentage: float  # tasa efectiva con pity proc
     ingredients: tuple[SlotProduction, ...]
     skill_triggers: float
+    # Ingredientes/día que aporta la main skill (p. ej. Ingredient Draw S), uno por
+    # ingrediente del pool. Vacío si la skill de la especie no produce ingredientes.
+    skill_ingredients: tuple[SlotProduction, ...]
+    # Energía/día que la main skill restaura a CADA compañero del equipo (p. ej.
+    # Energy for Everyone S). ``None`` si la skill no restaura energía al equipo.
+    skill_energy: float | None
+    # Ingredientes/día (de cualquier tipo, al azar) que consigue la main skill (p.
+    # ej. Ingredient Magnet S), como total sin desglosar. ``None`` si la skill no
+    # consigue ingredientes al azar.
+    skill_ingredient_total: float | None
+    # Ingredientes extra de pote/día que aporta la main skill (Cooking Power-Up S):
+    # cuántos slots extra de pote suma en total en el día. ``None`` si no aplica.
+    skill_cooking_ingredients: float | None
+    # Fuerza/día que la main skill suma a Snorlax (Charge Strength S / M). Para los
+    # montos aleatorios (S Random) es el valor esperado (punto medio). ``None`` si la
+    # skill no suma fuerza modelada (p. ej. la variante Stockpile).
+    skill_strength: float | None
+    # Energía/día que la main skill restaura al PROPIO Pokémon (Charge Energy S).
+    # ``None`` si la skill de la especie no carga energía al usuario.
+    skill_self_energy: float | None
+    # Fragmentos de sueño/día que consigue la main skill (Dream Shard Magnet S). Para
+    # los montos aleatorios es el valor esperado (punto medio). ``None`` si no aplica.
+    skill_dream_shards: float | None
+    # Aumento de Extra Tasty (en %) acumulado por la main skill (Tasty Chance S):
+    # disparos × %_del_nivel, sin acotar al tope de stack del juego. ``None`` si no aplica.
+    skill_tasty_chance: float | None
+    # Multiplicador de ayuda total del día por la main skill (Extra Helpful S):
+    # disparos × ×N_del_nivel. ``None`` si la skill no da ayuda instantánea.
+    skill_extra_helpful: float | None
+    # Energía/día que la main skill reparte al equipo, a un compañero al azar cada
+    # disparo (Energizing Cheer S): disparos × cantidad_del_nivel. ``None`` si no aplica.
+    skill_random_energy: float | None
     # Chances de disparar la skill de noche al menos k veces (k=1..tope).
     night_skill_chances: tuple[float, ...]
     inventory: int  # inventario efectivo (base + Inventory Up)
@@ -159,12 +219,14 @@ def daily_production(
     nature: Nature | None = None,
     sub_skills: tuple[SubSkill, ...] = (),
     ribbon: Ribbon = Ribbon.NONE,
+    skill_level: int = 1,
 ) -> DailyProduction:
     """Estima la producción diaria con ingredientes, nivel, naturaleza y sub skills.
 
     ``ingredients`` debe tener un ingrediente por slot (``MAX_INGREDIENTS``); la
     validación vive en la capa de aplicación. Por defecto, sin naturaleza (``None``)
-    ni sub skills (sin modificadores).
+    ni sub skills (sin modificadores). ``skill_level`` (1..MAX_SKILL_LEVEL) define
+    cuántos ingredientes entrega cada disparo de las skills tipo Ingredient Draw S.
     """
     if len(ingredients) != MAX_INGREDIENTS:
         raise ValueError(
@@ -272,6 +334,97 @@ def daily_production(
     night_skill = sum(night_skill_chances)  # E[min(N, cap)]
     skill_triggers = day_helps * effective_skill_rate + night_skill
 
+    # Ingredientes por la main skill (Ingredient Draw S y variantes): cada disparo
+    # entrega ``ingredient_draw_amount(skill_level)`` ingredientes repartidos en
+    # partes iguales entre el pool de la especie. Es independiente de la mecánica
+    # normal de ingredientes y no ocupa inventario en este modelo.
+    skill_ingredients: tuple[SlotProduction, ...] = ()
+    if draws_ingredients(species):
+        pool = ingredient_draw_pool(species)
+        if pool:
+            per_ingredient = skill_triggers * ingredient_draw_amount(skill_level) / len(pool)
+            skill_ingredients = tuple(
+                SlotProduction(ingredient=ing, amount=per_ingredient) for ing in pool
+            )
+
+    # Energía por la main skill (Energy for Everyone S): cada disparo restaura
+    # ``energy_for_everyone_amount(skill_level)`` de energía a CADA compañero, así que
+    # por día y por compañero es disparos × esa cantidad.
+    skill_energy: float | None = None
+    if restores_team_energy(species):
+        skill_energy = skill_triggers * energy_for_everyone_amount(skill_level)
+
+    # Ingredientes al azar por la main skill (Ingredient Magnet S): solo el total,
+    # sin desglosar por tipo (el tipo es impredecible). La variante (Plus) de Plusle
+    # usa su propia tabla base para el total al azar, y además da un ingrediente FIJO
+    # (café/leche) como bonus de sinergia: ese sí es específico, así que va junto a los
+    # ``skill_ingredients`` (se muestra en la sección Ingredientes, no en Skill).
+    skill_ingredient_total: float | None = None
+    if is_magnet_plus(species):
+        skill_ingredient_total = skill_triggers * magnet_plus_base_amount(skill_level)
+        bonus_ingredient = magnet_plus_bonus_ingredient(species)
+        if bonus_ingredient is not None:
+            skill_ingredients = (
+                SlotProduction(
+                    ingredient=bonus_ingredient,
+                    amount=skill_triggers * magnet_plus_bonus_amount(skill_level),
+                ),
+            )
+    elif magnets_ingredients(species):
+        skill_ingredient_total = skill_triggers * ingredient_magnet_amount(skill_level)
+
+    # Ingredientes extra de pote por la main skill (Cooking Power-Up S): cada disparo
+    # agranda el pote en N slots, así que por día es disparos × N. La variante (Minus)
+    # de Minun usa su propia tabla base de pote (más chica que la regular).
+    skill_cooking_ingredients: float | None = None
+    if is_cooking_minus(species):
+        skill_cooking_ingredients = skill_triggers * cooking_minus_pot_amount(skill_level)
+    elif powers_up_cooking(species):
+        skill_cooking_ingredients = skill_triggers * cooking_power_up_amount(skill_level)
+
+    # Fuerza por la main skill (Charge Strength S / M): cada disparo suma la fuerza
+    # esperada del nivel (punto medio si el monto es aleatorio), así que por día es
+    # disparos × esa fuerza. ``None`` si la skill no es una Charge Strength modelada.
+    per_strength = charge_strength_amount(species.main_skill, skill_level)
+    skill_strength: float | None = (
+        skill_triggers * per_strength if per_strength is not None else None
+    )
+
+    # Energía al propio Pokémon por la main skill (Charge Energy S): disparos × la
+    # energía del nivel.
+    skill_self_energy: float | None = None
+    if charges_self_energy(species):
+        skill_self_energy = skill_triggers * charge_energy_amount(skill_level)
+
+    # Fragmentos de sueño por la main skill (Dream Shard Magnet S): disparos × la
+    # cantidad esperada del nivel (punto medio si es aleatorio).
+    per_shards = dream_shard_amount(species.main_skill, skill_level)
+    skill_dream_shards: float | None = (
+        skill_triggers * per_shards if per_shards is not None else None
+    )
+
+    # Aumento de Extra Tasty por la main skill (Tasty Chance S): el boost se ACUMULA
+    # con cada disparo (disparos × %_del_nivel). No lo acotamos al tope de stack del
+    # juego (70%): a ese nivel un crítico lo consume y se sigue sumando.
+    skill_tasty_chance: float | None = (
+        skill_triggers * tasty_chance_amount(skill_level) if boosts_tasty_chance(species) else None
+    )
+
+    # Multiplicador de ayuda por la main skill (Extra Helpful S): cada disparo da ×N la
+    # ayuda normal, así que el total del día es disparos × N.
+    skill_extra_helpful: float | None = (
+        skill_triggers * extra_helpful_amount(skill_level) if is_extra_helpful(species) else None
+    )
+
+    # Energía a un compañero al azar: la da Energizing Cheer S y también el BONUS de
+    # Cooking Power-Up S (Minus) de Minun (asumiendo compañero Plus/Minus presente).
+    # El total repartido en el día es disparos × cantidad_del_nivel.
+    skill_random_energy: float | None = None
+    if cheers_random_energy(species):
+        skill_random_energy = skill_triggers * energizing_cheer_amount(skill_level)
+    elif is_cooking_minus(species):
+        skill_random_energy = skill_triggers * cooking_minus_energy_amount(skill_level)
+
     # En el overflow nocturno TODAS las ayudas producen bayas.
     berry_amount = (normal_helps * berry_rate + overflow_helps) * berry_per_help
 
@@ -292,6 +445,16 @@ def daily_production(
         effective_skill_percentage=effective_skill_rate * 100,
         ingredients=slots,
         skill_triggers=skill_triggers,
+        skill_ingredients=skill_ingredients,
+        skill_energy=skill_energy,
+        skill_ingredient_total=skill_ingredient_total,
+        skill_cooking_ingredients=skill_cooking_ingredients,
+        skill_strength=skill_strength,
+        skill_self_energy=skill_self_energy,
+        skill_dream_shards=skill_dream_shards,
+        skill_tasty_chance=skill_tasty_chance,
+        skill_extra_helpful=skill_extra_helpful,
+        skill_random_energy=skill_random_energy,
         night_skill_chances=night_skill_chances,
         inventory=inventory,
         inventory_fill_hours=fill_seconds / _SECONDS_PER_HOUR,

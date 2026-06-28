@@ -14,6 +14,7 @@ class MemberIn(msgspec.Struct, forbid_unknown_fields=True):
     nature: str = ""  # vacío = sin naturaleza
     sub_skills: list[str] = []
     ribbon: str = ""  # vacío = sin listón
+    skill_level: int = 1  # nivel de la main skill
 
 
 class MemberOut(msgspec.Struct):
@@ -24,6 +25,7 @@ class MemberOut(msgspec.Struct):
     ingredients: list[str]
     sub_skills: list[str]
     ribbon: str
+    skill_level: int
 
 
 class NatureOut(msgspec.Struct):
@@ -73,6 +75,7 @@ class ProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     nature: str = ""  # vacío = sin naturaleza
     sub_skills: list[str] = msgspec.field(default_factory=list)
     ribbon: str = ""  # vacío = sin listón
+    skill_level: int = 1  # nivel de la main skill
 
 
 class SlotProductionOut(msgspec.Struct):
@@ -91,6 +94,16 @@ class ProductionOut(msgspec.Struct):
     effective_skill_percentage: float
     ingredients: list[SlotProductionOut]
     skill_triggers: float
+    skill_ingredients: list[SlotProductionOut]
+    skill_energy: float | None
+    skill_ingredient_total: float | None
+    skill_cooking_ingredients: float | None
+    skill_strength: float | None
+    skill_self_energy: float | None
+    skill_dream_shards: float | None
+    skill_tasty_chance: float | None
+    skill_extra_helpful: float | None
+    skill_random_energy: float | None
     night_skill_chances: list[float]
     inventory: int
     inventory_fill_hours: float

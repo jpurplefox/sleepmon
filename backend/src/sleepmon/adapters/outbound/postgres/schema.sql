@@ -8,11 +8,14 @@ CREATE TABLE IF NOT EXISTS team_member (
     level       INTEGER     NOT NULL,
     nature      TEXT        NOT NULL,
     ribbon      TEXT        NOT NULL DEFAULT '',
+    skill_level INTEGER     NOT NULL DEFAULT 1,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- Alta idempotente del listón para bases ya creadas (migrate corre el schema entero).
 ALTER TABLE team_member ADD COLUMN IF NOT EXISTS ribbon TEXT NOT NULL DEFAULT '';
+-- Alta idempotente del nivel de skill para bases ya creadas.
+ALTER TABLE team_member ADD COLUMN IF NOT EXISTS skill_level INTEGER NOT NULL DEFAULT 1;
 
 CREATE TABLE IF NOT EXISTS team_member_subskill (
     member_id  UUID    NOT NULL REFERENCES team_member (id) ON DELETE CASCADE,

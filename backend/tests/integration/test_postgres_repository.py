@@ -86,3 +86,37 @@ def test_delete_removes_member(repo: PostgresTeamRepository) -> None:
     assert repo.delete(member.id) is True
     assert repo.get(member.id) is None
     assert repo.delete(member.id) is False
+
+
+def test_skill_level_roundtrips(repo: PostgresTeamRepository) -> None:
+    member = TeamMember(
+        species="Crustle",
+        level=60,
+        nature=Nature.MODEST,
+        ingredients=(Ingredient.GLOSSY_AVOCADO, Ingredient.SOFT_POTATO, Ingredient.PURE_OIL),
+        skill_level=6,
+    )
+    repo.add(member)
+    fetched = repo.get(member.id)
+    assert fetched is not None
+    assert fetched.skill_level == 6
+    assert fetched == member
+
+
+def test_update_changes_skill_level(repo: PostgresTeamRepository) -> None:
+    member = sample()  # skill_level por defecto = 1
+    repo.add(member)
+    changed = TeamMember(
+        id=member.id,
+        species=member.species,
+        level=member.level,
+        nature=member.nature,
+        ingredients=member.ingredients,
+        sub_skills=member.sub_skills,
+        ribbon=member.ribbon,
+        skill_level=7,
+    )
+    assert repo.update(changed) is True
+    fetched = repo.get(member.id)
+    assert fetched is not None
+    assert fetched.skill_level == 7

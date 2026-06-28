@@ -35,6 +35,8 @@ def _species(
     base_inventory: int = 100_000,  # alto: por defecto no se llena (producción plena)
     evolution_stage: int = 0,
     line_evolutions: int = 2,  # línea de 3 etapas por defecto (≥ evolution_stage)
+    main_skill: str = "Test Skill",
+    ingredients: tuple[Ingredient, ...] = _INGREDIENTS,
 ) -> Species:
     return Species(
         "Tester",
@@ -42,8 +44,8 @@ def _species(
         specialty,
         Berry.ORAN,
         SleepType.DOZING,
-        "Test Skill",
-        _INGREDIENTS,
+        main_skill,
+        ingredients,
         help_frequency_seconds,
         ingredient_percentage,
         skill_percentage,
@@ -571,3 +573,311 @@ def test_inventory_up_subskills_increase_inventory() -> None:
         sub_skills=(SubSkill.INVENTORY_UP_M, SubSkill.INVENTORY_UP_S),
     )
     assert prod.inventory == 11 + 12 + 6
+
+
+# --- Ingredient Draw S: ingredientes producidos por la main skill ---------------
+
+_DRAW_INGREDIENTS = (I.GLOSSY_AVOCADO, I.SOFT_POTATO, I.PURE_OIL)
+
+
+def test_skill_ingredients_empty_when_skill_does_not_draw() -> None:
+    # La main skill por defecto ("Test Skill") no produce ingredientes.
+    prod = daily_production(_species(), _INGREDIENTS, level=60)
+    assert prod.skill_ingredients == ()
+
+
+def test_ingredient_draw_s_produces_each_pool_ingredient() -> None:
+    # Pool de 3 ingredientes distintos; cada disparo entrega amount(nivel)/3 de cada uno.
+    species = _species(main_skill="Ingredient Draw S", ingredients=_DRAW_INGREDIENTS)
+    prod = daily_production(species, _DRAW_INGREDIENTS, level=60, skill_level=7)
+
+    assert [s.ingredient for s in prod.skill_ingredients] == list(_DRAW_INGREDIENTS)
+    expected_each = prod.skill_triggers * 18 / 3  # nivel 7 -> 18 ingredientes por disparo
+    for slot in prod.skill_ingredients:
+        assert slot.amount == pytest.approx(expected_each)
+
+
+def test_ingredient_draw_amount_scales_with_skill_level() -> None:
+    species = _species(main_skill="Ingredient Draw S", ingredients=_DRAW_INGREDIENTS)
+    lvl1 = daily_production(species, _DRAW_INGREDIENTS, level=60, skill_level=1)
+    lvl7 = daily_production(species, _DRAW_INGREDIENTS, level=60, skill_level=7)
+    # Mismos disparos (skill_level no afecta la frecuencia), 5 vs 18 por disparo.
+    assert lvl1.skill_ingredients[0].amount == pytest.approx(lvl1.skill_triggers * 5 / 3)
+    assert lvl7.skill_ingredients[0].amount == pytest.approx(lvl7.skill_triggers * 18 / 3)
+    assert lvl1.skill_triggers == pytest.approx(lvl7.skill_triggers)
+
+
+def test_ingredient_draw_default_skill_level_is_one() -> None:
+    species = _species(main_skill="Ingredient Draw S", ingredients=_DRAW_INGREDIENTS)
+    prod = daily_production(species, _DRAW_INGREDIENTS, level=60)  # skill_level por defecto = 1
+    assert prod.skill_ingredients[0].amount == pytest.approx(prod.skill_triggers * 5 / 3)
+
+
+def test_ingredient_draw_variant_with_passive_also_draws() -> None:
+    # Las variantes con pasivo ("(Super Luck)", "(Hyper Cutter)") sortean igual.
+    species = _species(main_skill="Ingredient Draw S (Super Luck)", ingredients=_DRAW_INGREDIENTS)
+    prod = daily_production(species, _DRAW_INGREDIENTS, level=60, skill_level=3)
+    assert len(prod.skill_ingredients) == 3
+    assert prod.skill_ingredients[0].amount == pytest.approx(prod.skill_triggers * 8 / 3)
+
+
+def test_ingredient_draw_pool_dedupes_repeated_ingredients() -> None:
+    # Si la especie repite un ingrediente, el pool lo cuenta una sola vez (reparte /2).
+    dup = (I.SOFT_POTATO, I.SOFT_POTATO, I.PURE_OIL)
+    species = _species(main_skill="Ingredient Draw S", ingredients=dup)
+    prod = daily_production(species, dup, level=60, skill_level=7)
+    assert [s.ingredient for s in prod.skill_ingredients] == [I.SOFT_POTATO, I.PURE_OIL]
+    for slot in prod.skill_ingredients:
+        assert slot.amount == pytest.approx(prod.skill_triggers * 18 / 2)
+
+
+# --- Energy for Everyone S: energía restaurada al equipo por la skill -----------
+
+
+def test_skill_energy_none_when_skill_does_not_restore_energy() -> None:
+    prod = daily_production(_species(), _INGREDIENTS, level=60)
+    assert prod.skill_energy is None
+
+
+def test_energy_for_everyone_restores_per_trigger_amount() -> None:
+    species = _species(main_skill="Energy for Everyone S", specialty=Specialty.SKILLS)
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
+    # Nivel 6 -> 18 de energía a cada compañero por disparo.
+    assert prod.skill_energy == pytest.approx(prod.skill_triggers * 18)
+
+
+def test_energy_for_everyone_scales_with_skill_level() -> None:
+    species = _species(main_skill="Energy for Everyone S", specialty=Specialty.SKILLS)
+    lvl1 = daily_production(species, _INGREDIENTS, level=60, skill_level=1)
+    lvl6 = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
+    assert lvl1.skill_energy == pytest.approx(lvl1.skill_triggers * 5)
+    assert lvl6.skill_energy == pytest.approx(lvl6.skill_triggers * 18)
+
+
+def test_energy_for_everyone_clamps_level_seven_to_six() -> None:
+    species = _species(main_skill="Energy for Everyone S", specialty=Specialty.SKILLS)
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
+    assert prod.skill_energy == pytest.approx(prod.skill_triggers * 18)  # tope nivel 6
+
+
+def test_energy_for_everyone_does_not_produce_skill_ingredients() -> None:
+    species = _species(main_skill="Energy for Everyone S", specialty=Specialty.SKILLS)
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
+    assert prod.skill_ingredients == ()
+
+
+# --- Ingredient Magnet S: total de ingredientes al azar por la skill ------------
+
+
+def test_skill_ingredient_total_none_when_skill_does_not_magnet() -> None:
+    prod = daily_production(_species(), _INGREDIENTS, level=60)
+    assert prod.skill_ingredient_total is None
+
+
+def test_ingredient_magnet_total_is_triggers_times_amount() -> None:
+    species = _species(main_skill="Ingredient Magnet S")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
+    assert prod.skill_ingredient_total == pytest.approx(prod.skill_triggers * 24)  # nivel 7 -> 24
+    # Magnet no desglosa por ingrediente ni restaura energía.
+    assert prod.skill_ingredients == ()
+    assert prod.skill_energy is None
+
+
+def test_ingredient_magnet_total_scales_with_skill_level() -> None:
+    species = _species(main_skill="Ingredient Magnet S")
+    lvl1 = daily_production(species, _INGREDIENTS, level=60, skill_level=1)
+    lvl7 = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
+    assert lvl1.skill_ingredient_total == pytest.approx(lvl1.skill_triggers * 6)
+    assert lvl7.skill_ingredient_total == pytest.approx(lvl7.skill_triggers * 24)
+
+
+# --- Cooking Power-Up S: ingredientes extra de pote por la skill ---------------
+
+
+def test_skill_cooking_none_when_skill_does_not_power_up_cooking() -> None:
+    prod = daily_production(_species(), _INGREDIENTS, level=60)
+    assert prod.skill_cooking_ingredients is None
+
+
+def test_cooking_power_up_total_is_triggers_times_amount() -> None:
+    species = _species(main_skill="Cooking Power-Up S")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
+    assert prod.skill_cooking_ingredients == pytest.approx(prod.skill_triggers * 31)  # nivel 7
+    # No desglosa ingredientes, no restaura energía, no es magnet.
+    assert prod.skill_ingredients == ()
+    assert prod.skill_energy is None
+    assert prod.skill_ingredient_total is None
+
+
+def test_cooking_power_up_scales_with_skill_level() -> None:
+    species = _species(main_skill="Cooking Power-Up S")
+    lvl1 = daily_production(species, _INGREDIENTS, level=60, skill_level=1)
+    lvl7 = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
+    assert lvl1.skill_cooking_ingredients == pytest.approx(lvl1.skill_triggers * 7)
+    assert lvl7.skill_cooking_ingredients == pytest.approx(lvl7.skill_triggers * 31)
+
+
+# --- Charge Strength S / M: fuerza por la skill --------------------------------
+
+
+def test_skill_strength_none_when_not_charge_strength() -> None:
+    assert daily_production(_species(), _INGREDIENTS, level=60).skill_strength is None
+
+
+def test_charge_strength_s_total_is_triggers_times_fixed_amount() -> None:
+    species = _species(main_skill="Charge Strength S")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
+    assert prod.skill_strength == pytest.approx(prod.skill_triggers * 3212)  # nivel 7 fijo
+    # No mezcla con los otros mecanismos.
+    assert prod.skill_ingredients == ()
+    assert prod.skill_energy is None
+    assert prod.skill_cooking_ingredients is None
+
+
+def test_charge_strength_m_uses_m_table() -> None:
+    species = _species(main_skill="Charge Strength M")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
+    assert prod.skill_strength == pytest.approx(prod.skill_triggers * 6858)
+
+
+def test_charge_strength_random_total_uses_midpoint() -> None:
+    species = _species(main_skill="Charge Strength S (Random)")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
+    assert prod.skill_strength == pytest.approx(prod.skill_triggers * 4015)  # mid de 1606..6424
+
+
+def test_charge_strength_stockpile_not_estimated() -> None:
+    species = _species(main_skill="Charge Strength S (Stockpile)")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
+    assert prod.skill_strength is None
+
+
+# --- Charge Energy S: energía al propio Pokémon --------------------------------
+
+
+def test_skill_self_energy_none_when_not_charge_energy() -> None:
+    assert daily_production(_species(), _INGREDIENTS, level=60).skill_self_energy is None
+
+
+def test_charge_energy_total_is_triggers_times_amount() -> None:
+    species = _species(main_skill="Charge Energy S")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
+    assert prod.skill_self_energy == pytest.approx(prod.skill_triggers * 43)  # nivel 6
+    # No se cruza con la energía al equipo (E4E) ni con los otros mecanismos.
+    assert prod.skill_energy is None
+    assert prod.skill_strength is None
+
+
+def test_charge_energy_clamps_level_seven_to_six() -> None:
+    species = _species(main_skill="Charge Energy S")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
+    assert prod.skill_self_energy == pytest.approx(prod.skill_triggers * 43)
+
+
+# --- Dream Shard Magnet S: fragmentos de sueño por la skill --------------------
+
+
+def test_skill_dream_shards_none_when_not_dream_shard() -> None:
+    assert daily_production(_species(), _INGREDIENTS, level=60).skill_dream_shards is None
+
+
+def test_dream_shard_fixed_total_is_triggers_times_amount() -> None:
+    species = _species(main_skill="Dream Shard Magnet S")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=8)
+    assert prod.skill_dream_shards == pytest.approx(prod.skill_triggers * 2500)  # nivel 8
+
+
+def test_dream_shard_random_total_uses_midpoint() -> None:
+    species = _species(main_skill="Dream Shard Magnet S (Random)")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=8)
+    assert prod.skill_dream_shards == pytest.approx(prod.skill_triggers * 2875)  # mid 1150..4600
+
+
+# --- Tasty Chance S: aumento de Extra Tasty (% acumulado, sin tope) ------------
+
+
+def test_skill_tasty_chance_none_when_not_tasty_chance() -> None:
+    assert daily_production(_species(), _INGREDIENTS, level=60).skill_tasty_chance is None
+
+
+def test_tasty_chance_accumulates_with_triggers() -> None:
+    species = _species(main_skill="Tasty Chance S", skill_percentage=2)
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
+    assert prod.skill_tasty_chance == pytest.approx(prod.skill_triggers * 10)
+
+
+def test_tasty_chance_not_capped() -> None:
+    # Muchos disparos (skill % alto): el acumulado pasa de 70% sin acotar.
+    species = _species(main_skill="Tasty Chance S", skill_percentage=80)
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
+    assert prod.skill_tasty_chance == pytest.approx(prod.skill_triggers * 10)
+    assert prod.skill_tasty_chance > 70
+
+
+# --- Extra Helpful S: multiplicador de ayuda total del día --------------------
+
+
+def test_skill_extra_helpful_none_when_not_extra_helpful() -> None:
+    assert daily_production(_species(), _INGREDIENTS, level=60).skill_extra_helpful is None
+
+
+def test_extra_helpful_total_is_triggers_times_multiplier() -> None:
+    species = _species(main_skill="Extra Helpful S")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
+    assert prod.skill_extra_helpful == pytest.approx(prod.skill_triggers * 12)  # nivel 7 -> ×12
+
+
+# --- Energizing Cheer S: energía a un compañero al azar -----------------------
+
+
+def test_skill_random_energy_none_when_not_energizing_cheer() -> None:
+    assert daily_production(_species(), _INGREDIENTS, level=60).skill_random_energy is None
+
+
+def test_energizing_cheer_total_is_triggers_times_amount() -> None:
+    species = _species(main_skill="Energizing Cheer S", specialty=Specialty.SKILLS)
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
+    assert prod.skill_random_energy == pytest.approx(prod.skill_triggers * 50)  # nivel 6
+    # No es energía al equipo entero (E4E) ni al usuario (Charge Energy).
+    assert prod.skill_energy is None
+    assert prod.skill_self_energy is None
+
+
+# --- Plusle / Minun: tablas propias + bonus de sinergia (condición siempre dada) ---
+
+
+def test_magnet_plus_total_is_base_only_bonus_in_skill_ingredients() -> None:
+    # _species se llama "Tester": el total al azar usa la base (18 a nivel 7) y, al no
+    # ser una especie conocida, no se le asigna ingrediente de bonus.
+    species = _species(main_skill="Ingredient Magnet S (Plus)", specialty=Specialty.SKILLS)
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
+    assert prod.skill_ingredient_total == pytest.approx(prod.skill_triggers * 18)
+    assert prod.skill_ingredients == ()  # sin especie conocida, no hay bonus
+
+
+def test_magnet_plus_bonus_ingredient_goes_to_skill_ingredients() -> None:
+    # Especie conocida (Plusle): el bonus específico (café) va a skill_ingredients,
+    # que es lo que el front muestra en la sección Ingredientes.
+    plusle = Species(
+        "Plusle", 311, Specialty.SKILLS, Berry.GREPA, SleepType.SNOOZING,
+        "Ingredient Magnet S (Plus)",
+        (I.ROUSING_COFFEE, I.LARGE_LEEK, I.MOOMOO_MILK),
+        3200, 23.9, 6.4, ((1,), (2, 1), (4, 2, 3)), 17, 0, 0,
+    )
+    prod = daily_production(
+        plusle, (I.ROUSING_COFFEE, I.LARGE_LEEK, I.MOOMOO_MILK), level=60, skill_level=7
+    )
+    assert prod.skill_ingredient_total == pytest.approx(prod.skill_triggers * 18)
+    assert len(prod.skill_ingredients) == 1
+    bonus = prod.skill_ingredients[0]
+    assert bonus.ingredient is I.ROUSING_COFFEE
+    assert bonus.amount == pytest.approx(prod.skill_triggers * 12)
+
+
+def test_cooking_minus_pot_and_random_energy() -> None:
+    species = _species(main_skill="Cooking Power-Up S (Minus)", specialty=Specialty.SKILLS)
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
+    # Pote con la tabla propia (24 a nivel 7), no la regular.
+    assert prod.skill_cooking_ingredients == pytest.approx(prod.skill_triggers * 24)
+    # Bonus: energía a un compañero al azar (35 a nivel 7).
+    assert prod.skill_random_energy == pytest.approx(prod.skill_triggers * 35)

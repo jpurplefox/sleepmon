@@ -38,6 +38,7 @@ def _to_out(member: TeamMember) -> MemberOut:
         ingredients=[i.value for i in member.ingredients],
         sub_skills=[s.value for s in member.sub_skills],
         ribbon=member.ribbon.value,
+        skill_level=member.skill_level,
     )
 
 
@@ -59,6 +60,7 @@ def _to_input(payload: MemberIn) -> TeamMemberInput:
         ingredients=payload.ingredients,
         sub_skills=payload.sub_skills,
         ribbon=payload.ribbon,
+        skill_level=payload.skill_level,
     )
 
 
@@ -115,6 +117,7 @@ class ProductionController(Controller):
                 nature=data.nature,
                 sub_skills=data.sub_skills,
                 ribbon=data.ribbon,
+                skill_level=data.skill_level,
             )
         )
         return ProductionOut(
@@ -131,6 +134,19 @@ class ProductionController(Controller):
                 for slot in result.ingredients
             ],
             skill_triggers=result.skill_triggers,
+            skill_ingredients=[
+                SlotProductionOut(ingredient=slot.ingredient, amount=slot.amount)
+                for slot in result.skill_ingredients
+            ],
+            skill_energy=result.skill_energy,
+            skill_ingredient_total=result.skill_ingredient_total,
+            skill_cooking_ingredients=result.skill_cooking_ingredients,
+            skill_strength=result.skill_strength,
+            skill_self_energy=result.skill_self_energy,
+            skill_dream_shards=result.skill_dream_shards,
+            skill_tasty_chance=result.skill_tasty_chance,
+            skill_extra_helpful=result.skill_extra_helpful,
+            skill_random_energy=result.skill_random_energy,
             night_skill_chances=result.night_skill_chances,
             inventory=result.inventory,
             inventory_fill_hours=result.inventory_fill_hours,

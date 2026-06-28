@@ -6,6 +6,7 @@ import { IngredientSlots } from "./IngredientSlots";
 import { LevelSelector } from "./LevelSelector";
 import { NatureSelect } from "./NatureSelect";
 import { RibbonSelect } from "./RibbonSelect";
+import { SkillLevelSelector } from "./SkillLevelSelector";
 import { SpeciesSelect } from "./SpeciesSelect";
 import { SubSkillSelect } from "./SubSkillSelect";
 
@@ -41,6 +42,7 @@ export function MemberForm({
   const [ingredients, setIngredients] = useState<string[]>(initial?.ingredients ?? []);
   const [subSkills, setSubSkills] = useState<string[]>(initial?.sub_skills ?? []);
   const [ribbon, setRibbon] = useState(initial?.ribbon ?? "");
+  const [skillLevel, setSkillLevel] = useState(initial?.skill_level ?? 1);
 
   const selectedSpecies = useMemo(
     () => catalog.species.find((s) => s.name === species),
@@ -82,6 +84,7 @@ export function MemberForm({
       // Las sub skills sí son opcionales: descartamos los slots vacíos.
       sub_skills: subSkills.filter(Boolean),
       ribbon,
+      skill_level: skillLevel,
     });
   }
 
@@ -132,6 +135,15 @@ export function MemberForm({
           level={level}
           onChange={setSubSkills}
           ariaLabel="Sub skills"
+        />
+      </fieldset>
+
+      <fieldset>
+        <legend>Nivel de skill</legend>
+        <SkillLevelSelector
+          value={skillLevel}
+          onChange={setSkillLevel}
+          mainSkill={selectedSpecies?.main_skill}
         />
       </fieldset>
 
