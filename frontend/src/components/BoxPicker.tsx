@@ -131,7 +131,11 @@ export function BoxPicker({
       {/* Anuncio del conteo de resultados al filtrar, para lectores de pantalla;
           el caso 0 lo cubre el mensaje visible de vacío (también role=status). */}
       <span className="sr-only" role="status" aria-live="polite">
-        {search && filtered.length > 0 ? t("prod.boxResultCount", { count: filtered.length }) : ""}
+        {search && filtered.length > 0
+          ? filtered.length === 1
+            ? t("prod.boxResultOne")
+            : t("prod.boxResultCount", { count: filtered.length })
+          : ""}
       </span>
 
       {filtered.length === 0 ? (
@@ -183,7 +187,9 @@ export function BoxPicker({
                           <span className="down">↓{nature.decreased}</span>
                         </span>
                       ) : (
-                        <span className="muted">{natureLabel(m.nature)}</span>
+                        <span className="muted">
+                          {m.nature ? natureLabel(m.nature) : t("card.noNature")}
+                        </span>
                       )}
                     </span>
 

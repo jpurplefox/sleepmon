@@ -571,6 +571,8 @@ select:focus {
   height: 32px;
   object-fit: contain;
   flex-shrink: 0;
+  /* Sprites pixel-art: nítidos al escalar, como el resto del sistema. */
+  image-rendering: pixelated;
 }
 
 /* Species combobox (buscador + imágenes) */
@@ -1524,8 +1526,11 @@ select:focus {
   height: 26px;
 }
 
-/* Estado neutro (no es identidad ni acción): chip atenuado con borde, legible. */
-.prod-box-item__tag {
+/* Chips neutros (no son identidad ni acción): atenuados con borde, legibles.
+   El tag "ya en comparación" y el nivel de main skill comparten tratamiento
+   (sin color propio: no compiten con el nivel dorado ni con los tiers). */
+.prod-box-item__tag,
+.prod-box-item__skill-lv {
   font-size: var(--text-xs);
   color: var(--muted);
   border: 1px solid var(--border);
@@ -1533,14 +1538,7 @@ select:focus {
   padding: 0.05rem 0.4rem;
 }
 
-/* Nivel de main skill: chip discreto, mismo tratamiento que el tag (sin color
-   propio: no compite con el nivel dorado ni con los tiers de sub skill). */
 .prod-box-item__skill-lv {
-  font-size: var(--text-xs);
-  color: var(--muted);
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  padding: 0.05rem 0.4rem;
   white-space: nowrap;
   flex-shrink: 0;
 }
