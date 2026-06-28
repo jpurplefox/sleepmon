@@ -92,6 +92,67 @@ solo frecuencias:
 
 > Objetivo: responder *"¿qué me falta cubrir?"*, no solo *"¿qué tengo más?"*.
 
+## Interacciones (definición UX/UI)
+
+Definido con los especialistas (frontend-ux-reviewer, frontend-ui-minimalist,
+ux-simplifier). Spec para implementar; el detalle visual final lo afina el loop.
+
+### Entrada por Pokémon
+
+- **Una card por Pokémon en lista vertical**, en tres zonas horizontales (en
+  pantalla angosta colapsa a columna): **identidad** (sprite + nombre + nivel en
+  badge dorado + listón) · **config** (ingredientes, naturaleza con íconos, sub
+  skills, ícono+nivel de skill — el **mismo lenguaje del** [picker](../../frontend/src/components/BoxPicker.tsx),
+  ligeramente atenuada para que retroceda frente a las métricas) · **producción**
+  (las 3 métricas).
+- **Tres métricas de igual jerarquía** (mismo peso, ninguna es "el KPI"): **bayas**
+  /día (ícono de baya + nº), **ingredientes** (ícono del **ingrediente principal**
+  + su nº; el desglose por ingrediente **on-demand** en tooltip), **disparos** de
+  habilidad/día (`IconSparkle` + nº). El **único dorado** de la entrada sigue
+  siendo el badge de nivel; los números van en color neutro.
+- Si la producción de una fila falta/falla, placeholder `—` por métrica sin
+  romper la fila (la config sigue legible).
+
+### Orden y filtros
+
+- **Barra de controles** sobre la lista (no sticky): un `<select>` de **orden** +
+  los **filtros** + acceso a **Agregar Pokémon** (único lugar del botón global).
+- **Orden** (un solo control, default **nº de Pokédex** ascendente, estable —no
+  reordena al editar): Pokédex, nivel, producción total de bayas, producción del
+  ingrediente principal. Toggle de dirección ↑/↓.
+- **Filtros** (AND entre dimensiones, **vacíos por defecto** = ver todo): **Tipo**
+  (que **es la misma dimensión que la baya**, 1:1 → **un solo filtro**, evita
+  combinaciones imposibles; se rotula por tipo, que el usuario suele tener más a
+  mano), **ingrediente**, **skill**, **especialidad**. Para **cajas chicas** los
+  filtros pueden ocultarse (aparecen cuando empiezan a hacer falta).
+- Filtros activos visibles como **chips** con `×` para quitar + "Limpiar". Estado
+  vacío al filtrar: mensaje inline con "Limpiar filtros" (distinto del estado
+  caja-vacía). El contador muestra "Mostrando N de M" cuando hay filtros.
+
+### Acciones por Pokémon
+
+- **Comparar**: acción **rápida y visible** (1 click; ícono con acento), abre
+  [Comparación](./comparacion.md) con ese Pokémon como base. Se navega con el `id`
+  en la URL (`?base=<id>`) para que sea recargable/compartible; Comparación lo lee
+  al montar y lo agrega como primera card.
+- **Editar** y **Eliminar**: en un **menú overflow `···`** por fila (no botones de
+  texto siempre visibles: con muchas filas saturan y exponen el borrado). Borrado
+  **confirmado** (paso de confirmación; el error de borrado se muestra ahí mismo).
+
+### Distribución → Cobertura
+
+Reemplaza los gráficos de frecuencia actuales por una sección de **cobertura**
+(responde "¿qué me falta cubrir?"), calculable en el cliente con los datos del
+catálogo + la caja:
+
+- **Especialidades**: conteo por especialidad (Bayas / Ingredientes / Skills);
+  un 0 se comunica explícito (la ausencia es información).
+- **Cobertura de bayas** de los especialistas en **Bayas**: grilla de íconos de
+  baya; las cubiertas normales, las no cubiertas **atenuadas** (opacidad +
+  escala de grises, el mismo lenguaje de los slots bloqueados).
+- **Cobertura de ingredientes** de los especialistas en **Ingredientes**: misma
+  grilla con los íconos de ingrediente.
+
 ## Lineamientos
 
 - **Overview, no comparación.** Sin base ni deltas; cada entrada se lee por sí
