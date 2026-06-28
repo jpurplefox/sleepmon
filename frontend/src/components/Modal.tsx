@@ -49,14 +49,18 @@ export function Modal({ title, onClose, children }: Props) {
     };
   }, [onClose]);
 
-  // Al abrir, mover el foco al primer elemento interactivo del panel; al cerrar,
-  // devolver el foco al elemento que abrió el modal.
+  // Al abrir, mover el foco a un elemento marcado con [data-autofocus] si existe
+  // (p. ej. el campo de búsqueda del picker), o al primer interactivo del panel
+  // en su defecto; al cerrar, devolver el foco al elemento que abrió el modal.
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
-    const first = panelRef.current?.querySelector<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-    );
-    first?.focus();
+    const panel = panelRef.current;
+    const target =
+      panel?.querySelector<HTMLElement>("[data-autofocus]") ??
+      panel?.querySelector<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+    target?.focus();
     return () => opener?.focus();
   }, []);
 

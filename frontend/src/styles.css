@@ -1402,26 +1402,56 @@ select:focus {
 }
 
 /* Lista de la caja dentro del modal de Producción */
+/* Campo de búsqueda del picker: fijo en el tope del modal, flush contra los
+   bordes del modal-body (que tiene 1.25rem de padding). Mismo tratamiento que
+   .species-search pero a lo ancho del panel. */
+.prod-box-search {
+  display: block;
+  width: calc(100% + 2 * 1.25rem);
+  margin: -1.25rem -1.25rem 0.75rem;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--surface-2);
+  padding: 0.55rem 1.25rem;
+  color: var(--text);
+  font-size: var(--text-base);
+}
+
+.prod-box-search:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.prod-box-empty {
+  margin: 0;
+  padding: 0.5rem 0;
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
 .prod-box-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
+/* Ítem del picker: dos filas (topline con identidad + config con iconos), la
+   "Caja en miniatura". El radio sube a --r-md porque ya es una card, no un chip. */
 .prod-box-item {
   display: flex;
-  align-items: center;
-  gap: 0.6rem;
+  flex-direction: column;
+  gap: 0.4rem;
   width: 100%;
   text-align: left;
   background: var(--surface-2);
   border: 1px solid var(--border);
   color: var(--text);
-  border-radius: var(--r-sm);
-  padding: 0.5rem 0.75rem;
+  border-radius: var(--r-md);
+  padding: 0.6rem 0.75rem;
   cursor: pointer;
 }
 
@@ -1429,21 +1459,54 @@ select:focus {
   border-color: var(--accent);
 }
 
-/* Miembro que ya está en la comparación: no se puede volver a agregar. Se marca
-   con borde punteado y el nombre atenuado, no con opacidad global (que dejaría el
-   tag ilegible). */
+/* Ya en la comparación: no se puede volver a agregar. Borde punteado + atenuado
+   uniforme (incluida la fila de iconos), que el tag sigue siendo legible. */
 .prod-box-item:disabled {
   cursor: default;
   border-style: dashed;
+  opacity: 0.5;
 }
 
-.prod-box-item:disabled .prod-box-item__name {
-  color: var(--muted);
+/* Fila 1: sprite + nombre + listón + tag + nivel. */
+.prod-box-item__topline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+/* Fila 2: lo que distingue a un ejemplar — naturaleza, ingredientes, sub skills,
+   nivel de skill. */
+.prod-box-item__config {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
 }
 
 .prod-box-item__name {
   font-weight: 600;
   flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prod-box-item__nature {
+  font-size: var(--text-xs);
+  flex-shrink: 0;
+}
+
+/* Sub skills al tamaño compacto de las prod-cards, no al de la Caja. */
+.prod-box-item .ss-icon {
+  width: 26px;
+  height: 26px;
+}
+
+.prod-box-item .ss-icon img {
+  width: 18px;
+  height: 18px;
 }
 
 /* Estado neutro (no es identidad ni acción): chip atenuado con borde, legible. */
@@ -1453,6 +1516,18 @@ select:focus {
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   padding: 0.05rem 0.4rem;
+}
+
+/* Nivel de main skill: chip discreto, mismo tratamiento que el tag (sin color
+   propio: no compite con el nivel dorado ni con los tiers de sub skill). */
+.prod-box-item__skill-lv {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 0.05rem 0.4rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* Comparación de producción: hasta 5 cards por fila (luego envuelven) */

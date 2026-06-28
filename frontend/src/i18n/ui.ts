@@ -53,6 +53,10 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Editás la copia de comparación; tu caja no cambia. Para actualizarla, usá el ícono de guardar en la card.",
     "prod.noteEditLocal": "Los cambios son solo para la comparación.",
     "prod.pickFromBox": "Elegí un Pokémon de tu caja",
+    "prod.boxSearch": "Buscar Pokémon…",
+    "prod.boxSearchAria": "Buscar en la caja",
+    "prod.boxSearchEmpty": 'Sin resultados para "{query}"',
+    "prod.skillLevelShort": "Skill Nv. {level}",
     "prod.boxErrorRetry": "No se pudo cargar la caja. Reintentá.",
     "prod.alreadyIn": "Ya en comparación",
     "prod.speciesNotInCatalog":
@@ -252,6 +256,10 @@ export const UI: Record<Lang, Record<string, string>> = {
       "You're editing the comparison copy; your box doesn't change. To update it, use the save icon on the card.",
     "prod.noteEditLocal": "Changes are for the comparison only.",
     "prod.pickFromBox": "Pick a Pokémon from your box",
+    "prod.boxSearch": "Search Pokémon…",
+    "prod.boxSearchAria": "Search box",
+    "prod.boxSearchEmpty": 'No results for "{query}"',
+    "prod.skillLevelShort": "Skill Lv. {level}",
     "prod.boxErrorRetry": "Couldn't load the box. Try again.",
     "prod.alreadyIn": "Already in comparison",
     "prod.speciesNotInCatalog":
