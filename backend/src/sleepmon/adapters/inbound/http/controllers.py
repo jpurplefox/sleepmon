@@ -14,6 +14,7 @@ from sleepmon.adapters.inbound.http.schemas import (
     DistributionsOut,
     MemberIn,
     MemberOut,
+    MemberProductionOut,
     NatureOut,
     ProductionIn,
     ProductionOut,
@@ -21,7 +22,7 @@ from sleepmon.adapters.inbound.http.schemas import (
     SpeciesOut,
     SubSkillOut,
 )
-from sleepmon.application.dto import ProductionInput, TeamMemberInput
+from sleepmon.application.dto import MemberProduction, ProductionInput, TeamMemberInput
 from sleepmon.application.services import TeamService
 from sleepmon.domain.catalog_data import NATURE_EFFECTS, SUB_SKILL_TIERS
 from sleepmon.domain.entities import TeamMember
@@ -29,7 +30,21 @@ from sleepmon.domain.ports import SpeciesCatalog
 from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
 
 
-def _to_out(member: TeamMember) -> MemberOut:
+def _production_out(production: MemberProduction | None) -> MemberProductionOut | None:
+    if production is None:
+        return None
+    return MemberProductionOut(
+        berries=production.berries,
+        ingredients=[
+            SlotProductionOut(ingredient=s.ingredient, amount=s.amount)
+            for s in production.ingredients
+        ],
+        ingredients_total=production.ingredients_total,
+        skill_triggers=production.skill_triggers,
+    )
+
+
+def _to_out(member: TeamMember, production: MemberProduction | None = None) -> MemberOut:
     return MemberOut(
         id=str(member.id),
         species=member.species,
@@ -39,6 +54,7 @@ def _to_out(member: TeamMember) -> MemberOut:
         sub_skills=[s.value for s in member.sub_skills],
         ribbon=member.ribbon.value,
         skill_level=member.skill_level,
+        production=_production_out(production),
     )
 
 
@@ -69,7 +85,7 @@ class TeamController(Controller):
 
     @get("/", sync_to_thread=True)
     def list_members(self, service: NamedDependency[TeamService]) -> list[MemberOut]:
-        return [_to_out(m) for m in service.list_members()]
+        return [_to_out(m, p) for m, p in service.list_members_with_production()]
 
     @post("/", status_code=HTTP_201_CREATED, sync_to_thread=True)
     def add_member(self, service: NamedDependency[TeamService], data: MemberIn) -> MemberOut:

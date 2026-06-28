@@ -15,6 +15,7 @@ from uuid import UUID
 
 from sleepmon.application.dto import (
     Distributions,
+    MemberProduction,
     ProductionInput,
     ProductionResult,
     SlotAmount,
@@ -72,6 +73,11 @@ class TeamService(ABC):
     def list_members(self) -> list[TeamMember]: ...
 
     @abstractmethod
+    def list_members_with_production(
+        self,
+    ) -> list[tuple[TeamMember, MemberProduction | None]]: ...
+
+    @abstractmethod
     def update_member(self, member_id: UUID, data: TeamMemberInput) -> TeamMember: ...
 
     @abstractmethod
@@ -102,6 +108,37 @@ class DefaultTeamService(TeamService):
 
     def list_members(self) -> list[TeamMember]:
         return self._repo.list()
+
+    def list_members_with_production(
+        self,
+    ) -> list[tuple[TeamMember, MemberProduction | None]]:
+        # Overview de la caja: producción por miembro reutilizando el cálculo del
+        # dominio (el mismo que /production). El miembro ya está validado (sus enums
+        # vienen del repo), así que no re-parseamos ni re-validamos.
+        return [(m, self._member_production(m)) for m in self._repo.list()]
+
+    def _member_production(self, member: TeamMember) -> MemberProduction | None:
+        species = self._catalog.get(member.species)
+        if species is None:  # especie fuera del catálogo curado: sin producción
+            return None
+        result = daily_production(
+            species,
+            member.ingredients,
+            member.level,
+            member.nature,
+            member.sub_skills,
+            member.ribbon,
+            member.skill_level,
+        )
+        return MemberProduction(
+            berries=result.berry_amount,
+            ingredients=[
+                SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
+                for slot in result.ingredients
+            ],
+            ingredients_total=sum(slot.amount for slot in result.ingredients),
+            skill_triggers=result.skill_triggers,
+        )
 
     def update_member(self, member_id: UUID, data: TeamMemberInput) -> TeamMember:
         # Preservamos el id; reconstruimos el resto para revalidar todo.

@@ -40,6 +40,15 @@ export interface Catalog {
 //  - sub_skills: hasta 5, sin repetir.
 //  - nature / ribbon: opcionales; "" significa "ninguno".
 //  - level: entero 1..100.
+// Producción diaria resumida de un miembro, para el overview de la Caja. Viene en
+// el listado (/team); ausente en respuestas de un solo miembro.
+export interface MemberProduction {
+  berries: number;
+  ingredients: SlotProduction[];
+  ingredients_total: number;
+  skill_triggers: number;
+}
+
 export interface Member {
   id: string;
   species: string;
@@ -55,6 +64,8 @@ export interface Member {
   ribbon: string;
   // Nivel de la main skill (1..7); se sube aparte del nivel del Pokémon.
   skill_level: number;
+  // Producción del overview (presente en el listado de la caja).
+  production?: MemberProduction;
 }
 
 // Payload de alta/edición. Mismas invariantes que Member (el backend valida y

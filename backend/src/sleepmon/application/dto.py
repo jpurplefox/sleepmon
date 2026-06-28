@@ -55,6 +55,21 @@ class SlotAmount:
 
 
 @dataclass(frozen=True, slots=True)
+class MemberProduction:
+    """Producción diaria resumida de un miembro de la caja, para el overview.
+
+    Un subconjunto de ``ProductionResult``: lo que el overview necesita leer de un
+    vistazo (bayas, ingredientes —total y por ingrediente—, disparos de skill). El
+    cálculo es el mismo del dominio que alimenta ``/production``; acá solo se resume.
+    """
+
+    berries: float  # bayas/día
+    ingredients: list[SlotAmount]  # ingredientes/día, por ingrediente
+    ingredients_total: float  # suma de todos los ingredientes/día
+    skill_triggers: float  # disparos de la main skill/día
+
+
+@dataclass(frozen=True, slots=True)
 class ProductionResult:
     """Producción estimada de un Pokémon en un día."""
 
