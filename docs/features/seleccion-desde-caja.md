@@ -31,15 +31,23 @@ que la Caja crece aparecen dos fricciones:
   (i18n). Si nada coincide, lo dice con un vacío claro.
 - **Identificar cada ejemplar por su config.** Cada item del picker muestra lo que
   lo hace único, **derivado solo de la config del Pokémon** (sin apodos ni datos
-  nuevos): nivel, naturaleza (con su ↑/↓), ingredientes, sub skills (con su tier),
-  listón y nivel de la main skill. Dos ejemplares de la misma especie deben
-  poder distinguirse sin abrirlos.
-- **Reusar el lenguaje visual de la Caja.** Los mismos iconos de ingredientes y
-  sub skills, los mismos colores de tier y de naturaleza que ya usa
-  [`MemberCard`](../../frontend/src/components/MemberCard.tsx), para que un
-  ejemplar se lea igual en los dos lados.
-- **Elegir = agregar y cerrar.** Un click sobre el item lo agrega a la comparación
-  (copiando la config, como hoy) y cierra el modal.
+  nuevos): nivel, naturaleza, ingredientes, sub skills (con su tier), listón y
+  nivel de la main skill. Dos ejemplares de la misma especie deben poder
+  distinguirse sin abrirlos.
+- **Naturaleza con íconos, igual que la comparación.** La naturaleza se expresa
+  con los **íconos de stat** (↑ stat que sube / ↓ stat que baja) tal como lo hacen
+  las cards de comparación ([`ProductionCard`](../../frontend/src/components/ProductionCard.tsx)
+  vía [`statIcon`](../../frontend/src/natures.ts)), **no** con el nombre del stat
+  en texto. Una naturaleza neutra (o sin asignar) se comunica con claridad.
+- **Listón pegado al nombre.** El listón, si tiene, va junto al nombre del Pokémon
+  (no en el extremo opuesto del item).
+- **Reusar el lenguaje visual de la app.** Los mismos iconos de ingredientes, sub
+  skills (colores de tier) y naturaleza que ya usan la Caja
+  ([`MemberCard`](../../frontend/src/components/MemberCard.tsx)) y la comparación
+  ([`ProductionCard`](../../frontend/src/components/ProductionCard.tsx)), para que
+  un ejemplar se lea igual en todos lados.
+- **Elegir = agregar y cerrar.** Seleccionar un item —con click o con **Enter**—
+  lo agrega a la comparación (copiando la config, como hoy) y cierra el modal.
 - **Marcar lo que ya está.** Un ejemplar que ya está en la comparación (por su id
   de origen) se muestra como tal y no se puede agregar dos veces.
 
@@ -52,16 +60,21 @@ El loop UX/UI debe dejar el picker cumpliendo todo esto:
    sobre el nombre **traducido** (idioma activo).
 2. **Estado vacío de búsqueda**: cuando el filtro no deja resultados, un mensaje
    claro (no la lista vacía a secas).
-3. **Cada item muestra la config completa derivada**: sprite + nombre, nivel,
-   naturaleza con ↑/↓, ingredientes (iconos), sub skills (iconos con tier),
-   listón si tiene, y nivel de main skill. Lo suficiente para distinguir
-   duplicados sin abrirlos.
+3. **Cada item muestra la config completa derivada**: sprite + nombre (con el
+   listón pegado si tiene), nivel, naturaleza con **íconos de stat** (como la
+   comparación), ingredientes (iconos), sub skills (iconos con tier) y nivel de
+   main skill. Lo suficiente para distinguir duplicados sin abrirlos.
 4. **Distinción de duplicados verificable**: dos ejemplares de la misma especie
    con configs distintas se leen como distintos de un vistazo.
-5. **Conserva el comportamiento actual**: copiar (no acoplar), marcar/deshabilitar
+5. **Teclado fluido desde la búsqueda**: tras escribir, **Enter** selecciona el
+   resultado resaltado (o el único/primero si hay uno solo) y lo agrega; las
+   **flechas ↑/↓** mueven el resaltado entre resultados **sin salir del campo de
+   búsqueda** (poder seguir tipeando). El resaltado del resultado activo es
+   visible.
+6. **Conserva el comportamiento actual**: copiar (no acoplar), marcar/deshabilitar
    los que ya están en la comparación, y el aviso cuando la especie no está en el
    catálogo cargado ([Production.tsx](../../frontend/src/pages/Production.tsx)).
-6. **Fiel al concepto "Luz de luna"** y accesible: navegable por teclado, foco
+7. **Fiel al concepto "Luz de luna"** y accesible: navegable por teclado, foco
    visible, contraste suficiente, labels/aria correctos.
 
 ## Lineamientos

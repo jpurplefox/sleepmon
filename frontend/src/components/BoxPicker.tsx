@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
 import {
@@ -9,9 +9,11 @@ import {
 } from "../constants";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
+import { statIcon } from "../natures";
 import { spriteUrl } from "../sprites";
 import { subSkillIcon } from "../subskills";
 import type { Catalog, Member } from "../types";
+import { IconMoon } from "./icons";
 import { RibbonIcon } from "./RibbonIcon";
 
 const TIER_CLASS: Record<string, string> = { Gold: "gold", Blue: "blue", Regular: "regular" };
@@ -49,30 +51,22 @@ export function BoxPicker({
   inComparison,
   onPick,
 }: Props) {
-  const { t, nature: natureLabel, ingredient, subSkill } = useI18n();
+  const { t, nature: natureLabel, natureStat, ingredient, subSkill } = useI18n();
   const [search, setSearch] = useState("");
+  // Índice resaltado dentro de la lista filtrada (-1 = ninguno). Patrón combobox:
+  // el foco se queda en el buscador; las flechas mueven este resaltado y Enter
+  // agrega el resaltado. Así se puede seguir tipeando sin perder el teclado.
+  const [highlighted, setHighlighted] = useState(-1);
   const listId = useId();
+  const listRef = useRef<HTMLUListElement>(null);
 
-  // Navegación con flechas entre ítems (además de Tab), útil cuando la caja es
-  // grande: ↓/↑ mueven el foco al siguiente/anterior ítem seleccionable, con wrap.
-  const onListKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
-    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
-    const btns = Array.from(
-      e.currentTarget.querySelectorAll<HTMLButtonElement>("button.prod-box-item:not([disabled])"),
-    );
-    if (btns.length === 0) return;
-    e.preventDefault();
-    const i = btns.indexOf(document.activeElement as HTMLButtonElement);
-    const next =
-      e.key === "ArrowDown"
-        ? i < 0
-          ? 0
-          : (i + 1) % btns.length
-        : i <= 0
-          ? btns.length - 1
-          : i - 1;
-    btns[next].focus();
-  };
+  // Mantener el ítem resaltado a la vista al navegar con flechas.
+  useEffect(() => {
+    if (highlighted < 0 || !listRef.current) return;
+    listRef.current
+      .querySelector<HTMLElement>(`#${CSS.escape(`${listId}-opt-${highlighted}`)}`)
+      ?.scrollIntoView({ block: "nearest" });
+  }, [highlighted, listId]);
 
   // Mapa especie→dex (sprite) y sub skill→tier, una sola vez por catálogo.
   const dexBySpecies = useMemo(
@@ -114,18 +108,48 @@ export function BoxPicker({
   const q = normalize(search);
   const filtered = q ? members.filter((m) => normalize(m.species).includes(q)) : members;
 
+  // Índices (dentro de filtered) que se pueden elegir: excluye los que ya están
+  // en la comparación. Las flechas saltan entre estos; Enter agrega el resaltado.
+  const selectable = filtered.flatMap((m, i) => (inComparison.has(m.id) ? [] : [i]));
+
+  const onSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      if (selectable.length === 0) return;
+      e.preventDefault();
+      const pos = selectable.indexOf(highlighted);
+      const next =
+        e.key === "ArrowDown"
+          ? selectable[(pos + 1) % selectable.length]
+          : selectable[(pos - 1 + selectable.length) % selectable.length];
+      setHighlighted(next);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      // El resaltado si es válido; si no, el primero seleccionable. Sin resultados
+      // seleccionables no hace nada (el vacío ya da feedback).
+      const idx = selectable.includes(highlighted) ? highlighted : selectable[0];
+      if (idx !== undefined) onPick(filtered[idx]);
+    }
+  };
+
   return (
     <>
       <input
         data-autofocus
         type="search"
+        role="combobox"
         className="prod-box-search"
         placeholder={t("prod.boxSearch")}
         aria-label={t("prod.boxSearchAria")}
         aria-controls={listId}
+        aria-expanded={filtered.length > 0}
         aria-autocomplete="list"
+        aria-activedescendant={highlighted >= 0 ? `${listId}-opt-${highlighted}` : undefined}
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setHighlighted(-1);
+        }}
+        onKeyDown={onSearchKeyDown}
       />
 
       {/* Anuncio del conteo de resultados al filtrar, para lectores de pantalla;
@@ -143,8 +167,8 @@ export function BoxPicker({
           {t("prod.boxSearchEmpty", { query: search })}
         </p>
       ) : (
-        <ul id={listId} className="prod-box-list" onKeyDown={onListKeyDown}>
-          {filtered.map((m) => {
+        <ul id={listId} className="prod-box-list" role="listbox" ref={listRef}>
+          {filtered.map((m, idx) => {
             const already = inComparison.has(m.id);
             const nature = natureByName.get(m.nature);
             const ribbonIdx = RIBBONS.findIndex((r) => r.name === m.ribbon);
@@ -152,8 +176,13 @@ export function BoxPicker({
               <li key={m.id}>
                 <button
                   type="button"
-                  className="prod-box-item"
+                  id={`${listId}-opt-${idx}`}
+                  role="option"
+                  aria-selected={highlighted === idx}
+                  tabIndex={-1}
+                  className={"prod-box-item" + (highlighted === idx ? " is-highlighted" : "")}
                   onClick={() => onPick(m)}
+                  onMouseMove={() => !already && setHighlighted(idx)}
                   disabled={already}
                 >
                   <div className="prod-box-item__topline">
@@ -164,7 +193,6 @@ export function BoxPicker({
                       loading="lazy"
                     />
                     <span className="prod-box-item__name">{m.species}</span>
-                    {already && <span className="prod-box-item__tag">{t("prod.alreadyIn")}</span>}
                     {ribbonIdx > 0 && (
                       <RibbonIcon
                         index={ribbonIdx}
@@ -172,6 +200,7 @@ export function BoxPicker({
                         title={t("member.ribbon", { hours: RIBBONS[ribbonIdx].hours })}
                       />
                     )}
+                    {already && <span className="prod-box-item__tag">{t("prod.alreadyIn")}</span>}
                     {/* El nivel (único dorado del topline) queda siempre al extremo
                         derecho, independientemente de listón o tag. */}
                     <span className="badge badge--level">
@@ -180,12 +209,24 @@ export function BoxPicker({
                   </div>
 
                   <div className="prod-box-item__config">
-                    <span className="prod-box-item__nature">
-                      {nature && !nature.neutral ? (
-                        <span className="nature-effect">
-                          <span className="up">↑{nature.increased}</span>{" "}
-                          <span className="down">↓{nature.decreased}</span>
-                        </span>
+                    <span className="prod-box-item__nature icon-row">
+                      {nature && !nature.neutral && nature.increased && nature.decreased ? (
+                        <>
+                          <span className="nat-up">↑</span>
+                          <img
+                            className="mini-icon"
+                            src={statIcon(nature.increased)}
+                            alt={natureStat(nature.increased)}
+                            title={natureStat(nature.increased)}
+                          />
+                          <span className="nat-down">↓</span>
+                          <img
+                            className="mini-icon"
+                            src={statIcon(nature.decreased)}
+                            alt={natureStat(nature.decreased)}
+                            title={natureStat(nature.decreased)}
+                          />
+                        </>
                       ) : (
                         <span className="muted">
                           {m.nature ? natureLabel(m.nature) : t("card.noNature")}
@@ -236,8 +277,12 @@ export function BoxPicker({
                       </span>
                     )}
 
-                    <span className="prod-box-item__skill-lv">
-                      {t("prod.skillLevelShort", { level: m.skill_level })}
+                    <span
+                      className="prod-box-item__skill-lv"
+                      title={t("prod.skillLevelShort", { level: m.skill_level })}
+                    >
+                      <IconMoon />
+                      {m.skill_level}
                     </span>
                   </div>
                 </button>

@@ -1509,6 +1509,15 @@ select:focus {
   white-space: nowrap;
 }
 
+/* Naturaleza con íconos de stat, mismo lenguaje que la comparación. */
+.prod-box-item__nature .nat-up {
+  color: var(--up);
+}
+
+.prod-box-item__nature .nat-down {
+  color: var(--down);
+}
+
 /* Ingredientes y sub skills a la misma escala compacta de las prod-cards (26px),
    no la de la Caja (28/30px): así la fila de config queda a una sola altura. */
 .prod-box-item .ss-icon {
@@ -1526,11 +1535,8 @@ select:focus {
   height: 26px;
 }
 
-/* Chips neutros (no son identidad ni acción): atenuados con borde, legibles.
-   El tag "ya en comparación" y el nivel de main skill comparten tratamiento
-   (sin color propio: no compiten con el nivel dorado ni con los tiers). */
-.prod-box-item__tag,
-.prod-box-item__skill-lv {
+/* Chip neutro (no es identidad ni acción): atenuado con borde, legible. */
+.prod-box-item__tag {
   font-size: var(--text-xs);
   color: var(--muted);
   border: 1px solid var(--border);
@@ -1538,9 +1544,27 @@ select:focus {
   padding: 0.05rem 0.4rem;
 }
 
+/* Nivel de main skill: la luna (acento de identidad) + el número, sin chip.
+   Es el único dato "propio" del Pokémon en la fila de config, no un estado. */
 .prod-box-item__skill-lv {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: var(--text-xs);
+  color: var(--moon);
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.prod-box-item__skill-lv svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* Ítem resaltado por teclado (flechas) o por el mouse: mismo acento que el hover. */
+.prod-box-item.is-highlighted:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-dim);
 }
 
 /* Comparación de producción: hasta 5 cards por fila (luego envuelven) */
