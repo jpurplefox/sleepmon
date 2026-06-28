@@ -132,6 +132,7 @@ class DefaultTeamService(TeamService):
         )
         return MemberProduction(
             berries=result.berry_amount,
+            berry_strength=result.berry_strength,
             ingredients=[
                 SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
                 for slot in result.ingredients
@@ -204,6 +205,7 @@ class DefaultTeamService(TeamService):
             seconds_per_help=result.seconds_per_help,
             berry=result.berry.value,
             berry_amount=result.berry_amount,
+            berry_strength=result.berry_strength,
             berry_percentage=result.berry_percentage,
             ingredient_percentage=result.ingredient_percentage,
             skill_percentage=result.skill_percentage,

@@ -10,6 +10,7 @@ import {
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { statIcon } from "../natures";
+import { CHARGE_STRENGTH_ICON } from "../skillIcons";
 import { spriteUrl } from "../sprites";
 import { subSkillIcon } from "../subskills";
 import type { Catalog, MemberInput, Production } from "../types";
@@ -28,7 +29,6 @@ import {
   IconPot,
   IconSaveBox,
   IconSparkle,
-  IconStrength,
 } from "./icons";
 
 const fmt = (n: number) => n.toFixed(2);
@@ -474,6 +474,25 @@ export function ProductionCard({
                 <strong>{fmt(d.berry_amount)}</strong>
                 <Delta value={d.berry_amount} base={base?.berry_amount} />
               </li>
+              {/* Fuerza a Snorlax: DIRECTA por bayas + INDIRECTA por la main skill
+                  (Charge Strength). Se muestra acá, no en el bloque skill. */}
+              <li>
+                <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt={t("card.strength")} title={t("card.strengthTitle")} />
+                <strong>{fmtInt(d.berry_strength + (d.skill_strength ?? 0))}</strong>
+                <Delta
+                  value={d.berry_strength + (d.skill_strength ?? 0)}
+                  base={base ? base.berry_strength + (base.skill_strength ?? 0) : undefined}
+                />
+                {d.skill_strength != null && (
+                  <span className="prod-ing__breakdown" title={t("card.strengthBreakdownTitle")}>
+                    {species && (
+                      <img src={berryIcon(species.berry)} alt="" title={t("card.fromBerriesTitle")} />
+                    )}{" "}
+                    {fmtInt(d.berry_strength)}
+                    <img src={statIcon("Main Skill Chance")} alt="" title={t("card.skillTitle")} /> {fmtInt(d.skill_strength)}
+                  </span>
+                )}
+              </li>
             </ul>
           </div>
 
@@ -540,15 +559,8 @@ export function ProductionCard({
                 </span>
               </div>
             )}
-            {d.skill_strength != null && (
-              <div className="prod-card__line">
-                <span title={t("card.strengthTitle")}>
-                  <IconStrength /> {fmtInt(d.skill_strength)}{" "}
-                  <Delta value={d.skill_strength} base={base?.skill_strength ?? null} />
-                  <span className="muted"> {t("card.strength")}</span>
-                </span>
-              </div>
-            )}
+            {/* La fuerza por Charge Strength se muestra en el bloque de bayas
+                (es aporte de fuerza a Snorlax, junto con la fuerza directa de bayas). */}
             {d.skill_dream_shards != null && (
               <div className="prod-card__line">
                 <span title={t("card.dreamShardsTitle")}>

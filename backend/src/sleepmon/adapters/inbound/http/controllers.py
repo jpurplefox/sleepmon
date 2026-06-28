@@ -35,6 +35,7 @@ def _production_out(production: MemberProduction | None) -> MemberProductionOut 
         return None
     return MemberProductionOut(
         berries=production.berries,
+        berry_strength=production.berry_strength,
         ingredients=[
             SlotProductionOut(ingredient=s.ingredient, amount=s.amount)
             for s in production.ingredients
@@ -154,6 +155,7 @@ class ProductionController(Controller):
             seconds_per_help=result.seconds_per_help,
             berry=result.berry,
             berry_amount=result.berry_amount,
+            berry_strength=result.berry_strength,
             berry_percentage=result.berry_percentage,
             ingredient_percentage=result.ingredient_percentage,
             skill_percentage=result.skill_percentage,

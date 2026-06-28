@@ -44,6 +44,8 @@ export interface Catalog {
 // el listado (/team); ausente en respuestas de un solo miembro.
 export interface MemberProduction {
   berries: number;
+  // Fuerza/día DIRECTA de las bayas (bayas × fuerza por baya del nivel).
+  berry_strength: number;
   ingredients: SlotProduction[];
   ingredients_total: number;
   skill_triggers: number;
@@ -126,6 +128,8 @@ export interface Production {
   seconds_per_help: number;
   berry: string;
   berry_amount: number;
+  // Fuerza/día DIRECTA de las bayas (bayas × fuerza por baya del nivel).
+  berry_strength: number;
   berry_percentage: number;
   ingredient_percentage: number;
   skill_percentage: number;

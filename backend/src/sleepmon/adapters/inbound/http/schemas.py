@@ -21,6 +21,7 @@ class MemberProductionOut(msgspec.Struct):
     """Producción diaria resumida de un miembro (overview de la Caja)."""
 
     berries: float
+    berry_strength: float  # fuerza/día DIRECTA de las bayas
     ingredients: list[SlotProductionOut]
     ingredients_total: float
     skill_triggers: float
@@ -114,6 +115,7 @@ class ProductionOut(msgspec.Struct):
     seconds_per_help: int
     berry: str
     berry_amount: float
+    berry_strength: float  # fuerza/día DIRECTA de las bayas
     berry_percentage: float
     ingredient_percentage: float
     skill_percentage: float

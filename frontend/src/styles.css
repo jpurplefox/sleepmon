@@ -2182,25 +2182,37 @@ select:focus {
   background: var(--accent-dim);
 }
 
-/* Comparación de producción: hasta 5 cards por fila (luego envuelven) */
-/* 5 columnas fijas (el tope del equipo en el juego): cada card mide siempre 1/5
-   del ancho, así las 5 llenan la fila pero agregar una no reacomoda ni cambia el
-   ancho de las que ya están —solo ocupa la siguiente columna libre—. Las
-   columnas sin card quedan vacías a la derecha. align-items: stretch + alturas
-   fijas por sección (más abajo) hacen que todas midan lo mismo de alto. */
+/* Comparación de producción: hasta 5 cards por fila (el tope del equipo en el
+   juego). El nº de columnas baja por breakpoints (5 → 4 → 3) en vez de forzar
+   siempre 5: así la card nunca se angosta por debajo de ~340px, que es lo que
+   necesita la línea de fuerza (total + diferencia + desglose) para entrar sin
+   cortarse. Cada salto fija un nº de columnas (no auto-fill) para que agregar una
+   card ocupe la siguiente columna libre sin reacomodar las demás. align-items:
+   stretch + alturas fijas por sección (más abajo) igualan el alto de todas. */
 .prod-cards {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  /* Base (angosto): las que entren sin bajar de 300px. */
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 0.75rem;
   margin-top: 1.5rem;
   align-items: stretch;
 }
 
-/* En pantallas angostas, 5 columnas fijas quedarían diminutas: ahí dejamos que
-   se acomoden las que entren (sin estirarse al agregar). */
-@media (max-width: 1000px) {
+/* A partir de cada ancho, fijamos columnas de modo que la card quede ≥ ~340px:
+   3 cols desde 1100px, 4 desde 1450px, 5 desde 1800px (tope). */
+@media (min-width: 1100px) {
   .prod-cards {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1450px) {
+  .prod-cards {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1800px) {
+  .prod-cards {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
