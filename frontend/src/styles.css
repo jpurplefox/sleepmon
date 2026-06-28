@@ -1421,7 +1421,10 @@ select:focus {
 
 .box-entry {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1.6fr) auto;
+  /* identidad · config · producción (bayas+ingredientes) · skill · acciones.
+     La columna de skill es `auto`: misma ancho/posición en todas las filas, así
+     los disparos quedan alineados sin importar cuántos ingredientes tenga cada uno. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1.6fr) auto auto;
   align-items: center;
   gap: 1rem 1.25rem;
 }
@@ -1492,6 +1495,16 @@ select:focus {
   flex-shrink: 0;
 }
 
+/* Zona 4 — Skill: disparos + aporte, apilados; en su propia columna del grid para
+   alinear los disparos entre filas. */
+.box-entry__skill {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
 .box-entry__metric {
   display: inline-flex;
   align-items: center;
@@ -1544,7 +1557,6 @@ select:focus {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  margin-left: 0.4rem;
 }
 
 .box-entry__skill-yield .mini-icon {

@@ -175,7 +175,9 @@ function skillCategory(skill: string): SkillCategory {
   if (drawsIngredients(skill) || magnetsIngredients(skill)) return "ingredients";
   if (restoresTeamEnergy(skill) || chargesSelfEnergy(skill) || cheersRandomEnergy(skill))
     return "energy";
-  if (powersUpCooking(skill) || boostsTastyChance(skill)) return "cooking";
+  // Cocina: Cooking Power-Up, Cooking Assist (Bulk Up) y Tasty Chance.
+  if (skill.startsWith("Cooking") || powersUpCooking(skill) || boostsTastyChance(skill))
+    return "cooking";
   if (contributesBerryRole(skill)) return "berry";
   return "others";
 }

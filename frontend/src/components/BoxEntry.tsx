@@ -8,7 +8,8 @@ import { ingredientIcon } from "../ingredients";
 import { statIcon } from "../natures";
 import { spriteUrl } from "../sprites";
 import type { Member, Nature, Species } from "../types";
-import { IconMagnifier, IconMore, IconPot, IconSparkle, IconStrength } from "./icons";
+import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
+import { IconMagnifier, IconMore, IconSparkle } from "./icons";
 import { MemberConfig } from "./MemberConfig";
 import { RibbonIcon } from "./RibbonIcon";
 
@@ -126,11 +127,11 @@ export function BoxEntry({
     if (prod.skill_random_energy != null)
       return { icon: img(statIcon("Energy Recovery")), text: fmt(prod.skill_random_energy), title: t("card.randomEnergy") };
     if (prod.skill_strength != null)
-      return { icon: <IconStrength aria-hidden="true" />, text: fmtInt(prod.skill_strength), title: t("card.strengthTitle") };
+      return { icon: img(CHARGE_STRENGTH_ICON), text: fmtInt(prod.skill_strength), title: t("card.strengthTitle") };
     if (prod.skill_dream_shards != null)
       return { icon: img("/shard.png"), text: fmtInt(prod.skill_dream_shards), title: t("card.dreamShardsTitle") };
     if (prod.skill_cooking_ingredients != null)
-      return { icon: <IconPot aria-hidden="true" />, text: fmt(prod.skill_cooking_ingredients), title: t("card.cookingTitle") };
+      return { icon: img(POT_EXPANSION_ICON), text: fmt(prod.skill_cooking_ingredients), title: t("card.cookingTitle") };
     if (prod.skill_tasty_chance != null)
       return { icon: img("/extra-tasty.png"), text: `+${fmtInt(prod.skill_tasty_chance)}%`, title: t("card.extraTastyTitle") };
     if (prod.skill_extra_helpful != null)
@@ -251,7 +252,12 @@ export function BoxEntry({
             </>
           )}
         </div>
+      </div>
 
+      {/* Zona 4 — Skill: disparos + aporte de la skill. En su propia columna (a la
+          derecha) para que quede alineada entre Pokémon, sin importar cuántos
+          ingredientes tenga cada uno. */}
+      <div className="box-entry__skill" role="group" aria-label={t("box.triggersTitle")}>
         <div className="box-entry__metric" title={t("box.triggersTitle")}>
           <IconSparkle aria-hidden="true" />
           <span className="box-entry__metric-value">
@@ -262,16 +268,15 @@ export function BoxEntry({
               value: prod ? fmt(prod.skill_triggers) : t("common.dash"),
             })}
           </span>
-          {/* Aporte de la main skill, junto a sus disparos: energía, fuerza,
-              ingredientes al azar, etc. según la skill de la especie. */}
-          {skillYield && (
-            <span className="box-entry__skill-yield" title={skillYield.title}>
-              {skillYield.icon}
-              <span className="box-entry__metric-value">{skillYield.text}</span>
-              <span className="sr-only">{`${skillYield.text} — ${skillYield.title}`}</span>
-            </span>
-          )}
         </div>
+        {/* Aporte de la main skill: energía, fuerza, ingredientes al azar, etc. */}
+        {skillYield && (
+          <span className="box-entry__skill-yield" title={skillYield.title}>
+            {skillYield.icon}
+            <span className="box-entry__metric-value">{skillYield.text}</span>
+            <span className="sr-only">{`${skillYield.text} — ${skillYield.title}`}</span>
+          </span>
+        )}
       </div>
 
       {/* Acciones: overflow "···" con Comparar (primero) + Editar/Eliminar. */}
