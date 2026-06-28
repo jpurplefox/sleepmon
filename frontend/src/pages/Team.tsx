@@ -79,7 +79,12 @@ function translateKeys(
   return out;
 }
 
-export function Team() {
+interface TeamProps {
+  // Abre Comparación con ese Pokémon como base (lo cablea App).
+  onCompare: (memberId: string) => void;
+}
+
+export function Team({ onCompare }: TeamProps) {
   const qc = useQueryClient();
   const { t, ingredient, subSkill, nature } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
@@ -237,6 +242,7 @@ export function Team() {
               tierBySubSkill={(name) => tierBySubSkill.get(name)}
               onEdit={() => openEdit(m)}
               onDelete={(id) => remove.mutate(id)}
+              onCompare={() => onCompare(m.id)}
             />
           ))}
         </div>

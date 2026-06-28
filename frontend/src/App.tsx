@@ -17,7 +17,14 @@ const TABS: Tab[] = ["team", "production"];
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("team");
+  // "Comparar" desde la Caja: lleva a Comparación con ese Pokémon como base.
+  const [compareBase, setCompareBase] = useState<string | null>(null);
   const { t } = useI18n();
+
+  const openCompare = (memberId: string) => {
+    setCompareBase(memberId);
+    setTab("production");
+  };
 
   // Navegación entre tabs con flechas izquierda/derecha (patrón ARIA de tablist).
   const onTabKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -67,7 +74,7 @@ export default function App() {
       </div>
       {tab === "team" ? (
         <div role="tabpanel" id="tabpanel-team" aria-labelledby="tab-team" tabIndex={0}>
-          <Team />
+          <Team onCompare={openCompare} />
         </div>
       ) : (
         <div
@@ -76,7 +83,7 @@ export default function App() {
           aria-labelledby="tab-production"
           tabIndex={0}
         >
-          <Production />
+          <Production baseMemberId={compareBase} onBaseConsumed={() => setCompareBase(null)} />
         </div>
       )}
       </ErrorBoundary>

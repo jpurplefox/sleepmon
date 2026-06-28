@@ -1,5 +1,5 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { api } from "../api/client";
 import { BoxPicker } from "../components/BoxPicker";
@@ -24,7 +24,14 @@ type CompareEntry = {
   save?: SaveStatus;
 };
 
-export function Production() {
+interface ProductionProps {
+  // Si viene seteado (desde "Comparar" en la Caja), se agrega ese Pokémon como
+  // base (primera card) al abrir Comparación; luego se limpia con onBaseConsumed.
+  baseMemberId?: string | null;
+  onBaseConsumed?: () => void;
+}
+
+export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {}) {
   const { t } = useI18n();
   const qc = useQueryClient();
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
@@ -146,6 +153,39 @@ export function Production() {
     setModal(null);
     setEditIndex(null);
   };
+
+  // "Comparar" desde la Caja: agrega el Pokémon indicado como base (primera card).
+  useEffect(() => {
+    if (!baseMemberId || !members.data || !catalog.data) return;
+    const m = members.data.find((x) => x.id === baseMemberId);
+    if (!m) {
+      onBaseConsumed?.();
+      return;
+    }
+    const species = catalog.data.species.find((s) => s.name === m.species);
+    if (!species || species.ingredient_slots.length === 0) {
+      setNotice(t("prod.speciesNotInCatalog", { species: m.species }));
+      onBaseConsumed?.();
+      return;
+    }
+    const slots = species.ingredient_slots;
+    const config: MemberInput = {
+      species: m.species,
+      level: m.level,
+      nature: m.nature,
+      ingredients: slots.map((opts, i) => m.ingredients[i] ?? opts[0] ?? ""),
+      sub_skills: m.sub_skills,
+      ribbon: m.ribbon,
+      skill_level: m.skill_level,
+    };
+    setNotice(null);
+    setEntries((prev) => {
+      if (prev.some((e) => e.sourceId === m.id) || prev.length >= MAX_COMPARE) return prev;
+      return [makeEntry(config, m.id), ...prev]; // como base
+    });
+    onBaseConsumed?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [baseMemberId, members.data, catalog.data]);
 
   const openAdd = (which: "form" | "box") => {
     setEditIndex(null);

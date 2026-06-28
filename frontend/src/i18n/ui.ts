@@ -59,6 +59,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.removeFilter": "Quitar filtro {filter}",
     "box.showing": "({shown} de {total})",
     "box.noMatch": "Ningún Pokémon coincide con los filtros.",
+    "box.compare": "Comparar",
+    "box.moreActions": "Más acciones para {species}",
     // Página Comparación
     "prod.title": "Comparación",
     "prod.subtitle":
@@ -290,6 +292,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.removeFilter": "Remove filter {filter}",
     "box.showing": "({shown} of {total})",
     "box.noMatch": "No Pokémon match the filters.",
+    "box.compare": "Compare",
+    "box.moreActions": "More actions for {species}",
     // Comparison page
     "prod.title": "Comparison",
     "prod.subtitle":

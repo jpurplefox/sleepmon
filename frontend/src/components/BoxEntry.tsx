@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { berryIcon } from "../berries";
 import { RIBBONS } from "../constants";
@@ -22,18 +22,29 @@ interface Props {
   tierBySubSkill: (name: string) => string | undefined;
   onEdit: () => void;
   onDelete: (id: string) => void;
+  onCompare: () => void;
 }
 
 // Entrada de overview de la Caja: una card por Pokémon en tres zonas (identidad ·
 // config · producción). Reemplaza a MemberCard. La config reusa el mismo lenguaje
 // visual que el picker (MemberConfig). Las tres métricas de producción son de
 // igual jerarquía y van en color neutro; el único dorado es el badge de nivel.
-export function BoxEntry({ member, species, nature, tierBySubSkill, onEdit, onDelete }: Props) {
+export function BoxEntry({
+  member,
+  species,
+  nature,
+  tierBySubSkill,
+  onEdit,
+  onDelete,
+  onCompare,
+}: Props) {
   const { t, berry, ingredient } = useI18n();
-  // Confirmación de borrado en dos pasos (igual que MemberCard): el primer click
-  // pide confirmar; a los ~3s sin confirmar vuelve al estado normal. La
-  // reubicación de las acciones es una fase posterior.
+  // Editar/Eliminar viven en un menú overflow "···" (no botones siempre visibles:
+  // con muchas filas saturan y exponen el borrado). Comparar es acción rápida y
+  // visible. El borrado se confirma en dos pasos dentro del menú.
+  const [menuOpen, setMenuOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!confirming) return;
@@ -41,9 +52,36 @@ export function BoxEntry({ member, species, nature, tierBySubSkill, onEdit, onDe
     return () => clearTimeout(timer);
   }, [confirming]);
 
+  // Cerrar el menú al click afuera o con Escape.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+        setConfirming(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        setConfirming(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
+
   const handleDelete = () => {
-    if (confirming) onDelete(member.id);
-    else setConfirming(true);
+    if (confirming) {
+      onDelete(member.id);
+      setMenuOpen(false);
+    } else {
+      setConfirming(true);
+    }
   };
 
   const prod = member.production;
@@ -156,22 +194,51 @@ export function BoxEntry({ member, species, nature, tierBySubSkill, onEdit, onDe
         </div>
       </div>
 
-      {/* Acciones: se conservan como en MemberCard (su reubicación es otra fase). */}
+      {/* Acciones: Comparar (rápida, acento) + overflow "···" con Editar/Eliminar. */}
       <div className="box-entry__actions">
-        <button className="btn btn--ghost btn--edit" onClick={onEdit}>
-          {t("common.edit")}
+        <button className="btn btn--ghost box-entry__compare" onClick={onCompare}>
+          {t("box.compare")}
         </button>
-        <button
-          className="btn btn--ghost btn--danger"
-          onClick={handleDelete}
-          aria-label={
-            confirming
-              ? t("member.deleteConfirmAria", { species: member.species })
-              : t("member.deleteAria", { species: member.species })
-          }
-        >
-          {confirming ? t("member.confirm") : t("member.delete")}
-        </button>
+        <div className="box-entry__menu" ref={menuRef}>
+          <button
+            type="button"
+            className="icon-btn box-entry__menu-btn"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            aria-label={t("box.moreActions", { species: member.species })}
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            ⋯
+          </button>
+          {menuOpen && (
+            <div className="box-entry__menu-pop" role="menu">
+              <button
+                type="button"
+                role="menuitem"
+                className="box-entry__menu-item"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onEdit();
+                }}
+              >
+                {t("common.edit")}
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                className="box-entry__menu-item box-entry__menu-item--danger"
+                onClick={handleDelete}
+                aria-label={
+                  confirming
+                    ? t("member.deleteConfirmAria", { species: member.species })
+                    : t("member.deleteAria", { species: member.species })
+                }
+              >
+                {confirming ? t("member.confirm") : t("member.delete")}
+              </button>
+            </div>
+          )}
+        </div>
         <span className="sr-only" role="status" aria-live="polite">
           {confirming ? t("member.deleteConfirmStatus", { species: member.species }) : ""}
         </span>

@@ -1184,13 +1184,59 @@ select:focus {
 
 .box-entry__actions {
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.4rem;
   flex-shrink: 0;
 }
 
-.box-entry__actions .btn--edit:hover {
+/* Comparar: acción rápida y visible, con acento funcional (índigo). */
+.box-entry__compare {
   color: var(--accent);
   border-color: var(--accent);
+}
+
+/* Menú overflow "···" para editar/eliminar. */
+.box-entry__menu {
+  position: relative;
+}
+
+.box-entry__menu-btn {
+  font-size: var(--text-lg);
+  line-height: 1;
+}
+
+.box-entry__menu-pop {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-width: 9rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-dropdown);
+  padding: 0.25rem;
+}
+
+.box-entry__menu-item {
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: var(--text-sm);
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+
+.box-entry__menu-item:hover {
+  background: var(--surface);
+}
+
+.box-entry__menu-item--danger:hover {
+  color: var(--error);
 }
 
 .member-card__head {
