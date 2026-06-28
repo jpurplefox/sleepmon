@@ -28,6 +28,15 @@ class MemberProductionOut(msgspec.Struct):
     # azar (Ingredient Magnet). Vacío/None si la skill no produce ingredientes.
     skill_ingredients: list[SlotProductionOut]
     skill_ingredient_total: float | None
+    # Otras salidas de la main skill (una por especie; el resto None).
+    skill_energy: float | None
+    skill_cooking_ingredients: float | None
+    skill_strength: float | None
+    skill_self_energy: float | None
+    skill_dream_shards: float | None
+    skill_tasty_chance: float | None
+    skill_extra_helpful: float | None
+    skill_random_energy: float | None
 
 
 class MemberOut(msgspec.Struct):

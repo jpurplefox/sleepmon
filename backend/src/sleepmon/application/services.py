@@ -143,6 +143,14 @@ class DefaultTeamService(TeamService):
                 for slot in result.skill_ingredients
             ],
             skill_ingredient_total=result.skill_ingredient_total,
+            skill_energy=result.skill_energy,
+            skill_cooking_ingredients=result.skill_cooking_ingredients,
+            skill_strength=result.skill_strength,
+            skill_self_energy=result.skill_self_energy,
+            skill_dream_shards=result.skill_dream_shards,
+            skill_tasty_chance=result.skill_tasty_chance,
+            skill_extra_helpful=result.skill_extra_helpful,
+            skill_random_energy=result.skill_random_energy,
         )
 
     def update_member(self, member_id: UUID, data: TeamMemberInput) -> TeamMember:

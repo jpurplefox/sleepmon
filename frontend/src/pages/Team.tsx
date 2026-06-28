@@ -27,8 +27,15 @@ function sortAndFilter(
 ): Member[] {
   const matches = (m: Member): boolean => {
     const sp = speciesByName.get(m.species);
-    if (filters.type && sp?.type !== filters.type) return false;
-    if (filters.ingredient && !m.ingredients.includes(filters.ingredient)) return false;
+    // Tipo/baya e ingrediente son multi-selección: OR dentro de la dimensión
+    // (matchea si el array está vacío o si hay intersección), AND entre dimensiones.
+    if (filters.type.length > 0 && !(sp && filters.type.includes(sp.type))) return false;
+    if (
+      filters.ingredient.length > 0 &&
+      !filters.ingredient.some((ing) => m.ingredients.includes(ing))
+    )
+      return false;
+    // Skill y especialidad siguen siendo single-select (string).
     if (filters.skill && sp?.main_skill !== filters.skill) return false;
     if (filters.specialty && sp?.specialty !== filters.specialty) return false;
     return true;
@@ -146,9 +153,33 @@ export function Team({ onCompare }: TeamProps) {
   const allMembers = members.data ?? [];
   const visible = sortAndFilter(allMembers, speciesByName, sortKey, sortDir, filters);
   const options = filterOptions(catalog.data);
-  const hasFilters = Object.values(filters).some((v) => v !== "");
-  const setFilter = (key: keyof BoxFilters, value: string) =>
+  // Hay filtros activos si alguna dimensión single tiene valor o alguna multi
+  // (arrays) tiene al menos un elemento.
+  const hasFilters =
+    filters.skill !== "" ||
+    filters.specialty !== "" ||
+    filters.type.length > 0 ||
+    filters.ingredient.length > 0;
+  // Single-select (skill / specialty): set directo.
+  const setFilter = (key: "skill" | "specialty", value: string) =>
     setFilters((f) => ({ ...f, [key]: value }));
+  // Multi-select (type / ingredient): toggle del valor dentro del array.
+  const toggleFilter = (key: "type" | "ingredient", value: string) =>
+    setFilters((f) => {
+      const current = f[key];
+      const next = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+      return { ...f, [key]: next };
+    });
+  // Quita un valor concreto de cualquier dimensión (para el × de cada chip).
+  const removeFilter = (key: keyof BoxFilters, value: string) =>
+    setFilters((f) => {
+      if (key === "type" || key === "ingredient") {
+        return { ...f, [key]: f[key].filter((v) => v !== value) };
+      }
+      return { ...f, [key]: "" };
+    });
 
   return (
     <div className="layout layout--wide">
@@ -204,6 +235,8 @@ export function Team({ onCompare }: TeamProps) {
             onToggleDir={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
             filters={filters}
             onFilter={setFilter}
+            onToggle={toggleFilter}
+            onRemove={removeFilter}
             onClear={() => setFilters(EMPTY_FILTERS)}
             options={options}
             catalog={catalog.data}

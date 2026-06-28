@@ -51,6 +51,15 @@ export interface MemberProduction {
   // Crustle) y/o total al azar (Ingredient Magnet, p. ej. Plusle).
   skill_ingredients: SlotProduction[];
   skill_ingredient_total: number | null;
+  // Otras salidas de la main skill (una por especie según su tipo; el resto null).
+  skill_energy: number | null;
+  skill_cooking_ingredients: number | null;
+  skill_strength: number | null;
+  skill_self_energy: number | null;
+  skill_dream_shards: number | null;
+  skill_tasty_chance: number | null;
+  skill_extra_helpful: number | null;
+  skill_random_energy: number | null;
 }
 
 export interface Member {

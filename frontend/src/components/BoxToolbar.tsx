@@ -5,6 +5,16 @@ import { berryIcon } from "../berries";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { mainSkillIcon } from "../skillIcons";
+import {
+  boostsTastyChance,
+  chargesSelfEnergy,
+  cheersRandomEnergy,
+  contributesBerryRole,
+  drawsIngredients,
+  magnetsIngredients,
+  powersUpCooking,
+  restoresTeamEnergy,
+} from "../skills";
 import type { Catalog } from "../types";
 import { IconChevronDown } from "./icons";
 
@@ -12,13 +22,15 @@ export type SortKey = "dex" | "level" | "berries" | "ingredients";
 export type SortDir = "asc" | "desc";
 
 export interface BoxFilters {
-  type: string;
-  ingredient: string;
+  // Tipo/baya e ingrediente son multi-selección (OR dentro de la dimensión).
+  type: string[];
+  ingredient: string[];
+  // Skill y especialidad siguen siendo single-select.
   skill: string;
   specialty: string;
 }
 
-export const EMPTY_FILTERS: BoxFilters = { type: "", ingredient: "", skill: "", specialty: "" };
+export const EMPTY_FILTERS: BoxFilters = { type: [], ingredient: [], skill: "", specialty: "" };
 
 interface Options {
   types: string[];
@@ -33,7 +45,12 @@ interface Props {
   onSortKey: (k: SortKey) => void;
   onToggleDir: () => void;
   filters: BoxFilters;
-  onFilter: (key: keyof BoxFilters, value: string) => void;
+  // Single-select (skill / specialty).
+  onFilter: (key: "skill" | "specialty", value: string) => void;
+  // Multi-select toggle (type / ingredient).
+  onToggle: (key: "type" | "ingredient", value: string) => void;
+  // Quita un valor concreto de cualquier dimensión (× de cada chip).
+  onRemove: (key: keyof BoxFilters, value: string) => void;
   onClear: () => void;
   options: Options;
   // El catálogo da la baya de cada tipo (1:1) y el ícono de cada ingrediente.
@@ -114,6 +131,7 @@ function FilterPopover({
 // Navegación por teclado dentro de un contenedor de [role="option"]: flechas
 // mueven el foco al option anterior/siguiente (roving simple, recorriendo el orden
 // del DOM). Sirve tanto para la grilla de íconos como para las listas verticales.
+// Salta cualquier elemento que no sea [role="option"] (p. ej. encabezados de grupo).
 function gridKeyDown(e: React.KeyboardEvent<HTMLElement>) {
   if (!["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) return;
   const grid = e.currentTarget;
@@ -141,12 +159,35 @@ function SkillIconView({ skill }: { skill: string | undefined }) {
   );
 }
 
+// Subcategorías del filtro de skill, en orden de presentación. Cada skill cae en
+// la PRIMERA categoría cuyo predicado matchea; "others" recoge el resto.
+type SkillCategory = "ingredients" | "energy" | "cooking" | "berry" | "others";
+
+const SKILL_CATEGORY_ORDER: SkillCategory[] = [
+  "ingredients",
+  "energy",
+  "cooking",
+  "berry",
+  "others",
+];
+
+function skillCategory(skill: string): SkillCategory {
+  if (drawsIngredients(skill) || magnetsIngredients(skill)) return "ingredients";
+  if (restoresTeamEnergy(skill) || chargesSelfEnergy(skill) || cheersRandomEnergy(skill))
+    return "energy";
+  if (powersUpCooking(skill) || boostsTastyChance(skill)) return "cooking";
+  if (contributesBerryRole(skill)) return "berry";
+  return "others";
+}
+
 // Barra de orden y filtros del overview de la Caja. Presentacional: el estado vive
 // en la página. Todos los desplegables (orden, tipo/baya, ingrediente, skill) usan
 // el mismo FilterPopover para que el panel y el scrollbar matcheen: orden y skill
 // son listas de texto, tipo/baya e ingrediente grillas de íconos. Orden lleva un
-// toggle de dirección conectado a la derecha. Filtros AND, vacíos por defecto;
-// especialidad como toggles. Chips de los filtros activos con × y "Limpiar".
+// toggle de dirección conectado a la derecha (control segmentado). Tipo/baya e
+// ingrediente son multi-select (OR dentro, AND entre dimensiones); skill agrupa sus
+// opciones por subcategoría. Filtros vacíos por defecto; especialidad como toggles.
+// Chips: uno por cada valor activo, con × que quita solo ese valor; "Limpiar" todo.
 export function BoxToolbar({
   sortKey,
   sortDir,
@@ -154,6 +195,8 @@ export function BoxToolbar({
   onToggleDir,
   filters,
   onFilter,
+  onToggle,
+  onRemove,
   onClear,
   options,
   catalog,
@@ -182,26 +225,46 @@ export function BoxToolbar({
   }
   const typeList = options.types.map((tp) => ({ type: tp, berry: typeBerry.get(tp) ?? "" }));
 
-  // Etiqueta legible de cada filtro y traductor de sus valores, para los chips.
-  const dims: {
-    key: keyof BoxFilters;
-    label: string;
-    tr: (v: string) => string;
-    icon?: (v: string) => string;
-  }[] = [
-    { key: "type", label: t("box.filterType"), tr: type, icon: (v) => berryIcon(typeBerry.get(v) ?? "") },
-    { key: "ingredient", label: t("box.filterIngredient"), tr: ingredient, icon: ingredientIcon },
-    { key: "skill", label: t("box.filterSkill"), tr: mainSkill },
-    { key: "specialty", label: t("box.filterSpecialty"), tr: specialty },
+  // Skills agrupadas por subcategoría, respetando el orden de SKILL_CATEGORY_ORDER y,
+  // dentro de cada grupo, el orden de options.skills. Solo grupos no vacíos.
+  const skillGroups = SKILL_CATEGORY_ORDER.map((cat) => ({
+    cat,
+    label: t(`box.skillCat.${cat}`),
+    skills: options.skills.filter((sk) => skillCategory(sk) === cat),
+  })).filter((g) => g.skills.length > 0);
+
+  // Chips: un descriptor por cada valor activo de cada dimensión.
+  type Chip = { key: keyof BoxFilters; value: string; label: string; icon?: string };
+  const chips: Chip[] = [
+    ...filters.type.map(
+      (v): Chip => ({
+        key: "type",
+        value: v,
+        label: `${t("box.filterType")}: ${type(v)}`,
+        icon: berryIcon(typeBerry.get(v) ?? ""),
+      }),
+    ),
+    ...filters.ingredient.map(
+      (v): Chip => ({
+        key: "ingredient",
+        value: v,
+        label: `${t("box.filterIngredient")}: ${ingredient(v)}`,
+        icon: ingredientIcon(v),
+      }),
+    ),
+    ...(filters.skill
+      ? [{ key: "skill" as const, value: filters.skill, label: `${t("box.filterSkill")}: ${mainSkill(filters.skill)}` }]
+      : []),
+    ...(filters.specialty
+      ? [
+          {
+            key: "specialty" as const,
+            value: filters.specialty,
+            label: `${t("box.filterSpecialty")}: ${specialty(filters.specialty)}`,
+          },
+        ]
+      : []),
   ];
-
-  const active = dims.filter((d) => filters[d.key] !== "");
-
-  const pick = (key: keyof BoxFilters, value: string) => {
-    // Toggle: re-elegir el valor activo lo limpia.
-    onFilter(key, filters[key] === value ? "" : value);
-    setOpenPanel(null);
-  };
 
   return (
     <div className="box-toolbar">
@@ -251,26 +314,35 @@ export function BoxToolbar({
       </div>
 
       <div className="box-toolbar__filters">
-        {/* Tipo / Baya: un solo control (1:1). Trigger con ícono de baya del tipo
-            activo; panel con grilla de íconos de baya. */}
+        {/* Tipo / Baya: multi-select (1:1 tipo↔baya). Trigger con conteo o íconos
+            de las bayas elegidas; panel grilla de íconos, click toggea y no cierra. */}
         <FilterPopover
           open={openPanel === "type"}
           onOpenChange={(o) => setOpenPanel(o ? "type" : null)}
           triggerLabel={t("box.filterTypeOpen")}
           triggerContent={
-            filters.type ? (
+            filters.type.length > 0 ? (
               <span className="filter-btn__value">
-                <img className="mini-icon" src={berryIcon(typeBerry.get(filters.type) ?? "")} alt="" />
-                <span>{type(filters.type)}</span>
+                <span className="filter-btn__icons">
+                  {filters.type.slice(0, 3).map((tp) => (
+                    <img
+                      key={tp}
+                      className="mini-icon"
+                      src={berryIcon(typeBerry.get(tp) ?? "")}
+                      alt=""
+                    />
+                  ))}
+                </span>
+                <span>{t("box.filterType")} ({filters.type.length})</span>
               </span>
             ) : (
               <span className="filter-btn__placeholder">{t("box.filterTypePlaceholder")}</span>
             )
           }
         >
-          <div className="filter-grid" role="listbox" aria-label={t("box.filterType")} onKeyDown={gridKeyDown}>
+          <div className="filter-grid" role="listbox" aria-multiselectable="true" aria-label={t("box.filterType")} onKeyDown={gridKeyDown}>
             {typeList.map(({ type: tp, berry }) => {
-              const selected = filters.type === tp;
+              const selected = filters.type.includes(tp);
               return (
                 <button
                   key={tp}
@@ -279,7 +351,7 @@ export function BoxToolbar({
                   aria-selected={selected}
                   className={"filter-grid__item" + (selected ? " is-selected" : "")}
                   title={type(tp)}
-                  onClick={() => pick("type", tp)}
+                  onClick={() => onToggle("type", tp)}
                 >
                   <img className="mini-icon" src={berryIcon(berry)} alt="" />
                   <span className="filter-grid__label">{type(tp)}</span>
@@ -289,16 +361,23 @@ export function BoxToolbar({
           </div>
         </FilterPopover>
 
-        {/* Ingrediente: trigger con ícono; panel con grilla de íconos de ingrediente. */}
+        {/* Ingrediente: multi-select. Trigger con conteo o íconos; panel grilla,
+            click toggea y no cierra. */}
         <FilterPopover
           open={openPanel === "ingredient"}
           onOpenChange={(o) => setOpenPanel(o ? "ingredient" : null)}
           triggerLabel={t("box.filterIngredientOpen")}
           triggerContent={
-            filters.ingredient ? (
+            filters.ingredient.length > 0 ? (
               <span className="filter-btn__value">
-                <img className="mini-icon" src={ingredientIcon(filters.ingredient)} alt="" />
-                <span>{ingredient(filters.ingredient)}</span>
+                <span className="filter-btn__icons">
+                  {filters.ingredient.slice(0, 3).map((ing) => (
+                    <img key={ing} className="mini-icon" src={ingredientIcon(ing)} alt="" />
+                  ))}
+                </span>
+                <span>
+                  {t("box.filterIngredient")} ({filters.ingredient.length})
+                </span>
               </span>
             ) : (
               <span className="filter-btn__placeholder">{t("box.filterIngredientPlaceholder")}</span>
@@ -308,11 +387,12 @@ export function BoxToolbar({
           <div
             className="filter-grid"
             role="listbox"
+            aria-multiselectable="true"
             aria-label={t("box.filterIngredient")}
             onKeyDown={gridKeyDown}
           >
             {options.ingredients.map((ing) => {
-              const selected = filters.ingredient === ing;
+              const selected = filters.ingredient.includes(ing);
               return (
                 <button
                   key={ing}
@@ -321,7 +401,7 @@ export function BoxToolbar({
                   aria-selected={selected}
                   className={"filter-grid__item" + (selected ? " is-selected" : "")}
                   title={ingredient(ing)}
-                  onClick={() => pick("ingredient", ing)}
+                  onClick={() => onToggle("ingredient", ing)}
                 >
                   <img className="mini-icon" src={ingredientIcon(ing)} alt="" />
                   <span className="filter-grid__label">{ingredient(ing)}</span>
@@ -331,9 +411,9 @@ export function BoxToolbar({
           </div>
         </FilterPopover>
 
-        {/* Skill: dropdown custom (mismo shell/scrollbar que tipo/ingrediente) con
-            lista vertical de [ícono + nombre]. El trigger muestra el ícono de la
-            skill activa; re-elegir el valor activo lo limpia (toggle). */}
+        {/* Skill: dropdown custom single-select con las opciones agrupadas por
+            subcategoría (encabezados no seleccionables). El trigger muestra el ícono
+            de la skill activa; re-elegir el valor activo lo limpia (toggle). */}
         <FilterPopover
           open={openPanel === "skill"}
           onOpenChange={(o) => setOpenPanel(o ? "skill" : null)}
@@ -353,23 +433,34 @@ export function BoxToolbar({
           }
         >
           <div className="filter-list" role="listbox" aria-label={t("box.filterSkill")} onKeyDown={gridKeyDown}>
-            {options.skills.map((sk) => {
-              const selected = filters.skill === sk;
-              return (
-                <button
-                  key={sk}
-                  type="button"
-                  role="option"
-                  aria-selected={selected}
-                  className={"filter-list__item" + (selected ? " is-selected" : "")}
-                  title={mainSkill(sk)}
-                  onClick={() => pick("skill", sk)}
-                >
-                  <SkillIconView skill={sk} />
-                  <span className="filter-list__label">{mainSkill(sk)}</span>
-                </button>
-              );
-            })}
+            {skillGroups.map((group) => (
+              <div key={group.cat} role="group" aria-label={group.label} className="filter-list__group">
+                <div className="filter-list__heading" role="presentation">
+                  {group.label}
+                </div>
+                {group.skills.map((sk) => {
+                  const selected = filters.skill === sk;
+                  return (
+                    <button
+                      key={sk}
+                      type="button"
+                      role="option"
+                      aria-selected={selected}
+                      className={"filter-list__item" + (selected ? " is-selected" : "")}
+                      title={mainSkill(sk)}
+                      onClick={() => {
+                        // Toggle: re-elegir el valor activo lo limpia.
+                        onFilter("skill", selected ? "" : sk);
+                        setOpenPanel(null);
+                      }}
+                    >
+                      <SkillIconView skill={sk} />
+                      <span className="filter-list__label">{mainSkill(sk)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </FilterPopover>
 
@@ -392,20 +483,18 @@ export function BoxToolbar({
         </div>
       </div>
 
-      {active.length > 0 && (
+      {chips.length > 0 && (
         <div className="box-toolbar__active" role="group" aria-label="Filtros activos">
-          {active.map((d) => (
+          {chips.map((c) => (
             <button
-              key={d.key}
+              key={`${c.key}:${c.value}`}
               type="button"
               className="box-filter-chip"
-              onClick={() => onFilter(d.key, "")}
-              aria-label={t("box.removeFilter", { filter: `${d.label}: ${d.tr(filters[d.key])}` })}
+              onClick={() => onRemove(c.key, c.value)}
+              aria-label={t("box.removeFilter", { filter: c.label })}
             >
-              {d.icon && (
-                <img className="box-filter-chip__icon" src={d.icon(filters[d.key])} alt="" />
-              )}
-              {d.label}: {d.tr(filters[d.key])} <span aria-hidden="true">×</span>
+              {c.icon && <img className="box-filter-chip__icon" src={c.icon} alt="" />}
+              {c.label} <span aria-hidden="true">×</span>
             </button>
           ))}
           <button type="button" className="btn btn--ghost box-toolbar__clear" onClick={onClear}>

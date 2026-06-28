@@ -46,6 +46,14 @@ def _production_out(production: MemberProduction | None) -> MemberProductionOut 
             for s in production.skill_ingredients
         ],
         skill_ingredient_total=production.skill_ingredient_total,
+        skill_energy=production.skill_energy,
+        skill_cooking_ingredients=production.skill_cooking_ingredients,
+        skill_strength=production.skill_strength,
+        skill_self_energy=production.skill_self_energy,
+        skill_dream_shards=production.skill_dream_shards,
+        skill_tasty_chance=production.skill_tasty_chance,
+        skill_extra_helpful=production.skill_extra_helpful,
+        skill_random_energy=production.skill_random_energy,
     )
 
 

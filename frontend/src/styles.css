@@ -1089,14 +1089,22 @@ select:focus {
 }
 
 /* Orden: select + dirección como un único control segmentado (pegados, borde
-   compartido). */
+   compartido, mismo alto, sin gap). El trigger del campo es un FilterPopover; el
+   botón de dirección va pegado a su derecha. */
 .sort-control {
   display: inline-flex;
   align-items: stretch;
 }
 
+/* El wrapper del FilterPopover (.filter-control) debe estirarse a lo alto del
+   control segmentado para que el trigger y el botón de dirección queden a la misma
+   altura, y su trigger ocupar todo el alto disponible. */
+.sort-control .filter-control {
+  align-items: stretch;
+}
+
 /* El trigger del dropdown de orden cuadra su lado derecho para pegarse al botón
-   de dirección (control segmentado). */
+   de dirección (esquinas internas planas, sin gap). */
 .sort-control__trigger {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
@@ -1108,11 +1116,20 @@ select:focus {
   padding: 0 0.6rem;
   background: var(--surface-2);
   border: 1px solid var(--border);
+  /* Comparte el borde con el trigger: sin borde izquierdo propio para no doblarlo. */
   border-left: none;
   border-top-right-radius: var(--r-md);
   border-bottom-right-radius: var(--r-md);
   color: var(--text);
   cursor: pointer;
+}
+
+/* Cuando el dropdown de orden está abierto, su trigger pinta el borde de acento;
+   el botón de dirección acompaña ese estado en su borde para que el control
+   segmentado se lea como una sola pieza resaltada. */
+.sort-control:has(.filter-btn--open) .sort-control__dir,
+.sort-control__dir:hover {
+  border-color: var(--accent);
 }
 
 .sort-control__dir:hover {
@@ -1203,6 +1220,22 @@ select:focus {
 .filter-btn__value .mini-icon {
   width: 18px;
   height: 18px;
+}
+
+/* Íconos de los valores seleccionados en un trigger multi-select (tipo / ingrediente).
+   Se solapan ligeramente para no estirar el botón cuando hay varios. */
+.filter-btn__icons {
+  display: inline-flex;
+  align-items: center;
+}
+
+.filter-btn__icons .mini-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.filter-btn__icons .mini-icon + .mini-icon {
+  margin-left: -6px;
 }
 
 .filter-btn__placeholder {
@@ -1302,6 +1335,22 @@ select:focus {
 
 .filter-list__label {
   line-height: 1.2;
+}
+
+/* Grupos de subcategoría dentro del dropdown de skill. El primero no lleva margen
+   superior; los siguientes se separan del grupo anterior. */
+.filter-list__group + .filter-list__group {
+  margin-top: 0.35rem;
+}
+
+/* Encabezado no seleccionable de cada subcategoría: label uppercase atenuado, en
+   la escala más chica. No es interactivo (role="presentation"). */
+.filter-list__heading {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  padding: 0.25rem 0.5rem 0.15rem;
 }
 
 .filter-grid__item {
@@ -1501,6 +1550,11 @@ select:focus {
 .box-entry__skill-yield .mini-icon {
   width: 18px;
   height: 18px;
+}
+
+.box-entry__skill-yield svg {
+  width: 16px;
+  height: 16px;
 }
 
 .box-entry__skill-yield .box-entry__metric-value {
@@ -2468,8 +2522,10 @@ button.prod-card__base-tag--action:hover {
    que ocupa el lugar del ícono de stat, para alinear con una naturaleza con ↑/↓. */
 .mini-icon--empty {
   display: inline-block;
-  width: 14px;
-  height: 14px;
+  /* Mismo tamaño que el ícono de stat (mini-icon = 22px) para que una naturaleza
+     neutra/sin cargar ocupe el mismo ancho que una con ↑/↓ y la fila quede alineada. */
+  width: 22px;
+  height: 22px;
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   opacity: 0.4;

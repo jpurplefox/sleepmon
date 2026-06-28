@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 
 import { berryIcon } from "../berries";
 import { RIBBONS } from "../constants";
@@ -7,7 +8,7 @@ import { ingredientIcon } from "../ingredients";
 import { statIcon } from "../natures";
 import { spriteUrl } from "../sprites";
 import type { Member, Nature, Species } from "../types";
-import { IconMore, IconSparkle } from "./icons";
+import { IconMagnifier, IconMore, IconPot, IconSparkle, IconStrength } from "./icons";
 import { MemberConfig } from "./MemberConfig";
 import { RibbonIcon } from "./RibbonIcon";
 
@@ -15,6 +16,8 @@ import { RibbonIcon } from "./RibbonIcon";
 // panorama sin el ruido de dos decimales de la card comparativa.
 const fmt = (n: number) =>
   n.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+// Para magnitudes grandes y enteras (Vigor, fragmentos de sueño).
+const fmtInt = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 0 });
 
 interface Props {
   member: Member;
@@ -101,12 +104,39 @@ export function BoxEntry({
       .filter((g) => g.total > 0);
   }, [prod]);
 
-  // Ingredientes al azar de la main skill (Ingredient Magnet S): total sin
-  // desglosar por tipo. Se muestra como marcador "✦ +N al azar" al final.
-  const randomTotal =
-    prod && prod.skill_ingredient_total != null && prod.skill_ingredient_total > 0
-      ? prod.skill_ingredient_total
-      : null;
+  // Aporte de la main skill, para mostrarlo junto a sus disparos. Una especie
+  // produce una sola de estas salidas (las demás vienen null). Mismos íconos que
+  // ProductionCard. Los ingredientes específicos (Ingredient Draw) NO van acá: ya
+  // se ven en la columna de ingredientes (combinados).
+  const skillYield = useMemo<{ icon: ReactNode; text: string; title: string } | null>(() => {
+    if (!prod) return null;
+    const img = (src: string) => <img className="mini-icon" src={src} alt="" aria-hidden="true" />;
+    if (prod.skill_ingredient_total != null && prod.skill_ingredient_total > 0) {
+      const v = fmt(prod.skill_ingredient_total);
+      return {
+        icon: img(statIcon("Ingredient Finding")),
+        text: t("box.randomIngredients", { value: v }),
+        title: t("box.randomIngredientsTitle", { value: v }),
+      };
+    }
+    if (prod.skill_energy != null)
+      return { icon: img(statIcon("Energy Recovery")), text: fmt(prod.skill_energy), title: t("card.energyEachTitle") };
+    if (prod.skill_self_energy != null)
+      return { icon: img(statIcon("Energy Recovery")), text: fmt(prod.skill_self_energy), title: t("card.selfEnergyTitle") };
+    if (prod.skill_random_energy != null)
+      return { icon: img(statIcon("Energy Recovery")), text: fmt(prod.skill_random_energy), title: t("card.randomEnergy") };
+    if (prod.skill_strength != null)
+      return { icon: <IconStrength aria-hidden="true" />, text: fmtInt(prod.skill_strength), title: t("card.strengthTitle") };
+    if (prod.skill_dream_shards != null)
+      return { icon: img("/shard.png"), text: fmtInt(prod.skill_dream_shards), title: t("card.dreamShardsTitle") };
+    if (prod.skill_cooking_ingredients != null)
+      return { icon: <IconPot aria-hidden="true" />, text: fmt(prod.skill_cooking_ingredients), title: t("card.cookingTitle") };
+    if (prod.skill_tasty_chance != null)
+      return { icon: img("/extra-tasty.png"), text: `+${fmtInt(prod.skill_tasty_chance)}%`, title: t("card.extraTastyTitle") };
+    if (prod.skill_extra_helpful != null)
+      return { icon: <IconMagnifier aria-hidden="true" />, text: `×${fmt(prod.skill_extra_helpful)}`, title: t("card.helpMultTitle") };
+    return null;
+  }, [prod, t]);
 
   return (
     <article className="card box-entry">
@@ -232,20 +262,13 @@ export function BoxEntry({
               value: prod ? fmt(prod.skill_triggers) : t("common.dash"),
             })}
           </span>
-          {/* Producción de la skill al lado de sus disparos: los ingredientes al
-              azar (Ingredient Magnet, p. ej. Plusle), con ícono de ingrediente. */}
-          {randomTotal != null && (
-            <span
-              className="box-entry__skill-yield"
-              title={t("box.randomIngredientsTitle", { value: fmt(randomTotal) })}
-            >
-              <img className="mini-icon" src={statIcon("Ingredient Finding")} alt="" aria-hidden="true" />
-              <span className="box-entry__metric-value">
-                {t("box.randomIngredients", { value: fmt(randomTotal) })}
-              </span>
-              <span className="sr-only">
-                {t("box.randomIngredientsAria", { value: fmt(randomTotal) })}
-              </span>
+          {/* Aporte de la main skill, junto a sus disparos: energía, fuerza,
+              ingredientes al azar, etc. según la skill de la especie. */}
+          {skillYield && (
+            <span className="box-entry__skill-yield" title={skillYield.title}>
+              {skillYield.icon}
+              <span className="box-entry__metric-value">{skillYield.text}</span>
+              <span className="sr-only">{`${skillYield.text} — ${skillYield.title}`}</span>
             </span>
           )}
         </div>

@@ -73,6 +73,17 @@ class MemberProduction:
     # Ingredientes/día al azar que consigue la main skill (Ingredient Magnet S, p. ej.
     # Plusle), como total sin desglosar. None si no aplica.
     skill_ingredient_total: float | None
+    # Otras salidas de la main skill (una por especie según su tipo de skill; el resto
+    # None). Mismas magnitudes que ProductionResult, para mostrar el aporte de la skill
+    # junto a sus disparos en el overview.
+    skill_energy: float | None  # Energy for Everyone S (energía a cada compañero)
+    skill_cooking_ingredients: float | None  # Cooking Power-Up S (ingredientes de pote)
+    skill_strength: float | None  # Charge Strength S/M (Vigor a Snorlax)
+    skill_self_energy: float | None  # Charge Energy S (energía al propio)
+    skill_dream_shards: float | None  # Dream Shard Magnet S (fragmentos de sueño)
+    skill_tasty_chance: float | None  # Tasty Chance S (+% de plato riquísimo)
+    skill_extra_helpful: float | None  # Extra Helpful S (×multiplicador de ayuda)
+    skill_random_energy: float | None  # Energizing Cheer S (energía a un compañero al azar)
 
 
 @dataclass(frozen=True, slots=True)
