@@ -1046,6 +1046,60 @@ select:focus {
 
 /* Entrada de overview de la Caja: tres zonas horizontales (identidad · config ·
    producción) + acciones. En pantalla angosta colapsa a columna. */
+/* Barra de orden y filtros del overview. */
+.box-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.box-toolbar__order {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--text-sm);
+}
+
+.box-toolbar__dir {
+  padding: 0.2rem 0.5rem;
+}
+
+.box-toolbar__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* Fila de chips de filtros activos: a lo ancho, debajo de los controles. */
+.box-toolbar__active {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  flex-basis: 100%;
+}
+
+/* Chip de filtro activo: acento funcional (índigo), con × para quitar. */
+.box-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: var(--text-xs);
+  color: var(--text);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-sm);
+  padding: 0.1rem 0.5rem;
+  cursor: pointer;
+}
+
+.box-toolbar__clear {
+  font-size: var(--text-sm);
+  padding: 0.1rem 0.4rem;
+}
+
 .box-entry {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.6fr) auto auto;

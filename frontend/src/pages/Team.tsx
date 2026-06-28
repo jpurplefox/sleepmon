@@ -3,11 +3,67 @@ import { useState } from "react";
 
 import { api } from "../api/client";
 import { BoxEntry } from "../components/BoxEntry";
+import {
+  BoxToolbar,
+  EMPTY_FILTERS,
+  type BoxFilters,
+  type SortDir,
+  type SortKey,
+} from "../components/BoxToolbar";
 import { DistributionChart } from "../components/DistributionChart";
 import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
 import { useI18n } from "../i18n";
-import type { Member, MemberInput } from "../types";
+import type { Catalog, Member, MemberInput, Species } from "../types";
+
+// Producción del ingrediente principal: el de mayor amount entre los desbloqueados.
+const mainIngredientAmount = (m: Member): number =>
+  m.production ? Math.max(0, ...m.production.ingredients.map((i) => i.amount)) : 0;
+
+// Orden + filtros del overview, en el cliente (la producción ya viene en /team).
+function sortAndFilter(
+  members: Member[],
+  speciesByName: Map<string, Species>,
+  sortKey: SortKey,
+  sortDir: SortDir,
+  filters: BoxFilters,
+): Member[] {
+  const matches = (m: Member): boolean => {
+    const sp = speciesByName.get(m.species);
+    if (filters.type && sp?.type !== filters.type) return false;
+    if (filters.ingredient && !m.ingredients.includes(filters.ingredient)) return false;
+    if (filters.skill && sp?.main_skill !== filters.skill) return false;
+    if (filters.specialty && sp?.specialty !== filters.specialty) return false;
+    return true;
+  };
+  const value = (m: Member): number => {
+    switch (sortKey) {
+      case "level":
+        return m.level;
+      case "berries":
+        return m.production?.berries ?? 0;
+      case "ingredient":
+        return mainIngredientAmount(m);
+      default:
+        return speciesByName.get(m.species)?.dex ?? 0;
+    }
+  };
+  const dir = sortDir === "asc" ? 1 : -1;
+  return members
+    .filter(matches)
+    .sort((a, b) => (value(a) - value(b)) * dir || a.species.localeCompare(b.species));
+}
+
+// Opciones de cada filtro, derivadas del catálogo (únicas).
+function filterOptions(catalog: Catalog) {
+  const uniq = (xs: string[]) => [...new Set(xs)];
+  return {
+    types: uniq(catalog.species.map((s) => s.type)).sort(),
+    ingredients: catalog.ingredients,
+    skills: uniq(catalog.species.map((s) => s.main_skill)).sort(),
+    specialties: uniq(catalog.species.map((s) => s.specialty)).sort(),
+  };
+}
 
 // El backend devuelve la distribución con claves en inglés (nombres del juego).
 // Las traducimos antes de graficarlas, construyendo un nuevo objeto con las keys
@@ -32,6 +88,9 @@ export function Team() {
   // Error de borrado (DELETE): se muestra junto a la lista, separado del error
   // del formulario de alta/edición.
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("dex");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [filters, setFilters] = useState<BoxFilters>(EMPTY_FILTERS);
 
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
   const members = useQuery({ queryKey: ["members"], queryFn: api.listMembers });
@@ -93,6 +152,13 @@ export function Team() {
   if (catalog.isError || !catalog.data)
     return <p className="error">{t("common.catalogError")}</p>;
 
+  const allMembers = members.data ?? [];
+  const visible = sortAndFilter(allMembers, speciesByName, sortKey, sortDir, filters);
+  const options = filterOptions(catalog.data);
+  const hasFilters = Object.values(filters).some((v) => v !== "");
+  const setFilter = (key: keyof BoxFilters, value: string) =>
+    setFilters((f) => ({ ...f, [key]: value }));
+
   return (
     <div className="layout">
       <header className="hero">
@@ -103,7 +169,12 @@ export function Team() {
       <section>
         <div className="section-head">
           <h2>
-            {t("team.box")} {members.data ? `(${members.data.length})` : ""}
+            {t("team.box")}{" "}
+            <span className="muted">
+              {hasFilters
+                ? t("box.showing", { shown: visible.length, total: allMembers.length })
+                : `(${allMembers.length})`}
+            </span>
             {/* Refetch en segundo plano (p. ej. tras editar): feedback sutil de que
                 los datos visibles se están actualizando, sin bloquear la lista. */}
             {members.isFetching && !members.isLoading && (
@@ -132,11 +203,32 @@ export function Team() {
             {t("team.deleteError", { error: deleteError })}
           </p>
         )}
-        {members.data?.length === 0 && (
-          <p className="muted">{t("team.boxEmpty")}</p>
+        {members.data?.length === 0 && <p className="muted">{t("team.boxEmpty")}</p>}
+
+        {allMembers.length > 0 && (
+          <BoxToolbar
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSortKey={setSortKey}
+            onToggleDir={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+            filters={filters}
+            onFilter={setFilter}
+            onClear={() => setFilters(EMPTY_FILTERS)}
+            options={options}
+          />
         )}
+
+        {allMembers.length > 0 && visible.length === 0 && (
+          <p className="muted" role="status">
+            {t("box.noMatch")}{" "}
+            <button type="button" className="btn btn--ghost" onClick={() => setFilters(EMPTY_FILTERS)}>
+              {t("box.clearFilters")}
+            </button>
+          </p>
+        )}
+
         <div className="members">
-          {members.data?.map((m) => (
+          {visible.map((m) => (
             <BoxEntry
               key={m.id}
               member={m}
