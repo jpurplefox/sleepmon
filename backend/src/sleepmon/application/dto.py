@@ -64,6 +64,7 @@ class MemberProduction:
     """
 
     berries: float  # bayas/día
+    berry_strength: float  # fuerza/día DIRECTA de las bayas (bayas × fuerza por baya del nivel)
     ingredients: list[SlotAmount]  # ingredientes/día por ayuda normal, por ingrediente
     ingredients_total: float  # suma de los ingredientes/día por ayuda normal
     skill_triggers: float  # disparos de la main skill/día
@@ -94,6 +95,7 @@ class ProductionResult:
     seconds_per_help: int
     berry: str
     berry_amount: float
+    berry_strength: float  # fuerza/día DIRECTA de las bayas
     berry_percentage: float
     ingredient_percentage: float
     skill_percentage: float

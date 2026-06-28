@@ -161,8 +161,8 @@ export function BoxEntry({
       return { icon: img(statIcon("Energy Recovery")), text: fmt(prod.skill_self_energy), title: t("card.selfEnergyTitle") };
     if (prod.skill_random_energy != null)
       return { icon: img(statIcon("Energy Recovery")), text: fmt(prod.skill_random_energy), title: t("card.randomEnergy") };
-    if (prod.skill_strength != null)
-      return { icon: img(CHARGE_STRENGTH_ICON), text: fmtInt(prod.skill_strength), title: t("card.strengthTitle") };
+    // La fuerza por Charge Strength NO va acá: se suma a la fuerza directa de las
+    // bayas y se muestra en la zona de producción (junto a las bayas).
     if (prod.skill_dream_shards != null)
       return { icon: img("/shard.png"), text: fmtInt(prod.skill_dream_shards), title: t("card.dreamShardsTitle") };
     if (prod.skill_cooking_ingredients != null)
@@ -228,6 +228,45 @@ export function BoxEntry({
             })}
           </span>
         </div>
+
+        {/* Fuerza a Snorlax: directa por bayas + indirecta por la main skill
+            (Charge Strength). Es la métrica que más importa en un Pokémon de bayas,
+            por eso va junto a las bayas y no escondida en el aporte de skill. */}
+        {prod && (prod.berry_strength > 0 || prod.skill_strength != null) && (
+          <div
+            className="box-entry__metric"
+            title={
+              prod.skill_strength != null
+                ? `${t("box.strengthTitle")} · ${t("card.fromBerriesTitle")} ${fmtInt(
+                    prod.berry_strength,
+                  )} + ${t("card.skillTitle")} ${fmtInt(prod.skill_strength)}`
+                : t("box.strengthTitle")
+            }
+          >
+            <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" aria-hidden="true" />
+            <span className="box-entry__metric-value">
+              {fmtInt(prod.berry_strength + (prod.skill_strength ?? 0))}
+            </span>
+            {prod.skill_strength != null && (
+              <img
+                className="box-entry__ing-skill"
+                src={statIcon("Main Skill Chance")}
+                alt=""
+                aria-hidden="true"
+                title={t("card.skillTitle")}
+              />
+            )}
+            <span className="sr-only">
+              {prod.skill_strength != null
+                ? t("box.strengthBreakdownAria", {
+                    value: fmtInt(prod.berry_strength + prod.skill_strength),
+                    berries: fmtInt(prod.berry_strength),
+                    skill: fmtInt(prod.skill_strength),
+                  })
+                : t("box.strengthAria", { value: fmtInt(prod.berry_strength) })}
+            </span>
+          </div>
+        )}
 
         <div
           className="box-entry__ingredients"

@@ -46,6 +46,8 @@ function sortAndFilter(
         return m.level;
       case "berries":
         return m.production?.berries ?? 0;
+      case "strength":
+        return m.production ? m.production.berry_strength + (m.production.skill_strength ?? 0) : 0;
       case "ingredients":
         return m.production ? totalIngredients(m.production) : 0;
       default:

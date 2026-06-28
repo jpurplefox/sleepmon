@@ -18,7 +18,7 @@ import {
 import type { Catalog } from "../types";
 import { IconArrowDown, IconArrowUp, IconChevronDown } from "./icons";
 
-export type SortKey = "dex" | "level" | "berries" | "ingredients";
+export type SortKey = "dex" | "level" | "berries" | "strength" | "ingredients";
 export type SortDir = "asc" | "desc";
 
 export interface BoxFilters {
@@ -215,6 +215,7 @@ export function BoxToolbar({
     { key: "dex", label: t("box.sortDex") },
     { key: "level", label: t("box.sortLevel") },
     { key: "berries", label: t("box.sortBerries") },
+    { key: "strength", label: t("box.sortStrength") },
     { key: "ingredients", label: t("box.sortIngredient") },
   ];
   const sortLabel = sortOptions.find((o) => o.key === sortKey)?.label ?? "";

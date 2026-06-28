@@ -32,6 +32,7 @@ from sleepmon.domain.catalog_data import (
     NATURE_EFFECTS,
     NIGHT_HOURS,
     SUB_SKILL_UNLOCK_LEVELS,
+    berry_strength_for_level,
     max_ingredient_slots,
     ribbon_inventory_bonus,
     ribbon_speed_bonus,
@@ -164,6 +165,10 @@ class DailyProduction:
     seconds_per_help: int  # intervalo entre ayudas (ya truncado a segundos enteros)
     berry: Berry
     berry_amount: float
+    # Fuerza/día que aportan las bayas a Snorlax (DIRECTA, sin contar la main skill):
+    # ``berry_amount`` × la fuerza por baya del nivel. Sube con el nivel y depende del
+    # tipo de baya. No incluye Area Bonus ni el x2 de baya favorita.
+    berry_strength: float
     berry_percentage: float
     ingredient_percentage: float
     skill_percentage: float  # tasa base de la especie
@@ -428,6 +433,9 @@ def daily_production(
     # En el overflow nocturno TODAS las ayudas producen bayas.
     berry_amount = (normal_helps * berry_rate + overflow_helps) * berry_per_help
 
+    # Fuerza directa de las bayas: cantidad de bayas × fuerza por baya del nivel.
+    berry_strength = berry_amount * berry_strength_for_level(species.berry, level)
+
     helps_per_slot = normal_helps * ingredient_rate / unlocked
     slots = tuple(
         SlotProduction(ingredient=ingredients[i], amount=helps_per_slot * slot_amounts[i])
@@ -439,6 +447,7 @@ def daily_production(
         seconds_per_help=seconds_per_help,
         berry=species.berry,
         berry_amount=berry_amount,
+        berry_strength=berry_strength,
         berry_percentage=berry_rate * 100,
         ingredient_percentage=ingredient_rate * 100,
         skill_percentage=species.skill_percentage,

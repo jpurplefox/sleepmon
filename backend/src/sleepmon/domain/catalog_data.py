@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final
 
-from sleepmon.domain.value_objects import Nature, NatureStat, Ribbon, SubSkill, SubSkillTier
+from sleepmon.domain.value_objects import Berry, Nature, NatureStat, Ribbon, SubSkill, SubSkillTier
 
 # Niveles en los que se desbloquean los slots. Actualizado en el último parche:
 # las sub skills pasaron a 10/25/50/70/80.
@@ -190,6 +190,47 @@ def ribbon_speed_bonus(ribbon: Ribbon, evolutions_remaining: int) -> float:
     return sum(
         _RIBBON_SPEED_STEP.get(r, {}).get(evolutions_remaining, 0.0) for r in _ribbons_up_to(ribbon)
     )
+
+
+# Fuerza base de cada baya (su valor a nivel 1). El objetivo de una especie de bayas
+# es subir la fuerza de Snorlax, y cada baya aporta una cantidad distinta: estos son
+# los valores crudos del juego, sin el Area Bonus ni el x2 de "baya favorita" (que son
+# per-usuario/semanales y quedan fuera del modelo). Fuente: catálogo de nerolis-lab.
+BERRY_BASE_STRENGTH: Final[Mapping[Berry, int]] = {
+    Berry.BELUE: 33,
+    Berry.BLUK: 26,
+    Berry.CHERI: 27,
+    Berry.CHESTO: 32,
+    Berry.DURIN: 30,
+    Berry.FIGY: 29,
+    Berry.GREPA: 25,
+    Berry.LEPPA: 27,
+    Berry.LUM: 24,
+    Berry.MAGO: 26,
+    Berry.ORAN: 31,
+    Berry.PAMTRE: 24,
+    Berry.PECHA: 26,
+    Berry.PERSIM: 28,
+    Berry.RABUTA: 30,
+    Berry.RAWST: 32,
+    Berry.SITRUS: 30,
+    Berry.WIKI: 31,
+    Berry.YACHE: 35,
+}
+
+# La baya rinde más fuerza a mayor nivel del Pokémon: se toma el mayor entre un
+# crecimiento lineal (base + (nivel-1)) y uno exponencial (base * 1.025^(nivel-1)),
+# redondeado. A niveles bajos manda el lineal; a partir de cierto nivel el exponencial
+# lo supera. Fuente: fórmula de nerolis-lab (``berryPowerForLevel``).
+_BERRY_STRENGTH_GROWTH_RATE: Final[float] = 1.025
+
+
+def berry_strength_for_level(berry: Berry, level: int) -> int:
+    """Fuerza que aporta UNA baya de ``berry`` para un Pokémon de nivel ``level``."""
+    base = BERRY_BASE_STRENGTH[berry]
+    linear = base + (level - 1)
+    exponential = base * _BERRY_STRENGTH_GROWTH_RATE ** (level - 1)
+    return round(max(linear, exponential))
 
 
 def max_sub_skill_slots(level: int) -> int:

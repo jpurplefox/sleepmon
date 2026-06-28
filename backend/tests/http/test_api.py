@@ -154,6 +154,8 @@ def test_production_endpoint_returns_estimate(client: TestClient) -> None:
         "Fancy Egg",
     ]
     assert body["skill_triggers"] >= 0
+    # Fuerza directa de las bayas: cantidad × fuerza por baya del nivel (Grepa L60 = 107).
+    assert body["berry_strength"] == pytest.approx(body["berry_amount"] * 107)
 
 
 def test_production_unknown_species_returns_400(client: TestClient) -> None:

@@ -1,10 +1,12 @@
 import pytest
 
 from sleepmon.domain.catalog_data import (
+    BERRY_BASE_STRENGTH,
     INGREDIENT_UNLOCK_LEVELS,
     NATURE_EFFECTS,
     SUB_SKILL_TIERS,
     SUB_SKILL_UNLOCK_LEVELS,
+    berry_strength_for_level,
     max_ingredient_slots,
     max_sub_skill_slots,
     ribbon_inventory_bonus,
@@ -322,3 +324,40 @@ def test_max_ingredient_slots_scales_with_level() -> None:
     assert max_ingredient_slots(29) == 1
     assert max_ingredient_slots(30) == 2
     assert max_ingredient_slots(60) == 3
+
+
+def test_berry_base_strength_covers_every_berry() -> None:
+    # Toda baya del enum tiene una fuerza base (la tabla es total sobre Berry).
+    assert set(BERRY_BASE_STRENGTH) == set(Berry)
+    assert all(v > 0 for v in BERRY_BASE_STRENGTH.values())
+
+
+def test_berry_strength_at_level_one_is_the_base() -> None:
+    for berry, base in BERRY_BASE_STRENGTH.items():
+        assert berry_strength_for_level(berry, 1) == base
+
+
+def test_berry_strength_low_levels_follow_linear_growth() -> None:
+    # A nivel bajo el crecimiento lineal (base + nivel-1) supera al exponencial.
+    assert berry_strength_for_level(Berry.ORAN, 2) == 32  # base 31 + 1
+    assert berry_strength_for_level(Berry.LUM, 30) == 53  # base 24 + 29 (lineal manda)
+    assert berry_strength_for_level(Berry.PERSIM, 25) == 52  # base 28 + 24
+
+
+def test_berry_strength_high_levels_follow_exponential_growth() -> None:
+    # A nivel alto el exponencial (base * 1.025^(nivel-1)) supera al lineal.
+    assert berry_strength_for_level(Berry.ORAN, 50) == 104
+    assert berry_strength_for_level(Berry.ORAN, 100) == 357
+    assert berry_strength_for_level(Berry.YACHE, 100) == 403
+
+
+def test_berry_strength_is_monotonic_in_level() -> None:
+    values = [berry_strength_for_level(Berry.ORAN, lvl) for lvl in range(1, 101)]
+    assert values == sorted(values)
+
+
+def test_berry_type_drives_strength_difference() -> None:
+    # Mismo nivel, distinta baya: la de mayor base aporta más fuerza.
+    yache = berry_strength_for_level(Berry.YACHE, 50)  # base 35
+    lum = berry_strength_for_level(Berry.LUM, 50)  # base 24
+    assert yache > lum

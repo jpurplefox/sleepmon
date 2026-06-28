@@ -38,6 +38,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.productionAria": "Producción estimada por día",
     "box.berriesTitle": "Bayas por día",
     "box.berriesAria": "{value} bayas por día ({berry})",
+    "box.strengthTitle": "Fuerza por día",
+    "box.strengthAria": "{value} de fuerza por día",
+    "box.strengthBreakdownAria":
+      "{value} de fuerza por día (bayas {berries} + skill {skill})",
     "box.ingredientsTitle": "Ingrediente principal por día (total: {total} ingredientes/día)",
     "box.ingredientsTitlePlain": "Ingredientes por día",
     "box.ingredientsBreakdownAria":
@@ -52,6 +56,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.sortDex": "Pokédex",
     "box.sortLevel": "Nivel",
     "box.sortBerries": "Bayas",
+    "box.sortStrength": "Fuerza",
     "box.sortIngredient": "Producción de ingredientes",
     "box.sortAsc": "Orden ascendente",
     "box.sortDesc": "Orden descendente",
@@ -195,7 +200,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.cookingTitle": "Ingredientes extra de pote por día para cocinar (Cooking Power-Up S)",
     "card.strength": "de fuerza",
     "card.strengthTitle":
-      "Fuerza por día que la skill suma a Snorlax (promedio si el monto es aleatorio)",
+      "Fuerza por día: directa por las bayas (según nivel y tipo de baya) más la de la main skill (Charge Strength)",
+    "card.strengthBreakdownTitle": "Aporte de las bayas y de la main skill",
+    "card.fromBerriesTitle": "Por las bayas",
     "card.dreamShards": "fragmentos de sueño",
     "card.dreamShardsTitle":
       "Fragmentos de sueño por día que consigue la skill (promedio si el monto es aleatorio)",
@@ -300,6 +307,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.productionAria": "Estimated production per day",
     "box.berriesTitle": "Berries per day",
     "box.berriesAria": "{value} berries per day ({berry})",
+    "box.strengthTitle": "Strength per day",
+    "box.strengthAria": "{value} Strength per day",
+    "box.strengthBreakdownAria":
+      "{value} Strength per day (berries {berries} + skill {skill})",
     "box.ingredientsTitle": "Main ingredient per day (total: {total} ingredients/day)",
     "box.ingredientsTitlePlain": "Ingredients per day",
     "box.ingredientsBreakdownAria":
@@ -314,6 +325,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.sortDex": "Pokédex",
     "box.sortLevel": "Level",
     "box.sortBerries": "Berries",
+    "box.sortStrength": "Strength",
     "box.sortIngredient": "Ingredient production",
     "box.sortAsc": "Ascending",
     "box.sortDesc": "Descending",
@@ -455,7 +467,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.cookingTitle": "Extra pot ingredients per day for cooking (Cooking Power-Up S)",
     "card.strength": "Strength",
     "card.strengthTitle":
-      "Strength per day the skill adds to Snorlax (average if the amount is random)",
+      "Strength per day: direct from berries (by level and berry type) plus the main skill's (Charge Strength)",
+    "card.strengthBreakdownTitle": "Contribution from berries and the main skill",
+    "card.fromBerriesTitle": "From berries",
     "card.dreamShards": "Dream Shards",
     "card.dreamShardsTitle":
       "Dream Shards per day the skill gets (average if the amount is random)",
