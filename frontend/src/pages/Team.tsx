@@ -2,8 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { api } from "../api/client";
+import { BoxEntry } from "../components/BoxEntry";
 import { DistributionChart } from "../components/DistributionChart";
-import { MemberCard } from "../components/MemberCard";
 import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
 import { useI18n } from "../i18n";
@@ -87,9 +87,7 @@ export function Team() {
 
   const natureByName = new Map((catalog.data?.natures ?? []).map((n) => [n.name, n]));
   const speciesByName = new Map((catalog.data?.species ?? []).map((s) => [s.name, s]));
-  const subSkillTiers = Object.fromEntries(
-    (catalog.data?.sub_skills ?? []).map((s) => [s.name, s.tier]),
-  );
+  const tierBySubSkill = new Map((catalog.data?.sub_skills ?? []).map((s) => [s.name, s.tier]));
 
   if (catalog.isLoading) return <p className="muted">{t("common.loadingCatalog")}</p>;
   if (catalog.isError || !catalog.data)
@@ -139,12 +137,12 @@ export function Team() {
         )}
         <div className="members">
           {members.data?.map((m) => (
-            <MemberCard
+            <BoxEntry
               key={m.id}
               member={m}
+              species={speciesByName.get(m.species)}
               nature={natureByName.get(m.nature)}
-              dex={speciesByName.get(m.species)?.dex}
-              subSkillTiers={subSkillTiers}
+              tierBySubSkill={(name) => tierBySubSkill.get(name)}
               onEdit={() => openEdit(m)}
               onDelete={(id) => remove.mutate(id)}
             />

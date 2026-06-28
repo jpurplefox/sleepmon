@@ -1044,6 +1044,101 @@ select:focus {
   gap: 1rem;
 }
 
+/* Entrada de overview de la Caja: tres zonas horizontales (identidad · config ·
+   producción) + acciones. En pantalla angosta colapsa a columna. */
+.box-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.6fr) auto auto;
+  align-items: center;
+  gap: 1rem 1.25rem;
+}
+
+@media (max-width: 720px) {
+  .box-entry {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+}
+
+/* Zona 1 — Identidad: sprite + nombre + listón a la izquierda, nivel a la derecha. */
+.box-entry__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.box-entry__sprite {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.box-entry__title {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.box-entry__name {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.box-entry__title .ribbon-icon {
+  flex-shrink: 0;
+}
+
+/* Zona 2 — Config: reusa .prod-box-item__config; atenuada para retroceder frente
+   a las métricas (la producción es el dato central del overview). */
+.box-entry__config {
+  opacity: 0.85;
+}
+
+/* Zona 3 — Producción: tres métricas de IGUAL jerarquía (mismo peso, números
+   neutros; el único dorado de la entrada es el badge de nivel). */
+.box-entry__production {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  flex-shrink: 0;
+}
+
+.box-entry__metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.box-entry__metric .mini-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.box-entry__metric-value {
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.box-entry__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.box-entry__actions .btn--edit:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 .member-card__head {
   display: flex;
   justify-content: space-between;

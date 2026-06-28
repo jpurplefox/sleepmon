@@ -1,22 +1,12 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
-import {
-  INGREDIENT_UNLOCK_LEVELS,
-  RIBBONS,
-  SUB_SKILL_NEVER_UNLOCKS,
-  SUB_SKILL_UNLOCK_LEVELS,
-} from "../constants";
+import { RIBBONS } from "../constants";
 import { useI18n } from "../i18n";
-import { ingredientIcon } from "../ingredients";
-import { statIcon } from "../natures";
-import { mainSkillIcon } from "../skillIcons";
 import { spriteUrl } from "../sprites";
-import { subSkillIcon } from "../subskills";
 import type { Catalog, Member } from "../types";
+import { MemberConfig } from "./MemberConfig";
 import { RibbonIcon } from "./RibbonIcon";
-
-const TIER_CLASS: Record<string, string> = { Gold: "gold", Blue: "blue", Regular: "regular" };
 
 // Normaliza para buscar: sin mayúsculas ni acentos, así "ralts" matchea "Ralts" y
 // "pikachú" matchea "Pikachu".
@@ -41,7 +31,7 @@ interface Props {
 // filtro de búsqueda se resetee al cerrar y reabrir el modal (se desmonta), y para
 // no recargar Production con su estado local. Cada ítem muestra la config completa
 // —derivada del propio Pokémon— para poder distinguir duplicados de un vistazo,
-// reusando el mismo lenguaje visual que la Caja (MemberCard).
+// reusando el mismo lenguaje visual que la Caja (MemberConfig).
 export function BoxPicker({
   members,
   isLoading,
@@ -51,7 +41,7 @@ export function BoxPicker({
   inComparison,
   onPick,
 }: Props) {
-  const { t, nature: natureLabel, natureStat, ingredient, subSkill, mainSkill } = useI18n();
+  const { t } = useI18n();
   const [search, setSearch] = useState("");
   // Índice resaltado dentro de la lista filtrada (-1 = ninguno). Patrón combobox:
   // el foco se queda en el buscador; las flechas mueven este resaltado y Enter
@@ -174,11 +164,7 @@ export function BoxPicker({
         <ul id={listId} className="prod-box-list" role="listbox" ref={listRef}>
           {filtered.map((m, idx) => {
             const already = inComparison.has(m.id);
-            const nature = natureByName.get(m.nature);
             const ribbonIdx = RIBBONS.findIndex((r) => r.name === m.ribbon);
-            const skillIcon = mainSkillIcon(mainSkillBySpecies.get(m.species));
-            const skillName = mainSkill(mainSkillBySpecies.get(m.species) ?? "");
-            const skillLv = t("prod.skillLv", { level: m.skill_level });
             return (
               <li key={m.id}>
                 <button
@@ -220,87 +206,16 @@ export function BoxPicker({
                   </div>
 
                   <div className="prod-box-item__config">
-                    {/* Orden: ingredientes → naturaleza → sub skills → skill. */}
-                    <span className="ingredient-row">
-                      {m.ingredients.map((ing, idx) => {
-                        const locked = m.level < (INGREDIENT_UNLOCK_LEVELS[idx] ?? 1);
-                        return (
-                          <img
-                            key={`${ing}-${idx}`}
-                            className={
-                              "ingredient-row__icon" +
-                              (locked ? " ingredient-row__icon--locked" : "")
-                            }
-                            src={ingredientIcon(ing)}
-                            alt={ingredient(ing)}
-                            title={ingredient(ing)}
-                            loading="lazy"
-                          />
-                        );
-                      })}
-                    </span>
-
-                    <span className="prod-box-item__nature icon-row">
-                      {nature && !nature.neutral && nature.increased && nature.decreased ? (
-                        <>
-                          <span className="nat-up">↑</span>
-                          <img
-                            className="mini-icon"
-                            src={statIcon(nature.increased)}
-                            alt={natureStat(nature.increased)}
-                            title={natureStat(nature.increased)}
-                          />
-                          <span className="nat-down">↓</span>
-                          <img
-                            className="mini-icon"
-                            src={statIcon(nature.decreased)}
-                            alt={natureStat(nature.decreased)}
-                            title={natureStat(nature.decreased)}
-                          />
-                        </>
-                      ) : (
-                        <span className="muted">
-                          {m.nature ? natureLabel(m.nature) : t("card.noNature")}
-                        </span>
-                      )}
-                    </span>
-
-                    {m.sub_skills.length > 0 && (
-                      <span className="ingredient-row">
-                        {m.sub_skills.map((s, idx) => {
-                          const unlock = SUB_SKILL_UNLOCK_LEVELS[idx] ?? SUB_SKILL_NEVER_UNLOCKS;
-                          const locked = m.level < unlock;
-                          const tier = TIER_CLASS[tierBySubSkill.get(s) ?? "Regular"];
-                          const tooltip = !locked
-                            ? subSkill(s)
-                            : Number.isFinite(unlock)
-                              ? t("member.subSkillLocked", { name: subSkill(s), level: unlock })
-                              : t("member.subSkillSlotUnavailable", { name: subSkill(s) });
-                          return (
-                            <span
-                              key={`${s}-${idx}`}
-                              className={`ss-icon ss-icon--${tier}` + (locked ? " is-locked" : "")}
-                              data-tooltip={tooltip}
-                            >
-                              <img src={subSkillIcon(s)} alt={subSkill(s)} loading="lazy" />
-                            </span>
-                          );
-                        })}
-                      </span>
-                    )}
-
-                    {/* Skill: el ícono propio de la main skill + "Lv. N". Color
-                        neutro (el dorado es para el nivel del Pokémon). El nombre de
-                        la skill va en sr-only/title para no depender solo del ícono. */}
-                    <span className="prod-box-item__skill-lv" title={`${skillName} · ${skillLv}`}>
-                      {skillIcon.kind === "img" ? (
-                        <img className="mini-icon" src={skillIcon.src} alt="" />
-                      ) : (
-                        <skillIcon.Component aria-hidden="true" />
-                      )}
-                      <span aria-hidden="true">{skillLv}</span>
-                      <span className="sr-only">{`${skillName} ${skillLv}`}</span>
-                    </span>
+                    <MemberConfig
+                      level={m.level}
+                      nature={m.nature}
+                      ingredients={m.ingredients}
+                      subSkills={m.sub_skills}
+                      skillLevel={m.skill_level}
+                      natureMeta={natureByName.get(m.nature)}
+                      mainSkillName={mainSkillBySpecies.get(m.species)}
+                      tierBySubSkill={(name) => tierBySubSkill.get(name)}
+                    />
                   </div>
                 </button>
               </li>

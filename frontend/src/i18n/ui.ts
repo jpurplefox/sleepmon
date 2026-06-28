@@ -14,7 +14,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "common.dash": "—",
     // Navegación
     "nav.aria": "Navegación principal",
-    "nav.team": "Equipo",
+    "nav.team": "Caja",
     "nav.comparison": "Comparación",
     "nav.language": "Idioma",
     // Página Equipo
@@ -33,6 +33,17 @@ export const UI: Record<Lang, Record<string, string>> = {
     "team.modalAdd": "Agregar Pokémon",
     "team.modalEdit": "Editar Pokémon",
     "team.saveChanges": "Guardar cambios",
+    // Entrada de la Caja (overview por Pokémon)
+    "box.productionAria": "Producción estimada por día",
+    "box.berriesTitle": "Bayas por día",
+    "box.berriesAria": "{value} bayas por día ({berry})",
+    "box.ingredientsTitle": "Ingrediente principal por día (total: {total} ingredientes/día)",
+    "box.ingredientsTitlePlain": "Ingredientes por día",
+    "box.ingredientsAria":
+      "{value} de {ingredient} por día (ingrediente principal; total {total} ingredientes por día)",
+    "box.ingredientsAriaEmpty": "Sin producción de ingredientes",
+    "box.triggersTitle": "Disparos de habilidad por día",
+    "box.triggersAria": "{value} disparos de habilidad por día",
     // Página Comparación
     "prod.title": "Comparación",
     "prod.subtitle":
@@ -219,7 +230,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "common.dash": "—",
     // Navigation
     "nav.aria": "Main navigation",
-    "nav.team": "Team",
+    "nav.team": "Box",
     "nav.comparison": "Comparison",
     "nav.language": "Language",
     // Team page
@@ -238,6 +249,17 @@ export const UI: Record<Lang, Record<string, string>> = {
     "team.modalAdd": "Add Pokémon",
     "team.modalEdit": "Edit Pokémon",
     "team.saveChanges": "Save changes",
+    // Box entry (per-Pokémon overview)
+    "box.productionAria": "Estimated production per day",
+    "box.berriesTitle": "Berries per day",
+    "box.berriesAria": "{value} berries per day ({berry})",
+    "box.ingredientsTitle": "Main ingredient per day (total: {total} ingredients/day)",
+    "box.ingredientsTitlePlain": "Ingredients per day",
+    "box.ingredientsAria":
+      "{value} {ingredient} per day (main ingredient; total {total} ingredients per day)",
+    "box.ingredientsAriaEmpty": "No ingredient production",
+    "box.triggersTitle": "Skill triggers per day",
+    "box.triggersAria": "{value} skill triggers per day",
     // Comparison page
     "prod.title": "Comparison",
     "prod.subtitle":
