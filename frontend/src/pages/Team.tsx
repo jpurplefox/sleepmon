@@ -10,7 +10,7 @@ import {
   type SortDir,
   type SortKey,
 } from "../components/BoxToolbar";
-import { DistributionChart } from "../components/DistributionChart";
+import { BoxCoverage } from "../components/BoxCoverage";
 import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
 import { useI18n } from "../i18n";
@@ -68,17 +68,6 @@ function filterOptions(catalog: Catalog) {
 // El backend devuelve la distribución con claves en inglés (nombres del juego).
 // Las traducimos antes de graficarlas, construyendo un nuevo objeto con las keys
 // ya traducidas (las claves del juego son únicas, no deberían colapsar).
-function translateKeys(
-  data: Record<string, number>,
-  translate: (key: string) => string,
-): Record<string, number> {
-  const out: Record<string, number> = {};
-  for (const [key, value] of Object.entries(data)) {
-    out[translate(key)] = value;
-  }
-  return out;
-}
-
 interface TeamProps {
   // Abre Comparación con ese Pokémon como base (lo cablea App).
   onCompare: (memberId: string) => void;
@@ -86,7 +75,7 @@ interface TeamProps {
 
 export function Team({ onCompare }: TeamProps) {
   const qc = useQueryClient();
-  const { t, ingredient, subSkill, nature } = useI18n();
+  const { t } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Member | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -99,14 +88,9 @@ export function Team({ onCompare }: TeamProps) {
 
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
   const members = useQuery({ queryKey: ["members"], queryFn: api.listMembers });
-  const distributions = useQuery({
-    queryKey: ["distributions"],
-    queryFn: api.getDistributions,
-  });
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["members"] });
-    qc.invalidateQueries({ queryKey: ["distributions"] });
   };
 
   const create = useMutation({
@@ -248,44 +232,7 @@ export function Team({ onCompare }: TeamProps) {
         </div>
       </section>
 
-      {distributions.isError && (
-        <section className="distributions">
-          <h2>{t("team.distribution")}</h2>
-          <p className="error" role="alert">
-            {t("team.distributionError")}{" "}
-            <button
-              type="button"
-              className="btn btn--ghost"
-              onClick={() => distributions.refetch()}
-            >
-              {t("common.retry")}
-            </button>
-          </p>
-        </section>
-      )}
-
-      {distributions.data && (
-        <section className="distributions">
-          <h2>{t("team.distribution")}</h2>
-          <div className="grid grid--3">
-            <DistributionChart
-              title={t("chart.ingredients")}
-              data={translateKeys(distributions.data.ingredients, ingredient)}
-              color="#d4a017"
-            />
-            <DistributionChart
-              title={t("chart.subSkills")}
-              data={translateKeys(distributions.data.sub_skills, subSkill)}
-              color="#6366f1"
-            />
-            <DistributionChart
-              title={t("chart.natures")}
-              data={translateKeys(distributions.data.natures, nature)}
-              color="#58a6ff"
-            />
-          </div>
-        </section>
-      )}
+      {allMembers.length > 0 && <BoxCoverage members={allMembers} catalog={catalog.data} />}
 
       {formOpen && (
         <Modal title={t("team.modalAdd")} onClose={() => setFormOpen(false)}>

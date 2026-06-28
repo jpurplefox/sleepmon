@@ -1383,6 +1383,50 @@ select:focus {
   font-size: var(--text-lg);
 }
 
+/* Cobertura del equipo: bloques apilados; íconos cubiertos vs. atenuados. */
+.coverage-block {
+  margin-bottom: 1rem;
+}
+
+.coverage-block__head {
+  font-size: var(--text-base);
+  margin: 0 0 0.6rem;
+}
+
+.specialties-count {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.specialties-count__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.specialties-count__number {
+  font-size: var(--text-xl);
+  font-weight: 700;
+}
+
+.coverage-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.coverage-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+/* Hueco de cobertura: mismo lenguaje que los slots bloqueados (atenuado + gris). */
+.coverage-icon--missing {
+  opacity: 0.3;
+  filter: grayscale(1);
+}
+
 /* Tabs de navegación */
 .tabs {
   display: flex;

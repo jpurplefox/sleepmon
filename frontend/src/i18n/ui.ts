@@ -61,6 +61,14 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.noMatch": "Ningún Pokémon coincide con los filtros.",
     "box.compare": "Comparar",
     "box.moreActions": "Más acciones para {species}",
+    "box.coverageTitle": "Cobertura del equipo",
+    "box.coverageSpecialties": "Especialidades",
+    "box.coverageBerries": "Cobertura de bayas (especialistas en Bayas)",
+    "box.coverageIngredients": "Cobertura de ingredientes (especialistas en Ingredientes)",
+    "box.coverageCount": "{covered} de {total}",
+    "box.coverageMissing": "{name} (sin cobertura)",
+    "box.noBerrySpecialists": "Sin especialistas en Bayas en la caja.",
+    "box.noIngredientSpecialists": "Sin especialistas en Ingredientes en la caja.",
     // Página Comparación
     "prod.title": "Comparación",
     "prod.subtitle":
@@ -294,6 +302,14 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.noMatch": "No Pokémon match the filters.",
     "box.compare": "Compare",
     "box.moreActions": "More actions for {species}",
+    "box.coverageTitle": "Team coverage",
+    "box.coverageSpecialties": "Specialties",
+    "box.coverageBerries": "Berry coverage (Berry specialists)",
+    "box.coverageIngredients": "Ingredient coverage (Ingredient specialists)",
+    "box.coverageCount": "{covered} of {total}",
+    "box.coverageMissing": "{name} (not covered)",
+    "box.noBerrySpecialists": "No Berry specialists in the box.",
+    "box.noIngredientSpecialists": "No Ingredient specialists in the box.",
     // Comparison page
     "prod.title": "Comparison",
     "prod.subtitle":
