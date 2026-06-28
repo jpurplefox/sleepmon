@@ -57,7 +57,16 @@ export function BoxEntry({
     if (!menuOpen) return;
     menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
     const onDown = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+        // Si el click NO cae sobre un control enfocable (que tomará el foco por sí
+        // mismo), devolvemos el foco al disparador para no perderlo en el body al
+        // desmontarse el item enfocado. Si cae sobre otro control, lo dejamos pasar.
+        const target = e.target as HTMLElement;
+        if (!target.closest("a, button, input, select, textarea, [tabindex]")) {
+          menuBtnRef.current?.focus();
+        }
+      }
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -72,6 +81,32 @@ export function BoxEntry({
       document.removeEventListener("keydown", onKey);
     };
   }, [menuOpen]);
+
+  // Navegación por teclado dentro del menú (patrón ARIA menu): flechas mueven el
+  // foco entre items y Home/End van a los extremos; Tab queda atrapado (cicla) para
+  // no escapar del menú abierto. Escape lo cierra (en el efecto de arriba).
+  const onMenuKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const items = Array.from(
+      e.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+    );
+    if (items.length === 0) return;
+    const idx = items.indexOf(document.activeElement as HTMLElement);
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const delta = e.key === "ArrowDown" ? 1 : -1;
+      items[(idx + delta + items.length) % items.length]?.focus();
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      items[0]?.focus();
+    } else if (e.key === "End") {
+      e.preventDefault();
+      items[items.length - 1]?.focus();
+    } else if (e.key === "Tab") {
+      // Patrón ARIA de menu button: Tab cierra el menú y deja que el foco salga
+      // naturalmente al siguiente elemento (no se atrapa el foco).
+      setMenuOpen(false);
+    }
+  };
 
   const prod = member.production;
   const ribbonIdx = RIBBONS.findIndex((r) => r.name === member.ribbon);
@@ -257,7 +292,7 @@ export function BoxEntry({
       {/* Zona 4 — Skill: disparos + aporte de la skill. En su propia columna (a la
           derecha) para que quede alineada entre Pokémon, sin importar cuántos
           ingredientes tenga cada uno. */}
-      <div className="box-entry__skill" role="group" aria-label={t("box.triggersTitle")}>
+      <div className="box-entry__skill" role="group" aria-label={t("box.skillAria")}>
         <div className="box-entry__metric" title={t("box.triggersTitle")}>
           <IconSparkle aria-hidden="true" />
           <span className="box-entry__metric-value">
@@ -274,7 +309,9 @@ export function BoxEntry({
           <span className="box-entry__skill-yield" title={skillYield.title}>
             {skillYield.icon}
             <span className="box-entry__metric-value">{skillYield.text}</span>
-            <span className="sr-only">{`${skillYield.text} — ${skillYield.title}`}</span>
+            {/* El valor ya está en el texto visible; el sr-only solo aporta la
+                descripción (que de otro modo solo se vería en el title al hover). */}
+            <span className="sr-only">{skillYield.title}</span>
           </span>
         )}
       </div>
@@ -294,7 +331,7 @@ export function BoxEntry({
             <IconMore />
           </button>
           {menuOpen && (
-            <div className="box-entry__menu-pop" role="menu">
+            <div className="box-entry__menu-pop" role="menu" onKeyDown={onMenuKeyDown}>
               <button
                 type="button"
                 role="menuitem"

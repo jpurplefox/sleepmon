@@ -972,6 +972,15 @@ select:focus {
   margin: 0;
 }
 
+/* Título de sección + indicador de refetch ("Actualizando…") en línea, alineados
+   por su línea base. El indicador vive fuera del <h2> (semántica estable). */
+.section-head__title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
 /* Modal */
 .modal-overlay {
   position: fixed;
@@ -1434,7 +1443,7 @@ select:focus {
      entre filas, sin importar cuántos ingredientes tenga cada Pokémon. */
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1.6fr) 8rem auto;
   align-items: center;
-  gap: 1rem 1.25rem;
+  gap: 1rem 1.5rem;
 }
 
 @media (max-width: 720px) {
@@ -1457,6 +1466,8 @@ select:focus {
   height: 48px;
   object-fit: contain;
   flex-shrink: 0;
+  /* Sprites pixel-art: nítidos al escalar, como el resto del sistema. */
+  image-rendering: pixelated;
 }
 
 .box-entry__title {
@@ -1481,15 +1492,11 @@ select:focus {
 }
 
 /* Zona 2 — Config: reusa .prod-box-item__config; atenuada para retroceder frente
-   a las métricas (la producción es el dato central del overview). */
+   a las métricas (la producción es el dato central del overview). En ancho NO
+   envuelve: así "Lv. N" de la skill se queda en la misma línea que el resto en vez
+   de caer a una segunda fila. En angosto vuelve a envolver (media query de abajo). */
 .box-entry__config {
   opacity: 0.85;
-}
-
-/* En ancho, la config NO envuelve: así "Lv. N" de la skill se queda en la misma
-   línea que el resto en vez de caer a una segunda fila. En angosto vuelve a
-   envolver (ver el media query de abajo). */
-.box-entry__config {
   flex-wrap: nowrap;
   min-width: 0;
 }
@@ -1573,8 +1580,8 @@ select:focus {
 }
 
 .box-entry__skill-yield svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 
 .box-entry__skill-yield .box-entry__metric-value {
@@ -1595,7 +1602,6 @@ select:focus {
 }
 
 .box-entry__menu-btn {
-  font-size: var(--text-lg);
   line-height: 1;
 }
 
@@ -1603,7 +1609,9 @@ select:focus {
   position: absolute;
   right: 0;
   top: calc(100% + 4px);
-  z-index: 10;
+  /* Por encima de cualquier panel de filtro/orden abierto (.filter-pop es 20);
+     mismo plano que los dropdowns de naturaleza/sub skill (30). */
+  z-index: 30;
   display: flex;
   flex-direction: column;
   min-width: 9rem;
@@ -1659,10 +1667,10 @@ select:focus {
   object-fit: contain;
 }
 
-/* Ingrediente de un slot que el nivel todavía no desbloqueó: más oscuro. */
+/* Ingrediente de un slot que el nivel todavía no desbloqueó: atenuado. Mismo
+   lenguaje "bloqueado por nivel" que .ingredient-slot--locked (opacity 0.45). */
 .ingredient-row__icon--locked {
-  filter: brightness(0.4);
-  opacity: 0.7;
+  opacity: 0.45;
 }
 
 /* Sub skills en la card: marco coloreado por tier (mismo ss-icon que el selector). */
@@ -1725,6 +1733,12 @@ select:focus {
   margin-top: 2.5rem;
 }
 
+/* El título de sección de cobertura va fuera de una .card: reset del margin-top
+   del navegador para alinear con el resto de los títulos de sección. */
+.distributions > h2 {
+  margin-top: 0;
+}
+
 /* Cobertura del equipo: bloques apilados; íconos cubiertos vs. atenuados. */
 .coverage-block {
   margin-bottom: 1rem;
@@ -1747,7 +1761,7 @@ select:focus {
 }
 
 .specialties-count__number {
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   font-weight: 700;
 }
 
