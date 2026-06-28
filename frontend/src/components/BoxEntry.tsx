@@ -41,33 +41,25 @@ export function BoxEntry({
 }: Props) {
   const { t, berry, ingredient } = useI18n();
   // Editar/Eliminar/Comparar viven en un menú overflow "···" (no botones siempre
-  // visibles: con muchas filas saturan y exponen el borrado). Comparar es el primer
-  // ítem (acción rápida); el borrado se confirma en dos pasos dentro del menú.
+  // visibles: con muchas filas saturan). El borrado abre un modal de confirmación
+  // (lo maneja la página), más claro que un paso inline.
   const [menuOpen, setMenuOpen] = useState(false);
-  const [confirming, setConfirming] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
 
   // Manejo del menú: foco al primer item (= Comparar) al abrir; al cerrar (click
-  // afuera / Escape) se resetea la confirmación y el foco vuelve al disparador. No
-  // hay auto-reset por tiempo: confunde tener el botón "Eliminar" volviendo solo
-  // mientras el menú sigue abierto.
+  // afuera / Escape) el foco vuelve al disparador.
   useEffect(() => {
     if (!menuOpen) return;
     menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
-    const close = () => {
-      setMenuOpen(false);
-      setConfirming(false);
-      menuBtnRef.current?.focus();
-    };
     const onDown = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-        setConfirming(false);
-      }
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        menuBtnRef.current?.focus();
+      }
     };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
@@ -76,15 +68,6 @@ export function BoxEntry({
       document.removeEventListener("keydown", onKey);
     };
   }, [menuOpen]);
-
-  const handleDelete = () => {
-    if (confirming) {
-      onDelete(member.id);
-      setMenuOpen(false);
-    } else {
-      setConfirming(true);
-    }
-  };
 
   const prod = member.production;
   const ribbonIdx = RIBBONS.findIndex((r) => r.name === member.ribbon);
@@ -188,7 +171,7 @@ export function BoxEntry({
               : t("box.ingredientsTitlePlain")
           }
         >
-          {combined.length === 0 && randomTotal == null ? (
+          {combined.length === 0 ? (
             <span className="box-entry__metric-value">{t("common.dash")}</span>
           ) : (
             <>
@@ -235,27 +218,6 @@ export function BoxEntry({
                   </span>
                 </span>
               ))}
-              {randomTotal != null && (
-                <span
-                  className="box-entry__ing-pair box-entry__ing-random"
-                  title={t("box.randomIngredientsTitle", { value: fmt(randomTotal) })}
-                >
-                  {/* Ingredientes al azar (Ingredient Magnet): ícono de ingrediente
-                      genérico, no el de skill — son ingredientes, de cualquier tipo. */}
-                  <img
-                    className="mini-icon"
-                    src={statIcon("Ingredient Finding")}
-                    alt=""
-                    aria-hidden="true"
-                  />
-                  <span className="box-entry__metric-value">
-                    {t("box.randomIngredients", { value: fmt(randomTotal) })}
-                  </span>
-                  <span className="sr-only">
-                    {t("box.randomIngredientsAria", { value: fmt(randomTotal) })}
-                  </span>
-                </span>
-              )}
             </>
           )}
         </div>
@@ -270,6 +232,22 @@ export function BoxEntry({
               value: prod ? fmt(prod.skill_triggers) : t("common.dash"),
             })}
           </span>
+          {/* Producción de la skill al lado de sus disparos: los ingredientes al
+              azar (Ingredient Magnet, p. ej. Plusle), con ícono de ingrediente. */}
+          {randomTotal != null && (
+            <span
+              className="box-entry__skill-yield"
+              title={t("box.randomIngredientsTitle", { value: fmt(randomTotal) })}
+            >
+              <img className="mini-icon" src={statIcon("Ingredient Finding")} alt="" aria-hidden="true" />
+              <span className="box-entry__metric-value">
+                {t("box.randomIngredients", { value: fmt(randomTotal) })}
+              </span>
+              <span className="sr-only">
+                {t("box.randomIngredientsAria", { value: fmt(randomTotal) })}
+              </span>
+            </span>
+          )}
         </div>
       </div>
 
@@ -316,21 +294,17 @@ export function BoxEntry({
                 type="button"
                 role="menuitem"
                 className="box-entry__menu-item box-entry__menu-item--danger"
-                onClick={handleDelete}
-                aria-label={
-                  confirming
-                    ? t("member.deleteConfirmAria", { species: member.species })
-                    : t("member.deleteAria", { species: member.species })
-                }
+                onClick={() => {
+                  setMenuOpen(false);
+                  onDelete(member.id);
+                }}
+                aria-label={t("member.deleteAria", { species: member.species })}
               >
-                {confirming ? t("member.confirm") : t("member.delete")}
+                {t("member.delete")}
               </button>
             </div>
           )}
         </div>
-        <span className="sr-only" role="status" aria-live="polite">
-          {confirming ? t("member.deleteConfirmStatus", { species: member.species }) : ""}
-        </span>
       </div>
     </article>
   );

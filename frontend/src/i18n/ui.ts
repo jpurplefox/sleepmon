@@ -6,6 +6,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     // Común
     "common.retry": "Reintentar",
     "common.close": "Cerrar",
+    "common.cancel": "Cancelar",
     "common.edit": "Editar",
     "common.reload": "Recargar",
     "common.loadingCatalog": "Cargando catálogo…",
@@ -139,6 +140,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "member.subSkillLocked": "{name} (se desbloquea a nivel {level})",
     "member.subSkillSlotUnavailable": "{name} (slot no disponible)",
     "member.delete": "Eliminar",
+    "member.deleteModalTitle": "¿Eliminar a {species}?",
+    "member.deleteModalBody": "Esta acción no se puede deshacer.",
     "member.confirm": "Confirmar",
     "member.deleteAria": "Eliminar {species}",
     "member.deleteConfirmAria": "Confirmar eliminación de {species} — pulsá de nuevo para confirmar",
@@ -261,6 +264,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     // Common
     "common.retry": "Retry",
     "common.close": "Close",
+    "common.cancel": "Cancel",
     "common.edit": "Edit",
     "common.reload": "Reload",
     "common.loadingCatalog": "Loading catalog…",
@@ -394,6 +398,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "member.subSkillLocked": "{name} (unlocks at level {level})",
     "member.subSkillSlotUnavailable": "{name} (slot unavailable)",
     "member.delete": "Delete",
+    "member.deleteModalTitle": "Delete {species}?",
+    "member.deleteModalBody": "This can't be undone.",
     "member.confirm": "Confirm",
     "member.deleteAria": "Delete {species}",
     "member.deleteConfirmAria": "Confirm deletion of {species} — press again to confirm",

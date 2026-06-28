@@ -76,6 +76,8 @@ export function Team({ onCompare }: TeamProps) {
   // Error de borrado (DELETE): se muestra junto a la lista, separado del error
   // del formulario de alta/edición.
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  // Pokémon pendiente de confirmar borrado (abre el modal de confirmación).
+  const [deleting, setDeleting] = useState<Member | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("dex");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [filters, setFilters] = useState<BoxFilters>(EMPTY_FILTERS);
@@ -112,9 +114,13 @@ export function Team({ onCompare }: TeamProps) {
     mutationFn: (id: string) => api.deleteMember(id),
     onSuccess: () => {
       setDeleteError(null);
+      setDeleting(null);
       invalidate();
     },
-    onError: (err: Error) => setDeleteError(err.message),
+    onError: (err: Error) => {
+      setDeleting(null);
+      setDeleteError(err.message);
+    },
   });
 
   const openForm = () => {
@@ -222,7 +228,7 @@ export function Team({ onCompare }: TeamProps) {
               nature={natureByName.get(m.nature)}
               tierBySubSkill={(name) => tierBySubSkill.get(name)}
               onEdit={() => openEdit(m)}
-              onDelete={(id) => remove.mutate(id)}
+              onDelete={() => setDeleting(m)}
               onCompare={() => onCompare(m.id)}
             />
           ))}
@@ -252,6 +258,33 @@ export function Team({ onCompare }: TeamProps) {
             pending={update.isPending}
             error={formError}
           />
+        </Modal>
+      )}
+
+      {deleting && (
+        <Modal
+          title={t("member.deleteModalTitle", { species: deleting.species })}
+          onClose={() => setDeleting(null)}
+        >
+          <p className="muted">{t("member.deleteModalBody")}</p>
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="btn btn--ghost"
+              data-autofocus
+              onClick={() => setDeleting(null)}
+            >
+              {t("common.cancel")}
+            </button>
+            <button
+              type="button"
+              className="btn btn--danger"
+              onClick={() => remove.mutate(deleting.id)}
+              disabled={remove.isPending}
+            >
+              {t("member.delete")}
+            </button>
+          </div>
         </Modal>
       )}
     </div>

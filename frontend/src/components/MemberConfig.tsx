@@ -12,6 +12,10 @@ import type { Nature } from "../types";
 
 const TIER_CLASS: Record<string, string> = { Gold: "gold", Blue: "blue", Regular: "regular" };
 
+// Slots de sub skill del juego (1..5). Se pintan SIEMPRE los 5: los no cargados,
+// como cuadrados vacíos y opacos, para que la fila quede alineada entre Pokémon.
+const SUB_SKILL_SLOTS = SUB_SKILL_UNLOCK_LEVELS.length;
+
 interface Props {
   // Lo necesario de un ejemplar para pintar su config (subconjunto de Member):
   // se pasan primitivos en vez del objeto entero para no atar el componente a la
@@ -73,7 +77,13 @@ export function MemberConfig({
         })}
       </span>
 
-      <span className="prod-box-item__nature icon-row">
+      {/* Naturaleza: si tiene efecto, ↑/↓ con íconos de stat; si es neutra o no
+          tiene, un placeholder que ocupa el MISMO espacio (cuadrados vacíos) para
+          que la fila quede alineada. El nombre va en title/sr-only. */}
+      <span
+        className="prod-box-item__nature icon-row"
+        title={nature ? natureLabel(nature) : t("card.noNature")}
+      >
         {natureMeta && !natureMeta.neutral && natureMeta.increased && natureMeta.decreased ? (
           <>
             <span className="nat-up">↑</span>
@@ -92,35 +102,42 @@ export function MemberConfig({
             />
           </>
         ) : (
-          <span className="muted">
-            {nature ? natureLabel(nature) : t("card.noNature")}
-          </span>
+          <>
+            <span className="nat-up nat-up--muted">↑</span>
+            <span className="mini-icon mini-icon--empty" aria-hidden="true" />
+            <span className="nat-down nat-down--muted">↓</span>
+            <span className="mini-icon mini-icon--empty" aria-hidden="true" />
+            <span className="sr-only">{nature ? natureLabel(nature) : t("card.noNature")}</span>
+          </>
         )}
       </span>
 
-      {subSkills.length > 0 && (
-        <span className="ingredient-row">
-          {subSkills.map((s, idx) => {
-            const unlock = SUB_SKILL_UNLOCK_LEVELS[idx] ?? SUB_SKILL_NEVER_UNLOCKS;
-            const locked = level < unlock;
-            const tier = TIER_CLASS[tierBySubSkill(s) ?? "Regular"];
-            const tooltip = !locked
-              ? subSkill(s)
-              : Number.isFinite(unlock)
-                ? t("member.subSkillLocked", { name: subSkill(s), level: unlock })
-                : t("member.subSkillSlotUnavailable", { name: subSkill(s) });
-            return (
-              <span
-                key={`${s}-${idx}`}
-                className={`ss-icon ss-icon--${tier}` + (locked ? " is-locked" : "")}
-                data-tooltip={tooltip}
-              >
-                <img src={subSkillIcon(s)} alt={subSkill(s)} loading="lazy" />
-              </span>
-            );
-          })}
-        </span>
-      )}
+      {/* Sub skills: siempre los 5 slots; los no cargados como cuadrado vacío. */}
+      <span className="ingredient-row">
+        {Array.from({ length: SUB_SKILL_SLOTS }, (_, idx) => {
+          const s = subSkills[idx];
+          if (!s) {
+            return <span key={`empty-${idx}`} className="ss-icon ss-icon--empty" aria-hidden="true" />;
+          }
+          const unlock = SUB_SKILL_UNLOCK_LEVELS[idx] ?? SUB_SKILL_NEVER_UNLOCKS;
+          const locked = level < unlock;
+          const tier = TIER_CLASS[tierBySubSkill(s) ?? "Regular"];
+          const tooltip = !locked
+            ? subSkill(s)
+            : Number.isFinite(unlock)
+              ? t("member.subSkillLocked", { name: subSkill(s), level: unlock })
+              : t("member.subSkillSlotUnavailable", { name: subSkill(s) });
+          return (
+            <span
+              key={`${s}-${idx}`}
+              className={`ss-icon ss-icon--${tier}` + (locked ? " is-locked" : "")}
+              data-tooltip={tooltip}
+            >
+              <img src={subSkillIcon(s)} alt={subSkill(s)} loading="lazy" />
+            </span>
+          );
+        })}
+      </span>
 
       {/* Skill: el ícono propio de la main skill + "Lv. N". Color neutro (el
           dorado es para el nivel del Pokémon). El nombre de la skill va en
