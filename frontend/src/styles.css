@@ -1062,8 +1062,33 @@ select:focus {
   font-size: var(--text-sm);
 }
 
-.box-toolbar__dir {
-  padding: 0.2rem 0.5rem;
+/* Orden: select + dirección como un único control segmentado (pegados, borde
+   compartido). */
+.sort-control {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.sort-control__select {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.sort-control__dir {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.6rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-left: none;
+  border-top-right-radius: var(--r-md);
+  border-bottom-right-radius: var(--r-md);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.sort-control__dir:hover {
+  color: var(--accent);
 }
 
 .box-toolbar__filters {
@@ -1399,21 +1424,10 @@ select:focus {
   opacity: 0.8;
 }
 
-/* "✦ +N al azar" (Ingredient Magnet S): se distingue del resto con el color de
-   acento funcional y el destello de skill. */
-.box-entry__ing-random {
-  color: var(--accent);
-  font-size: var(--text-sm);
-}
-
-.box-entry__ing-random svg {
-  width: 13px;
-  height: 13px;
-}
-
+/* "+N al azar" (Ingredient Magnet S): ícono de ingrediente + texto neutro, como
+   el resto de la producción (el "al azar" ya lo distingue; sin color de acento). */
 .box-entry__ing-random .box-entry__metric-value {
-  color: var(--accent);
-  font-size: var(--text-sm);
+  color: var(--muted);
 }
 
 .box-entry__actions {

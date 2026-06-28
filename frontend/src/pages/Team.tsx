@@ -14,20 +14,8 @@ import { BoxCoverage } from "../components/BoxCoverage";
 import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
 import { useI18n } from "../i18n";
+import { totalIngredients } from "../ingredientProduction";
 import type { Catalog, Member, MemberInput, Species } from "../types";
-
-// Producción del ingrediente principal: el de mayor total entre los desbloqueados,
-// combinando la mecánica normal (ingredients) con lo que aporta la main skill
-// (skill_ingredients), por ingrediente. Coherente con lo que muestra BoxEntry.
-const mainIngredientAmount = (m: Member): number => {
-  const prod = m.production;
-  if (!prod) return 0;
-  const totals = new Map<string, number>();
-  for (const s of prod.ingredients) totals.set(s.ingredient, (totals.get(s.ingredient) ?? 0) + s.amount);
-  for (const s of prod.skill_ingredients)
-    totals.set(s.ingredient, (totals.get(s.ingredient) ?? 0) + s.amount);
-  return Math.max(0, ...totals.values());
-};
 
 // Orden + filtros del overview, en el cliente (la producción ya viene en /team).
 function sortAndFilter(
@@ -51,8 +39,8 @@ function sortAndFilter(
         return m.level;
       case "berries":
         return m.production?.berries ?? 0;
-      case "ingredient":
-        return mainIngredientAmount(m);
+      case "ingredients":
+        return m.production ? totalIngredients(m.production) : 0;
       default:
         return speciesByName.get(m.species)?.dex ?? 0;
     }

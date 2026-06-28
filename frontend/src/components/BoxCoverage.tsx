@@ -1,7 +1,8 @@
 import { berryIcon } from "../berries";
-import { INGREDIENT_UNLOCK_LEVELS } from "../constants";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
+import { mainIngredient } from "../ingredientProduction";
+import { contributesBerryRole, producesIngredients } from "../skills";
 import type { Catalog, Member } from "../types";
 
 interface Props {
@@ -10,49 +11,52 @@ interface Props {
 }
 
 // Cobertura del equipo: en vez de frecuencias, responde "¿qué tengo cubierto y qué
-// me falta?". Tres bloques: conteo por especialidad, y la cobertura de bayas /
-// ingredientes de los especialistas correspondientes (íconos cubiertos vs.
-// atenuados). Se calcula en el cliente con el catálogo + la caja.
+// me falta?". Conteo por especialidad + cobertura de bayas e ingredientes. Lo que
+// "cuenta" no es solo la especialidad: un Pokémon de especialidad Skills cuya
+// habilidad cumple ese rol también suma (Crustle/Plusle juntan ingredientes;
+// Noivern/Sceptile cumplen el rol de bayas). Se calcula en el cliente.
 export function BoxCoverage({ members, catalog }: Props) {
   const { t, specialty, berry, ingredient } = useI18n();
 
   const speciesByName = new Map(catalog.species.map((s) => [s.name, s]));
   const specialtyOf = (m: Member) => speciesByName.get(m.species)?.specialty;
+  const skillOf = (m: Member) => speciesByName.get(m.species)?.main_skill;
 
   // Conteo por especialidad (en el orden del juego; 0 se muestra explícito).
   const SPECIALTIES = ["Berries", "Ingredients", "Skills"];
   const specialtyCount = (sp: string) => members.filter((m) => specialtyOf(m) === sp).length;
 
-  // Universo de bayas del catálogo y las cubiertas por los especialistas en Bayas.
+  // Cobertura de BAYAS: cuenta su baya si es especialista en Bayas, o si es
+  // especialista en Skills y su habilidad cumple el rol de bayas (Charge Strength /
+  // Berry Burst). Golem (Charge Strength pero especialidad Ingredientes) NO cuenta.
+  const coversBerry = (m: Member): boolean => {
+    const sp = specialtyOf(m);
+    return sp === "Berries" || (sp === "Skills" && contributesBerryRole(skillOf(m)));
+  };
   const allBerries = [...new Set(catalog.species.map((s) => s.berry))].sort();
   const coveredBerries = new Set(
     members
-      .filter((m) => specialtyOf(m) === "Berries")
+      .filter(coversBerry)
       .map((m) => speciesByName.get(m.species)?.berry)
       .filter((b): b is string => !!b),
   );
 
-  // Ingredientes que cargan los especialistas en Ingredientes, contando solo los
-  // slots ya desbloqueados por nivel (un slot bloqueado todavía no produce).
+  // Cobertura de INGREDIENTES: cuenta su ingrediente PRINCIPAL (el de mayor
+  // producción combinada base+skill) si es especialista en Ingredientes o su
+  // habilidad produce ingredientes (Ingredient Draw/Magnet). Solo el principal: un
+  // ingrediente secundario de baja producción (la hierba de Dragonite) no cuenta.
+  const coversIngredient = (m: Member): boolean =>
+    specialtyOf(m) === "Ingredients" || producesIngredients(skillOf(m));
+  const allIngredients = catalog.ingredients;
   const coveredIngredients = new Set(
     members
-      .filter((m) => specialtyOf(m) === "Ingredients")
-      .flatMap((m) =>
-        m.ingredients.filter((_, i) => m.level >= (INGREDIENT_UNLOCK_LEVELS[i] ?? 1)),
-      ),
+      .filter(coversIngredient)
+      .map((m) => (m.production ? mainIngredient(m.production) : null))
+      .filter((i): i is string => !!i),
   );
-  // Universo alcanzable: ingredientes que ALGUNA especie con especialidad
-  // Ingredientes puede cargar (no los 19 del juego, que harían el 100% imposible).
-  const reachableIngredients = [
-    ...new Set(
-      catalog.species
-        .filter((s) => s.specialty === "Ingredients")
-        .flatMap((s) => s.ingredient_slots.flat()),
-    ),
-  ].sort();
 
-  const berrySpecialists = specialtyCount("Berries");
-  const ingredientSpecialists = specialtyCount("Ingredients");
+  const berryContributors = members.filter(coversBerry).length;
+  const ingredientContributors = members.filter(coversIngredient).length;
 
   return (
     <section className="distributions">
@@ -79,7 +83,7 @@ export function BoxCoverage({ members, catalog }: Props) {
             {t("box.coverageCount", { covered: coveredBerries.size, total: allBerries.length })}
           </span>
         </h3>
-        {berrySpecialists === 0 ? (
+        {berryContributors === 0 ? (
           <p className="muted">{t("box.noBerrySpecialists")}</p>
         ) : (
           <div className="coverage-grid">
@@ -107,15 +111,15 @@ export function BoxCoverage({ members, catalog }: Props) {
           <span className="muted">
             {t("box.coverageCount", {
               covered: coveredIngredients.size,
-              total: reachableIngredients.length,
+              total: allIngredients.length,
             })}
           </span>
         </h3>
-        {ingredientSpecialists === 0 ? (
+        {ingredientContributors === 0 ? (
           <p className="muted">{t("box.noIngredientSpecialists")}</p>
         ) : (
           <div className="coverage-grid">
-            {reachableIngredients.map((ing) => {
+            {allIngredients.map((ing) => {
               const covered = coveredIngredients.has(ing);
               return (
                 <img

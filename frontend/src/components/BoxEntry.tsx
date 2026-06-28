@@ -240,7 +240,14 @@ export function BoxEntry({
                   className="box-entry__ing-pair box-entry__ing-random"
                   title={t("box.randomIngredientsTitle", { value: fmt(randomTotal) })}
                 >
-                  <IconSparkle aria-hidden="true" />
+                  {/* Ingredientes al azar (Ingredient Magnet): ícono de ingrediente
+                      genérico, no el de skill — son ingredientes, de cualquier tipo. */}
+                  <img
+                    className="mini-icon"
+                    src={statIcon("Ingredient Finding")}
+                    alt=""
+                    aria-hidden="true"
+                  />
                   <span className="box-entry__metric-value">
                     {t("box.randomIngredients", { value: fmt(randomTotal) })}
                   </span>
