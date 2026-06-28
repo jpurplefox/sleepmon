@@ -1,4 +1,5 @@
 import { berryIcon } from "../berries";
+import { INGREDIENT_UNLOCK_LEVELS } from "../constants";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import type { Catalog, Member } from "../types";
@@ -31,12 +32,24 @@ export function BoxCoverage({ members, catalog }: Props) {
       .filter((b): b is string => !!b),
   );
 
-  // Universo de ingredientes y los que cargan los especialistas en Ingredientes.
+  // Ingredientes que cargan los especialistas en Ingredientes, contando solo los
+  // slots ya desbloqueados por nivel (un slot bloqueado todavía no produce).
   const coveredIngredients = new Set(
     members
       .filter((m) => specialtyOf(m) === "Ingredients")
-      .flatMap((m) => m.ingredients),
+      .flatMap((m) =>
+        m.ingredients.filter((_, i) => m.level >= (INGREDIENT_UNLOCK_LEVELS[i] ?? 1)),
+      ),
   );
+  // Universo alcanzable: ingredientes que ALGUNA especie con especialidad
+  // Ingredientes puede cargar (no los 19 del juego, que harían el 100% imposible).
+  const reachableIngredients = [
+    ...new Set(
+      catalog.species
+        .filter((s) => s.specialty === "Ingredients")
+        .flatMap((s) => s.ingredient_slots.flat()),
+    ),
+  ].sort();
 
   const berrySpecialists = specialtyCount("Berries");
   const ingredientSpecialists = specialtyCount("Ingredients");
@@ -94,7 +107,7 @@ export function BoxCoverage({ members, catalog }: Props) {
           <span className="muted">
             {t("box.coverageCount", {
               covered: coveredIngredients.size,
-              total: catalog.ingredients.length,
+              total: reachableIngredients.length,
             })}
           </span>
         </h3>
@@ -102,7 +115,7 @@ export function BoxCoverage({ members, catalog }: Props) {
           <p className="muted">{t("box.noIngredientSpecialists")}</p>
         ) : (
           <div className="coverage-grid">
-            {catalog.ingredients.map((ing) => {
+            {reachableIngredients.map((ing) => {
               const covered = coveredIngredients.has(ing);
               return (
                 <img

@@ -125,11 +125,13 @@ export function Team({ onCompare }: TeamProps) {
 
   const openForm = () => {
     setFormError(null);
+    setDeleteError(null);
     setFormOpen(true);
   };
 
   const openEdit = (member: Member) => {
     setFormError(null);
+    setDeleteError(null);
     setEditing(member);
   };
 
@@ -159,7 +161,7 @@ export function Team({ onCompare }: TeamProps) {
         <div className="section-head">
           <h2>
             {t("team.box")}{" "}
-            <span className="muted">
+            <span className="muted" role="status" aria-live="polite">
               {hasFilters
                 ? t("box.showing", { shown: visible.length, total: allMembers.length })
                 : `(${allMembers.length})`}

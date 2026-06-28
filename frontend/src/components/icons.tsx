@@ -135,6 +135,17 @@ export function IconGrip(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+// Más acciones (menú overflow): tres puntos horizontales.
+export function IconMore(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="5" cy="12" r="1" />
+      <circle cx="12" cy="12" r="1" />
+      <circle cx="19" cy="12" r="1" />
+    </svg>
+  );
+}
+
 // Cerrar / quitar (cruz de línea, mismo trazo que el resto).
 export function IconClose(props: SVGProps<SVGSVGElement>) {
   return (

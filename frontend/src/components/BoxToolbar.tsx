@@ -75,11 +75,7 @@ export function BoxToolbar({
     <div className="box-toolbar">
       <label className="box-toolbar__order">
         <span className="muted">{t("box.sortBy")}</span>
-        <select
-          value={sortKey}
-          onChange={(e) => onSortKey(e.target.value as SortKey)}
-          aria-label={t("box.sortBy")}
-        >
+        <select value={sortKey} onChange={(e) => onSortKey(e.target.value as SortKey)}>
           <option value="dex">{t("box.sortDex")}</option>
           <option value="level">{t("box.sortLevel")}</option>
           <option value="berries">{t("box.sortBerries")}</option>

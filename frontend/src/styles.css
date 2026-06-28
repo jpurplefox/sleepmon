@@ -562,7 +562,7 @@ select:focus {
 /* Opción resaltada por la navegación con flechas (foco de teclado en el listbox). */
 .nature-option--highlight {
   border-color: var(--accent);
-  background: var(--surface-3, var(--surface-2));
+  background: var(--surface-2);
 }
 
 /* Sprite */
@@ -1239,25 +1239,6 @@ select:focus {
   color: var(--error);
 }
 
-.member-card__head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.member-card__title {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.member-card__sprite {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-
 .ingredient-row {
   display: flex;
   flex-wrap: wrap;
@@ -1288,14 +1269,6 @@ select:focus {
   height: 22px;
 }
 
-.member-card__head h3 {
-  margin: 0;
-}
-
-.member-card__head .muted {
-  font-size: var(--text-sm);
-}
-
 .badge {
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -1309,46 +1282,12 @@ select:focus {
   border-color: var(--moon-dim);
 }
 
-.member-card__body {
-  margin: 0.75rem 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.member-card__body dt {
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-}
-
-.member-card__body dd {
-  margin: 0.2rem 0 0;
-}
-
 .nature-effect .up {
   color: var(--up);
 }
 
 .nature-effect .down {
   color: var(--down);
-}
-
-/* Acciones de la card (Editar / Eliminar) lado a lado. */
-.member-card__actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.member-card__actions .btn {
-  flex: 1;
-}
-
-/* El botón de editar usa el acento (no el rojo del borrar). */
-.member-card__actions .btn--edit:hover {
-  color: var(--accent);
-  border-color: var(--accent);
 }
 
 .chips {
@@ -1377,10 +1316,6 @@ select:focus {
 /* Distributions */
 .distributions {
   margin-top: 2.5rem;
-}
-
-.chart-card h3 {
-  font-size: var(--text-lg);
 }
 
 /* Cobertura del equipo: bloques apilados; íconos cubiertos vs. atenuados. */
@@ -2315,13 +2250,6 @@ button.prod-card__base-tag--action:hover {
 }
 
 /* ---- Listón (ribbon) ---------------------------------------------------- */
-.member-card__head-right {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  flex-shrink: 0;
-}
-
 .ribbon-icon {
   flex-shrink: 0;
   object-fit: contain;

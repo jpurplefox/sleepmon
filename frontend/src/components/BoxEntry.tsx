@@ -6,7 +6,7 @@ import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { spriteUrl } from "../sprites";
 import type { Member, Nature, Species } from "../types";
-import { IconSparkle } from "./icons";
+import { IconMore, IconSparkle } from "./icons";
 import { MemberConfig } from "./MemberConfig";
 import { RibbonIcon } from "./RibbonIcon";
 
@@ -45,16 +45,20 @@ export function BoxEntry({
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const menuBtnRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    if (!confirming) return;
-    const timer = setTimeout(() => setConfirming(false), 3000);
-    return () => clearTimeout(timer);
-  }, [confirming]);
-
-  // Cerrar el menú al click afuera o con Escape.
+  // Manejo del menú: foco al primer item al abrir; al cerrar (click afuera /
+  // Escape) se resetea la confirmación y el foco vuelve al disparador. No hay
+  // auto-reset por tiempo: confunde tener el botón "Eliminar" volviendo solo
+  // mientras el menú sigue abierto.
   useEffect(() => {
     if (!menuOpen) return;
+    menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
+    const close = () => {
+      setMenuOpen(false);
+      setConfirming(false);
+      menuBtnRef.current?.focus();
+    };
     const onDown = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
@@ -62,10 +66,7 @@ export function BoxEntry({
       }
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setMenuOpen(false);
-        setConfirming(false);
-      }
+      if (e.key === "Escape") close();
     };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
@@ -87,9 +88,9 @@ export function BoxEntry({
   const prod = member.production;
   const ribbonIdx = RIBBONS.findIndex((r) => r.name === member.ribbon);
 
-  // Ingrediente "principal" del overview: el de mayor amount de la producción. El
-  // total disponible (ingredients_total) se muestra en el tooltip. Si hay empate o
-  // no hay ingredientes, queda undefined y la métrica cae al placeholder.
+  // Ingrediente "principal" del overview: el de mayor amount de la producción
+  // (ante empate gana el primero en orden de slot). El total (ingredients_total)
+  // va en el tooltip. Sin ingredientes queda undefined y la métrica cae al "—".
   const mainIngredient =
     prod && prod.ingredients.length > 0
       ? prod.ingredients.reduce((best, cur) => (cur.amount > best.amount ? cur : best))
@@ -196,11 +197,16 @@ export function BoxEntry({
 
       {/* Acciones: Comparar (rápida, acento) + overflow "···" con Editar/Eliminar. */}
       <div className="box-entry__actions">
-        <button className="btn btn--ghost box-entry__compare" onClick={onCompare}>
+        <button
+          className="btn btn--ghost box-entry__compare"
+          onClick={onCompare}
+          aria-label={t("box.compareAria", { species: member.species })}
+        >
           {t("box.compare")}
         </button>
         <div className="box-entry__menu" ref={menuRef}>
           <button
+            ref={menuBtnRef}
             type="button"
             className="icon-btn box-entry__menu-btn"
             aria-haspopup="menu"
@@ -208,7 +214,7 @@ export function BoxEntry({
             aria-label={t("box.moreActions", { species: member.species })}
             onClick={() => setMenuOpen((o) => !o)}
           >
-            ⋯
+            <IconMore />
           </button>
           {menuOpen && (
             <div className="box-entry__menu-pop" role="menu">
