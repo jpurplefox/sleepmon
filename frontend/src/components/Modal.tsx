@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from "react";
 import type { ReactNode } from "react";
 
+import { useI18n } from "../i18n";
 import { IconClose } from "./icons";
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function Modal({ title, onClose, children }: Props) {
+  const { t } = useI18n();
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
 
@@ -70,7 +72,7 @@ export function Modal({ title, onClose, children }: Props) {
       >
         <header className="modal-head">
           <h2 id={titleId}>{title}</h2>
-          <button className="modal-close" onClick={onClose} aria-label="Cerrar">
+          <button className="modal-close" onClick={onClose} aria-label={t("common.close")}>
             <IconClose />
           </button>
         </header>

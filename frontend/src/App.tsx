@@ -2,6 +2,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { LanguageSelector } from "./components/LanguageSelector";
+import { useI18n } from "./i18n";
 import { Production } from "./pages/Production";
 import { Team } from "./pages/Team";
 
@@ -15,6 +17,7 @@ const TABS: Tab[] = ["team", "production"];
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("team");
+  const { t } = useI18n();
 
   // Navegación entre tabs con flechas izquierda/derecha (patrón ARIA de tablist).
   const onTabKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -31,7 +34,8 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
-        <nav className="tabs" role="tablist" aria-label="Navegación principal">
+        <div className="topbar">
+        <nav className="tabs" role="tablist" aria-label={t("nav.aria")}>
         <button
           id="tab-team"
           type="button"
@@ -43,7 +47,7 @@ export default function App() {
           onClick={() => setTab("team")}
           onKeyDown={onTabKeyDown}
         >
-          Equipo
+          {t("nav.team")}
         </button>
         <button
           id="tab-production"
@@ -56,9 +60,11 @@ export default function App() {
           onClick={() => setTab("production")}
           onKeyDown={onTabKeyDown}
         >
-          Comparación
+          {t("nav.comparison")}
         </button>
       </nav>
+        <LanguageSelector />
+      </div>
       {tab === "team" ? (
         <div role="tabpanel" id="tabpanel-team" aria-labelledby="tab-team" tabIndex={0}>
           <Team />

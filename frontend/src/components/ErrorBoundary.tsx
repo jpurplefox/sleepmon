@@ -1,12 +1,33 @@
 import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 
+import { useI18n } from "../i18n";
+
 interface Props {
   children: ReactNode;
 }
 
 interface State {
   hasError: boolean;
+}
+
+// Fallback funcional: el ErrorBoundary es un class component y no puede usar
+// hooks, así que la traducción vive en este componente interno.
+function ErrorFallback() {
+  const { t } = useI18n();
+  return (
+    <div className="error-boundary" role="alert">
+      <h2>{t("error.title")}</h2>
+      <p className="muted">{t("error.body")}</p>
+      <button
+        type="button"
+        className="btn btn--primary"
+        onClick={() => window.location.reload()}
+      >
+        {t("common.reload")}
+      </button>
+    </div>
+  );
 }
 
 // Captura excepciones de render del árbol que envuelve y muestra un fallback
@@ -26,21 +47,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      return (
-        <div className="error-boundary" role="alert">
-          <h2>Algo salió mal</h2>
-          <p className="muted">
-            Ocurrió un error inesperado al mostrar esta vista. Probá recargar la página.
-          </p>
-          <button
-            type="button"
-            className="btn btn--primary"
-            onClick={() => window.location.reload()}
-          >
-            Recargar
-          </button>
-        </div>
-      );
+      return <ErrorFallback />;
     }
     return this.props.children;
   }

@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 
 import { LEVEL_SHORTCUTS, MAX_LEVEL } from "../constants";
+import { useI18n } from "../i18n";
 
 interface Props {
   value: number;
@@ -14,6 +15,7 @@ function clamp(n: number, min: number, max: number): number {
 }
 
 export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL }: Props) {
+  const { t } = useI18n();
   const inputId = useId();
   // Draft local para permitir escribir libremente (incluido borrar el campo).
   const [draft, setDraft] = useState(String(value));
@@ -57,14 +59,14 @@ export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL }: Pro
     <div className="level-selector">
       <div className="level-stepper">
         <label className="level-stepper__label" htmlFor={inputId}>
-          Nivel
+          {t("levelSel.label")}
         </label>
         <button
           type="button"
           className="level-stepper__btn"
           onClick={() => set(value - 1)}
           disabled={value <= min}
-          aria-label="Bajar un nivel"
+          aria-label={t("levelSel.down")}
         >
           ‹
         </button>
@@ -88,7 +90,7 @@ export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL }: Pro
           className="level-stepper__btn"
           onClick={() => set(value + 1)}
           disabled={value >= max}
-          aria-label="Subir un nivel"
+          aria-label={t("levelSel.up")}
         >
           ›
         </button>
