@@ -1,4 +1,5 @@
 import { RIBBONS } from "../constants";
+import { useI18n } from "../i18n";
 import { RibbonIcon } from "./RibbonIcon";
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 // Stepper de listón: arranca sin listón y se avanza/retrocede con los botones a
 // izquierda y derecha. Muestra el ícono del listón, las horas de sueño y el efecto.
 export function RibbonSelect({ value, onChange }: Props) {
+  const { t, lang } = useI18n();
   const found = RIBBONS.findIndex((r) => r.name === value);
   const index = found === -1 ? 0 : found;
   const tier = RIBBONS[index];
@@ -20,11 +22,14 @@ export function RibbonSelect({ value, onChange }: Props) {
     if (next >= 0 && next < RIBBONS.length) onChange(RIBBONS[next].name);
   };
 
-  const label = tier.hours === 0 ? "Sin listón" : `${tier.hours.toLocaleString("es")} h`;
+  const label =
+    tier.hours === 0
+      ? t("ribbon.none")
+      : t("ribbon.hours", { hours: tier.hours.toLocaleString(lang) });
   const effect =
     tier.hours === 0
-      ? "Dormí con el Pokémon para ganar listones"
-      : `+${tier.inventoryBonus} inventario${tier.speed ? " · más velocidad" : ""}`;
+      ? t("ribbon.noneEffect")
+      : t("ribbon.effect", { inv: tier.inventoryBonus }) + (tier.speed ? t("ribbon.speed") : "");
 
   return (
     <div className="ribbon-select">
@@ -33,7 +38,7 @@ export function RibbonSelect({ value, onChange }: Props) {
         className="ribbon-step"
         onClick={() => go(-1)}
         disabled={atStart}
-        aria-label="Listón anterior"
+        aria-label={t("ribbon.prev")}
       >
         ‹
       </button>
@@ -51,7 +56,7 @@ export function RibbonSelect({ value, onChange }: Props) {
         className="ribbon-step"
         onClick={() => go(1)}
         disabled={atEnd}
-        aria-label="Listón siguiente"
+        aria-label={t("ribbon.next")}
       >
         ›
       </button>

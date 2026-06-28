@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 
 import { maxSubSkillSlots, SUB_SKILL_UNLOCK_LEVELS } from "../constants";
+import { useI18n } from "../i18n";
 import { subSkillIcon } from "../subskills";
 import type { SubSkill } from "../types";
 
 const MAX_SUB_SKILLS = 5;
 
 // Grupos por familia, en el orden pedido. "Otros" = los que no tienen variantes S/M/L.
+// `labelKey` es la clave i18n que se traduce al renderizar el encabezado del grupo.
 const FAMILIES = [
-  { title: "Helping Speed", prefix: "Helping Speed " },
-  { title: "Inventario", prefix: "Inventory Up " },
-  { title: "Skill Level Up", prefix: "Skill Level Up " },
-  { title: "Ingrediente", prefix: "Ingredient Finder " },
-  { title: "Skill Trigger", prefix: "Skill Trigger " },
+  { labelKey: "subSel.family.helpingSpeed", prefix: "Helping Speed " },
+  { labelKey: "subSel.family.inventory", prefix: "Inventory Up " },
+  { labelKey: "subSel.family.skillLevelUp", prefix: "Skill Level Up " },
+  { labelKey: "subSel.family.ingredient", prefix: "Ingredient Finder " },
+  { labelKey: "subSel.family.skillTrigger", prefix: "Skill Trigger " },
 ];
 
 const TIER_CLASS: Record<string, string> = { Gold: "gold", Blue: "blue", Regular: "regular" };
@@ -26,6 +28,7 @@ interface Props {
 }
 
 export function SubSkillSelect({ subSkills, value, level, onChange, ariaLabel }: Props) {
+  const { t, subSkill } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -86,10 +89,10 @@ export function SubSkillSelect({ subSkills, value, level, onChange, ariaLabel }:
   const familyGroups = FAMILIES.map((f) => {
     const items = subSkills.filter((s) => s.name.startsWith(f.prefix));
     items.forEach((s) => used.add(s.name));
-    return { title: f.title, items: sorted(items) };
+    return { labelKey: f.labelKey, items: sorted(items) };
   });
   const groups = [
-    { title: "Otros", items: sorted(subSkills.filter((s) => !used.has(s.name))) },
+    { labelKey: "subSel.family.others", items: sorted(subSkills.filter((s) => !used.has(s.name))) },
     ...familyGroups,
   ];
 
@@ -113,7 +116,7 @@ export function SubSkillSelect({ subSkills, value, level, onChange, ariaLabel }:
               <span
                 key={i}
                 className={`ss-icon ss-icon--${tier}` + (locked ? " is-locked" : "")}
-                data-tooltip={name || `Slot de nivel ${unlock}`}
+                data-tooltip={name ? subSkill(name) : t("subSel.slotEmpty", { unlock })}
               >
                 {name && <img src={subSkillIcon(name)} alt={name} />}
                 <span className="ss-icon__lv">{unlock}</span>
@@ -125,13 +128,13 @@ export function SubSkillSelect({ subSkills, value, level, onChange, ariaLabel }:
           className="subskill-trigger__hint"
           title={
             available < MAX_SUB_SKILLS
-              ? `El kit guarda hasta ${MAX_SUB_SKILLS}; al nivel ${level} ${available} de ${MAX_SUB_SKILLS} slots están activos, el resto se activa al subir de nivel`
-              : "Los 5 slots están activos"
+              ? t("subSel.hintActive", { level, available })
+              : t("subSel.hintAllActive")
           }
         >
           {count >= MAX_SUB_SKILLS
-            ? `${count}/${MAX_SUB_SKILLS} · cambiar`
-            : `${count}/${MAX_SUB_SKILLS} · elegir`}
+            ? t("subSel.change", { count })
+            : t("subSel.choose", { count })}
         </span>
       </button>
 
@@ -140,12 +143,12 @@ export function SubSkillSelect({ subSkills, value, level, onChange, ariaLabel }:
           className="subskill-dropdown"
           role="listbox"
           aria-multiselectable
-          aria-label="Elegir sub skills"
+          aria-label={t("subSel.aria")}
         >
           {groups.map((g) =>
             g.items.length === 0 ? null : (
-              <div key={g.title} className="subskill-group">
-                <div className="subskill-group__title">{g.title}</div>
+              <div key={g.labelKey} className="subskill-group">
+                <div className="subskill-group__title">{t(g.labelKey)}</div>
                 <div className="subskill-group__items">
                   {g.items.map((s) => {
                     const idx = slots.indexOf(s.name);
@@ -162,8 +165,12 @@ export function SubSkillSelect({ subSkills, value, level, onChange, ariaLabel }:
                         }
                         onClick={() => toggle(s.name)}
                         disabled={disabled}
-                        title={selected ? `Quitar ${s.name}` : s.name}
-                        aria-label={selected ? `Quitar ${s.name}` : s.name}
+                        title={
+                          selected ? t("subSel.remove", { name: subSkill(s.name) }) : subSkill(s.name)
+                        }
+                        aria-label={
+                          selected ? t("subSel.remove", { name: subSkill(s.name) }) : subSkill(s.name)
+                        }
                       >
                         <span className={`ss-icon ss-icon--${TIER_CLASS[s.tier]}`}>
                           <img src={subSkillIcon(s.name)} alt="" />
@@ -171,7 +178,7 @@ export function SubSkillSelect({ subSkills, value, level, onChange, ariaLabel }:
                             <span className="ss-icon__lv">{SUB_SKILL_UNLOCK_LEVELS[idx]}</span>
                           )}
                         </span>
-                        <span>{s.name}</span>
+                        <span>{subSkill(s.name)}</span>
                       </button>
                     );
                   })}

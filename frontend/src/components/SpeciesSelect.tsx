@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import { useI18n } from "../i18n";
 import { spriteUrl } from "../sprites";
 import type { Species } from "../types";
 
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function SpeciesSelect({ species, value, onChange, ariaLabel }: Props) {
+  const { t, specialty } = useI18n();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   // Opción resaltada para la navegación con flechas dentro del dropdown.
@@ -81,10 +83,10 @@ export function SpeciesSelect({ species, value, onChange, ariaLabel }: Props) {
           <>
             <img className="sprite" src={spriteUrl(selected.dex)} alt="" loading="lazy" />
             <span className="species-trigger__name">{selected.name}</span>
-            <span className="species-trigger__meta">{selected.specialty}</span>
+            <span className="species-trigger__meta">{specialty(selected.specialty)}</span>
           </>
         ) : (
-          <span className="muted">Elegí una especie…</span>
+          <span className="muted">{t("speciesSel.placeholder")}</span>
         )}
         <span className="species-trigger__chevron">▾</span>
       </button>
@@ -94,8 +96,8 @@ export function SpeciesSelect({ species, value, onChange, ariaLabel }: Props) {
           <input
             className="species-search"
             autoFocus
-            aria-label="Buscar especie"
-            placeholder="Buscar especie…"
+            aria-label={t("speciesSel.searchAria")}
+            placeholder={t("speciesSel.searchPlaceholder")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onSearchKey}
@@ -108,7 +110,7 @@ export function SpeciesSelect({ species, value, onChange, ariaLabel }: Props) {
           />
           <ul className="species-options" role="listbox" id="species-options">
             {filtered.length === 0 && (
-              <li className="species-empty muted">Sin resultados</li>
+              <li className="species-empty muted">{t("speciesSel.noResults")}</li>
             )}
             {filtered.map((s, i) => (
               <li key={s.name}>
@@ -127,7 +129,7 @@ export function SpeciesSelect({ species, value, onChange, ariaLabel }: Props) {
                 >
                   <img className="sprite" src={spriteUrl(s.dex)} alt="" loading="lazy" />
                   <span className="species-option__name">{s.name}</span>
-                  <span className="species-option__meta">{s.specialty}</span>
+                  <span className="species-option__meta">{specialty(s.specialty)}</span>
                 </button>
               </li>
             ))}

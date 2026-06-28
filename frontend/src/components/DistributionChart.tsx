@@ -8,6 +8,8 @@ import {
   YAxis,
 } from "recharts";
 
+import { useI18n } from "../i18n";
+
 interface Props {
   title: string;
   data: Record<string, number>;
@@ -15,6 +17,7 @@ interface Props {
 }
 
 export function DistributionChart({ title, data, color = "#6366f1" }: Props) {
+  const { t } = useI18n();
   const rows = Object.entries(data)
     .filter(([, value]) => value !== 0)
     .sort((a, b) => b[1] - a[1])
@@ -24,7 +27,7 @@ export function DistributionChart({ title, data, color = "#6366f1" }: Props) {
     <section className="card chart-card">
       <h3>{title}</h3>
       {rows.length === 0 ? (
-        <p className="muted">Sin datos todavía.</p>
+        <p className="muted">{t("chart.noData")}</p>
       ) : (
         <ResponsiveContainer width="100%" height={Math.max(160, rows.length * 32)}>
           <BarChart data={rows} layout="vertical" margin={{ left: 24, right: 16 }}>

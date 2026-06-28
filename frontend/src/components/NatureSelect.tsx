@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-import { NATURE_GROUP_ORDER, statIcon, statLabel } from "../natures";
+import { useI18n } from "../i18n";
+import { NATURE_GROUP_ORDER, statIcon } from "../natures";
 import type { Nature } from "../types";
 
 interface Props {
@@ -27,13 +28,14 @@ function XCircle() {
 // Badges ↑/↓: chevron de color (rojo sube, azul baja) + ícono del stat. Para las
 // neutras se muestra el círculo con X en ambos lados.
 function NatureEffect({ nature }: { nature: Nature }) {
+  const { t, natureStat } = useI18n();
   if (nature.neutral) {
     return (
       <span className="nature-effect">
-        <span className="nat-stat nat-stat--up" title="Sin efecto">
+        <span className="nat-stat nat-stat--up" title={t("natureSel.noEffect")}>
           <XCircle />
         </span>
-        <span className="nat-stat nat-stat--down" title="Sin efecto">
+        <span className="nat-stat nat-stat--down" title={t("natureSel.noEffect")}>
           <XCircle />
         </span>
       </span>
@@ -41,10 +43,16 @@ function NatureEffect({ nature }: { nature: Nature }) {
   }
   return (
     <span className="nature-effect">
-      <span className="nat-stat nat-stat--up" title={`Sube: ${statLabel(nature.increased)}`}>
+      <span
+        className="nat-stat nat-stat--up"
+        title={t("natureSel.raises", { stat: natureStat(nature.increased!) })}
+      >
         <img src={statIcon(nature.increased!)} alt="" />
       </span>
-      <span className="nat-stat nat-stat--down" title={`Baja: ${statLabel(nature.decreased)}`}>
+      <span
+        className="nat-stat nat-stat--down"
+        title={t("natureSel.lowers", { stat: natureStat(nature.decreased!) })}
+      >
         <img src={statIcon(nature.decreased!)} alt="" />
       </span>
     </span>
@@ -52,6 +60,7 @@ function NatureEffect({ nature }: { nature: Nature }) {
 }
 
 export function NatureSelect({ natures, value, onChange, allowNone, ariaLabel }: Props) {
+  const { t, nature: natureLabel, natureStat } = useI18n();
   const [open, setOpen] = useState(false);
   // Opción resaltada para la navegación con flechas dentro del dropdown.
   const [activeIndex, setActiveIndex] = useState(0);
@@ -147,7 +156,11 @@ export function NatureSelect({ natures, value, onChange, allowNone, ariaLabel }:
         aria-label={ariaLabel}
       >
         <span className="nature-trigger__name">
-          {selected?.name ?? (allowNone ? "Sin naturaleza" : "Elegir naturaleza")}
+          {selected
+            ? natureLabel(selected.name)
+            : allowNone
+              ? t("natureSel.noNature")
+              : t("natureSel.choose")}
         </span>
         {selected && <NatureEffect nature={selected} />}
       </button>
@@ -157,7 +170,7 @@ export function NatureSelect({ natures, value, onChange, allowNone, ariaLabel }:
           ref={listRef}
           className="nature-dropdown"
           role="listbox"
-          aria-label="Elegir naturaleza"
+          aria-label={t("natureSel.choose")}
           tabIndex={0}
           aria-activedescendant={
             optionValues[activeIndex] !== undefined
@@ -183,7 +196,7 @@ export function NatureSelect({ natures, value, onChange, allowNone, ariaLabel }:
                   onMouseEnter={() => setActiveIndex(0)}
                   tabIndex={-1}
                 >
-                  <span className="nature-option__name">Sin naturaleza</span>
+                  <span className="nature-option__name">{t("natureSel.noNature")}</span>
                 </button>
               </div>
             </div>
@@ -194,7 +207,7 @@ export function NatureSelect({ natures, value, onChange, allowNone, ariaLabel }:
                 {g.title && (
                   <div className="nature-group__title">
                     <img className="nature-group__icon" src={statIcon(g.title)} alt="" />
-                    {statLabel(g.title)}
+                    {natureStat(g.title)}
                   </div>
                 )}
                 <div className="nature-group__items">
@@ -214,7 +227,7 @@ export function NatureSelect({ natures, value, onChange, allowNone, ariaLabel }:
                       onMouseEnter={() => setActiveIndex(optionValues.indexOf(n.name))}
                       tabIndex={-1}
                     >
-                      <span className="nature-option__name">{n.name}</span>
+                      <span className="nature-option__name">{natureLabel(n.name)}</span>
                       <NatureEffect nature={n} />
                     </button>
                   ))}

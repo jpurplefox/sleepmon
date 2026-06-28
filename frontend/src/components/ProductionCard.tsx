@@ -7,6 +7,7 @@ import {
   SUB_SKILL_NEVER_UNLOCKS,
   SUB_SKILL_UNLOCK_LEVELS,
 } from "../constants";
+import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { statIcon } from "../natures";
 import { spriteUrl } from "../sprites";
@@ -120,6 +121,7 @@ export function ProductionCard({
   onDrop,
   onDragEnd,
 }: Props) {
+  const { t, ingredient, berry, subSkill, natureStat, nature: natureName } = useI18n();
   const cardRef = useRef<HTMLElement>(null);
   // La animación de entrada solo debe correr al montar (al agregar una card). Al
   // reordenar/intercambiar, el navegador reinicia las animaciones CSS de los nodos
@@ -209,17 +211,25 @@ export function ProductionCard({
       <div className="prod-card__toolbar">
         {/* Feedback del guardado, junto al botón que lo dispara. */}
         <span className="prod-card__toolbar-status" role="status" aria-live="polite">
-          {saveState === "saving" && <span className="prod-card__save muted">Guardando…</span>}
+          {saveState === "saving" && (
+            <span className="prod-card__save muted">{t("card.saving")}</span>
+          )}
           {saveState === "saved" && (
-            <span className="prod-card__save prod-card__save--ok">Guardado</span>
+            <span className="prod-card__save prod-card__save--ok">{t("card.saved")}</span>
           )}
           {saveState === "error" && (
             <span className="prod-card__save prod-card__save--error">
-              {saveError ?? "No se pudo guardar."}
+              {saveError ?? t("card.saveError")}
             </span>
           )}
         </span>
-        <button type="button" className="icon-btn" onClick={onEdit} title="Editar" aria-label="Editar">
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={onEdit}
+          title={t("common.edit")}
+          aria-label={t("common.edit")}
+        >
           <IconEdit />
         </button>
         <button
@@ -227,8 +237,8 @@ export function ProductionCard({
           className="icon-btn"
           onClick={onClone}
           disabled={cloneDisabled}
-          title={cloneDisabled ? "Máximo 5 en la comparación" : "Clonar"}
-          aria-label="Clonar"
+          title={cloneDisabled ? t("card.cloneMax") : t("card.clone")}
+          aria-label={t("card.clone")}
         >
           <IconCopy />
         </button>
@@ -241,8 +251,8 @@ export function ProductionCard({
           }
           onClick={onSaveToBox}
           disabled={saveState === "saving"}
-          title={inBox ? "Actualizar este Pokémon en tu caja" : "Guardar como nuevo en tu caja"}
-          aria-label={inBox ? "Actualizar este Pokémon en tu caja" : "Guardar como nuevo en tu caja"}
+          title={inBox ? t("card.saveUpdate") : t("card.saveNew")}
+          aria-label={inBox ? t("card.saveUpdate") : t("card.saveNew")}
         >
           <IconSaveBox />
         </button>
@@ -250,8 +260,8 @@ export function ProductionCard({
           type="button"
           className="icon-btn prod-card__remove"
           onClick={onRemove}
-          title="Quitar"
-          aria-label="Quitar"
+          title={t("card.remove")}
+          aria-label={t("card.remove")}
         >
           <IconClose />
         </button>
@@ -299,8 +309,8 @@ export function ProductionCard({
                   onMoveRight();
                 }
               }}
-              title="Arrastrar (o usar ← / → con foco) para reordenar; la primera card es la base"
-              aria-label="Reordenar: arrastrar, o flechas izquierda y derecha"
+              title={t("card.gripTitle")}
+              aria-label={t("card.gripAria")}
             >
               <IconGrip />
             </button>
@@ -309,8 +319,8 @@ export function ProductionCard({
               className="icon-btn prod-card__move"
               onClick={onMoveLeft}
               disabled={!onMoveLeft}
-              title="Mover a la izquierda"
-              aria-label="Mover a la izquierda"
+              title={t("card.moveLeft")}
+              aria-label={t("card.moveLeft")}
             >
               ‹
             </button>
@@ -319,17 +329,22 @@ export function ProductionCard({
               className="icon-btn prod-card__move"
               onClick={onMoveRight}
               disabled={!onMoveRight}
-              title="Mover a la derecha"
-              aria-label="Mover a la derecha"
+              title={t("card.moveRight")}
+              aria-label={t("card.moveRight")}
             >
               ›
             </button>
             <div className="prod-card__title">
-              <strong>{config.species}</strong> <span className="muted">Nv.&nbsp;{config.level}</span>
+              <strong>{config.species}</strong>{" "}
+              <span className="muted">{t("common.level", { level: config.level })}</span>
               {(() => {
                 const idx = RIBBONS.findIndex((r) => r.name === config.ribbon);
                 return idx > 0 ? (
-                  <RibbonIcon index={idx} size={16} title={`Listón ${RIBBONS[idx].hours} h`} />
+                  <RibbonIcon
+                    index={idx}
+                    size={16}
+                    title={t("member.ribbon", { hours: RIBBONS[idx].hours })}
+                  />
                 ) : null;
               })()}
             </div>
@@ -339,17 +354,17 @@ export function ProductionCard({
           <div className="prod-card__base-row">
             {comparing &&
               (isBase ? (
-                <span className="prod-card__base-tag" title="El resto se compara contra esta card">
-                  Base
+                <span className="prod-card__base-tag" title={t("card.baseTitle")}>
+                  {t("card.base")}
                 </span>
               ) : (
                 <button
                   type="button"
                   className="prod-card__base-tag prod-card__base-tag--action"
                   onClick={onMakeBase}
-                  title="Usar esta card como base de la comparación"
+                  title={t("card.makeBaseTitle")}
                 >
-                  Hacer base
+                  {t("card.makeBase")}
                 </button>
               ))}
           </div>
@@ -368,46 +383,53 @@ export function ProductionCard({
                 key={i}
                 className={"mini-icon" + (locked ? " mini-icon--locked" : "")}
                 src={ingredientIcon(ing)}
-                alt={ing}
-                title={locked ? `${ing} (se activa a nivel ${INGREDIENT_UNLOCK_LEVELS[i]})` : ing}
+                alt={ingredient(ing)}
+                title={
+                  locked
+                    ? t("card.ingredientLocked", {
+                        ing: ingredient(ing),
+                        level: INGREDIENT_UNLOCK_LEVELS[i],
+                      })
+                    : ingredient(ing)
+                }
               />
             );
           })}
         </div>
         <div className="icon-row">
-          {config.sub_skills.length === 0 && <span className="muted">sin sub skills</span>}
+          {config.sub_skills.length === 0 && <span className="muted">{t("card.noSubSkills")}</span>}
           {config.sub_skills.map((s, i) => {
             const unlock = SUB_SKILL_UNLOCK_LEVELS[i] ?? SUB_SKILL_NEVER_UNLOCKS;
             const locked = config.level < unlock;
             const title = !locked
-              ? s
+              ? subSkill(s)
               : Number.isFinite(unlock)
-                ? `${s} (se activa a nivel ${unlock})`
-                : `${s} (slot no disponible)`;
+                ? t("card.subSkillLocked", { name: subSkill(s), level: unlock })
+                : t("card.subSkillSlotUnavailable", { name: subSkill(s) });
             return (
               <span
                 key={i}
                 className={`ss-icon ss-icon--${tierClass(s)}` + (locked ? " is-locked" : "")}
                 title={title}
               >
-                <img src={subSkillIcon(s)} alt={s} />
+                <img src={subSkillIcon(s)} alt={subSkill(s)} />
               </span>
             );
           })}
         </div>
         <div className="icon-row prod-card__nature">
           {!config.nature ? (
-            <span className="muted">Sin naturaleza</span>
+            <span className="muted">{t("card.noNature")}</span>
           ) : nature && !nature.neutral && nature.increased && nature.decreased ? (
             <>
               <span className="nat-up">↑</span>
-              <img className="mini-icon" src={statIcon(nature.increased)} alt={nature.increased} title={nature.increased} />
+              <img className="mini-icon" src={statIcon(nature.increased)} alt={natureStat(nature.increased)} title={natureStat(nature.increased)} />
               <span className="nat-down">↓</span>
-              <img className="mini-icon" src={statIcon(nature.decreased)} alt={nature.decreased} title={nature.decreased} />
-              <span className="muted">{config.nature}</span>
+              <img className="mini-icon" src={statIcon(nature.decreased)} alt={natureStat(nature.decreased)} title={natureStat(nature.decreased)} />
+              <span className="muted">{natureName(config.nature)}</span>
             </>
           ) : (
-            <span className="muted">{config.nature}</span>
+            <span className="muted">{natureName(config.nature)}</span>
           )}
         </div>
       </div>
@@ -418,36 +440,36 @@ export function ProductionCard({
             {productionError.message}
           </p>
         ) : (
-          <p className="muted prod-card__calc">Calculando…</p>
+          <p className="muted prod-card__calc">{t("card.calculating")}</p>
         )
       ) : (
         <>
           <div className="prod-card__line">
-            <span title="Cadencia de ayuda">
+            <span title={t("card.helpCadence")}>
               <IconClock /> {mmss(d.seconds_per_help)}
             </span>
-            <span title="Ayudas por día">
+            <span title={t("card.helpsPerDay")}>
               <IconHelp /> {fmt(d.helps_per_day)} <Delta value={d.helps_per_day} base={base?.helps_per_day} />
             </span>
           </div>
 
           <div className="prod-card__line">
-            <span title="Inventario">
+            <span title={t("card.inventory")}>
               <IconPackage /> {d.inventory}
             </span>
-            <span title="Se llena en">
+            <span title={t("card.fillsIn")}>
               <IconHourglass /> {hms(d.inventory_fill_hours)}
             </span>
           </div>
 
           <div className="prod-card__block prod-card__block--berry">
             <div className="prod-card__block-head">
-              Bayas <span className="muted">{pct(d.berry_percentage)}</span>
+              {t("card.berries")} <span className="muted">{pct(d.berry_percentage)}</span>
             </div>
             <ul className="prod-card__ings">
               <li>
                 {species && (
-                  <img className="mini-icon" src={berryIcon(species.berry)} alt={d.berry} title={d.berry} />
+                  <img className="mini-icon" src={berryIcon(species.berry)} alt={berry(d.berry)} title={berry(d.berry)} />
                 )}
                 <strong>{fmt(d.berry_amount)}</strong>
                 <Delta value={d.berry_amount} base={base?.berry_amount} />
@@ -457,23 +479,23 @@ export function ProductionCard({
 
           <div className="prod-card__block prod-card__block--ing">
             <div className="prod-card__block-head">
-              Ingredientes{" "}
+              {t("card.ingredientsBlock")}{" "}
               <span className="muted">
                 {pct(d.ingredient_percentage)}
-                {skillIng.size > 0 && " + skill"}
+                {skillIng.size > 0 && ` ${t("card.plusSkill")}`}
               </span>
             </div>
             <ul className="prod-card__ings">
               {combined.map((g) => (
                 <li key={g.ingredient}>
-                  <img className="mini-icon" src={ingredientIcon(g.ingredient)} alt={g.ingredient} title={g.ingredient} />
+                  <img className="mini-icon" src={ingredientIcon(g.ingredient)} alt={ingredient(g.ingredient)} title={ingredient(g.ingredient)} />
                   <strong>{fmt(g.total)}</strong>
                   <Delta value={g.total} base={baseIng.get(g.ingredient)} />
                   {g.fromSkill > 0 && (
-                    <span className="prod-ing__breakdown" title="Aporte de la mecánica normal y de la main skill">
-                      <img src={statIcon("Ingredient Finding")} alt="" title="Por la mecánica normal de ingredientes" />{" "}
+                    <span className="prod-ing__breakdown" title={t("card.breakdownTitle")}>
+                      <img src={statIcon("Ingredient Finding")} alt="" title={t("card.normalTitle")} />{" "}
                       {fmt(g.fromNormal)}
-                      <img src={statIcon("Main Skill Chance")} alt="" title="Por la main skill" /> {fmt(g.fromSkill)}
+                      <img src={statIcon("Main Skill Chance")} alt="" title={t("card.skillTitle")} /> {fmt(g.fromSkill)}
                     </span>
                   )}
                 </li>
@@ -483,119 +505,119 @@ export function ProductionCard({
 
           <div className="prod-card__block prod-card__block--skill">
             <div className="prod-card__block-head">
-              Skill <span className="muted">{pct(d.effective_skill_percentage)}</span>
+              {t("card.skill")} <span className="muted">{pct(d.effective_skill_percentage)}</span>
             </div>
             <div className="prod-card__line">
-              <span title="Activaciones de skill por día">
+              <span title={t("card.triggersTitle")}>
                 <IconSparkle /> {fmt(d.skill_triggers)} <Delta value={d.skill_triggers} base={base?.skill_triggers} />
               </span>
             </div>
             {d.skill_energy != null && (
               <div className="prod-card__line">
-                <span title="Energía que la skill recupera por día a cada compañero del equipo">
-                  <img className="mini-icon" src={statIcon("Energy Recovery")} alt="Energía" />{" "}
+                <span title={t("card.energyEachTitle")}>
+                  <img className="mini-icon" src={statIcon("Energy Recovery")} alt="" />{" "}
                   {fmt(d.skill_energy)} <Delta value={d.skill_energy} base={base?.skill_energy ?? null} />
-                  <span className="muted"> a cada compañero</span>
+                  <span className="muted"> {t("card.energyEach")}</span>
                 </span>
               </div>
             )}
             {d.skill_ingredient_total != null && (
               <div className="prod-card__line">
-                <span title="Ingredientes por día que consigue la skill (de cualquier tipo, al azar)">
-                  <img className="mini-icon" src={statIcon("Ingredient Finding")} alt="Ingredientes" />{" "}
+                <span title={t("card.randomIngredientsTitle")}>
+                  <img className="mini-icon" src={statIcon("Ingredient Finding")} alt="" />{" "}
                   {fmt(d.skill_ingredient_total)}{" "}
                   <Delta value={d.skill_ingredient_total} base={base?.skill_ingredient_total ?? null} />
-                  <span className="muted"> ingredientes al azar</span>
+                  <span className="muted"> {t("card.randomIngredients")}</span>
                 </span>
               </div>
             )}
             {d.skill_cooking_ingredients != null && (
               <div className="prod-card__line">
-                <span title="Ingredientes extra de pote por día para cocinar (Cooking Power-Up S)">
+                <span title={t("card.cookingTitle")}>
                   <IconPot /> {fmt(d.skill_cooking_ingredients)}{" "}
                   <Delta value={d.skill_cooking_ingredients} base={base?.skill_cooking_ingredients ?? null} />
-                  <span className="muted"> ingredientes extra al pote</span>
+                  <span className="muted"> {t("card.cookingExtra")}</span>
                 </span>
               </div>
             )}
             {d.skill_strength != null && (
               <div className="prod-card__line">
-                <span title="Fuerza por día que la skill suma a Snorlax (promedio si el monto es aleatorio)">
+                <span title={t("card.strengthTitle")}>
                   <IconStrength /> {fmtInt(d.skill_strength)}{" "}
                   <Delta value={d.skill_strength} base={base?.skill_strength ?? null} />
-                  <span className="muted"> de fuerza</span>
+                  <span className="muted"> {t("card.strength")}</span>
                 </span>
               </div>
             )}
             {d.skill_dream_shards != null && (
               <div className="prod-card__line">
-                <span title="Fragmentos de sueño por día que consigue la skill (promedio si el monto es aleatorio)">
-                  <img className="mini-icon" src="/shard.png" alt="Fragmento de sueño" />{" "}
+                <span title={t("card.dreamShardsTitle")}>
+                  <img className="mini-icon" src="/shard.png" alt="" />{" "}
                   {fmtInt(d.skill_dream_shards)}{" "}
                   <Delta value={d.skill_dream_shards} base={base?.skill_dream_shards ?? null} />
-                  <span className="muted"> fragmentos de sueño</span>
+                  <span className="muted"> {t("card.dreamShards")}</span>
                 </span>
               </div>
             )}
             {d.skill_tasty_chance != null && (
               <div className="prod-card__line">
-                <span title="Aumento acumulado de Extra Tasty por día (disparos × % del nivel) — Tasty Chance S">
-                  <img className="mini-icon" src="/extra-tasty.png" alt="Extra Tasty" />{" "}
+                <span title={t("card.extraTastyTitle")}>
+                  <img className="mini-icon" src="/extra-tasty.png" alt="" />{" "}
                   +{fmtInt(d.skill_tasty_chance)}%{" "}
                   <Delta value={d.skill_tasty_chance} base={base?.skill_tasty_chance ?? null} />
-                  <span className="muted"> Extra Tasty</span>
+                  <span className="muted"> {t("card.extraTasty")}</span>
                 </span>
               </div>
             )}
             {d.skill_extra_helpful != null && (
               <div className="prod-card__line">
-                <span title="Multiplicador de ayuda total del día (disparos × ×N del nivel) — Extra Helpful S">
+                <span title={t("card.helpMultTitle")}>
                   <IconMagnifier /> ×{fmt(d.skill_extra_helpful)}{" "}
                   <Delta value={d.skill_extra_helpful} base={base?.skill_extra_helpful ?? null} />
-                  <span className="muted"> de ayuda</span>
+                  <span className="muted"> {t("card.helpMult")}</span>
                 </span>
               </div>
             )}
             {d.skill_self_energy != null && (
               <div className="prod-card__line">
-                <span title="Energía que la skill recupera por día al propio Pokémon (Charge Energy S)">
-                  <img className="mini-icon" src={statIcon("Energy Recovery")} alt="Energía" />{" "}
+                <span title={t("card.selfEnergyTitle")}>
+                  <img className="mini-icon" src={statIcon("Energy Recovery")} alt="" />{" "}
                   {fmt(d.skill_self_energy)} <Delta value={d.skill_self_energy} base={base?.skill_self_energy ?? null} />
-                  <span className="muted"> de energía a sí mismo</span>
+                  <span className="muted"> {t("card.selfEnergy")}</span>
                 </span>
               </div>
             )}
             {d.skill_random_energy != null && (
               <div className="prod-card__line">
-                <span title="Energía por día que la skill reparte al equipo, a un compañero al azar cada activación (Energizing Cheer S)">
-                  <img className="mini-icon" src={statIcon("Energy Recovery")} alt="Energía" />{" "}
+                <span title={t("card.randomEnergyTitle")}>
+                  <img className="mini-icon" src={statIcon("Energy Recovery")} alt="" />{" "}
                   {fmt(d.skill_random_energy)} <Delta value={d.skill_random_energy} base={base?.skill_random_energy ?? null} />
-                  <span className="muted"> de energía a un compañero al azar</span>
+                  <span className="muted"> {t("card.randomEnergy")}</span>
                 </span>
               </div>
             )}
             <div className="prod-card__night">
               {d.night_skill_chances.length >= 2 ? (
                 <>
-                  <span title="Probabilidad de activar la skill exactamente 1 vez mientras dormís">
+                  <span title={t("card.nightOnceTitle")}>
                     <IconMoon />
-                    <span className="muted">1 vez</span>{" "}
+                    <span className="muted">{t("card.nightOnce")}</span>{" "}
                     {pct((d.night_skill_chances[0] - d.night_skill_chances[1]) * 100)}
                   </span>
-                  <span title="Probabilidad de activar la skill 2 veces mientras dormís (el tope)">
+                  <span title={t("card.nightTwiceTitle")}>
                     <IconMoon />
-                    <span className="muted">2 veces</span> {pct(d.night_skill_chances[1] * 100)}
+                    <span className="muted">{t("card.nightTwice")}</span> {pct(d.night_skill_chances[1] * 100)}
                   </span>
                 </>
               ) : d.night_skill_chances.length === 1 ? (
-                <span title="Probabilidad de activar la skill mientras dormís">
+                <span title={t("card.nightSleepTitle")}>
                   <IconMoon />
-                  <span className="muted">al dormir</span> {pct(d.night_skill_chances[0] * 100)}
+                  <span className="muted">{t("card.nightSleep")}</span> {pct(d.night_skill_chances[0] * 100)}
                 </span>
               ) : (
-                <span title="Probabilidad de activar la skill mientras dormís">
+                <span title={t("card.nightSleepTitle")}>
                   <IconMoon />
-                  <span className="muted">al dormir</span> —
+                  <span className="muted">{t("card.nightSleep")}</span> {t("common.dash")}
                 </span>
               )}
             </div>

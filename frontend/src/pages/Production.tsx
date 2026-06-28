@@ -5,6 +5,7 @@ import { api } from "../api/client";
 import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
 import { ProductionCard } from "../components/ProductionCard";
+import { useI18n } from "../i18n";
 import { spriteUrl } from "../sprites";
 import type { Member, MemberInput } from "../types";
 
@@ -24,6 +25,7 @@ type CompareEntry = {
 };
 
 export function Production() {
+  const { t } = useI18n();
   const qc = useQueryClient();
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
   const members = useQuery({ queryKey: ["members"], queryFn: api.listMembers });
@@ -124,7 +126,7 @@ export function Production() {
     // 400 al calcular/guardar y sprite en dex 0. Mejor no agregarla y avisar.
     const species = speciesList.find((s) => s.name === m.species);
     if (!species || species.ingredient_slots.length === 0) {
-      setNotice(`No se pudo agregar ${m.species}: la especie no está en el catálogo cargado.`);
+      setNotice(t("prod.speciesNotInCatalog", { species: m.species }));
       setModal(null);
       setEditIndex(null);
       return;
@@ -195,13 +197,13 @@ export function Production() {
 
   const saveToBox = (i: number) => save.mutate(entries[i]);
 
-  if (catalog.isLoading) return <p className="muted">Cargando catálogo…</p>;
+  if (catalog.isLoading) return <p className="muted">{t("common.loadingCatalog")}</p>;
   if (catalog.isError || !catalog.data)
     return (
       <p className="error" role="alert">
-        No se pudo cargar el catálogo. ¿Está el backend en :8000?{" "}
+        {t("common.catalogError")}{" "}
         <button type="button" className="btn btn--ghost" onClick={() => catalog.refetch()}>
-          Reintentar
+          {t("common.retry")}
         </button>
       </p>
     );
@@ -209,14 +211,9 @@ export function Production() {
   return (
     <div className="layout layout--wide">
       <header className="hero">
-        <h1>Comparación</h1>
-        <p className="muted">
-          Agregá Pokémon —de tu caja o nuevos— y compará su producción lado a lado. La primera card
-          es la base: el resto muestra la diferencia contra ella.
-        </p>
-        <p className="muted hero__note">
-          Los cálculos asumen un día de 15.5 h despierto + 8.5 h de sueño con energía máxima.
-        </p>
+        <h1>{t("prod.title")}</h1>
+        <p className="muted">{t("prod.subtitle")}</p>
+        <p className="muted hero__note">{t("prod.assumptions")}</p>
         {notice && (
           <p className="error" role="alert">
             {notice}
@@ -267,22 +264,20 @@ export function Production() {
           <div className="prod-card__toolbar prod-card__toolbar--empty" aria-hidden="true" />
           <article className="prod-card prod-card--add">
             {atMax ? (
-              <p className="muted prod-add__hint">
-                Ya hay 5 Pokémon: es el máximo del equipo en el juego. Quitá uno para agregar otro.
-              </p>
+              <p className="muted prod-add__hint">{t("prod.atMax")}</p>
             ) : (
               <>
                 <p className="muted prod-add__hint">
                   {entries.length === 0
-                    ? "Agregá un Pokémon —de tu caja o configurando uno nuevo— para comparar su producción lado a lado."
-                    : "Agregá otro Pokémon para sumarlo a la comparación."}
+                    ? t("prod.addHintEmpty")
+                    : t("prod.addHintMore")}
                 </p>
                 <div className="prod-add__actions">
                   <button type="button" className="btn btn--primary" onClick={() => openAdd("form")}>
-                    + Nuevo
+                    {t("prod.new")}
                   </button>
                   <button type="button" className="btn btn--ghost" onClick={() => openAdd("box")}>
-                    + Mis Pokémon
+                    {t("prod.myPokemon")}
                   </button>
                 </div>
               </>
@@ -293,7 +288,7 @@ export function Production() {
 
       {modal === "form" && (
         <Modal
-          title={editIndex !== null ? "Editar Pokémon" : "Agregar Pokémon"}
+          title={editIndex !== null ? t("team.modalEdit") : t("team.modalAdd")}
           onClose={() => {
             setModal(null);
             setEditIndex(null);
@@ -303,19 +298,16 @@ export function Production() {
             catalog={catalog.data}
             pending={false}
             error={null}
-            submitLabel={editIndex !== null ? "Guardar" : "Agregar a la comparación"}
+            submitLabel={editIndex !== null ? t("prod.save") : t("prod.addToComparison")}
             initial={editIndex !== null ? entries[editIndex].config : undefined}
             onSubmit={upsert}
             footer={
               editIndex === null ? (
-                <p className="muted">No se guarda en tu caja.</p>
+                <p className="muted">{t("prod.noteNew")}</p>
               ) : entries[editIndex]?.sourceId !== undefined ? (
-                <p className="muted">
-                  Editás la copia de comparación; tu caja no cambia. Para actualizarla, usá el ícono
-                  de guardar en la card.
-                </p>
+                <p className="muted">{t("prod.noteEditInBox")}</p>
               ) : (
-                <p className="muted">Los cambios son solo para la comparación.</p>
+                <p className="muted">{t("prod.noteEditLocal")}</p>
               )
             }
           />
@@ -324,16 +316,16 @@ export function Production() {
 
       {modal === "box" && (
         <Modal
-          title="Elegí un Pokémon de tu caja"
+          title={t("prod.pickFromBox")}
           onClose={() => {
             setModal(null);
             setEditIndex(null);
           }}
         >
           {members.isLoading ? (
-            <p className="muted">Cargando caja…</p>
+            <p className="muted">{t("team.loadingBox")}</p>
           ) : members.isError ? (
-            <p className="error">No se pudo cargar la caja. Reintentá.</p>
+            <p className="error">{t("prod.boxErrorRetry")}</p>
           ) : members.data && members.data.length > 0 ? (
             <ul className="prod-box-list">
               {members.data.map((m) => {
@@ -354,9 +346,9 @@ export function Production() {
                       />
                       <span className="prod-box-item__name">{m.species}</span>
                       {already ? (
-                        <span className="prod-box-item__tag">Ya en comparación</span>
+                        <span className="prod-box-item__tag">{t("prod.alreadyIn")}</span>
                       ) : (
-                        <span className="muted">Nv. {m.level}</span>
+                        <span className="muted">{t("common.level", { level: m.level })}</span>
                       )}
                     </button>
                   </li>
@@ -364,7 +356,7 @@ export function Production() {
               })}
             </ul>
           ) : (
-            <p className="muted">La caja está vacía. Agregá Pokémon en la pestaña Equipo.</p>
+            <p className="muted">{t("prod.boxEmptyTab")}</p>
           )}
         </Modal>
       )}

@@ -6,10 +6,26 @@ import { DistributionChart } from "../components/DistributionChart";
 import { MemberCard } from "../components/MemberCard";
 import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
+import { useI18n } from "../i18n";
 import type { Member, MemberInput } from "../types";
+
+// El backend devuelve la distribución con claves en inglés (nombres del juego).
+// Las traducimos antes de graficarlas, construyendo un nuevo objeto con las keys
+// ya traducidas (las claves del juego son únicas, no deberían colapsar).
+function translateKeys(
+  data: Record<string, number>,
+  translate: (key: string) => string,
+): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [key, value] of Object.entries(data)) {
+    out[translate(key)] = value;
+  }
+  return out;
+}
 
 export function Team() {
   const qc = useQueryClient();
+  const { t, ingredient, subSkill, nature } = useI18n();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Member | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -75,54 +91,51 @@ export function Team() {
     (catalog.data?.sub_skills ?? []).map((s) => [s.name, s.tier]),
   );
 
-  if (catalog.isLoading) return <p className="muted">Cargando catálogo…</p>;
+  if (catalog.isLoading) return <p className="muted">{t("common.loadingCatalog")}</p>;
   if (catalog.isError || !catalog.data)
-    return <p className="error">No se pudo cargar el catálogo. ¿Está el backend en :8000?</p>;
+    return <p className="error">{t("common.catalogError")}</p>;
 
   return (
     <div className="layout">
       <header className="hero">
-        <h1>Mi caja de Pokémon Sleep</h1>
-        <p className="muted">
-          Registrá tus Pokémon con su naturaleza, sub skills e ingredientes, y mirá la
-          distribución de toda la caja.
-        </p>
+        <h1>{t("team.title")}</h1>
+        <p className="muted">{t("team.subtitle")}</p>
       </header>
 
       <section>
         <div className="section-head">
           <h2>
-            Caja {members.data ? `(${members.data.length})` : ""}
+            {t("team.box")} {members.data ? `(${members.data.length})` : ""}
             {/* Refetch en segundo plano (p. ej. tras editar): feedback sutil de que
                 los datos visibles se están actualizando, sin bloquear la lista. */}
             {members.isFetching && !members.isLoading && (
               <span className="muted" role="status">
                 {" "}
-                Actualizando…
+                {t("team.updating")}
               </span>
             )}
           </h2>
           <button className="btn btn--primary" onClick={openForm}>
-            + Agregar Pokémon
+            {t("team.add")}
           </button>
         </div>
 
-        {members.isLoading && <p className="muted">Cargando caja…</p>}
+        {members.isLoading && <p className="muted">{t("team.loadingBox")}</p>}
         {members.isError && (
           <p className="error" role="alert">
-            No se pudo cargar la caja.{" "}
+            {t("team.boxError")}{" "}
             <button type="button" className="btn btn--ghost" onClick={() => members.refetch()}>
-              Reintentar
+              {t("common.retry")}
             </button>
           </p>
         )}
         {deleteError && (
           <p className="error" role="alert">
-            No se pudo eliminar: {deleteError}
+            {t("team.deleteError", { error: deleteError })}
           </p>
         )}
         {members.data?.length === 0 && (
-          <p className="muted">La caja está vacía. Agregá tu primer Pokémon.</p>
+          <p className="muted">{t("team.boxEmpty")}</p>
         )}
         <div className="members">
           {members.data?.map((m) => (
@@ -141,15 +154,15 @@ export function Team() {
 
       {distributions.isError && (
         <section className="distributions">
-          <h2>Distribución de la caja</h2>
+          <h2>{t("team.distribution")}</h2>
           <p className="error" role="alert">
-            No se pudo cargar la distribución.{" "}
+            {t("team.distributionError")}{" "}
             <button
               type="button"
               className="btn btn--ghost"
               onClick={() => distributions.refetch()}
             >
-              Reintentar
+              {t("common.retry")}
             </button>
           </p>
         </section>
@@ -157,21 +170,21 @@ export function Team() {
 
       {distributions.data && (
         <section className="distributions">
-          <h2>Distribución de la caja</h2>
+          <h2>{t("team.distribution")}</h2>
           <div className="grid grid--3">
             <DistributionChart
-              title="Ingredientes"
-              data={distributions.data.ingredients}
+              title={t("chart.ingredients")}
+              data={translateKeys(distributions.data.ingredients, ingredient)}
               color="#d4a017"
             />
             <DistributionChart
-              title="Sub skills"
-              data={distributions.data.sub_skills}
+              title={t("chart.subSkills")}
+              data={translateKeys(distributions.data.sub_skills, subSkill)}
               color="#6366f1"
             />
             <DistributionChart
-              title="Naturalezas"
-              data={distributions.data.natures}
+              title={t("chart.natures")}
+              data={translateKeys(distributions.data.natures, nature)}
               color="#58a6ff"
             />
           </div>
@@ -179,7 +192,7 @@ export function Team() {
       )}
 
       {formOpen && (
-        <Modal title="Agregar Pokémon" onClose={() => setFormOpen(false)}>
+        <Modal title={t("team.modalAdd")} onClose={() => setFormOpen(false)}>
           <MemberForm
             catalog={catalog.data}
             onSubmit={(data) => create.mutate(data)}
@@ -190,11 +203,11 @@ export function Team() {
       )}
 
       {editing && (
-        <Modal title="Editar Pokémon" onClose={() => setEditing(null)}>
+        <Modal title={t("team.modalEdit")} onClose={() => setEditing(null)}>
           <MemberForm
             catalog={catalog.data}
             initial={editing}
-            submitLabel="Guardar cambios"
+            submitLabel={t("team.saveChanges")}
             onSubmit={(data) => update.mutate({ id: editing.id, data })}
             pending={update.isPending}
             error={formError}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
+import { useI18n } from "../i18n";
 import type { Catalog, MemberInput } from "../types";
 import { IngredientSlots } from "./IngredientSlots";
 import { LevelSelector } from "./LevelSelector";
@@ -27,10 +28,12 @@ export function MemberForm({
   onSubmit,
   pending,
   error,
-  submitLabel = "Agregar al equipo",
+  submitLabel,
   initial,
   footer,
 }: Props) {
+  const { t } = useI18n();
+  const label = submitLabel ?? t("form.addToTeam");
   // La especie arranca vacía (sin preselección): así nadie agrega por error la
   // primera del catálogo creyendo que eligió. El submit queda bloqueado hasta
   // que se elige una. Al editar, viene la del miembro.
@@ -92,23 +95,23 @@ export function MemberForm({
     <form className="form" onSubmit={handleSubmit}>
       <div className="form__row">
         <label>
-          Especie
+          {t("form.species")}
           <SpeciesSelect
             species={catalog.species}
             value={species}
             onChange={setSpecies}
-            ariaLabel="Especie"
+            ariaLabel={t("form.species")}
           />
         </label>
 
         <label>
-          Naturaleza
+          {t("form.nature")}
           <NatureSelect
             natures={catalog.natures}
             value={nature}
             onChange={setNature}
             allowNone
-            ariaLabel="Naturaleza"
+            ariaLabel={t("form.nature")}
           />
         </label>
       </div>
@@ -117,7 +120,7 @@ export function MemberForm({
 
       {selectedSpecies && (
         <fieldset>
-          <legend>Ingredientes</legend>
+          <legend>{t("form.ingredients")}</legend>
           <IngredientSlots
             species={selectedSpecies}
             level={level}
@@ -128,18 +131,18 @@ export function MemberForm({
       )}
 
       <fieldset>
-        <legend>Sub skills</legend>
+        <legend>{t("form.subSkills")}</legend>
         <SubSkillSelect
           subSkills={catalog.sub_skills}
           value={subSkills}
           level={level}
           onChange={setSubSkills}
-          ariaLabel="Sub skills"
+          ariaLabel={t("form.subSkills")}
         />
       </fieldset>
 
       <fieldset>
-        <legend>Nivel de skill</legend>
+        <legend>{t("form.skillLevel")}</legend>
         <SkillLevelSelector
           value={skillLevel}
           onChange={setSkillLevel}
@@ -148,13 +151,13 @@ export function MemberForm({
       </fieldset>
 
       <fieldset>
-        <legend>Listón</legend>
+        <legend>{t("form.ribbon")}</legend>
         <RibbonSelect value={ribbon} onChange={setRibbon} />
       </fieldset>
 
       {speciesUnknown && (
         <p className="error" role="alert">
-          La especie «{species}» no está en el catálogo cargado; no se puede editar.
+          {t("form.speciesUnknown", { species })}
         </p>
       )}
 
@@ -171,7 +174,7 @@ export function MemberForm({
         type="submit"
         disabled={pending || !species || speciesUnknown || !ingredientsComplete}
       >
-        {pending ? "Guardando…" : submitLabel}
+        {pending ? t("form.saving") : label}
       </button>
     </form>
   );

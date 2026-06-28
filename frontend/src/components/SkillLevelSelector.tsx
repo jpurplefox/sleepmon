@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 
+import { useI18n } from "../i18n";
 import { maxSkillLevel, skillDescription } from "../skills";
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
 // su bajada real del juego (con la cantidad del nivel ya resuelta). El máximo
 // depende de la skill (E4E topa en 6; el resto en 7).
 export function SkillLevelSelector({ value, onChange, mainSkill }: Props) {
+  const { t, lang, mainSkill: tMainSkill } = useI18n();
   const max = maxSkillLevel(mainSkill);
 
   // Si al cambiar de especie el nivel quedó por encima del tope de la nueva skill,
@@ -31,7 +33,7 @@ export function SkillLevelSelector({ value, onChange, mainSkill }: Props) {
     if (next >= 1 && next <= max) onChange(next);
   };
 
-  const desc = skillDescription(mainSkill, value);
+  const desc = skillDescription(mainSkill, value, lang);
 
   return (
     <div className="skill-stepper">
@@ -40,17 +42,19 @@ export function SkillLevelSelector({ value, onChange, mainSkill }: Props) {
         className="skill-step"
         onClick={() => go(-1)}
         disabled={atStart}
-        aria-label="Bajar nivel de skill"
+        aria-label={t("skillSel.down")}
       >
         ‹
       </button>
 
       <div className="skill-stepper__display">
-        <span className="skill-stepper__level" title={`Nivel de skill ${value} de ${max}`}>
+        <span className="skill-stepper__level" title={t("skillSel.title", { value, max })}>
           {value}
         </span>
         <div className="skill-stepper__text">
-          <span className="skill-stepper__name">{mainSkill ?? "Elegí una especie"}</span>
+          <span className="skill-stepper__name">
+            {mainSkill ? tMainSkill(mainSkill) : t("skillSel.pickSpecies")}
+          </span>
           {desc && <span className="skill-stepper__desc">{desc}</span>}
         </div>
       </div>
@@ -60,7 +64,7 @@ export function SkillLevelSelector({ value, onChange, mainSkill }: Props) {
         className="skill-step"
         onClick={() => go(1)}
         disabled={atEnd}
-        aria-label="Subir nivel de skill"
+        aria-label={t("skillSel.up")}
       >
         ›
       </button>

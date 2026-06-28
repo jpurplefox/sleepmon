@@ -2,6 +2,7 @@
 // para mostrar nombre + bajada real del juego según el nivel de skill.
 
 import { MAX_SKILL_LEVEL } from "./constants";
+import type { Lang } from "./i18n/terms";
 
 // Ingredientes que entrega Ingredient Draw S por nivel de skill (1..7).
 export const INGREDIENT_DRAW_AMOUNTS = [5, 6, 8, 11, 13, 16, 18];
@@ -156,61 +157,108 @@ export function maxSkillLevel(mainSkill: string | undefined): number {
   return MAX_SKILL_LEVEL;
 }
 
-// Bajada real del juego para la skill, con la cantidad del nivel ya resuelta.
+// Bajada de la skill, con la cantidad del nivel ya resuelta, en el idioma pedido.
+// Usa los términos oficiales del juego (Vigor, Fragmentos de sueño, Plato riquísimo…).
 // null si no tenemos la descripción de esa skill todavía.
-export function skillDescription(mainSkill: string | undefined, level: number): string | null {
+export function skillDescription(
+  mainSkill: string | undefined,
+  level: number,
+  lang: Lang,
+): string | null {
+  const es = lang === "es";
+  const num = (n: number) => n.toLocaleString(es ? "es-ES" : "en-US");
+
   if (drawsIngredients(mainSkill)) {
-    return `Gets ${ingredientDrawAmount(level)} of one type of ingredient chosen randomly from a specific selection of ingredients.`;
+    const x = ingredientDrawAmount(level);
+    return es
+      ? `Consigue ${x} de un tipo de ingrediente elegido al azar de una selección concreta.`
+      : `Gets ${x} of one type of ingredient chosen randomly from a specific selection of ingredients.`;
   }
   if (restoresTeamEnergy(mainSkill)) {
-    return `Restores ${energyForEveryoneAmount(level)} Energy to each Pokémon on your team.`;
+    const n = energyForEveryoneAmount(level);
+    return es
+      ? `Restaura ${n} de Energía a cada Pokémon del equipo.`
+      : `Restores ${n} Energy to each Pokémon on your team.`;
   }
   // Plusle / Minun: chequear las variantes Plus/Minus antes que las genéricas.
   if (mainSkill?.startsWith("Ingredient Magnet S (Plus)")) {
-    return `Gets you ${INGREDIENT_MAGNET_PLUS_BASE[idx(level)]} ingredients at random, plus ${INGREDIENT_MAGNET_PLUS_BONUS[idx(level)]} more with a Plus/Minus partner.`;
+    const base = INGREDIENT_MAGNET_PLUS_BASE[idx(level)];
+    const bonus = INGREDIENT_MAGNET_PLUS_BONUS[idx(level)];
+    return es
+      ? `Te consigue ${base} ingredientes al azar, y ${bonus} más con un compañero Más/Menos.`
+      : `Gets you ${base} ingredients at random, plus ${bonus} more with a Plus/Minus partner.`;
   }
   if (magnetsIngredients(mainSkill)) {
-    return `Gets you ${ingredientMagnetAmount(level)} ingredients chosen at random.`;
+    const n = ingredientMagnetAmount(level);
+    return es
+      ? `Te consigue ${n} ingredientes al azar.`
+      : `Gets you ${n} ingredients chosen at random.`;
   }
   if (mainSkill?.startsWith("Cooking Power-Up S (Minus)")) {
-    return `Pot room for ${COOKING_POWER_UP_MINUS_POT[idx(level)]} more ingredients, and restores ${COOKING_POWER_UP_MINUS_ENERGY[idx(level)]} Energy to a random teammate with a Plus/Minus partner.`;
+    const pot = COOKING_POWER_UP_MINUS_POT[idx(level)];
+    const energy = COOKING_POWER_UP_MINUS_ENERGY[idx(level)];
+    return es
+      ? `Amplía la olla en ${pot} ingredientes, y restaura ${energy} de Energía a un compañero al azar con un compañero Más/Menos.`
+      : `Pot room for ${pot} more ingredients, and restores ${energy} Energy to a random teammate with a Plus/Minus partner.`;
   }
   if (powersUpCooking(mainSkill)) {
-    return `Gives your pot room for ${cookingPowerUpAmount(level)} more ingredients the next time you cook.`;
+    const n = cookingPowerUpAmount(level);
+    return es
+      ? `Amplía la capacidad de la olla en ${n} ingredientes la próxima vez que cocines.`
+      : `Gives your pot room for ${n} more ingredients the next time you cook.`;
   }
   // Charge Strength: el orden importa porque (Random)/(Stockpile) empiezan con "S".
   if (mainSkill?.startsWith("Charge Strength M")) {
-    return `Increases Snorlax's Strength by ${CHARGE_STRENGTH_M_AMOUNTS[idx(level)].toLocaleString("en-US")}.`;
+    const n = num(CHARGE_STRENGTH_M_AMOUNTS[idx(level)]);
+    return es ? `Aumenta el Vigor de Snorlax en ${n}.` : `Increases Snorlax's Strength by ${n}.`;
   }
   if (mainSkill?.startsWith("Charge Strength S (Random)")) {
     const [lo, hi] = CHARGE_STRENGTH_S_RANDOM_RANGES[idx(level)];
-    return `Increases Snorlax's Strength by ${lo.toLocaleString("en-US")} to ${hi.toLocaleString("en-US")} at random.`;
+    return es
+      ? `Aumenta el Vigor de Snorlax entre ${num(lo)} y ${num(hi)} al azar.`
+      : `Increases Snorlax's Strength by ${num(lo)} to ${num(hi)} at random.`;
   }
   if (mainSkill?.startsWith("Charge Strength S (Stockpile)")) {
     return null; // acumula; no la estimamos todavía
   }
   if (mainSkill?.startsWith("Charge Strength S")) {
-    return `Increases Snorlax's Strength by ${CHARGE_STRENGTH_S_AMOUNTS[idx(level)].toLocaleString("en-US")}.`;
+    const n = num(CHARGE_STRENGTH_S_AMOUNTS[idx(level)]);
+    return es ? `Aumenta el Vigor de Snorlax en ${n}.` : `Increases Snorlax's Strength by ${n}.`;
   }
   if (chargesSelfEnergy(mainSkill)) {
-    return `Restores ${chargeEnergyAmount(level)} Energy to the user.`;
+    const n = chargeEnergyAmount(level);
+    return es
+      ? `Restaura ${n} de Energía al usuario.`
+      : `Restores ${n} Energy to the user.`;
   }
   // Dream Shard Magnet: el orden importa porque (Random) empieza con el mismo prefijo.
   if (mainSkill?.startsWith("Dream Shard Magnet S (Random)")) {
     const [lo, hi] = DREAM_SHARD_MAGNET_S_RANDOM_RANGES[dsIdx(level)];
-    return `Obtain ${lo.toLocaleString("en-US")} to ${hi.toLocaleString("en-US")} Dream Shards at random.`;
+    return es
+      ? `Obtén entre ${num(lo)} y ${num(hi)} Fragmentos de sueño al azar.`
+      : `Obtain ${num(lo)} to ${num(hi)} Dream Shards at random.`;
   }
   if (mainSkill?.startsWith("Dream Shard Magnet S")) {
-    return `Obtain ${DREAM_SHARD_MAGNET_S_AMOUNTS[dsIdx(level)].toLocaleString("en-US")} Dream Shards.`;
+    const n = num(DREAM_SHARD_MAGNET_S_AMOUNTS[dsIdx(level)]);
+    return es ? `Obtén ${n} Fragmentos de sueño.` : `Obtain ${n} Dream Shards.`;
   }
   if (boostsTastyChance(mainSkill)) {
-    return `Raises your Extra Tasty rate by ${tastyChanceAmount(level)}% (stacks up to 70%).`;
+    const n = tastyChanceAmount(level);
+    return es
+      ? `Aumenta la probabilidad de Plato riquísimo un ${n}% (acumulable hasta 70%).`
+      : `Raises your Extra Tasty rate by ${n}% (stacks up to 70%).`;
   }
   if (isExtraHelpful(mainSkill)) {
-    return `Instantly gets you ×${extraHelpfulAmount(level)} the usual help from a helper Pokémon.`;
+    const n = extraHelpfulAmount(level);
+    return es
+      ? `Consigue al instante ×${n} la ayuda habitual de un Pokémon ayudante.`
+      : `Instantly gets you ×${n} the usual help from a helper Pokémon.`;
   }
   if (cheersRandomEnergy(mainSkill)) {
-    return `Restores ${energizingCheerAmount(level)} Energy to another Pokémon chosen at random.`;
+    const n = energizingCheerAmount(level);
+    return es
+      ? `Restaura ${n} de Energía a otro Pokémon elegido al azar.`
+      : `Restores ${n} Energy to another Pokémon chosen at random.`;
   }
   return null;
 }

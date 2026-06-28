@@ -1,4 +1,5 @@
 import { INGREDIENT_UNLOCK_LEVELS } from "../constants";
+import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import type { Species } from "../types";
 
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function IngredientSlots({ species, level, value, onChange }: Props) {
+  const { t, ingredient } = useI18n();
   if (!species) return null;
 
   const setSlot = (slot: number, ingredient: string) => {
@@ -28,7 +30,7 @@ export function IngredientSlots({ species, level, value, onChange }: Props) {
             key={i}
             className={"ingredient-slot" + (locked ? " ingredient-slot--locked" : "")}
           >
-            <span className="ingredient-slot__label">Lv {unlock}</span>
+            <span className="ingredient-slot__label">{t("ingSlots.slot", { unlock })}</span>
             <div className="ingredient-slot__options">
               {options.map((ing, j) => {
                 // Cantidad de ESTE ingrediente en este slot (depende del ingrediente).
@@ -42,14 +44,14 @@ export function IngredientSlots({ species, level, value, onChange }: Props) {
                         (value[i] === ing ? " ingredient-icon--active" : "")
                       }
                       onClick={() => setSlot(i, ing)}
-                      title={ing}
-                      aria-label={ing}
+                      title={ingredient(ing)}
+                      aria-label={ingredient(ing)}
                       aria-pressed={value[i] === ing}
                     >
                       <img
                         className="ingredient-icon__img"
                         src={ingredientIcon(ing)}
-                        alt={ing}
+                        alt={ingredient(ing)}
                         loading="lazy"
                       />
                     </button>

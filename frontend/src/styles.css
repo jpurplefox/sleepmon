@@ -1216,6 +1216,52 @@ select:focus {
   border-color: var(--border);
 }
 
+/* Barra superior: tabs a la izquierda, selector de idioma a la derecha. */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem 0;
+}
+
+.topbar .tabs {
+  margin: 0;
+  padding: 0;
+}
+
+.lang-select {
+  display: flex;
+  gap: 0.3rem;
+  flex: 0 0 auto;
+}
+
+.lang-chip {
+  min-width: 36px;
+  height: 30px;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lang-chip:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.lang-chip--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
 /* Producción */
 /* Card de estado vacío / "agregar otro": vive en la grilla como un slot más y
    contiene los botones para sumar un Pokémon a la comparación. */
