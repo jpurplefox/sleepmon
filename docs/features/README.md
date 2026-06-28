@@ -5,8 +5,9 @@ que debe respetar al evolucionar (no el detalle de implementación, que vive en 
 código). El norte **visual** transversal está en
 [`frontend/docs/ui-concept.md`](../../frontend/docs/ui-concept.md).
 
-- [Caja (Equipo)](./caja-equipo.md) — registro persistente del equipo: la fuente
-  de verdad, más la distribución agregada de la caja.
+- [Caja](./caja-equipo.md) — registro persistente del equipo (la fuente de verdad)
+  y **pantallazo general**: cuánto produce cada Pokémon y qué aspectos del juego
+  cubre el equipo. Antes "Equipo"; ese nombre queda libre para otra herramienta.
 - [Comparación](./comparacion.md) — pone varios Pokémon lado a lado y compara su
   producción diaria estimada. Análisis efímero (con guardado a la Caja opcional).
 - [Selección desde la Caja](./seleccion-desde-caja.md) — el picker "Mis Pokémon"
