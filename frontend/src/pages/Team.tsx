@@ -16,9 +16,18 @@ import { Modal } from "../components/Modal";
 import { useI18n } from "../i18n";
 import type { Catalog, Member, MemberInput, Species } from "../types";
 
-// Producción del ingrediente principal: el de mayor amount entre los desbloqueados.
-const mainIngredientAmount = (m: Member): number =>
-  m.production ? Math.max(0, ...m.production.ingredients.map((i) => i.amount)) : 0;
+// Producción del ingrediente principal: el de mayor total entre los desbloqueados,
+// combinando la mecánica normal (ingredients) con lo que aporta la main skill
+// (skill_ingredients), por ingrediente. Coherente con lo que muestra BoxEntry.
+const mainIngredientAmount = (m: Member): number => {
+  const prod = m.production;
+  if (!prod) return 0;
+  const totals = new Map<string, number>();
+  for (const s of prod.ingredients) totals.set(s.ingredient, (totals.get(s.ingredient) ?? 0) + s.amount);
+  for (const s of prod.skill_ingredients)
+    totals.set(s.ingredient, (totals.get(s.ingredient) ?? 0) + s.amount);
+  return Math.max(0, ...totals.values());
+};
 
 // Orden + filtros del overview, en el cliente (la producción ya viene en /team).
 function sortAndFilter(
@@ -65,9 +74,6 @@ function filterOptions(catalog: Catalog) {
   };
 }
 
-// El backend devuelve la distribución con claves en inglés (nombres del juego).
-// Las traducimos antes de graficarlas, construyendo un nuevo objeto con las keys
-// ya traducidas (las claves del juego son únicas, no deberían colapsar).
 interface TeamProps {
   // Abre Comparación con ese Pokémon como base (lo cablea App).
   onCompare: (memberId: string) => void;
@@ -151,7 +157,7 @@ export function Team({ onCompare }: TeamProps) {
     setFilters((f) => ({ ...f, [key]: value }));
 
   return (
-    <div className="layout">
+    <div className="layout layout--wide">
       <header className="hero">
         <h1>{t("team.title")}</h1>
         <p className="muted">{t("team.subtitle")}</p>
@@ -206,6 +212,7 @@ export function Team({ onCompare }: TeamProps) {
             onFilter={setFilter}
             onClear={() => setFilters(EMPTY_FILTERS)}
             options={options}
+            catalog={catalog.data}
           />
         )}
 

@@ -24,6 +24,10 @@ class MemberProductionOut(msgspec.Struct):
     ingredients: list[SlotProductionOut]
     ingredients_total: float
     skill_triggers: float
+    # Ingredientes por la main skill: específicos (Ingredient Draw) y/o total al
+    # azar (Ingredient Magnet). Vacío/None si la skill no produce ingredientes.
+    skill_ingredients: list[SlotProductionOut]
+    skill_ingredient_total: float | None
 
 
 class MemberOut(msgspec.Struct):

@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { berryIcon } from "../berries";
 import { RIBBONS } from "../constants";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
+import { statIcon } from "../natures";
 import { spriteUrl } from "../sprites";
 import type { Member, Nature, Species } from "../types";
 import { IconMore, IconSparkle } from "./icons";
@@ -27,8 +28,8 @@ interface Props {
 
 // Entrada de overview de la Caja: una card por Pokémon en tres zonas (identidad ·
 // config · producción). Reemplaza a MemberCard. La config reusa el mismo lenguaje
-// visual que el picker (MemberConfig). Las tres métricas de producción son de
-// igual jerarquía y van en color neutro; el único dorado es el badge de nivel.
+// visual que el picker (MemberConfig). Las métricas de producción son de igual
+// jerarquía y van en color neutro; el único dorado es el badge de nivel.
 export function BoxEntry({
   member,
   species,
@@ -39,17 +40,17 @@ export function BoxEntry({
   onCompare,
 }: Props) {
   const { t, berry, ingredient } = useI18n();
-  // Editar/Eliminar viven en un menú overflow "···" (no botones siempre visibles:
-  // con muchas filas saturan y exponen el borrado). Comparar es acción rápida y
-  // visible. El borrado se confirma en dos pasos dentro del menú.
+  // Editar/Eliminar/Comparar viven en un menú overflow "···" (no botones siempre
+  // visibles: con muchas filas saturan y exponen el borrado). Comparar es el primer
+  // ítem (acción rápida); el borrado se confirma en dos pasos dentro del menú.
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
 
-  // Manejo del menú: foco al primer item al abrir; al cerrar (click afuera /
-  // Escape) se resetea la confirmación y el foco vuelve al disparador. No hay
-  // auto-reset por tiempo: confunde tener el botón "Eliminar" volviendo solo
+  // Manejo del menú: foco al primer item (= Comparar) al abrir; al cerrar (click
+  // afuera / Escape) se resetea la confirmación y el foco vuelve al disparador. No
+  // hay auto-reset por tiempo: confunde tener el botón "Eliminar" volviendo solo
   // mientras el menú sigue abierto.
   useEffect(() => {
     if (!menuOpen) return;
@@ -88,13 +89,41 @@ export function BoxEntry({
   const prod = member.production;
   const ribbonIdx = RIBBONS.findIndex((r) => r.name === member.ribbon);
 
-  // Ingrediente "principal" del overview: el de mayor amount de la producción
-  // (ante empate gana el primero en orden de slot). El total (ingredients_total)
-  // va en el tooltip. Sin ingredientes queda undefined y la métrica cae al "—".
-  const mainIngredient =
-    prod && prod.ingredients.length > 0
-      ? prod.ingredients.reduce((best, cur) => (cur.amount > best.amount ? cur : best))
-      : undefined;
+  // Producción combinada por ingrediente: para cada ingrediente, la mecánica
+  // normal (production.ingredients) + lo que aporta la main skill específica
+  // (production.skill_ingredients). Mismo patrón "combined" que ProductionCard. El
+  // pool de la skill puede incluir ingredientes que ningún slot normal produce
+  // (slots bloqueados por nivel), así que se agregan al final conservando el orden.
+  const combined = useMemo(() => {
+    if (!prod) return [];
+    const normal = new Map<string, number>();
+    const order: string[] = [];
+    for (const s of prod.ingredients) {
+      if (!normal.has(s.ingredient)) order.push(s.ingredient);
+      normal.set(s.ingredient, (normal.get(s.ingredient) ?? 0) + s.amount);
+    }
+    const skill = new Map<string, number>();
+    for (const s of prod.skill_ingredients) {
+      skill.set(s.ingredient, (skill.get(s.ingredient) ?? 0) + s.amount);
+      if (!normal.has(s.ingredient)) order.push(s.ingredient);
+    }
+    return order
+      .map((ing) => {
+        const fromNormal = normal.get(ing) ?? 0;
+        const fromSkill = skill.get(ing) ?? 0;
+        return { ingredient: ing, total: fromNormal + fromSkill, fromNormal, fromSkill };
+      })
+      // Slots bloqueados por nivel rinden 0; no se muestran (coherente con
+      // INGREDIENT_UNLOCK_LEVELS: solo los desbloqueados producen).
+      .filter((g) => g.total > 0);
+  }, [prod]);
+
+  // Ingredientes al azar de la main skill (Ingredient Magnet S): total sin
+  // desglosar por tipo. Se muestra como marcador "✦ +N al azar" al final.
+  const randomTotal =
+    prod && prod.skill_ingredient_total != null && prod.skill_ingredient_total > 0
+      ? prod.skill_ingredient_total
+      : null;
 
   return (
     <article className="card box-entry">
@@ -131,7 +160,8 @@ export function BoxEntry({
         />
       </div>
 
-      {/* Zona 3 — Producción: tres métricas de igual jerarquía, números neutros. */}
+      {/* Zona 3 — Producción: bayas + todos los ingredientes desbloqueados +
+          disparos de skill. Números neutros (el único dorado es el nivel). */}
       <div className="box-entry__production" role="group" aria-label={t("box.productionAria")}>
         <div className="box-entry__metric" title={t("box.berriesTitle")}>
           {species ? (
@@ -151,35 +181,76 @@ export function BoxEntry({
         </div>
 
         <div
-          className="box-entry__metric"
+          className="box-entry__ingredients"
           title={
             prod
               ? t("box.ingredientsTitle", { total: fmt(prod.ingredients_total) })
               : t("box.ingredientsTitlePlain")
           }
         >
-          {mainIngredient ? (
-            <img
-              className="mini-icon"
-              src={ingredientIcon(mainIngredient.ingredient)}
-              alt=""
-              aria-hidden="true"
-            />
+          {combined.length === 0 && randomTotal == null ? (
+            <span className="box-entry__metric-value">{t("common.dash")}</span>
           ) : (
-            <span className="mini-icon" aria-hidden="true" />
+            <>
+              {combined.map((g) => (
+                <span
+                  key={g.ingredient}
+                  className="box-entry__ing-pair"
+                  title={
+                    g.fromSkill > 0
+                      ? `${ingredient(g.ingredient)} · ${t("card.normalTitle")} ${fmt(
+                          g.fromNormal,
+                        )} + ${t("card.skillTitle")} ${fmt(g.fromSkill)}`
+                      : ingredient(g.ingredient)
+                  }
+                >
+                  <img
+                    className="mini-icon"
+                    src={ingredientIcon(g.ingredient)}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                  <span className="box-entry__metric-value">{fmt(g.total)}</span>
+                  {g.fromSkill > 0 && (
+                    <img
+                      className="box-entry__ing-skill"
+                      src={statIcon("Main Skill Chance")}
+                      alt=""
+                      aria-hidden="true"
+                      title={t("card.skillTitle")}
+                    />
+                  )}
+                  <span className="sr-only">
+                    {g.fromSkill > 0
+                      ? t("box.ingredientsBreakdownAria", {
+                          value: fmt(g.total),
+                          ingredient: ingredient(g.ingredient),
+                          normal: fmt(g.fromNormal),
+                          skill: fmt(g.fromSkill),
+                        })
+                      : t("box.ingredientsPlainAria", {
+                          value: fmt(g.total),
+                          ingredient: ingredient(g.ingredient),
+                        })}
+                  </span>
+                </span>
+              ))}
+              {randomTotal != null && (
+                <span
+                  className="box-entry__ing-pair box-entry__ing-random"
+                  title={t("box.randomIngredientsTitle", { value: fmt(randomTotal) })}
+                >
+                  <IconSparkle aria-hidden="true" />
+                  <span className="box-entry__metric-value">
+                    {t("box.randomIngredients", { value: fmt(randomTotal) })}
+                  </span>
+                  <span className="sr-only">
+                    {t("box.randomIngredientsAria", { value: fmt(randomTotal) })}
+                  </span>
+                </span>
+              )}
+            </>
           )}
-          <span className="box-entry__metric-value">
-            {mainIngredient ? fmt(mainIngredient.amount) : t("common.dash")}
-          </span>
-          <span className="sr-only">
-            {mainIngredient && prod
-              ? t("box.ingredientsAria", {
-                  value: fmt(mainIngredient.amount),
-                  ingredient: ingredient(mainIngredient.ingredient),
-                  total: fmt(prod.ingredients_total),
-                })
-              : t("box.ingredientsAriaEmpty")}
-          </span>
         </div>
 
         <div className="box-entry__metric" title={t("box.triggersTitle")}>
@@ -195,15 +266,8 @@ export function BoxEntry({
         </div>
       </div>
 
-      {/* Acciones: Comparar (rápida, acento) + overflow "···" con Editar/Eliminar. */}
+      {/* Acciones: overflow "···" con Comparar (primero) + Editar/Eliminar. */}
       <div className="box-entry__actions">
-        <button
-          className="btn btn--ghost box-entry__compare"
-          onClick={onCompare}
-          aria-label={t("box.compareAria", { species: member.species })}
-        >
-          {t("box.compare")}
-        </button>
         <div className="box-entry__menu" ref={menuRef}>
           <button
             ref={menuBtnRef}
@@ -218,6 +282,18 @@ export function BoxEntry({
           </button>
           {menuOpen && (
             <div className="box-entry__menu-pop" role="menu">
+              <button
+                type="button"
+                role="menuitem"
+                className="box-entry__menu-item box-entry__menu-item--compare"
+                aria-label={t("box.compareAria", { species: member.species })}
+                onClick={() => {
+                  setMenuOpen(false);
+                  onCompare();
+                }}
+              >
+                {t("box.compareMenu")}
+              </button>
               <button
                 type="button"
                 role="menuitem"

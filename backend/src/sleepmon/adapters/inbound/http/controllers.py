@@ -41,6 +41,11 @@ def _production_out(production: MemberProduction | None) -> MemberProductionOut 
         ],
         ingredients_total=production.ingredients_total,
         skill_triggers=production.skill_triggers,
+        skill_ingredients=[
+            SlotProductionOut(ingredient=s.ingredient, amount=s.amount)
+            for s in production.skill_ingredients
+        ],
+        skill_ingredient_total=production.skill_ingredient_total,
     )
 
 

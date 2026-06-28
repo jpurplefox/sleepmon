@@ -135,6 +135,15 @@ export function IconGrip(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+// Chevron hacia abajo: disparador de paneles desplegables (filtros con íconos).
+export function IconChevronDown(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
 // Más acciones (menú overflow): tres puntos horizontales.
 export function IconMore(props: SVGProps<SVGSVGElement>) {
   return (

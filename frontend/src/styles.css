@@ -1100,9 +1100,190 @@ select:focus {
   padding: 0.1rem 0.4rem;
 }
 
+/* Ícono dentro del chip de filtro activo (tipo→baya, ingrediente). */
+.box-filter-chip__icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+/* --- Filtros con íconos --------------------------------------------------- */
+
+/* Control de filtro (trigger + panel desplegable). */
+.filter-control {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Trigger de un filtro: ícono del valor activo (o placeholder) + chevron. Mismo
+   lenguaje que los <select> nativos de la barra. */
+.filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text);
+  font-size: var(--text-sm);
+  padding: 0.35rem 0.55rem;
+  cursor: pointer;
+}
+
+.filter-btn:hover,
+.filter-btn--open {
+  border-color: var(--accent);
+}
+
+.filter-btn__value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.filter-btn__value .mini-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.filter-btn__placeholder {
+  color: var(--muted);
+}
+
+.filter-btn__chevron {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+/* Panel desplegable del filtro. */
+.filter-pop {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  z-index: 20;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-dropdown);
+  padding: 0.5rem;
+}
+
+/* Grilla de íconos (bayas / ingredientes). */
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 0.25rem;
+  width: min(20rem, 72vw);
+  max-height: 18rem;
+  overflow-y: auto;
+}
+
+.filter-grid__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-size: var(--text-xs);
+  padding: 0.35rem 0.2rem;
+  cursor: pointer;
+}
+
+.filter-grid__item .mini-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.filter-grid__item:hover {
+  background: var(--surface);
+}
+
+.filter-grid__item.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.filter-grid__label {
+  text-align: center;
+  line-height: 1.1;
+}
+
+/* Skill: select nativo con el ícono de la skill activa pegado a la izquierda. */
+.filter-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 0 0.2rem 0 0.5rem;
+}
+
+.filter-select:focus-within {
+  border-color: var(--accent);
+}
+
+.filter-select__icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted);
+}
+
+.filter-select__icon .mini-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.filter-select select {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: var(--text-sm);
+  padding: 0.35rem 0.3rem;
+}
+
+.filter-select select:focus-visible {
+  outline: none;
+}
+
+/* Especialidad: grupo de toggle-buttons segmentados. */
+.specialty-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.specialty-toggle__btn {
+  background: var(--surface-2);
+  border: none;
+  border-left: 1px solid var(--border);
+  color: var(--muted);
+  font-size: var(--text-sm);
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+}
+
+.specialty-toggle__btn:first-child {
+  border-left: none;
+}
+
+.specialty-toggle__btn:hover {
+  color: var(--text);
+}
+
+.specialty-toggle__btn.is-on {
+  background: var(--accent-dim);
+  color: var(--text);
+}
+
 .box-entry {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.6fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1.6fr) auto;
   align-items: center;
   gap: 1rem 1.25rem;
 }
@@ -1156,6 +1337,14 @@ select:focus {
   opacity: 0.85;
 }
 
+/* En ancho, la config NO envuelve: así "Lv. N" de la skill se queda en la misma
+   línea que el resto en vez de caer a una segunda fila. En angosto vuelve a
+   envolver (ver el media query de abajo). */
+.box-entry__config {
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
 /* Zona 3 — Producción: tres métricas de IGUAL jerarquía (mismo peso, números
    neutros; el único dorado de la entrada es el badge de nivel). */
 .box-entry__production {
@@ -1182,6 +1371,51 @@ select:focus {
   color: var(--text);
 }
 
+/* Producción de TODOS los ingredientes desbloqueados: fila de pares [icono + nº],
+   envuelve si no entran. Crece dentro de la zona 3 (es la métrica con más datos). */
+.box-entry__ingredients {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.7rem;
+  min-width: 0;
+}
+
+.box-entry__ing-pair {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.box-entry__ing-pair .mini-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Aporte de la main skill a ese ingrediente: marcador chico junto al número. */
+.box-entry__ing-skill {
+  width: 11px;
+  height: 11px;
+  opacity: 0.8;
+}
+
+/* "✦ +N al azar" (Ingredient Magnet S): se distingue del resto con el color de
+   acento funcional y el destello de skill. */
+.box-entry__ing-random {
+  color: var(--accent);
+  font-size: var(--text-sm);
+}
+
+.box-entry__ing-random svg {
+  width: 13px;
+  height: 13px;
+}
+
+.box-entry__ing-random .box-entry__metric-value {
+  color: var(--accent);
+  font-size: var(--text-sm);
+}
+
 .box-entry__actions {
   display: flex;
   align-items: center;
@@ -1189,13 +1423,7 @@ select:focus {
   flex-shrink: 0;
 }
 
-/* Comparar: acción rápida y visible, con acento funcional (índigo). */
-.box-entry__compare {
-  color: var(--accent);
-  border-color: var(--accent);
-}
-
-/* Menú overflow "···" para editar/eliminar. */
+/* Menú overflow "···" para comparar/editar/eliminar. */
 .box-entry__menu {
   position: relative;
 }
@@ -1235,8 +1463,21 @@ select:focus {
   background: var(--surface);
 }
 
+/* Comparar: primer ítem del menú, con acento funcional (índigo) para señalar que
+   es la acción rápida/principal del menú. */
+.box-entry__menu-item--compare {
+  color: var(--accent);
+}
+
 .box-entry__menu-item--danger:hover {
   color: var(--error);
+}
+
+/* En angosto la entrada colapsa a columna: la config vuelve a poder envolver. */
+@media (max-width: 720px) {
+  .box-entry__config {
+    flex-wrap: wrap;
+  }
 }
 
 .ingredient-row {

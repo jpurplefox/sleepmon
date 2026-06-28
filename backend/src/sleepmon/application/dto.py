@@ -64,9 +64,15 @@ class MemberProduction:
     """
 
     berries: float  # bayas/día
-    ingredients: list[SlotAmount]  # ingredientes/día, por ingrediente
-    ingredients_total: float  # suma de todos los ingredientes/día
+    ingredients: list[SlotAmount]  # ingredientes/día por ayuda normal, por ingrediente
+    ingredients_total: float  # suma de los ingredientes/día por ayuda normal
     skill_triggers: float  # disparos de la main skill/día
+    # Ingredientes/día que aporta la main skill por ingrediente (Ingredient Draw S,
+    # p. ej. Crustle). Vacío si la skill de la especie no da ingredientes específicos.
+    skill_ingredients: list[SlotAmount]
+    # Ingredientes/día al azar que consigue la main skill (Ingredient Magnet S, p. ej.
+    # Plusle), como total sin desglosar. None si no aplica.
+    skill_ingredient_total: float | None
 
 
 @dataclass(frozen=True, slots=True)

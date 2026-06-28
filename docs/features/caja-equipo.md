@@ -120,24 +120,29 @@ ux-simplifier). Spec para implementar; el detalle visual final lo afina el loop.
 - **Orden** (un solo control, default **nº de Pokédex** ascendente, estable —no
   reordena al editar): Pokédex, nivel, producción total de bayas, producción del
   ingrediente principal. Toggle de dirección ↑/↓.
-- **Filtros** (AND entre dimensiones, **vacíos por defecto** = ver todo): **Tipo**
-  (que **es la misma dimensión que la baya**, 1:1 → **un solo filtro**, evita
-  combinaciones imposibles; se rotula por tipo, que el usuario suele tener más a
-  mano), **ingrediente**, **skill**, **especialidad**. Para **cajas chicas** los
-  filtros pueden ocultarse (aparecen cuando empiezan a hacer falta).
+- **Filtros con íconos** (AND entre dimensiones, **vacíos por defecto** = ver
+  todo): **Tipo/Baya** (misma dimensión, 1:1 → **un solo control**: panel con la
+  grilla de **íconos de baya**, rotulados con el nombre del tipo), **ingrediente**
+  (panel con **íconos de ingrediente**), **skill** (con su ícono) y
+  **especialidad** (toggles). Nada de selects pelados.
 - Filtros activos visibles como **chips** con `×` para quitar + "Limpiar". Estado
   vacío al filtrar: mensaje inline con "Limpiar filtros" (distinto del estado
   caja-vacía). El contador muestra "Mostrando N de M" cuando hay filtros.
 
 ### Acciones por Pokémon
 
-- **Comparar**: acción **rápida y visible** (1 click; ícono con acento), abre
-  [Comparación](./comparacion.md) con ese Pokémon como base. Se navega con el `id`
-  en la URL (`?base=<id>`) para que sea recargable/compartible; Comparación lo lee
-  al montar y lo agrega como primera card.
-- **Editar** y **Eliminar**: en un **menú overflow `···`** por fila (no botones de
-  texto siempre visibles: con muchas filas saturan y exponen el borrado). Borrado
-  **confirmado** (paso de confirmación; el error de borrado se muestra ahí mismo).
+- **Comparar / Editar / Eliminar** viven en un **menú overflow `···`** por fila
+  (un botón de Comparar siempre visible resultó **invasivo** con muchas filas).
+  Orden del menú: **Comparar** (abre [Comparación](./comparacion.md) con ese
+  Pokémon como base) → **Editar** → **Eliminar** (confirmado).
+
+### Métricas: todos los ingredientes, incluida la skill
+
+La entrada usa el **ancho completo** (como Comparación) y muestra la producción de
+**todos los ingredientes desbloqueados** (no solo el principal). Para los Pokémon
+cuya main skill produce ingredientes, esa producción es **visible**: combinada por
+ingrediente para *Ingredient Draw* (p. ej. Crustle) y como **"+N al azar"** para
+*Ingredient Magnet* (p. ej. Plusle), distinguida de la producción base.
 
 ### Distribución → Cobertura
 

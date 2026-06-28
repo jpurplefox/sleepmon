@@ -138,6 +138,11 @@ class DefaultTeamService(TeamService):
             ],
             ingredients_total=sum(slot.amount for slot in result.ingredients),
             skill_triggers=result.skill_triggers,
+            skill_ingredients=[
+                SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
+                for slot in result.skill_ingredients
+            ],
+            skill_ingredient_total=result.skill_ingredient_total,
         )
 
     def update_member(self, member_id: UUID, data: TeamMemberInput) -> TeamMember:

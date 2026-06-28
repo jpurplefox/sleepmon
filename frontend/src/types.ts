@@ -47,6 +47,10 @@ export interface MemberProduction {
   ingredients: SlotProduction[];
   ingredients_total: number;
   skill_triggers: number;
+  // Ingredientes que aporta la main skill: específicos (Ingredient Draw, p. ej.
+  // Crustle) y/o total al azar (Ingredient Magnet, p. ej. Plusle).
+  skill_ingredients: SlotProduction[];
+  skill_ingredient_total: number | null;
 }
 
 export interface Member {
