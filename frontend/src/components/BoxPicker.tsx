@@ -10,10 +10,10 @@ import {
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { statIcon } from "../natures";
+import { mainSkillIcon } from "../skillIcons";
 import { spriteUrl } from "../sprites";
 import { subSkillIcon } from "../subskills";
 import type { Catalog, Member } from "../types";
-import { IconMoon } from "./icons";
 import { RibbonIcon } from "./RibbonIcon";
 
 const TIER_CLASS: Record<string, string> = { Gold: "gold", Blue: "blue", Regular: "regular" };
@@ -51,7 +51,7 @@ export function BoxPicker({
   inComparison,
   onPick,
 }: Props) {
-  const { t, nature: natureLabel, natureStat, ingredient, subSkill } = useI18n();
+  const { t, nature: natureLabel, natureStat, ingredient, subSkill, mainSkill } = useI18n();
   const [search, setSearch] = useState("");
   // Índice resaltado dentro de la lista filtrada (-1 = ninguno). Patrón combobox:
   // el foco se queda en el buscador; las flechas mueven este resaltado y Enter
@@ -71,6 +71,10 @@ export function BoxPicker({
   // Mapa especie→dex (sprite) y sub skill→tier, una sola vez por catálogo.
   const dexBySpecies = useMemo(
     () => new Map(catalog.species.map((s) => [s.name, s.dex])),
+    [catalog.species],
+  );
+  const mainSkillBySpecies = useMemo(
+    () => new Map(catalog.species.map((s) => [s.name, s.main_skill])),
     [catalog.species],
   );
   const tierBySubSkill = useMemo(
@@ -172,6 +176,9 @@ export function BoxPicker({
             const already = inComparison.has(m.id);
             const nature = natureByName.get(m.nature);
             const ribbonIdx = RIBBONS.findIndex((r) => r.name === m.ribbon);
+            const skillIcon = mainSkillIcon(mainSkillBySpecies.get(m.species));
+            const skillName = mainSkill(mainSkillBySpecies.get(m.species) ?? "");
+            const skillLv = t("prod.skillLv", { level: m.skill_level });
             return (
               <li key={m.id}>
                 <button
@@ -192,14 +199,18 @@ export function BoxPicker({
                       alt=""
                       loading="lazy"
                     />
-                    <span className="prod-box-item__name">{m.species}</span>
-                    {ribbonIdx > 0 && (
-                      <RibbonIcon
-                        index={ribbonIdx}
-                        size={18}
-                        title={t("member.ribbon", { hours: RIBBONS[ribbonIdx].hours })}
-                      />
-                    )}
+                    {/* Nombre + listón pegados; el grupo crece y empuja tag y nivel
+                        al extremo derecho. */}
+                    <span className="prod-box-item__title">
+                      <span className="prod-box-item__name">{m.species}</span>
+                      {ribbonIdx > 0 && (
+                        <RibbonIcon
+                          index={ribbonIdx}
+                          size={18}
+                          title={t("member.ribbon", { hours: RIBBONS[ribbonIdx].hours })}
+                        />
+                      )}
+                    </span>
                     {already && <span className="prod-box-item__tag">{t("prod.alreadyIn")}</span>}
                     {/* El nivel (único dorado del topline) queda siempre al extremo
                         derecho, independientemente de listón o tag. */}
@@ -209,6 +220,26 @@ export function BoxPicker({
                   </div>
 
                   <div className="prod-box-item__config">
+                    {/* Orden: ingredientes → naturaleza → sub skills → skill. */}
+                    <span className="ingredient-row">
+                      {m.ingredients.map((ing, idx) => {
+                        const locked = m.level < (INGREDIENT_UNLOCK_LEVELS[idx] ?? 1);
+                        return (
+                          <img
+                            key={`${ing}-${idx}`}
+                            className={
+                              "ingredient-row__icon" +
+                              (locked ? " ingredient-row__icon--locked" : "")
+                            }
+                            src={ingredientIcon(ing)}
+                            alt={ingredient(ing)}
+                            title={ingredient(ing)}
+                            loading="lazy"
+                          />
+                        );
+                      })}
+                    </span>
+
                     <span className="prod-box-item__nature icon-row">
                       {nature && !nature.neutral && nature.increased && nature.decreased ? (
                         <>
@@ -232,25 +263,6 @@ export function BoxPicker({
                           {m.nature ? natureLabel(m.nature) : t("card.noNature")}
                         </span>
                       )}
-                    </span>
-
-                    <span className="ingredient-row">
-                      {m.ingredients.map((ing, idx) => {
-                        const locked = m.level < (INGREDIENT_UNLOCK_LEVELS[idx] ?? 1);
-                        return (
-                          <img
-                            key={`${ing}-${idx}`}
-                            className={
-                              "ingredient-row__icon" +
-                              (locked ? " ingredient-row__icon--locked" : "")
-                            }
-                            src={ingredientIcon(ing)}
-                            alt={ingredient(ing)}
-                            title={ingredient(ing)}
-                            loading="lazy"
-                          />
-                        );
-                      })}
                     </span>
 
                     {m.sub_skills.length > 0 && (
@@ -277,12 +289,17 @@ export function BoxPicker({
                       </span>
                     )}
 
-                    <span
-                      className="prod-box-item__skill-lv"
-                      title={t("prod.skillLevelShort", { level: m.skill_level })}
-                    >
-                      <IconMoon />
-                      {m.skill_level}
+                    {/* Skill: el ícono propio de la main skill + "Lv. N". Color
+                        neutro (el dorado es para el nivel del Pokémon). El nombre de
+                        la skill va en sr-only/title para no depender solo del ícono. */}
+                    <span className="prod-box-item__skill-lv" title={`${skillName} · ${skillLv}`}>
+                      {skillIcon.kind === "img" ? (
+                        <img className="mini-icon" src={skillIcon.src} alt="" />
+                      ) : (
+                        <skillIcon.Component aria-hidden="true" />
+                      )}
+                      <span aria-hidden="true">{skillLv}</span>
+                      <span className="sr-only">{`${skillName} ${skillLv}`}</span>
                     </span>
                   </div>
                 </button>

@@ -1494,13 +1494,26 @@ select:focus {
   gap: 0.25rem;
 }
 
+/* Grupo título: nombre con ellipsis + listón pegado a su derecha. El grupo crece
+   (flex:1) y empuja el tag y el badge de nivel al extremo derecho. */
+.prod-box-item__title {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 0;
+}
+
 .prod-box-item__name {
   font-weight: 600;
-  flex: 1;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.prod-box-item__title .ribbon-icon {
+  flex-shrink: 0;
 }
 
 .prod-box-item__nature {
@@ -1544,21 +1557,22 @@ select:focus {
   padding: 0.05rem 0.4rem;
 }
 
-/* Nivel de main skill: la luna (acento de identidad) + el número, sin chip.
-   Es el único dato "propio" del Pokémon en la fila de config, no un estado. */
+/* Nivel de main skill: el ícono propio de la skill + "Lv. N", sin chip. Color
+   neutro: el dorado se reserva para el nivel del Pokémon (badge del topline). */
 .prod-box-item__skill-lv {
   display: inline-flex;
   align-items: center;
-  gap: 0.15rem;
+  gap: 0.2rem;
   font-size: var(--text-xs);
-  color: var(--moon);
+  color: var(--muted);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
-.prod-box-item__skill-lv svg {
-  width: 13px;
-  height: 13px;
+.prod-box-item__skill-lv svg,
+.prod-box-item__skill-lv img {
+  width: 14px;
+  height: 14px;
 }
 
 /* Ítem resaltado por teclado (flechas) o por el mouse: mismo acento que el hover. */

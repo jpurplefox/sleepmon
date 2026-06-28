@@ -58,7 +58,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.boxSearchEmpty": 'Sin resultados para "{query}"',
     "prod.boxResultCount": "{count} resultados",
     "prod.boxResultOne": "1 resultado",
-    "prod.skillLevelShort": "Skill Nv. {level}",
+    "prod.skillLv": "Lv. {level}",
     "prod.boxErrorRetry": "No se pudo cargar la caja. Reintentá.",
     "prod.alreadyIn": "Ya en comparación",
     "prod.speciesNotInCatalog":
@@ -263,7 +263,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.boxSearchEmpty": 'No results for "{query}"',
     "prod.boxResultCount": "{count} results",
     "prod.boxResultOne": "1 result",
-    "prod.skillLevelShort": "Skill Lv. {level}",
+    "prod.skillLv": "Lv. {level}",
     "prod.boxErrorRetry": "Couldn't load the box. Try again.",
     "prod.alreadyIn": "Already in comparison",
     "prod.speciesNotInCatalog":
