@@ -8,8 +8,9 @@ import { ingredientIcon } from "../ingredients";
 import { statIcon } from "../natures";
 import { spriteUrl } from "../sprites";
 import type { Member, Nature, Species } from "../types";
-import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
+import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON, mainSkillIcon } from "../skillIcons";
 import { IconMagnifier, IconMore, IconSparkle } from "./icons";
+import { IngredientLineup } from "./IngredientLineup";
 import { MemberConfig } from "./MemberConfig";
 import { RibbonIcon } from "./RibbonIcon";
 
@@ -43,7 +44,7 @@ export function BoxEntry({
   onDelete,
   onCompare,
 }: Props) {
-  const { t, berry, ingredient } = useI18n();
+  const { t, berry, ingredient, mainSkill } = useI18n();
   // Editar/Eliminar/Comparar viven en un menú overflow "···" (no botones siempre
   // visibles: con muchas filas saturan). El borrado abre un modal de confirmación
   // (lo maneja la página), más claro que un paso inline.
@@ -111,6 +112,12 @@ export function BoxEntry({
   const prod = member.production;
   const ribbonIdx = RIBBONS.findIndex((r) => r.name === member.ribbon);
 
+  // Nivel de la main skill: se muestra en la columna de skill (junto a los
+  // disparos), ya no en la fila de config. Mismo ícono/lenguaje que MemberConfig.
+  const skillIcon = mainSkillIcon(species?.main_skill);
+  const skillName = mainSkill(species?.main_skill ?? "");
+  const skillLv = t("prod.skillLv", { level: member.skill_level });
+
   // Producción combinada por ingrediente: para cada ingrediente, la mecánica
   // normal (production.ingredients) + lo que aporta la main skill específica
   // (production.skill_ingredients). Mismo patrón "combined" que ProductionCard. El
@@ -176,26 +183,37 @@ export function BoxEntry({
 
   return (
     <article className="card box-entry">
-      {/* Zona 1 — Identidad: sprite + nombre + listón + badge de nivel (dorado). */}
+      {/* Columna 1 — Identidad: sprite a la izquierda; a su derecha el nombre con
+          el listón en una línea y el nivel (dorado) debajo. */}
       <div className="box-entry__identity">
         {species && (
           <img className="box-entry__sprite" src={spriteUrl(species.dex)} alt="" loading="lazy" />
         )}
-        <div className="box-entry__title">
-          <span className="box-entry__name">{member.species}</span>
-          {ribbonIdx > 0 && (
-            <RibbonIcon
-              index={ribbonIdx}
-              size={18}
-              title={t("member.ribbon", { hours: RIBBONS[ribbonIdx].hours })}
-            />
-          )}
+        <div className="box-entry__id-text">
+          <div className="box-entry__title">
+            <span className="box-entry__name">{member.species}</span>
+            {ribbonIdx > 0 && (
+              <RibbonIcon
+                index={ribbonIdx}
+                size={18}
+                title={t("member.ribbon", { hours: RIBBONS[ribbonIdx].hours })}
+              />
+            )}
+          </div>
+          <span className="badge badge--level">{t("common.level", { level: member.level })}</span>
         </div>
-        <span className="badge badge--level">{t("common.level", { level: member.level })}</span>
       </div>
 
-      {/* Zona 2 — Config: mismo lenguaje que el picker, atenuada para retroceder
-          frente a las métricas. */}
+      {/* Columna 2 — Ingredientes equipados: su propia columna (antes vivían arriba
+          de la config). Atenuada igual que la config. */}
+      <div className="box-entry__ing-config">
+        <IngredientLineup level={member.level} ingredients={member.ingredients} />
+      </div>
+
+      {/* Columna 3 — Config: mismo lenguaje que el picker, en dos líneas
+          (naturaleza / sub skills). El nivel de skill y los ingredientes se sacan de
+          acá (van a sus propias columnas). Atenuada para retroceder frente a las
+          métricas. */}
       <div className="box-entry__config prod-box-item__config">
         <MemberConfig
           level={member.level}
@@ -206,12 +224,14 @@ export function BoxEntry({
           natureMeta={nature}
           mainSkillName={species?.main_skill}
           tierBySubSkill={tierBySubSkill}
+          showSkillLevel={false}
+          showIngredients={false}
         />
       </div>
 
-      {/* Zona 3 — Producción: bayas + todos los ingredientes desbloqueados +
-          disparos de skill. Números neutros (el único dorado es el nivel). */}
-      <div className="box-entry__production" role="group" aria-label={t("box.productionAria")}>
+      {/* Columna 4 — Bayas + Fuerza, en dos líneas. Números neutros (el único
+          dorado es el nivel). */}
+      <div className="box-entry__berries" role="group" aria-label={t("box.productionAria")}>
         <div className="box-entry__metric" title={t("box.berriesTitle")}>
           {species ? (
             <img className="mini-icon" src={berryIcon(species.berry)} alt="" aria-hidden="true" />
@@ -267,71 +287,80 @@ export function BoxEntry({
             </span>
           </div>
         )}
-
-        <div
-          className="box-entry__ingredients"
-          title={
-            prod
-              ? t("box.ingredientsTitle", { total: fmt(prod.ingredients_total) })
-              : t("box.ingredientsTitlePlain")
-          }
-        >
-          {combined.length === 0 ? (
-            <span className="box-entry__metric-value">{t("common.dash")}</span>
-          ) : (
-            <>
-              {combined.map((g) => (
-                <span
-                  key={g.ingredient}
-                  className="box-entry__ing-pair"
-                  title={
-                    g.fromSkill > 0
-                      ? `${ingredient(g.ingredient)} · ${t("card.normalTitle")} ${fmt(
-                          g.fromNormal,
-                        )} + ${t("card.skillTitle")} ${fmt(g.fromSkill)}`
-                      : ingredient(g.ingredient)
-                  }
-                >
-                  <img
-                    className="mini-icon"
-                    src={ingredientIcon(g.ingredient)}
-                    alt=""
-                    aria-hidden="true"
-                  />
-                  <span className="box-entry__metric-value">{fmt(g.total)}</span>
-                  {g.fromSkill > 0 && (
-                    <img
-                      className="box-entry__ing-skill"
-                      src={statIcon("Main Skill Chance")}
-                      alt=""
-                      aria-hidden="true"
-                      title={t("card.skillTitle")}
-                    />
-                  )}
-                  <span className="sr-only">
-                    {g.fromSkill > 0
-                      ? t("box.ingredientsBreakdownAria", {
-                          value: fmt(g.total),
-                          ingredient: ingredient(g.ingredient),
-                          normal: fmt(g.fromNormal),
-                          skill: fmt(g.fromSkill),
-                        })
-                      : t("box.ingredientsPlainAria", {
-                          value: fmt(g.total),
-                          ingredient: ingredient(g.ingredient),
-                        })}
-                  </span>
-                </span>
-              ))}
-            </>
-          )}
-        </div>
       </div>
 
-      {/* Zona 4 — Skill: disparos + aporte de la skill. En su propia columna (a la
-          derecha) para que quede alineada entre Pokémon, sin importar cuántos
-          ingredientes tenga cada uno. */}
+      {/* Columna 5 — Producción de ingredientes: uno por línea, alineados entre
+          Pokémon. */}
+      <div
+        className="box-entry__ingredients"
+        title={
+          prod
+            ? t("box.ingredientsTitle", { total: fmt(prod.ingredients_total) })
+            : t("box.ingredientsTitlePlain")
+        }
+      >
+        {combined.length === 0 ? (
+          <span className="box-entry__metric-value">{t("common.dash")}</span>
+        ) : (
+          combined.map((g) => (
+            <span
+              key={g.ingredient}
+              className="box-entry__ing-pair"
+              title={
+                g.fromSkill > 0
+                  ? `${ingredient(g.ingredient)} · ${t("card.normalTitle")} ${fmt(
+                      g.fromNormal,
+                    )} + ${t("card.skillTitle")} ${fmt(g.fromSkill)}`
+                  : ingredient(g.ingredient)
+              }
+            >
+              <img
+                className="mini-icon"
+                src={ingredientIcon(g.ingredient)}
+                alt=""
+                aria-hidden="true"
+              />
+              <span className="box-entry__metric-value">{fmt(g.total)}</span>
+              {g.fromSkill > 0 && (
+                <img
+                  className="box-entry__ing-skill"
+                  src={statIcon("Main Skill Chance")}
+                  alt=""
+                  aria-hidden="true"
+                  title={t("card.skillTitle")}
+                />
+              )}
+              <span className="sr-only">
+                {g.fromSkill > 0
+                  ? t("box.ingredientsBreakdownAria", {
+                      value: fmt(g.total),
+                      ingredient: ingredient(g.ingredient),
+                      normal: fmt(g.fromNormal),
+                      skill: fmt(g.fromSkill),
+                    })
+                  : t("box.ingredientsPlainAria", {
+                      value: fmt(g.total),
+                      ingredient: ingredient(g.ingredient),
+                    })}
+              </span>
+            </span>
+          ))
+        )}
+      </div>
+
+      {/* Columna 6 — Skill: nivel de la main skill + disparos + ayuda extra que dan
+          esos disparos, apilados. En su propia columna para alinear entre Pokémon,
+          sin importar cuántos ingredientes tenga cada uno. */}
       <div className="box-entry__skill" role="group" aria-label={t("box.skillAria")}>
+        <span className="box-entry__skill-lv" title={`${skillName} · ${skillLv}`}>
+          {skillIcon.kind === "img" ? (
+            <img className="mini-icon" src={skillIcon.src} alt="" />
+          ) : (
+            <skillIcon.Component aria-hidden="true" />
+          )}
+          <span className="box-entry__metric-value" aria-hidden="true">{skillLv}</span>
+          <span className="sr-only">{`${skillName} ${skillLv}`}</span>
+        </span>
         <div className="box-entry__metric" title={t("box.triggersTitle")}>
           <IconSparkle aria-hidden="true" />
           <span className="box-entry__metric-value">

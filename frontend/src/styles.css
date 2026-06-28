@@ -1437,23 +1437,26 @@ select:focus {
 
 .box-entry {
   display: grid;
-  /* identidad · config · producción (bayas+ingredientes) · skill · acciones.
-     La columna de skill tiene ANCHO FIJO: cada card es un grid independiente, así
-     que sólo con un ancho fijo (no `auto`/contenido) los disparos quedan alineados
-     entre filas, sin importar cuántos ingredientes tenga cada Pokémon. */
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1.6fr) 8rem auto;
+  /* identidad · ingredientes(equipados) · config · bayas+fuerza · ingredientes
+     (producción) · skill · acciones. Cada card es un grid independiente: identidad
+     con ANCHO FIJO y las métricas también, para que la misma info caiga en la misma
+     posición en todos los Pokémon. El espacio libre se reparte ENTRE las columnas
+     (space-between) en vez de acumularse en una sola, así en pantallas anchas no
+     quedan todas amontonadas a la derecha. Centradas en vertical: cada columna
+     tiene distinta cantidad de líneas y se centra en el alto de la fila. */
+  grid-template-columns: 13rem auto auto 5.5rem 6rem 7rem auto;
   align-items: center;
-  gap: 1rem 1.5rem;
+  justify-content: space-between;
+  gap: 1rem 1.1rem;
 }
 
-@media (max-width: 720px) {
-  .box-entry {
-    grid-template-columns: 1fr;
-    align-items: stretch;
-  }
-}
+/* El layout angosto (< 1024px) está consolidado en un único bloque al final de la
+   sección (busca "RESPONSIVE ANGOSTO"): se reorganiza en una grilla de 2 columnas en
+   vez de apilar las 7 zonas, así no se desperdicia el ancho. El salto se hace a
+   1024px porque desde ~980px las siete columnas ya se empiezan a superponer. */
 
-/* Zona 1 — Identidad: sprite + nombre + listón a la izquierda, nivel a la derecha. */
+/* Columna 1 — Identidad: sprite a la izquierda; a su derecha el nombre+listón en
+   una línea y el badge de nivel debajo. */
 .box-entry__identity {
   display: flex;
   align-items: center;
@@ -1461,9 +1464,17 @@ select:focus {
   min-width: 0;
 }
 
+.box-entry__id-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
 .box-entry__sprite {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   object-fit: contain;
   flex-shrink: 0;
   /* Sprites pixel-art: nítidos al escalar, como el resto del sistema. */
@@ -1474,8 +1485,8 @@ select:focus {
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  flex: 1;
   min-width: 0;
+  max-width: 100%;
 }
 
 .box-entry__name {
@@ -1491,33 +1502,73 @@ select:focus {
   flex-shrink: 0;
 }
 
-/* Zona 2 — Config: reusa .prod-box-item__config; atenuada para retroceder frente
-   a las métricas (la producción es el dato central del overview). En ancho NO
-   envuelve: así "Lv. N" de la skill se queda en la misma línea que el resto en vez
-   de caer a una segunda fila. En angosto vuelve a envolver (media query de abajo). */
-.box-entry__config {
+/* Columna 2 — Ingredientes equipados: fila de íconos en una sola línea, atenuada
+   igual que la config (es parte del "build", retrocede frente a las métricas). */
+.box-entry__ing-config {
   opacity: 0.85;
+}
+
+.box-entry__ing-config .ingredient-row {
   flex-wrap: nowrap;
+}
+
+/* Columna 3 — Config: reusa .prod-box-item__config pero en columna, dos líneas
+   apiladas (naturaleza / sub skills). Atenuada para retroceder frente a las
+   métricas (la producción es el dato central del overview). Doble clase para
+   ganarle al align-items:center de .prod-box-item__config (misma especificidad pero
+   definido después). */
+.box-entry__config.prod-box-item__config {
+  opacity: 0.85;
+  flex-direction: column;
+  /* Centradas: la fila de naturaleza (más angosta) queda centrada sobre la fila de
+     sub skills (la más ancha, que define el ancho de la columna). */
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0.3rem;
   min-width: 0;
 }
 
-/* Zona 3 — Producción: tres métricas de IGUAL jerarquía (mismo peso, números
+/* (El override angosto de align-items de la config vive en el bloque consolidado
+   "RESPONSIVE ANGOSTO" al final de la sección.) */
+
+/* Cada una de las tres filas (ingredientes / naturaleza / sub skills) en una sola
+   línea: así la columna toma el ancho de los 5 slots de sub skill y no se aprieta. */
+.box-entry__config .ingredient-row {
+  flex-wrap: nowrap;
+}
+
+/* Columna 3 — Bayas + Fuerza, apiladas en dos líneas. Misma jerarquía (números
    neutros; el único dorado de la entrada es el badge de nivel). */
-.box-entry__production {
+.box-entry__berries {
   display: flex;
-  align-items: center;
-  gap: 1.1rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
   flex-shrink: 0;
 }
 
-/* Zona 4 — Skill: disparos + aporte, apilados; en su propia columna del grid para
-   alinear los disparos entre filas. */
+/* Columna 5 — Skill: nivel + disparos + ayuda extra, apilados; en su propia
+   columna del grid para alinear los disparos entre filas. */
 .box-entry__skill {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.25rem;
   flex-shrink: 0;
+}
+
+/* Nivel de la main skill: ícono propio + "Lv. N", igual lenguaje que el resto de
+   las métricas (la línea superior de la columna de skill). */
+.box-entry__skill-lv {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.box-entry__skill-lv .mini-icon,
+.box-entry__skill-lv svg {
+  width: 18px;
+  height: 18px;
 }
 
 .box-entry__metric {
@@ -1537,13 +1588,13 @@ select:focus {
   color: var(--text);
 }
 
-/* Producción de TODOS los ingredientes desbloqueados: fila de pares [icono + nº],
-   envuelve si no entran. Crece dentro de la zona 3 (es la métrica con más datos). */
+/* Columna 4 — Producción de TODOS los ingredientes desbloqueados: un par
+   [icono + nº] por línea, apilados para alinear entre Pokémon. */
 .box-entry__ingredients {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.3rem 0.7rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
   min-width: 0;
 }
 
@@ -1647,10 +1698,80 @@ select:focus {
   color: var(--error);
 }
 
-/* En angosto la entrada colapsa a columna: la config vuelve a poder envolver. */
-@media (max-width: 720px) {
-  .box-entry__config {
+/* ── RESPONSIVE ANGOSTO (< 1024px) ───────────────────────────────────────────
+   Desde ~980px las 7 columnas se empiezan a superponer, así que el salto se hace
+   acá. En vez de apilar las 7 zonas en una sola columna (mucho ancho desperdiciado y
+   cards larguísimas), se reorganiza en una grilla de 2 columnas, agrupando por
+   afinidad. Acá NO importa la alineación entre cards (cada card es más alta y la info
+   queda lejos igual), así que priorizamos densidad y agrupación:
+     fila 1: identidad             | menú "···"
+     fila 2: ingredientes equip.   | config (naturaleza + sub skills)   ← build
+     fila 3: bayas + fuerza        | skill                              ← producción
+     fila 4: ingredientes producidos (ancho completo, en fila que envuelve)
+   Va al final de la sección para ganarle por orden a las reglas base (las media
+   queries no suman especificidad: decide el orden en el archivo). */
+@media (max-width: 1024px) {
+  .box-entry {
+    position: relative;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+    justify-content: stretch;
+    gap: 0.7rem 1rem;
+  }
+
+  /* Identidad a TODO el ancho (fila propia) para que el nombre no se trunque; el
+     menú flota arriba a la derecha. */
+  .box-entry__identity {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    padding-right: 2.25rem;
+  }
+
+  /* Menú "···" arriba a la derecha (posición convencional), absolute para no robarle
+     ancho a la identidad. */
+  .box-entry__actions {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+  }
+
+  .box-entry__ing-config {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .box-entry__config.prod-box-item__config {
+    grid-column: 2;
+    grid-row: 2;
+    /* A la izquierda: centrada se vería flotando en su media columna. */
+    align-items: flex-start;
+  }
+
+  /* Sub skills un toque más chicos para que los 5 entren en media columna a ~375px
+     (mismo tamaño que el picker compacto). */
+  .box-entry__config .ss-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .box-entry__berries {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .box-entry__skill {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  /* Ingredientes producidos: ancho completo, en fila que envuelve (en vez de uno por
+     línea), para aprovechar el ancho. */
+  .box-entry__ingredients {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    flex-direction: row;
     flex-wrap: wrap;
+    gap: 0.3rem 0.9rem;
   }
 }
 
