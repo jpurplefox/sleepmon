@@ -73,6 +73,9 @@ interface Props {
   // chip "Base" y el borde lunar. comparing controla si se ofrece "Hacer base".
   isBase?: boolean;
   comparing?: boolean;
+  // Modo solo lectura: oculta la barra de acciones (editar/clonar/guardar/mover/arrastre)
+  // y los deltas/chip "Base". Conserva el botón × (onRemove) para poder quitar la card.
+  readOnly?: boolean;
   onEdit: () => void;
   onClone: () => void;
   onRemove: () => void;
@@ -103,6 +106,7 @@ export function ProductionCard({
   base,
   isBase,
   comparing,
+  readOnly = false,
   onEdit,
   onClone,
   onRemove,
@@ -207,7 +211,22 @@ export function ProductionCard({
   return (
     <div className="prod-card-cell">
       {/* Acciones fuera del cuerpo de la card, en una barra arriba: liberan la
-          primera fila de la card para el nombre / nivel / listón. */}
+          primera fila de la card para el nombre / nivel / listón.
+          En modo readOnly solo se muestra el botón × (quitar). */}
+      {readOnly ? (
+        <div className="prod-card__toolbar prod-card__toolbar--readonly">
+          <span className="prod-card__toolbar-status" aria-hidden="true" />
+          <button
+            type="button"
+            className="icon-btn prod-card__remove"
+            onClick={onRemove}
+            title={t("card.remove")}
+            aria-label={t("card.remove")}
+          >
+            <IconClose />
+          </button>
+        </div>
+      ) : (
       <div className="prod-card__toolbar">
         {/* Feedback del guardado, junto al botón que lo dispara. */}
         <span className="prod-card__toolbar-status" role="status" aria-live="polite">
@@ -266,6 +285,7 @@ export function ProductionCard({
           <IconClose />
         </button>
       </div>
+      )}
       <article
         ref={cardRef}
         className={
@@ -286,54 +306,59 @@ export function ProductionCard({
         }}
       >
         <header className="prod-card__head">
-          {/* Fila 1: grip de arrastre + reordenar por teclado + nombre / nivel / listón. */}
+          {/* Fila 1: grip de arrastre + reordenar por teclado + nombre / nivel / listón.
+              En modo readOnly no se muestran grip ni botones de movimiento. */}
           <div className="prod-card__topline">
-            <button
-              type="button"
-              className="icon-btn prod-card__grip"
-              draggable
-              onDragStart={(e) => {
-                e.dataTransfer.effectAllowed = "move";
-                e.dataTransfer.setData("text/plain", config.species);
-                if (cardRef.current) e.dataTransfer.setDragImage(cardRef.current, 20, 20);
-                onDragStart?.();
-              }}
-              onDragEnd={onDragEnd}
-              onKeyDown={(e) => {
-                // Alternativa de teclado al arrastre: flechas mueven la card.
-                if (e.key === "ArrowLeft" && onMoveLeft) {
-                  e.preventDefault();
-                  onMoveLeft();
-                } else if (e.key === "ArrowRight" && onMoveRight) {
-                  e.preventDefault();
-                  onMoveRight();
-                }
-              }}
-              title={t("card.gripTitle")}
-              aria-label={t("card.gripAria")}
-            >
-              <IconGrip />
-            </button>
-            <button
-              type="button"
-              className="icon-btn prod-card__move"
-              onClick={onMoveLeft}
-              disabled={!onMoveLeft}
-              title={t("card.moveLeft")}
-              aria-label={t("card.moveLeft")}
-            >
-              ‹
-            </button>
-            <button
-              type="button"
-              className="icon-btn prod-card__move"
-              onClick={onMoveRight}
-              disabled={!onMoveRight}
-              title={t("card.moveRight")}
-              aria-label={t("card.moveRight")}
-            >
-              ›
-            </button>
+            {!readOnly && (
+              <>
+                <button
+                  type="button"
+                  className="icon-btn prod-card__grip"
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.effectAllowed = "move";
+                    e.dataTransfer.setData("text/plain", config.species);
+                    if (cardRef.current) e.dataTransfer.setDragImage(cardRef.current, 20, 20);
+                    onDragStart?.();
+                  }}
+                  onDragEnd={onDragEnd}
+                  onKeyDown={(e) => {
+                    // Alternativa de teclado al arrastre: flechas mueven la card.
+                    if (e.key === "ArrowLeft" && onMoveLeft) {
+                      e.preventDefault();
+                      onMoveLeft();
+                    } else if (e.key === "ArrowRight" && onMoveRight) {
+                      e.preventDefault();
+                      onMoveRight();
+                    }
+                  }}
+                  title={t("card.gripTitle")}
+                  aria-label={t("card.gripAria")}
+                >
+                  <IconGrip />
+                </button>
+                <button
+                  type="button"
+                  className="icon-btn prod-card__move"
+                  onClick={onMoveLeft}
+                  disabled={!onMoveLeft}
+                  title={t("card.moveLeft")}
+                  aria-label={t("card.moveLeft")}
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  className="icon-btn prod-card__move"
+                  onClick={onMoveRight}
+                  disabled={!onMoveRight}
+                  title={t("card.moveRight")}
+                  aria-label={t("card.moveRight")}
+                >
+                  ›
+                </button>
+              </>
+            )}
             <div className="prod-card__title">
               <strong>{config.species}</strong>{" "}
               <span className="muted">{t("common.level", { level: config.level })}</span>
@@ -350,24 +375,27 @@ export function ProductionCard({
             </div>
           </div>
           {/* Fila de altura reservada: evita que las cards salten al pasar de 1 a 2
-              (cuando aparecen el chip "Base" / el botón "Hacer base"). */}
-          <div className="prod-card__base-row">
-            {comparing &&
-              (isBase ? (
-                <span className="prod-card__base-tag" title={t("card.baseTitle")}>
-                  {t("card.base")}
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  className="prod-card__base-tag prod-card__base-tag--action"
-                  onClick={onMakeBase}
-                  title={t("card.makeBaseTitle")}
-                >
-                  {t("card.makeBase")}
-                </button>
-              ))}
-          </div>
+              (cuando aparecen el chip "Base" / el botón "Hacer base").
+              En modo readOnly no hay chip ni botón de base. */}
+          {!readOnly && (
+            <div className="prod-card__base-row">
+              {comparing &&
+                (isBase ? (
+                  <span className="prod-card__base-tag" title={t("card.baseTitle")}>
+                    {t("card.base")}
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    className="prod-card__base-tag prod-card__base-tag--action"
+                    onClick={onMakeBase}
+                    title={t("card.makeBaseTitle")}
+                  >
+                    {t("card.makeBase")}
+                  </button>
+                ))}
+            </div>
+          )}
           {/* Sprite centrado: foco visual de la card. */}
           {species && (
             <img className="prod-card__sprite" src={spriteUrl(species.dex)} alt="" loading="lazy" />

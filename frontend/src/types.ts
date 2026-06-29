@@ -165,6 +165,7 @@ export interface MemberContribution {
   berry_amount: number;
   ingredients_total: number;
   skill_triggers: number;
+  production: Production;
 }
 
 export interface TeamProduction {

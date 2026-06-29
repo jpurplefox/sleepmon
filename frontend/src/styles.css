@@ -2819,6 +2819,95 @@ button.prod-card__base-tag--action:hover {
   margin-top: 0;
 }
 
+/* Barra de toolbar en modo readOnly: solo el botón ×, alineado a la derecha
+   igual que en la barra normal. */
+.prod-card__toolbar--readonly {
+  justify-content: flex-end;
+}
+
+/* Análisis de equipo — sección de agregados y cocina */
+.teams-aggregates {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+/* Fila cabecera de los agregados: grand total + toggle diario/semanal en la misma línea. */
+.teams-aggregates__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Slot de cocina: receta + nivel en fila, badge de met a la derecha. */
+.teams-meal {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.teams-meal__level {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  /* El espacio del número siempre se reserva para evitar saltos de layout. */
+  min-width: 5.5rem;
+}
+
+.teams-meal__level input {
+  width: 3.5rem;
+  padding: 0.3rem 0.4rem;
+  font-size: var(--text-sm);
+}
+
+/* Balance ingredientes: nombre + required + produced + balance en fila compacta. */
+.teams-balance {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.teams-balance__row {
+  display: grid;
+  grid-template-columns: auto 1fr repeat(3, 4rem);
+  align-items: center;
+  gap: 0.3rem 0.6rem;
+  font-size: var(--text-sm);
+}
+
+.teams-balance__row .mini-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.teams-balance__num {
+  text-align: right;
+  color: var(--muted);
+}
+
+.teams-balance__delta {
+  text-align: right;
+  font-weight: 700;
+}
+
+.teams-balance__delta--up {
+  color: var(--up);
+}
+
+.teams-balance__delta--down {
+  color: var(--down);
+}
+
 /* Visualmente oculto pero accesible a lectores de pantalla (live regions, etc.). */
 .sr-only {
   position: absolute;
