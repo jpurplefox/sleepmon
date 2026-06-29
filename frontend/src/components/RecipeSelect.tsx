@@ -26,7 +26,6 @@ export function RecipeSelect({ recipes, value, onChange, placeholder, id }: Prop
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
-  const listboxRef = useRef<HTMLUListElement>(null);
 
   // Derived namespaced ids so multiple instances on the same page don't collide.
   const listboxId = `${id}-options`;
@@ -169,7 +168,7 @@ export function RecipeSelect({ recipes, value, onChange, placeholder, id }: Prop
             aria-label="Buscar receta"
           />
 
-          <ul className="recipe-options" role="listbox" id={listboxId} ref={listboxRef}>
+          <ul className="recipe-options" role="listbox" id={listboxId}>
             {/* "Sin receta" clear option */}
             <li>
               <button
