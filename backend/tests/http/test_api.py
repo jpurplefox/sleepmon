@@ -3,14 +3,19 @@ from litestar.testing import TestClient
 
 from sleepmon.adapters.inbound.http.app import create_app
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
+from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.services import DefaultTeamService
 from tests.fakes import InMemoryTeamRepository
 
 
 @pytest.fixture
 def client() -> TestClient:
-    service = DefaultTeamService(InMemoryTeamRepository(), StaticSpeciesCatalog())
-    app = create_app(service=service, catalog=StaticSpeciesCatalog())
+    service = DefaultTeamService(
+        InMemoryTeamRepository(), StaticSpeciesCatalog(), StaticRecipeCatalog()
+    )
+    app = create_app(
+        service=service, catalog=StaticSpeciesCatalog(), recipe_catalog=StaticRecipeCatalog()
+    )
     with TestClient(app=app) as client:
         yield client
 
@@ -477,3 +482,15 @@ def test_production_minun_pot_and_random_energy(client: TestClient) -> None:
     body = res.json()
     assert body["skill_cooking_ingredients"] == pytest.approx(body["skill_triggers"] * 24)
     assert body["skill_random_energy"] == pytest.approx(body["skill_triggers"] * 35)
+
+
+def test_recipes_endpoint_lists_recipes(client: TestClient) -> None:
+    res = client.get("/recipes")
+    assert res.status_code == 200
+    body = res.json()
+    assert body, "debe devolver al menos una receta"
+    types = {r["type"] for r in body}
+    assert types == {"Curry", "Salad", "Dessert"}
+    first = body[0]
+    assert {"name", "type", "ingredients", "base_strength"} <= first.keys()
+    assert all({"ingredient", "count"} <= ing.keys() for ing in first["ingredients"])

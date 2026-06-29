@@ -15,9 +15,11 @@ from uuid import UUID
 
 from sleepmon.application.dto import (
     Distributions,
+    IngredientCountDTO,
     MemberProduction,
     ProductionInput,
     ProductionResult,
+    RecipeDTO,
     SlotAmount,
     TeamMemberInput,
 )
@@ -30,7 +32,7 @@ from sleepmon.domain.entities import (
     validate_sub_skills,
 )
 from sleepmon.domain.errors import SpeciesNotFoundError, TeamMemberNotFoundError, ValidationError
-from sleepmon.domain.ports import SpeciesCatalog, TeamRepository
+from sleepmon.domain.ports import RecipeCatalog, SpeciesCatalog, TeamRepository
 from sleepmon.domain.production import daily_production
 from sleepmon.domain.species import Species
 from sleepmon.domain.value_objects import Ingredient, Nature, Ribbon, SubSkill
@@ -89,11 +91,20 @@ class TeamService(ABC):
     @abstractmethod
     def compute_production(self, data: ProductionInput) -> ProductionResult: ...
 
+    @abstractmethod
+    def list_recipes(self) -> list[RecipeDTO]: ...
+
 
 class DefaultTeamService(TeamService):
-    def __init__(self, repository: TeamRepository, catalog: SpeciesCatalog) -> None:
+    def __init__(
+        self,
+        repository: TeamRepository,
+        catalog: SpeciesCatalog,
+        recipe_catalog: RecipeCatalog,
+    ) -> None:
         self._repo = repository
         self._catalog = catalog
+        self._recipes = recipe_catalog
 
     def add_member(self, data: TeamMemberInput) -> TeamMember:
         member = self._build_member(data)
@@ -232,6 +243,20 @@ class DefaultTeamService(TeamService):
             inventory=result.inventory,
             inventory_fill_hours=result.inventory_fill_hours,
         )
+
+    def list_recipes(self) -> list[RecipeDTO]:
+        return [
+            RecipeDTO(
+                name=r.name,
+                type=r.type.value,
+                ingredients=[
+                    IngredientCountDTO(ingredient=ing.value, count=count)
+                    for ing, count in r.ingredients
+                ],
+                base_strength=r.base_strength,
+            )
+            for r in self._recipes.all()
+        ]
 
     def _build_member(self, data: TeamMemberInput, member_id: UUID | None = None) -> TeamMember:
         species = self._catalog.get(data.species)

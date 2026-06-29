@@ -3,6 +3,7 @@ from uuid import uuid4
 import pytest
 
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
+from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.dto import ProductionInput, TeamMemberInput
 from sleepmon.application.services import DefaultTeamService
 from sleepmon.domain.errors import (
@@ -15,7 +16,9 @@ from tests.fakes import InMemoryTeamRepository
 
 @pytest.fixture
 def service() -> DefaultTeamService:
-    return DefaultTeamService(InMemoryTeamRepository(), StaticSpeciesCatalog())
+    return DefaultTeamService(
+        InMemoryTeamRepository(), StaticSpeciesCatalog(), StaticRecipeCatalog()
+    )
 
 
 def valid_input(**overrides: object) -> TeamMemberInput:

@@ -137,5 +137,17 @@ class ProductionOut(msgspec.Struct):
     inventory_fill_hours: float
 
 
+class IngredientCountOut(msgspec.Struct):
+    ingredient: str
+    count: int
+
+
+class RecipeOut(msgspec.Struct):
+    name: str
+    type: str
+    ingredients: list[IngredientCountOut]
+    base_strength: int
+
+
 class ErrorOut(msgspec.Struct):
     detail: str

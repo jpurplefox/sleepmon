@@ -11,6 +11,24 @@ from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True, slots=True)
+class IngredientCountDTO:
+    """Un ingrediente requerido por una receta, con su cantidad."""
+
+    ingredient: str
+    count: int
+
+
+@dataclass(frozen=True, slots=True)
+class RecipeDTO:
+    """Una receta del catálogo, lista para serializar."""
+
+    name: str
+    type: str
+    ingredients: list[IngredientCountDTO]
+    base_strength: int
+
+
+@dataclass(frozen=True, slots=True)
 class TeamMemberInput:
     """Datos crudos para crear o actualizar un miembro del equipo."""
 

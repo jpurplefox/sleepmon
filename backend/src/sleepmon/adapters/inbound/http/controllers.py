@@ -12,12 +12,14 @@ from litestar.status_codes import HTTP_200_OK, HTTP_201_CREATED
 from sleepmon.adapters.inbound.http.schemas import (
     CatalogOut,
     DistributionsOut,
+    IngredientCountOut,
     MemberIn,
     MemberOut,
     MemberProductionOut,
     NatureOut,
     ProductionIn,
     ProductionOut,
+    RecipeOut,
     SlotProductionOut,
     SpeciesOut,
     SubSkillOut,
@@ -211,3 +213,22 @@ class CatalogController(Controller):
                 for sp in catalog.all()
             ],
         )
+
+
+class RecipeController(Controller):
+    path = "/recipes"
+
+    @get("/", sync_to_thread=True)
+    def list_recipes(self, service: NamedDependency[TeamService]) -> list[RecipeOut]:
+        return [
+            RecipeOut(
+                name=r.name,
+                type=r.type,
+                ingredients=[
+                    IngredientCountOut(ingredient=i.ingredient, count=i.count)
+                    for i in r.ingredients
+                ],
+                base_strength=r.base_strength,
+            )
+            for r in service.list_recipes()
+        ]
