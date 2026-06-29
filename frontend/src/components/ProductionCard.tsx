@@ -298,12 +298,9 @@ export function ProductionCard({
         onAnimationEnd={(e) => {
           if (e.animationName === "prod-card-in") setEntering(false);
         }}
-        onDragEnter={onDragEnter}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => {
-          e.preventDefault();
-          onDrop?.();
-        }}
+        onDragEnter={!readOnly ? onDragEnter : undefined}
+        onDragOver={!readOnly ? (e) => e.preventDefault() : undefined}
+        onDrop={!readOnly ? (e) => { e.preventDefault(); onDrop?.(); } : undefined}
       >
         <header className="prod-card__head">
           {/* Fila 1: grip de arrastre + reordenar por teclado + nombre / nivel / listón.

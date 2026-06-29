@@ -8,9 +8,26 @@ import { ProductionCard } from "../components/ProductionCard";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { CHARGE_STRENGTH_ICON } from "../skillIcons";
-import type { MealInput, Member, MemberInput } from "../types";
+import type { Catalog, MealInput, Member, MemberInput } from "../types";
 
 const MAX_TEAM = 5;
+
+// Pure module-level helper — same logic as pickMember in Production.tsx.
+function configFromMember(catalog: Catalog, m: Member): MemberInput | null {
+  const species = catalog.species.find((s) => s.name === m.species);
+  if (!species || species.ingredient_slots.length === 0) return null;
+  return {
+    species: m.species,
+    level: m.level,
+    nature: m.nature,
+    ingredients: species.ingredient_slots.map(
+      (opts, i) => m.ingredients[i] ?? opts[0] ?? "",
+    ),
+    sub_skills: m.sub_skills,
+    ribbon: m.ribbon,
+    skill_level: m.skill_level,
+  };
+}
 const MAX_RECIPE_LEVEL = 70;
 const MEAL_SLOTS = ["breakfast", "lunch", "dinner"] as const;
 
@@ -60,25 +77,6 @@ export function Teams() {
     [result],
   );
 
-  // Build a MemberInput config from a Member (catalog-validated), matching the
-  // pattern used in Production.tsx's pickMember.
-  const configFromMember = (m: Member): MemberInput | null => {
-    if (!catalog.data) return null;
-    const species = catalog.data.species.find((s) => s.name === m.species);
-    if (!species || species.ingredient_slots.length === 0) return null;
-    return {
-      species: m.species,
-      level: m.level,
-      nature: m.nature,
-      ingredients: species.ingredient_slots.map(
-        (opts, i) => m.ingredients[i] ?? opts[0] ?? "",
-      ),
-      sub_skills: m.sub_skills,
-      ribbon: m.ribbon,
-      skill_level: m.skill_level,
-    };
-  };
-
   const pickMember = (m: Member) => {
     if (selectedIds.length >= MAX_TEAM) return;
     if (selectedIds.includes(m.id)) return;
@@ -123,7 +121,7 @@ export function Teams() {
         {selectedIds.map((id) => {
           const m = memberById.get(id);
           if (!m) return null;
-          const config = configFromMember(m);
+          const config = configFromMember(catalog.data, m);
           if (!config) return null;
 
           // Find this member's per-member production from the team result.
@@ -158,7 +156,7 @@ export function Teams() {
                 <p className="muted prod-add__hint">
                   {selectedIds.length === 0
                     ? t("teams.empty")
-                    : t("prod.addHintMore")}
+                    : t("teams.addHintMore")}
                 </p>
                 <div className="prod-add__actions">
                   <button
