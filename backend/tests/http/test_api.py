@@ -50,6 +50,10 @@ def test_catalog_endpoint_lists_reference_data(client: TestClient) -> None:
         ["Honey", "Snoozy Tomato", "Greengrass Soybeans"],
     ]
 
+    # La tabla de bonus por nivel de receta: 70 entradas, índice 0 = nivel 1 = 1.0.
+    assert len(body["recipe_level_bonus"]) == 70
+    assert body["recipe_level_bonus"][0] == 1.0
+
 
 def test_create_and_list_member(client: TestClient) -> None:
     res = client.post("/team", json=valid_payload())

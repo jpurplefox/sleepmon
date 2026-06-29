@@ -33,6 +33,9 @@ export interface Catalog {
   sub_skills: SubSkill[];
   ingredients: string[];
   species: Species[];
+  // Multiplicador de fuerza de una receta por nivel (longitud 70, índice = nivel-1).
+  // recipe_level_bonus[0] == 1.0 (nivel 1, sin bonus).
+  recipe_level_bonus: number[];
 }
 
 // Invariantes del contrato del backend (ver MemberInput):

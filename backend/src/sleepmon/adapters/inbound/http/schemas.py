@@ -84,6 +84,7 @@ class CatalogOut(msgspec.Struct):
     sub_skills: list[SubSkillOut]
     ingredients: list[str]
     species: list[SpeciesOut]
+    recipe_level_bonus: list[float]
 
 
 class DistributionsOut(msgspec.Struct):
