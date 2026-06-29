@@ -45,7 +45,7 @@ def _daily(
 def test_team_production_empty() -> None:
     result = team_production([])
     assert result.member_count == 0
-    assert result.total_strength == 0
+    assert result.total_strength == 0.0
     assert result.ingredients == {}
 
 
@@ -87,3 +87,69 @@ def test_team_production_member_breakdown() -> None:
     assert member.member_id == "id-a"
     assert member.species == "Pikachu"
     assert member.strength == 120.0
+
+
+def test_team_production_skill_ingredients_folded_into_aggregation() -> None:
+    """skill_ingredients deben sumarse a ingredients junto con los slots normales."""
+    from sleepmon.domain.production import DailyProduction
+
+    # Miembro A: slot normal de HONEY(3.0) + skill_ingredient FANCY_EGG(4.0)
+    a = DailyProduction(
+        helps_per_day=50.0,
+        seconds_per_help=3000,
+        berry=Berry.BELUE,
+        berry_amount=10.0,
+        berry_strength=100.0,
+        berry_percentage=80.0,
+        ingredient_percentage=20.0,
+        skill_percentage=5.0,
+        effective_skill_percentage=6.0,
+        ingredients=(SlotProduction(I.HONEY, 3.0),),
+        skill_triggers=2.0,
+        skill_ingredients=(SlotProduction(I.FANCY_EGG, 4.0),),
+        skill_energy=None,
+        skill_ingredient_total=None,
+        skill_cooking_ingredients=None,
+        skill_strength=None,
+        skill_self_energy=None,
+        skill_dream_shards=None,
+        skill_tasty_chance=None,
+        skill_extra_helpful=None,
+        skill_random_energy=None,
+        night_skill_chances=(),
+        inventory=100,
+        inventory_fill_hours=5.0,
+    )
+    # Miembro B: slot normal de HONEY(2.0) + skill_ingredient HONEY(1.0)
+    b = DailyProduction(
+        helps_per_day=50.0,
+        seconds_per_help=3000,
+        berry=Berry.BELUE,
+        berry_amount=10.0,
+        berry_strength=100.0,
+        berry_percentage=80.0,
+        ingredient_percentage=20.0,
+        skill_percentage=5.0,
+        effective_skill_percentage=6.0,
+        ingredients=(SlotProduction(I.HONEY, 2.0),),
+        skill_triggers=2.0,
+        skill_ingredients=(SlotProduction(I.HONEY, 1.0),),
+        skill_energy=None,
+        skill_ingredient_total=None,
+        skill_cooking_ingredients=None,
+        skill_strength=None,
+        skill_self_energy=None,
+        skill_dream_shards=None,
+        skill_tasty_chance=None,
+        skill_extra_helpful=None,
+        skill_random_energy=None,
+        night_skill_chances=(),
+        inventory=100,
+        inventory_fill_hours=5.0,
+    )
+    result = team_production([("a", "X", a), ("b", "Y", b)])
+    # HONEY: 3 (slot A) + 2 (slot B) + 1 (skill B) = 6.0
+    assert result.ingredients[I.HONEY] == 6.0
+    # FANCY_EGG: 4 (skill A) = 4.0
+    assert result.ingredients[I.FANCY_EGG] == 4.0
+    assert result.total_ingredients == 10.0

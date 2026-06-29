@@ -108,7 +108,7 @@ _OPTIONAL_SKILL_FIELDS: tuple[str, ...] = (
 
 def _sum_optional(dailies: list[DailyProduction], field: str) -> float | None:
     """Suma los valores no-None de ``field``; None si ninguno aporta."""
-    present = [v for d in dailies if (v := getattr(d, field)) is not None]
+    present: list[float] = [v for d in dailies if (v := getattr(d, field)) is not None]
     return sum(present) if present else None
 
 
