@@ -96,7 +96,7 @@ export function MealPickerModal({
     <Modal title={t("teams.mealPickerTitle")} onClose={onClose} wide>
       {/* Top bar: type filter + search */}
       <div className="meal-picker-topbar">
-        <div className="specialty-toggle" role="group" aria-label="Tipo">
+        <div className="specialty-toggle" role="group" aria-label={t("teams.recipeType")}>
           <button
             type="button"
             className={"specialty-toggle__btn" + (typeFilter === null ? " is-on" : "")}
@@ -141,7 +141,7 @@ export function MealPickerModal({
       <div className="meal-picker-grid">
         {sorted.length === 0 ? (
           <p className="muted" style={{ gridColumn: "1/-1", textAlign: "center" }}>
-            Sin resultados
+            {t("teams.noResults")}
           </p>
         ) : (
           sorted.map((r) => {
@@ -195,7 +195,7 @@ export function MealPickerModal({
                     type="button"
                     className="level-stepper__btn"
                     disabled={level <= 1}
-                    aria-label="Bajar nivel"
+                    aria-label={t("teams.levelDown")}
                     onClick={() => setLevelFor(r.name, level - 1)}
                   >
                     −
@@ -210,13 +210,13 @@ export function MealPickerModal({
                       const v = Number(e.target.value);
                       if (!isNaN(v)) setLevelFor(r.name, v);
                     }}
-                    aria-label="Nivel de receta"
+                    aria-label={t("teams.recipeLevel")}
                   />
                   <button
                     type="button"
                     className="level-stepper__btn"
                     disabled={level >= 70}
-                    aria-label="Subir nivel"
+                    aria-label={t("teams.levelUp")}
                     onClick={() => setLevelFor(r.name, level + 1)}
                   >
                     +

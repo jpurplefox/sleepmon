@@ -2879,7 +2879,7 @@ button.prod-card__base-tag--action:hover {
   border-bottom: 1px solid var(--border);
 }
 
-.teams-plan-row:last-of-type {
+.teams-plan-rows .teams-plan-row:last-child {
   border-bottom: none;
 }
 

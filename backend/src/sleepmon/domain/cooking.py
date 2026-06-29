@@ -4,8 +4,10 @@ Dadas las recetas elegidas para las comidas del día y los ingredientes que prod
 el equipo, calcula: ingredientes requeridos vs producidos (con su balance), los
 sobrantes (producidos que ninguna receta usa) y la fuerza aportada por las recetas.
 
-La fuerza se cuenta SE CUMPLAN O NO los requisitos de ingredientes; el cumplimiento
-por comida es solo un indicador informativo (``met``).
+La fuerza se cuenta SE CUMPLAN O NO los requisitos de ingredientes. El cumplimiento
+(``met``) se evalúa de forma agregada: una comida está marcada como cumplida solo si
+la demanda total del plan (suma de todas las comidas) está cubierta por la producción
+del equipo; es decir, ``met`` es idéntico para todas las comidas del plan.
 """
 
 from __future__ import annotations

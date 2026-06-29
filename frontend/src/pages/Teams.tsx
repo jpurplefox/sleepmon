@@ -413,40 +413,42 @@ export function Teams() {
             </div>
 
             {/* Compact plan summary: one row per moment */}
-            {MEAL_SLOTS.map((slot, idx) => {
-              const meal = meals[idx];
-              const met = meal ? metByRecipe.get(meal.recipe) : undefined;
-              return (
-                <div key={slot} className="teams-plan-row">
-                  <span className="teams-plan-row__label muted">
-                    {t(`teams.${slot}`)}
-                  </span>
-                  {meal ? (
-                    <>
-                      <img
-                        className="teams-plan-row__thumb"
-                        src={recipeImage(meal.recipe)}
-                        alt=""
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.display = "none";
-                        }}
-                      />
-                      <span className="teams-plan-row__name">{meal.recipe}</span>
-                      <span className="teams-plan-row__lv muted">Lv.{meal.level}</span>
-                      {met != null && (
-                        <span className={met ? "badge badge--ok" : "badge badge--low"}>
-                          {met ? t("teams.fulfilled") : t("teams.notMet")}
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <span className="muted" style={{ fontSize: "var(--text-sm)" }}>
-                      {t("common.dash")}
+            <div className="teams-plan-rows">
+              {MEAL_SLOTS.map((slot, idx) => {
+                const meal = meals[idx];
+                const met = meal ? metByRecipe.get(meal.recipe) : undefined;
+                return (
+                  <div key={slot} className="teams-plan-row">
+                    <span className="teams-plan-row__label muted">
+                      {t(`teams.${slot}`)}
                     </span>
-                  )}
-                </div>
-              );
-            })}
+                    {meal ? (
+                      <>
+                        <img
+                          className="teams-plan-row__thumb"
+                          src={recipeImage(meal.recipe)}
+                          alt=""
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = "none";
+                          }}
+                        />
+                        <span className="teams-plan-row__name">{meal.recipe}</span>
+                        <span className="teams-plan-row__lv muted">Lv.{meal.level}</span>
+                        {met != null && (
+                          <span className={met ? "badge badge--ok" : "badge badge--low"}>
+                            {met ? t("teams.fulfilled") : t("teams.notMet")}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="muted" style={{ fontSize: "var(--text-sm)" }}>
+                        {t("common.dash")}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
 
             {/* Cooking strength */}
             <div className="prod-card__line" style={{ marginTop: "0.75rem" }}>
