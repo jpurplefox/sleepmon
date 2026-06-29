@@ -4,6 +4,7 @@ import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { recipeImage, recipeStrengthAtLevel } from "../recipes";
 import type { MealInput, Recipe } from "../types";
+import { LevelStepperInput } from "./LevelStepperInput";
 import { Modal } from "./Modal";
 
 const RECIPE_TYPES: Recipe["type"][] = ["Curry", "Salad", "Dessert"];
@@ -191,36 +192,17 @@ export function MealPickerModal({
 
                 {/* Level stepper */}
                 <div className="level-stepper meal-picker-card__stepper">
-                  <button
-                    type="button"
-                    className="level-stepper__btn"
-                    disabled={level <= 1}
-                    aria-label={t("teams.levelDown")}
-                    onClick={() => setLevelFor(r.name, level - 1)}
-                  >
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    className="level-stepper__input"
+                  <LevelStepperInput
+                    value={level}
+                    onChange={(n) => setLevelFor(r.name, n)}
                     min={1}
                     max={70}
-                    value={level}
-                    onChange={(e) => {
-                      const v = Number(e.target.value);
-                      if (!isNaN(v)) setLevelFor(r.name, v);
+                    ariaLabels={{
+                      down: t("teams.levelDown"),
+                      input: t("teams.recipeLevel"),
+                      up: t("teams.levelUp"),
                     }}
-                    aria-label={t("teams.recipeLevel")}
                   />
-                  <button
-                    type="button"
-                    className="level-stepper__btn"
-                    disabled={level >= 70}
-                    aria-label={t("teams.levelUp")}
-                    onClick={() => setLevelFor(r.name, level + 1)}
-                  >
-                    +
-                  </button>
                 </div>
 
                 {/* 3 moment toggles */}
