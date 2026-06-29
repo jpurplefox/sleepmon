@@ -4,10 +4,17 @@ Dadas las recetas elegidas para las comidas del día y los ingredientes que prod
 el equipo, calcula: ingredientes requeridos vs producidos (con su balance), los
 sobrantes (producidos que ninguna receta usa) y la fuerza aportada por las recetas.
 
-La fuerza se cuenta SE CUMPLAN O NO los requisitos de ingredientes. El cumplimiento
-(``met``) se evalúa de forma agregada: una comida está marcada como cumplida solo si
-la demanda total del plan (suma de todas las comidas) está cubierta por la producción
-del equipo; es decir, ``met`` es idéntico para todas las comidas del plan.
+La fuerza se cuenta SE CUMPLAN O NO los requisitos de ingredientes.
+
+El cumplimiento (``met``) se evalúa **por plato individual**: una comida está
+marcada como cumplida si la producción del equipo cubre los ingredientes de ESA
+receta por sí sola (una porción), independientemente de las demás comidas elegidas.
+
+Los balances de ingredientes (``ingredients``) se calculan contra la demanda máxima
+por porción: para cada ingrediente, se toma el mayor requerimiento que tenga ese
+ingrediente en cualquiera de las recetas elegidas (deduplicando recetas iguales).
+Esto garantiza el invariante: ``all(s.met for s in result.slots)`` ⟺ no hay
+``IngredientBalance`` con ``balance < 0``.
 """
 
 from __future__ import annotations
@@ -39,12 +46,12 @@ class IngredientBalance:
 
 @dataclass(frozen=True, slots=True)
 class SlotFeasibility:
-    """Si una comida tiene cubiertos sus ingredientes con la demanda agregada del plan.
+    """Si una comida tiene cubiertos sus ingredientes evaluados por porción individual.
 
-    ``met`` es ``True`` solo cuando TODOS los ingredientes del plan (suma de todas las
-    comidas elegidas) están cubiertos por lo producido, garantizando el invariante:
-    ``all(s.met for s in result.slots)`` ⟺ no hay ``IngredientBalance`` con
-    ``balance < 0``.
+    ``met`` es ``True`` cuando la producción del equipo cubre los ingredientes de
+    ESTA receta sola (una porción), sin considerar las otras comidas elegidas.
+    Garantiza el invariante: ``all(s.met for s in result.slots)`` ⟺ no hay
+    ``IngredientBalance`` con ``balance < 0``.
     """
 
     recipe_name: str
@@ -65,13 +72,27 @@ def plan_cooking(
     meals: Sequence[MealSelection | None],
     produced: Mapping[Ingredient, float],
 ) -> CookingResult:
-    """Planifica la cocina del día con las comidas elegidas y lo producido."""
+    """Planifica la cocina del día con las comidas elegidas y lo producido.
+
+    Modelo por porción individual:
+    - ``required[ing]`` = máximo requerimiento de ese ingrediente en una sola porción
+      de cualquiera de las recetas distintas elegidas (no suma entre comidas).
+    - ``met`` por comida = la producción cubre esa receta sola (aislada).
+    - ``cooking_strength`` = suma sobre TODOS los slots elegidos (3× la misma receta
+      sigue sumando 3× la fuerza).
+    """
     chosen = [m for m in meals if m is not None]
 
-    required: dict[Ingredient, float] = {}
+    # Deduplicar recetas distintas; para cada ingrediente tomar el MAX por porción.
+    distinct_recipes: dict[str, Recipe] = {}
     for meal in chosen:
-        for ingredient, count in meal.recipe.ingredients:
-            required[ingredient] = required.get(ingredient, 0.0) + count
+        distinct_recipes[meal.recipe.name] = meal.recipe
+
+    required: dict[Ingredient, float] = {}
+    for recipe in distinct_recipes.values():
+        for ingredient, count in recipe.ingredients:
+            if count > required.get(ingredient, 0.0):
+                required[ingredient] = float(count)
 
     ingredients = tuple(
         IngredientBalance(
@@ -84,7 +105,7 @@ def plan_cooking(
     )
 
     # Sobrantes: por ingrediente producido, lo que queda tras cubrir lo requerido
-    # (>0). Incluye los producidos que ninguna receta usa.
+    # (>0, usando el max por porción). Incluye los producidos que ninguna receta usa.
     surplus = tuple(
         IngredientBalance(
             ingredient=ingredient,
@@ -96,14 +117,14 @@ def plan_cooking(
         if amount - required.get(ingredient, 0.0) > 0
     )
 
-    # met se evalúa contra la demanda AGREGADA del plan completo (required ya
-    # acumula todos los ingredientes de todas las comidas). Una comida está
-    # "cumplida" solo si el equipo puede cubrir el total del plan.
-    all_met = all(produced.get(ing, 0.0) >= req for ing, req in required.items())
+    # met por porción individual: la producción cubre esta receta sola.
     slots = tuple(
         SlotFeasibility(
             recipe_name=meal.recipe.name,
-            met=all_met,
+            met=all(
+                produced.get(ing, 0.0) >= count
+                for ing, count in meal.recipe.ingredients
+            ),
         )
         for meal in chosen
     )
