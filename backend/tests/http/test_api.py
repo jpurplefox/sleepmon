@@ -508,6 +508,23 @@ def test_team_production_endpoint(client: TestClient) -> None:
     assert "grand_total_strength" in body
     assert isinstance(body["ingredients"], list)
     assert isinstance(body["members"], list)
+    # Each member now carries a full production object.
+    member = body["members"][0]
+    prod = member["production"]
+    assert isinstance(prod, dict)
+    for key in (
+        "berry_amount",
+        "ingredients",
+        "skill_triggers",
+        "inventory",
+        "seconds_per_help",
+        "helps_per_day",
+        "berry",
+        "berry_strength",
+        "night_skill_chances",
+        "inventory_fill_hours",
+    ):
+        assert key in prod, f"missing key {key!r} in member production"
 
 
 def test_team_production_endpoint_rejects_too_many(client: TestClient) -> None:

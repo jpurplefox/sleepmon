@@ -173,6 +173,7 @@ class MemberContributionDTO:
     berry_amount: float
     ingredients_total: float
     skill_triggers: float
+    production: ProductionResult
 
 
 @dataclass(frozen=True, slots=True)

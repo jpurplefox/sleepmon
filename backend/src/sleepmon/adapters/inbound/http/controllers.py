@@ -33,6 +33,7 @@ from sleepmon.application.dto import (
     MealSelectionInput,
     MemberProduction,
     ProductionInput,
+    ProductionResult,
     TeamMemberInput,
     TeamProductionInput,
 )
@@ -41,6 +42,42 @@ from sleepmon.domain.catalog_data import NATURE_EFFECTS, SUB_SKILL_TIERS
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.ports import SpeciesCatalog
 from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
+
+
+def _full_production_out(result: ProductionResult) -> ProductionOut:
+    """Convierte un ``ProductionResult`` DTO a su schema de respuesta HTTP."""
+    return ProductionOut(
+        helps_per_day=result.helps_per_day,
+        seconds_per_help=result.seconds_per_help,
+        berry=result.berry,
+        berry_amount=result.berry_amount,
+        berry_strength=result.berry_strength,
+        berry_percentage=result.berry_percentage,
+        ingredient_percentage=result.ingredient_percentage,
+        skill_percentage=result.skill_percentage,
+        effective_skill_percentage=result.effective_skill_percentage,
+        ingredients=[
+            SlotProductionOut(ingredient=slot.ingredient, amount=slot.amount)
+            for slot in result.ingredients
+        ],
+        skill_triggers=result.skill_triggers,
+        skill_ingredients=[
+            SlotProductionOut(ingredient=slot.ingredient, amount=slot.amount)
+            for slot in result.skill_ingredients
+        ],
+        skill_energy=result.skill_energy,
+        skill_ingredient_total=result.skill_ingredient_total,
+        skill_cooking_ingredients=result.skill_cooking_ingredients,
+        skill_strength=result.skill_strength,
+        skill_self_energy=result.skill_self_energy,
+        skill_dream_shards=result.skill_dream_shards,
+        skill_tasty_chance=result.skill_tasty_chance,
+        skill_extra_helpful=result.skill_extra_helpful,
+        skill_random_energy=result.skill_random_energy,
+        night_skill_chances=result.night_skill_chances,
+        inventory=result.inventory,
+        inventory_fill_hours=result.inventory_fill_hours,
+    )
 
 
 def _production_out(production: MemberProduction | None) -> MemberProductionOut | None:
@@ -163,38 +200,7 @@ class ProductionController(Controller):
                 skill_level=data.skill_level,
             )
         )
-        return ProductionOut(
-            helps_per_day=result.helps_per_day,
-            seconds_per_help=result.seconds_per_help,
-            berry=result.berry,
-            berry_amount=result.berry_amount,
-            berry_strength=result.berry_strength,
-            berry_percentage=result.berry_percentage,
-            ingredient_percentage=result.ingredient_percentage,
-            skill_percentage=result.skill_percentage,
-            effective_skill_percentage=result.effective_skill_percentage,
-            ingredients=[
-                SlotProductionOut(ingredient=slot.ingredient, amount=slot.amount)
-                for slot in result.ingredients
-            ],
-            skill_triggers=result.skill_triggers,
-            skill_ingredients=[
-                SlotProductionOut(ingredient=slot.ingredient, amount=slot.amount)
-                for slot in result.skill_ingredients
-            ],
-            skill_energy=result.skill_energy,
-            skill_ingredient_total=result.skill_ingredient_total,
-            skill_cooking_ingredients=result.skill_cooking_ingredients,
-            skill_strength=result.skill_strength,
-            skill_self_energy=result.skill_self_energy,
-            skill_dream_shards=result.skill_dream_shards,
-            skill_tasty_chance=result.skill_tasty_chance,
-            skill_extra_helpful=result.skill_extra_helpful,
-            skill_random_energy=result.skill_random_energy,
-            night_skill_chances=result.night_skill_chances,
-            inventory=result.inventory,
-            inventory_fill_hours=result.inventory_fill_hours,
-        )
+        return _full_production_out(result)
 
 
 class CatalogController(Controller):
@@ -290,6 +296,7 @@ class TeamProductionController(Controller):
                     berry_amount=m.berry_amount,
                     ingredients_total=m.ingredients_total,
                     skill_triggers=m.skill_triggers,
+                    production=_full_production_out(m.production),
                 )
                 for m in result.members
             ],

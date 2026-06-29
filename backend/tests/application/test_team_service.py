@@ -630,6 +630,39 @@ def test_compute_team_production_aggregates_members() -> None:
     assert result.grand_total_strength == result.total_strength  # sin cocina
 
 
+def test_compute_team_production_member_carries_full_production() -> None:
+    """Each MemberContributionDTO carries a full ProductionResult matching compute_production."""
+    svc = _service_tp()
+    mid = _add_pikachu(svc)
+    result = svc.compute_team_production(
+        TeamProductionInput(member_ids=[mid], meals=[None, None, None])
+    )
+    assert result.member_count == 1
+    member = result.members[0]
+    # production field must exist and be a ProductionResult
+    prod = member.production
+    assert prod is not None
+    # The full production must agree with compute_production for the same config.
+    standalone = svc.compute_production(
+        ProductionInput(
+            species="Pikachu",
+            level=30,
+            nature="Adamant",
+            ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+            sub_skills=[],
+        )
+    )
+    assert prod.berry_amount == standalone.berry_amount
+    assert prod.berry_strength == standalone.berry_strength
+    assert prod.skill_triggers == standalone.skill_triggers
+    assert prod.seconds_per_help == standalone.seconds_per_help
+    assert prod.helps_per_day == standalone.helps_per_day
+    assert prod.berry == standalone.berry
+    assert prod.inventory == standalone.inventory
+    assert prod.inventory_fill_hours == standalone.inventory_fill_hours
+    assert prod.night_skill_chances == standalone.night_skill_chances
+
+
 def test_compute_team_production_adds_cooking_to_grand_total() -> None:
     svc = _service_tp()
     mid = _add_pikachu(svc)

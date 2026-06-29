@@ -182,6 +182,7 @@ class MemberContributionOut(msgspec.Struct):
     berry_amount: float
     ingredients_total: float
     skill_triggers: float
+    production: ProductionOut
 
 
 class TeamProductionOut(msgspec.Struct):

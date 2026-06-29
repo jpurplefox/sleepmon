@@ -48,6 +48,46 @@ from sleepmon.domain.value_objects import Ingredient, Nature, Ribbon, SubSkill
 E = TypeVar("E", bound=StrEnum)
 
 
+def _production_result(daily: DailyProduction) -> ProductionResult:
+    """Convierte un ``DailyProduction`` del dominio a ``ProductionResult`` (DTO).
+
+    Función compartida entre ``compute_production`` y ``compute_team_production``
+    para que ambas produzcan exactamente la misma forma, sin duplicar el mapping.
+    """
+    return ProductionResult(
+        helps_per_day=daily.helps_per_day,
+        seconds_per_help=daily.seconds_per_help,
+        berry=daily.berry.value,
+        berry_amount=daily.berry_amount,
+        berry_strength=daily.berry_strength,
+        berry_percentage=daily.berry_percentage,
+        ingredient_percentage=daily.ingredient_percentage,
+        skill_percentage=daily.skill_percentage,
+        effective_skill_percentage=daily.effective_skill_percentage,
+        ingredients=[
+            SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
+            for slot in daily.ingredients
+        ],
+        skill_triggers=daily.skill_triggers,
+        skill_ingredients=[
+            SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
+            for slot in daily.skill_ingredients
+        ],
+        skill_energy=daily.skill_energy,
+        skill_ingredient_total=daily.skill_ingredient_total,
+        skill_cooking_ingredients=daily.skill_cooking_ingredients,
+        skill_strength=daily.skill_strength,
+        skill_self_energy=daily.skill_self_energy,
+        skill_dream_shards=daily.skill_dream_shards,
+        skill_tasty_chance=daily.skill_tasty_chance,
+        skill_extra_helpful=daily.skill_extra_helpful,
+        skill_random_energy=daily.skill_random_energy,
+        night_skill_chances=list(daily.night_skill_chances),
+        inventory=daily.inventory,
+        inventory_fill_hours=daily.inventory_fill_hours,
+    )
+
+
 def _parse_enum(enum_cls: type[E], value: str, field: str) -> E:
     try:
         return enum_cls(value)
@@ -222,38 +262,7 @@ class DefaultTeamService(TeamService):
         result = daily_production(
             species, ingredients, data.level, nature, sub_skills, ribbon, data.skill_level
         )
-        return ProductionResult(
-            helps_per_day=result.helps_per_day,
-            seconds_per_help=result.seconds_per_help,
-            berry=result.berry.value,
-            berry_amount=result.berry_amount,
-            berry_strength=result.berry_strength,
-            berry_percentage=result.berry_percentage,
-            ingredient_percentage=result.ingredient_percentage,
-            skill_percentage=result.skill_percentage,
-            effective_skill_percentage=result.effective_skill_percentage,
-            ingredients=[
-                SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
-                for slot in result.ingredients
-            ],
-            skill_triggers=result.skill_triggers,
-            skill_ingredients=[
-                SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
-                for slot in result.skill_ingredients
-            ],
-            skill_energy=result.skill_energy,
-            skill_ingredient_total=result.skill_ingredient_total,
-            skill_cooking_ingredients=result.skill_cooking_ingredients,
-            skill_strength=result.skill_strength,
-            skill_self_energy=result.skill_self_energy,
-            skill_dream_shards=result.skill_dream_shards,
-            skill_tasty_chance=result.skill_tasty_chance,
-            skill_extra_helpful=result.skill_extra_helpful,
-            skill_random_energy=result.skill_random_energy,
-            night_skill_chances=list(result.night_skill_chances),
-            inventory=result.inventory,
-            inventory_fill_hours=result.inventory_fill_hours,
-        )
+        return _production_result(result)
 
     def list_recipes(self) -> list[RecipeDTO]:
         return [
@@ -284,6 +293,7 @@ class DefaultTeamService(TeamService):
         # Cargar miembros (404 si falta) y computar su producción. Los miembros con
         # especie fuera del catálogo curado se excluyen del agregado.
         entries: list[tuple[str, str, DailyProduction]] = []
+        member_productions: dict[str, ProductionResult] = {}
         excluded = 0
         for raw_id in data.member_ids:
             try:
@@ -304,7 +314,9 @@ class DefaultTeamService(TeamService):
                 member.ribbon,
                 member.skill_level,
             )
-            entries.append((str(member.id), member.species, daily))
+            member_id_str = str(member.id)
+            member_productions[member_id_str] = _production_result(daily)
+            entries.append((member_id_str, member.species, daily))
 
         aggregate = team_production(entries)
 
@@ -355,6 +367,7 @@ class DefaultTeamService(TeamService):
                     berry_amount=m.berry_amount,
                     ingredients_total=m.ingredients_total,
                     skill_triggers=m.skill_triggers,
+                    production=member_productions[m.member_id],
                 )
                 for m in aggregate.members
             ],
