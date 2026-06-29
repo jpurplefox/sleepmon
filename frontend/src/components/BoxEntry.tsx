@@ -381,12 +381,12 @@ export function BoxEntry({
               produce (sin volver a ser un encabezado). */}
           {skillYield && (
             <span className="box-entry__skill-stat box-entry__skill-yield" title={skillYield.title}>
-              <span className="box-entry__metric-value">{skillYield.text}</span>
               {skillIcon.kind === "img" ? (
                 <img className="box-entry__skill-yield-icon" src={skillIcon.src} alt="" aria-hidden="true" />
               ) : (
                 <skillIcon.Component className="box-entry__skill-yield-icon" aria-hidden="true" />
               )}
+              <span className="box-entry__metric-value">{skillYield.text}</span>
               <span className="sr-only">{skillYield.title}</span>
             </span>
           )}
