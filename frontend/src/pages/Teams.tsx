@@ -52,6 +52,12 @@ export function Teams() {
     [members.data],
   );
 
+  // Lookup map: recipe_name → met, built from cooking_meals for the met indicator.
+  const metByRecipe = useMemo(
+    () => new Map((result?.cooking_meals ?? []).map((cm) => [cm.recipe_name, cm.met])),
+    [result],
+  );
+
   // Lookup map: species → dex number, for sprites.
   const dexBySpecies = useMemo(
     () => new Map((catalog.data?.species ?? []).map((s) => [s.name, s.dex])),
@@ -231,50 +237,59 @@ export function Teams() {
                 <h2>{t("teams.cooking")}</h2>
 
                 <div className="teams-meals">
-                  {MEAL_SLOTS.map((slot, idx) => (
-                    <div key={slot} className="teams__meal">
-                      <label className="teams__meal-label">
-                        {t(`teams.${slot}`)}
-                        <select
-                          className="teams__meal-select"
-                          value={meals[idx]?.recipe ?? ""}
-                          onChange={(e) =>
-                            setMeal(idx, e.target.value, meals[idx]?.level ?? 1)
-                          }
-                        >
-                          <option value="">{t("teams.noRecipe")}</option>
-                          {Object.entries(byType).map(([type, list]) => (
-                            <optgroup key={type} label={type}>
-                              {list.map((r) => (
-                                <option key={r.name} value={r.name}>
-                                  {r.name}
-                                </option>
-                              ))}
-                            </optgroup>
-                          ))}
-                        </select>
-                      </label>
-                      {meals[idx] && (
-                        <label className="teams__meal-level-label">
-                          {t("teams.recipeLevel")}
-                          <input
-                            type="number"
-                            className="teams__meal-level"
-                            min={1}
-                            max={MAX_RECIPE_LEVEL}
-                            value={meals[idx]?.level ?? 1}
+                  {MEAL_SLOTS.map((slot, idx) => {
+                    const chosenRecipe = meals[idx]?.recipe;
+                    const met = chosenRecipe != null ? metByRecipe.get(chosenRecipe) : undefined;
+                    return (
+                      <div key={slot} className="teams__meal">
+                        <label className="teams__meal-label">
+                          {t(`teams.${slot}`)}
+                          <select
+                            className="teams__meal-select"
+                            value={meals[idx]?.recipe ?? ""}
                             onChange={(e) =>
-                              setMeal(
-                                idx,
-                                meals[idx]!.recipe,
-                                Math.max(1, Math.min(MAX_RECIPE_LEVEL, Number(e.target.value))),
-                              )
+                              setMeal(idx, e.target.value, meals[idx]?.level ?? 1)
                             }
-                          />
+                          >
+                            <option value="">{t("teams.noRecipe")}</option>
+                            {Object.entries(byType).map(([type, list]) => (
+                              <optgroup key={type} label={type}>
+                                {list.map((r) => (
+                                  <option key={r.name} value={r.name}>
+                                    {r.name}
+                                  </option>
+                                ))}
+                              </optgroup>
+                            ))}
+                          </select>
                         </label>
-                      )}
-                    </div>
-                  ))}
+                        {meals[idx] && (
+                          <label className="teams__meal-level-label">
+                            {t("teams.recipeLevel")}
+                            <input
+                              type="number"
+                              className="teams__meal-level"
+                              min={1}
+                              max={MAX_RECIPE_LEVEL}
+                              value={meals[idx]?.level ?? 1}
+                              onChange={(e) =>
+                                setMeal(
+                                  idx,
+                                  meals[idx]!.recipe,
+                                  Math.max(1, Math.min(MAX_RECIPE_LEVEL, Number(e.target.value))),
+                                )
+                              }
+                            />
+                          </label>
+                        )}
+                        {met != null && (
+                          <span className={met ? "badge badge--ok" : "badge badge--low"}>
+                            {met ? t("teams.met") : t("teams.notMet")}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <dl className="teams-stat-list">

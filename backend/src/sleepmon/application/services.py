@@ -286,7 +286,11 @@ class DefaultTeamService(TeamService):
         entries: list[tuple[str, str, DailyProduction]] = []
         excluded = 0
         for raw_id in data.member_ids:
-            member = self.get_member(UUID(raw_id))  # levanta TeamMemberNotFoundError
+            try:
+                member_uuid = UUID(raw_id)
+            except ValueError as exc:
+                raise ValidationError(f"Id de miembro inválido: {raw_id!r}.") from exc
+            member = self.get_member(member_uuid)  # levanta TeamMemberNotFoundError
             species = self._catalog.get(member.species)
             if species is None:
                 excluded += 1

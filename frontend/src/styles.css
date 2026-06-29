@@ -1697,6 +1697,16 @@ select:focus {
   border-color: var(--moon-dim);
 }
 
+.badge--ok {
+  color: var(--up);
+  border-color: var(--up);
+}
+
+.badge--low {
+  color: var(--down);
+  border-color: var(--down);
+}
+
 .nature-effect .up {
   color: var(--up);
 }

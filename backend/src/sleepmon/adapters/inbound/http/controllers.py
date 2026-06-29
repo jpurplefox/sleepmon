@@ -229,7 +229,7 @@ class CatalogController(Controller):
 class RecipeController(Controller):
     path = "/recipes"
 
-    @get("/", sync_to_thread=True)
+    @get("/", sync_to_thread=False)
     def list_recipes(self, service: NamedDependency[TeamService]) -> list[RecipeOut]:
         return [
             RecipeOut(

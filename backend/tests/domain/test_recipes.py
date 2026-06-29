@@ -59,3 +59,11 @@ def test_seed_recipes_are_well_formed() -> None:
         for ingredient, count in r.ingredients:
             assert isinstance(ingredient, Ingredient), r.name
             assert count > 0, r.name
+
+
+def test_recipe_level_bonus_is_monotone_non_decreasing() -> None:
+    from sleepmon.domain.catalog_data import RECIPE_LEVEL_BONUS
+    assert all(
+        RECIPE_LEVEL_BONUS[i] <= RECIPE_LEVEL_BONUS[i + 1]
+        for i in range(len(RECIPE_LEVEL_BONUS) - 1)
+    )

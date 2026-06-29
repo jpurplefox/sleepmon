@@ -709,6 +709,16 @@ class _EmptySpeciesCatalog(SpeciesCatalog):
         return ()
 
 
+def test_compute_team_production_rejects_malformed_member_id() -> None:
+    svc = _service_tp()
+    with pytest.raises(ValidationError, match="inválido"):
+        svc.compute_team_production(
+            TeamProductionInput(
+                member_ids=["not-a-uuid"], meals=[None, None, None]
+            )
+        )
+
+
 def test_compute_team_production_excludes_off_catalog_members() -> None:
     repo = InMemoryTeamRepository()
     member = TeamMember(
