@@ -9,6 +9,7 @@ import { spriteUrl } from "../sprites";
 import type { MealInput, Member, Recipe } from "../types";
 
 const MAX_TEAM = 5;
+const MAX_RECIPE_LEVEL = 70;
 const MEAL_SLOTS = ["breakfast", "lunch", "dinner"] as const;
 
 export function Teams() {
@@ -139,7 +140,7 @@ export function Teams() {
       ) : (
         <>
           {/* Daily / Weekly toggle */}
-          <div className="teams__toggle" role="group" aria-label={t("teams.daily")}>
+          <div className="teams__toggle" role="group" aria-label={t("teams.toggleLabel")}>
             <button
               type="button"
               className={"btn" + (!weekly ? " btn--primary" : " btn--ghost")}
@@ -220,7 +221,7 @@ export function Teams() {
 
                 {result.excluded_count > 0 && (
                   <p className="teams__excluded muted">
-                    {t("teams.excluded").replace("{count}", String(result.excluded_count))}
+                    {t("teams.excluded", { count: result.excluded_count })}
                   </p>
                 )}
               </section>
@@ -260,13 +261,13 @@ export function Teams() {
                             type="number"
                             className="teams__meal-level"
                             min={1}
-                            max={65}
+                            max={MAX_RECIPE_LEVEL}
                             value={meals[idx]?.level ?? 1}
                             onChange={(e) =>
                               setMeal(
                                 idx,
                                 meals[idx]!.recipe,
-                                Math.max(1, Math.min(65, Number(e.target.value))),
+                                Math.max(1, Math.min(MAX_RECIPE_LEVEL, Number(e.target.value))),
                               )
                             }
                           />
