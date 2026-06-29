@@ -494,3 +494,41 @@ def test_recipes_endpoint_lists_recipes(client: TestClient) -> None:
     first = body[0]
     assert {"name", "type", "ingredients", "base_strength"} <= first.keys()
     assert all({"ingredient", "count"} <= ing.keys() for ing in first["ingredients"])
+
+
+def test_team_production_endpoint(client: TestClient) -> None:
+    created = client.post("/team", json=valid_payload()).json()
+    res = client.post(
+        "/teams/production",
+        json={"member_ids": [created["id"]], "meals": [None, None, None]},
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["member_count"] == 1
+    assert "grand_total_strength" in body
+    assert isinstance(body["ingredients"], list)
+    assert isinstance(body["members"], list)
+
+
+def test_team_production_endpoint_rejects_too_many(client: TestClient) -> None:
+    ids = [client.post("/team", json=valid_payload()).json()["id"] for _ in range(6)]
+    res = client.post(
+        "/teams/production", json={"member_ids": ids, "meals": [None, None, None]}
+    )
+    assert res.status_code == 400
+
+
+def test_team_production_endpoint_with_recipe(client: TestClient) -> None:
+    created = client.post("/team", json=valid_payload()).json()
+    recipe = client.get("/recipes").json()[0]
+    res = client.post(
+        "/teams/production",
+        json={
+            "member_ids": [created["id"]],
+            "meals": [{"recipe": recipe["name"], "level": 1}, None, None],
+        },
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["cooking_strength"] == recipe["base_strength"]
+    assert body["grand_total_strength"] == body["total_strength"] + body["cooking_strength"]

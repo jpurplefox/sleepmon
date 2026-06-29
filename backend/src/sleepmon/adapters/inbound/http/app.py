@@ -20,6 +20,7 @@ from sleepmon.adapters.inbound.http.controllers import (
     ProductionController,
     RecipeController,
     TeamController,
+    TeamProductionController,
 )
 from sleepmon.adapters.inbound.http.schemas import ErrorOut
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
@@ -72,7 +73,13 @@ def create_app(
     bound_catalog = catalog
 
     return Litestar(
-        route_handlers=[TeamController, CatalogController, ProductionController, RecipeController],
+        route_handlers=[
+            TeamController,
+            CatalogController,
+            ProductionController,
+            RecipeController,
+            TeamProductionController,
+        ],
         dependencies={
             "service": Provide(lambda: bound_service, sync_to_thread=False),
             "catalog": Provide(lambda: bound_catalog, sync_to_thread=False),

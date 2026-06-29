@@ -151,3 +151,60 @@ class RecipeOut(msgspec.Struct):
 
 class ErrorOut(msgspec.Struct):
     detail: str
+
+
+class MealIn(msgspec.Struct, forbid_unknown_fields=True):
+    recipe: str
+    level: int = 1
+
+
+class TeamProductionIn(msgspec.Struct, forbid_unknown_fields=True):
+    member_ids: list[str]
+    meals: list[MealIn | None] = msgspec.field(default_factory=list)
+
+
+class IngredientBalanceOut(msgspec.Struct):
+    ingredient: str
+    required: float
+    produced: float
+    balance: float
+
+
+class MealFeasibilityOut(msgspec.Struct):
+    recipe_name: str
+    met: bool
+
+
+class MemberContributionOut(msgspec.Struct):
+    member_id: str
+    species: str
+    strength: float
+    berry_amount: float
+    ingredients_total: float
+    skill_triggers: float
+
+
+class TeamProductionOut(msgspec.Struct):
+    member_count: int
+    excluded_count: int
+    total_strength: float
+    total_berry_amount: float
+    total_berry_strength: float
+    total_skill_strength: float
+    ingredients: list[SlotProductionOut]
+    total_ingredients: float
+    skill_triggers: float
+    skill_energy: float | None
+    skill_self_energy: float | None
+    skill_dream_shards: float | None
+    skill_tasty_chance: float | None
+    skill_extra_helpful: float | None
+    skill_random_energy: float | None
+    skill_cooking_ingredients: float | None
+    skill_ingredient_total: float | None
+    members: list[MemberContributionOut]
+    cooking_strength: float
+    cooking_ingredients: list[IngredientBalanceOut]
+    cooking_surplus: list[IngredientBalanceOut]
+    cooking_meals: list[MealFeasibilityOut]
+    grand_total_strength: float

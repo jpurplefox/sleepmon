@@ -12,7 +12,10 @@ from litestar.status_codes import HTTP_200_OK, HTTP_201_CREATED
 from sleepmon.adapters.inbound.http.schemas import (
     CatalogOut,
     DistributionsOut,
+    IngredientBalanceOut,
     IngredientCountOut,
+    MealFeasibilityOut,
+    MemberContributionOut,
     MemberIn,
     MemberOut,
     MemberProductionOut,
@@ -23,8 +26,16 @@ from sleepmon.adapters.inbound.http.schemas import (
     SlotProductionOut,
     SpeciesOut,
     SubSkillOut,
+    TeamProductionIn,
+    TeamProductionOut,
 )
-from sleepmon.application.dto import MemberProduction, ProductionInput, TeamMemberInput
+from sleepmon.application.dto import (
+    MealSelectionInput,
+    MemberProduction,
+    ProductionInput,
+    TeamMemberInput,
+    TeamProductionInput,
+)
 from sleepmon.application.services import TeamService
 from sleepmon.domain.catalog_data import NATURE_EFFECTS, SUB_SKILL_TIERS
 from sleepmon.domain.entities import TeamMember
@@ -232,3 +243,78 @@ class RecipeController(Controller):
             )
             for r in service.list_recipes()
         ]
+
+
+class TeamProductionController(Controller):
+    path = "/teams/production"
+
+    @post("/", status_code=HTTP_200_OK, sync_to_thread=True)
+    def compute(
+        self, service: NamedDependency[TeamService], data: TeamProductionIn
+    ) -> TeamProductionOut:
+        result = service.compute_team_production(
+            TeamProductionInput(
+                member_ids=data.member_ids,
+                meals=[
+                    None if m is None else MealSelectionInput(recipe=m.recipe, level=m.level)
+                    for m in data.meals
+                ],
+            )
+        )
+        return TeamProductionOut(
+            member_count=result.member_count,
+            excluded_count=result.excluded_count,
+            total_strength=result.total_strength,
+            total_berry_amount=result.total_berry_amount,
+            total_berry_strength=result.total_berry_strength,
+            total_skill_strength=result.total_skill_strength,
+            ingredients=[
+                SlotProductionOut(ingredient=s.ingredient, amount=s.amount)
+                for s in result.ingredients
+            ],
+            total_ingredients=result.total_ingredients,
+            skill_triggers=result.skill_triggers,
+            skill_energy=result.skill_energy,
+            skill_self_energy=result.skill_self_energy,
+            skill_dream_shards=result.skill_dream_shards,
+            skill_tasty_chance=result.skill_tasty_chance,
+            skill_extra_helpful=result.skill_extra_helpful,
+            skill_random_energy=result.skill_random_energy,
+            skill_cooking_ingredients=result.skill_cooking_ingredients,
+            skill_ingredient_total=result.skill_ingredient_total,
+            members=[
+                MemberContributionOut(
+                    member_id=m.member_id,
+                    species=m.species,
+                    strength=m.strength,
+                    berry_amount=m.berry_amount,
+                    ingredients_total=m.ingredients_total,
+                    skill_triggers=m.skill_triggers,
+                )
+                for m in result.members
+            ],
+            cooking_strength=result.cooking_strength,
+            cooking_ingredients=[
+                IngredientBalanceOut(
+                    ingredient=b.ingredient,
+                    required=b.required,
+                    produced=b.produced,
+                    balance=b.balance,
+                )
+                for b in result.cooking_ingredients
+            ],
+            cooking_surplus=[
+                IngredientBalanceOut(
+                    ingredient=b.ingredient,
+                    required=b.required,
+                    produced=b.produced,
+                    balance=b.balance,
+                )
+                for b in result.cooking_surplus
+            ],
+            cooking_meals=[
+                MealFeasibilityOut(recipe_name=m.recipe_name, met=m.met)
+                for m in result.cooking_meals
+            ],
+            grand_total_strength=result.grand_total_strength,
+        )
