@@ -5,6 +5,7 @@ import { api } from "../api/client";
 import { BoxPicker } from "../components/BoxPicker";
 import { Modal } from "../components/Modal";
 import { ProductionCard } from "../components/ProductionCard";
+import { RecipeSelect } from "../components/RecipeSelect";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { CHARGE_STRENGTH_ICON } from "../skillIcons";
@@ -59,13 +60,6 @@ export function Teams() {
   const factor = weekly ? 7 : 1;
   const result = teamQuery.data;
 
-  // Recipes grouped by type for the meal selectors.
-  const byType = useMemo(() => {
-    const groups: Record<string, typeof recipes.data> = { Curry: [], Salad: [], Dessert: [] };
-    for (const r of recipes.data ?? []) groups[r.type]?.push(r);
-    return groups;
-  }, [recipes.data]);
-
   // Lookup map: member id → Member.
   const memberById = useMemo(
     () => new Map((members.data ?? []).map((m) => [m.id, m])),
@@ -88,7 +82,7 @@ export function Teams() {
   const removeMember = (id: string) =>
     setSelectedIds((prev) => prev.filter((x) => x !== id));
 
-  const setMeal = (slot: number, recipeName: string, level: number) => {
+  const setMeal = (slot: number, recipeName: string | null, level: number) => {
     setMeals((prev) => {
       const next = [...prev];
       next[slot] = recipeName ? { recipe: recipeName, level } : null;
@@ -328,32 +322,21 @@ export function Teams() {
             <h2 style={{ margin: "0 0 1rem" }}>{t("teams.cooking")}</h2>
 
             {MEAL_SLOTS.map((slot, idx) => {
-              const chosenRecipe = meals[idx]?.recipe ?? "";
+              const chosenRecipe = meals[idx]?.recipe ?? null;
               const met = chosenRecipe ? metByRecipe.get(chosenRecipe) : undefined;
               return (
                 <div key={slot} className="teams-meal">
-                  {/* Recipe select */}
+                  {/* Recipe select — custom dropdown replaces native <select> */}
                   <label className="form" style={{ marginBottom: 0 }}>
                     <span className="muted" style={{ fontSize: "var(--text-sm)" }}>
                       {t(`teams.${slot}`)}
                     </span>
-                    <select
+                    <RecipeSelect
+                      recipes={recipes.data ?? []}
                       value={chosenRecipe}
-                      onChange={(e) =>
-                        setMeal(idx, e.target.value, meals[idx]?.level ?? 1)
-                      }
-                    >
-                      <option value="">{t("teams.noRecipe")}</option>
-                      {Object.entries(byType).map(([type, list]) => (
-                        <optgroup key={type} label={type}>
-                          {(list ?? []).map((r) => (
-                            <option key={r.name} value={r.name}>
-                              {r.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                      ))}
-                    </select>
+                      onChange={(name) => setMeal(idx, name, meals[idx]?.level ?? 1)}
+                      placeholder={t("teams.noRecipe")}
+                    />
                   </label>
 
                   {/* Recipe level — space always reserved to avoid layout jump */}
@@ -368,7 +351,7 @@ export function Teams() {
                       onChange={(e) =>
                         setMeal(
                           idx,
-                          meals[idx]?.recipe ?? "",
+                          meals[idx]?.recipe ?? null,
                           Math.max(1, Math.min(MAX_RECIPE_LEVEL, Number(e.target.value))),
                         )
                       }
