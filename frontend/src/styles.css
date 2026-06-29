@@ -2829,8 +2829,15 @@ button.prod-card__base-tag--action:hover {
 /* Análisis de equipo — sección de agregados y cocina */
 .teams-aggregates {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
   gap: 1.5rem;
   margin-top: 2rem;
+}
+
+@media (max-width: 860px) {
+  .teams-aggregates {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Fila cabecera de los agregados: grand total + toggle diario/semanal en la misma línea. */
