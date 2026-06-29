@@ -37,10 +37,12 @@ class IngredientBalance:
 
 @dataclass(frozen=True, slots=True)
 class SlotFeasibility:
-    """Si una comida tiene cubiertos sus ingredientes con lo producido en el día.
+    """Si una comida tiene cubiertos sus ingredientes con la demanda agregada del plan.
 
-    Cada comida se evalúa contra el producido total del día, sin descontar lo que
-    requieren las otras comidas (indicador informativo).
+    ``met`` es ``True`` solo cuando TODOS los ingredientes del plan (suma de todas las
+    comidas elegidas) están cubiertos por lo producido, garantizando el invariante:
+    ``all(s.met for s in result.slots)`` ⟺ no hay ``IngredientBalance`` con
+    ``balance < 0``.
     """
 
     recipe_name: str
@@ -92,13 +94,14 @@ def plan_cooking(
         if amount - required.get(ingredient, 0.0) > 0
     )
 
+    # met se evalúa contra la demanda AGREGADA del plan completo (required ya
+    # acumula todos los ingredientes de todas las comidas). Una comida está
+    # "cumplida" solo si el equipo puede cubrir el total del plan.
+    all_met = all(produced.get(ing, 0.0) >= req for ing, req in required.items())
     slots = tuple(
         SlotFeasibility(
             recipe_name=meal.recipe.name,
-            met=all(
-                produced.get(ingredient, 0.0) >= count
-                for ingredient, count in meal.recipe.ingredients
-            ),
+            met=all_met,
         )
         for meal in chosen
     )

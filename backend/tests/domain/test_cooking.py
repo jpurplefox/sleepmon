@@ -42,17 +42,38 @@ def test_plan_cooking_required_vs_produced_balance() -> None:
     assert result.slots[0].met is False  # falta fancy egg
 
 
-def test_met_checks_per_meal_not_aggregated() -> None:
-    # met se evalúa por comida contra el total producido, no contra el agregado
-    # de todas las comidas. Aquí: 8 >= 6 por comida -> met True;
-    # pero el agregado (12) no alcanza -> balance negativo.
+def test_met_reflects_aggregate_demand() -> None:
+    # met se evalúa contra la demanda AGREGADA: dos comidas con la misma receta
+    # duplican el requerimiento. Si el total supera lo producido, AMBAS comidas
+    # deben ser met=False (coherente con el balance negativo del ingrediente).
     r = _recipe(ings=((I.HONEY, 6),), base=100)
     meals = [MealSelection(r, 1), MealSelection(r, 1)]  # HONEY total requerido: 12
-    result = plan_cooking(meals, {I.HONEY: 8.0})  # 8 >= 6 por comida -> met; agregado no alcanza
-    assert result.slots[0].met is True
-    assert result.slots[1].met is True
+    result = plan_cooking(meals, {I.HONEY: 8.0})  # producido 8 < requerido 12
+    assert result.slots[0].met is False
+    assert result.slots[1].met is False
     by_ing = {b.ingredient: b for b in result.ingredients}
     assert by_ing[I.HONEY].balance == -4.0  # agregado: 8 - 12
+
+
+def test_met_coherent_with_ingredient_balance() -> None:
+    # Invariante: all(s.met) ⟺ no hay IngredientBalance con balance < 0.
+    r = _recipe(ings=((I.HONEY, 6),), base=100)
+
+    # Caso A: plan NO cumplible — met False y balance negativo
+    meals_bad = [MealSelection(r, 1), MealSelection(r, 1)]
+    result_bad = plan_cooking(meals_bad, {I.HONEY: 8.0})
+    all_met_bad = all(s.met for s in result_bad.slots)
+    has_shortfall_bad = any(b.balance < 0 for b in result_bad.ingredients)
+    assert all_met_bad is False
+    assert has_shortfall_bad is True
+
+    # Caso B: plan cumplible — met True y sin faltantes
+    meals_ok = [MealSelection(r, 1)]
+    result_ok = plan_cooking(meals_ok, {I.HONEY: 10.0})
+    all_met_ok = all(s.met for s in result_ok.slots)
+    has_shortfall_ok = any(b.balance < 0 for b in result_ok.ingredients)
+    assert all_met_ok is True
+    assert has_shortfall_ok is False
 
 
 def test_plan_cooking_surplus_lists_unused_produced() -> None:
