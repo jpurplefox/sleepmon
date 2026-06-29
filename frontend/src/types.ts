@@ -123,6 +123,76 @@ export interface SlotProduction {
   amount: number;
 }
 
+export interface IngredientCount {
+  ingredient: string;
+  count: number;
+}
+
+export interface Recipe {
+  name: string;
+  type: "Curry" | "Salad" | "Dessert";
+  ingredients: IngredientCount[];
+  base_strength: number;
+}
+
+export interface MealInput {
+  recipe: string;
+  level: number;
+}
+
+export interface TeamProductionInput {
+  member_ids: string[];
+  // 3 slots (mañana/mediodía/noche); null = sin receta en ese slot.
+  meals: (MealInput | null)[];
+}
+
+export interface IngredientBalance {
+  ingredient: string;
+  required: number;
+  produced: number;
+  balance: number;
+}
+
+export interface MealFeasibility {
+  recipe_name: string;
+  met: boolean;
+}
+
+export interface MemberContribution {
+  member_id: string;
+  species: string;
+  strength: number;
+  berry_amount: number;
+  ingredients_total: number;
+  skill_triggers: number;
+}
+
+export interface TeamProduction {
+  member_count: number;
+  excluded_count: number;
+  total_strength: number;
+  total_berry_amount: number;
+  total_berry_strength: number;
+  total_skill_strength: number;
+  ingredients: SlotProduction[];
+  total_ingredients: number;
+  skill_triggers: number;
+  skill_energy: number | null;
+  skill_self_energy: number | null;
+  skill_dream_shards: number | null;
+  skill_tasty_chance: number | null;
+  skill_extra_helpful: number | null;
+  skill_random_energy: number | null;
+  skill_cooking_ingredients: number | null;
+  skill_ingredient_total: number | null;
+  members: MemberContribution[];
+  cooking_strength: number;
+  cooking_ingredients: IngredientBalance[];
+  cooking_surplus: IngredientBalance[];
+  cooking_meals: MealFeasibility[];
+  grand_total_strength: number;
+}
+
 export interface Production {
   helps_per_day: number;
   seconds_per_help: number;
