@@ -1584,6 +1584,14 @@ select:focus {
   gap: 0.3rem;
 }
 
+/* Ícono de la skill repetido en chico a la derecha del aporte: hace de "unidad"
+   (qué produce ese número), sin competir con el ícono-encabezado. */
+.box-entry__skill-yield-icon {
+  width: 13px;
+  height: 13px;
+  opacity: 0.85;
+}
+
 .box-entry__metric {
   display: inline-flex;
   align-items: center;

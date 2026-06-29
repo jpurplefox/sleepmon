@@ -8,7 +8,7 @@ import { statIcon } from "../natures";
 import { spriteUrl } from "../sprites";
 import type { Member, Nature, Species } from "../types";
 import { CHARGE_STRENGTH_ICON, mainSkillIcon } from "../skillIcons";
-import { IconMore, IconSparkle } from "./icons";
+import { IconMore } from "./icons";
 import { IngredientLineup } from "./IngredientLineup";
 import { MemberConfig } from "./MemberConfig";
 import { RibbonIcon } from "./RibbonIcon";
@@ -364,10 +364,11 @@ export function BoxEntry({
             <span className="box-entry__metric-value" aria-hidden="true">{skillLv}</span>
             <span className="sr-only">{`${skillName} ${skillLv}`}</span>
           </span>
+          {/* Disparos por día: "×N" (cuántas veces se activa la skill). La "×" hace
+              de marcador en vez de un ícono propio. */}
           <span className="box-entry__skill-stat" title={t("box.triggersTitle")}>
-            <IconSparkle aria-hidden="true" />
             <span className="box-entry__metric-value">
-              {prod ? fmt(prod.skill_triggers) : t("common.dash")}
+              {prod ? `×${fmt(prod.skill_triggers)}` : t("common.dash")}
             </span>
             <span className="sr-only">
               {t("box.triggersAria", {
@@ -375,11 +376,17 @@ export function BoxEntry({
               })}
             </span>
           </span>
-          {/* Aporte de la main skill: energía, ingredientes al azar, etc. Anclado bajo
-              el ícono de la skill (no lleva ícono propio). */}
+          {/* Aporte de la main skill: energía, ingredientes al azar, etc. Repite el
+              ícono de la skill en chico a la derecha del número, como "unidad" de qué
+              produce (sin volver a ser un encabezado). */}
           {skillYield && (
             <span className="box-entry__skill-stat box-entry__skill-yield" title={skillYield.title}>
               <span className="box-entry__metric-value">{skillYield.text}</span>
+              {skillIcon.kind === "img" ? (
+                <img className="box-entry__skill-yield-icon" src={skillIcon.src} alt="" aria-hidden="true" />
+              ) : (
+                <skillIcon.Component className="box-entry__skill-yield-icon" aria-hidden="true" />
+              )}
               <span className="sr-only">{skillYield.title}</span>
             </span>
           )}
