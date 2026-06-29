@@ -8,9 +8,11 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Iterable
+from dataclasses import dataclass
 
 from sleepmon.domain.catalog_data import NATURE_EFFECTS
 from sleepmon.domain.entities import TeamMember
+from sleepmon.domain.production import DailyProduction
 from sleepmon.domain.value_objects import Ingredient, Nature, NatureStat, SubSkill
 
 
@@ -53,3 +55,106 @@ def nature_stat_balance(members: Iterable[TeamMember]) -> dict[NatureStat, int]:
         if effect.decreased is not None:
             balance[effect.decreased] -= 1
     return balance
+
+
+@dataclass(frozen=True, slots=True)
+class MemberContribution:
+    """Aporte de un miembro al agregado del equipo (para el desglose)."""
+
+    member_id: str
+    species: str
+    strength: float  # berry_strength + skill_strength (None cuenta 0)
+    berry_amount: float
+    ingredients_total: float
+    skill_triggers: float
+
+
+@dataclass(frozen=True, slots=True)
+class TeamProduction:
+    """Producción diaria agregada de un equipo (bayas + skills)."""
+
+    member_count: int
+    total_strength: float
+    total_berry_amount: float
+    total_berry_strength: float
+    total_skill_strength: float
+    ingredients: dict[Ingredient, float]
+    total_ingredients: float
+    skill_triggers: float
+    skill_energy: float | None
+    skill_self_energy: float | None
+    skill_dream_shards: float | None
+    skill_tasty_chance: float | None
+    skill_extra_helpful: float | None
+    skill_random_energy: float | None
+    skill_cooking_ingredients: float | None
+    skill_ingredient_total: float | None
+    members: tuple[MemberContribution, ...]
+
+
+# Métricas opcionales de la main skill que se agregan sumando los presentes (None si
+# ningún miembro la aporta). Nombre del atributo en DailyProduction.
+_OPTIONAL_SKILL_FIELDS: tuple[str, ...] = (
+    "skill_energy",
+    "skill_self_energy",
+    "skill_dream_shards",
+    "skill_tasty_chance",
+    "skill_extra_helpful",
+    "skill_random_energy",
+    "skill_cooking_ingredients",
+    "skill_ingredient_total",
+)
+
+
+def _sum_optional(dailies: list[DailyProduction], field: str) -> float | None:
+    """Suma los valores no-None de ``field``; None si ninguno aporta."""
+    present = [v for d in dailies if (v := getattr(d, field)) is not None]
+    return sum(present) if present else None
+
+
+def team_production(
+    entries: Iterable[tuple[str, str, DailyProduction]],
+) -> TeamProduction:
+    """Agrega la producción diaria de los miembros de un equipo.
+
+    Cada entry es ``(member_id, species_name, daily)``. La fuerza total es la suma de
+    la fuerza directa de bayas más la de Charge Strength (los ``None`` cuentan 0). Los
+    ingredientes se agregan por tipo (slots normales + main skill).
+    """
+    entries_list = list(entries)
+    dailies = [daily for _, _, daily in entries_list]
+
+    ingredients: dict[Ingredient, float] = {}
+    for daily in dailies:
+        for slot in (*daily.ingredients, *daily.skill_ingredients):
+            ingredients[slot.ingredient] = ingredients.get(slot.ingredient, 0.0) + slot.amount
+
+    total_berry_strength = sum(d.berry_strength for d in dailies)
+    total_skill_strength = sum(d.skill_strength or 0.0 for d in dailies)
+
+    members = tuple(
+        MemberContribution(
+            member_id=member_id,
+            species=species,
+            strength=daily.berry_strength + (daily.skill_strength or 0.0),
+            berry_amount=daily.berry_amount,
+            ingredients_total=sum(slot.amount for slot in daily.ingredients),
+            skill_triggers=daily.skill_triggers,
+        )
+        for member_id, species, daily in entries_list
+    )
+
+    optional = {field: _sum_optional(dailies, field) for field in _OPTIONAL_SKILL_FIELDS}
+
+    return TeamProduction(
+        member_count=len(entries_list),
+        total_strength=total_berry_strength + total_skill_strength,
+        total_berry_amount=sum(d.berry_amount for d in dailies),
+        total_berry_strength=total_berry_strength,
+        total_skill_strength=total_skill_strength,
+        ingredients=ingredients,
+        total_ingredients=sum(ingredients.values()),
+        skill_triggers=sum(d.skill_triggers for d in dailies),
+        members=members,
+        **optional,
+    )
