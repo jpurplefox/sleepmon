@@ -37,7 +37,11 @@ class IngredientBalance:
 
 @dataclass(frozen=True, slots=True)
 class SlotFeasibility:
-    """Si una comida tiene cubiertos sus ingredientes con lo producido en el día."""
+    """Si una comida tiene cubiertos sus ingredientes con lo producido en el día.
+
+    Cada comida se evalúa contra el producido total del día, sin descontar lo que
+    requieren las otras comidas (indicador informativo).
+    """
 
     recipe_name: str
     met: bool
@@ -99,7 +103,7 @@ def plan_cooking(
         for meal in chosen
     )
 
-    cooking_strength = sum(recipe_strength(m.recipe, m.level) for m in chosen)
+    cooking_strength = sum((recipe_strength(m.recipe, m.level) for m in chosen), 0.0)
 
     return CookingResult(
         cooking_strength=cooking_strength,

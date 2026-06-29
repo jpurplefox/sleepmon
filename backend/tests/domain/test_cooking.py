@@ -13,6 +13,7 @@ def test_plan_cooking_no_meals_is_zero() -> None:
     result = plan_cooking([None, None, None], {I.HONEY: 10.0})
     assert result.cooking_strength == 0.0
     assert result.ingredients == ()
+    assert result.slots == ()
 
 
 def test_plan_cooking_sums_recipe_strength() -> None:
@@ -39,6 +40,19 @@ def test_plan_cooking_required_vs_produced_balance() -> None:
     assert by_ing[I.HONEY].balance == 3.0
     assert by_ing[I.FANCY_EGG].balance == -3.0  # falta
     assert result.slots[0].met is False  # falta fancy egg
+
+
+def test_met_checks_per_meal_not_aggregated() -> None:
+    # met se evalúa por comida contra el total producido, no contra el agregado
+    # de todas las comidas. Aquí: 8 >= 6 por comida -> met True;
+    # pero el agregado (12) no alcanza -> balance negativo.
+    r = _recipe(ings=((I.HONEY, 6),), base=100)
+    meals = [MealSelection(r, 1), MealSelection(r, 1)]  # HONEY total requerido: 12
+    result = plan_cooking(meals, {I.HONEY: 8.0})  # 8 >= 6 por comida -> met; agregado no alcanza
+    assert result.slots[0].met is True
+    assert result.slots[1].met is True
+    by_ing = {b.ingredient: b for b in result.ingredients}
+    assert by_ing[I.HONEY].balance == -4.0  # agregado: 8 - 12
 
 
 def test_plan_cooking_surplus_lists_unused_produced() -> None:
