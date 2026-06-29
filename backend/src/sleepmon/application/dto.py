@@ -133,3 +133,75 @@ class ProductionResult:
     night_skill_chances: list[float]
     inventory: int
     inventory_fill_hours: float
+
+
+@dataclass(frozen=True, slots=True)
+class MealSelectionInput:
+    """Una comida elegida (receta + nivel) para el planificador."""
+
+    recipe: str
+    level: int = 1
+
+
+@dataclass(frozen=True, slots=True)
+class TeamProductionInput:
+    """Datos crudos para computar la producción de un equipo (no se persiste)."""
+
+    member_ids: list[str]
+    meals: list[MealSelectionInput | None]
+
+
+@dataclass(frozen=True, slots=True)
+class IngredientBalanceDTO:
+    ingredient: str
+    required: float
+    produced: float
+    balance: float
+
+
+@dataclass(frozen=True, slots=True)
+class MealFeasibilityDTO:
+    recipe_name: str
+    met: bool
+
+
+@dataclass(frozen=True, slots=True)
+class MemberContributionDTO:
+    member_id: str
+    species: str
+    strength: float
+    berry_amount: float
+    ingredients_total: float
+    skill_triggers: float
+
+
+@dataclass(frozen=True, slots=True)
+class TeamProductionResult:
+    """Producción diaria agregada de un equipo: bayas/skills + cocina + gran total."""
+
+    member_count: int
+    excluded_count: int
+    # Bayas y skills
+    total_strength: float
+    total_berry_amount: float
+    total_berry_strength: float
+    total_skill_strength: float
+    ingredients: list[SlotAmount]  # agregados por tipo (reusa SlotAmount: ingredient+amount)
+    total_ingredients: float
+    skill_triggers: float
+    skill_energy: float | None
+    skill_self_energy: float | None
+    skill_dream_shards: float | None
+    skill_tasty_chance: float | None
+    skill_extra_helpful: float | None
+    skill_random_energy: float | None
+    skill_cooking_ingredients: float | None
+    skill_ingredient_total: float | None
+    members: list[MemberContributionDTO]
+    # Cocina
+    cooking_strength: float
+    cooking_ingredients: list[IngredientBalanceDTO]
+    cooking_surplus: list[IngredientBalanceDTO]
+    cooking_meals: list[MealFeasibilityDTO]
+    # Gran total
+    grand_total_strength: float

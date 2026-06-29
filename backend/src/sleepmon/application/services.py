@@ -15,15 +15,23 @@ from uuid import UUID
 
 from sleepmon.application.dto import (
     Distributions,
+    IngredientBalanceDTO,
     IngredientCountDTO,
+    MealFeasibilityDTO,
+    MemberContributionDTO,
     MemberProduction,
     ProductionInput,
     ProductionResult,
     RecipeDTO,
     SlotAmount,
     TeamMemberInput,
+    TeamProductionInput,
+    TeamProductionResult,
 )
 from sleepmon.domain import analytics
+from sleepmon.domain.analytics import team_production
+from sleepmon.domain.catalog_data import MAX_RECIPE_LEVEL
+from sleepmon.domain.cooking import MealSelection, plan_cooking
 from sleepmon.domain.entities import (
     TeamMember,
     validate_ingredient_count,
@@ -33,7 +41,7 @@ from sleepmon.domain.entities import (
 )
 from sleepmon.domain.errors import SpeciesNotFoundError, TeamMemberNotFoundError, ValidationError
 from sleepmon.domain.ports import RecipeCatalog, SpeciesCatalog, TeamRepository
-from sleepmon.domain.production import daily_production
+from sleepmon.domain.production import DailyProduction, daily_production
 from sleepmon.domain.species import Species
 from sleepmon.domain.value_objects import Ingredient, Nature, Ribbon, SubSkill
 
@@ -93,6 +101,9 @@ class TeamService(ABC):
 
     @abstractmethod
     def list_recipes(self) -> list[RecipeDTO]: ...
+
+    @abstractmethod
+    def compute_team_production(self, data: TeamProductionInput) -> TeamProductionResult: ...
 
 
 class DefaultTeamService(TeamService):
@@ -257,6 +268,116 @@ class DefaultTeamService(TeamService):
             )
             for r in self._recipes.all()
         ]
+
+    _MAX_TEAM = 5
+
+    def compute_team_production(self, data: TeamProductionInput) -> TeamProductionResult:
+        # Validación de la selección: 1..5 ids, sin duplicados.
+        if not 1 <= len(data.member_ids) <= self._MAX_TEAM:
+            raise ValidationError(
+                f"Un equipo tiene entre 1 y {self._MAX_TEAM} miembros; llegaron "
+                f"{len(data.member_ids)}."
+            )
+        if len(set(data.member_ids)) != len(data.member_ids):
+            raise ValidationError("Un equipo no puede repetir miembros.")
+
+        # Cargar miembros (404 si falta) y computar su producción. Los miembros con
+        # especie fuera del catálogo curado se excluyen del agregado.
+        entries: list[tuple[str, str, DailyProduction]] = []
+        excluded = 0
+        for raw_id in data.member_ids:
+            member = self.get_member(UUID(raw_id))  # levanta TeamMemberNotFoundError
+            species = self._catalog.get(member.species)
+            if species is None:
+                excluded += 1
+                continue
+            daily = daily_production(
+                species,
+                member.ingredients,
+                member.level,
+                member.nature,
+                member.sub_skills,
+                member.ribbon,
+                member.skill_level,
+            )
+            entries.append((str(member.id), member.species, daily))
+
+        aggregate = team_production(entries)
+
+        # Cocina: resolver cada comida (receta + nivel) contra el catálogo.
+        meals: list[MealSelection | None] = []
+        for meal in data.meals:
+            if meal is None:
+                meals.append(None)
+                continue
+            recipe = self._recipes.get(meal.recipe)
+            if recipe is None:
+                raise ValidationError(f"Receta desconocida: {meal.recipe!r}.")
+            if not 1 <= meal.level <= MAX_RECIPE_LEVEL:
+                raise ValidationError(
+                    f"El nivel de receta debe estar entre 1 y {MAX_RECIPE_LEVEL}; "
+                    f"llegó {meal.level}."
+                )
+            meals.append(MealSelection(recipe=recipe, level=meal.level))
+
+        cooking = plan_cooking(meals, aggregate.ingredients)
+
+        return TeamProductionResult(
+            member_count=aggregate.member_count,
+            excluded_count=excluded,
+            total_strength=aggregate.total_strength,
+            total_berry_amount=aggregate.total_berry_amount,
+            total_berry_strength=aggregate.total_berry_strength,
+            total_skill_strength=aggregate.total_skill_strength,
+            ingredients=[
+                SlotAmount(ingredient=ing.value, amount=amount)
+                for ing, amount in aggregate.ingredients.items()
+            ],
+            total_ingredients=aggregate.total_ingredients,
+            skill_triggers=aggregate.skill_triggers,
+            skill_energy=aggregate.skill_energy,
+            skill_self_energy=aggregate.skill_self_energy,
+            skill_dream_shards=aggregate.skill_dream_shards,
+            skill_tasty_chance=aggregate.skill_tasty_chance,
+            skill_extra_helpful=aggregate.skill_extra_helpful,
+            skill_random_energy=aggregate.skill_random_energy,
+            skill_cooking_ingredients=aggregate.skill_cooking_ingredients,
+            skill_ingredient_total=aggregate.skill_ingredient_total,
+            members=[
+                MemberContributionDTO(
+                    member_id=m.member_id,
+                    species=m.species,
+                    strength=m.strength,
+                    berry_amount=m.berry_amount,
+                    ingredients_total=m.ingredients_total,
+                    skill_triggers=m.skill_triggers,
+                )
+                for m in aggregate.members
+            ],
+            cooking_strength=cooking.cooking_strength,
+            cooking_ingredients=[
+                IngredientBalanceDTO(
+                    ingredient=b.ingredient.value,
+                    required=b.required,
+                    produced=b.produced,
+                    balance=b.balance,
+                )
+                for b in cooking.ingredients
+            ],
+            cooking_surplus=[
+                IngredientBalanceDTO(
+                    ingredient=b.ingredient.value,
+                    required=b.required,
+                    produced=b.produced,
+                    balance=b.balance,
+                )
+                for b in cooking.surplus
+            ],
+            cooking_meals=[
+                MealFeasibilityDTO(recipe_name=s.recipe_name, met=s.met) for s in cooking.slots
+            ],
+            grand_total_strength=aggregate.total_strength + cooking.cooking_strength,
+        )
 
     def _build_member(self, data: TeamMemberInput, member_id: UUID | None = None) -> TeamMember:
         species = self._catalog.get(data.species)
