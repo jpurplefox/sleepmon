@@ -4,9 +4,9 @@ import { useMemo, useState } from "react";
 import { api } from "../api/client";
 import { berryIcon } from "../berries";
 import { BoxPicker } from "../components/BoxPicker";
+import { MealPickerModal } from "../components/MealPickerModal";
 import { Modal } from "../components/Modal";
 import { ProductionCard } from "../components/ProductionCard";
-import { RecipeSelect } from "../components/RecipeSelect";
 import {
   IconMagnifier,
   IconPot,
@@ -14,6 +14,7 @@ import {
 } from "../components/icons";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
+import { recipeImage } from "../recipes";
 import { statIcon } from "../natures";
 import { CHARGE_STRENGTH_ICON } from "../skillIcons";
 import type { Catalog, MealInput, Member, MemberInput } from "../types";
@@ -36,7 +37,6 @@ function configFromMember(catalog: Catalog, m: Member): MemberInput | null {
     skill_level: m.skill_level,
   };
 }
-const MAX_RECIPE_LEVEL = 70;
 const MEAL_SLOTS = ["breakfast", "lunch", "dinner"] as const;
 
 const fmt = (n: number) => n.toFixed(2);
@@ -54,6 +54,7 @@ export function Teams() {
   const [meals, setMeals] = useState<(MealInput | null)[]>([null, null, null]);
   const [weekly, setWeekly] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [mealPickerOpen, setMealPickerOpen] = useState(false);
   const [berryBreakdownOpen, setBerryBreakdownOpen] = useState(false);
 
   const inTeam = useMemo(() => new Set(selectedIds), [selectedIds]);
@@ -113,14 +114,6 @@ export function Teams() {
 
   const removeMember = (id: string) =>
     setSelectedIds((prev) => prev.filter((x) => x !== id));
-
-  const setMeal = (slot: number, recipeName: string | null, level: number) => {
-    setMeals((prev) => {
-      const next = [...prev];
-      next[slot] = recipeName ? { recipe: recipeName, level } : null;
-      return next;
-    });
-  };
 
   // Catalog must be loaded for BoxPicker to work.
   if (catalog.isLoading) return <p className="muted">{t("common.loadingCatalog")}</p>;
@@ -408,54 +401,49 @@ export function Teams() {
 
           {/* Cooking card */}
           <div className="card">
-            <h2 style={{ margin: "0 0 1rem" }}>{t("teams.cooking")}</h2>
+            <div className="teams-cooking-head">
+              <h2 style={{ margin: 0 }}>{t("teams.cooking")}</h2>
+              <button
+                type="button"
+                className="btn btn--ghost teams-cooking-edit"
+                onClick={() => setMealPickerOpen(true)}
+              >
+                {t("teams.editRecipes")}
+              </button>
+            </div>
 
+            {/* Compact plan summary: one row per moment */}
             {MEAL_SLOTS.map((slot, idx) => {
-              const chosenRecipe = meals[idx]?.recipe ?? null;
-              const met = chosenRecipe ? metByRecipe.get(chosenRecipe) : undefined;
+              const meal = meals[idx];
+              const met = meal ? metByRecipe.get(meal.recipe) : undefined;
               return (
-                <div key={slot} className="teams-meal">
-                  {/* Recipe select — custom dropdown replaces native <select> */}
-                  <label className="form" style={{ marginBottom: 0 }}>
+                <div key={slot} className="teams-plan-row">
+                  <span className="teams-plan-row__label muted">
+                    {t(`teams.${slot}`)}
+                  </span>
+                  {meal ? (
+                    <>
+                      <img
+                        className="teams-plan-row__thumb"
+                        src={recipeImage(meal.recipe)}
+                        alt=""
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                      <span className="teams-plan-row__name">{meal.recipe}</span>
+                      <span className="teams-plan-row__lv muted">Lv.{meal.level}</span>
+                      {met != null && (
+                        <span className={met ? "badge badge--ok" : "badge badge--low"}>
+                          {met ? t("teams.fulfilled") : t("teams.notMet")}
+                        </span>
+                      )}
+                    </>
+                  ) : (
                     <span className="muted" style={{ fontSize: "var(--text-sm)" }}>
-                      {t(`teams.${slot}`)}
+                      {t("common.dash")}
                     </span>
-                    <RecipeSelect
-                      id={`recipe-select-${slot}`}
-                      recipes={recipes.data ?? []}
-                      value={chosenRecipe}
-                      onChange={(name) => setMeal(idx, name, meals[idx]?.level ?? 1)}
-                      placeholder={t("teams.noRecipe")}
-                    />
-                  </label>
-
-                  {/* Recipe level — space always reserved to avoid layout jump */}
-                  <span className="teams-meal__level">
-                    <span className="muted">{t("teams.recipeLevel")}</span>
-                    <input
-                      type="number"
-                      min={1}
-                      max={MAX_RECIPE_LEVEL}
-                      value={meals[idx]?.level ?? 1}
-                      disabled={!chosenRecipe}
-                      onChange={(e) =>
-                        setMeal(
-                          idx,
-                          meals[idx]?.recipe ?? null,
-                          Math.max(1, Math.min(MAX_RECIPE_LEVEL, Number(e.target.value))),
-                        )
-                      }
-                    />
-                  </span>
-
-                  {/* Met badge — more prominent */}
-                  <span style={{ minWidth: "9rem" }}>
-                    {met != null && (
-                      <span className={met ? "badge badge--ok" : "badge badge--low"}>
-                        {met ? t("teams.fulfilled") : t("teams.notMet")}
-                      </span>
-                    )}
-                  </span>
+                  )}
                 </div>
               );
             })}
@@ -561,6 +549,17 @@ export function Teams() {
             onPick={pickMember}
           />
         </Modal>
+      )}
+
+      {/* MealPickerModal */}
+      {mealPickerOpen && (
+        <MealPickerModal
+          recipes={recipes.data ?? []}
+          levelBonus={catalog.data.recipe_level_bonus}
+          meals={meals}
+          onChangeMeals={setMeals}
+          onClose={() => setMealPickerOpen(false)}
+        />
       )}
     </div>
   );

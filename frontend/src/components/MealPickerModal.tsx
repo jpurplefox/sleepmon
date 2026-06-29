@@ -1,0 +1,253 @@
+import { useState } from "react";
+
+import { useI18n } from "../i18n";
+import { ingredientIcon } from "../ingredients";
+import { recipeImage, recipeStrengthAtLevel } from "../recipes";
+import type { MealInput, Recipe } from "../types";
+import { Modal } from "./Modal";
+
+const RECIPE_TYPES: Recipe["type"][] = ["Curry", "Salad", "Dessert"];
+
+// Normaliza para búsqueda: sin mayúsculas ni acentos.
+function normalize(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+}
+
+interface Props {
+  recipes: Recipe[];
+  levelBonus: number[];
+  meals: (MealInput | null)[];
+  onChangeMeals: (m: (MealInput | null)[]) => void;
+  onClose: () => void;
+}
+
+export function MealPickerModal({
+  recipes,
+  levelBonus,
+  meals,
+  onChangeMeals,
+  onClose,
+}: Props) {
+  const { t } = useI18n();
+
+  // Type filter: null = all.
+  const [typeFilter, setTypeFilter] = useState<Recipe["type"] | null>(null);
+  // Text search.
+  const [search, setSearch] = useState("");
+
+  // Per-recipe levels: initialized from meals so existing selections show their level.
+  const [recipeLevels, setRecipeLevels] = useState<Map<string, number>>(() => {
+    const m = new Map<string, number>();
+    for (const meal of meals) {
+      if (meal) m.set(meal.recipe, meal.level);
+    }
+    return m;
+  });
+
+  const getLevelFor = (name: string) => recipeLevels.get(name) ?? 1;
+
+  const setLevelFor = (name: string, level: number) => {
+    const clamped = Math.max(1, Math.min(70, level));
+    setRecipeLevels((prev) => new Map(prev).set(name, clamped));
+    // Update every meal slot that holds this recipe.
+    const next = meals.map((m) =>
+      m?.recipe === name ? { recipe: name, level: clamped } : m,
+    );
+    onChangeMeals(next);
+  };
+
+  const toggleMoment = (recipe: Recipe, momentIdx: number) => {
+    const level = getLevelFor(recipe.name);
+    const next = meals.map((m, i) => {
+      if (i !== momentIdx) return m;
+      // Clicking the same recipe on the same moment clears it.
+      if (m?.recipe === recipe.name) return null;
+      return { recipe: recipe.name, level };
+    });
+    onChangeMeals(next);
+  };
+
+  // Filter recipes.
+  const q = normalize(search.trim());
+  const filtered = recipes.filter((r) => {
+    if (typeFilter && r.type !== typeFilter) return false;
+    if (q && !normalize(r.name).includes(q)) return false;
+    return true;
+  });
+
+  // Sort: by base_strength desc within each type group, respecting type order.
+  const sorted = [...filtered].sort((a, b) => {
+    const ta = RECIPE_TYPES.indexOf(a.type);
+    const tb = RECIPE_TYPES.indexOf(b.type);
+    if (ta !== tb) return ta - tb;
+    return b.base_strength - a.base_strength;
+  });
+
+  const MOMENT_LABELS = [
+    t("teams.breakfast"),
+    t("teams.midday"),
+    t("teams.dinner"),
+  ];
+
+  return (
+    <Modal title={t("teams.mealPickerTitle")} onClose={onClose} wide>
+      {/* Top bar: type filter + search */}
+      <div className="meal-picker-topbar">
+        <div className="specialty-toggle" role="group" aria-label="Tipo">
+          <button
+            type="button"
+            className={"specialty-toggle__btn" + (typeFilter === null ? " is-on" : "")}
+            aria-pressed={typeFilter === null}
+            onClick={() => setTypeFilter(null)}
+          >
+            {t("teams.allTypes")}
+          </button>
+          {RECIPE_TYPES.map((type) => (
+            <button
+              key={type}
+              type="button"
+              className={"specialty-toggle__btn" + (typeFilter === type ? " is-on" : "")}
+              aria-pressed={typeFilter === type}
+              onClick={() => setTypeFilter(type)}
+            >
+              {type}
+            </button>
+          ))}
+        </div>
+
+        <input
+          data-autofocus
+          type="search"
+          className="meal-picker-search"
+          placeholder={t("teams.recipeSearchPlaceholder")}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label={t("teams.recipeSearchPlaceholder")}
+        />
+
+        <button
+          type="button"
+          className="btn btn--ghost meal-picker-clear"
+          onClick={() => onChangeMeals([null, null, null])}
+        >
+          {t("teams.clearMeals")}
+        </button>
+      </div>
+
+      {/* Recipe card grid */}
+      <div className="meal-picker-grid">
+        {sorted.length === 0 ? (
+          <p className="muted" style={{ gridColumn: "1/-1", textAlign: "center" }}>
+            Sin resultados
+          </p>
+        ) : (
+          sorted.map((r) => {
+            const level = getLevelFor(r.name);
+            const strength = recipeStrengthAtLevel(r.base_strength, level, levelBonus);
+
+            return (
+              <div key={r.name} className="meal-picker-card">
+                {/* Dish image */}
+                <div className="meal-picker-card__img-wrap">
+                  <img
+                    className="meal-picker-card__img"
+                    src={recipeImage(r.name)}
+                    alt={r.name}
+                    loading="lazy"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                </div>
+
+                {/* Name + type badge */}
+                <div className="meal-picker-card__header">
+                  <span className="meal-picker-card__name">{r.name}</span>
+                  <span className="meal-picker-card__type-badge">{r.type}</span>
+                </div>
+
+                {/* Strength at current level */}
+                <div className="meal-picker-card__strength">
+                  {strength.toLocaleString()}
+                </div>
+
+                {/* Ingredient icons row */}
+                <div className="meal-picker-card__ings">
+                  {r.ingredients.map((ic) => (
+                    <span key={ic.ingredient} className="meal-picker-card__ing">
+                      <img
+                        src={ingredientIcon(ic.ingredient)}
+                        alt={ic.ingredient}
+                        title={ic.ingredient}
+                        style={{ width: 16, height: 16 }}
+                      />
+                      <span className="meal-picker-card__ing-count">×{ic.count}</span>
+                    </span>
+                  ))}
+                </div>
+
+                {/* Level stepper */}
+                <div className="level-stepper meal-picker-card__stepper">
+                  <button
+                    type="button"
+                    className="level-stepper__btn"
+                    disabled={level <= 1}
+                    aria-label="Bajar nivel"
+                    onClick={() => setLevelFor(r.name, level - 1)}
+                  >
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    className="level-stepper__input"
+                    min={1}
+                    max={70}
+                    value={level}
+                    onChange={(e) => {
+                      const v = Number(e.target.value);
+                      if (!isNaN(v)) setLevelFor(r.name, v);
+                    }}
+                    aria-label="Nivel de receta"
+                  />
+                  <button
+                    type="button"
+                    className="level-stepper__btn"
+                    disabled={level >= 70}
+                    aria-label="Subir nivel"
+                    onClick={() => setLevelFor(r.name, level + 1)}
+                  >
+                    +
+                  </button>
+                </div>
+
+                {/* 3 moment toggles */}
+                <div className="meal-picker-card__moments">
+                  {MOMENT_LABELS.map((label, idx) => {
+                    const isActive = meals[idx]?.recipe === r.name;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        className={
+                          "meal-picker-card__moment-btn" + (isActive ? " is-active" : "")
+                        }
+                        aria-pressed={isActive}
+                        onClick={() => toggleMoment(r, idx)}
+                        title={label}
+                      >
+                        {label.slice(0, 2)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </Modal>
+  );
+}
