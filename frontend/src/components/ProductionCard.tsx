@@ -293,7 +293,8 @@ export function ProductionCard({
           (entering ? " prod-card--enter" : "") +
           (isBase ? " prod-card--base" : "") +
           (dragging ? " prod-card--dragging" : "") +
-          (dragOver ? " prod-card--dragover" : "")
+          (dragOver ? " prod-card--dragover" : "") +
+          (readOnly ? " prod-card--readonly" : "")
         }
         onAnimationEnd={(e) => {
           if (e.animationName === "prod-card-in") setEntering(false);

@@ -2920,3 +2920,14 @@ button.prod-card__base-tag--action:hover {
   white-space: nowrap;
   border: 0;
 }
+
+/* Cards de equipo en modo readonly: más densas, sin reserva de alto para alinear comparativas. */
+.prod-card--readonly .prod-card__sprite { width: 60px; height: 60px; }
+.prod-card--readonly .prod-card__block--ing .prod-card__ings { min-height: 0; }
+.prod-card--readonly .prod-card__night { min-height: 0; }
+
+/* Grilla compacta del equipo: entran hasta 5 a lo ancho. */
+.prod-cards--compact { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+@media (min-width: 900px)  { .prod-cards--compact { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1150px) { .prod-cards--compact { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1400px) { .prod-cards--compact { grid-template-columns: repeat(5, minmax(0, 1fr)); } }

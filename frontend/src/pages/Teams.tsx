@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
 import { api } from "../api/client";
@@ -53,6 +53,7 @@ export function Teams() {
     queryKey: ["team-production", selectedIds, meals],
     queryFn: () => api.computeTeamProduction({ member_ids: selectedIds, meals }),
     enabled: selectedIds.length > 0,
+    placeholderData: keepPreviousData,
   });
 
   const factor = weekly ? 7 : 1;
@@ -117,7 +118,7 @@ export function Teams() {
       </header>
 
       {/* ── Per-member cards (mirrors Production.tsx selection model) ── */}
-      <div className="prod-cards">
+      <div className="prod-cards prod-cards--compact">
         {selectedIds.map((id) => {
           const m = memberById.get(id);
           if (!m) return null;
@@ -197,6 +198,11 @@ export function Teams() {
                 <span className="prod-stat__label">{t("teams.grandTotal")}</span>
                 <span className="prod-stat__value">
                   {fmtInt(result.grand_total_strength * factor)}
+                  {teamQuery.isFetching && !teamQuery.isLoading && (
+                    <span className="muted" style={{ fontSize: "var(--text-sm)", marginLeft: "0.5rem" }}>
+                      {t("teams.updating")}
+                    </span>
+                  )}
                 </span>
               </div>
               {/* Diario / Semanal toggle */}

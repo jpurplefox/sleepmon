@@ -301,6 +301,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.atMax": "Ya hay 5 Pokémon en el equipo.",
     "teams.addHintMore": "Agregá otro Pokémon al equipo.",
     "teams.calculating": "Calculando…",
+    "teams.updating": "Recalculando…",
     "teams.teamError": "No se pudo calcular la producción del equipo.",
     // Error boundary
     "error.title": "Algo salió mal",
@@ -603,6 +604,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.atMax": "Already 5 Pokémon in the team.",
     "teams.addHintMore": "Add another Pokémon to the team.",
     "teams.calculating": "Calculating…",
+    "teams.updating": "Updating…",
     "teams.teamError": "Couldn't compute team production.",
     // Error boundary
     "error.title": "Something went wrong",
