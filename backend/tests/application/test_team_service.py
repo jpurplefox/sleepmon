@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from uuid import uuid4
 
 import pytest
@@ -11,11 +12,16 @@ from sleepmon.application.dto import (
     TeamProductionInput,
 )
 from sleepmon.application.services import DefaultTeamService
+from sleepmon.domain.catalog_data import MAX_RECIPE_LEVEL
+from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.errors import (
     SpeciesNotFoundError,
     TeamMemberNotFoundError,
     ValidationError,
 )
+from sleepmon.domain.ports import SpeciesCatalog
+from sleepmon.domain.species import Species
+from sleepmon.domain.value_objects import Ingredient
 from tests.fakes import InMemoryTeamRepository
 
 
@@ -620,7 +626,7 @@ def test_compute_team_production_aggregates_members() -> None:
         TeamProductionInput(member_ids=[mid], meals=[None, None, None])
     )
     assert result.member_count == 1
-    assert result.total_strength >= 0
+    assert result.total_strength > 0
     assert result.grand_total_strength == result.total_strength  # sin cocina
 
 
@@ -673,3 +679,49 @@ def test_compute_team_production_rejects_unknown_recipe() -> None:
                 member_ids=[mid], meals=[MealSelectionInput(recipe="No Existe", level=1)]
             )
         )
+
+
+def test_compute_team_production_rejects_recipe_level_out_of_range() -> None:
+    svc = _service_tp()
+    mid = _add_pikachu(svc)
+    recipe = svc.list_recipes()[0]
+    with pytest.raises(ValidationError):
+        svc.compute_team_production(
+            TeamProductionInput(
+                member_ids=[mid],
+                meals=[MealSelectionInput(recipe=recipe.name, level=0)],
+            )
+        )
+    with pytest.raises(ValidationError):
+        svc.compute_team_production(
+            TeamProductionInput(
+                member_ids=[mid],
+                meals=[MealSelectionInput(recipe=recipe.name, level=MAX_RECIPE_LEVEL + 1)],
+            )
+        )
+
+
+class _EmptySpeciesCatalog(SpeciesCatalog):
+    def get(self, name: str) -> Species | None:
+        return None
+
+    def all(self) -> Sequence[Species]:
+        return ()
+
+
+def test_compute_team_production_excludes_off_catalog_members() -> None:
+    repo = InMemoryTeamRepository()
+    member = TeamMember(
+        species="Pikachu",
+        level=30,
+        nature=None,
+        ingredients=(Ingredient.FANCY_APPLE, Ingredient.WARMING_GINGER, Ingredient.FANCY_EGG),
+    )
+    repo.add(member)
+    svc = DefaultTeamService(repo, _EmptySpeciesCatalog(), StaticRecipeCatalog())
+    result = svc.compute_team_production(
+        TeamProductionInput(member_ids=[str(member.id)], meals=[None, None, None])
+    )
+    assert result.excluded_count == 1
+    assert result.member_count == 0
+    assert result.total_strength == 0.0
