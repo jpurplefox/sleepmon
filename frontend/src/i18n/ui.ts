@@ -47,7 +47,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.ingredientsBreakdownAria":
       "{value} de {ingredient} por día (normal {normal} + skill {skill})",
     "box.ingredientsPlainAria": "{value} de {ingredient} por día",
-    "box.randomIngredients": "+{value} al azar",
+    "box.randomIngredients": "{value}",
     "box.randomIngredientsTitle": "{value} ingredientes al azar por día (main skill)",
     "box.skillAria": "Habilidad",
     "box.triggersTitle": "Disparos de habilidad por día",
@@ -316,7 +316,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.ingredientsBreakdownAria":
       "{value} {ingredient} per day (normal {normal} + skill {skill})",
     "box.ingredientsPlainAria": "{value} {ingredient} per day",
-    "box.randomIngredients": "+{value} random",
+    "box.randomIngredients": "{value}",
     "box.randomIngredientsTitle": "{value} random ingredients per day (main skill)",
     "box.skillAria": "Skill",
     "box.triggersTitle": "Skill triggers per day",

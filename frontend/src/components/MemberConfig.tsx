@@ -1,14 +1,13 @@
 import {
-  INGREDIENT_UNLOCK_LEVELS,
   SUB_SKILL_NEVER_UNLOCKS,
   SUB_SKILL_UNLOCK_LEVELS,
 } from "../constants";
 import { useI18n } from "../i18n";
-import { ingredientIcon } from "../ingredients";
 import { statIcon } from "../natures";
 import { mainSkillIcon } from "../skillIcons";
 import { subSkillIcon } from "../subskills";
 import type { Nature } from "../types";
+import { IngredientLineup } from "./IngredientLineup";
 
 const TIER_CLASS: Record<string, string> = { Gold: "gold", Blue: "blue", Regular: "regular" };
 
@@ -33,6 +32,13 @@ interface Props {
   mainSkillName?: string;
   // Tier de cada sub skill por nombre (marco coloreado). Las ausentes = Regular.
   tierBySubSkill: (name: string) => string | undefined;
+  // Si mostrar la línea "ícono de skill + Lv. N". El picker la quiere (true por
+  // defecto); la Caja la apaga porque muestra el nivel de skill en su propia
+  // columna de producción, junto a los disparos.
+  showSkillLevel?: boolean;
+  // Si mostrar la fila de ingredientes equipados. El picker la quiere (true por
+  // defecto); la Caja la apaga porque los muestra en su propia columna.
+  showIngredients?: boolean;
 }
 
 // Fila de config compartida entre el picker (BoxPicker) y la entrada de la Caja
@@ -49,8 +55,10 @@ export function MemberConfig({
   natureMeta,
   mainSkillName,
   tierBySubSkill,
+  showSkillLevel = true,
+  showIngredients = true,
 }: Props) {
-  const { t, nature: natureLabel, natureStat, ingredient, subSkill, mainSkill } = useI18n();
+  const { t, nature: natureLabel, natureStat, subSkill, mainSkill } = useI18n();
 
   const skillIcon = mainSkillIcon(mainSkillName);
   const skillName = mainSkill(mainSkillName ?? "");
@@ -58,24 +66,9 @@ export function MemberConfig({
 
   return (
     <>
-      {/* Orden: ingredientes → naturaleza → sub skills → skill. */}
-      <span className="ingredient-row">
-        {ingredients.map((ing, idx) => {
-          const locked = level < (INGREDIENT_UNLOCK_LEVELS[idx] ?? 1);
-          return (
-            <img
-              key={`${ing}-${idx}`}
-              className={
-                "ingredient-row__icon" + (locked ? " ingredient-row__icon--locked" : "")
-              }
-              src={ingredientIcon(ing)}
-              alt={ingredient(ing)}
-              title={ingredient(ing)}
-              loading="lazy"
-            />
-          );
-        })}
-      </span>
+      {/* Orden: ingredientes → naturaleza → sub skills → skill. La Caja apaga los
+          ingredientes (showIngredients=false): los muestra en su propia columna. */}
+      {showIngredients && <IngredientLineup level={level} ingredients={ingredients} />}
 
       {/* Naturaleza: si tiene efecto, ↑/↓ con íconos de stat; si es neutra o no
           tiene, un placeholder que ocupa el MISMO espacio (cuadrados vacíos) para
@@ -141,16 +134,19 @@ export function MemberConfig({
 
       {/* Skill: el ícono propio de la main skill + "Lv. N". Color neutro (el
           dorado es para el nivel del Pokémon). El nombre de la skill va en
-          sr-only/title para no depender solo del ícono. */}
-      <span className="prod-box-item__skill-lv" title={`${skillName} · ${skillLv}`}>
-        {skillIcon.kind === "img" ? (
-          <img className="mini-icon" src={skillIcon.src} alt="" />
-        ) : (
-          <skillIcon.Component aria-hidden="true" />
-        )}
-        <span aria-hidden="true">{skillLv}</span>
-        <span className="sr-only">{`${skillName} ${skillLv}`}</span>
-      </span>
+          sr-only/title para no depender solo del ícono. La Caja la apaga
+          (showSkillLevel=false): muestra el nivel en su columna de skill. */}
+      {showSkillLevel && (
+        <span className="prod-box-item__skill-lv" title={`${skillName} · ${skillLv}`}>
+          {skillIcon.kind === "img" ? (
+            <img className="mini-icon" src={skillIcon.src} alt="" />
+          ) : (
+            <skillIcon.Component aria-hidden="true" />
+          )}
+          <span aria-hidden="true">{skillLv}</span>
+          <span className="sr-only">{`${skillName} ${skillLv}`}</span>
+        </span>
+      )}
     </>
   );
 }
