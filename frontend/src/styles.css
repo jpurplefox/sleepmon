@@ -1547,28 +1547,41 @@ select:focus {
   flex-shrink: 0;
 }
 
-/* Columna 5 — Skill: nivel + disparos + ayuda extra, apilados; en su propia
-   columna del grid para alinear los disparos entre filas. */
+/* Columna 6 — Skill: el ícono de la skill UNA vez (encabezado, izquierda) + las
+   cifras apiladas a su derecha (nivel · disparos · aporte). */
 .box-entry__skill {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
   flex-shrink: 0;
 }
 
-/* Nivel de la main skill: ícono propio + "Lv. N", igual lenguaje que el resto de
-   las métricas (la línea superior de la columna de skill). */
-.box-entry__skill-lv {
+/* Ícono de la skill como ancla del grupo: un poco más grande que los íconos inline
+   de las métricas (18px), para que se lea como encabezado de la columna. */
+.box-entry__skill-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.box-entry__skill-icon img,
+.box-entry__skill-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+/* Cifras de la skill apiladas a la derecha del ícono. */
+.box-entry__skill-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+
+.box-entry__skill-stat {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-}
-
-.box-entry__skill-lv .mini-icon,
-.box-entry__skill-lv svg {
-  width: 18px;
-  height: 18px;
 }
 
 .box-entry__metric {
@@ -1615,21 +1628,6 @@ select:focus {
   width: 11px;
   height: 11px;
   opacity: 0.8;
-}
-
-/* Producción de la skill junto a los disparos: energía, ingredientes al azar, etc.
-   Sin ícono propio (sería el mismo que el de la skill, ya visible en la línea de
-   nivel): texto muted sangrado el ancho de un ícono + su gap, para que el número
-   quede alineado con los de las líneas de nivel y disparos. */
-.box-entry__skill-yield {
-  display: inline-flex;
-  align-items: center;
-  padding-left: calc(18px + 0.3rem);
-}
-
-.box-entry__skill-yield .box-entry__metric-value {
-  color: var(--muted);
-  font-size: var(--text-sm);
 }
 
 .box-entry__actions {

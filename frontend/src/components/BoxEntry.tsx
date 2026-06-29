@@ -346,41 +346,44 @@ export function BoxEntry({
         )}
       </div>
 
-      {/* Columna 6 — Skill: nivel de la main skill + disparos + ayuda extra que dan
-          esos disparos, apilados. En su propia columna para alinear entre Pokémon,
-          sin importar cuántos ingredientes tenga cada uno. */}
+      {/* Columna 6 — Skill: el ícono de la main skill UNA sola vez (a la izquierda,
+          como encabezado del grupo) y al lado las cifras apiladas: nivel · disparos ·
+          aporte. Así el aporte (energía, fragmentos, etc.) queda anclado bajo el
+          ícono de la skill, sin repetirlo ni dejar el número huérfano. */}
       <div className="box-entry__skill" role="group" aria-label={t("box.skillAria")}>
-        <span className="box-entry__skill-lv" title={`${skillName} · ${skillLv}`}>
+        <span className="box-entry__skill-icon" title={skillName}>
           {skillIcon.kind === "img" ? (
-            <img className="mini-icon" src={skillIcon.src} alt="" />
+            <img src={skillIcon.src} alt="" />
           ) : (
             <skillIcon.Component aria-hidden="true" />
           )}
-          <span className="box-entry__metric-value" aria-hidden="true">{skillLv}</span>
-          <span className="sr-only">{`${skillName} ${skillLv}`}</span>
+          <span className="sr-only">{skillName}</span>
         </span>
-        <div className="box-entry__metric" title={t("box.triggersTitle")}>
-          <IconSparkle aria-hidden="true" />
-          <span className="box-entry__metric-value">
-            {prod ? fmt(prod.skill_triggers) : t("common.dash")}
+        <div className="box-entry__skill-stats">
+          <span className="box-entry__skill-stat" title={skillLv}>
+            <span className="box-entry__metric-value" aria-hidden="true">{skillLv}</span>
+            <span className="sr-only">{`${skillName} ${skillLv}`}</span>
           </span>
-          <span className="sr-only">
-            {t("box.triggersAria", {
-              value: prod ? fmt(prod.skill_triggers) : t("common.dash"),
-            })}
+          <span className="box-entry__skill-stat" title={t("box.triggersTitle")}>
+            <IconSparkle aria-hidden="true" />
+            <span className="box-entry__metric-value">
+              {prod ? fmt(prod.skill_triggers) : t("common.dash")}
+            </span>
+            <span className="sr-only">
+              {t("box.triggersAria", {
+                value: prod ? fmt(prod.skill_triggers) : t("common.dash"),
+              })}
+            </span>
           </span>
+          {/* Aporte de la main skill: energía, ingredientes al azar, etc. Anclado bajo
+              el ícono de la skill (no lleva ícono propio). */}
+          {skillYield && (
+            <span className="box-entry__skill-stat box-entry__skill-yield" title={skillYield.title}>
+              <span className="box-entry__metric-value">{skillYield.text}</span>
+              <span className="sr-only">{skillYield.title}</span>
+            </span>
+          )}
         </div>
-        {/* Aporte de la main skill: energía, ingredientes al azar, etc. Sin ícono
-            (sería el mismo que el de la skill, ya visible arriba): solo el número,
-            sangrado para alinearse con las líneas de nivel y disparos. */}
-        {skillYield && (
-          <span className="box-entry__skill-yield" title={skillYield.title}>
-            <span className="box-entry__metric-value">{skillYield.text}</span>
-            {/* El valor ya está en el texto visible; el sr-only solo aporta la
-                descripción (que de otro modo solo se vería en el title al hover). */}
-            <span className="sr-only">{skillYield.title}</span>
-          </span>
-        )}
       </div>
 
       {/* Acciones: overflow "···" con Comparar (primero) + Editar/Eliminar. */}
