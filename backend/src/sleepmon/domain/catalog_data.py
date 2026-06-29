@@ -233,6 +233,32 @@ def berry_strength_for_level(berry: Berry, level: int) -> int:
     return round(max(linear, exponential))
 
 
+# Multiplicador de fuerza de una receta según su nivel (1..MAX_RECIPE_LEVEL).
+# Índice = nivel-1. RECIPE_LEVEL_BONUS[0] == 1.0 (nivel 1 = sin bonus). Monótona
+# creciente. Fuente: nerolis-lab (sleepapi, bonus de nivel de receta), expresado
+# como multiplicador = 1 + bonus%/100.
+MAX_RECIPE_LEVEL: Final[int] = 65
+RECIPE_LEVEL_BONUS: Final[tuple[float, ...]] = (
+    1.00, 1.02, 1.04, 1.06, 1.08, 1.09, 1.11, 1.13, 1.15, 1.17,
+    1.18, 1.19, 1.21, 1.23, 1.25, 1.27, 1.29, 1.31, 1.33, 1.35,
+    1.37, 1.39, 1.41, 1.43, 1.45, 1.47, 1.48, 1.49, 1.51, 1.53,
+    1.55, 1.57, 1.59, 1.61, 1.63, 1.65, 1.67, 1.69, 1.71, 1.73,
+    1.75, 1.77, 1.79, 1.81, 1.83, 1.85, 1.87, 1.89, 1.91, 2.04,
+    2.06, 2.08, 2.10, 2.12, 2.14, 2.16, 2.18, 2.20, 2.22, 2.24,
+    2.26, 2.28, 2.30, 2.32, 2.48,
+)
+assert len(RECIPE_LEVEL_BONUS) == MAX_RECIPE_LEVEL
+
+
+def recipe_level_bonus(level: int) -> float:
+    """Multiplicador de fuerza de una receta de nivel ``level`` (1..MAX_RECIPE_LEVEL)."""
+    if not 1 <= level <= MAX_RECIPE_LEVEL:
+        raise ValueError(
+            f"El nivel de receta debe estar entre 1 y {MAX_RECIPE_LEVEL}; llegó {level}."
+        )
+    return RECIPE_LEVEL_BONUS[level - 1]
+
+
 def max_sub_skill_slots(level: int) -> int:
     """Cuántas sub skills puede tener un Pokémon de este nivel."""
     return sum(1 for unlock in SUB_SKILL_UNLOCK_LEVELS if level >= unlock)

@@ -223,3 +223,11 @@ class Ribbon(StrEnum):
     SLEEP_500 = "500h"
     SLEEP_1000 = "1000h"
     SLEEP_2000 = "2000h"
+
+
+class RecipeType(StrEnum):
+    """Los tres tipos de receta de Pokémon Sleep."""
+
+    CURRY = "Curry"  # curries y guisos
+    SALAD = "Salad"
+    DESSERT = "Dessert"  # postres y bebidas
