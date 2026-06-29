@@ -421,6 +421,7 @@ export function Teams() {
                       {t(`teams.${slot}`)}
                     </span>
                     <RecipeSelect
+                      id={`recipe-select-${slot}`}
                       recipes={recipes.data ?? []}
                       value={chosenRecipe}
                       onChange={(name) => setMeal(idx, name, meals[idx]?.level ?? 1)}

@@ -8,7 +8,7 @@ interface Props {
   value: string | null;
   onChange: (name: string | null) => void;
   placeholder: string;
-  id?: string;
+  id: string;
 }
 
 // Normalize text for accent/case-insensitive search (same approach as BoxPicker).
@@ -26,6 +26,12 @@ export function RecipeSelect({ recipes, value, onChange, placeholder, id }: Prop
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
+  const listboxRef = useRef<HTMLUListElement>(null);
+
+  // Derived namespaced ids so multiple instances on the same page don't collide.
+  const listboxId = `${id}-options`;
+  const noneOptId = `${id}-opt-none`;
+  const optId = (name: string) => `${id}-opt-${name}`;
 
   const selected = recipes.find((r) => r.name === value) ?? null;
 
@@ -55,6 +61,14 @@ export function RecipeSelect({ recipes, value, onChange, placeholder, id }: Prop
   useEffect(() => {
     setActiveIndex(0);
   }, [query, open]);
+
+  // Scroll the highlighted option into view on keyboard navigation.
+  useEffect(() => {
+    if (!open) return;
+    const activeId = activeIndex === 0 ? noneOptId : optId(flatOptions[activeIndex]?.name ?? "");
+    const el = document.getElementById(activeId);
+    el?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex, open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Click-outside and Escape to close.
   useEffect(() => {
@@ -107,8 +121,9 @@ export function RecipeSelect({ recipes, value, onChange, placeholder, id }: Prop
         type="button"
         className="recipe-trigger"
         onClick={() => setOpen((o) => !o)}
-        aria-haspopup="dialog"
+        aria-haspopup="listbox"
         aria-expanded={open}
+        aria-controls={listboxId}
       >
         {selected ? (
           <>
@@ -142,24 +157,24 @@ export function RecipeSelect({ recipes, value, onChange, placeholder, id }: Prop
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onSearchKey}
             role="combobox"
-            aria-expanded
-            aria-controls="recipe-options"
+            aria-expanded={open}
+            aria-controls={listboxId}
             aria-activedescendant={
               activeIndex === 0
-                ? "recipe-opt-none"
+                ? noneOptId
                 : flatOptions[activeIndex]
-                  ? `recipe-opt-${flatOptions[activeIndex]!.name}`
+                  ? optId(flatOptions[activeIndex]!.name)
                   : undefined
             }
             aria-label="Buscar receta"
           />
 
-          <ul className="recipe-options" role="listbox" id="recipe-options">
+          <ul className="recipe-options" role="listbox" id={listboxId} ref={listboxRef}>
             {/* "Sin receta" clear option */}
             <li>
               <button
                 type="button"
-                id="recipe-opt-none"
+                id={noneOptId}
                 role="option"
                 aria-selected={activeIndex === 0}
                 className={
@@ -186,7 +201,7 @@ export function RecipeSelect({ recipes, value, onChange, placeholder, id }: Prop
                       <li key={r.name}>
                         <button
                           type="button"
-                          id={`recipe-opt-${r.name}`}
+                          id={optId(r.name)}
                           role="option"
                           aria-selected={flatIdx === activeIndex}
                           className={
