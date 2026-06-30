@@ -45,7 +45,7 @@ def test_plan_cooking_required_vs_produced_balance() -> None:
     assert result.slots[0].met is False  # falta fancy egg
 
 
-# ── Tests del modelo greedy ───────────────────────────────────────────────────
+# ── Tests del modelo de consumo secuencial ───────────────────────────────────
 
 def test_same_recipe_three_slots_produced_two_servings_third_not_met() -> None:
     """×3 misma receta, producción exacta para 2 porciones del ingrediente
@@ -87,13 +87,13 @@ def test_same_recipe_three_slots_produced_less_than_one_serving_none_met() -> No
     assert by_ing[I.HONEY].balance == -13.0
 
 
-def test_greedy_ordering_expensive_first_flips_later_slot() -> None:
-    """Orden greedy: la primera comida (cara) consume ingredientes compartidos
-    y la segunda (más barata) queda sin cubrir porque no sobra.
+def test_sequential_ordering_expensive_first_depletes_later_slot() -> None:
+    """Consumo secuencial: la primera comida (cara) consume ingredientes compartidos
+    y la segunda (más barata) queda sin cubrir porque ya no hay remaining.
 
     R1 necesita 8 HONEY, R2 necesita 5 HONEY.
-    Producimos 8: greedy cubre R1 (8≥8, remaining=0), luego R2 falla (0<5).
-    Si el orden fuera al revés R2 se cubriría primero.
+    Producimos 8: R1 cumple (8≥8, subtract → remaining=0), luego R2 falla (0<5,
+    subtract → remaining=-5). Bajo consumo secuencial ambos slots consumen siempre.
     """
     r1 = _recipe(name="R1", ings=((I.HONEY, 8),), base=100)
     r2 = _recipe(name="R2", ings=((I.HONEY, 5),), base=100)
@@ -130,6 +130,50 @@ def test_invariant_all_met_iff_no_negative_balance() -> None:
     )
     assert all(s.met for s in result_ok.slots)
     assert not any(b.balance < 0 for b in result_ok.ingredients)
+
+
+def test_sequential_consumption_unmet_meal_still_depletes_pool() -> None:
+    """Escenario del usuario: comida intermedia no cumplida consume igualmente sus
+    ingredientes, y la comida posterior lo refleja.
+
+    Receta con A=HONEY(5) y B=FANCY_EGG(4).
+    Producción: HONEY=11 (≈2.2 porciones), FANCY_EGG=7 (1.75 porciones).
+
+    Meal 1: remaining HONEY=11≥5 y FANCY_EGG=7≥4 → met=True.
+            subtract → remaining HONEY=6, FANCY_EGG=3.
+    Meal 2: remaining HONEY=6≥5 pero FANCY_EGG=3<4 → met=False.
+            subtract SIEMPRE → remaining HONEY=1, FANCY_EGG=-1.
+    Meal 3: remaining HONEY=1<5 → met=False.
+            available HONEY = max(0, min(1, 5)) = 1 (< required=5).
+
+    Prueba que la comida 3 ve HONEY depletado por las dos anteriores (aunque la 2
+    no se cumplió), y que available = max(0, produced_A - 2*count_A) = max(0, 11-10)=1.
+    """
+    honey_count = 5
+    egg_count = 4
+    r = _recipe(ings=((I.HONEY, honey_count), (I.FANCY_EGG, egg_count)), base=100)
+    produced_honey = 11.0  # 2.2 porciones de HONEY
+    produced_egg = 7.0     # 1.75 porciones de FANCY_EGG
+    meals = [MealSelection(r, 1), MealSelection(r, 1), MealSelection(r, 1)]
+    result = plan_cooking(meals, {I.HONEY: produced_honey, I.FANCY_EGG: produced_egg})
+
+    # Meal 1: met (ambos ingredientes cubiertos)
+    assert result.slots[0].met is True
+    # Meal 2: NOT met (FANCY_EGG insuficiente: 7-4=3 < 4), pero consume igualmente
+    assert result.slots[1].met is False
+    # Meal 3: NOT met (HONEY depletado por las dos anteriores: 11-5-5=1 < 5)
+    assert result.slots[2].met is False
+
+    # La comida 3 ve HONEY depletado: available = max(0, 11-10) = 1
+    slot2_by_ing = {s.ingredient: s for s in result.slots[2].ingredients}
+    expected_honey_available = max(0.0, produced_honey - 2 * honey_count)  # = 1.0
+    assert slot2_by_ing[I.HONEY].available == expected_honey_available
+    assert slot2_by_ing[I.HONEY].required == honey_count
+
+    # La depleción de HONEY en meal 3 proviene de que meal 2 (no cumplida) también restó.
+    # Si meal 2 NO hubiera restado (modelo greedy anterior), meal 3 vería HONEY=6 (≥5).
+    # Con consumo secuencial, meal 3 ve HONEY=1 (<5): prueba directa del cambio.
+    assert slot2_by_ing[I.HONEY].available < honey_count
 
 
 def test_cooking_strength_sums_all_slots_unchanged() -> None:
