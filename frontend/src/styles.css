@@ -2829,12 +2829,19 @@ button.prod-card__base-tag--action:hover {
   justify-content: flex-end;
 }
 
+/* Análisis de equipo — barra de período (toggle diario/semanal) a nivel de página */
+.teams-period-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
 /* Análisis de equipo — sección de agregados y cocina */
 .teams-aggregates {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
   gap: 1.5rem;
-  margin-top: 2rem;
+  margin-top: 1rem;
 }
 
 @media (max-width: 860px) {

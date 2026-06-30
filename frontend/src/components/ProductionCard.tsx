@@ -10,7 +10,7 @@ import {
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { statIcon } from "../natures";
-import { CHARGE_STRENGTH_ICON } from "../skillIcons";
+import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
 import { spriteUrl } from "../sprites";
 import { subSkillIcon } from "../subskills";
 import type { Catalog, MemberInput, Production } from "../types";
@@ -26,7 +26,6 @@ import {
   IconMagnifier,
   IconMoon,
   IconPackage,
-  IconPot,
   IconSaveBox,
   IconSparkle,
 } from "./icons";
@@ -579,7 +578,8 @@ export function ProductionCard({
             {d.skill_cooking_ingredients != null && (
               <div className="prod-card__line">
                 <span title={t("card.cookingTitle")}>
-                  <IconPot /> {fmt(d.skill_cooking_ingredients)}{" "}
+                  <img className="mini-icon" src={POT_EXPANSION_ICON} alt="" />{" "}
+                  {fmt(d.skill_cooking_ingredients)}{" "}
                   <Delta value={d.skill_cooking_ingredients} base={base?.skill_cooking_ingredients ?? null} />
                   <span className="muted"> {t("card.cookingExtra")}</span>
                 </span>

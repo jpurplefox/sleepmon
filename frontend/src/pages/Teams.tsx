@@ -1,5 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
+import type React from "react";
 
 import { api } from "../api/client";
 import { berryIcon } from "../berries";
@@ -9,17 +10,78 @@ import { Modal } from "../components/Modal";
 import { ProductionCard } from "../components/ProductionCard";
 import {
   IconMagnifier,
-  IconPot,
   IconSparkle,
 } from "../components/icons";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { recipeImage } from "../recipes";
 import { statIcon } from "../natures";
-import { CHARGE_STRENGTH_ICON } from "../skillIcons";
-import type { Catalog, MealInput, Member, MemberInput } from "../types";
+import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
+import type { Catalog, MealInput, Member, MemberInput, SkillEffectAgg } from "../types";
 
 const MAX_TEAM = 5;
+
+// kind → { icon renderer, i18n label key } — mirrors ProductionCard's skill section.
+// Used to render skill_effects rows in the aggregates card.
+type SkillEffectMeta = {
+  iconNode: () => React.ReactNode;
+  labelKey: string;
+};
+
+function skillEffectMeta(kind: string): SkillEffectMeta {
+  switch (kind) {
+    case "strength":
+      return {
+        iconNode: () => <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" />,
+        labelKey: "card.strength",
+      };
+    case "energy":
+      return {
+        iconNode: () => <img className="mini-icon" src={statIcon("Energy Recovery")} alt="" />,
+        labelKey: "card.energyEach",
+      };
+    case "self_energy":
+      return {
+        iconNode: () => <img className="mini-icon" src={statIcon("Energy Recovery")} alt="" />,
+        labelKey: "card.selfEnergy",
+      };
+    case "dream_shards":
+      return {
+        iconNode: () => <img className="mini-icon" src="/shard.png" alt="" />,
+        labelKey: "card.dreamShards",
+      };
+    case "tasty_chance":
+      return {
+        iconNode: () => <img className="mini-icon" src="/extra-tasty.png" alt="" />,
+        labelKey: "card.extraTasty",
+      };
+    case "extra_helpful":
+      return {
+        iconNode: () => <IconMagnifier />,
+        labelKey: "card.helpMult",
+      };
+    case "random_energy":
+      return {
+        iconNode: () => <img className="mini-icon" src={statIcon("Energy Recovery")} alt="" />,
+        labelKey: "card.randomEnergy",
+      };
+    case "ingredient_total":
+      return {
+        iconNode: () => <img className="mini-icon" src={statIcon("Ingredient Finding")} alt="" />,
+        labelKey: "card.randomIngredients",
+      };
+    case "cooking_ingredients":
+      return {
+        iconNode: () => <img className="mini-icon" src={POT_EXPANSION_ICON} alt="" />,
+        labelKey: "card.cookingExtra",
+      };
+    default:
+      return {
+        iconNode: () => <IconSparkle />,
+        labelKey: "card.skill",
+      };
+  }
+}
 
 // Pure module-level helper — same logic as pickMember in Production.tsx.
 function configFromMember(catalog: Catalog, m: Member): MemberInput | null {
@@ -55,7 +117,6 @@ export function Teams() {
   const [weekly, setWeekly] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
-  const [berryBreakdownOpen, setBerryBreakdownOpen] = useState(false);
 
   const inTeam = useMemo(() => new Set(selectedIds), [selectedIds]);
 
@@ -220,14 +281,38 @@ export function Teams() {
 
       {/* ── Aggregates + cooking (only when we have data) ── */}
       {result && (
-        <div className="teams-aggregates">
+        <>
+          {/* #1 — Page-level daily/weekly toggle: global control for all analysis below */}
+          <div className="teams-period-toolbar">
+            <div className="specialty-toggle" role="group" aria-label={t("teams.toggleLabel")}>
+              <button
+                type="button"
+                className={"specialty-toggle__btn" + (!weekly ? " is-on" : "")}
+                aria-pressed={!weekly}
+                onClick={() => setWeekly(false)}
+              >
+                {t("teams.daily")}
+              </button>
+              <button
+                type="button"
+                className={"specialty-toggle__btn" + (weekly ? " is-on" : "")}
+                aria-pressed={weekly}
+                onClick={() => setWeekly(true)}
+              >
+                {t("teams.weekly")}
+              </button>
+            </div>
+          </div>
 
-          {/* Grand-total card with daily/weekly toggle */}
-          <div className="card">
-            <div className="teams-aggregates__header">
-              <div className="prod-stat">
+          <div className="teams-aggregates">
+
+            {/* Grand-total card */}
+            <div className="card">
+              {/* Grand total value — flame icon is sufficient, no redundant label */}
+              <div className="prod-stat" style={{ marginBottom: "0.75rem" }}>
                 <span className="prod-stat__label">{t("teams.grandTotal")}</span>
                 <span className="prod-stat__value">
+                  <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" style={{ width: 18, height: 18, marginRight: "0.25rem" }} />
                   {fmtInt(result.grand_total_strength * factor)}
                   {teamQuery.isFetching && !teamQuery.isLoading && (
                     <span className="muted" style={{ fontSize: "var(--text-sm)", marginLeft: "0.5rem" }}>
@@ -236,63 +321,33 @@ export function Teams() {
                   )}
                 </span>
               </div>
-              {/* Diario / Semanal toggle */}
-              <div className="specialty-toggle" role="group" aria-label={t("teams.toggleLabel")}>
-                <button
-                  type="button"
-                  className={"specialty-toggle__btn" + (!weekly ? " is-on" : "")}
-                  aria-pressed={!weekly}
-                  onClick={() => setWeekly(false)}
-                >
-                  {t("teams.daily")}
-                </button>
-                <button
-                  type="button"
-                  className={"specialty-toggle__btn" + (weekly ? " is-on" : "")}
-                  aria-pressed={weekly}
-                  onClick={() => setWeekly(true)}
-                >
-                  {t("teams.weekly")}
-                </button>
+
+              {/* Berries & skills aggregates */}
+              <div className="prod-card__block-head">{t("teams.berriesSkills")}</div>
+
+              {/* Berry totals */}
+              <div className="prod-card__line">
+                <span>
+                  <img
+                    className="mini-icon"
+                    src={CHARGE_STRENGTH_ICON}
+                    alt=""
+                  />{" "}
+                  {fmtInt(result.total_strength * factor)}
+                </span>
               </div>
-            </div>
+              <div className="prod-card__line">
+                <span className="muted">{t("teams.berries")}</span>
+                <span>{fmt(result.total_berry_amount * factor)}</span>
+              </div>
 
-            {/* Berries & skills aggregates */}
-            <div className="prod-card__block-head">{t("teams.berriesSkills")}</div>
-
-            {/* Berry totals */}
-            <div className="prod-card__line">
-              <span>
-                <img
-                  className="mini-icon"
-                  src={CHARGE_STRENGTH_ICON}
-                  alt={t("teams.totalStrength")}
-                  title={t("teams.totalStrength")}
-                />{" "}
-                {fmtInt(result.total_strength * factor)}
-              </span>
-              <span className="muted">{t("teams.totalStrength")}</span>
-            </div>
-            <div className="prod-card__line">
-              <span className="muted">{t("teams.berries")}</span>
-              <span>{fmt(result.total_berry_amount * factor)}</span>
-            </div>
-
-            {/* Berry-type breakdown (expandable) */}
-            {berryBreakdown.length > 0 && (
-              <div style={{ marginTop: "0.4rem" }}>
-                <button
-                  type="button"
-                  className="btn btn--ghost"
-                  style={{ marginTop: 0, fontSize: "var(--text-xs)", padding: "0.2rem 0.5rem" }}
-                  onClick={() => setBerryBreakdownOpen((v) => !v)}
-                  aria-expanded={berryBreakdownOpen}
-                >
-                  {berryBreakdownOpen ? "▲" : "▼"}{" "}
-                  {t("teams.byBerry")}
-                </button>
-                {berryBreakdownOpen && (
-                  <ul className="prod-card__ings" style={{ marginTop: "0.4rem" }}>
+              {/* #3 — Berry-type breakdown: always visible */}
+              {berryBreakdown.length > 0 && (
+                <div style={{ marginTop: "0.4rem" }}>
+                  <div className="prod-card__block-head" style={{ fontSize: "var(--text-xs)", marginTop: "0.5rem" }}>
+                    {t("teams.byBerry")}
+                  </div>
+                  <ul className="prod-card__ings" style={{ marginTop: "0.25rem" }}>
                     {berryBreakdown.map(({ berry, berry_amount, berry_strength }) => (
                       <li key={berry} style={{ justifyContent: "space-between" }}>
                         <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
@@ -319,270 +374,237 @@ export function Teams() {
                       </li>
                     ))}
                   </ul>
-                )}
-              </div>
-            )}
+                </div>
+              )}
 
-            {/* Skill aggregates with icons — same pattern as ProductionCard skill block */}
-            <div className="prod-card__block-head" style={{ marginTop: "0.75rem" }}>
-              {t("card.skill")}
-            </div>
-            <div className="prod-card__line">
-              <span>
-                <IconSparkle /> {fmt(result.skill_triggers * factor)}
-              </span>
-              <span className="muted">{t("teams.skillTriggers")}</span>
-            </div>
-            {result.skill_energy != null && (
-              <div className="prod-card__line">
-                <span>
-                  <img className="mini-icon" src={statIcon("Energy Recovery")} alt="" />{" "}
-                  {fmt(result.skill_energy * factor)}
-                </span>
-                <span className="muted">{t("card.energyEach")}</span>
-              </div>
-            )}
-            {result.skill_self_energy != null && (
-              <div className="prod-card__line">
-                <span>
-                  <img className="mini-icon" src={statIcon("Energy Recovery")} alt="" />{" "}
-                  {fmt(result.skill_self_energy * factor)}
-                </span>
-                <span className="muted">{t("card.selfEnergy")}</span>
-              </div>
-            )}
-            {result.skill_random_energy != null && (
-              <div className="prod-card__line">
-                <span>
-                  <img className="mini-icon" src={statIcon("Energy Recovery")} alt="" />{" "}
-                  {fmt(result.skill_random_energy * factor)}
-                </span>
-                <span className="muted">{t("card.randomEnergy")}</span>
-              </div>
-            )}
-            {result.skill_ingredient_total != null && (
-              <div className="prod-card__line">
-                <span>
-                  <img className="mini-icon" src={statIcon("Ingredient Finding")} alt="" />{" "}
-                  {fmt(result.skill_ingredient_total * factor)}
-                </span>
-                <span className="muted">{t("card.randomIngredients")}</span>
-              </div>
-            )}
-            {result.skill_cooking_ingredients != null && (
-              <div className="prod-card__line">
-                <span>
-                  <IconPot /> {fmt(result.skill_cooking_ingredients * factor)}
-                </span>
-                <span className="muted">{t("card.cookingExtra")}</span>
-              </div>
-            )}
-            {result.skill_dream_shards != null && (
-              <div className="prod-card__line">
-                <span>
-                  <img className="mini-icon" src="/shard.png" alt="" />{" "}
-                  {fmtInt(result.skill_dream_shards * factor)}
-                </span>
-                <span className="muted">{t("card.dreamShards")}</span>
-              </div>
-            )}
-            {result.skill_tasty_chance != null && (
-              <div className="prod-card__line">
-                <span>
-                  <img className="mini-icon" src="/extra-tasty.png" alt="" />{" "}
-                  +{fmtInt(result.skill_tasty_chance * factor)}%
-                </span>
-                <span className="muted">{t("card.extraTasty")}</span>
-              </div>
-            )}
-            {result.skill_extra_helpful != null && (
-              <div className="prod-card__line">
-                <span>
-                  <IconMagnifier /> ×{fmt(result.skill_extra_helpful * factor)}
-                </span>
-                <span className="muted">{t("card.helpMult")}</span>
-              </div>
-            )}
+              {/* #4 & #5 — Skill effects with icon + total + triggers. Excludes cooking_ingredients (#6). */}
+              {result.skill_effects.filter((e: SkillEffectAgg) => e.kind !== "cooking_ingredients").length > 0 && (
+                <>
+                  <div className="prod-card__block-head" style={{ marginTop: "0.75rem" }}>
+                    {t("card.skill")}
+                  </div>
+                  {result.skill_effects
+                    .filter((e: SkillEffectAgg) => e.kind !== "cooking_ingredients")
+                    .map((e: SkillEffectAgg) => {
+                      const meta = skillEffectMeta(e.kind);
+                      const total = e.total * factor;
+                      const triggers = e.triggers * factor;
+                      const label = t(meta.labelKey);
+                      const text =
+                        e.kind === "tasty_chance"
+                          ? `+${fmtInt(total)}% ${label} ${t("teams.inTriggers", { n: fmt(triggers) })}`
+                          : e.kind === "extra_helpful"
+                            ? `×${fmt(total)} ${label} ${t("teams.inTriggers", { n: fmt(triggers) })}`
+                            : `${e.kind === "dream_shards" ? fmtInt(total) : fmt(total)} ${label} ${t("teams.inTriggers", { n: fmt(triggers) })}`;
+                      return (
+                        <div key={e.kind} className="prod-card__line">
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                            {meta.iconNode()}
+                            <span>{text}</span>
+                          </span>
+                        </div>
+                      );
+                    })}
+                </>
+              )}
 
-            {result.excluded_count > 0 && (
-              <p className="muted" style={{ fontSize: "var(--text-sm)", marginTop: "0.5rem" }}>
-                {t("teams.excluded", { count: String(result.excluded_count) })}
-              </p>
-            )}
-          </div>
-
-          {/* Cooking card */}
-          <div className="card">
-            <div className="teams-cooking-head">
-              <h2 style={{ margin: 0 }}>{t("teams.cooking")}</h2>
-              <button
-                type="button"
-                className="btn btn--ghost teams-cooking-edit"
-                onClick={() => setMealPickerOpen(true)}
-              >
-                {t("teams.editRecipes")}
-              </button>
+              {result.excluded_count > 0 && (
+                <p className="muted" style={{ fontSize: "var(--text-sm)", marginTop: "0.5rem" }}>
+                  {t("teams.excluded", { count: String(result.excluded_count) })}
+                </p>
+              )}
             </div>
 
-            {/* Compact plan summary: one row per moment */}
-            <div className="teams-plan-rows">
-              {MEAL_SLOTS.map((slot, idx) => {
-                const meal = meals[idx];
-                const feasibility = meal ? feasibilityBySlot.get(idx) : undefined;
-                const met = feasibility?.met;
-                return (
-                  <div key={slot} className="teams-plan-row">
-                    <span className="teams-plan-row__label muted">
-                      {t(`teams.${slot}`)}
-                    </span>
-                    {meal ? (
-                      <div className="cook-row__body">
-                        <div className="cook-row__topline">
-                          <img
-                            className="teams-plan-row__thumb"
-                            src={recipeImage(meal.recipe)}
-                            alt=""
-                            onError={(e) => {
-                              (e.currentTarget as HTMLImageElement).style.display = "none";
-                            }}
-                          />
-                          <span className="teams-plan-row__name">{meal.recipe}</span>
-                          <span className="teams-plan-row__lv muted">Lv.{meal.level}</span>
-                          {feasibility != null && (
-                            <span className="cook-row__strength">
-                              <img
-                                className="mini-icon"
-                                src={CHARGE_STRENGTH_ICON}
-                                alt=""
-                                style={{ width: 14, height: 14 }}
-                              />
-                              {fmtInt(feasibility.strength * factor)}
-                            </span>
-                          )}
-                          {met != null && (
-                            <span className={met ? "badge badge--ok" : "badge badge--low"}>
-                              {met ? t("teams.fulfilled") : t("teams.notMet")}
-                            </span>
+            {/* Cooking card */}
+            <div className="card">
+              <div className="teams-cooking-head">
+                <h2 style={{ margin: 0 }}>{t("teams.cooking")}</h2>
+                <button
+                  type="button"
+                  className="btn btn--ghost teams-cooking-edit"
+                  onClick={() => setMealPickerOpen(true)}
+                >
+                  {t("teams.editRecipes")}
+                </button>
+              </div>
+
+              {/* Compact plan summary: one row per moment */}
+              <div className="teams-plan-rows">
+                {MEAL_SLOTS.map((slot, idx) => {
+                  const meal = meals[idx];
+                  const feasibility = meal ? feasibilityBySlot.get(idx) : undefined;
+                  const met = feasibility?.met;
+                  return (
+                    <div key={slot} className="teams-plan-row">
+                      <span className="teams-plan-row__label muted">
+                        {t(`teams.${slot}`)}
+                      </span>
+                      {meal ? (
+                        <div className="cook-row__body">
+                          <div className="cook-row__topline">
+                            <img
+                              className="teams-plan-row__thumb"
+                              src={recipeImage(meal.recipe)}
+                              alt=""
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = "none";
+                              }}
+                            />
+                            <span className="teams-plan-row__name">{meal.recipe}</span>
+                            <span className="teams-plan-row__lv muted">Lv.{meal.level}</span>
+                            {feasibility != null && (
+                              <span className="cook-row__strength">
+                                <img
+                                  className="mini-icon"
+                                  src={CHARGE_STRENGTH_ICON}
+                                  alt=""
+                                  style={{ width: 14, height: 14 }}
+                                />
+                                {fmtInt(feasibility.strength * factor)}
+                              </span>
+                            )}
+                            {met != null && (
+                              <span className={met ? "badge badge--ok" : "badge badge--low"}>
+                                {met ? t("teams.fulfilled") : t("teams.notMet")}
+                              </span>
+                            )}
+                          </div>
+                          {feasibility != null && feasibility.ingredients.length > 0 && (
+                            <div className="cook-row__ings">
+                              {feasibility.ingredients.map((ing) => {
+                                const ok = ing.available >= ing.required;
+                                const fmtAmt = (n: number) =>
+                                  Number.isInteger(n) ? String(n) : n.toFixed(1);
+                                return (
+                                  <span
+                                    key={ing.ingredient}
+                                    className={`cook-ing-chip ${ok ? "cook-ing-chip--ok" : "cook-ing-chip--short"}`}
+                                    title={ingName(ing.ingredient)}
+                                  >
+                                    <img
+                                      className="mini-icon"
+                                      src={ingredientIcon(ing.ingredient)}
+                                      alt={ingName(ing.ingredient)}
+                                      style={{ width: 16, height: 16 }}
+                                    />
+                                    {fmtAmt(ing.available)}/{fmtAmt(ing.required)}
+                                  </span>
+                                );
+                              })}
+                            </div>
                           )}
                         </div>
-                        {feasibility != null && feasibility.ingredients.length > 0 && (
-                          <div className="cook-row__ings">
-                            {feasibility.ingredients.map((ing) => {
-                              const ok = ing.available >= ing.required;
-                              const fmtAmt = (n: number) =>
-                                Number.isInteger(n) ? String(n) : n.toFixed(1);
-                              return (
-                                <span
-                                  key={ing.ingredient}
-                                  className={`cook-ing-chip ${ok ? "cook-ing-chip--ok" : "cook-ing-chip--short"}`}
-                                  title={ingName(ing.ingredient)}
-                                >
-                                  <img
-                                    className="mini-icon"
-                                    src={ingredientIcon(ing.ingredient)}
-                                    alt={ingName(ing.ingredient)}
-                                    style={{ width: 16, height: 16 }}
-                                  />
-                                  {fmtAmt(ing.available)}/{fmtAmt(ing.required)}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="muted" style={{ fontSize: "var(--text-sm)" }}>
-                        {t("common.dash")}
+                      ) : (
+                        <span className="muted" style={{ fontSize: "var(--text-sm)" }}>
+                          {t("common.dash")}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Cooking strength */}
+              <div className="prod-card__line" style={{ marginTop: "0.75rem" }}>
+                <span className="muted">{t("teams.cookingStrength")}</span>
+                <span>{fmtInt(result.cooking_strength * factor)}</span>
+              </div>
+
+              {/* #6 — cooking_ingredients skill effect in Cooking card */}
+              {result.skill_effects
+                .filter((e: SkillEffectAgg) => e.kind === "cooking_ingredients")
+                .map((e: SkillEffectAgg) => {
+                  const meta = skillEffectMeta("cooking_ingredients");
+                  const total = e.total * factor;
+                  const triggers = e.triggers * factor;
+                  return (
+                    <div key="cooking_skill" className="prod-card__line">
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                        {meta.iconNode()}
+                        <span>
+                          {fmt(total)} {t(meta.labelKey)} {t("teams.inTriggers", { n: fmt(triggers) })}
+                        </span>
                       </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                    </div>
+                  );
+                })}
 
-            {/* Cooking strength */}
-            <div className="prod-card__line" style={{ marginTop: "0.75rem" }}>
-              <span className="muted">{t("teams.cookingStrength")}</span>
-              <span>{fmtInt(result.cooking_strength * factor)}</span>
-            </div>
-
-            {/* Missing ingredients zone */}
-            {result.cooking_ingredients.filter((b) => b.balance < 0).length > 0 && (
-              <>
-                <div
-                  className="prod-card__block-head"
-                  style={{ marginTop: "1rem", color: "var(--down)" }}
-                >
-                  {t("teams.missing")}
-                </div>
-                <ul className="prod-card__ings">
-                  {result.cooking_ingredients
-                    .filter((b) => b.balance < 0)
-                    .map((b) => (
-                      <li key={b.ingredient} style={{ justifyContent: "space-between" }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
-                          <img
-                            className="mini-icon"
-                            src={ingredientIcon(b.ingredient)}
-                            alt={ingName(b.ingredient)}
-                            title={ingName(b.ingredient)}
-                            style={{ width: 20, height: 20 }}
-                          />
-                          <span>{ingName(b.ingredient)}</span>
-                        </span>
-                        <span style={{ color: "var(--down)", fontWeight: 700, fontSize: "var(--text-sm)" }}>
-                          {t("teams.missingAmt", { n: fmt(Math.abs(b.balance) * factor) })}
-                        </span>
-                      </li>
-                    ))}
-                </ul>
-              </>
-            )}
-
-            {/* Surplus zone: cooking_ingredients with balance > 0 + cooking_surplus, deduplicated */}
-            {(() => {
-              const surplusMap = new Map<string, number>();
-              // From cooking_ingredients where balance > 0
-              for (const b of result.cooking_ingredients) {
-                if (b.balance > 0) surplusMap.set(b.ingredient, b.balance);
-              }
-              // From cooking_surplus — if not already in map (don't duplicate)
-              for (const b of result.cooking_surplus) {
-                if (!surplusMap.has(b.ingredient)) {
-                  surplusMap.set(b.ingredient, b.balance);
-                }
-              }
-              const surplusEntries = [...surplusMap.entries()];
-              if (surplusEntries.length === 0) return null;
-              return (
+              {/* Missing ingredients zone */}
+              {result.cooking_ingredients.filter((b) => b.balance < 0).length > 0 && (
                 <>
-                  <div className="prod-card__block-head" style={{ marginTop: "1rem" }}>
-                    {t("teams.surplus")}
+                  <div
+                    className="prod-card__block-head"
+                    style={{ marginTop: "1rem", color: "var(--down)" }}
+                  >
+                    {t("teams.missing")}
                   </div>
                   <ul className="prod-card__ings">
-                    {surplusEntries.map(([ingredient, balance]) => (
-                      <li key={ingredient} style={{ justifyContent: "space-between" }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
-                          <img
-                            className="mini-icon"
-                            src={ingredientIcon(ingredient)}
-                            alt={ingName(ingredient)}
-                            title={ingName(ingredient)}
-                            style={{ width: 20, height: 20 }}
-                          />
-                          <span className="muted">{ingName(ingredient)}</span>
-                        </span>
-                        <span className="muted" style={{ fontSize: "var(--text-sm)" }}>
-                          +{fmt(balance * factor)}
-                        </span>
-                      </li>
-                    ))}
+                    {result.cooking_ingredients
+                      .filter((b) => b.balance < 0)
+                      .map((b) => (
+                        <li key={b.ingredient} style={{ justifyContent: "space-between" }}>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                            <img
+                              className="mini-icon"
+                              src={ingredientIcon(b.ingredient)}
+                              alt={ingName(b.ingredient)}
+                              title={ingName(b.ingredient)}
+                              style={{ width: 20, height: 20 }}
+                            />
+                            <span>{ingName(b.ingredient)}</span>
+                          </span>
+                          <span style={{ color: "var(--down)", fontWeight: 700, fontSize: "var(--text-sm)" }}>
+                            {t("teams.missingAmt", { n: fmt(Math.abs(b.balance) * factor) })}
+                          </span>
+                        </li>
+                      ))}
                   </ul>
                 </>
-              );
-            })()}
+              )}
+
+              {/* Surplus zone: cooking_ingredients with balance > 0 + cooking_surplus, deduplicated */}
+              {(() => {
+                const surplusMap = new Map<string, number>();
+                for (const b of result.cooking_ingredients) {
+                  if (b.balance > 0) surplusMap.set(b.ingredient, b.balance);
+                }
+                for (const b of result.cooking_surplus) {
+                  if (!surplusMap.has(b.ingredient)) {
+                    surplusMap.set(b.ingredient, b.balance);
+                  }
+                }
+                const surplusEntries = [...surplusMap.entries()];
+                if (surplusEntries.length === 0) return null;
+                return (
+                  <>
+                    <div className="prod-card__block-head" style={{ marginTop: "1rem" }}>
+                      {t("teams.surplus")}
+                    </div>
+                    <ul className="prod-card__ings">
+                      {surplusEntries.map(([ingredient, balance]) => (
+                        <li key={ingredient} style={{ justifyContent: "space-between" }}>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                            <img
+                              className="mini-icon"
+                              src={ingredientIcon(ingredient)}
+                              alt={ingName(ingredient)}
+                              title={ingName(ingredient)}
+                              style={{ width: 20, height: 20 }}
+                            />
+                            <span className="muted">{ingName(ingredient)}</span>
+                          </span>
+                          <span className="muted" style={{ fontSize: "var(--text-sm)" }}>
+                            +{fmt(balance * factor)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                );
+              })()}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* BoxPicker modal — same pattern as Production.tsx */}
