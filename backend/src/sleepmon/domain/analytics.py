@@ -58,6 +58,20 @@ def nature_stat_balance(members: Iterable[TeamMember]) -> dict[NatureStat, int]:
 
 
 @dataclass(frozen=True, slots=True)
+class SkillEffectAgg:
+    """Agregado de un tipo de efecto de main skill para todo el equipo.
+
+    ``total`` es la suma del efecto entre los miembros que lo aportan;
+    ``triggers`` es la suma de sus ``skill_triggers`` (los que NO aportan este
+    efecto no cuentan).
+    """
+
+    kind: str  # "strength" | "energy" | "self_energy" | "dream_shards" | ...
+    total: float
+    triggers: float
+
+
+@dataclass(frozen=True, slots=True)
 class MemberContribution:
     """Aporte de un miembro al agregado del equipo (para el desglose)."""
 
@@ -89,6 +103,7 @@ class TeamProduction:
     skill_random_energy: float | None
     skill_cooking_ingredients: float | None
     skill_ingredient_total: float | None
+    skill_effects: tuple[SkillEffectAgg, ...]
     members: tuple[MemberContribution, ...]
 
 
@@ -103,6 +118,20 @@ _OPTIONAL_SKILL_FIELDS: tuple[str, ...] = (
     "skill_random_energy",
     "skill_cooking_ingredients",
     "skill_ingredient_total",
+)
+
+# Mapeo kind → nombre del atributo en DailyProduction, en el orden canónico de
+# presentación.
+_EFFECT_KIND_TO_FIELD: tuple[tuple[str, str], ...] = (
+    ("strength", "skill_strength"),
+    ("energy", "skill_energy"),
+    ("self_energy", "skill_self_energy"),
+    ("dream_shards", "skill_dream_shards"),
+    ("tasty_chance", "skill_tasty_chance"),
+    ("extra_helpful", "skill_extra_helpful"),
+    ("random_energy", "skill_random_energy"),
+    ("cooking_ingredients", "skill_cooking_ingredients"),
+    ("ingredient_total", "skill_ingredient_total"),
 )
 
 
@@ -146,6 +175,25 @@ def team_production(
 
     optional = {field: _sum_optional(dailies, field) for field in _OPTIONAL_SKILL_FIELDS}
 
+    # Construir skill_effects: un SkillEffectAgg por cada kind que al menos un miembro
+    # aporta (su atributo DailyProduction es no-None). total acumula el valor del
+    # efecto; triggers acumula los skill_triggers solo de esos miembros.
+    skill_effects_list: list[SkillEffectAgg] = []
+    for kind, field in _EFFECT_KIND_TO_FIELD:
+        total_val = 0.0
+        total_trig = 0.0
+        has_contributor = False
+        for daily in dailies:
+            value: float | None = getattr(daily, field)
+            if value is not None:
+                total_val += value
+                total_trig += daily.skill_triggers
+                has_contributor = True
+        if has_contributor:
+            skill_effects_list.append(
+                SkillEffectAgg(kind=kind, total=total_val, triggers=total_trig)
+            )
+
     return TeamProduction(
         member_count=len(entries_list),
         total_strength=total_berry_strength + total_skill_strength,
@@ -155,6 +203,7 @@ def team_production(
         ingredients=ingredients,
         total_ingredients=sum(ingredients.values()),
         skill_triggers=sum(d.skill_triggers for d in dailies),
+        skill_effects=tuple(skill_effects_list),
         members=members,
         **optional,
     )

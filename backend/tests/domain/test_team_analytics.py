@@ -1,4 +1,4 @@
-from sleepmon.domain.analytics import team_production
+from sleepmon.domain.analytics import SkillEffectAgg, team_production
 from sleepmon.domain.production import DailyProduction, SlotProduction
 from sleepmon.domain.value_objects import Berry, Ingredient
 
@@ -153,3 +153,73 @@ def test_team_production_skill_ingredients_folded_into_aggregation() -> None:
     # FANCY_EGG: 4 (skill A) = 4.0
     assert result.ingredients[I.FANCY_EGG] == 4.0
     assert result.total_ingredients == 10.0
+
+
+# ── skill_effects ──────────────────────────────────────────────────────────────
+
+
+def test_skill_effects_empty_when_no_contributors() -> None:
+    """Ningún miembro aporta ningún efecto → skill_effects vacío."""
+    result = team_production([("a", "X", _daily(skill_energy=None, skill_strength=None))])
+    assert result.skill_effects == ()
+
+
+def test_skill_effects_energy_only_contributing_member() -> None:
+    """Un miembro con skill_energy y otro sin ella → entry 'energy' solo del primero."""
+    a = _daily(skill_energy=10.0, skill_triggers=3.0)
+    b = _daily(skill_energy=None, skill_triggers=1.5)
+    result = team_production([("a", "X", a), ("b", "Y", b)])
+
+    kinds = {e.kind: e for e in result.skill_effects}
+    assert "energy" in kinds
+    energy = kinds["energy"]
+    assert energy.total == 10.0
+    assert energy.triggers == 3.0  # solo los disparos de 'a'
+
+
+def test_skill_effects_strength_entry() -> None:
+    """Un miembro con skill_strength → entry 'strength' con su total y triggers."""
+    a = _daily(skill_strength=200.0, skill_triggers=2.0)
+    result = team_production([("a", "X", a)])
+
+    kinds = {e.kind: e for e in result.skill_effects}
+    assert "strength" in kinds
+    assert kinds["strength"].total == 200.0
+    assert kinds["strength"].triggers == 2.0
+
+
+def test_skill_effects_two_energy_contributors_summed() -> None:
+    """Dos miembros con skill_energy → total y triggers sumados."""
+    a = _daily(skill_energy=10.0, skill_triggers=3.0)
+    b = _daily(skill_energy=5.0, skill_triggers=1.5)
+    result = team_production([("a", "X", a), ("b", "Y", b)])
+
+    kinds = {e.kind: e for e in result.skill_effects}
+    assert "energy" in kinds
+    assert kinds["energy"].total == 15.0
+    assert kinds["energy"].triggers == 4.5
+
+
+def test_skill_effects_absent_kind_not_emitted() -> None:
+    """Un kind sin ningún contribuidor no aparece en skill_effects."""
+    a = _daily(skill_energy=10.0)
+    result = team_production([("a", "X", a)])
+    kinds = {e.kind for e in result.skill_effects}
+    assert "strength" not in kinds
+    assert "dream_shards" not in kinds
+
+
+def test_skill_effects_stable_order() -> None:
+    """skill_effects sigue el orden canónico de kinds (strength antes que energy)."""
+    a = _daily(skill_strength=100.0, skill_energy=50.0, skill_triggers=2.0)
+    result = team_production([("a", "X", a)])
+    kinds_order = [e.kind for e in result.skill_effects]
+    assert kinds_order.index("strength") < kinds_order.index("energy")
+
+
+def test_skill_effects_is_tuple_of_skill_effect_agg() -> None:
+    """skill_effects es una tupla de SkillEffectAgg."""
+    a = _daily(skill_energy=10.0)
+    result = team_production([("a", "X", a)])
+    assert isinstance(result.skill_effects, tuple)
+    assert all(isinstance(e, SkillEffectAgg) for e in result.skill_effects)

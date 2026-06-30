@@ -176,6 +176,15 @@ class MealFeasibilityDTO:
 
 
 @dataclass(frozen=True, slots=True)
+class SkillEffectAggDTO:
+    """Agregado de un tipo de efecto de main skill para todo el equipo."""
+
+    kind: str
+    total: float
+    triggers: float
+
+
+@dataclass(frozen=True, slots=True)
 class MemberContributionDTO:
     member_id: str
     species: str
@@ -208,6 +217,7 @@ class TeamProductionResult:
     skill_random_energy: float | None
     skill_cooking_ingredients: float | None
     skill_ingredient_total: float | None
+    skill_effects: list[SkillEffectAggDTO]
     members: list[MemberContributionDTO]
     # Cocina
     cooking_strength: float

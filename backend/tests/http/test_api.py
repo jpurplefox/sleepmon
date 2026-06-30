@@ -594,3 +594,26 @@ def test_team_production_cooking_meals_have_breakdown_fields(client: TestClient)
     assert isinstance(first_ing["ingredient"], str)
     assert isinstance(first_ing["required"], int)
     assert isinstance(first_ing["available"], (int, float))
+
+
+def test_team_production_returns_skill_effects(client: TestClient) -> None:
+    """/teams/production incluye skill_effects como lista de {kind, total, triggers}."""
+    created = client.post("/team", json=valid_payload()).json()
+    res = client.post(
+        "/teams/production",
+        json={"member_ids": [created["id"]], "meals": [None, None, None]},
+    )
+    assert res.status_code == 200
+    body = res.json()
+
+    assert "skill_effects" in body, "missing 'skill_effects' in response"
+    assert isinstance(body["skill_effects"], list)
+
+    # Puede ser vacía (si la especie no activa ningún efecto) o tener entradas.
+    for effect in body["skill_effects"]:
+        assert "kind" in effect, "missing 'kind' in skill_effect entry"
+        assert "total" in effect, "missing 'total' in skill_effect entry"
+        assert "triggers" in effect, "missing 'triggers' in skill_effect entry"
+        assert isinstance(effect["kind"], str)
+        assert isinstance(effect["total"], (int, float))
+        assert isinstance(effect["triggers"], (int, float))

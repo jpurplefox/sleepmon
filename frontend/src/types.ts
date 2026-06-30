@@ -170,6 +170,12 @@ export interface MealFeasibility {
   ingredients: SlotIngredientStatus[];
 }
 
+export interface SkillEffectAgg {
+  kind: string;
+  total: number;
+  triggers: number;
+}
+
 export interface MemberContribution {
   member_id: string;
   species: string;
@@ -198,6 +204,7 @@ export interface TeamProduction {
   skill_random_energy: number | null;
   skill_cooking_ingredients: number | null;
   skill_ingredient_total: number | null;
+  skill_effects: SkillEffectAgg[];
   members: MemberContribution[];
   cooking_strength: number;
   cooking_ingredients: IngredientBalance[];

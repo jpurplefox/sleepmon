@@ -185,6 +185,12 @@ class MealFeasibilityOut(msgspec.Struct):
     ingredients: list[SlotIngredientStatusOut]
 
 
+class SkillEffectAggOut(msgspec.Struct):
+    kind: str
+    total: float
+    triggers: float
+
+
 class MemberContributionOut(msgspec.Struct):
     member_id: str
     species: str
@@ -213,6 +219,7 @@ class TeamProductionOut(msgspec.Struct):
     skill_random_energy: float | None
     skill_cooking_ingredients: float | None
     skill_ingredient_total: float | None
+    skill_effects: list[SkillEffectAggOut]
     members: list[MemberContributionOut]
     cooking_strength: float
     cooking_ingredients: list[IngredientBalanceOut]

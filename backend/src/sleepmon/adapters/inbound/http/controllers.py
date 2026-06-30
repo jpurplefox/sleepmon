@@ -23,6 +23,7 @@ from sleepmon.adapters.inbound.http.schemas import (
     ProductionIn,
     ProductionOut,
     RecipeOut,
+    SkillEffectAggOut,
     SlotIngredientStatusOut,
     SlotProductionOut,
     SpeciesOut,
@@ -290,6 +291,10 @@ class TeamProductionController(Controller):
             skill_random_energy=result.skill_random_energy,
             skill_cooking_ingredients=result.skill_cooking_ingredients,
             skill_ingredient_total=result.skill_ingredient_total,
+            skill_effects=[
+                SkillEffectAggOut(kind=e.kind, total=e.total, triggers=e.triggers)
+                for e in result.skill_effects
+            ],
             members=[
                 MemberContributionOut(
                     member_id=m.member_id,
