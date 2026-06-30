@@ -10,6 +10,7 @@ import { Modal } from "../components/Modal";
 import { ProductionCard } from "../components/ProductionCard";
 import {
   IconMagnifier,
+  IconPackage,
   IconPot,
   IconSparkle,
 } from "../components/icons";
@@ -102,7 +103,6 @@ function configFromMember(catalog: Catalog, m: Member): MemberInput | null {
 }
 const MEAL_SLOTS = ["breakfast", "lunch", "dinner"] as const;
 
-const fmt = (n: number) => n.toFixed(2);
 const fmtInt = (n: number) => Math.round(n).toLocaleString("en-US");
 // Floor-down helper: display integers always floored (never rounded up).
 const fdown = (n: number) => Math.floor(n).toLocaleString("en-US");
@@ -225,6 +225,17 @@ export function Teams() {
         <p className="muted">{t("teams.subtitle")}</p>
       </header>
 
+      {/* ── Config toolbar above the roster (recipes + island + berries + bonuses) ── */}
+      <div className="teams-config-toolbar">
+        <button
+          type="button"
+          className="btn btn--ghost"
+          onClick={() => setMealPickerOpen(true)}
+        >
+          {t("teams.configure")}
+        </button>
+      </div>
+
       {/* ── Per-member cards (mirrors Production.tsx selection model) ── */}
       <div className="prod-cards prod-cards--compact">
         {selectedIds.map((id) => {
@@ -322,27 +333,14 @@ export function Teams() {
 
           <div className="teams-aggregates">
 
-            {/* Grand-total card */}
-            <div className="card">
-              {/* Grand total value — flame icon is sufficient, no redundant label */}
-              <div className="prod-stat" style={{ marginBottom: "0.75rem" }}>
-                <span className="prod-stat__label">{t("teams.grandTotal")}</span>
-                <span className="prod-stat__value">
-                  <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" style={{ width: 18, height: 18, marginRight: "0.25rem" }} />
-                  {fmtInt(result.grand_total_strength * factor)}
-                  {teamQuery.isFetching && !teamQuery.isLoading && (
-                    <span className="muted" style={{ fontSize: "var(--text-sm)", marginLeft: "0.5rem" }}>
-                      {t("teams.updating")}
-                    </span>
-                  )}
-                </span>
-              </div>
-
+            {/* Berries & skills card */}
+            <div className="card teams-aggregates__berries">
               {/* Berries & skills aggregates */}
               <div className="prod-card__block-head">{t("teams.berriesSkills")}</div>
 
-              {/* Berry totals */}
+              {/* Total strength (berries + skills) — right-aligned value */}
               <div className="prod-card__line">
+                <span className="muted">{t("teams.totalStrength")}</span>
                 <span>
                   <img
                     className="mini-icon"
@@ -352,21 +350,25 @@ export function Teams() {
                   {fmtInt(result.total_strength * factor)}
                 </span>
               </div>
+              {/* Skills-only strength — right-aligned value */}
               <div className="prod-card__line">
-                <span className="muted">{t("teams.berries")}</span>
-                <span>{fmt(result.total_berry_amount * factor)}</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                  <IconSparkle width={12} height={12} style={{ opacity: 0.75 }} />
+                  <span className="muted">{t("card.skill")}</span>
+                </span>
+                <span>{fmtInt(result.total_skill_strength * factor)}</span>
               </div>
 
-              {/* #3 — Berry-type breakdown: always visible */}
+              {/* Berry-type breakdown: tabular-aligned name / amount / strength columns */}
               {berryBreakdown.length > 0 && (
                 <div style={{ marginTop: "0.4rem" }}>
                   <div className="prod-card__block-head" style={{ fontSize: "var(--text-xs)", marginTop: "0.5rem" }}>
                     {t("teams.byBerry")}
                   </div>
-                  <ul className="prod-card__ings" style={{ marginTop: "0.25rem" }}>
+                  <ul className="teams-berry-list">
                     {berryBreakdown.map(({ berry, berry_amount, berry_strength }) => (
-                      <li key={berry} style={{ justifyContent: "space-between" }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                      <li key={berry} className="teams-berry-row">
+                        <span className="teams-berry-row__name">
                           <img
                             className="mini-icon"
                             src={berryIcon(berry)}
@@ -375,10 +377,10 @@ export function Teams() {
                           />
                           <span>{berryName(berry)}</span>
                         </span>
-                        <span className="muted" style={{ fontSize: "var(--text-xs)" }}>
+                        <span className="teams-berry-row__amount muted">
                           ×{fdown(berry_amount * factor)}
                         </span>
-                        <span>
+                        <span className="teams-berry-row__strength">
                           <img
                             className="mini-icon"
                             src={CHARGE_STRENGTH_ICON}
@@ -418,7 +420,7 @@ export function Teams() {
                                   : `${fdown(total)} ${label}`}
                             </span>
                             <IconSparkle width={12} height={12} style={{ opacity: 0.75 }} />
-                            <span>{fdown(triggers)}</span>
+                            <span>{triggers.toFixed(2)}</span>
                           </span>
                         </div>
                       );
@@ -434,16 +436,9 @@ export function Teams() {
             </div>
 
             {/* Cooking card */}
-            <div className="card">
+            <div className="card teams-aggregates__cooking">
               <div className="teams-cooking-head">
                 <h2 style={{ margin: 0 }}>{t("teams.cooking")}</h2>
-                <button
-                  type="button"
-                  className="btn btn--ghost teams-cooking-edit"
-                  onClick={() => setMealPickerOpen(true)}
-                >
-                  {t("teams.editRecipes")}
-                </button>
               </div>
 
               {/* Compact plan summary: one row per moment */}
@@ -530,14 +525,51 @@ export function Teams() {
 
                 // ── Filler allocation (slot-based, sorted by strength desc) ─
                 const ingredientStrengths = catalog.data.ingredient_strengths;
-                const surplusIngredients = result.cooking_surplus.filter((b) => b.balance > 0);
-                const sortedSurplus = [...surplusIngredients].sort(
-                  (a, b) =>
-                    (ingredientStrengths[b.ingredient] ?? 0) -
-                    (ingredientStrengths[a.ingredient] ?? 0),
-                );
+
+                // Random ingredients (Ingredient Magnet): units/day of unknown type.
+                // Modeled as a single pseudo-ingredient whose strength is the mean
+                // of all ingredient base strengths (type unknown → average ≈145).
+                const randomTotal = result.skill_ingredient_total ?? 0;
+                const strengthValues = Object.values(ingredientStrengths);
+                const avgStrength =
+                  strengthValues.length > 0
+                    ? strengthValues.reduce((s, v) => s + v, 0) / strengthValues.length
+                    : 0;
+
+                // Unified filler pool: real surplus ingredients + (optionally) the
+                // random pseudo-ingredient. Each entry carries its own strength so
+                // the allocation/render code stays uniform.
+                type FillerEntry = {
+                  key: string;
+                  ingredient: string | null; // null → random pseudo-ingredient
+                  label: string;
+                  strength: number;
+                  balance: number;
+                  isRandom: boolean;
+                };
+                const fillerPool: FillerEntry[] = result.cooking_surplus
+                  .filter((b) => b.balance > 0)
+                  .map((b) => ({
+                    key: b.ingredient,
+                    ingredient: b.ingredient,
+                    label: ingName(b.ingredient),
+                    strength: ingredientStrengths[b.ingredient] ?? 0,
+                    balance: b.balance,
+                    isRandom: false,
+                  }));
+                if (randomTotal > 0) {
+                  fillerPool.push({
+                    key: "__random__",
+                    ingredient: null,
+                    label: t("teams.randomIngredients"),
+                    strength: avgStrength,
+                    balance: randomTotal,
+                    isRandom: true,
+                  });
+                }
+                const sortedPool = [...fillerPool].sort((a, b) => b.strength - a.strength);
                 let remainingSlots = totalFillers;
-                const fillerAllocation = sortedSurplus.map((item) => {
+                const fillerAllocation = sortedPool.map((item) => {
                   const usedUnits = Math.min(item.balance, remainingSlots);
                   remainingSlots -= usedUnits;
                   return { ...item, usedUnits };
@@ -549,8 +581,7 @@ export function Teams() {
                 );
 
                 // Filler contributed-strength total (used by both Block3 heading and Block4).
-                const fillerStrengthTotal = fillerAllocation.reduce((sum, { usedUnits, ingredient }) => {
-                  const strength = ingredientStrengths[ingredient] ?? 0;
+                const fillerStrengthTotal = fillerAllocation.reduce((sum, { usedUnits, strength }) => {
                   return sum + Math.floor(usedUnits) * strength;
                 }, 0);
 
@@ -629,7 +660,7 @@ export function Teams() {
                               <IconSparkle width={14} height={14} />
                               {t("teams.potSkill")}
                               <span className="muted" style={{ fontSize: "var(--text-xs)", display: "inline-flex", alignItems: "center", gap: "0.15rem" }}>
-                                &ensp;(<IconSparkle width={11} height={11} />{fdown(cookingSkillEffect.triggers * factor)})
+                                &ensp;(<IconSparkle width={11} height={11} />{(cookingSkillEffect.triggers * factor).toFixed(2)})
                               </span>
                             </span>
                             <span className="cook-cap-row__value">+{fdown(cookingExtra)}</span>
@@ -673,28 +704,37 @@ export function Teams() {
                           )}
                         </div>
                         <ul className="cook-filler-list">
-                          {fillerAllocation.map(({ ingredient, balance, usedUnits }) => {
-                            const strength = ingredientStrengths[ingredient] ?? 0;
+                          {fillerAllocation.map(({ key, ingredient, label, strength, balance, usedUnits, isRandom }) => {
                             const isUsed = usedUnits > 0;
                             const usedFloor = Math.floor(usedUnits);
                             const availFloor = Math.floor(balance);
                             const contributed = Math.floor(usedUnits * strength * factor);
+                            const tip = isRandom ? t("teams.randomIngredientsTip") : undefined;
                             return (
                               <li
-                                key={ingredient}
+                                key={key}
                                 className="cook-filler-item cook-filler-item--rich"
+                                title={tip}
                               >
                                 <span className="cook-filler-item__info">
-                                  <img
-                                    className="mini-icon"
-                                    src={ingredientIcon(ingredient)}
-                                    alt={ingName(ingredient)}
-                                    title={ingName(ingredient)}
-                                    style={{ width: 18, height: 18 }}
-                                  />
-                                  <span>{ingName(ingredient)}</span>
+                                  {isRandom ? (
+                                    <IconPackage
+                                      width={18}
+                                      height={18}
+                                      style={{ color: "var(--muted)" }}
+                                    />
+                                  ) : (
+                                    <img
+                                      className="mini-icon"
+                                      src={ingredientIcon(ingredient as string)}
+                                      alt={label}
+                                      title={label}
+                                      style={{ width: 18, height: 18 }}
+                                    />
+                                  )}
+                                  <span>{label}</span>
                                   <span className="cook-filler-item__base-strength muted">
-                                    {strength}
+                                    {Math.round(strength)}
                                   </span>
                                 </span>
                                 <span className="cook-filler-item__right">

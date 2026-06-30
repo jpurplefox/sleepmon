@@ -2839,9 +2839,59 @@ button.prod-card__base-tag--action:hover {
 /* Análisis de equipo — sección de agregados y cocina */
 .teams-aggregates {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
   gap: 1.5rem;
   margin-top: 1rem;
+}
+
+/* Cooking is the wide left column; berries & skills the narrow right column. */
+.teams-aggregates__cooking { order: 1; }
+.teams-aggregates__berries { order: 2; }
+
+/* Config toolbar above the roster: right-aligned action. */
+.teams-config-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0.5rem 0 0.75rem;
+}
+
+/* Berry breakdown: name (grows) + amount + strength, both right-aligned, tabular. */
+.teams-berry-list {
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.teams-berry-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: var(--text-sm);
+}
+
+.teams-berry-row__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.teams-berry-row__amount {
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.teams-berry-row__strength {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-variant-numeric: tabular-nums;
+  justify-content: flex-end;
 }
 
 @media (max-width: 860px) {
