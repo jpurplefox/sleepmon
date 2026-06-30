@@ -1,4 +1,4 @@
-from sleepmon.domain.cooking import MealSelection, plan_cooking
+from sleepmon.domain.cooking import MealSelection, SlotIngredientStatus, plan_cooking
 from sleepmon.domain.recipes import Recipe, recipe_strength
 from sleepmon.domain.value_objects import Ingredient, RecipeType
 
@@ -148,3 +148,119 @@ def test_plan_cooking_surplus_lists_unused_produced() -> None:
     surplus = {b.ingredient: b.balance for b in result.surplus}
     assert surplus[I.MOOMOO_MILK] == 4.0  # no usado por ninguna receta
     assert surplus[I.HONEY] == 3.0  # sobrante tras requerir 2 (1 slot)
+
+
+# ── Tests de desglose por ingrediente y fuerza por plato ─────────────────────
+
+def test_slot_ingredient_available_greedy_aware() -> None:
+    """×3 misma receta, producción = 2 porciones del ingrediente vinculante.
+
+    Meal 1: available == required (remaining = 12 ≥ 6).
+    Meal 2: available == required (remaining = 6 ≥ 6 after meal 1 subtracts).
+    Meal 3: available < required (remaining = 0 < 6).
+    """
+    r = _recipe(ings=((I.HONEY, 6),), base=100)
+    meals = [MealSelection(r, 2), MealSelection(r, 2), MealSelection(r, 2)]
+    result = plan_cooking(meals, {I.HONEY: 12.0})  # exactamente 2 porciones
+
+    slot0_ing = {s.ingredient: s for s in result.slots[0].ingredients}
+    slot2_ing = {s.ingredient: s for s in result.slots[2].ingredients}
+
+    # Meal 1: remaining=12 ≥ required=6 → available == required
+    assert slot0_ing[I.HONEY].required == 6
+    assert slot0_ing[I.HONEY].available == 6.0
+
+    # Meal 3: remaining=0 < required=6 → available < required
+    assert slot2_ing[I.HONEY].required == 6
+    assert slot2_ing[I.HONEY].available == 0.0
+
+
+def test_slot_feasibility_strength_and_level() -> None:
+    """SlotFeasibility expone level y strength correctos para cada comida."""
+    r = _recipe(ings=((I.HONEY, 6),), base=100)
+    meals = [MealSelection(r, 1), MealSelection(r, 3)]
+    result = plan_cooking(meals, {I.HONEY: 100.0})
+
+    assert result.slots[0].level == 1
+    assert result.slots[0].strength == recipe_strength(r, 1)
+    assert result.slots[1].level == 3
+    assert result.slots[1].strength == recipe_strength(r, 3)
+
+
+# ── Tests de SlotIngredientStatus y campos level/strength ────────────────────
+
+def test_slot_feasibility_has_level_and_strength() -> None:
+    """level y strength de SlotFeasibility reflejan el MealSelection pasado."""
+    r = _recipe(base=200)
+    level = 5
+    meals = [MealSelection(r, level)]
+    result = plan_cooking(meals, {I.HONEY: 20.0})
+    assert result.slots[0].met is True
+    assert result.slots[0].level == level
+    assert result.slots[0].strength == recipe_strength(r, level)
+
+
+def test_slot_feasibility_ingredients_greedy_breakdown() -> None:
+    """Tres slots de la misma receta, producción exacta para 2 porciones.
+
+    Slot 0: met=True, todo available==required.
+    Slot 1: met=True, todo available==required.
+    Slot 2: met=False, ingrediente vinculante available==0 (ya consumido).
+    """
+    r = _recipe(ings=((I.HONEY, 6),), base=100)
+    level = 3
+    meals = [MealSelection(r, level), MealSelection(r, level), MealSelection(r, level)]
+    # Producción exacta para 2 porciones del ingrediente vinculante.
+    result = plan_cooking(meals, {I.HONEY: 12.0})
+
+    # Slot 0: met y available == required
+    s0 = result.slots[0]
+    assert s0.met is True
+    assert s0.level == level
+    assert s0.strength == recipe_strength(r, level)
+    assert len(s0.ingredients) == 1
+    honey_s0 = s0.ingredients[0]
+    assert isinstance(honey_s0, SlotIngredientStatus)
+    assert honey_s0.ingredient == I.HONEY
+    assert honey_s0.required == 6
+    assert honey_s0.available == 6.0  # 12 disponibles, cap a 6
+
+    # Slot 1: met y available == required (quedan 6 tras descontar slot 0)
+    s1 = result.slots[1]
+    assert s1.met is True
+    honey_s1 = s1.ingredients[0]
+    assert honey_s1.available == 6.0
+
+    # Slot 2: no met, ingrediente vinculante available==0 (todo consumido)
+    s2 = result.slots[2]
+    assert s2.met is False
+    honey_s2 = s2.ingredients[0]
+    assert honey_s2.ingredient == I.HONEY
+    assert honey_s2.required == 6
+    assert honey_s2.available == 0.0  # remaining=0 tras los dos slots anteriores
+
+
+def test_slot_feasibility_ingredients_partial_availability() -> None:
+    """Slot con ingrediente parcialmente disponible: available < required, met=False."""
+    r = _recipe(ings=((I.HONEY, 6), (I.FANCY_EGG, 4)), base=100)
+    # Suficiente HONEY pero no FANCY_EGG
+    result = plan_cooking([MealSelection(r, 1)], {I.HONEY: 10.0, I.FANCY_EGG: 2.0})
+    s = result.slots[0]
+    assert s.met is False
+    by_ing = {si.ingredient: si for si in s.ingredients}
+    assert by_ing[I.HONEY].available == 6.0   # cap a required
+    assert by_ing[I.FANCY_EGG].available == 2.0  # solo 2 disponibles, required=4
+
+
+def test_aggregate_fields_unchanged_by_new_slot_fields() -> None:
+    """Los campos agregados (ingredients, surplus, cooking_strength) no cambian."""
+    r = _recipe(ings=((I.HONEY, 6),), base=100)
+    meals = [MealSelection(r, 1), MealSelection(r, 1), MealSelection(r, 1)]
+    result = plan_cooking(meals, {I.HONEY: 12.0})
+    # cooking_strength sigue sumando todos los slots (met o no)
+    expected_strength = recipe_strength(r, 1) * 3
+    assert result.cooking_strength == expected_strength
+    # balance agregado intacto: 12 − 18 = −6
+    by_ing = {b.ingredient: b for b in result.ingredients}
+    assert by_ing[I.HONEY].required == 18.0
+    assert by_ing[I.HONEY].balance == -6.0

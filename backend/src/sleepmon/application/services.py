@@ -24,6 +24,7 @@ from sleepmon.application.dto import (
     ProductionResult,
     RecipeDTO,
     SlotAmount,
+    SlotIngredientStatusDTO,
     TeamMemberInput,
     TeamProductionInput,
     TeamProductionResult,
@@ -391,7 +392,21 @@ class DefaultTeamService(TeamService):
                 for b in cooking.surplus
             ],
             cooking_meals=[
-                MealFeasibilityDTO(recipe_name=s.recipe_name, met=s.met) for s in cooking.slots
+                MealFeasibilityDTO(
+                    recipe_name=s.recipe_name,
+                    met=s.met,
+                    level=s.level,
+                    strength=s.strength,
+                    ingredients=[
+                        SlotIngredientStatusDTO(
+                            ingredient=si.ingredient.value,
+                            required=si.required,
+                            available=si.available,
+                        )
+                        for si in s.ingredients
+                    ],
+                )
+                for s in cooking.slots
             ],
             grand_total_strength=aggregate.total_strength + cooking.cooking_strength,
         )

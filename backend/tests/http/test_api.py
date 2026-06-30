@@ -553,3 +553,44 @@ def test_team_production_endpoint_with_recipe(client: TestClient) -> None:
     body = res.json()
     assert body["cooking_strength"] == recipe["base_strength"]
     assert body["grand_total_strength"] == body["total_strength"] + body["cooking_strength"]
+
+
+def test_team_production_cooking_meals_have_breakdown_fields(client: TestClient) -> None:
+    """cooking_meals incluye level, strength e ingredients (desglose X/Y por ingrediente)."""
+    created = client.post("/team", json=valid_payload()).json()
+    recipe = client.get("/recipes").json()[0]
+    res = client.post(
+        "/teams/production",
+        json={
+            "member_ids": [created["id"]],
+            "meals": [{"recipe": recipe["name"], "level": 2}, None, None],
+        },
+    )
+    assert res.status_code == 200
+    body = res.json()
+    cooking_meals = body["cooking_meals"]
+    assert len(cooking_meals) == 1
+
+    meal = cooking_meals[0]
+    # Campos nuevos presentes
+    assert "level" in meal, "missing 'level' in cooking_meals[0]"
+    assert "strength" in meal, "missing 'strength' in cooking_meals[0]"
+    assert "ingredients" in meal, "missing 'ingredients' in cooking_meals[0]"
+
+    # Tipos correctos
+    assert isinstance(meal["level"], int)
+    assert isinstance(meal["strength"], int)
+    assert isinstance(meal["ingredients"], list)
+
+    # Level coincide con lo enviado
+    assert meal["level"] == 2
+
+    # Hay al menos un ingrediente con los tres campos
+    assert len(meal["ingredients"]) > 0
+    first_ing = meal["ingredients"][0]
+    assert "ingredient" in first_ing, "missing 'ingredient' key"
+    assert "required" in first_ing, "missing 'required' key"
+    assert "available" in first_ing, "missing 'available' key"
+    assert isinstance(first_ing["ingredient"], str)
+    assert isinstance(first_ing["required"], int)
+    assert isinstance(first_ing["available"], (int, float))

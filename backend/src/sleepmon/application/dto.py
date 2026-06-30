@@ -160,9 +160,19 @@ class IngredientBalanceDTO:
 
 
 @dataclass(frozen=True, slots=True)
+class SlotIngredientStatusDTO:
+    ingredient: str
+    required: int
+    available: float
+
+
+@dataclass(frozen=True, slots=True)
 class MealFeasibilityDTO:
     recipe_name: str
     met: bool
+    level: int
+    strength: int
+    ingredients: list[SlotIngredientStatusDTO]
 
 
 @dataclass(frozen=True, slots=True)

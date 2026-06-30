@@ -171,9 +171,18 @@ class IngredientBalanceOut(msgspec.Struct):
     balance: float
 
 
+class SlotIngredientStatusOut(msgspec.Struct, frozen=True):
+    ingredient: str
+    required: int
+    available: float
+
+
 class MealFeasibilityOut(msgspec.Struct):
     recipe_name: str
     met: bool
+    level: int
+    strength: int
+    ingredients: list[SlotIngredientStatusOut]
 
 
 class MemberContributionOut(msgspec.Struct):

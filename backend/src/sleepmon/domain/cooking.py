@@ -52,6 +52,21 @@ class IngredientBalance:
 
 
 @dataclass(frozen=True, slots=True)
+class SlotIngredientStatus:
+    """Disponibilidad de un ingrediente para una comida concreta bajo asignación greedy.
+
+    ``available`` es el mínimo entre ``remaining_before`` (lo que quedaba antes de
+    intentar cocinar este slot) y ``required`` (lo que pide la receta). Así refleja
+    cuánto de ese ingrediente PODRÍA consumir esta comida, sin contar lo que ya fue
+    comprometido por comidas previas.
+    """
+
+    ingredient: Ingredient
+    required: int
+    available: float  # min(remaining_before, required)
+
+
+@dataclass(frozen=True, slots=True)
 class SlotFeasibility:
     """Si una comida tiene cubiertos sus ingredientes bajo asignación greedy.
 
@@ -60,12 +75,18 @@ class SlotFeasibility:
     Al marcar ``met=True`` se descuentan los ingredientes de ``remaining`` para
     las siguientes comidas.
 
+    ``ingredients`` captura el snapshot de disponibilidad ANTES de intentar esta
+    comida (capped a required), útil para mostrar "X/Y" en la UI.
+
     Garantiza el invariante: ``all(s.met for s in result.slots)`` ⟺ no hay
     ``IngredientBalance`` con ``balance < 0`` (vs la demanda agregada total).
     """
 
     recipe_name: str
     met: bool
+    level: int
+    strength: int
+    ingredients: tuple[SlotIngredientStatus, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -128,13 +149,28 @@ def plan_cooking(
     remaining: dict[Ingredient, float] = dict(produced)
     slot_results: list[SlotFeasibility] = []
     for meal in chosen:
-        can_cook = all(
-            remaining.get(ing, 0.0) >= count for ing, count in meal.recipe.ingredients
+        # Snapshot de disponibilidad ANTES de intentar esta comida (capped a required).
+        ing_statuses = tuple(
+            SlotIngredientStatus(
+                ingredient=ing,
+                required=count,
+                available=min(remaining.get(ing, 0.0), count),
+            )
+            for ing, count in meal.recipe.ingredients
         )
+        can_cook = all(s.available == s.required for s in ing_statuses)
         if can_cook:
             for ing, count in meal.recipe.ingredients:
                 remaining[ing] = remaining.get(ing, 0.0) - count
-        slot_results.append(SlotFeasibility(recipe_name=meal.recipe.name, met=can_cook))
+        slot_results.append(
+            SlotFeasibility(
+                recipe_name=meal.recipe.name,
+                met=can_cook,
+                level=meal.level,
+                strength=recipe_strength(meal.recipe, meal.level),
+                ingredients=ing_statuses,
+            )
+        )
 
     slots = tuple(slot_results)
 

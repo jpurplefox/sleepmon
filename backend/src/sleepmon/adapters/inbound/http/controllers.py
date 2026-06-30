@@ -23,6 +23,7 @@ from sleepmon.adapters.inbound.http.schemas import (
     ProductionIn,
     ProductionOut,
     RecipeOut,
+    SlotIngredientStatusOut,
     SlotProductionOut,
     SpeciesOut,
     SubSkillOut,
@@ -321,7 +322,20 @@ class TeamProductionController(Controller):
                 for b in result.cooking_surplus
             ],
             cooking_meals=[
-                MealFeasibilityOut(recipe_name=m.recipe_name, met=m.met)
+                MealFeasibilityOut(
+                    recipe_name=m.recipe_name,
+                    met=m.met,
+                    level=m.level,
+                    strength=m.strength,
+                    ingredients=[
+                        SlotIngredientStatusOut(
+                            ingredient=si.ingredient,
+                            required=si.required,
+                            available=si.available,
+                        )
+                        for si in m.ingredients
+                    ],
+                )
                 for m in result.cooking_meals
             ],
             grand_total_strength=result.grand_total_strength,

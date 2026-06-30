@@ -156,9 +156,18 @@ export interface IngredientBalance {
   balance: number;
 }
 
+export interface SlotIngredientStatus {
+  ingredient: string;
+  required: number;
+  available: number;
+}
+
 export interface MealFeasibility {
   recipe_name: string;
   met: boolean;
+  level: number;
+  strength: number;
+  ingredients: SlotIngredientStatus[];
 }
 
 export interface MemberContribution {
