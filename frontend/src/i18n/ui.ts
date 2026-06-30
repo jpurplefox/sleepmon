@@ -317,6 +317,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.calculating": "Calculando…",
     "teams.updating": "Recalculando…",
     "teams.teamError": "No se pudo calcular la producción del equipo.",
+    "teams.potSize": "Tamaño de pote",
+    "teams.fillers": "{n} fillers",
+    "teams.potFits": "Entra",
+    "teams.potNoFit": "No entra",
     // Error boundary
     "error.title": "Algo salió mal",
     "error.body": "Ocurrió un error inesperado al mostrar esta vista. Probá recargar la página.",
@@ -634,6 +638,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.calculating": "Calculating…",
     "teams.updating": "Updating…",
     "teams.teamError": "Couldn't compute team production.",
+    "teams.potSize": "Pot size",
+    "teams.fillers": "{n} fillers",
+    "teams.potFits": "Fits",
+    "teams.potNoFit": "Doesn't fit",
     // Error boundary
     "error.title": "Something went wrong",
     "error.body": "An unexpected error occurred while showing this view. Try reloading the page.",

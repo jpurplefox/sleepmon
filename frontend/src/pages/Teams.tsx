@@ -117,6 +117,7 @@ export function Teams() {
   const [weekly, setWeekly] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
+  const [potSize, setPotSize] = useState(15);
 
   const inTeam = useMemo(() => new Set(selectedIds), [selectedIds]);
 
@@ -129,6 +130,18 @@ export function Teams() {
 
   const factor = weekly ? 7 : 1;
   const result = teamQuery.data;
+
+  // Total extra pot ingredients/day from cooking_ingredients skill effect (or 0).
+  const cookingExtra = useMemo(() => {
+    if (!result) return 0;
+    return result.skill_effects.find((e) => e.kind === "cooking_ingredients")?.total ?? 0;
+  }, [result]);
+
+  // Lookup map: recipe name → Recipe for pot/filler calc in plan rows.
+  const recipeByName = useMemo(
+    () => new Map((recipes.data ?? []).map((r) => [r.name, r])),
+    [recipes.data],
+  );
 
   // Lookup map: member id → Member.
   const memberById = useMemo(
@@ -434,6 +447,16 @@ export function Teams() {
                   const meal = meals[idx];
                   const feasibility = meal ? feasibilityBySlot.get(idx) : undefined;
                   const met = feasibility?.met;
+
+                  // Pot fit for this meal's recipe.
+                  const effectivePot = potSize + Math.floor(cookingExtra / 3);
+                  const recipeData = meal ? recipeByName.get(meal.recipe) : undefined;
+                  const mealTotalIngs = recipeData
+                    ? recipeData.ingredients.reduce((s, ic) => s + ic.count, 0)
+                    : null;
+                  const mealFits = mealTotalIngs != null ? mealTotalIngs <= effectivePot : null;
+                  const mealFillers = mealTotalIngs != null ? effectivePot - mealTotalIngs : null;
+
                   return (
                     <div key={slot} className="teams-plan-row">
                       <span className="teams-plan-row__label muted">
@@ -466,6 +489,15 @@ export function Teams() {
                             {met != null && (
                               <span className={met ? "badge badge--ok" : "badge badge--low"}>
                                 {met ? t("teams.fulfilled") : t("teams.notMet")}
+                              </span>
+                            )}
+                            {mealFits != null && (
+                              <span className={`cook-row__pot-fit ${mealFits ? "cook-row__pot-fit--ok" : "cook-row__pot-fit--no"}`}>
+                                <img src="/pot.webp" alt="" className="meal-picker-pot__icon" />
+                                {mealFits
+                                  ? t("teams.fillers", { n: String(mealFillers) })
+                                  : t("teams.potNoFit")
+                                }
                               </span>
                             )}
                           </div>
@@ -633,6 +665,9 @@ export function Teams() {
           meals={meals}
           onChangeMeals={setMeals}
           onClose={() => setMealPickerOpen(false)}
+          potSize={potSize}
+          onPotSizeChange={setPotSize}
+          cookingExtra={cookingExtra}
         />
       )}
     </div>

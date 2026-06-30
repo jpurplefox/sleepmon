@@ -23,6 +23,10 @@ interface Props {
   meals: (MealInput | null)[];
   onChangeMeals: (m: (MealInput | null)[]) => void;
   onClose: () => void;
+  potSize: number;
+  onPotSizeChange: (n: number) => void;
+  /** Total extra pot ingredients/day from cooking_ingredients skill effect (or 0). */
+  cookingExtra: number;
 }
 
 export function MealPickerModal({
@@ -31,6 +35,9 @@ export function MealPickerModal({
   meals,
   onChangeMeals,
   onClose,
+  potSize,
+  onPotSizeChange,
+  cookingExtra,
 }: Props) {
   const { t } = useI18n();
 
@@ -47,6 +54,9 @@ export function MealPickerModal({
     }
     return m;
   });
+
+  // Effective pot = base pot + floor(cookingExtra / 3) (3 meals/day).
+  const effectivePot = potSize + Math.floor(cookingExtra / 3);
 
   const getLevelFor = (name: string) => recipeLevels.get(name) ?? 1;
 
@@ -129,6 +139,33 @@ export function MealPickerModal({
           aria-label={t("teams.recipeSearchPlaceholder")}
         />
 
+        {/* Pot size control */}
+        <div className="meal-picker-pot">
+          <img src="/pot.webp" alt="" className="meal-picker-pot__icon" />
+          <span className="meal-picker-pot__label muted">{t("teams.potSize")}</span>
+          <div className="level-stepper meal-picker-pot__stepper">
+            <LevelStepperInput
+              value={potSize}
+              onChange={onPotSizeChange}
+              min={1}
+              max={100}
+              ariaLabels={{
+                down: "−",
+                input: t("teams.potSize"),
+                up: "+",
+              }}
+            />
+          </div>
+          {cookingExtra > 0 && (
+            <span className="meal-picker-pot__effective muted">
+              +{Math.floor(cookingExtra / 3)} = <strong>{effectivePot}</strong>
+            </span>
+          )}
+          {cookingExtra === 0 && (
+            <span className="meal-picker-pot__effective muted">= {effectivePot}</span>
+          )}
+        </div>
+
         <button
           type="button"
           className="btn btn--ghost meal-picker-clear"
@@ -148,6 +185,10 @@ export function MealPickerModal({
           sorted.map((r) => {
             const level = getLevelFor(r.name);
             const strength = recipeStrengthAtLevel(r.base_strength, level, levelBonus);
+
+            const totalIngs = r.ingredients.reduce((s, ic) => s + ic.count, 0);
+            const fits = totalIngs <= effectivePot;
+            const fillers = effectivePot - totalIngs;
 
             return (
               <div key={r.name} className="meal-picker-card">
@@ -188,6 +229,15 @@ export function MealPickerModal({
                       <span className="meal-picker-card__ing-count">×{ic.count}</span>
                     </span>
                   ))}
+                </div>
+
+                {/* Pot fit indicator */}
+                <div className={`meal-picker-card__pot-fit ${fits ? "meal-picker-card__pot-fit--ok" : "meal-picker-card__pot-fit--no"}`}>
+                  <img src="/pot.webp" alt="" className="meal-picker-pot__icon" />
+                  {fits
+                    ? <span>{t("teams.potFits")} · {t("teams.fillers", { n: String(fillers) })}</span>
+                    : <span>{t("teams.potNoFit")} ({totalIngs}/{effectivePot})</span>
+                  }
                 </div>
 
                 {/* Level stepper */}

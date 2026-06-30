@@ -3152,6 +3152,76 @@ button.prod-card__base-tag--action:hover {
   outline-offset: 2px;
 }
 
+/* Pot fit indicator on recipe cards (meal picker) */
+.meal-picker-card__pot-fit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: var(--text-xs);
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.meal-picker-card__pot-fit--ok {
+  color: var(--up);
+  border-color: var(--up);
+}
+.meal-picker-card__pot-fit--no {
+  color: var(--down);
+  border-color: var(--down);
+}
+
+/* Pot size control in meal picker topbar */
+.meal-picker-pot {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+}
+.meal-picker-pot__icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.meal-picker-pot__label {
+  white-space: nowrap;
+}
+.meal-picker-pot__stepper {
+  padding: 0;
+}
+.meal-picker-pot__stepper .level-stepper__input {
+  width: 3rem;
+  font-size: var(--text-sm);
+}
+.meal-picker-pot__effective {
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+/* Pot fit chip in plan rows */
+.cook-row__pot-fit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: var(--text-xs);
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.cook-row__pot-fit--ok {
+  color: var(--up);
+  border-color: var(--up);
+}
+.cook-row__pot-fit--no {
+  color: var(--down);
+  border-color: var(--down);
+}
+
 /* Balance ingredientes: nombre + required + produced + balance en fila compacta. */
 .teams-balance {
   list-style: none;
