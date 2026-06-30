@@ -148,7 +148,7 @@ export function MealPickerModal({
               value={potSize}
               onChange={onPotSizeChange}
               min={1}
-              max={100}
+              max={150}
               ariaLabels={{
                 down: "−",
                 input: t("teams.potSize"),
