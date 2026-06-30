@@ -3415,6 +3415,46 @@ button.prod-card__base-tag--action:hover {
   filter: grayscale(0.5);
 }
 
+/* Rich filler row: info (icon+name+base) grows, right side (chip+contrib) stays right */
+.cook-filler-item--rich {
+  align-items: center;
+}
+
+.cook-filler-item--rich .cook-filler-item__info {
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 0.3rem;
+}
+
+.cook-filler-item__base-strength {
+  font-size: var(--text-xs);
+  flex-shrink: 0;
+}
+
+/* Right cluster: chip + contributed strength, always pushed to the far right */
+.cook-filler-item__right {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+/* Contributed strength after the chip */
+.cook-filler-item__contrib {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-xs);
+  color: var(--moon);
+}
+
+/* Dimmed chip variant — slots ran out, shows 0/available */
+.cook-ing-chip--dim {
+  opacity: 0.38;
+  filter: grayscale(0.4);
+}
+
 /* Grand total block */
 .cook-total-row {
   display: flex;

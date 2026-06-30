@@ -9,7 +9,6 @@ import { MealPickerModal } from "../components/MealPickerModal";
 import { Modal } from "../components/Modal";
 import { ProductionCard } from "../components/ProductionCard";
 import {
-  IconCheck,
   IconMagnifier,
   IconPot,
   IconSparkle,
@@ -105,6 +104,8 @@ const MEAL_SLOTS = ["breakfast", "lunch", "dinner"] as const;
 
 const fmt = (n: number) => n.toFixed(2);
 const fmtInt = (n: number) => Math.round(n).toLocaleString("en-US");
+// Floor-down helper: display integers always floored (never rounded up).
+const fdown = (n: number) => Math.floor(n).toLocaleString("en-US");
 
 export function Teams() {
   const { t, ingredient: ingName, berry: berryName } = useI18n();
@@ -375,7 +376,7 @@ export function Teams() {
                           <span>{berryName(berry)}</span>
                         </span>
                         <span className="muted" style={{ fontSize: "var(--text-xs)" }}>
-                          ×{fmt(berry_amount * factor)}
+                          ×{fdown(berry_amount * factor)}
                         </span>
                         <span>
                           <img
@@ -384,7 +385,7 @@ export function Teams() {
                             alt=""
                             style={{ width: 14, height: 14 }}
                           />{" "}
-                          {fmtInt(Math.round(berry_strength * factor))}
+                          {fdown(berry_strength * factor)}
                         </span>
                       </li>
                     ))}
@@ -405,17 +406,19 @@ export function Teams() {
                       const total = e.total * factor;
                       const triggers = e.triggers * factor;
                       const label = t(meta.labelKey);
-                      const text =
-                        e.kind === "tasty_chance"
-                          ? `+${fmtInt(total)}% ${label} ${t("teams.inTriggers", { n: fmt(triggers) })}`
-                          : e.kind === "extra_helpful"
-                            ? `×${fmt(total)} ${label} ${t("teams.inTriggers", { n: fmt(triggers) })}`
-                            : `${e.kind === "dream_shards" ? fmtInt(total) : fmt(total)} ${label} ${t("teams.inTriggers", { n: fmt(triggers) })}`;
                       return (
                         <div key={e.kind} className="prod-card__line">
                           <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
                             {meta.iconNode()}
-                            <span>{text}</span>
+                            <span>
+                              {e.kind === "tasty_chance"
+                                ? `+${fdown(total)}% ${label}`
+                                : e.kind === "extra_helpful"
+                                  ? `×${fdown(total)} ${label}`
+                                  : `${fdown(total)} ${label}`}
+                            </span>
+                            <IconSparkle width={12} height={12} style={{ opacity: 0.75 }} />
+                            <span>{fdown(triggers)}</span>
                           </span>
                         </div>
                       );
@@ -483,8 +486,6 @@ export function Teams() {
                             <div className="cook-row__ings">
                               {feasibility.ingredients.map((ing) => {
                                 const ok = ing.available >= ing.required;
-                                const fmtAmt = (n: number) =>
-                                  Number.isInteger(n) ? String(n) : n.toFixed(1);
                                 return (
                                   <span
                                     key={ing.ingredient}
@@ -497,7 +498,7 @@ export function Teams() {
                                       alt={ingName(ing.ingredient)}
                                       style={{ width: 16, height: 16 }}
                                     />
-                                    {fmtAmt(ing.available)}/{fmtAmt(ing.required)}
+                                    {Math.floor(ing.available)}/{Math.floor(ing.required)}
                                   </span>
                                 );
                               })}
@@ -536,12 +537,9 @@ export function Teams() {
                     (ingredientStrengths[a.ingredient] ?? 0),
                 );
                 let remainingSlots = totalFillers;
-                let fillerStrength = 0;
                 const fillerAllocation = sortedSurplus.map((item) => {
                   const usedUnits = Math.min(item.balance, remainingSlots);
                   remainingSlots -= usedUnits;
-                  const strength = ingredientStrengths[item.ingredient] ?? 0;
-                  fillerStrength += usedUnits * strength;
                   return { ...item, usedUnits };
                 });
 
@@ -549,6 +547,12 @@ export function Teams() {
                 const cookingSkillEffect = result.skill_effects.find(
                   (e: SkillEffectAgg) => e.kind === "cooking_ingredients",
                 );
+
+                // Filler contributed-strength total (used by both Block3 heading and Block4).
+                const fillerStrengthTotal = fillerAllocation.reduce((sum, { usedUnits, ingredient }) => {
+                  const strength = ingredientStrengths[ingredient] ?? 0;
+                  return sum + Math.floor(usedUnits) * strength;
+                }, 0);
 
                 return (
                   <>
@@ -565,58 +569,12 @@ export function Teams() {
                             alt=""
                             style={{ width: 16, height: 16 }}
                           />
-                          {fmtInt(result.cooking_strength * factor)}
+                          {fdown(result.cooking_strength * factor)}
                         </span>
                       </div>
                     </div>
 
-                    {/* Block 2 — Pot capacity table */}
-                    <div className="cook-result-block">
-                      <div className="prod-card__block-head">{t("teams.potCapacity")}</div>
-                      <ul className="cook-cap-table">
-                        {/* Base */}
-                        <li className="cook-cap-row">
-                          <span className="cook-cap-row__label">
-                            <IconPot width={14} height={14} />
-                            {t("teams.potBase")}
-                            <span className="muted" style={{ fontSize: "var(--text-xs)" }}>
-                              &thinsp;×3
-                            </span>
-                          </span>
-                          <span className="cook-cap-row__value">{potSize * 3}</span>
-                        </li>
-                        {/* Skill expansion — only if >0 */}
-                        {cookingExtra > 0 && cookingSkillEffect && (
-                          <li className="cook-cap-row">
-                            <span className="cook-cap-row__label">
-                              <IconSparkle width={14} height={14} />
-                              {t("teams.potSkill")}
-                              <span className="muted" style={{ fontSize: "var(--text-xs)" }}>
-                                &ensp;({t("teams.inTriggers", { n: fmt(cookingSkillEffect.triggers * factor) })})
-                              </span>
-                            </span>
-                            <span className="cook-cap-row__value">+{cookingExtra}</span>
-                          </li>
-                        )}
-                        {/* Used by recipes */}
-                        <li className="cook-cap-row">
-                          <span className="cook-cap-row__label">
-                            <img src="/pot.webp" alt="" className="mini-icon" style={{ width: 14, height: 14 }} />
-                            {t("teams.usedByRecipes")}
-                          </span>
-                          <span className="cook-cap-row__value">−{usedByRecipes}</span>
-                        </li>
-                        {/* Fillers total row */}
-                        <li className="cook-cap-row cook-cap-row--total">
-                          <span className="cook-cap-row__label">
-                            {t("teams.fillersLabel")}
-                          </span>
-                          <span className="cook-cap-row__value">{totalFillers}</span>
-                        </li>
-                      </ul>
-                    </div>
-
-                    {/* Missing ingredients zone (kept visible, placed after capacity) */}
+                    {/* Block 2 — Missing ingredients (before pot capacity, per spec) */}
                     {result.cooking_ingredients.filter((b) => b.balance < 0).length > 0 && (
                       <div className="cook-result-block" style={{ borderTopColor: "var(--down)" }}>
                         <div
@@ -641,7 +599,7 @@ export function Teams() {
                                   <span>{ingName(b.ingredient)}</span>
                                 </span>
                                 <span style={{ color: "var(--down)", fontWeight: 700, fontSize: "var(--text-sm)" }}>
-                                  {t("teams.missingAmt", { n: fmt(Math.abs(b.balance) * factor) })}
+                                  {t("teams.missingAmt", { n: fdown(Math.abs(b.balance) * factor) })}
                                 </span>
                               </li>
                             ))}
@@ -649,12 +607,58 @@ export function Teams() {
                       </div>
                     )}
 
-                    {/* Block 3 — Fillers (slot-based allocation, sorted by strength) */}
+                    {/* Block 3 — Pot capacity table */}
+                    <div className="cook-result-block">
+                      <div className="prod-card__block-head">{t("teams.potCapacity")}</div>
+                      <ul className="cook-cap-table">
+                        {/* Base */}
+                        <li className="cook-cap-row">
+                          <span className="cook-cap-row__label">
+                            <IconPot width={14} height={14} />
+                            {t("teams.potBase")}
+                            <span className="muted" style={{ fontSize: "var(--text-xs)" }}>
+                              &thinsp;×3
+                            </span>
+                          </span>
+                          <span className="cook-cap-row__value">{potSize * 3}</span>
+                        </li>
+                        {/* Skill expansion — only if >0 */}
+                        {cookingExtra > 0 && cookingSkillEffect && (
+                          <li className="cook-cap-row">
+                            <span className="cook-cap-row__label">
+                              <IconSparkle width={14} height={14} />
+                              {t("teams.potSkill")}
+                              <span className="muted" style={{ fontSize: "var(--text-xs)", display: "inline-flex", alignItems: "center", gap: "0.15rem" }}>
+                                &ensp;(<IconSparkle width={11} height={11} />{fdown(cookingSkillEffect.triggers * factor)})
+                              </span>
+                            </span>
+                            <span className="cook-cap-row__value">+{fdown(cookingExtra)}</span>
+                          </li>
+                        )}
+                        {/* Used by recipes */}
+                        <li className="cook-cap-row">
+                          <span className="cook-cap-row__label">
+                            <img src="/pot.webp" alt="" className="mini-icon" style={{ width: 14, height: 14 }} />
+                            {t("teams.usedByRecipes")}
+                          </span>
+                          <span className="cook-cap-row__value">−{fdown(usedByRecipes)}</span>
+                        </li>
+                        {/* Fillers total row */}
+                        <li className="cook-cap-row cook-cap-row--total">
+                          <span className="cook-cap-row__label">
+                            {t("teams.fillersLabel")}
+                          </span>
+                          <span className="cook-cap-row__value">{fdown(totalFillers)}</span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    {/* Block 4 — Fillers (slot-based allocation: base strength + X/Y chip + contributed strength) */}
                     {fillerAllocation.length > 0 && (
                       <div className="cook-result-block">
                         <div className="prod-card__block-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span>{t("teams.fillersLabel")}</span>
-                          {fillerStrength > 0 && (
+                          {fillerStrengthTotal > 0 && (
                             <span style={{ color: "var(--moon-dim)", display: "inline-flex", alignItems: "center", gap: "0.2rem", fontWeight: 400, fontSize: "var(--text-xs)" }}>
                               <img
                                 className="mini-icon"
@@ -663,18 +667,22 @@ export function Teams() {
                                 style={{ width: 13, height: 13, opacity: 0.7 }}
                               />
                               <span style={{ color: "var(--moon)", opacity: 0.8 }}>
-                                {fmtInt(fillerStrength * factor)}
+                                {fdown(fillerStrengthTotal * factor)}
                               </span>
                             </span>
                           )}
                         </div>
                         <ul className="cook-filler-list">
                           {fillerAllocation.map(({ ingredient, balance, usedUnits }) => {
+                            const strength = ingredientStrengths[ingredient] ?? 0;
                             const isUsed = usedUnits > 0;
+                            const usedFloor = Math.floor(usedUnits);
+                            const availFloor = Math.floor(balance);
+                            const contributed = Math.floor(usedUnits * strength * factor);
                             return (
                               <li
                                 key={ingredient}
-                                className={`cook-filler-item${isUsed ? "" : " cook-filler-item--unused"}`}
+                                className="cook-filler-item cook-filler-item--rich"
                               >
                                 <span className="cook-filler-item__info">
                                   <img
@@ -685,15 +693,26 @@ export function Teams() {
                                     style={{ width: 18, height: 18 }}
                                   />
                                   <span>{ingName(ingredient)}</span>
+                                  <span className="cook-filler-item__base-strength muted">
+                                    {strength}
+                                  </span>
                                 </span>
-                                <span className="cook-filler-item__qty">
-                                  <span className="muted">{fmt(balance * factor)}</span>
+                                <span className="cook-filler-item__right">
+                                  <span
+                                    className={`cook-ing-chip ${isUsed ? "cook-ing-chip--ok" : "cook-ing-chip--dim"}`}
+                                  >
+                                    {usedFloor}/{availFloor}
+                                  </span>
                                   {isUsed && (
-                                    <IconCheck
-                                      width={13}
-                                      height={13}
-                                      style={{ color: "var(--up)" }}
-                                    />
+                                    <span className="cook-filler-item__contrib">
+                                      <img
+                                        className="mini-icon"
+                                        src={CHARGE_STRENGTH_ICON}
+                                        alt=""
+                                        style={{ width: 13, height: 13 }}
+                                      />
+                                      {fdown(contributed)}
+                                    </span>
                                   )}
                                 </span>
                               </li>
@@ -703,9 +722,9 @@ export function Teams() {
                       </div>
                     )}
 
-                    {/* Block 4 — Grand total with +10% Extra Tasty */}
+                    {/* Block 5 — Grand total with +10% Extra Tasty */}
                     {(() => {
-                      const subtotal = (result.cooking_strength + fillerStrength) * factor;
+                      const subtotal = (result.cooking_strength + fillerStrengthTotal) * factor;
                       const extraTastyBonus = subtotal * 0.10;
                       const grandTotal = subtotal * 1.10;
                       return (
@@ -715,7 +734,7 @@ export function Teams() {
                               {t("teams.recipes")}
                             </span>
                             <span className="cook-total-row__value">
-                              {fmtInt(result.cooking_strength * factor)}
+                              {fdown(result.cooking_strength * factor)}
                             </span>
                           </div>
                           <div className="cook-total-row">
@@ -723,7 +742,7 @@ export function Teams() {
                               {t("teams.fillersLabel")}
                             </span>
                             <span className="cook-total-row__value">
-                              {fmtInt(fillerStrength * factor)}
+                              {fdown(fillerStrengthTotal * factor)}
                             </span>
                           </div>
                           <div className="cook-total-row">
@@ -737,7 +756,7 @@ export function Teams() {
                               {t("teams.extraTasty")} +10%
                             </span>
                             <span className="cook-total-row__value">
-                              +{fmtInt(extraTastyBonus)}
+                              +{fdown(extraTastyBonus)}
                             </span>
                           </div>
                           <div className="cook-total-row cook-total-row--grand">
@@ -751,7 +770,7 @@ export function Teams() {
                                 alt=""
                                 style={{ width: 16, height: 16 }}
                               />
-                              {fmtInt(grandTotal)}
+                              {fdown(grandTotal)}
                             </span>
                           </div>
                         </div>
