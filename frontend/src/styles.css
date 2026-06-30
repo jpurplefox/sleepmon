@@ -3287,3 +3287,170 @@ button.prod-card__base-tag--action:hover {
 @media (min-width: 900px)  { .prod-cards--compact { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 1150px) { .prod-cards--compact { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (min-width: 1400px) { .prod-cards--compact { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+
+/* ── Cooking result blocks (4-block redesign) ────────────────────────────── */
+
+/* Generic result block: top padding + top border to separate from recipe rows */
+.cook-result-block {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+/* Row inside a result block: label left, value right */
+.cook-result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: var(--text-sm);
+  padding: 0.15rem 0;
+}
+
+/* Strength row: value stands out */
+.cook-result-row--strength {
+  font-size: var(--text-base);
+}
+
+.cook-result-row--strength .cook-result-row__value {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.cook-result-row__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.cook-result-row__value {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Pot capacity table */
+.cook-cap-table {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.cook-cap-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: var(--text-sm);
+  padding: 0.15rem 0;
+  color: var(--muted);
+}
+
+.cook-cap-row__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.cook-cap-row__value {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--text);
+}
+
+/* Total row in pot capacity table: bold, top border */
+.cook-cap-row--total {
+  border-top: 1px solid var(--border);
+  margin-top: 0.25rem;
+  padding-top: 0.4rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cook-cap-row--total .cook-cap-row__value {
+  font-weight: 700;
+}
+
+/* Filler list */
+.cook-filler-list {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.cook-filler-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: var(--text-sm);
+  padding: 0.1rem 0;
+}
+
+.cook-filler-item__info {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.cook-filler-item__qty {
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Unused filler: dimmed + desaturated */
+.cook-filler-item--unused {
+  opacity: 0.4;
+  filter: grayscale(0.5);
+}
+
+/* Grand total block */
+.cook-total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: var(--text-sm);
+  padding: 0.2rem 0;
+  color: var(--muted);
+}
+
+.cook-total-row__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.cook-total-row__value {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Grand total row: bigger, gold */
+.cook-total-row--grand {
+  border-top: 1px solid var(--border);
+  margin-top: 0.4rem;
+  padding-top: 0.5rem;
+  color: var(--moon);
+  font-weight: 700;
+}
+
+.cook-total-row--grand .cook-total-row__value {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--moon);
+}
