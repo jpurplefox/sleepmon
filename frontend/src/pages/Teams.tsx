@@ -75,11 +75,23 @@ export function Teams() {
     [members.data],
   );
 
-  // Lookup map: recipe_name → MealFeasibility, from cooking_meals.
-  const feasibilityByRecipe = useMemo(
-    () => new Map((result?.cooking_meals ?? []).map((cm) => [cm.recipe_name, cm])),
-    [result],
-  );
+  // Positional map: slot index (0/1/2) → MealFeasibility entry.
+  // cooking_meals contains exactly the non-null meals in slot order; map each
+  // non-null slot i to cooking_meals[k] where k is the count of non-null slots
+  // before i. This handles duplicate recipes correctly (each slot gets its own
+  // greedy-allocated entry instead of all sharing the same name-keyed entry).
+  const feasibilityBySlot = useMemo(() => {
+    const cookingMeals = result?.cooking_meals ?? [];
+    const map = new Map<number, (typeof cookingMeals)[number]>();
+    let k = 0;
+    for (let i = 0; i < meals.length; i++) {
+      if (meals[i] != null) {
+        if (k < cookingMeals.length) map.set(i, cookingMeals[k]);
+        k++;
+      }
+    }
+    return map;
+  }, [result, meals]);
 
   // Berry breakdown: group members by berry type, sum amounts and strengths.
   const berryBreakdown = useMemo(() => {
@@ -416,7 +428,7 @@ export function Teams() {
             <div className="teams-plan-rows">
               {MEAL_SLOTS.map((slot, idx) => {
                 const meal = meals[idx];
-                const feasibility = meal ? feasibilityByRecipe.get(meal.recipe) : undefined;
+                const feasibility = meal ? feasibilityBySlot.get(idx) : undefined;
                 const met = feasibility?.met;
                 return (
                   <div key={slot} className="teams-plan-row">
