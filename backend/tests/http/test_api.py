@@ -54,6 +54,12 @@ def test_catalog_endpoint_lists_reference_data(client: TestClient) -> None:
     assert len(body["recipe_level_bonus"]) == 70
     assert body["recipe_level_bonus"][0] == 1.0
 
+    # Fuerza base por ingrediente: 19 entradas, una por ingrediente.
+    ing_str = body["ingredient_strengths"]
+    assert len(ing_str) == 19
+    assert ing_str["Slowpoke Tail"] == 342
+    assert ing_str["Fancy Apple"] == 90
+
 
 def test_create_and_list_member(client: TestClient) -> None:
     res = client.post("/team", json=valid_payload())

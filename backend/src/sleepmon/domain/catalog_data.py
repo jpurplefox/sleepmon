@@ -14,7 +14,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final
 
-from sleepmon.domain.value_objects import Berry, Nature, NatureStat, Ribbon, SubSkill, SubSkillTier
+from sleepmon.domain.value_objects import (
+    Berry,
+    Ingredient,
+    Nature,
+    NatureStat,
+    Ribbon,
+    SubSkill,
+    SubSkillTier,
+)
 
 # Niveles en los que se desbloquean los slots. Actualizado en el último parche:
 # las sub skills pasaron a 10/25/50/70/80.
@@ -217,6 +225,35 @@ BERRY_BASE_STRENGTH: Final[Mapping[Berry, int]] = {
     Berry.WIKI: 31,
     Berry.YACHE: 35,
 }
+
+# Fuerza base de cada ingrediente (valor a nivel 1 del Pokémon que lo produce).
+# Se usa para estimar la fuerza de los "fillers" en una receta. Fuente: nerolis-lab.
+INGREDIENT_STRENGTH: Final[dict[Ingredient, int]] = {
+    Ingredient.FANCY_APPLE: 90,
+    Ingredient.MOOMOO_MILK: 98,
+    Ingredient.GREENGRASS_SOYBEANS: 100,
+    Ingredient.HONEY: 101,
+    Ingredient.BEAN_SAUSAGE: 103,
+    Ingredient.WARMING_GINGER: 109,
+    Ingredient.SNOOZY_TOMATO: 110,
+    Ingredient.FANCY_EGG: 115,
+    Ingredient.PURE_OIL: 121,
+    Ingredient.SOFT_POTATO: 124,
+    Ingredient.FIERY_HERB: 130,
+    Ingredient.GREENGRASS_CORN: 140,
+    Ingredient.SOOTHING_CACAO: 151,
+    Ingredient.ROUSING_COFFEE: 153,
+    Ingredient.GLOSSY_AVOCADO: 162,
+    Ingredient.TASTY_MUSHROOM: 167,
+    Ingredient.LARGE_LEEK: 185,
+    Ingredient.PLUMP_PUMPKIN: 250,
+    Ingredient.SLOWPOKE_TAIL: 342,
+}
+assert set(INGREDIENT_STRENGTH) == set(Ingredient), (
+    "INGREDIENT_STRENGTH está desincronizado con el enum Ingredient: "
+    f"faltan={set(Ingredient) - set(INGREDIENT_STRENGTH)}, "
+    f"extra={set(INGREDIENT_STRENGTH) - set(Ingredient)}"
+)
 
 # La baya rinde más fuerza a mayor nivel del Pokémon: se toma el mayor entre un
 # crecimiento lineal (base + (nivel-1)) y uno exponencial (base * 1.025^(nivel-1)),

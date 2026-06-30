@@ -40,7 +40,12 @@ from sleepmon.application.dto import (
     TeamProductionInput,
 )
 from sleepmon.application.services import TeamService
-from sleepmon.domain.catalog_data import NATURE_EFFECTS, RECIPE_LEVEL_BONUS, SUB_SKILL_TIERS
+from sleepmon.domain.catalog_data import (
+    INGREDIENT_STRENGTH,
+    NATURE_EFFECTS,
+    RECIPE_LEVEL_BONUS,
+    SUB_SKILL_TIERS,
+)
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.ports import SpeciesCatalog
 from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
@@ -215,6 +220,7 @@ class CatalogController(Controller):
             sub_skills=[SubSkillOut(name=s.value, tier=SUB_SKILL_TIERS[s].value) for s in SubSkill],
             ingredients=[i.value for i in Ingredient],
             recipe_level_bonus=list(RECIPE_LEVEL_BONUS),
+            ingredient_strengths={ing.value: INGREDIENT_STRENGTH[ing] for ing in Ingredient},
             species=[
                 SpeciesOut(
                     name=sp.name,
