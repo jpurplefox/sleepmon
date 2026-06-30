@@ -2910,6 +2910,63 @@ button.prod-card__base-tag--action:hover {
   font-size: var(--text-xs);
 }
 
+/* Cook row: body wraps topline + ingredient chips */
+.cook-row__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.cook-row__topline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.cook-row__topline .teams-plan-row__name {
+  flex: 1;
+}
+
+.cook-row__strength {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: var(--text-xs);
+  color: var(--moon);
+  flex-shrink: 0;
+}
+
+/* Ingredient chips row */
+.cook-row__ings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.cook-ing-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: var(--text-xs);
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.cook-ing-chip--ok {
+  color: var(--up);
+  border-color: var(--up);
+}
+
+.cook-ing-chip--short {
+  color: var(--down);
+  border-color: var(--down);
+}
+
 /* Meal picker modal top bar */
 .meal-picker-topbar {
   display: flex;

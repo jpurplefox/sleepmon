@@ -75,9 +75,9 @@ export function Teams() {
     [members.data],
   );
 
-  // Lookup map: recipe_name → met, from cooking_meals for the badge.
-  const metByRecipe = useMemo(
-    () => new Map((result?.cooking_meals ?? []).map((cm) => [cm.recipe_name, cm.met])),
+  // Lookup map: recipe_name → MealFeasibility, from cooking_meals.
+  const feasibilityByRecipe = useMemo(
+    () => new Map((result?.cooking_meals ?? []).map((cm) => [cm.recipe_name, cm])),
     [result],
   );
 
@@ -416,30 +416,68 @@ export function Teams() {
             <div className="teams-plan-rows">
               {MEAL_SLOTS.map((slot, idx) => {
                 const meal = meals[idx];
-                const met = meal ? metByRecipe.get(meal.recipe) : undefined;
+                const feasibility = meal ? feasibilityByRecipe.get(meal.recipe) : undefined;
+                const met = feasibility?.met;
                 return (
                   <div key={slot} className="teams-plan-row">
                     <span className="teams-plan-row__label muted">
                       {t(`teams.${slot}`)}
                     </span>
                     {meal ? (
-                      <>
-                        <img
-                          className="teams-plan-row__thumb"
-                          src={recipeImage(meal.recipe)}
-                          alt=""
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).style.display = "none";
-                          }}
-                        />
-                        <span className="teams-plan-row__name">{meal.recipe}</span>
-                        <span className="teams-plan-row__lv muted">Lv.{meal.level}</span>
-                        {met != null && (
-                          <span className={met ? "badge badge--ok" : "badge badge--low"}>
-                            {met ? t("teams.fulfilled") : t("teams.notMet")}
-                          </span>
+                      <div className="cook-row__body">
+                        <div className="cook-row__topline">
+                          <img
+                            className="teams-plan-row__thumb"
+                            src={recipeImage(meal.recipe)}
+                            alt=""
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).style.display = "none";
+                            }}
+                          />
+                          <span className="teams-plan-row__name">{meal.recipe}</span>
+                          <span className="teams-plan-row__lv muted">Lv.{meal.level}</span>
+                          {feasibility != null && (
+                            <span className="cook-row__strength">
+                              <img
+                                className="mini-icon"
+                                src={CHARGE_STRENGTH_ICON}
+                                alt=""
+                                style={{ width: 14, height: 14 }}
+                              />
+                              {fmtInt(feasibility.strength * factor)}
+                            </span>
+                          )}
+                          {met != null && (
+                            <span className={met ? "badge badge--ok" : "badge badge--low"}>
+                              {met ? t("teams.fulfilled") : t("teams.notMet")}
+                            </span>
+                          )}
+                        </div>
+                        {feasibility != null && feasibility.ingredients.length > 0 && (
+                          <div className="cook-row__ings">
+                            {feasibility.ingredients.map((ing) => {
+                              const ok = ing.available >= ing.required;
+                              const fmtAmt = (n: number) =>
+                                Number.isInteger(n) ? String(n) : n.toFixed(1);
+                              return (
+                                <span
+                                  key={ing.ingredient}
+                                  className={`cook-ing-chip ${ok ? "cook-ing-chip--ok" : "cook-ing-chip--short"}`}
+                                  title={ingName(ing.ingredient)}
+                                >
+                                  <img
+                                    className="mini-icon"
+                                    src={ingredientIcon(ing.ingredient)}
+                                    alt={ingName(ing.ingredient)}
+                                    style={{ width: 16, height: 16 }}
+                                  />
+                                  {fmtAmt(ing.available)}/{fmtAmt(ing.required)}
+                                </span>
+                              );
+                            })}
+                          </div>
                         )}
-                      </>
+                      </div>
                     ) : (
                       <span className="muted" style={{ fontSize: "var(--text-sm)" }}>
                         {t("common.dash")}
