@@ -194,6 +194,51 @@ export function Teams() {
       .sort((a, b) => b.berry_strength - a.berry_strength);
   }, [result]);
 
+  // Filler strength total (daily) — same allocation logic the cooking card's
+  // IIFE uses, lifted to component scope so the totals card can reuse it.
+  // Surplus ingredients + the random pseudo-ingredient fill the leftover pot
+  // slots, sorted by strength desc; each unit contributes its base strength.
+  const fillerStrengthTotal = useMemo(() => {
+    if (!result || catalog.isLoading || !catalog.data) return 0;
+    const ingredientStrengths = catalog.data.ingredient_strengths;
+    const totalCapacity = potSize * 3 + cookingExtra;
+    const usedByRecipes = MEAL_SLOTS.reduce((sum, _slot, idx) => {
+      const meal = meals[idx];
+      if (!meal) return sum;
+      const recipeData = recipeByName.get(meal.recipe);
+      if (!recipeData) return sum;
+      return sum + recipeData.ingredients.reduce((s, ic) => s + ic.count, 0);
+    }, 0);
+    const totalFillers = Math.max(0, totalCapacity - usedByRecipes);
+
+    const strengthValues = Object.values(ingredientStrengths);
+    const avgStrength =
+      strengthValues.length > 0
+        ? strengthValues.reduce((s, v) => s + v, 0) / strengthValues.length
+        : 0;
+    const randomTotal = result.skill_ingredient_total ?? 0;
+
+    const pool = result.cooking_surplus
+      .filter((b) => b.balance > 0)
+      .map((b) => ({ strength: ingredientStrengths[b.ingredient] ?? 0, balance: b.balance }));
+    if (randomTotal > 0) pool.push({ strength: avgStrength, balance: randomTotal });
+    pool.sort((a, b) => b.strength - a.strength);
+
+    let remainingSlots = totalFillers;
+    let total = 0;
+    for (const item of pool) {
+      const usedUnits = Math.min(item.balance, remainingSlots);
+      remainingSlots -= usedUnits;
+      total += Math.floor(usedUnits) * item.strength;
+    }
+    return total;
+  }, [result, catalog.isLoading, catalog.data, potSize, cookingExtra, meals, recipeByName]);
+
+  // Cooking grand total (daily): recipes + fillers, +10% Extra Tasty.
+  const grandTotalCooking = result
+    ? (result.cooking_strength + fillerStrengthTotal) * 1.10
+    : 0;
+
   const pickMember = (m: Member) => {
     if (selectedIds.length >= MAX_TEAM) return;
     if (selectedIds.includes(m.id)) return;
@@ -580,10 +625,8 @@ export function Teams() {
                   (e: SkillEffectAgg) => e.kind === "cooking_ingredients",
                 );
 
-                // Filler contributed-strength total (used by both Block3 heading and Block4).
-                const fillerStrengthTotal = fillerAllocation.reduce((sum, { usedUnits, strength }) => {
-                  return sum + Math.floor(usedUnits) * strength;
-                }, 0);
+                // fillerStrengthTotal is lifted to component scope (reused by the
+                // totals card); the allocation above only drives the per-filler rows.
 
                 return (
                   <>
@@ -690,14 +733,14 @@ export function Teams() {
                         <div className="prod-card__block-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span>{t("teams.fillersLabel")}</span>
                           {fillerStrengthTotal > 0 && (
-                            <span style={{ color: "var(--moon-dim)", display: "inline-flex", alignItems: "center", gap: "0.2rem", fontWeight: 400, fontSize: "var(--text-xs)" }}>
+                            <span style={{ color: "var(--moon)", display: "inline-flex", alignItems: "center", gap: "0.2rem", fontWeight: 400, fontSize: "var(--text-xs)" }}>
                               <img
                                 className="mini-icon"
                                 src={CHARGE_STRENGTH_ICON}
                                 alt=""
-                                style={{ width: 13, height: 13, opacity: 0.7 }}
+                                style={{ width: 13, height: 13 }}
                               />
-                              <span style={{ color: "var(--moon)", opacity: 0.8 }}>
+                              <span style={{ color: "var(--moon)" }}>
                                 {fdown(fillerStrengthTotal * factor)}
                               </span>
                             </span>
@@ -766,7 +809,7 @@ export function Teams() {
                     {(() => {
                       const subtotal = (result.cooking_strength + fillerStrengthTotal) * factor;
                       const extraTastyBonus = subtotal * 0.10;
-                      const grandTotal = subtotal * 1.10;
+                      const grandTotal = grandTotalCooking * factor;
                       return (
                         <div className="cook-result-block">
                           <div className="cook-total-row">
@@ -819,6 +862,49 @@ export function Teams() {
                   </>
                 );
               })()}
+            </div>
+          </div>
+
+          {/* ── TEAM TOTALS card — the page's headline KPI (daily + weekly, always) ── */}
+          <div className="card teams-totals">
+            {/* Col 1 — Berries & skills */}
+            <div className="teams-totals__col">
+              <span className="teams-totals__label">{t("teams.berriesSkills")}</span>
+              <span className="teams-totals__kpi">
+                <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" style={{ width: 18, height: 18 }} />
+                {fdown(result.total_strength)}
+              </span>
+              <span className="teams-totals__aside">
+                ×7 {fdown(result.total_strength * 7)}
+              </span>
+            </div>
+
+            <span className="teams-totals__divider" aria-hidden="true" />
+
+            {/* Col 2 — Cooking */}
+            <div className="teams-totals__col">
+              <span className="teams-totals__label">{t("teams.cooking")}</span>
+              <span className="teams-totals__kpi">
+                <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" style={{ width: 18, height: 18 }} />
+                {fdown(grandTotalCooking)}
+              </span>
+              <span className="teams-totals__aside">
+                ×7 {fdown(grandTotalCooking * 7)}
+              </span>
+            </div>
+
+            <span className="teams-totals__divider" aria-hidden="true" />
+
+            {/* Col 3 — Grand total (biggest number on the page) */}
+            <div className="teams-totals__col teams-totals__col--grand">
+              <span className="teams-totals__label">{t("teams.grandTotal")}</span>
+              <span className="teams-totals__kpi teams-totals__kpi--grand">
+                <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" style={{ width: 22, height: 22 }} />
+                {fdown(result.total_strength + grandTotalCooking)}
+              </span>
+              <span className="teams-totals__aside">
+                ×7 {fdown((result.total_strength + grandTotalCooking) * 7)}
+              </span>
             </div>
           </div>
         </>

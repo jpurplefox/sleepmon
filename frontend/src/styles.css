@@ -2900,6 +2900,72 @@ button.prod-card__base-tag--action:hover {
   }
 }
 
+/* ── Team totals card: headline KPI, 3 columns with vertical dividers ── */
+.teams-totals {
+  display: flex;
+  align-items: stretch;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  border-color: var(--moon-border);
+}
+
+.teams-totals__col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.teams-totals__col--grand {
+  flex: 1.2;
+}
+
+.teams-totals__divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border);
+}
+
+.teams-totals__label {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.teams-totals__kpi {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--moon);
+  font-variant-numeric: tabular-nums;
+}
+
+.teams-totals__kpi--grand {
+  font-size: 2rem;
+  color: var(--moon);
+}
+
+.teams-totals__aside {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 860px) {
+  .teams-totals {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .teams-totals__divider {
+    width: auto;
+    height: 1px;
+  }
+}
+
 /* Fila cabecera de los agregados: grand total + toggle diario/semanal en la misma línea. */
 .teams-aggregates__header {
   display: flex;
@@ -2992,7 +3058,7 @@ button.prod-card__base-tag--action:hover {
   align-items: center;
   gap: 0.2rem;
   font-size: var(--text-xs);
-  color: var(--moon);
+  color: var(--muted);
   flex-shrink: 0;
 }
 
@@ -3496,7 +3562,7 @@ button.prod-card__base-tag--action:hover {
   gap: 0.2rem;
   font-variant-numeric: tabular-nums;
   font-size: var(--text-xs);
-  color: var(--moon);
+  color: var(--muted);
 }
 
 /* Dimmed chip variant — slots ran out, shows 0/available */
