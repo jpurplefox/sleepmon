@@ -446,16 +446,6 @@ export function Teams() {
                 {MEAL_SLOTS.map((slot, idx) => {
                   const meal = meals[idx];
                   const feasibility = meal ? feasibilityBySlot.get(idx) : undefined;
-                  const met = feasibility?.met;
-
-                  // Pot fit for this meal's recipe.
-                  const effectivePot = potSize + Math.floor(cookingExtra / 3);
-                  const recipeData = meal ? recipeByName.get(meal.recipe) : undefined;
-                  const mealTotalIngs = recipeData
-                    ? recipeData.ingredients.reduce((s, ic) => s + ic.count, 0)
-                    : null;
-                  const mealFits = mealTotalIngs != null ? mealTotalIngs <= effectivePot : null;
-                  const mealFillers = mealTotalIngs != null ? effectivePot - mealTotalIngs : null;
 
                   return (
                     <div key={slot} className="teams-plan-row">
@@ -476,7 +466,7 @@ export function Teams() {
                             <span className="teams-plan-row__name">{meal.recipe}</span>
                             <span className="teams-plan-row__lv muted">Lv.{meal.level}</span>
                             {feasibility != null && (
-                              <span className="cook-row__strength">
+                              <span className="cook-row__strength cook-row__strength--right">
                                 <img
                                   className="mini-icon"
                                   src={CHARGE_STRENGTH_ICON}
@@ -484,20 +474,6 @@ export function Teams() {
                                   style={{ width: 14, height: 14 }}
                                 />
                                 {fmtInt(feasibility.strength * factor)}
-                              </span>
-                            )}
-                            {met != null && (
-                              <span className={met ? "badge badge--ok" : "badge badge--low"}>
-                                {met ? t("teams.fulfilled") : t("teams.notMet")}
-                              </span>
-                            )}
-                            {mealFits != null && (
-                              <span className={`cook-row__pot-fit ${mealFits ? "cook-row__pot-fit--ok" : "cook-row__pot-fit--no"}`}>
-                                <img src="/pot.webp" alt="" className="meal-picker-pot__icon" />
-                                {mealFits
-                                  ? t("teams.fillers", { n: String(mealFillers) })
-                                  : t("teams.potNoFit")
-                                }
                               </span>
                             )}
                           </div>
@@ -594,7 +570,7 @@ export function Teams() {
                 </>
               )}
 
-              {/* Surplus zone: cooking_ingredients with balance > 0 + cooking_surplus, deduplicated */}
+              {/* Surplus zone + fillers total */}
               {(() => {
                 const surplusMap = new Map<string, number>();
                 for (const b of result.cooking_ingredients) {
@@ -606,31 +582,58 @@ export function Teams() {
                   }
                 }
                 const surplusEntries = [...surplusMap.entries()];
-                if (surplusEntries.length === 0) return null;
+
+                // Total fillers = sum of leftover pot slots across all chosen meals.
+                const effectivePot = potSize + Math.floor(cookingExtra / 3);
+                const totalFillers = MEAL_SLOTS.reduce((sum, _slot, idx) => {
+                  const meal = meals[idx];
+                  if (!meal) return sum;
+                  const recipeData = recipeByName.get(meal.recipe);
+                  if (!recipeData) return sum;
+                  const totalIngs = recipeData.ingredients.reduce((s, ic) => s + ic.count, 0);
+                  return sum + Math.max(0, effectivePot - totalIngs);
+                }, 0);
+
+                const hasSurplus = surplusEntries.length > 0;
+                const hasFillers = totalFillers > 0;
+                if (!hasSurplus && !hasFillers) return null;
                 return (
                   <>
-                    <div className="prod-card__block-head" style={{ marginTop: "1rem" }}>
-                      {t("teams.surplus")}
-                    </div>
-                    <ul className="prod-card__ings">
-                      {surplusEntries.map(([ingredient, balance]) => (
-                        <li key={ingredient} style={{ justifyContent: "space-between" }}>
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
-                            <img
-                              className="mini-icon"
-                              src={ingredientIcon(ingredient)}
-                              alt={ingName(ingredient)}
-                              title={ingName(ingredient)}
-                              style={{ width: 20, height: 20 }}
-                            />
-                            <span className="muted">{ingName(ingredient)}</span>
-                          </span>
-                          <span className="muted" style={{ fontSize: "var(--text-sm)" }}>
-                            +{fmt(balance * factor)}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
+                    {hasFillers && (
+                      <div className="prod-card__line" style={{ marginTop: "1rem" }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                          <img src="/pot.webp" alt="" className="mini-icon" style={{ width: 16, height: 16 }} />
+                          <span className="muted">{t("teams.fillersTotal")}</span>
+                        </span>
+                        <span>{totalFillers}</span>
+                      </div>
+                    )}
+                    {hasSurplus && (
+                      <>
+                        <div className="prod-card__block-head" style={{ marginTop: hasFillers ? "0.5rem" : "1rem" }}>
+                          {t("teams.surplus")}
+                        </div>
+                        <ul className="prod-card__ings">
+                          {surplusEntries.map(([ingredient, balance]) => (
+                            <li key={ingredient} style={{ justifyContent: "space-between" }}>
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                                <img
+                                  className="mini-icon"
+                                  src={ingredientIcon(ingredient)}
+                                  alt={ingName(ingredient)}
+                                  title={ingName(ingredient)}
+                                  style={{ width: 20, height: 20 }}
+                                />
+                                <span className="muted">{ingName(ingredient)}</span>
+                              </span>
+                              <span className="muted" style={{ fontSize: "var(--text-sm)" }}>
+                                +{fmt(balance * factor)}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
                   </>
                 );
               })()}
