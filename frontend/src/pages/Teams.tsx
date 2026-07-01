@@ -25,6 +25,7 @@ import {
 } from "../components/icons";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
+import { fdown } from "../utils/format";
 import { recipeImage } from "../recipes";
 import { statIcon } from "../natures";
 import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
@@ -113,8 +114,6 @@ function configFromMember(catalog: Catalog, m: Member): MemberInput | null {
 const MEAL_SLOTS = ["breakfast", "lunch", "dinner"] as const;
 
 const fmtInt = (n: number) => Math.round(n).toLocaleString("en-US");
-// Floor-down helper: display integers always floored (never rounded up).
-const fdown = (n: number) => Math.floor(n).toLocaleString("en-US");
 
 export function Teams() {
   const { t, ingredient: ingName, berry: berryName } = useI18n();

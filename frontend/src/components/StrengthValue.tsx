@@ -1,13 +1,11 @@
 import { useI18n } from "../i18n";
+import { fdown } from "../utils/format";
 
 interface StrengthValueProps {
   value: number;
   base: number;
   bonus: number; // fraction 0–0.85
 }
-
-// Formateo idéntico al de Teams.tsx: floor hacia abajo, locale en-US.
-const fdown = (n: number) => Math.floor(n).toLocaleString("en-US");
 
 /**
  * Renders a strength number with an optional tooltip showing the base/with-bonus
