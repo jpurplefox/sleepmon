@@ -225,6 +225,9 @@ class TeamProductionResult:
     skill_random_energy: float | None
     skill_cooking_ingredients: float | None
     skill_ingredient_total: float | None
+    # Extra Tasty del equipo: chance promedio (0..1) y multiplicador esperado por plato.
+    extra_tasty_rate: float
+    extra_tasty_multiplier: float
     skill_effects: list[SkillEffectAggDTO]
     members: list[MemberContributionDTO]
     # Cocina

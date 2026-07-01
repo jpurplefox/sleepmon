@@ -314,6 +314,8 @@ class TeamProductionController(Controller):
             skill_random_energy=result.skill_random_energy,
             skill_cooking_ingredients=result.skill_cooking_ingredients,
             skill_ingredient_total=result.skill_ingredient_total,
+            extra_tasty_rate=result.extra_tasty_rate,
+            extra_tasty_multiplier=result.extra_tasty_multiplier,
             skill_effects=[
                 SkillEffectAggOut(kind=e.kind, total=e.total, triggers=e.triggers)
                 for e in result.skill_effects

@@ -537,6 +537,17 @@ def test_team_production_endpoint(client: TestClient) -> None:
         assert key in prod, f"missing key {key!r} in member production"
 
 
+def test_team_production_exposes_extra_tasty(client: TestClient) -> None:
+    created = client.post("/team", json=valid_payload()).json()
+    body = client.post(
+        "/teams/production",
+        json={"member_ids": [created["id"]], "meals": [None, None, None]},
+    ).json()
+    # Sin main skill de Tasty Chance, la chance/multiplicador son la base del juego.
+    assert body["extra_tasty_rate"] == pytest.approx(2.7 / 21)
+    assert body["extra_tasty_multiplier"] == pytest.approx(24.6 / 21)
+
+
 def test_team_production_endpoint_rejects_too_many(client: TestClient) -> None:
     ids = [client.post("/team", json=valid_payload()).json()["id"] for _ in range(6)]
     res = client.post(
