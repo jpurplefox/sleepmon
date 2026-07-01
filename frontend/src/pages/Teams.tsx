@@ -267,9 +267,10 @@ export function Teams() {
     return total * bonusFactor;
   }, [result, catalog.isLoading, catalog.data, potSize, cookingExtra, meals, recipeByName, islandBonus]);
 
-  // Cooking grand total (daily): recipes + fillers, +10% Extra Tasty.
+  // Cooking grand total (daily): recipes + fillers × el multiplicador esperado de
+  // Extra Tasty del equipo (base del juego ≈1.17; sube con Tasty Chance S).
   const grandTotalCooking = result
-    ? (result.cooking_strength + fillerStrengthTotal) * 1.10
+    ? (result.cooking_strength + fillerStrengthTotal) * result.extra_tasty_multiplier
     : 0;
 
   const pickMember = (m: Member) => {
@@ -546,7 +547,9 @@ export function Teams() {
                 (e: SkillEffectAgg) =>
                   e.kind !== "strength" &&
                   e.kind !== "cooking_ingredients" &&
-                  e.kind !== "ingredient_total",
+                  e.kind !== "ingredient_total" &&
+                  // Extra Tasty ya se muestra (chance + multiplicador) en la card de Cocina.
+                  e.kind !== "tasty_chance",
               );
               if (otherSkills.length === 0) return null;
               return (
@@ -567,11 +570,9 @@ export function Teams() {
                         <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
                           {meta.iconNode()}
                           <span>
-                            {e.kind === "tasty_chance"
-                              ? `+${fdown(total)}% ${label}`
-                              : e.kind === "extra_helpful"
-                                ? `×${fdown(total)} ${label}`
-                                : `${fdown(total)} ${label}`}
+                            {e.kind === "extra_helpful"
+                              ? `×${fdown(total)} ${label}`
+                              : `${fdown(total)} ${label}`}
                           </span>
                           <span style={{ display: "inline-flex", alignItems: "center", gap: "0.15rem", fontSize: "var(--text-xs)" }}>
                             (<IconSparkle width={11} height={11} style={{ opacity: 0.75 }} />
@@ -592,6 +593,8 @@ export function Teams() {
                 { key: "skills", name: t("card.skill"), value: result.total_skill_strength * factor, color: "#3fb950" },
                 { key: "recipes", name: t("teams.recipes"), value: result.cooking_strength * factor, color: "#a371f7" },
                 { key: "fillers", name: t("teams.fillersLabel"), value: fillerStrengthTotal * factor, color: "#f78166" },
+                // Fuerza extra que aporta el multiplicador de Extra Tasty sobre recetas + fillers.
+                { key: "extraTasty", name: t("teams.extraTasty"), value: (result.cooking_strength + fillerStrengthTotal) * (result.extra_tasty_multiplier - 1) * factor, color: "#e3b341" },
               ].filter((d) => d.value > 0);
               const totalValue = pieData.reduce((s, d) => s + d.value, 0);
               if (totalValue <= 0) return null;
@@ -1020,10 +1023,12 @@ export function Teams() {
                       </div>
                     )}
 
-                    {/* Block 5 — Grand total with +10% Extra Tasty */}
+                    {/* Block 5 — Grand total con el Extra Tasty esperado del equipo */}
                     {(() => {
                       const subtotal = (result.cooking_strength + fillerStrengthTotal) * factor;
-                      const extraTastyBonus = subtotal * 0.10;
+                      const extraTastyBonus = subtotal * (result.extra_tasty_multiplier - 1);
+                      const extraTastyPct = (result.extra_tasty_rate * 100).toFixed(1);
+                      const extraTastyMult = result.extra_tasty_multiplier.toFixed(2);
                       const grandTotal = grandTotalCooking * factor;
                       return (
                         <div className="cook-result-block">
@@ -1044,14 +1049,18 @@ export function Teams() {
                             </span>
                           </div>
                           <div className="cook-total-row">
-                            <span className="cook-total-row__label">
+                            <span
+                              className="cook-total-row__label"
+                              style={{ cursor: "help" }}
+                              title={t("teams.extraTastyTooltip")}
+                            >
                               <img
                                 className="mini-icon"
                                 src="/extra-tasty.png"
                                 alt=""
                                 style={{ width: 14, height: 14 }}
                               />
-                              {t("teams.extraTasty")} +10%
+                              {t("teams.extraTasty")} {extraTastyPct}% · ×{extraTastyMult}
                             </span>
                             <span className="cook-total-row__value">
                               +{fdown(extraTastyBonus)}

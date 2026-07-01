@@ -231,6 +231,9 @@ export interface TeamProduction {
   skill_random_energy: number | null;
   skill_cooking_ingredients: number | null;
   skill_ingredient_total: number | null;
+  // Extra Tasty del equipo: chance promedio (0..1) y multiplicador esperado por plato.
+  extra_tasty_rate: number;
+  extra_tasty_multiplier: number;
   skill_effects: SkillEffectAgg[];
   members: MemberContribution[];
   cooking_strength: number;

@@ -309,6 +309,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.cookingTotal": "Total cocina",
     "teams.recipes": "Recetas",
     "teams.extraTasty": "Extra Tasty",
+    "teams.extraTastyTooltip":
+      "Chance promedio de plato riquísimo sobre los 21 platos de la semana. Los disparos de Cocinitas del equipo se reparten uniforme entre los platos (distribución de Poisson) y suben la chance hasta que un crítico la resetea. Contempla la base y el multiplicador extra de los domingos.",
     "teams.missing": "Faltan ingredientes",
     "teams.missingAmt": "faltan {n}",
     "teams.byBerry": "Por tipo de baya",
@@ -661,6 +663,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.cookingTotal": "Cooking total",
     "teams.recipes": "Recipes",
     "teams.extraTasty": "Extra Tasty",
+    "teams.extraTastyTooltip":
+      "Average Extra Tasty chance across the week's 21 dishes. The team's Tasty Chance procs are spread uniformly across dishes (Poisson distribution) and raise the chance until a crit resets it. Sundays' higher base and multiplier are accounted for.",
     "teams.missing": "Missing ingredients",
     "teams.missingAmt": "need {n}",
     "teams.byBerry": "By berry type",

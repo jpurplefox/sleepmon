@@ -12,6 +12,7 @@ from dataclasses import dataclass
 
 from sleepmon.domain.catalog_data import NATURE_EFFECTS
 from sleepmon.domain.entities import TeamMember
+from sleepmon.domain.extra_tasty import expected_extra_tasty
 from sleepmon.domain.production import DailyProduction
 from sleepmon.domain.value_objects import Ingredient, Nature, NatureStat, SubSkill
 
@@ -108,6 +109,11 @@ class TeamProduction:
     skill_random_energy: float | None
     skill_cooking_ingredients: float | None
     skill_ingredient_total: float | None
+    # Extra Tasty (plato riquísimo) del equipo: chance promedio (0..1) y multiplicador
+    # de cocina esperado por plato. Siempre presentes: sin Tasty Chance es la base del
+    # juego (12.86% / 1.171x). El stack de crítico es del equipo (ver domain/extra_tasty).
+    extra_tasty_rate: float
+    extra_tasty_multiplier: float
     skill_effects: tuple[SkillEffectAgg, ...]
     members: tuple[MemberContribution, ...]
 
@@ -189,6 +195,16 @@ def team_production(
 
     optional = {field: _sum_optional(dailies, field) for field in _OPTIONAL_SKILL_FIELDS}
 
+    # Extra Tasty: el stack de crítico es del EQUIPO. Cada miembro con Tasty Chance S
+    # aporta una fuente (disparos/día, tamaño_pp); el tamaño se recupera del total
+    # plano ``skill_tasty_chance = disparos × tamaño``. Sin fuentes → base del juego.
+    tasty_sources: list[tuple[float, float]] = [
+        (d.skill_triggers, d.skill_tasty_chance / d.skill_triggers)
+        for d in dailies
+        if d.skill_tasty_chance is not None and d.skill_triggers > 0
+    ]
+    extra_tasty = expected_extra_tasty(tasty_sources)
+
     # Construir skill_effects: un SkillEffectAgg por cada kind que al menos un miembro
     # aporta (su atributo DailyProduction es no-None). total acumula el valor del
     # efecto; triggers acumula los skill_triggers solo de esos miembros.
@@ -221,6 +237,8 @@ def team_production(
         ingredients=ingredients,
         total_ingredients=sum(ingredients.values()),
         skill_triggers=sum(d.skill_triggers for d in dailies),
+        extra_tasty_rate=extra_tasty.rate,
+        extra_tasty_multiplier=extra_tasty.multiplier,
         skill_effects=tuple(skill_effects_list),
         members=members,
         **optional,

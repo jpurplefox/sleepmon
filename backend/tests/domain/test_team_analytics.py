@@ -1,6 +1,7 @@
 import pytest
 
 from sleepmon.domain.analytics import SkillEffectAgg, team_production
+from sleepmon.domain.extra_tasty import expected_extra_tasty
 from sleepmon.domain.production import DailyProduction, SlotProduction
 from sleepmon.domain.value_objects import Berry, Ingredient
 
@@ -15,6 +16,7 @@ def _daily(
     skill_triggers: float = 2.0,
     skill_strength: float | None = None,
     skill_energy: float | None = None,
+    skill_tasty_chance: float | None = None,
 ) -> DailyProduction:
     return DailyProduction(
         helps_per_day=50.0,
@@ -35,7 +37,7 @@ def _daily(
         skill_strength=skill_strength,
         skill_self_energy=None,
         skill_dream_shards=None,
-        skill_tasty_chance=None,
+        skill_tasty_chance=skill_tasty_chance,
         skill_extra_helpful=None,
         skill_random_energy=None,
         night_skill_chances=(),
@@ -80,6 +82,30 @@ def test_team_production_optional_metric_sums_present() -> None:
         [("a", "X", _daily(skill_energy=10.0)), ("b", "Y", _daily(skill_energy=5.0))]
     )
     assert result.skill_energy == 15.0
+
+
+def test_team_extra_tasty_baseline_without_tasty_chance() -> None:
+    baseline = expected_extra_tasty([])
+    result = team_production([("a", "X", _daily(skill_tasty_chance=None))])
+    assert result.extra_tasty_rate == pytest.approx(baseline.rate)
+    assert result.extra_tasty_multiplier == pytest.approx(baseline.multiplier)
+
+
+def test_team_extra_tasty_uses_triggers_and_recovered_proc_size() -> None:
+    # skill_tasty_chance = disparos × tamaño_pp → tamaño = 56.6 / 5.66 = 10 pp.
+    daily = _daily(skill_triggers=5.66, skill_tasty_chance=56.6)
+    result = team_production([("a", "X", daily)])
+    expected = expected_extra_tasty([(5.66, 10.0)])
+    assert result.extra_tasty_rate == pytest.approx(expected.rate)
+    assert result.extra_tasty_multiplier == pytest.approx(expected.multiplier)
+
+
+def test_team_extra_tasty_combines_contributors_into_shared_stack() -> None:
+    a = _daily(skill_triggers=2.83, skill_tasty_chance=28.3)  # tamaño 10 pp
+    b = _daily(skill_triggers=2.83, skill_tasty_chance=28.3)
+    result = team_production([("a", "X", a), ("b", "Y", b)])
+    expected = expected_extra_tasty([(2.83, 10.0), (2.83, 10.0)])
+    assert result.extra_tasty_rate == pytest.approx(expected.rate)
 
 
 def test_team_production_member_breakdown() -> None:

@@ -385,6 +385,8 @@ class DefaultTeamService(TeamService):
             skill_random_energy=aggregate.skill_random_energy,
             skill_cooking_ingredients=aggregate.skill_cooking_ingredients,
             skill_ingredient_total=aggregate.skill_ingredient_total,
+            extra_tasty_rate=aggregate.extra_tasty_rate,
+            extra_tasty_multiplier=aggregate.extra_tasty_multiplier,
             skill_effects=[
                 SkillEffectAggDTO(kind=e.kind, total=e.total, triggers=e.triggers)
                 for e in aggregate.skill_effects
