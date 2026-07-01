@@ -3864,7 +3864,6 @@ button.prod-card__base-tag--action:hover {
 
 .island-tab__bonus-hint {
   margin: 0;
-  padding-left: 10rem; /* align under the control */
   font-size: var(--text-sm);
 }
 
