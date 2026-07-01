@@ -3967,10 +3967,10 @@ button.prod-card__base-tag--action:hover {
 }
 .bonus-slider__track:hover .bonus-slider__thumb { transform: translateY(-50%) scale(1.2); }
 .bonus-slider__track:has(.bonus-slider__input:active) .bonus-slider__thumb {
-  background: var(--moon-dim); transform: translateY(-50%) scale(1.1); border-color: var(--moon);
+  background: var(--moon); transform: translateY(-50%) scale(1.1); border-color: var(--moon);
 }
-/* Foco DORADO tanto con mouse como con teclado */
-.bonus-slider__track:focus-within .bonus-slider__thumb { outline: 2px solid var(--moon); outline-offset: 2px; }
+/* Foco DORADO tanto con mouse como con teclado — glow difuso (sin doble círculo) */
+.bonus-slider__track:focus-within .bonus-slider__thumb { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 0 8px 2px var(--moon-border); }
 /* Input nativo: invisible pero funcional (teclado/puntero/a11y). Sin outline propio. */
 .bonus-slider__input {
   position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
