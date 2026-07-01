@@ -811,6 +811,34 @@ def test_too_many_favorites_rejected(
         )
 
 
+def test_duplicate_favorites_rejected(
+    service_with_members: tuple[DefaultTeamService, list[str]],
+) -> None:
+    service, member_ids = service_with_members
+    with pytest.raises(ValidationError):
+        service.compute_team_production(
+            TeamProductionInput(
+                member_ids=member_ids,
+                meals=[],
+                favorite_berries=["Oran", "Oran"],
+            )
+        )
+
+
+def test_unknown_berry_rejected(
+    service_with_members: tuple[DefaultTeamService, list[str]],
+) -> None:
+    service, member_ids = service_with_members
+    with pytest.raises(ValidationError):
+        service.compute_team_production(
+            TeamProductionInput(
+                member_ids=member_ids,
+                meals=[],
+                favorite_berries=["Banana"],
+            )
+        )
+
+
 def test_compute_team_production_excludes_off_catalog_members() -> None:
     repo = InMemoryTeamRepository()
     member = TeamMember(
