@@ -129,11 +129,25 @@ export function Teams() {
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
   const [potSize, setPotSize] = useState(15);
 
+  // Island state (efímero, como meals).
+  const [selectedIsland, setSelectedIsland] = useState<string | null>(null);
+  const [favoriteBerries, setFavoriteBerries] = useState<string[]>([]);
+  const [islandBonus, setIslandBonus] = useState<number>(0);
+
   const inTeam = useMemo(() => new Set(selectedIds), [selectedIds]);
 
+  // Bayas que realmente enviar al backend: filtrar strings vacíos (slots no elegidos).
+  const activeBerries = favoriteBerries.filter(Boolean);
+
   const teamQuery = useQuery({
-    queryKey: ["team-production", selectedIds, meals],
-    queryFn: () => api.computeTeamProduction({ member_ids: selectedIds, meals }),
+    queryKey: ["team-production", selectedIds, meals, activeBerries, islandBonus],
+    queryFn: () =>
+      api.computeTeamProduction({
+        member_ids: selectedIds,
+        meals,
+        favorite_berries: activeBerries,
+        island_bonus: islandBonus,
+      }),
     enabled: selectedIds.length > 0,
     placeholderData: keepPreviousData,
   });
@@ -1082,6 +1096,13 @@ export function Teams() {
           potSize={potSize}
           onPotSizeChange={setPotSize}
           cookingExtra={cookingExtra}
+          catalog={catalog.data}
+          selectedIsland={selectedIsland}
+          favoriteBerries={favoriteBerries}
+          islandBonus={islandBonus}
+          onSelectIsland={setSelectedIsland}
+          onFavoriteBerries={setFavoriteBerries}
+          onIslandBonus={setIslandBonus}
         />
       )}
     </div>

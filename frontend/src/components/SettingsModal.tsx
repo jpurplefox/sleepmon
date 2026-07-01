@@ -3,7 +3,8 @@ import { useState } from "react";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { recipeImage, recipeStrengthAtLevel } from "../recipes";
-import type { MealInput, Recipe } from "../types";
+import type { Catalog, MealInput, Recipe } from "../types";
+import { IslandTab } from "./IslandTab";
 import { LevelStepperInput } from "./LevelStepperInput";
 import { Modal } from "./Modal";
 
@@ -29,6 +30,14 @@ interface Props {
   onPotSizeChange: (n: number) => void;
   /** Total extra pot ingredients/day from cooking_ingredients skill effect (or 0). */
   cookingExtra: number;
+  // Island tab props
+  catalog: Catalog;
+  selectedIsland: string | null;
+  favoriteBerries: string[];
+  islandBonus: number;
+  onSelectIsland: (name: string | null) => void;
+  onFavoriteBerries: (berries: string[]) => void;
+  onIslandBonus: (bonus: number) => void;
 }
 
 export function SettingsModal({
@@ -40,6 +49,13 @@ export function SettingsModal({
   potSize,
   onPotSizeChange,
   cookingExtra,
+  catalog,
+  selectedIsland,
+  favoriteBerries,
+  islandBonus,
+  onSelectIsland,
+  onFavoriteBerries,
+  onIslandBonus,
 }: Props) {
   const { t } = useI18n();
 
@@ -144,7 +160,15 @@ export function SettingsModal({
         hidden={activeTab !== "island"}
         className="settings-modal-panel"
       >
-        {/* IslandTab va acá (Task 8) */}
+        <IslandTab
+          catalog={catalog}
+          selectedIsland={selectedIsland}
+          favoriteBerries={favoriteBerries}
+          islandBonus={islandBonus}
+          onSelectIsland={onSelectIsland}
+          onFavoriteBerries={onFavoriteBerries}
+          onIslandBonus={onIslandBonus}
+        />
       </div>
 
       {/* Tab: Meals */}

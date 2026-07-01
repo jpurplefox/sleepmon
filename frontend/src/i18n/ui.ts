@@ -337,6 +337,13 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.potNoFit": "No entra",
     "teams.tabIsland": "Isla",
     "teams.tabMeals": "Comidas",
+    // Tab de Isla
+    "teams.selectIsland": "Isla",
+    "teams.noIsland": "Sin isla",
+    "teams.favoriteBerries": "Bayas favoritas",
+    "teams.mainBerry": "Principal",
+    "teams.secondaryBerry": "Secundaria",
+    "teams.islandBonus": "Bonus de isla",
     // Error boundary
     "error.title": "Algo salió mal",
     "error.body": "Ocurrió un error inesperado al mostrar esta vista. Probá recargar la página.",
@@ -674,6 +681,13 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.potNoFit": "Doesn't fit",
     "teams.tabIsland": "Island",
     "teams.tabMeals": "Meals",
+    // Island tab
+    "teams.selectIsland": "Island",
+    "teams.noIsland": "No island",
+    "teams.favoriteBerries": "Favorite berries",
+    "teams.mainBerry": "Main",
+    "teams.secondaryBerry": "Secondary",
+    "teams.islandBonus": "Island bonus",
     // Error boundary
     "error.title": "Something went wrong",
     "error.body": "An unexpected error occurred while showing this view. Try reloading the page.",
