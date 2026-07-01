@@ -37,10 +37,11 @@ cada request), igual que los meals hoy. No se persiste en DB.
 
 ### Tipo de plato
 
-- El usuario elige **un** tipo de plato (curry / ensalada / postre) en la tab de
-  isla. **No** depende de la isla seleccionada.
-- La tab de meals se filtra a ese tipo. Al fijar/cambiar el tipo, se **limpian**
-  los meals ya elegidos que no coincidan.
+- El tipo de plato (curry / ensalada / postre) se elige en la **tab de Meals**.
+  **No** depende de la isla seleccionada.
+- **No se pueden mezclar tipos**: los 3 slots de meal deben ser todos del mismo
+  tipo. Al fijar/cambiar el tipo, la tab de meals se filtra a ese tipo y se
+  **limpian** los meals ya elegidos que no coincidan.
 - El tipo de plato es puramente frontend: no viaja al backend (la cocina ya se
   calcula a partir de las recetas concretas elegidas).
 
@@ -133,13 +134,18 @@ class TeamProductionIn:  # extendido
   secundarias (de las 18 bayas).
 - Input de bonus de isla (0–85%). El diseño del control (slider / stepper) lo
   deciden los agentes de frontend.
-- Selector de tipo de plato (curry / ensalada / postre), selección única.
+
+**2b. `MealsTab`** — el selector de **tipo de plato** (curry / ensalada / postre,
+selección única) vive acá. Al fijar/cambiar el tipo, la lista se filtra a ese tipo
+y se limpian los meals ya elegidos de otro tipo. No se pueden mezclar tipos entre
+los 3 slots.
 
 **3. `Teams.tsx`** — estado nuevo (efímero):
 
 - `favoriteBerries: Berry[]` (≤3), `islandBonus: number` (0–0.85),
   `dishType: RecipeType | null`.
-- Se agregan al payload de `computeTeamProduction`.
+- `favoriteBerries` + `islandBonus` se agregan al payload de
+  `computeTeamProduction`; `dishType` es solo frontend.
 - `dishType` filtra la tab de meals; al cambiarlo se limpian meals incompatibles.
 
 **4. Resaltado de cards de baya favorita** — las cards de Pokémon que producen una
