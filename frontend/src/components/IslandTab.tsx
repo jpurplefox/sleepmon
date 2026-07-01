@@ -112,6 +112,8 @@ export function IslandTab({
   };
 
   const selectedCount = favoriteBerries.length;
+  const isUserPicks = island?.user_picks ?? false;
+  const isReadOnly = selectedIsland !== null && !isUserPicks;
 
   return (
     <div className="island-tab">
@@ -150,13 +152,13 @@ export function IslandTab({
               aria-label={t("teams.selectIsland")}
             >
               <div className="filter-list">
-                {/* Opción "Sin isla" */}
+                {/* Opción "Sin isla" — Item 3: clase island-tab__island-none */}
                 <button
                   type="button"
                   role="option"
                   aria-selected={selectedIsland === null}
                   className={
-                    "filter-list__item" +
+                    "filter-list__item island-tab__island-none" +
                     (selectedIsland === null ? " is-selected" : "")
                   }
                   onClick={() => {
@@ -186,19 +188,29 @@ export function IslandTab({
                     }}
                   >
                     <span className="filter-list__label">{isl.name}</span>
-                    {!isl.user_picks && isl.favorite_berries.length > 0 && (
-                      <span className="island-tab__island-berries">
-                        {isl.favorite_berries.map((b) => (
-                          <img
-                            key={b}
-                            src={berryIcon(b)}
-                            alt={berryName(b)}
-                            title={berryName(b)}
-                            className="island-tab__berry-icon"
-                          />
-                        ))}
-                      </span>
-                    )}
+                    {/* Item 2: siempre mostrar .island-tab__island-berries;
+                        user_picks → 3 "?" placeholder; normal → íconos reales */}
+                    <span className="island-tab__island-berries">
+                      {isl.user_picks
+                        ? Array.from({ length: 3 }, (_, i) => (
+                            <span
+                              key={i}
+                              className="island-tab__berry-icon--unknown"
+                              aria-hidden="true"
+                            >
+                              ?
+                            </span>
+                          ))
+                        : isl.favorite_berries.map((b) => (
+                            <img
+                              key={b}
+                              src={berryIcon(b)}
+                              alt={berryName(b)}
+                              title={berryName(b)}
+                              className="island-tab__berry-icon"
+                            />
+                          ))}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -207,62 +219,65 @@ export function IslandTab({
         </div>
       </div>
 
-      {/* Bayas favoritas */}
+      {/* Bayas favoritas — Item 4: grilla unificada (editable o read-only) */}
       {selectedIsland !== null && (
         <div className="island-tab__row">
           <span className="island-tab__label">{t("teams.favoriteBerries")}</span>
 
-          {island?.user_picks ? (
-            /* user_picks: grilla de chips togglable */
-            <div className="island-tab__berry-picker">
-              <div className="island-tab__berry-grid">
-                {allBerries.map((b) => {
-                  const isSelected = favoriteBerries.includes(b);
-                  const isDisabled = !isSelected && selectedCount >= 3;
-                  return (
-                    <button
-                      key={b}
-                      type="button"
-                      className={`island-tab__berry-toggle${isSelected ? " is-selected" : ""}`}
-                      disabled={isDisabled}
-                      onClick={() => handleBerryToggle(b)}
-                      aria-pressed={isSelected}
-                    >
-                      <img
-                        src={berryIcon(b)}
-                        alt=""
-                        className="island-tab__berry-icon"
-                      />
-                      {berryName(b)}
-                    </button>
-                  );
-                })}
-              </div>
+          <div className="island-tab__berry-picker">
+            <div
+              className={
+                "island-tab__berry-grid" +
+                (isReadOnly ? " island-tab__berry-grid--readonly" : "")
+              }
+            >
+              {allBerries.map((b) => {
+                const isSelected = favoriteBerries.includes(b);
+                const isPrimary = isSelected && favoriteBerries.indexOf(b) === 0;
+                const isDisabled = !isReadOnly && !isSelected && selectedCount >= 3;
+
+                // Item 5: clase --primary y aria-label para la baya principal
+                const toggleClass =
+                  "island-tab__berry-toggle" +
+                  (isSelected ? " is-selected" : "") +
+                  (isPrimary ? " island-tab__berry-toggle--primary" : "");
+
+                return (
+                  <button
+                    key={b}
+                    type="button"
+                    className={toggleClass}
+                    disabled={!isReadOnly && isDisabled}
+                    onClick={isReadOnly ? undefined : () => handleBerryToggle(b)}
+                    aria-pressed={isSelected}
+                    title={isPrimary ? t("teams.berryPrimary") : undefined}
+                    aria-label={
+                      isPrimary
+                        ? t("teams.berryPrimary")
+                        : isSelected
+                        ? t("teams.berrySecondary")
+                        : berryName(b)
+                    }
+                  >
+                    <img
+                      src={berryIcon(b)}
+                      alt=""
+                      className="island-tab__berry-icon"
+                    />
+                    {berryName(b)}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Contador solo en modo editable (user_picks) */}
+            {isUserPicks && (
               <p
                 className={`island-tab__berry-count${selectedCount === 3 ? " island-tab__berry-count--full" : ""}`}
               >
                 {selectedCount} / 3
               </p>
-            </div>
-          ) : (
-            /* Favoritas fijas: chips de solo lectura */
-            <div className="island-tab__berry-chips">
-              {favoriteBerries.length === 0 ? (
-                <span className="muted">—</span>
-              ) : (
-                favoriteBerries.map((b) => (
-                  <span key={b} className="island-tab__berry-chip">
-                    <img
-                      src={berryIcon(b)}
-                      alt={berryName(b)}
-                      className="island-tab__berry-icon"
-                    />
-                    <span>{berryName(b)}</span>
-                  </span>
-                ))
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 

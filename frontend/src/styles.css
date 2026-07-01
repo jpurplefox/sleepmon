@@ -3850,26 +3850,25 @@ button.prod-card__base-tag--action:hover {
 /* Dropdown custom de isla (reemplaza el <select> nativo) */
 .island-tab__island-control { flex: 1; min-width: 14rem; max-width: 22rem; }
 .island-tab__island-trigger { width: 100%; justify-content: space-between; }
-.island-tab__island-pop { min-width: 100%; width: max-content; }
-.island-tab__island-berries { display: inline-flex; gap: 0.2rem; margin-left: auto; padding-left: 0.5rem; flex-shrink: 0; }
+.island-tab__island-pop { min-width: min-content; width: max-content; max-width: 22rem; }
+.island-tab__island-berries { display: inline-flex; gap: 0.2rem; margin-left: 1.5rem; padding-left: 0; flex-shrink: 0; }
 
-/* Berry chips (read-only, islands with fixed favorites) */
-.island-tab__berry-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+/* Item 2 — placeholder "?" para islas user_picks en el dropdown */
+.island-tab__berry-icon--unknown {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--muted); font-size: 10px; font-weight: 700; line-height: 1;
+  flex-shrink: 0; user-select: none;
 }
 
-.island-tab__berry-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.25rem 0.65rem;
-  background: var(--moon-dim);
-  border: 1px solid var(--moon-border);
-  border-radius: var(--r-sm);
-  font-size: var(--text-sm);
-}
+/* Item 3 — "Sin isla" atenuada */
+.island-tab__island-none { color: var(--muted); font-style: italic; }
+.island-tab__island-none.is-selected { color: var(--text); font-style: normal; }
+
+/* Item 4 — grilla read-only para islas normales */
+.island-tab__berry-grid--readonly .island-tab__berry-toggle { cursor: default; pointer-events: none; }
+.island-tab__berry-grid--readonly .island-tab__berry-toggle:not(.is-selected) { opacity: 0.28; }
 
 /* Berry icon (used in both chips and pickers) */
 .island-tab__berry-icon {
@@ -3911,6 +3910,17 @@ button.prod-card__base-tag--action:hover {
   background: var(--moon-dim);
   border-color: var(--moon-border);
   color: var(--text);
+}
+
+/* Item 5 — baya principal (índice 0): anillo dorado + estrella */
+.island-tab__berry-toggle--primary {
+  border-color: var(--moon);
+  box-shadow: 0 0 0 1px var(--moon);
+  position: relative;
+}
+.island-tab__berry-toggle--primary::before {
+  content: "★"; position: absolute; top: -6px; left: -4px;
+  font-size: 9px; line-height: 1; color: var(--moon); pointer-events: none;
 }
 
 .island-tab__berry-toggle:disabled {

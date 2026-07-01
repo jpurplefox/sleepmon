@@ -348,6 +348,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.islandBonus": "Bonus de la zona",
     "teams.islandBonusDecrease": "Bajar bonus de la zona",
     "teams.islandBonusIncrease": "Subir bonus de la zona",
+    "teams.berryPrimary": "Baya principal",
+    "teams.berrySecondary": "Baya secundaria",
     "card.favBerryBadge": "×2 — baya favorita de la isla",
     // Tooltip de fuerza base / monto del Area bonus
     "teams.strengthBase": "Base",
@@ -700,6 +702,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.islandBonus": "Area bonus",
     "teams.islandBonusDecrease": "Decrease area bonus",
     "teams.islandBonusIncrease": "Increase area bonus",
+    "teams.berryPrimary": "Primary berry",
+    "teams.berrySecondary": "Secondary berry",
     "card.favBerryBadge": "×2 — island favorite berry",
     // Strength base / Area bonus delta tooltip
     "teams.strengthBase": "Base",
