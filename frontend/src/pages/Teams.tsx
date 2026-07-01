@@ -1,6 +1,14 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import type React from "react";
+import {
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 
 import { api } from "../api/client";
 import { berryIcon } from "../berries";
@@ -17,7 +25,6 @@ import {
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { recipeImage } from "../recipes";
-import { spriteUrl } from "../sprites";
 import { statIcon } from "../natures";
 import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
 import type { Catalog, MealInput, Member, MemberInput, SkillEffectAgg } from "../types";
@@ -195,25 +202,6 @@ export function Teams() {
       .sort((a, b) => b.berry_strength - a.berry_strength);
   }, [result]);
 
-  // Member ranking: members sorted by strength desc, with dex for the sprite.
-  const memberRanking = useMemo(() => {
-    if (!result) return [];
-    const bySpecies = new Map(catalog.data?.species.map((s) => [s.name, s]) ?? []);
-    return result.members
-      .map((mc) => ({
-        member_id: mc.member_id,
-        species: mc.species,
-        strength: mc.strength,
-        dex: bySpecies.get(mc.species)?.dex ?? 0,
-      }))
-      .sort((a, b) => b.strength - a.strength);
-  }, [result, catalog.data]);
-
-  const maxMemberStrength = useMemo(
-    () => memberRanking.reduce((m, r) => Math.max(m, r.strength), 0),
-    [memberRanking],
-  );
-
   // Filler strength total (daily) — same allocation logic the cooking card's
   // IIFE uses, lifted to component scope so the totals card can reuse it.
   // Surplus ingredients + the random pseudo-ingredient fill the leftover pot
@@ -378,38 +366,15 @@ export function Teams() {
 
             {/* Right column: berries & skills card + member ranking card, stacked */}
             <div className="teams-aggregates__right">
-            {/* Berries & skills card */}
+            {/* Berries & skills card — mirrors the Cocina card hierarchy:
+                components → subtotal → grand total at the bottom. */}
             <div className="card teams-aggregates__berries">
-              {/* Berries & skills aggregates */}
               <div className="prod-card__block-head">{t("teams.berriesSkills")}</div>
 
-              {/* Total strength (berries + skills) — right-aligned value */}
-              <div className="prod-card__line">
-                <span className="muted">{t("teams.totalStrength")}</span>
-                <span>
-                  <img
-                    className="mini-icon"
-                    src={CHARGE_STRENGTH_ICON}
-                    alt=""
-                  />{" "}
-                  {fmtInt(result.total_strength * factor)}
-                </span>
-              </div>
-              {/* Skills-only strength — right-aligned value */}
-              <div className="prod-card__line">
-                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
-                  <IconSparkle width={12} height={12} style={{ opacity: 0.75 }} />
-                  <span className="muted">{t("card.skill")}</span>
-                </span>
-                <span>{fmtInt(result.total_skill_strength * factor)}</span>
-              </div>
-
-              {/* Berry-type breakdown: tabular-aligned name / amount / strength columns */}
-              {berryBreakdown.length > 0 && (
-                <div style={{ marginTop: "0.4rem" }}>
-                  <div className="prod-card__block-head" style={{ fontSize: "var(--text-xs)", marginTop: "0.5rem" }}>
-                    {t("teams.byBerry")}
-                  </div>
+              {/* ── Berries block ── */}
+              <div className="cook-result-block">
+                <div className="prod-card__block-head">{t("teams.berries")}</div>
+                {berryBreakdown.length > 0 && (
                   <ul className="teams-berry-list">
                     {berryBreakdown.map(({ berry, berry_amount, berry_strength }) => (
                       <li key={berry} className="teams-berry-row">
@@ -437,47 +402,75 @@ export function Teams() {
                       </li>
                     ))}
                   </ul>
+                )}
+                {/* Berries strength subtotal — same treatment as the cooking
+                    "Fuerza de recetas" subtotal. */}
+                <div className="cook-result-row cook-result-row--strength">
+                  <span className="cook-result-row__label muted">
+                    {t("teams.berryStrength")}
+                  </span>
+                  <span className="cook-result-row__value">
+                    <img
+                      className="mini-icon"
+                      src={CHARGE_STRENGTH_ICON}
+                      alt=""
+                      style={{ width: 16, height: 16 }}
+                    />
+                    {fdown(result.total_berry_strength * factor)}
+                  </span>
                 </div>
-              )}
+              </div>
 
-              {/* #4 & #5 — Skill effects with icon + total + triggers. Excludes
-                  cooking_ingredients (pot expansion) and ingredient_total (random
-                  ingredients) — both are represented in the cooking card / fillers. */}
-              {result.skill_effects.filter(
-                (e: SkillEffectAgg) => e.kind !== "cooking_ingredients" && e.kind !== "ingredient_total",
-              ).length > 0 && (
-                <>
-                  <div className="prod-card__block-head" style={{ marginTop: "0.75rem" }}>
-                    {t("card.skill")}
+              {/* ── Skill block (strength-contributing skill only) ── */}
+              {result.total_skill_strength > 0 && (() => {
+                const strengthEffect = result.skill_effects.find(
+                  (e: SkillEffectAgg) => e.kind === "strength",
+                );
+                const triggers = (strengthEffect?.triggers ?? 0) * factor;
+                return (
+                  <div className="cook-result-block">
+                    <div className="prod-card__block-head">{t("card.skill")}</div>
+                    <div className="cook-result-row">
+                      <span
+                        className="cook-result-row__label muted"
+                        style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
+                      >
+                        <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" />
+                        {t("card.skill")}
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.15rem", fontSize: "var(--text-xs)" }}>
+                          (<IconSparkle width={11} height={11} />
+                          {triggers.toFixed(2)})
+                        </span>
+                      </span>
+                      <span className="cook-result-row__value" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                        <img
+                          className="mini-icon"
+                          src={CHARGE_STRENGTH_ICON}
+                          alt=""
+                          style={{ width: 14, height: 14 }}
+                        />
+                        {fdown(result.total_skill_strength * factor)}
+                      </span>
+                    </div>
                   </div>
-                  {result.skill_effects
-                    .filter(
-                      (e: SkillEffectAgg) => e.kind !== "cooking_ingredients" && e.kind !== "ingredient_total",
-                    )
-                    .map((e: SkillEffectAgg) => {
-                      const meta = skillEffectMeta(e.kind);
-                      const total = e.total * factor;
-                      const triggers = e.triggers * factor;
-                      const label = t(meta.labelKey);
-                      return (
-                        <div key={e.kind} className="prod-card__line">
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
-                            {meta.iconNode()}
-                            <span>
-                              {e.kind === "tasty_chance"
-                                ? `+${fdown(total)}% ${label}`
-                                : e.kind === "extra_helpful"
-                                  ? `×${fdown(total)} ${label}`
-                                  : `${fdown(total)} ${label}`}
-                            </span>
-                            <IconSparkle width={12} height={12} style={{ opacity: 0.75 }} />
-                            <span>{triggers.toFixed(2)}</span>
-                          </span>
-                        </div>
-                      );
-                    })}
-                </>
-              )}
+                );
+              })()}
+
+              {/* ── Card total (berries + skill) — neutral, like "Total cocina" ── */}
+              <div className="cook-result-block">
+                <div className="cook-total-row cook-total-row--grand">
+                  <span className="cook-total-row__label">{t("teams.total")}</span>
+                  <span className="cook-total-row__value">
+                    <img
+                      className="mini-icon"
+                      src={CHARGE_STRENGTH_ICON}
+                      alt=""
+                      style={{ width: 16, height: 16 }}
+                    />
+                    {fdown(result.total_strength * factor)}
+                  </span>
+                </div>
+              </div>
 
               {result.excluded_count > 0 && (
                 <p className="muted" style={{ fontSize: "var(--text-sm)", marginTop: "0.5rem" }}>
@@ -486,46 +479,103 @@ export function Teams() {
               )}
             </div>
 
-            {/* Member ranking card: contribution per member, sorted by strength */}
-            {memberRanking.length > 0 && (
-              <div className="card teams-member-rank-card">
-                <div className="prod-card__block-head">{t("teams.memberRanking")}</div>
-                <ul className="teams-member-rank">
-                  {memberRanking.map((r) => (
-                    <li key={r.member_id} className="teams-member-rank__row">
-                      <img
-                        className="teams-member-rank__sprite"
-                        src={spriteUrl(r.dex)}
-                        alt={r.species}
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
-                        }}
-                      />
-                      <span className="teams-member-rank__mid">
-                        <span className="teams-member-rank__name">{r.species}</span>
-                        <span className="teams-member-rank__bar-track">
-                          <span
-                            className="teams-member-rank__bar"
-                            style={{
-                              width: `${maxMemberStrength > 0 ? (r.strength / maxMemberStrength) * 100 : 0}%`,
-                            }}
-                          />
+            {/* ── Other skills card: skill_effects that don't add to total strength ── */}
+            {(() => {
+              const otherSkills = result.skill_effects.filter(
+                (e: SkillEffectAgg) =>
+                  e.kind !== "strength" &&
+                  e.kind !== "cooking_ingredients" &&
+                  e.kind !== "ingredient_total",
+              );
+              if (otherSkills.length === 0) return null;
+              return (
+                <div className="card">
+                  <div className="prod-card__block-head">{t("teams.otherSkills")}</div>
+                  {otherSkills.map((e: SkillEffectAgg) => {
+                    const meta = skillEffectMeta(e.kind);
+                    const total = e.total * factor;
+                    const triggers = e.triggers * factor;
+                    const label = t(meta.labelKey);
+                    return (
+                      <div key={e.kind} className="prod-card__line">
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                          {meta.iconNode()}
+                          <span>
+                            {e.kind === "tasty_chance"
+                              ? `+${fdown(total)}% ${label}`
+                              : e.kind === "extra_helpful"
+                                ? `×${fdown(total)} ${label}`
+                                : `${fdown(total)} ${label}`}
+                          </span>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "0.15rem", fontSize: "var(--text-xs)" }}>
+                            (<IconSparkle width={11} height={11} style={{ opacity: 0.75 }} />
+                            {triggers.toFixed(2)})
+                          </span>
                         </span>
-                      </span>
-                      <span className="teams-member-rank__value">
-                        <img
-                          className="mini-icon"
-                          src={CHARGE_STRENGTH_ICON}
-                          alt=""
-                          style={{ width: 13, height: 13 }}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
+            {/* ── Strength breakdown: proportion of the 4 strength sources ── */}
+            {(() => {
+              const pieData = [
+                { key: "berries", name: t("teams.berries"), value: result.total_berry_strength * factor, color: "#6366f1" },
+                { key: "skills", name: t("card.skill"), value: result.total_skill_strength * factor, color: "#3fb950" },
+                { key: "recipes", name: t("teams.recipes"), value: result.cooking_strength * factor, color: "#a371f7" },
+                { key: "fillers", name: t("teams.fillersLabel"), value: fillerStrengthTotal * factor, color: "#f78166" },
+              ].filter((d) => d.value > 0);
+              const totalValue = pieData.reduce((s, d) => s + d.value, 0);
+              if (totalValue <= 0) return null;
+              return (
+                <div className="card teams-breakdown-card">
+                  <div className="prod-card__block-head">{t("teams.strengthBreakdown")}</div>
+                  <div className="teams-breakdown-chart">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie
+                          data={pieData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={45}
+                          outerRadius={70}
+                          paddingAngle={2}
+                          stroke="var(--surface)"
+                        >
+                          {pieData.map((d) => (
+                            <Cell key={d.key} fill={d.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value: number, name: string) => [
+                            `${fdown(value)} (${((value / totalValue) * 100).toFixed(1)}%)`,
+                            name,
+                          ]}
+                          contentStyle={{
+                            background: "var(--surface-2)",
+                            border: "1px solid var(--border)",
+                            borderRadius: "8px",
+                            color: "var(--text)",
+                            fontSize: "var(--text-sm)",
+                          }}
                         />
-                        {fdown(r.strength * factor)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+                        <Legend
+                          verticalAlign="bottom"
+                          height={36}
+                          formatter={(value: string) => (
+                            <span style={{ color: "var(--text)", fontSize: "var(--text-xs)" }}>{value}</span>
+                          )}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              );
+            })()}
             </div>
 
             {/* Cooking card */}

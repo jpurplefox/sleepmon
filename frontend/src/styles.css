@@ -2850,65 +2850,10 @@ button.prod-card__base-tag--action:hover {
   min-width: 0;
 }
 
-/* Member ranking: sprite + name + proportional bar + strength, one row each. */
-.teams-member-rank {
-  list-style: none;
-  margin: 0.4rem 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.teams-member-rank__row {
-  display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: var(--text-sm);
-}
-
-.teams-member-rank__sprite {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-
-.teams-member-rank__mid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  min-width: 0;
-}
-
-.teams-member-rank__name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.teams-member-rank__bar-track {
-  height: 6px;
-  border-radius: 999px;
-  background: var(--surface-2);
-  overflow: hidden;
-}
-
-.teams-member-rank__bar {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: var(--accent);
-}
-
-.teams-member-rank__value {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--muted);
-  justify-content: flex-end;
+/* Strength breakdown card: compact Recharts donut. */
+.teams-breakdown-chart {
+  margin-top: 0.4rem;
+  width: 100%;
 }
 
 /* Config toolbar above the roster: right-aligned action. */
