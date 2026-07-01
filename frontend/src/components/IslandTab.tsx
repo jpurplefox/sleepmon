@@ -54,8 +54,8 @@ export function IslandTab({
         // Isla con favoritas fijas: las seteamos automáticamente.
         onFavoriteBerries(found.favorite_berries);
       } else {
-        // user_picks: resetear para que el usuario elija.
-        onFavoriteBerries(["", "", ""]);
+        // user_picks: array limpio, el usuario elige.
+        onFavoriteBerries([]);
       }
     }
   };
@@ -65,14 +65,19 @@ export function IslandTab({
     onIslandBonus(clamped / 100);
   };
 
-  // Handlers para los 3 selectores de baya (solo cuando user_picks === true).
-  const handleBerryPick = (slotIdx: number, berry: string) => {
-    const next = [...favoriteBerries];
-    // Aseguramos que haya 3 slots.
-    while (next.length < 3) next.push("");
-    next[slotIdx] = berry;
-    onFavoriteBerries(next);
+  // Handlers para la grilla de chips (solo cuando user_picks === true).
+  const handleBerryToggle = (berry: string) => {
+    if (favoriteBerries.includes(berry)) {
+      // Quitar
+      onFavoriteBerries(favoriteBerries.filter((b) => b !== berry));
+    } else if (favoriteBerries.length < 3) {
+      // Agregar si hay espacio
+      onFavoriteBerries([...favoriteBerries, berry]);
+    }
+    // Si ya hay 3 y el chip no está seleccionado, el botón está disabled: no hace falta else.
   };
+
+  const selectedCount = favoriteBerries.length;
 
   return (
     <div className="island-tab">
@@ -102,51 +107,34 @@ export function IslandTab({
           <span className="island-tab__label">{t("teams.favoriteBerries")}</span>
 
           {island?.user_picks ? (
-            /* user_picks: 3 selectores */
-            <div className="island-tab__berry-pickers">
-              {[0, 1, 2].map((slotIdx) => {
-                const currentVal = favoriteBerries[slotIdx] ?? "";
-                return (
-                  <div key={slotIdx} className="island-tab__berry-slot">
-                    <label
-                      htmlFor={`island-berry-${slotIdx}`}
-                      className="island-tab__berry-slot-label muted"
+            /* user_picks: grilla de chips togglable */
+            <div>
+              <p className={`island-tab__berry-count${selectedCount === 3 ? " island-tab__berry-count--full" : ""}`}>
+                {selectedCount} / 3
+              </p>
+              <div className="island-tab__berry-grid">
+                {allBerries.map((b) => {
+                  const isSelected = favoriteBerries.includes(b);
+                  const isDisabled = !isSelected && selectedCount >= 3;
+                  return (
+                    <button
+                      key={b}
+                      type="button"
+                      className={`island-tab__berry-toggle${isSelected ? " is-selected" : ""}`}
+                      disabled={isDisabled}
+                      onClick={() => handleBerryToggle(b)}
+                      aria-pressed={isSelected}
                     >
-                      {slotIdx === 0
-                        ? t("teams.mainBerry")
-                        : t("teams.secondaryBerry")}
-                    </label>
-                    <div className="island-tab__berry-sel-wrap">
-                      {currentVal && (
-                        <img
-                          src={berryIcon(currentVal)}
-                          alt=""
-                          className="island-tab__berry-icon"
-                        />
-                      )}
-                      <select
-                        id={`island-berry-${slotIdx}`}
-                        className="island-tab__berry-select"
-                        value={currentVal}
-                        onChange={(e) => handleBerryPick(slotIdx, e.target.value)}
-                      >
-                        <option value="">—</option>
-                        {allBerries.map((b) => {
-                          // Deshabilitar bayas ya elegidas en otros slots.
-                          const isUsedElsewhere = favoriteBerries.some(
-                            (pb, pi) => pi !== slotIdx && pb === b,
-                          );
-                          return (
-                            <option key={b} value={b} disabled={isUsedElsewhere}>
-                              {berryName(b)}
-                            </option>
-                          );
-                        })}
-                      </select>
-                    </div>
-                  </div>
-                );
-              })}
+                      <img
+                        src={berryIcon(b)}
+                        alt=""
+                        className="island-tab__berry-icon"
+                      />
+                      {berryName(b)}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           ) : (
             /* Favoritas fijas: chips de solo lectura */
@@ -170,7 +158,7 @@ export function IslandTab({
         </div>
       )}
 
-      {/* Bonus de isla */}
+      {/* Bonus de zona */}
       <div className="island-tab__row">
         <label className="island-tab__label">
           {t("teams.islandBonus")}
@@ -192,18 +180,6 @@ export function IslandTab({
           <span className="island-tab__bonus-unit muted">%</span>
         </div>
       </div>
-
-      {/* Hint: qué es el bonus */}
-      <p className="muted island-tab__bonus-hint">
-        {t("teams.islandBonusHint")}
-      </p>
-
-      {/* Recordatorio visual cuando hay bonus activo */}
-      {islandBonus > 0 && (
-        <p className="muted island-tab__bonus-hint">
-          ×{(1 + islandBonus).toFixed(2)}
-        </p>
-      )}
     </div>
   );
 }
