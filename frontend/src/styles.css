@@ -2445,24 +2445,24 @@ select:focus {
   border-color: var(--moon-border);
 }
 
-/* Resaltado de baya favorita: borde de acento + fondo de acento muy sutil.
-   Reutiliza --accent/--accent-dim para coherencia con el lenguaje interactivo
-   ya establecido en el sistema. La sombra interior refuerza el contorno. */
+/* Resaltado de baya favorita: borde dorado lunar + sombra interior en dorado
+   tenue. Usa --moon-border/--moon-dim para no colisionar con el lenguaje de
+   selección/drag que usa --accent. */
 .prod-card--favorite-berry {
-  border-color: var(--accent);
-  box-shadow: inset 0 0 0 1px var(--accent);
+  border-color: var(--moon-border);
+  box-shadow: inset 0 0 0 1px var(--moon-dim);
 }
 
-/* Badge "×2" junto al encabezado del bloque de bayas. Pill compacta, misma
-   familia de color que --accent para ligar con el borde de resaltado. */
+/* Badge "×2" junto al encabezado del bloque de bayas. Pill compacta, en
+   dorado lunar para ligar con el borde de resaltado. */
 .prod-card__fav-badge {
   display: inline-flex;
   align-items: center;
   font-size: var(--text-xs);
   font-weight: 700;
-  color: var(--accent);
-  background: var(--accent-dim);
-  border: 1px solid var(--accent);
+  color: var(--moon);
+  background: var(--moon-dim);
+  border: 1px solid var(--moon-border);
   border-radius: 999px;
   padding: 0 0.4rem;
   line-height: 1.6;
@@ -3818,8 +3818,8 @@ button.prod-card__base-tag--action:hover {
   align-items: center;
   gap: 0.35rem;
   padding: 0.25rem 0.65rem;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  background: var(--moon-dim);
+  border: 1px solid var(--moon-border);
   border-radius: var(--r-sm);
   font-size: var(--text-sm);
 }
@@ -3858,18 +3858,6 @@ button.prod-card__base-tag--action:hover {
   min-width: 10rem;
 }
 
-/* Bonus input */
-.island-tab__bonus-wrap {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.island-tab__bonus-input {
-  width: 5rem;
-  text-align: right;
-}
-
 .island-tab__bonus-unit {
   font-size: var(--text-sm);
 }
@@ -3877,6 +3865,19 @@ button.prod-card__base-tag--action:hover {
 .island-tab__bonus-hint {
   margin: 0;
   padding-left: 10rem; /* align under the control */
+  font-size: var(--text-sm);
+}
+
+/* Stepper del bonus de isla: flex para alinear stepper + unidad "%" */
+.island-tab__bonus-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Input compacto (3 cifras, 0–85) vs el ancho por defecto del nivel normal. */
+.island-tab__bonus-stepper .level-stepper__input {
+  width: 3rem;
 }
 
 /* ── StrengthValue tooltip ─────────────────────────────────────────────────
@@ -3897,8 +3898,9 @@ button.prod-card__base-tag--action:hover {
   display: none;
   position: absolute;
   bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
+  left: auto;
+  right: 0;
+  transform: none;
   min-width: 13rem;
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -3932,4 +3934,16 @@ button.prod-card__base-tag--action:hover {
 .strength-value__tooltip-val {
   font-weight: 600;
   color: var(--text);
+}
+
+/* Separador entre las 2 filas del tooltip (Base / Con bonus). */
+.strength-value__tooltip-row + .strength-value__tooltip-row {
+  border-top: 1px solid var(--border);
+  padding-top: 0.2rem;
+  margin-top: 0.1rem;
+}
+
+/* Fila activa (con bonus): valor en dorado. */
+.strength-value__tooltip-row:last-child .strength-value__tooltip-val {
+  color: var(--moon);
 }

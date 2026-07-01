@@ -135,7 +135,7 @@ export function SettingsModal({
   ];
 
   return (
-    <Modal title={t("teams.mealPickerTitle")} onClose={onClose} wide>
+    <Modal title={t("teams.configure")} onClose={onClose} wide>
       {/* Tab bar */}
       <div className="settings-modal-tabs" role="tablist">
         <button

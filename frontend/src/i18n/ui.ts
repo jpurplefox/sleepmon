@@ -348,6 +348,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.mainBerry": "Principal",
     "teams.secondaryBerry": "Secundaria",
     "teams.islandBonus": "Bonus de isla",
+    "teams.islandBonusHint": "Bonus de facilidad de la isla, configurable en el juego (0–85%).",
+    "teams.islandBonusDecrease": "Bajar bonus",
+    "teams.islandBonusIncrease": "Subir bonus",
     "card.favBerryBadge": "×2 — baya favorita de la isla",
     // Tooltip de fuerza base / con bonus
     "teams.strengthBase": "Base",
@@ -700,6 +703,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.mainBerry": "Main",
     "teams.secondaryBerry": "Secondary",
     "teams.islandBonus": "Island bonus",
+    "teams.islandBonusHint": "Island support bonus, set in-game (0–85%).",
+    "teams.islandBonusDecrease": "Decrease bonus",
+    "teams.islandBonusIncrease": "Increase bonus",
     "card.favBerryBadge": "×2 — island favorite berry",
     // Strength base / with bonus tooltip
     "teams.strengthBase": "Base",

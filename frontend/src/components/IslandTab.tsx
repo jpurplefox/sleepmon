@@ -1,6 +1,7 @@
 import { berryIcon } from "../berries";
 import { useI18n } from "../i18n";
 import type { Catalog, Island } from "../types";
+import { LevelStepperInput } from "./LevelStepperInput";
 
 interface Props {
   catalog: Catalog;
@@ -171,28 +172,35 @@ export function IslandTab({
 
       {/* Bonus de isla */}
       <div className="island-tab__row">
-        <label htmlFor="island-bonus" className="island-tab__label">
+        <label className="island-tab__label">
           {t("teams.islandBonus")}
         </label>
-        <div className="island-tab__bonus-wrap">
-          <input
-            id="island-bonus"
-            type="number"
-            className="island-tab__bonus-input"
-            min={0}
-            max={85}
-            step={1}
-            value={bonusPct}
-            onChange={(e) => handleBonusChange(Number(e.target.value))}
-            aria-label={t("teams.islandBonus")}
-          />
+        <div className="island-tab__bonus-stepper">
+          <div className="level-stepper">
+            <LevelStepperInput
+              value={bonusPct}
+              min={0}
+              max={85}
+              onChange={handleBonusChange}
+              ariaLabels={{
+                down: t("teams.islandBonusDecrease"),
+                input: t("teams.islandBonus"),
+                up: t("teams.islandBonusIncrease"),
+              }}
+            />
+          </div>
           <span className="island-tab__bonus-unit muted">%</span>
         </div>
       </div>
 
+      {/* Hint: qué es el bonus */}
+      <p className="muted island-tab__bonus-hint">
+        {t("teams.islandBonusHint")}
+      </p>
+
       {/* Recordatorio visual cuando hay bonus activo */}
       {islandBonus > 0 && (
-        <p className="muted island-tab__bonus-hint" style={{ fontSize: "var(--text-sm)" }}>
+        <p className="muted island-tab__bonus-hint">
           ×{(1 + islandBonus).toFixed(2)}
         </p>
       )}
