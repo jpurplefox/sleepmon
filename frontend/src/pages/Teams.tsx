@@ -318,32 +318,28 @@ export function Teams() {
           );
         })}
 
-        {/* Trailing "add" slot — same pattern as Production.tsx */}
-        <div className="prod-card-cell">
-          <div className="prod-card__toolbar prod-card__toolbar--empty" aria-hidden="true" />
-          <article className="prod-card prod-card--add">
-            {atMax ? (
-              <p className="muted prod-add__hint">{t("teams.atMax")}</p>
-            ) : (
-              <>
-                <p className="muted prod-add__hint">
-                  {selectedIds.length === 0
-                    ? t("teams.empty")
-                    : t("teams.addHintMore")}
-                </p>
-                <div className="prod-add__actions">
-                  <button
-                    type="button"
-                    className="btn btn--primary"
-                    onClick={() => setPickerOpen(true)}
-                  >
-                    {t("teams.addPokemon")}
-                  </button>
-                </div>
-              </>
-            )}
-          </article>
-        </div>
+        {/* Trailing "add" slot — hidden once the team is full (max is obvious). */}
+        {!atMax && (
+          <div className="prod-card-cell">
+            <div className="prod-card__toolbar prod-card__toolbar--empty" aria-hidden="true" />
+            <article className="prod-card prod-card--add">
+              <p className="muted prod-add__hint">
+                {selectedIds.length === 0
+                  ? t("teams.empty")
+                  : t("teams.addHintMore")}
+              </p>
+              <div className="prod-add__actions">
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  onClick={() => setPickerOpen(true)}
+                >
+                  {t("teams.addPokemon")}
+                </button>
+              </div>
+            </article>
+          </div>
+        )}
       </div>
 
       {/* ── Loading / error states for the team query ── */}
@@ -421,8 +417,8 @@ export function Teams() {
                 </div>
               </div>
 
-              {/* ── Skill block (strength-contributing skill only) ── */}
-              {result.total_skill_strength > 0 && (() => {
+              {/* ── Skill block — always shown, even at 0 strength / 0 triggers. ── */}
+              {(() => {
                 const strengthEffect = result.skill_effects.find(
                   (e: SkillEffectAgg) => e.kind === "strength",
                 );
@@ -432,7 +428,7 @@ export function Teams() {
                     <div className="prod-card__block-head">{t("card.skill")}</div>
                     <div className="cook-result-row">
                       <span
-                        className="cook-result-row__label muted"
+                        className="cook-result-row__label"
                         style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}
                       >
                         <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" />
@@ -490,7 +486,12 @@ export function Teams() {
               if (otherSkills.length === 0) return null;
               return (
                 <div className="card">
-                  <div className="prod-card__block-head">{t("teams.otherSkills")}</div>
+                  <div
+                    className="prod-card__block-head"
+                    style={{ marginBottom: "0.75rem" }}
+                  >
+                    {t("teams.otherSkills")}
+                  </div>
                   {otherSkills.map((e: SkillEffectAgg) => {
                     const meta = skillEffectMeta(e.kind);
                     const total = e.total * factor;
@@ -562,6 +563,8 @@ export function Teams() {
                             color: "var(--text)",
                             fontSize: "var(--text-sm)",
                           }}
+                          itemStyle={{ color: "var(--text)" }}
+                          labelStyle={{ color: "var(--text)" }}
                         />
                         <Legend
                           verticalAlign="bottom"
