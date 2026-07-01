@@ -335,6 +335,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.fillers": "{n} fillers",
     "teams.potFits": "Entra",
     "teams.potNoFit": "No entra",
+    "teams.tabIsland": "Isla",
+    "teams.tabMeals": "Comidas",
     // Error boundary
     "error.title": "Algo salió mal",
     "error.body": "Ocurrió un error inesperado al mostrar esta vista. Probá recargar la página.",
@@ -670,6 +672,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.fillers": "{n} fillers",
     "teams.potFits": "Fits",
     "teams.potNoFit": "Doesn't fit",
+    "teams.tabIsland": "Island",
+    "teams.tabMeals": "Meals",
     // Error boundary
     "error.title": "Something went wrong",
     "error.body": "An unexpected error occurred while showing this view. Try reloading the page.",

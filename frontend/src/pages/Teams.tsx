@@ -13,7 +13,7 @@ import {
 import { api } from "../api/client";
 import { berryIcon } from "../berries";
 import { BoxPicker } from "../components/BoxPicker";
-import { MealPickerModal } from "../components/MealPickerModal";
+import { SettingsModal } from "../components/SettingsModal";
 import { Modal } from "../components/Modal";
 import { ProductionCard } from "../components/ProductionCard";
 import {
@@ -1071,9 +1071,9 @@ export function Teams() {
         </Modal>
       )}
 
-      {/* MealPickerModal */}
+      {/* SettingsModal */}
       {mealPickerOpen && (
-        <MealPickerModal
+        <SettingsModal
           recipes={recipes.data ?? []}
           levelBonus={catalog.data.recipe_level_bonus}
           meals={meals}
