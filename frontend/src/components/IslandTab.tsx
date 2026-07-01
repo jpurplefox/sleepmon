@@ -73,9 +73,6 @@ export function IslandTab({
     onFavoriteBerries(next);
   };
 
-  // Las bayas ya elegidas en otros slots (para evitar duplicados).
-  const pickedBerries = (island?.user_picks ? favoriteBerries : []).filter(Boolean);
-
   return (
     <div className="island-tab">
       {/* Selector de isla */}
@@ -135,7 +132,7 @@ export function IslandTab({
                         <option value="">—</option>
                         {allBerries.map((b) => {
                           // Deshabilitar bayas ya elegidas en otros slots.
-                          const isUsedElsewhere = pickedBerries.some(
+                          const isUsedElsewhere = favoriteBerries.some(
                             (pb, pi) => pi !== slotIdx && pb === b,
                           );
                           return (
