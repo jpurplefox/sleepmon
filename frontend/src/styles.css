@@ -3878,3 +3878,58 @@ button.prod-card__base-tag--action:hover {
   margin: 0;
   padding-left: 10rem; /* align under the control */
 }
+
+/* ── StrengthValue tooltip ─────────────────────────────────────────────────
+   Shows a two-line breakdown (Base / Con bonus) when hovering a strength
+   value that has an island bonus applied. The wrapping span is position:
+   relative so the tooltip card can anchor to it. The tooltip is hidden by
+   default and shown on hover/focus; it is also available as a native `title`
+   and `aria-label` for screen readers and keyboard users.
+ ─────────────────────────────────────────────────────────────────────────── */
+.strength-value--has-tooltip {
+  position: relative;
+  cursor: help;
+  text-decoration: underline dotted var(--muted);
+  text-underline-offset: 2px;
+}
+
+.strength-value__tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 13rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 0.4rem 0.6rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  font-size: var(--text-xs);
+  color: var(--text);
+  white-space: nowrap;
+  z-index: 200;
+  pointer-events: none;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.strength-value--has-tooltip:hover .strength-value__tooltip,
+.strength-value--has-tooltip:focus-within .strength-value__tooltip {
+  display: flex;
+}
+
+.strength-value__tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.strength-value__tooltip-label {
+  color: var(--muted);
+}
+
+.strength-value__tooltip-val {
+  font-weight: 600;
+  color: var(--text);
+}

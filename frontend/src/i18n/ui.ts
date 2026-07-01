@@ -349,6 +349,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.secondaryBerry": "Secundaria",
     "teams.islandBonus": "Bonus de isla",
     "card.favBerryBadge": "×2 — baya favorita de la isla",
+    // Tooltip de fuerza base / con bonus
+    "teams.strengthBase": "Base",
+    "teams.strengthWithBonus": "Con bonus (+{bonus}%)",
     // Error boundary
     "error.title": "Algo salió mal",
     "error.body": "Ocurrió un error inesperado al mostrar esta vista. Probá recargar la página.",
@@ -698,6 +701,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.secondaryBerry": "Secondary",
     "teams.islandBonus": "Island bonus",
     "card.favBerryBadge": "×2 — island favorite berry",
+    // Strength base / with bonus tooltip
+    "teams.strengthBase": "Base",
+    "teams.strengthWithBonus": "With bonus (+{bonus}%)",
     // Error boundary
     "error.title": "Something went wrong",
     "error.body": "An unexpected error occurred while showing this view. Try reloading the page.",

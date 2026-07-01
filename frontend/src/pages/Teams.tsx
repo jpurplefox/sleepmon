@@ -16,6 +16,7 @@ import { BoxPicker } from "../components/BoxPicker";
 import { SettingsModal } from "../components/SettingsModal";
 import { Modal } from "../components/Modal";
 import { ProductionCard } from "../components/ProductionCard";
+import { StrengthValue } from "../components/StrengthValue";
 import {
   IconMagnifier,
   IconPackage,
@@ -462,7 +463,11 @@ export function Teams() {
                       alt=""
                       style={{ width: 16, height: 16 }}
                     />
-                    {fdown(result.total_berry_strength * factor)}
+                    <StrengthValue
+                      value={result.total_berry_strength * factor}
+                      base={result.total_berry_strength_base * factor}
+                      bonus={islandBonus}
+                    />
                   </span>
                 </div>
               </div>
@@ -495,7 +500,11 @@ export function Teams() {
                           alt=""
                           style={{ width: 14, height: 14 }}
                         />
-                        {fdown(result.total_skill_strength * factor)}
+                        <StrengthValue
+                          value={result.total_skill_strength * factor}
+                          base={result.total_skill_strength_base * factor}
+                          bonus={islandBonus}
+                        />
                       </span>
                     </div>
                   </div>
@@ -515,7 +524,11 @@ export function Teams() {
                     alt=""
                     style={{ width: 16, height: 16 }}
                   />
-                  {fdown(result.total_strength * factor)}
+                  <StrengthValue
+                    value={result.total_strength * factor}
+                    base={result.total_strength_base * factor}
+                    bonus={islandBonus}
+                  />
                 </span>
               </div>
 
@@ -824,7 +837,11 @@ export function Teams() {
                             alt=""
                             style={{ width: 16, height: 16 }}
                           />
-                          {fdown(result.cooking_strength * factor)}
+                          <StrengthValue
+                            value={result.cooking_strength * factor}
+                            base={result.cooking_strength_base * factor}
+                            bonus={islandBonus}
+                          />
                         </span>
                       </div>
                     </div>
@@ -1065,7 +1082,11 @@ export function Teams() {
               <span className="teams-totals__label">{t("teams.berriesSkills")}</span>
               <span className="teams-totals__kpi">
                 <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" style={{ width: 18, height: 18 }} />
-                {fdown(result.total_strength)}
+                <StrengthValue
+                  value={result.total_strength}
+                  base={result.total_strength_base}
+                  bonus={islandBonus}
+                />
               </span>
               <span className="teams-totals__aside">
                 ×7 {fdown(result.total_strength * 7)}
