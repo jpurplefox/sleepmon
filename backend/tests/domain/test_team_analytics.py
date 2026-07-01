@@ -1,3 +1,5 @@
+import pytest
+
 from sleepmon.domain.analytics import SkillEffectAgg, team_production
 from sleepmon.domain.production import DailyProduction, SlotProduction
 from sleepmon.domain.value_objects import Berry, Ingredient
@@ -223,3 +225,41 @@ def test_skill_effects_is_tuple_of_skill_effect_agg() -> None:
     result = team_production([("a", "X", a)])
     assert isinstance(result.skill_effects, tuple)
     assert all(isinstance(e, SkillEffectAgg) for e in result.skill_effects)
+
+
+# ── bonus de isla ──────────────────────────────────────────────────────────────
+
+
+def _sample_entries() -> list[tuple[str, str, DailyProduction]]:
+    """Entries de muestra para tests de bonus de isla."""
+    a = _daily(berry_strength=100.0, skill_strength=50.0)
+    b = _daily(berry_strength=200.0, skill_strength=None)
+    return [("id-a", "Pikachu", a), ("id-b", "Bulbasaur", b)]
+
+
+def test_island_bonus_scales_all_strength() -> None:
+    entries = _sample_entries()
+    base = team_production(entries)
+    boosted = team_production(entries, island_bonus=0.5)
+
+    assert boosted.total_berry_strength_base == base.total_berry_strength
+    assert boosted.total_berry_strength == pytest.approx(base.total_berry_strength * 1.5)
+    assert boosted.total_skill_strength == pytest.approx(base.total_skill_strength * 1.5)
+    assert boosted.total_strength == pytest.approx(base.total_strength * 1.5)
+    assert boosted.island_bonus == 0.5
+
+
+def test_member_strength_has_base_and_boosted() -> None:
+    entries = _sample_entries()
+    boosted = team_production(entries, island_bonus=0.85)
+    for member in boosted.members:
+        assert member.strength == pytest.approx(member.strength_base * 1.85)
+
+
+def test_zero_bonus_is_identity() -> None:
+    entries = _sample_entries()
+    base = team_production(entries)
+    assert base.island_bonus == 0.0
+    assert base.total_strength == base.total_strength_base
+    for member in base.members:
+        assert member.strength == member.strength_base
