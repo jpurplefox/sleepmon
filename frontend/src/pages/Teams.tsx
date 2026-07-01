@@ -139,6 +139,12 @@ export function Teams() {
 
   const inTeam = useMemo(() => new Set(selectedIds), [selectedIds]);
 
+  // Set de bayas favoritas activas para lookup O(1) al renderizar las cards.
+  const favBerrySet = useMemo(
+    () => new Set(favoriteBerries.filter(Boolean)),
+    [favoriteBerries],
+  );
+
   // Bayas que realmente enviar al backend: filtrar strings vacíos (slots no elegidos).
   const activeBerries = favoriteBerries.filter(Boolean);
 
@@ -337,6 +343,13 @@ export function Teams() {
           const contrib = result?.members.find((mc) => mc.member_id === id);
           const prod = contrib?.production ?? null;
 
+          // Determine if this member's berry is a favorite of the active island.
+          // The source of truth is the catalog species entry (not the production
+          // result), so the highlight is available even before the query resolves.
+          const speciesEntry = catalog.data.species.find((s) => s.name === m.species);
+          const isFavoriteBerry =
+            speciesEntry != null && favBerrySet.has(speciesEntry.berry);
+
           return (
             <ProductionCard
               key={id}
@@ -345,6 +358,7 @@ export function Teams() {
               production={prod}
               productionError={null}
               readOnly
+              isFavoriteBerry={isFavoriteBerry}
               onEdit={() => {/* no-op in readOnly */}}
               onClone={() => {/* no-op in readOnly */}}
               onRemove={() => removeMember(id)}
