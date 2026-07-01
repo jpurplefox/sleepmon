@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { berryIcon } from "../berries";
 import { useI18n } from "../i18n";
 import type { Catalog, Island } from "../types";
-import { LevelStepperInput } from "./LevelStepperInput";
 import { IconChevronDown } from "./icons";
 
 interface Props {
@@ -283,24 +282,34 @@ export function IslandTab({
 
       {/* Bonus de zona */}
       <div className="island-tab__row">
-        <label className="island-tab__label">
+        <label className="island-tab__label" htmlFor="area-bonus-range">
           {t("teams.islandBonus")}
         </label>
-        <div className="island-tab__bonus-stepper">
-          <div className="level-stepper">
-            <LevelStepperInput
-              value={bonusPct}
+        <div
+          className="area-bonus-slider"
+          style={{ "--slider-pct": `${((bonusPct / 85) * 100).toFixed(1)}%` } as React.CSSProperties}
+        >
+          <div className="area-bonus-slider__track-row">
+            <input
+              id="area-bonus-range"
+              type="range"
+              className="area-bonus-slider__input"
               min={0}
               max={85}
-              onChange={handleBonusChange}
-              ariaLabels={{
-                down: t("teams.islandBonusDecrease"),
-                input: t("teams.islandBonus"),
-                up: t("teams.islandBonusIncrease"),
-              }}
+              step={5}
+              value={bonusPct}
+              onChange={(e) => handleBonusChange(Number(e.target.value))}
+              aria-label={t("teams.islandBonus")}
+              aria-valuetext={`${bonusPct}%`}
             />
+            <span className="area-bonus-slider__value" aria-hidden="true">
+              {bonusPct}<span className="area-bonus-slider__unit">%</span>
+            </span>
           </div>
-          <span className="island-tab__bonus-unit muted">%</span>
+          <div className="area-bonus-slider__marks" aria-hidden="true">
+            <span>0%</span>
+            <span>85%</span>
+          </div>
         </div>
       </div>
     </div>

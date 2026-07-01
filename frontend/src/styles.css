@@ -3942,21 +3942,35 @@ button.prod-card__base-tag--action:hover {
   color: var(--moon);
 }
 
-.island-tab__bonus-unit {
-  font-size: var(--text-sm);
+/* ── Area Bonus Slider (reemplaza el stepper; fill en --moon = valor "caliente") ── */
+.area-bonus-slider { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; min-width: 14rem; max-width: 22rem; }
+.area-bonus-slider__track-row { display: flex; align-items: center; gap: 0.75rem; }
+.area-bonus-slider__input {
+  -webkit-appearance: none; appearance: none; flex: 1; height: 6px; border-radius: 999px;
+  border: none; outline: none; cursor: pointer;
+  background: linear-gradient(to right, var(--moon) 0%, var(--moon) var(--slider-pct, 0%), var(--border) var(--slider-pct, 0%), var(--border) 100%);
 }
-
-/* Stepper del bonus de isla: flex para alinear stepper + unidad "%" */
-.island-tab__bonus-stepper {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
+.area-bonus-slider__input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 999px; }
+.area-bonus-slider__input::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 999px;
+  background: var(--surface-2); border: 2px solid var(--moon); box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  cursor: pointer; transition: border-color 0.12s, transform 0.1s;
 }
-
-/* Input compacto (3 cifras, 0–85) vs el ancho por defecto del nivel normal. */
-.island-tab__bonus-stepper .level-stepper__input {
-  width: 3rem;
+.area-bonus-slider__input::-webkit-slider-thumb:hover { transform: scale(1.15); }
+.area-bonus-slider__input::-webkit-slider-thumb:active { background: var(--moon-dim); transform: scale(1.1); }
+.area-bonus-slider__input::-moz-range-thumb {
+  width: 18px; height: 18px; border-radius: 999px; background: var(--surface-2);
+  border: 2px solid var(--moon); box-shadow: 0 1px 3px rgba(0,0,0,0.5); cursor: pointer;
+  transition: border-color 0.12s, transform 0.1s;
 }
+.area-bonus-slider__input::-moz-range-thumb:hover { transform: scale(1.15); }
+.area-bonus-slider__input::-moz-range-thumb:active { background: var(--moon-dim); transform: scale(1.1); }
+.area-bonus-slider__input::-moz-range-progress { background: var(--moon); height: 6px; border-radius: 999px; }
+.area-bonus-slider__input::-moz-range-track { background: var(--border); height: 6px; border-radius: 999px; }
+.area-bonus-slider__input:disabled { opacity: 0.35; cursor: default; }
+.area-bonus-slider__value { flex-shrink: 0; min-width: 3.2ch; text-align: right; font-size: var(--text-base); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--moon); }
+.area-bonus-slider__unit { font-size: var(--text-sm); color: var(--muted); font-weight: 400; }
+.area-bonus-slider__marks { display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--muted); padding: 0 9px; user-select: none; }
 
 /* ── StrengthValue tooltip ─────────────────────────────────────────────────
    Shows a two-line breakdown (Base / Con bonus) when hovering a strength
