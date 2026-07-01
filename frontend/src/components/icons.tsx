@@ -186,6 +186,15 @@ export function IconCopy(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+// Check (ingrediente filler usado / slot cubierto).
+export function IconCheck(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
 // Guardar en la caja (una caja con una flecha que entra hacia adentro).
 export function IconSaveBox(props: SVGProps<SVGSVGElement>) {
   return (

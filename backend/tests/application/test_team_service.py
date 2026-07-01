@@ -1,21 +1,35 @@
+from collections.abc import Sequence
 from uuid import uuid4
 
 import pytest
 
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
-from sleepmon.application.dto import ProductionInput, TeamMemberInput
+from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
+from sleepmon.application.dto import (
+    MealSelectionInput,
+    ProductionInput,
+    TeamMemberInput,
+    TeamProductionInput,
+)
 from sleepmon.application.services import DefaultTeamService
+from sleepmon.domain.catalog_data import MAX_RECIPE_LEVEL
+from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.errors import (
     SpeciesNotFoundError,
     TeamMemberNotFoundError,
     ValidationError,
 )
+from sleepmon.domain.ports import SpeciesCatalog
+from sleepmon.domain.species import Species
+from sleepmon.domain.value_objects import Ingredient
 from tests.fakes import InMemoryTeamRepository
 
 
 @pytest.fixture
 def service() -> DefaultTeamService:
-    return DefaultTeamService(InMemoryTeamRepository(), StaticSpeciesCatalog())
+    return DefaultTeamService(
+        InMemoryTeamRepository(), StaticSpeciesCatalog(), StaticRecipeCatalog()
+    )
 
 
 def valid_input(**overrides: object) -> TeamMemberInput:
@@ -579,3 +593,178 @@ def test_compute_production_includes_dream_shards_for_meowth(
     )
     assert result.skill_dream_shards is not None
     assert result.skill_dream_shards == pytest.approx(result.skill_triggers * 2500)
+
+
+# ---------------------------------------------------------------------------
+# compute_team_production
+# ---------------------------------------------------------------------------
+
+
+def _service_tp() -> DefaultTeamService:
+    return DefaultTeamService(
+        InMemoryTeamRepository(), StaticSpeciesCatalog(), StaticRecipeCatalog()
+    )
+
+
+def _add_pikachu(svc: DefaultTeamService) -> str:
+    member = svc.add_member(
+        TeamMemberInput(
+            species="Pikachu",
+            level=30,
+            nature="Adamant",
+            ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+            sub_skills=[],
+        )
+    )
+    return str(member.id)
+
+
+def test_compute_team_production_aggregates_members() -> None:
+    svc = _service_tp()
+    mid = _add_pikachu(svc)
+    result = svc.compute_team_production(
+        TeamProductionInput(member_ids=[mid], meals=[None, None, None])
+    )
+    assert result.member_count == 1
+    assert result.total_strength > 0
+    assert result.grand_total_strength == result.total_strength  # sin cocina
+
+
+def test_compute_team_production_member_carries_full_production() -> None:
+    """Each MemberContributionDTO carries a full ProductionResult matching compute_production."""
+    svc = _service_tp()
+    mid = _add_pikachu(svc)
+    result = svc.compute_team_production(
+        TeamProductionInput(member_ids=[mid], meals=[None, None, None])
+    )
+    assert result.member_count == 1
+    member = result.members[0]
+    # production field must exist and be a ProductionResult
+    prod = member.production
+    assert prod is not None
+    # The full production must agree with compute_production for the same config.
+    standalone = svc.compute_production(
+        ProductionInput(
+            species="Pikachu",
+            level=30,
+            nature="Adamant",
+            ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+            sub_skills=[],
+        )
+    )
+    assert prod.berry_amount == standalone.berry_amount
+    assert prod.berry_strength == standalone.berry_strength
+    assert prod.skill_triggers == standalone.skill_triggers
+    assert prod.seconds_per_help == standalone.seconds_per_help
+    assert prod.helps_per_day == standalone.helps_per_day
+    assert prod.berry == standalone.berry
+    assert prod.inventory == standalone.inventory
+    assert prod.inventory_fill_hours == standalone.inventory_fill_hours
+    assert prod.night_skill_chances == standalone.night_skill_chances
+
+
+def test_compute_team_production_adds_cooking_to_grand_total() -> None:
+    svc = _service_tp()
+    mid = _add_pikachu(svc)
+    recipe = svc.list_recipes()[0]
+    result = svc.compute_team_production(
+        TeamProductionInput(
+            member_ids=[mid],
+            meals=[MealSelectionInput(recipe=recipe.name, level=1), None, None],
+        )
+    )
+    assert result.cooking_strength == recipe.base_strength  # nivel 1 = base
+    assert result.grand_total_strength == result.total_strength + result.cooking_strength
+
+
+def test_compute_team_production_rejects_missing_member() -> None:
+    svc = _service_tp()
+    with pytest.raises(TeamMemberNotFoundError):
+        svc.compute_team_production(
+            TeamProductionInput(
+                member_ids=["00000000-0000-0000-0000-000000000000"], meals=[None, None, None]
+            )
+        )
+
+
+def test_compute_team_production_rejects_too_many_members() -> None:
+    svc = _service_tp()
+    ids = [_add_pikachu(svc) for _ in range(6)]
+    with pytest.raises(ValidationError):
+        svc.compute_team_production(TeamProductionInput(member_ids=ids, meals=[None, None, None]))
+
+
+def test_compute_team_production_rejects_duplicate_members() -> None:
+    svc = _service_tp()
+    mid = _add_pikachu(svc)
+    with pytest.raises(ValidationError):
+        svc.compute_team_production(
+            TeamProductionInput(member_ids=[mid, mid], meals=[None, None, None])
+        )
+
+
+def test_compute_team_production_rejects_unknown_recipe() -> None:
+    svc = _service_tp()
+    mid = _add_pikachu(svc)
+    with pytest.raises(ValidationError):
+        svc.compute_team_production(
+            TeamProductionInput(
+                member_ids=[mid], meals=[MealSelectionInput(recipe="No Existe", level=1)]
+            )
+        )
+
+
+def test_compute_team_production_rejects_recipe_level_out_of_range() -> None:
+    svc = _service_tp()
+    mid = _add_pikachu(svc)
+    recipe = svc.list_recipes()[0]
+    with pytest.raises(ValidationError):
+        svc.compute_team_production(
+            TeamProductionInput(
+                member_ids=[mid],
+                meals=[MealSelectionInput(recipe=recipe.name, level=0)],
+            )
+        )
+    with pytest.raises(ValidationError):
+        svc.compute_team_production(
+            TeamProductionInput(
+                member_ids=[mid],
+                meals=[MealSelectionInput(recipe=recipe.name, level=MAX_RECIPE_LEVEL + 1)],
+            )
+        )
+
+
+class _EmptySpeciesCatalog(SpeciesCatalog):
+    def get(self, name: str) -> Species | None:
+        return None
+
+    def all(self) -> Sequence[Species]:
+        return ()
+
+
+def test_compute_team_production_rejects_malformed_member_id() -> None:
+    svc = _service_tp()
+    with pytest.raises(ValidationError, match="inválido"):
+        svc.compute_team_production(
+            TeamProductionInput(
+                member_ids=["not-a-uuid"], meals=[None, None, None]
+            )
+        )
+
+
+def test_compute_team_production_excludes_off_catalog_members() -> None:
+    repo = InMemoryTeamRepository()
+    member = TeamMember(
+        species="Pikachu",
+        level=30,
+        nature=None,
+        ingredients=(Ingredient.FANCY_APPLE, Ingredient.WARMING_GINGER, Ingredient.FANCY_EGG),
+    )
+    repo.add(member)
+    svc = DefaultTeamService(repo, _EmptySpeciesCatalog(), StaticRecipeCatalog())
+    result = svc.compute_team_production(
+        TeamProductionInput(member_ids=[str(member.id)], meals=[None, None, None])
+    )
+    assert result.excluded_count == 1
+    assert result.member_count == 0
+    assert result.total_strength == 0.0

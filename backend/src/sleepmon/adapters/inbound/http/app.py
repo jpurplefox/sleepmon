@@ -18,16 +18,19 @@ from litestar.status_codes import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 from sleepmon.adapters.inbound.http.controllers import (
     CatalogController,
     ProductionController,
+    RecipeController,
     TeamController,
+    TeamProductionController,
 )
 from sleepmon.adapters.inbound.http.schemas import ErrorOut
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
+from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.adapters.outbound.postgres.pool import create_pool
 from sleepmon.adapters.outbound.postgres.repository import PostgresTeamRepository
 from sleepmon.application.services import DefaultTeamService, TeamService
 from sleepmon.config import Settings
 from sleepmon.domain.errors import TeamMemberNotFoundError, ValidationError
-from sleepmon.domain.ports import SpeciesCatalog
+from sleepmon.domain.ports import RecipeCatalog, SpeciesCatalog
 
 
 def _validation_handler(_: Request[Any, Any, Any], exc: ValidationError) -> Response[ErrorOut]:
@@ -44,6 +47,7 @@ def create_app(
     *,
     service: TeamService | None = None,
     catalog: SpeciesCatalog | None = None,
+    recipe_catalog: RecipeCatalog | None = None,
     settings: Settings | None = None,
 ) -> Litestar:
     # ``object`` y no ``Any``: el valor de retorno de los hooks se descarta, pero
@@ -52,12 +56,14 @@ def create_app(
 
     if catalog is None:
         catalog = StaticSpeciesCatalog()
+    if recipe_catalog is None:
+        recipe_catalog = StaticRecipeCatalog()
 
     if service is None:
         settings = settings or Settings.from_env()
         pool = create_pool(settings.database_url)
         repository = PostgresTeamRepository(pool)
-        service = DefaultTeamService(repository, catalog)
+        service = DefaultTeamService(repository, catalog, recipe_catalog)
         # Litestar pasa el app a los hooks que aceptan un argumento; sin el lambda,
         # `pool.close` recibiría el app como su parámetro `timeout` y reventaría.
         on_shutdown.append(lambda: pool.close())
@@ -67,7 +73,13 @@ def create_app(
     bound_catalog = catalog
 
     return Litestar(
-        route_handlers=[TeamController, CatalogController, ProductionController],
+        route_handlers=[
+            TeamController,
+            CatalogController,
+            ProductionController,
+            RecipeController,
+            TeamProductionController,
+        ],
         dependencies={
             "service": Provide(lambda: bound_service, sync_to_thread=False),
             "catalog": Provide(lambda: bound_catalog, sync_to_thread=False),

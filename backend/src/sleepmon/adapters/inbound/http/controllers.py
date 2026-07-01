@@ -12,22 +12,79 @@ from litestar.status_codes import HTTP_200_OK, HTTP_201_CREATED
 from sleepmon.adapters.inbound.http.schemas import (
     CatalogOut,
     DistributionsOut,
+    IngredientBalanceOut,
+    IngredientCountOut,
+    MealFeasibilityOut,
+    MemberContributionOut,
     MemberIn,
     MemberOut,
     MemberProductionOut,
     NatureOut,
     ProductionIn,
     ProductionOut,
+    RecipeOut,
+    SkillEffectAggOut,
+    SlotIngredientStatusOut,
     SlotProductionOut,
     SpeciesOut,
     SubSkillOut,
+    TeamProductionIn,
+    TeamProductionOut,
 )
-from sleepmon.application.dto import MemberProduction, ProductionInput, TeamMemberInput
+from sleepmon.application.dto import (
+    MealSelectionInput,
+    MemberProduction,
+    ProductionInput,
+    ProductionResult,
+    TeamMemberInput,
+    TeamProductionInput,
+)
 from sleepmon.application.services import TeamService
-from sleepmon.domain.catalog_data import NATURE_EFFECTS, SUB_SKILL_TIERS
+from sleepmon.domain.catalog_data import (
+    INGREDIENT_STRENGTH,
+    NATURE_EFFECTS,
+    RECIPE_LEVEL_BONUS,
+    SUB_SKILL_TIERS,
+)
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.ports import SpeciesCatalog
 from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
+
+
+def _full_production_out(result: ProductionResult) -> ProductionOut:
+    """Convierte un ``ProductionResult`` DTO a su schema de respuesta HTTP."""
+    return ProductionOut(
+        helps_per_day=result.helps_per_day,
+        seconds_per_help=result.seconds_per_help,
+        berry=result.berry,
+        berry_amount=result.berry_amount,
+        berry_strength=result.berry_strength,
+        berry_percentage=result.berry_percentage,
+        ingredient_percentage=result.ingredient_percentage,
+        skill_percentage=result.skill_percentage,
+        effective_skill_percentage=result.effective_skill_percentage,
+        ingredients=[
+            SlotProductionOut(ingredient=slot.ingredient, amount=slot.amount)
+            for slot in result.ingredients
+        ],
+        skill_triggers=result.skill_triggers,
+        skill_ingredients=[
+            SlotProductionOut(ingredient=slot.ingredient, amount=slot.amount)
+            for slot in result.skill_ingredients
+        ],
+        skill_energy=result.skill_energy,
+        skill_ingredient_total=result.skill_ingredient_total,
+        skill_cooking_ingredients=result.skill_cooking_ingredients,
+        skill_strength=result.skill_strength,
+        skill_self_energy=result.skill_self_energy,
+        skill_dream_shards=result.skill_dream_shards,
+        skill_tasty_chance=result.skill_tasty_chance,
+        skill_extra_helpful=result.skill_extra_helpful,
+        skill_random_energy=result.skill_random_energy,
+        night_skill_chances=result.night_skill_chances,
+        inventory=result.inventory,
+        inventory_fill_hours=result.inventory_fill_hours,
+    )
 
 
 def _production_out(production: MemberProduction | None) -> MemberProductionOut | None:
@@ -150,38 +207,7 @@ class ProductionController(Controller):
                 skill_level=data.skill_level,
             )
         )
-        return ProductionOut(
-            helps_per_day=result.helps_per_day,
-            seconds_per_help=result.seconds_per_help,
-            berry=result.berry,
-            berry_amount=result.berry_amount,
-            berry_strength=result.berry_strength,
-            berry_percentage=result.berry_percentage,
-            ingredient_percentage=result.ingredient_percentage,
-            skill_percentage=result.skill_percentage,
-            effective_skill_percentage=result.effective_skill_percentage,
-            ingredients=[
-                SlotProductionOut(ingredient=slot.ingredient, amount=slot.amount)
-                for slot in result.ingredients
-            ],
-            skill_triggers=result.skill_triggers,
-            skill_ingredients=[
-                SlotProductionOut(ingredient=slot.ingredient, amount=slot.amount)
-                for slot in result.skill_ingredients
-            ],
-            skill_energy=result.skill_energy,
-            skill_ingredient_total=result.skill_ingredient_total,
-            skill_cooking_ingredients=result.skill_cooking_ingredients,
-            skill_strength=result.skill_strength,
-            skill_self_energy=result.skill_self_energy,
-            skill_dream_shards=result.skill_dream_shards,
-            skill_tasty_chance=result.skill_tasty_chance,
-            skill_extra_helpful=result.skill_extra_helpful,
-            skill_random_energy=result.skill_random_energy,
-            night_skill_chances=result.night_skill_chances,
-            inventory=result.inventory,
-            inventory_fill_hours=result.inventory_fill_hours,
-        )
+        return _full_production_out(result)
 
 
 class CatalogController(Controller):
@@ -193,6 +219,8 @@ class CatalogController(Controller):
             natures=[_nature_out(n) for n in Nature],
             sub_skills=[SubSkillOut(name=s.value, tier=SUB_SKILL_TIERS[s].value) for s in SubSkill],
             ingredients=[i.value for i in Ingredient],
+            recipe_level_bonus=list(RECIPE_LEVEL_BONUS),
+            ingredient_strengths={ing.value: INGREDIENT_STRENGTH[ing] for ing in Ingredient},
             species=[
                 SpeciesOut(
                     name=sp.name,
@@ -210,4 +238,116 @@ class CatalogController(Controller):
                 )
                 for sp in catalog.all()
             ],
+        )
+
+
+class RecipeController(Controller):
+    path = "/recipes"
+
+    @get("/", sync_to_thread=False)
+    def list_recipes(self, service: NamedDependency[TeamService]) -> list[RecipeOut]:
+        return [
+            RecipeOut(
+                name=r.name,
+                type=r.type,
+                ingredients=[
+                    IngredientCountOut(ingredient=i.ingredient, count=i.count)
+                    for i in r.ingredients
+                ],
+                base_strength=r.base_strength,
+            )
+            for r in service.list_recipes()
+        ]
+
+
+class TeamProductionController(Controller):
+    path = "/teams/production"
+
+    @post("/", status_code=HTTP_200_OK, sync_to_thread=True)
+    def compute(
+        self, service: NamedDependency[TeamService], data: TeamProductionIn
+    ) -> TeamProductionOut:
+        result = service.compute_team_production(
+            TeamProductionInput(
+                member_ids=data.member_ids,
+                meals=[
+                    None if m is None else MealSelectionInput(recipe=m.recipe, level=m.level)
+                    for m in data.meals
+                ],
+            )
+        )
+        return TeamProductionOut(
+            member_count=result.member_count,
+            excluded_count=result.excluded_count,
+            total_strength=result.total_strength,
+            total_berry_amount=result.total_berry_amount,
+            total_berry_strength=result.total_berry_strength,
+            total_skill_strength=result.total_skill_strength,
+            ingredients=[
+                SlotProductionOut(ingredient=s.ingredient, amount=s.amount)
+                for s in result.ingredients
+            ],
+            total_ingredients=result.total_ingredients,
+            skill_triggers=result.skill_triggers,
+            skill_energy=result.skill_energy,
+            skill_self_energy=result.skill_self_energy,
+            skill_dream_shards=result.skill_dream_shards,
+            skill_tasty_chance=result.skill_tasty_chance,
+            skill_extra_helpful=result.skill_extra_helpful,
+            skill_random_energy=result.skill_random_energy,
+            skill_cooking_ingredients=result.skill_cooking_ingredients,
+            skill_ingredient_total=result.skill_ingredient_total,
+            skill_effects=[
+                SkillEffectAggOut(kind=e.kind, total=e.total, triggers=e.triggers)
+                for e in result.skill_effects
+            ],
+            members=[
+                MemberContributionOut(
+                    member_id=m.member_id,
+                    species=m.species,
+                    strength=m.strength,
+                    berry_amount=m.berry_amount,
+                    ingredients_total=m.ingredients_total,
+                    skill_triggers=m.skill_triggers,
+                    production=_full_production_out(m.production),
+                )
+                for m in result.members
+            ],
+            cooking_strength=result.cooking_strength,
+            cooking_ingredients=[
+                IngredientBalanceOut(
+                    ingredient=b.ingredient,
+                    required=b.required,
+                    produced=b.produced,
+                    balance=b.balance,
+                )
+                for b in result.cooking_ingredients
+            ],
+            cooking_surplus=[
+                IngredientBalanceOut(
+                    ingredient=b.ingredient,
+                    required=b.required,
+                    produced=b.produced,
+                    balance=b.balance,
+                )
+                for b in result.cooking_surplus
+            ],
+            cooking_meals=[
+                MealFeasibilityOut(
+                    recipe_name=m.recipe_name,
+                    met=m.met,
+                    level=m.level,
+                    strength=m.strength,
+                    ingredients=[
+                        SlotIngredientStatusOut(
+                            ingredient=si.ingredient,
+                            required=si.required,
+                            available=si.available,
+                        )
+                        for si in m.ingredients
+                    ],
+                )
+                for m in result.cooking_meals
+            ],
+            grand_total_strength=result.grand_total_strength,
         )

@@ -84,6 +84,8 @@ class CatalogOut(msgspec.Struct):
     sub_skills: list[SubSkillOut]
     ingredients: list[str]
     species: list[SpeciesOut]
+    recipe_level_bonus: list[float]
+    ingredient_strengths: dict[str, int]
 
 
 class DistributionsOut(msgspec.Struct):
@@ -137,5 +139,91 @@ class ProductionOut(msgspec.Struct):
     inventory_fill_hours: float
 
 
+class IngredientCountOut(msgspec.Struct):
+    ingredient: str
+    count: int
+
+
+class RecipeOut(msgspec.Struct):
+    name: str
+    type: str
+    ingredients: list[IngredientCountOut]
+    base_strength: int
+
+
 class ErrorOut(msgspec.Struct):
     detail: str
+
+
+class MealIn(msgspec.Struct, forbid_unknown_fields=True):
+    recipe: str
+    level: int = 1
+
+
+class TeamProductionIn(msgspec.Struct, forbid_unknown_fields=True):
+    member_ids: list[str]
+    meals: list[MealIn | None] = msgspec.field(default_factory=list)
+
+
+class IngredientBalanceOut(msgspec.Struct):
+    ingredient: str
+    required: float
+    produced: float
+    balance: float
+
+
+class SlotIngredientStatusOut(msgspec.Struct, frozen=True):
+    ingredient: str
+    required: int
+    available: float
+
+
+class MealFeasibilityOut(msgspec.Struct):
+    recipe_name: str
+    met: bool
+    level: int
+    strength: int
+    ingredients: list[SlotIngredientStatusOut]
+
+
+class SkillEffectAggOut(msgspec.Struct):
+    kind: str
+    total: float
+    triggers: float
+
+
+class MemberContributionOut(msgspec.Struct):
+    member_id: str
+    species: str
+    strength: float
+    berry_amount: float
+    ingredients_total: float
+    skill_triggers: float
+    production: ProductionOut
+
+
+class TeamProductionOut(msgspec.Struct):
+    member_count: int
+    excluded_count: int
+    total_strength: float
+    total_berry_amount: float
+    total_berry_strength: float
+    total_skill_strength: float
+    ingredients: list[SlotProductionOut]
+    total_ingredients: float
+    skill_triggers: float
+    skill_energy: float | None
+    skill_self_energy: float | None
+    skill_dream_shards: float | None
+    skill_tasty_chance: float | None
+    skill_extra_helpful: float | None
+    skill_random_energy: float | None
+    skill_cooking_ingredients: float | None
+    skill_ingredient_total: float | None
+    skill_effects: list[SkillEffectAggOut]
+    members: list[MemberContributionOut]
+    cooking_strength: float
+    cooking_ingredients: list[IngredientBalanceOut]
+    cooking_surplus: list[IngredientBalanceOut]
+    cooking_meals: list[MealFeasibilityOut]
+    grand_total_strength: float

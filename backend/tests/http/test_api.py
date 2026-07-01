@@ -3,14 +3,19 @@ from litestar.testing import TestClient
 
 from sleepmon.adapters.inbound.http.app import create_app
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
+from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.services import DefaultTeamService
 from tests.fakes import InMemoryTeamRepository
 
 
 @pytest.fixture
 def client() -> TestClient:
-    service = DefaultTeamService(InMemoryTeamRepository(), StaticSpeciesCatalog())
-    app = create_app(service=service, catalog=StaticSpeciesCatalog())
+    service = DefaultTeamService(
+        InMemoryTeamRepository(), StaticSpeciesCatalog(), StaticRecipeCatalog()
+    )
+    app = create_app(
+        service=service, catalog=StaticSpeciesCatalog(), recipe_catalog=StaticRecipeCatalog()
+    )
     with TestClient(app=app) as client:
         yield client
 
@@ -44,6 +49,16 @@ def test_catalog_endpoint_lists_reference_data(client: TestClient) -> None:
         ["Honey", "Snoozy Tomato"],
         ["Honey", "Snoozy Tomato", "Greengrass Soybeans"],
     ]
+
+    # La tabla de bonus por nivel de receta: 70 entradas, índice 0 = nivel 1 = 1.0.
+    assert len(body["recipe_level_bonus"]) == 70
+    assert body["recipe_level_bonus"][0] == 1.0
+
+    # Fuerza base por ingrediente: 19 entradas, una por ingrediente.
+    ing_str = body["ingredient_strengths"]
+    assert len(ing_str) == 19
+    assert ing_str["Slowpoke Tail"] == 342
+    assert ing_str["Fancy Apple"] == 90
 
 
 def test_create_and_list_member(client: TestClient) -> None:
@@ -477,3 +492,134 @@ def test_production_minun_pot_and_random_energy(client: TestClient) -> None:
     body = res.json()
     assert body["skill_cooking_ingredients"] == pytest.approx(body["skill_triggers"] * 24)
     assert body["skill_random_energy"] == pytest.approx(body["skill_triggers"] * 35)
+
+
+def test_recipes_endpoint_lists_recipes(client: TestClient) -> None:
+    res = client.get("/recipes")
+    assert res.status_code == 200
+    body = res.json()
+    assert body, "debe devolver al menos una receta"
+    types = {r["type"] for r in body}
+    assert types == {"Curry", "Salad", "Dessert"}
+    first = body[0]
+    assert {"name", "type", "ingredients", "base_strength"} <= first.keys()
+    assert all({"ingredient", "count"} <= ing.keys() for ing in first["ingredients"])
+
+
+def test_team_production_endpoint(client: TestClient) -> None:
+    created = client.post("/team", json=valid_payload()).json()
+    res = client.post(
+        "/teams/production",
+        json={"member_ids": [created["id"]], "meals": [None, None, None]},
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["member_count"] == 1
+    assert "grand_total_strength" in body
+    assert isinstance(body["ingredients"], list)
+    assert isinstance(body["members"], list)
+    # Each member now carries a full production object.
+    member = body["members"][0]
+    prod = member["production"]
+    assert isinstance(prod, dict)
+    for key in (
+        "berry_amount",
+        "ingredients",
+        "skill_triggers",
+        "inventory",
+        "seconds_per_help",
+        "helps_per_day",
+        "berry",
+        "berry_strength",
+        "night_skill_chances",
+        "inventory_fill_hours",
+    ):
+        assert key in prod, f"missing key {key!r} in member production"
+
+
+def test_team_production_endpoint_rejects_too_many(client: TestClient) -> None:
+    ids = [client.post("/team", json=valid_payload()).json()["id"] for _ in range(6)]
+    res = client.post(
+        "/teams/production", json={"member_ids": ids, "meals": [None, None, None]}
+    )
+    assert res.status_code == 400
+
+
+def test_team_production_endpoint_with_recipe(client: TestClient) -> None:
+    created = client.post("/team", json=valid_payload()).json()
+    recipe = client.get("/recipes").json()[0]
+    res = client.post(
+        "/teams/production",
+        json={
+            "member_ids": [created["id"]],
+            "meals": [{"recipe": recipe["name"], "level": 1}, None, None],
+        },
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["cooking_strength"] == recipe["base_strength"]
+    assert body["grand_total_strength"] == body["total_strength"] + body["cooking_strength"]
+
+
+def test_team_production_cooking_meals_have_breakdown_fields(client: TestClient) -> None:
+    """cooking_meals incluye level, strength e ingredients (desglose X/Y por ingrediente)."""
+    created = client.post("/team", json=valid_payload()).json()
+    recipe = client.get("/recipes").json()[0]
+    res = client.post(
+        "/teams/production",
+        json={
+            "member_ids": [created["id"]],
+            "meals": [{"recipe": recipe["name"], "level": 2}, None, None],
+        },
+    )
+    assert res.status_code == 200
+    body = res.json()
+    cooking_meals = body["cooking_meals"]
+    assert len(cooking_meals) == 1
+
+    meal = cooking_meals[0]
+    # Campos nuevos presentes
+    assert "level" in meal, "missing 'level' in cooking_meals[0]"
+    assert "strength" in meal, "missing 'strength' in cooking_meals[0]"
+    assert "ingredients" in meal, "missing 'ingredients' in cooking_meals[0]"
+
+    # Tipos correctos
+    assert isinstance(meal["level"], int)
+    assert isinstance(meal["strength"], int)
+    assert isinstance(meal["ingredients"], list)
+
+    # Level coincide con lo enviado
+    assert meal["level"] == 2
+
+    # Hay al menos un ingrediente con los tres campos
+    assert len(meal["ingredients"]) > 0
+    first_ing = meal["ingredients"][0]
+    assert "ingredient" in first_ing, "missing 'ingredient' key"
+    assert "required" in first_ing, "missing 'required' key"
+    assert "available" in first_ing, "missing 'available' key"
+    assert isinstance(first_ing["ingredient"], str)
+    assert isinstance(first_ing["required"], int)
+    assert isinstance(first_ing["available"], (int, float))
+
+
+def test_team_production_returns_skill_effects(client: TestClient) -> None:
+    """/teams/production incluye skill_effects como lista de {kind, total, triggers}."""
+    created = client.post("/team", json=valid_payload()).json()
+    res = client.post(
+        "/teams/production",
+        json={"member_ids": [created["id"]], "meals": [None, None, None]},
+    )
+    assert res.status_code == 200
+    body = res.json()
+
+    assert "skill_effects" in body, "missing 'skill_effects' in response"
+    assert isinstance(body["skill_effects"], list)
+
+    # Puede ser vacía (si la especie no activa ningún efecto) o tener entradas.
+    for effect in body["skill_effects"]:
+        assert "kind" in effect, "missing 'kind' in skill_effect entry"
+        assert "total" in effect, "missing 'total' in skill_effect entry"
+        assert "triggers" in effect, "missing 'triggers' in skill_effect entry"
+        assert isinstance(effect["kind"], str)
+        assert isinstance(effect["total"], (int, float))
+        assert isinstance(effect["triggers"], (int, float))

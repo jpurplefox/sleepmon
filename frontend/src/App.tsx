@@ -6,14 +6,15 @@ import { LanguageSelector } from "./components/LanguageSelector";
 import { useI18n } from "./i18n";
 import { Production } from "./pages/Production";
 import { Team } from "./pages/Team";
+import { Teams } from "./pages/Teams";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false } },
 });
 
-type Tab = "team" | "production";
+type Tab = "team" | "production" | "teams";
 
-const TABS: Tab[] = ["team", "production"];
+const TABS: Tab[] = ["team", "production", "teams"];
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("team");
@@ -69,14 +70,28 @@ export default function App() {
         >
           {t("nav.comparison")}
         </button>
+        <button
+          id="tab-teams"
+          type="button"
+          role="tab"
+          aria-selected={tab === "teams"}
+          aria-controls="tabpanel-teams"
+          tabIndex={tab === "teams" ? 0 : -1}
+          className={"tab" + (tab === "teams" ? " tab--active" : "")}
+          onClick={() => setTab("teams")}
+          onKeyDown={onTabKeyDown}
+        >
+          {t("nav.teams")}
+        </button>
       </nav>
         <LanguageSelector />
       </div>
-      {tab === "team" ? (
+      {tab === "team" && (
         <div role="tabpanel" id="tabpanel-team" aria-labelledby="tab-team" tabIndex={0}>
           <Team onCompare={openCompare} />
         </div>
-      ) : (
+      )}
+      {tab === "production" && (
         <div
           role="tabpanel"
           id="tabpanel-production"
@@ -84,6 +99,11 @@ export default function App() {
           tabIndex={0}
         >
           <Production baseMemberId={compareBase} onBaseConsumed={() => setCompareBase(null)} />
+        </div>
+      )}
+      {tab === "teams" && (
+        <div role="tabpanel" id="tabpanel-teams" aria-labelledby="tab-teams" tabIndex={0}>
+          <Teams />
         </div>
       )}
       </ErrorBoundary>

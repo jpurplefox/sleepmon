@@ -33,6 +33,12 @@ export interface Catalog {
   sub_skills: SubSkill[];
   ingredients: string[];
   species: Species[];
+  // Multiplicador de fuerza de una receta por nivel (longitud 70, índice = nivel-1).
+  // recipe_level_bonus[0] == 1.0 (nivel 1, sin bonus).
+  recipe_level_bonus: number[];
+  // Fuerza base de cada ingrediente (a nivel 1); 19 entradas, una por ingrediente.
+  // Usada por el frontend para estimar la fuerza de los fillers en una receta.
+  ingredient_strengths: Record<string, number>;
 }
 
 // Invariantes del contrato del backend (ver MemberInput):
@@ -121,6 +127,93 @@ export interface ProductionInput {
 export interface SlotProduction {
   ingredient: string;
   amount: number;
+}
+
+export interface IngredientCount {
+  ingredient: string;
+  count: number;
+}
+
+export interface Recipe {
+  name: string;
+  type: "Curry" | "Salad" | "Dessert";
+  ingredients: IngredientCount[];
+  base_strength: number;
+}
+
+export interface MealInput {
+  recipe: string;
+  level: number;
+}
+
+export interface TeamProductionInput {
+  member_ids: string[];
+  // 3 slots (mañana/mediodía/noche); null = sin receta en ese slot.
+  meals: (MealInput | null)[];
+}
+
+export interface IngredientBalance {
+  ingredient: string;
+  required: number;
+  produced: number;
+  balance: number;
+}
+
+export interface SlotIngredientStatus {
+  ingredient: string;
+  required: number;
+  available: number;
+}
+
+export interface MealFeasibility {
+  recipe_name: string;
+  met: boolean;
+  level: number;
+  strength: number;
+  ingredients: SlotIngredientStatus[];
+}
+
+export interface SkillEffectAgg {
+  kind: string;
+  total: number;
+  triggers: number;
+}
+
+export interface MemberContribution {
+  member_id: string;
+  species: string;
+  strength: number;
+  berry_amount: number;
+  ingredients_total: number;
+  skill_triggers: number;
+  production: Production;
+}
+
+export interface TeamProduction {
+  member_count: number;
+  excluded_count: number;
+  total_strength: number;
+  total_berry_amount: number;
+  total_berry_strength: number;
+  total_skill_strength: number;
+  ingredients: SlotProduction[];
+  total_ingredients: number;
+  skill_triggers: number;
+  skill_energy: number | null;
+  skill_self_energy: number | null;
+  skill_dream_shards: number | null;
+  skill_tasty_chance: number | null;
+  skill_extra_helpful: number | null;
+  skill_random_energy: number | null;
+  skill_cooking_ingredients: number | null;
+  skill_ingredient_total: number | null;
+  skill_effects: SkillEffectAgg[];
+  members: MemberContribution[];
+  cooking_strength: number;
+  cooking_ingredients: IngredientBalance[];
+  cooking_surplus: IngredientBalance[];
+  cooking_meals: MealFeasibility[];
+  grand_total_strength: number;
 }
 
 export interface Production {

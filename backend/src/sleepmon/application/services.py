@@ -15,13 +15,25 @@ from uuid import UUID
 
 from sleepmon.application.dto import (
     Distributions,
+    IngredientBalanceDTO,
+    IngredientCountDTO,
+    MealFeasibilityDTO,
+    MemberContributionDTO,
     MemberProduction,
     ProductionInput,
     ProductionResult,
+    RecipeDTO,
+    SkillEffectAggDTO,
     SlotAmount,
+    SlotIngredientStatusDTO,
     TeamMemberInput,
+    TeamProductionInput,
+    TeamProductionResult,
 )
 from sleepmon.domain import analytics
+from sleepmon.domain.analytics import team_production
+from sleepmon.domain.catalog_data import MAX_RECIPE_LEVEL
+from sleepmon.domain.cooking import MealSelection, plan_cooking
 from sleepmon.domain.entities import (
     TeamMember,
     validate_ingredient_count,
@@ -30,12 +42,52 @@ from sleepmon.domain.entities import (
     validate_sub_skills,
 )
 from sleepmon.domain.errors import SpeciesNotFoundError, TeamMemberNotFoundError, ValidationError
-from sleepmon.domain.ports import SpeciesCatalog, TeamRepository
-from sleepmon.domain.production import daily_production
+from sleepmon.domain.ports import RecipeCatalog, SpeciesCatalog, TeamRepository
+from sleepmon.domain.production import DailyProduction, daily_production
 from sleepmon.domain.species import Species
 from sleepmon.domain.value_objects import Ingredient, Nature, Ribbon, SubSkill
 
 E = TypeVar("E", bound=StrEnum)
+
+
+def _production_result(daily: DailyProduction) -> ProductionResult:
+    """Convierte un ``DailyProduction`` del dominio a ``ProductionResult`` (DTO).
+
+    Función compartida entre ``compute_production`` y ``compute_team_production``
+    para que ambas produzcan exactamente la misma forma, sin duplicar el mapping.
+    """
+    return ProductionResult(
+        helps_per_day=daily.helps_per_day,
+        seconds_per_help=daily.seconds_per_help,
+        berry=daily.berry.value,
+        berry_amount=daily.berry_amount,
+        berry_strength=daily.berry_strength,
+        berry_percentage=daily.berry_percentage,
+        ingredient_percentage=daily.ingredient_percentage,
+        skill_percentage=daily.skill_percentage,
+        effective_skill_percentage=daily.effective_skill_percentage,
+        ingredients=[
+            SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
+            for slot in daily.ingredients
+        ],
+        skill_triggers=daily.skill_triggers,
+        skill_ingredients=[
+            SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
+            for slot in daily.skill_ingredients
+        ],
+        skill_energy=daily.skill_energy,
+        skill_ingredient_total=daily.skill_ingredient_total,
+        skill_cooking_ingredients=daily.skill_cooking_ingredients,
+        skill_strength=daily.skill_strength,
+        skill_self_energy=daily.skill_self_energy,
+        skill_dream_shards=daily.skill_dream_shards,
+        skill_tasty_chance=daily.skill_tasty_chance,
+        skill_extra_helpful=daily.skill_extra_helpful,
+        skill_random_energy=daily.skill_random_energy,
+        night_skill_chances=list(daily.night_skill_chances),
+        inventory=daily.inventory,
+        inventory_fill_hours=daily.inventory_fill_hours,
+    )
 
 
 def _parse_enum(enum_cls: type[E], value: str, field: str) -> E:
@@ -89,11 +141,23 @@ class TeamService(ABC):
     @abstractmethod
     def compute_production(self, data: ProductionInput) -> ProductionResult: ...
 
+    @abstractmethod
+    def list_recipes(self) -> list[RecipeDTO]: ...
+
+    @abstractmethod
+    def compute_team_production(self, data: TeamProductionInput) -> TeamProductionResult: ...
+
 
 class DefaultTeamService(TeamService):
-    def __init__(self, repository: TeamRepository, catalog: SpeciesCatalog) -> None:
+    def __init__(
+        self,
+        repository: TeamRepository,
+        catalog: SpeciesCatalog,
+        recipe_catalog: RecipeCatalog,
+    ) -> None:
         self._repo = repository
         self._catalog = catalog
+        self._recipes = recipe_catalog
 
     def add_member(self, data: TeamMemberInput) -> TeamMember:
         member = self._build_member(data)
@@ -200,37 +264,156 @@ class DefaultTeamService(TeamService):
         result = daily_production(
             species, ingredients, data.level, nature, sub_skills, ribbon, data.skill_level
         )
-        return ProductionResult(
-            helps_per_day=result.helps_per_day,
-            seconds_per_help=result.seconds_per_help,
-            berry=result.berry.value,
-            berry_amount=result.berry_amount,
-            berry_strength=result.berry_strength,
-            berry_percentage=result.berry_percentage,
-            ingredient_percentage=result.ingredient_percentage,
-            skill_percentage=result.skill_percentage,
-            effective_skill_percentage=result.effective_skill_percentage,
+        return _production_result(result)
+
+    def list_recipes(self) -> list[RecipeDTO]:
+        return [
+            RecipeDTO(
+                name=r.name,
+                type=r.type.value,
+                ingredients=[
+                    IngredientCountDTO(ingredient=ing.value, count=count)
+                    for ing, count in r.ingredients
+                ],
+                base_strength=r.base_strength,
+            )
+            for r in self._recipes.all()
+        ]
+
+    _MAX_TEAM = 5
+
+    def compute_team_production(self, data: TeamProductionInput) -> TeamProductionResult:
+        # Validación de la selección: 1..5 ids, sin duplicados.
+        if not 1 <= len(data.member_ids) <= self._MAX_TEAM:
+            raise ValidationError(
+                f"Un equipo tiene entre 1 y {self._MAX_TEAM} miembros; llegaron "
+                f"{len(data.member_ids)}."
+            )
+        if len(set(data.member_ids)) != len(data.member_ids):
+            raise ValidationError("Un equipo no puede repetir miembros.")
+
+        # Cargar miembros (404 si falta) y computar su producción. Los miembros con
+        # especie fuera del catálogo curado se excluyen del agregado.
+        entries: list[tuple[str, str, DailyProduction]] = []
+        member_productions: dict[str, ProductionResult] = {}
+        excluded = 0
+        for raw_id in data.member_ids:
+            try:
+                member_uuid = UUID(raw_id)
+            except ValueError as exc:
+                raise ValidationError(f"Id de miembro inválido: {raw_id!r}.") from exc
+            member = self.get_member(member_uuid)  # levanta TeamMemberNotFoundError
+            species = self._catalog.get(member.species)
+            if species is None:
+                excluded += 1
+                continue
+            daily = daily_production(
+                species,
+                member.ingredients,
+                member.level,
+                member.nature,
+                member.sub_skills,
+                member.ribbon,
+                member.skill_level,
+            )
+            member_id_str = str(member.id)
+            member_productions[member_id_str] = _production_result(daily)
+            entries.append((member_id_str, member.species, daily))
+
+        aggregate = team_production(entries)
+
+        # Cocina: resolver cada comida (receta + nivel) contra el catálogo.
+        meals: list[MealSelection | None] = []
+        for meal in data.meals:
+            if meal is None:
+                meals.append(None)
+                continue
+            recipe = self._recipes.get(meal.recipe)
+            if recipe is None:
+                raise ValidationError(f"Receta desconocida: {meal.recipe!r}.")
+            if not 1 <= meal.level <= MAX_RECIPE_LEVEL:
+                raise ValidationError(
+                    f"El nivel de receta debe estar entre 1 y {MAX_RECIPE_LEVEL}; "
+                    f"llegó {meal.level}."
+                )
+            meals.append(MealSelection(recipe=recipe, level=meal.level))
+
+        cooking = plan_cooking(meals, aggregate.ingredients)
+
+        return TeamProductionResult(
+            member_count=aggregate.member_count,
+            excluded_count=excluded,
+            total_strength=aggregate.total_strength,
+            total_berry_amount=aggregate.total_berry_amount,
+            total_berry_strength=aggregate.total_berry_strength,
+            total_skill_strength=aggregate.total_skill_strength,
             ingredients=[
-                SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
-                for slot in result.ingredients
+                SlotAmount(ingredient=ing.value, amount=amount)
+                for ing, amount in aggregate.ingredients.items()
             ],
-            skill_triggers=result.skill_triggers,
-            skill_ingredients=[
-                SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
-                for slot in result.skill_ingredients
+            total_ingredients=aggregate.total_ingredients,
+            skill_triggers=aggregate.skill_triggers,
+            skill_energy=aggregate.skill_energy,
+            skill_self_energy=aggregate.skill_self_energy,
+            skill_dream_shards=aggregate.skill_dream_shards,
+            skill_tasty_chance=aggregate.skill_tasty_chance,
+            skill_extra_helpful=aggregate.skill_extra_helpful,
+            skill_random_energy=aggregate.skill_random_energy,
+            skill_cooking_ingredients=aggregate.skill_cooking_ingredients,
+            skill_ingredient_total=aggregate.skill_ingredient_total,
+            skill_effects=[
+                SkillEffectAggDTO(kind=e.kind, total=e.total, triggers=e.triggers)
+                for e in aggregate.skill_effects
             ],
-            skill_energy=result.skill_energy,
-            skill_ingredient_total=result.skill_ingredient_total,
-            skill_cooking_ingredients=result.skill_cooking_ingredients,
-            skill_strength=result.skill_strength,
-            skill_self_energy=result.skill_self_energy,
-            skill_dream_shards=result.skill_dream_shards,
-            skill_tasty_chance=result.skill_tasty_chance,
-            skill_extra_helpful=result.skill_extra_helpful,
-            skill_random_energy=result.skill_random_energy,
-            night_skill_chances=list(result.night_skill_chances),
-            inventory=result.inventory,
-            inventory_fill_hours=result.inventory_fill_hours,
+            members=[
+                MemberContributionDTO(
+                    member_id=m.member_id,
+                    species=m.species,
+                    strength=m.strength,
+                    berry_amount=m.berry_amount,
+                    ingredients_total=m.ingredients_total,
+                    skill_triggers=m.skill_triggers,
+                    production=member_productions[m.member_id],
+                )
+                for m in aggregate.members
+            ],
+            cooking_strength=cooking.cooking_strength,
+            cooking_ingredients=[
+                IngredientBalanceDTO(
+                    ingredient=b.ingredient.value,
+                    required=b.required,
+                    produced=b.produced,
+                    balance=b.balance,
+                )
+                for b in cooking.ingredients
+            ],
+            cooking_surplus=[
+                IngredientBalanceDTO(
+                    ingredient=b.ingredient.value,
+                    required=b.required,
+                    produced=b.produced,
+                    balance=b.balance,
+                )
+                for b in cooking.surplus
+            ],
+            cooking_meals=[
+                MealFeasibilityDTO(
+                    recipe_name=s.recipe_name,
+                    met=s.met,
+                    level=s.level,
+                    strength=s.strength,
+                    ingredients=[
+                        SlotIngredientStatusDTO(
+                            ingredient=si.ingredient.value,
+                            required=si.required,
+                            available=si.available,
+                        )
+                        for si in s.ingredients
+                    ],
+                )
+                for s in cooking.slots
+            ],
+            grand_total_strength=aggregate.total_strength + cooking.cooking_strength,
         )
 
     def _build_member(self, data: TeamMemberInput, member_id: UUID | None = None) -> TeamMember:

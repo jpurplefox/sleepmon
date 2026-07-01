@@ -8,9 +8,10 @@ interface Props {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  wide?: boolean;
 }
 
-export function Modal({ title, onClose, children }: Props) {
+export function Modal({ title, onClose, children, wide }: Props) {
   const { t } = useI18n();
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
@@ -67,7 +68,7 @@ export function Modal({ title, onClose, children }: Props) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
-        className="modal-panel"
+        className={"modal-panel" + (wide ? " modal-panel--wide" : "")}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

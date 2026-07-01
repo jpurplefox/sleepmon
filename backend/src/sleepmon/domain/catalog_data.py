@@ -14,7 +14,15 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final
 
-from sleepmon.domain.value_objects import Berry, Nature, NatureStat, Ribbon, SubSkill, SubSkillTier
+from sleepmon.domain.value_objects import (
+    Berry,
+    Ingredient,
+    Nature,
+    NatureStat,
+    Ribbon,
+    SubSkill,
+    SubSkillTier,
+)
 
 # Niveles en los que se desbloquean los slots. Actualizado en el último parche:
 # las sub skills pasaron a 10/25/50/70/80.
@@ -218,6 +226,35 @@ BERRY_BASE_STRENGTH: Final[Mapping[Berry, int]] = {
     Berry.YACHE: 35,
 }
 
+# Fuerza base de cada ingrediente (valor a nivel 1 del Pokémon que lo produce).
+# Se usa para estimar la fuerza de los "fillers" en una receta. Fuente: nerolis-lab.
+INGREDIENT_STRENGTH: Final[dict[Ingredient, int]] = {
+    Ingredient.FANCY_APPLE: 90,
+    Ingredient.MOOMOO_MILK: 98,
+    Ingredient.GREENGRASS_SOYBEANS: 100,
+    Ingredient.HONEY: 101,
+    Ingredient.BEAN_SAUSAGE: 103,
+    Ingredient.WARMING_GINGER: 109,
+    Ingredient.SNOOZY_TOMATO: 110,
+    Ingredient.FANCY_EGG: 115,
+    Ingredient.PURE_OIL: 121,
+    Ingredient.SOFT_POTATO: 124,
+    Ingredient.FIERY_HERB: 130,
+    Ingredient.GREENGRASS_CORN: 140,
+    Ingredient.SOOTHING_CACAO: 151,
+    Ingredient.ROUSING_COFFEE: 153,
+    Ingredient.GLOSSY_AVOCADO: 162,
+    Ingredient.TASTY_MUSHROOM: 167,
+    Ingredient.LARGE_LEEK: 185,
+    Ingredient.PLUMP_PUMPKIN: 250,
+    Ingredient.SLOWPOKE_TAIL: 342,
+}
+assert set(INGREDIENT_STRENGTH) == set(Ingredient), (
+    "INGREDIENT_STRENGTH está desincronizado con el enum Ingredient: "
+    f"faltan={set(Ingredient) - set(INGREDIENT_STRENGTH)}, "
+    f"extra={set(INGREDIENT_STRENGTH) - set(Ingredient)}"
+)
+
 # La baya rinde más fuerza a mayor nivel del Pokémon: se toma el mayor entre un
 # crecimiento lineal (base + (nivel-1)) y uno exponencial (base * 1.025^(nivel-1)),
 # redondeado. A niveles bajos manda el lineal; a partir de cierto nivel el exponencial
@@ -231,6 +268,32 @@ def berry_strength_for_level(berry: Berry, level: int) -> int:
     linear = base + (level - 1)
     exponential = base * _BERRY_STRENGTH_GROWTH_RATE ** (level - 1)
     return round(max(linear, exponential))
+
+
+# Multiplicador de fuerza de una receta según su nivel (1..MAX_RECIPE_LEVEL).
+# Índice = nivel-1. RECIPE_LEVEL_BONUS[0] == 1.0 (nivel 1 = sin bonus). Monótona
+# creciente. Fuente: nerolis-lab (sleepapi, bonus de nivel de receta), expresado
+# como multiplicador = 1 + bonus%/100.
+MAX_RECIPE_LEVEL: Final[int] = 70
+RECIPE_LEVEL_BONUS: Final[tuple[float, ...]] = (
+    1.0, 1.02, 1.04, 1.06, 1.08, 1.09, 1.11, 1.13, 1.16, 1.18,
+    1.19, 1.21, 1.23, 1.24, 1.26, 1.28, 1.3, 1.31, 1.33, 1.35,
+    1.37, 1.4, 1.42, 1.45, 1.47, 1.5, 1.52, 1.55, 1.58, 1.61,
+    1.64, 1.67, 1.7, 1.74, 1.77, 1.81, 1.84, 1.88, 1.92, 1.96,
+    2.0, 2.04, 2.08, 2.13, 2.17, 2.22, 2.27, 2.32, 2.37, 2.42,
+    2.48, 2.53, 2.59, 2.65, 2.71, 2.77, 2.83, 2.9, 2.97, 3.03,
+    3.09, 3.15, 3.21, 3.27, 3.34, 3.39, 3.43, 3.48, 3.52, 3.58,
+)
+assert len(RECIPE_LEVEL_BONUS) == MAX_RECIPE_LEVEL
+
+
+def recipe_level_bonus(level: int) -> float:
+    """Multiplicador de fuerza de una receta de nivel ``level`` (1..MAX_RECIPE_LEVEL)."""
+    if not 1 <= level <= MAX_RECIPE_LEVEL:
+        raise ValueError(
+            f"El nivel de receta debe estar entre 1 y {MAX_RECIPE_LEVEL}; llegó {level}."
+        )
+    return RECIPE_LEVEL_BONUS[level - 1]
 
 
 def max_sub_skill_slots(level: int) -> int:
