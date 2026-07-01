@@ -213,7 +213,7 @@ export interface TeamProduction {
   total_berry_amount: number;
   total_berry_strength: number;
   total_skill_strength: number;
-  // Campos base (sin bonus de isla); presentes cuando se envía island_bonus.
+  // Campos base (versión sin el bonus de isla; siempre presentes, iguales al valor con bonus cuando island_bonus es 0).
   island_bonus: number;
   total_strength_base: number;
   total_berry_strength_base: number;

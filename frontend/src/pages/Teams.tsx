@@ -163,6 +163,8 @@ export function Teams() {
 
   // Everything renders daily; the totals card shows daily + ×7 on its own.
   const factor = 1;
+  // Multiplicador de fuerza del bonus de isla (1 cuando no hay bonus).
+  const bonusFactor = 1 + islandBonus;
   const result = teamQuery.data;
 
   // Total extra pot ingredients/day from cooking_ingredients skill effect (or 0).
@@ -262,8 +264,8 @@ export function Teams() {
       remainingSlots -= usedUnits;
       total += Math.floor(usedUnits) * item.strength;
     }
-    return total;
-  }, [result, catalog.isLoading, catalog.data, potSize, cookingExtra, meals, recipeByName]);
+    return total * bonusFactor;
+  }, [result, catalog.isLoading, catalog.data, potSize, cookingExtra, meals, recipeByName, islandBonus]);
 
   // Cooking grand total (daily): recipes + fillers, +10% Extra Tasty.
   const grandTotalCooking = result
@@ -443,7 +445,7 @@ export function Teams() {
                             alt=""
                             style={{ width: 14, height: 14 }}
                           />{" "}
-                          {fdown(berry_strength * factor)}
+                          {fdown(berry_strength * bonusFactor)}
                         </span>
                       </li>
                     ))}
@@ -692,7 +694,7 @@ export function Teams() {
                                   alt=""
                                   style={{ width: 14, height: 14 }}
                                 />
-                                {fmtInt(feasibility.strength * factor)}
+                                {fmtInt(feasibility.strength * bonusFactor)}
                               </span>
                             )}
                           </div>
@@ -935,7 +937,7 @@ export function Teams() {
                             const isUsed = usedUnits > 0;
                             const usedFloor = Math.floor(usedUnits);
                             const availFloor = Math.floor(balance);
-                            const contributed = Math.floor(usedUnits * strength * factor);
+                            const contributed = Math.floor(usedUnits * strength * bonusFactor);
                             const tip = isRandom ? t("teams.randomIngredientsTip") : undefined;
                             return (
                               <li
