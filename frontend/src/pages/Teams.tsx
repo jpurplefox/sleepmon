@@ -875,6 +875,22 @@ export function Teams() {
                             );
                           })}
                         </ul>
+                        {/* Fillers strength subtotal — same visual hierarchy as
+                            the recipes strength subtotal (Block 1). Peers. */}
+                        <div className="cook-result-row cook-result-row--strength">
+                          <span className="cook-result-row__label muted">
+                            {t("teams.fillersStrength")}
+                          </span>
+                          <span className="cook-result-row__value">
+                            <img
+                              className="mini-icon"
+                              src={CHARGE_STRENGTH_ICON}
+                              alt=""
+                              style={{ width: 16, height: 16 }}
+                            />
+                            {fdown(fillerStrengthTotal * factor)}
+                          </span>
+                        </div>
                       </div>
                     )}
 
