@@ -1,7 +1,9 @@
+import { useEffect, useRef, useState } from "react";
 import { berryIcon } from "../berries";
 import { useI18n } from "../i18n";
 import type { Catalog, Island } from "../types";
 import { LevelStepperInput } from "./LevelStepperInput";
+import { IconChevronDown } from "./icons";
 
 interface Props {
   catalog: Catalog;
@@ -40,6 +42,38 @@ export function IslandTab({
 
   // Bonus en porcentaje para el input (0–85).
   const bonusPct = Math.round(islandBonus * 100);
+
+  // Estado del dropdown custom de isla
+  const [islandOpen, setIslandOpen] = useState(false);
+  const islandWrapRef = useRef<HTMLDivElement>(null);
+  const islandTriggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!islandOpen) return;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (
+        islandWrapRef.current &&
+        !islandWrapRef.current.contains(e.target as Node)
+      ) {
+        setIslandOpen(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIslandOpen(false);
+        islandTriggerRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("mousedown", handleMouseDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleMouseDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [islandOpen]);
 
   const handleIslandChange = (name: string) => {
     if (name === "") {
@@ -81,24 +115,96 @@ export function IslandTab({
 
   return (
     <div className="island-tab">
-      {/* Selector de isla */}
+      {/* Selector de isla — dropdown custom */}
       <div className="island-tab__row">
-        <label htmlFor="island-select" className="island-tab__label">
-          {t("teams.selectIsland")}
-        </label>
-        <select
-          id="island-select"
-          className="island-tab__select"
-          value={selectedIsland ?? ""}
-          onChange={(e) => handleIslandChange(e.target.value)}
+        <span className="island-tab__label">{t("teams.selectIsland")}</span>
+        <div
+          className="filter-control island-tab__island-control"
+          ref={islandWrapRef}
         >
-          <option value="">{t("teams.noIsland")}</option>
-          {islands.map((isl) => (
-            <option key={isl.name} value={isl.name}>
-              {isl.name}
-            </option>
-          ))}
-        </select>
+          <button
+            ref={islandTriggerRef}
+            type="button"
+            className={
+              "filter-btn island-tab__island-trigger" +
+              (islandOpen ? " filter-btn--open" : "")
+            }
+            aria-haspopup="listbox"
+            aria-expanded={islandOpen}
+            onClick={() => setIslandOpen((o) => !o)}
+          >
+            <span className="filter-btn__value">
+              {selectedIsland ?? (
+                <span className="filter-btn__placeholder">
+                  {t("teams.noIsland")}
+                </span>
+              )}
+            </span>
+            <IconChevronDown className="filter-btn__chevron" />
+          </button>
+
+          {islandOpen && (
+            <div
+              className="filter-pop island-tab__island-pop"
+              role="listbox"
+              aria-label={t("teams.selectIsland")}
+            >
+              <div className="filter-list">
+                {/* Opción "Sin isla" */}
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={selectedIsland === null}
+                  className={
+                    "filter-list__item" +
+                    (selectedIsland === null ? " is-selected" : "")
+                  }
+                  onClick={() => {
+                    handleIslandChange("");
+                    setIslandOpen(false);
+                  }}
+                >
+                  <span className="filter-list__label">
+                    {t("teams.noIsland")}
+                  </span>
+                </button>
+
+                {/* Opciones de isla */}
+                {islands.map((isl) => (
+                  <button
+                    key={isl.name}
+                    type="button"
+                    role="option"
+                    aria-selected={selectedIsland === isl.name}
+                    className={
+                      "filter-list__item" +
+                      (selectedIsland === isl.name ? " is-selected" : "")
+                    }
+                    onClick={() => {
+                      handleIslandChange(isl.name);
+                      setIslandOpen(false);
+                    }}
+                  >
+                    <span className="filter-list__label">{isl.name}</span>
+                    {!isl.user_picks && isl.favorite_berries.length > 0 && (
+                      <span className="island-tab__island-berries">
+                        {isl.favorite_berries.map((b) => (
+                          <img
+                            key={b}
+                            src={berryIcon(b)}
+                            alt={berryName(b)}
+                            title={berryName(b)}
+                            className="island-tab__berry-icon"
+                          />
+                        ))}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Bayas favoritas */}
@@ -108,10 +214,7 @@ export function IslandTab({
 
           {island?.user_picks ? (
             /* user_picks: grilla de chips togglable */
-            <div>
-              <p className={`island-tab__berry-count${selectedCount === 3 ? " island-tab__berry-count--full" : ""}`}>
-                {selectedCount} / 3
-              </p>
+            <div className="island-tab__berry-picker">
               <div className="island-tab__berry-grid">
                 {allBerries.map((b) => {
                   const isSelected = favoriteBerries.includes(b);
@@ -135,6 +238,11 @@ export function IslandTab({
                   );
                 })}
               </div>
+              <p
+                className={`island-tab__berry-count${selectedCount === 3 ? " island-tab__berry-count--full" : ""}`}
+              >
+                {selectedCount} / 3
+              </p>
             </div>
           ) : (
             /* Favoritas fijas: chips de solo lectura */
