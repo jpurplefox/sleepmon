@@ -452,20 +452,21 @@ export function Teams() {
                 );
               })()}
 
-              {/* ── Card total (berries + skill) — neutral, like "Total cocina" ── */}
-              <div className="cook-result-block">
-                <div className="cook-total-row cook-total-row--grand">
-                  <span className="cook-total-row__label">{t("teams.total")}</span>
-                  <span className="cook-total-row__value">
-                    <img
-                      className="mini-icon"
-                      src={CHARGE_STRENGTH_ICON}
-                      alt=""
-                      style={{ width: 16, height: 16 }}
-                    />
-                    {fdown(result.total_strength * factor)}
-                  </span>
-                </div>
+              {/* ── Card total (berries + skill) — neutral, like "Total cocina".
+                  Rendered without a cook-result-block wrapper: the grand row
+                  already draws its own divider, so wrapping it would stack two
+                  grey rules before the total. ── */}
+              <div className="cook-total-row cook-total-row--grand">
+                <span className="cook-total-row__label">{t("teams.total")}</span>
+                <span className="cook-total-row__value">
+                  <img
+                    className="mini-icon"
+                    src={CHARGE_STRENGTH_ICON}
+                    alt=""
+                    style={{ width: 16, height: 16 }}
+                  />
+                  {fdown(result.total_strength * factor)}
+                </span>
               </div>
 
               {result.excluded_count > 0 && (
