@@ -337,6 +337,11 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.potNoFit": "No entra",
     "teams.tabIsland": "Isla",
     "teams.tabMeals": "Comidas",
+    "teams.dishType": "Tipo de plato",
+    "teams.dishTypeCurry": "Curry",
+    "teams.dishTypeSalad": "Ensalada",
+    "teams.dishTypeDessert": "Postre",
+    "teams.dishTypeClearWarning": "Cambiar el tipo limpiará las comidas elegidas del tipo anterior.",
     // Tab de Isla
     "teams.selectIsland": "Isla",
     "teams.noIsland": "Sin isla",
@@ -681,6 +686,11 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.potNoFit": "Doesn't fit",
     "teams.tabIsland": "Island",
     "teams.tabMeals": "Meals",
+    "teams.dishType": "Dish type",
+    "teams.dishTypeCurry": "Curry",
+    "teams.dishTypeSalad": "Salad",
+    "teams.dishTypeDessert": "Dessert",
+    "teams.dishTypeClearWarning": "Changing the type will clear meals of the previous type.",
     // Island tab
     "teams.selectIsland": "Island",
     "teams.noIsland": "No island",

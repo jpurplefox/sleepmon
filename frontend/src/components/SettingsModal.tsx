@@ -38,6 +38,10 @@ interface Props {
   onSelectIsland: (name: string | null) => void;
   onFavoriteBerries: (berries: string[]) => void;
   onIslandBonus: (bonus: number) => void;
+  /** Active dish type for all 3 meal slots. null = no restriction yet. */
+  dishType: Recipe["type"] | null;
+  /** Called when the user selects a dish type or clears it (null). */
+  onDishTypeChange: (type: Recipe["type"] | null) => void;
 }
 
 export function SettingsModal({
@@ -56,14 +60,14 @@ export function SettingsModal({
   onSelectIsland,
   onFavoriteBerries,
   onIslandBonus,
+  dishType,
+  onDishTypeChange,
 }: Props) {
   const { t } = useI18n();
 
   // Tab state: "island" is active by default.
   const [activeTab, setActiveTab] = useState<TabId>("island");
 
-  // Type filter: null = all.
-  const [typeFilter, setTypeFilter] = useState<Recipe["type"] | null>(null);
   // Text search.
   const [search, setSearch] = useState("");
 
@@ -93,19 +97,25 @@ export function SettingsModal({
 
   const toggleMoment = (recipe: Recipe, momentIdx: number) => {
     const level = getLevelFor(recipe.name);
+    const isRemoving = meals[momentIdx]?.recipe === recipe.name;
     const next = meals.map((m, i) => {
       if (i !== momentIdx) return m;
       // Clicking the same recipe on the same moment clears it.
-      if (m?.recipe === recipe.name) return null;
+      if (isRemoving) return null;
       return { recipe: recipe.name, level };
     });
     onChangeMeals(next);
+    // Auto-set dishType when adding the first recipe to a fully empty plan.
+    // This locks in the type so subsequent slots are restricted to the same type.
+    if (!isRemoving && dishType === null && meals.every((m) => m === null)) {
+      onDishTypeChange(recipe.type);
+    }
   };
 
-  // Filter recipes.
+  // Filter recipes. When dishType is set, only show recipes of that type.
   const q = normalize(search.trim());
   const filtered = recipes.filter((r) => {
-    if (typeFilter && r.type !== typeFilter) return false;
+    if (dishType && r.type !== dishType) return false;
     if (q && !normalize(r.name).includes(q)) return false;
     return true;
   });
@@ -179,28 +189,39 @@ export function SettingsModal({
         hidden={activeTab !== "meals"}
         className="settings-modal-panel"
       >
-        {/* Top bar: type filter + search */}
+        {/* Top bar: dish type selector + search */}
         <div className="meal-picker-topbar">
-          <div className="specialty-toggle" role="group" aria-label={t("teams.recipeType")}>
-            <button
-              type="button"
-              className={"specialty-toggle__btn" + (typeFilter === null ? " is-on" : "")}
-              aria-pressed={typeFilter === null}
-              onClick={() => setTypeFilter(null)}
-            >
-              {t("teams.allTypes")}
-            </button>
-            {RECIPE_TYPES.map((type) => (
+          <div className="meal-picker-dish-type">
+            <span className="meal-picker-dish-type__label muted">{t("teams.dishType")}:</span>
+            <div className="specialty-toggle" role="group" aria-label={t("teams.dishType")}>
               <button
-                key={type}
                 type="button"
-                className={"specialty-toggle__btn" + (typeFilter === type ? " is-on" : "")}
-                aria-pressed={typeFilter === type}
-                onClick={() => setTypeFilter(type)}
+                className={"specialty-toggle__btn" + (dishType === null ? " is-on" : "")}
+                aria-pressed={dishType === null}
+                onClick={() => onDishTypeChange(null)}
               >
-                {type}
+                {t("teams.allTypes")}
               </button>
-            ))}
+              {RECIPE_TYPES.map((type) => {
+                const labelKey =
+                  type === "Curry"
+                    ? "teams.dishTypeCurry"
+                    : type === "Salad"
+                      ? "teams.dishTypeSalad"
+                      : "teams.dishTypeDessert";
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    className={"specialty-toggle__btn" + (dishType === type ? " is-on" : "")}
+                    aria-pressed={dishType === type}
+                    onClick={() => onDishTypeChange(type)}
+                  >
+                    {t(labelKey)}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <input
@@ -243,7 +264,10 @@ export function SettingsModal({
           <button
             type="button"
             className="btn btn--ghost meal-picker-clear"
-            onClick={() => onChangeMeals([null, null, null])}
+            onClick={() => {
+              onChangeMeals([null, null, null]);
+              onDishTypeChange(null);
+            }}
           >
             {t("teams.clearMeals")}
           </button>

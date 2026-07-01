@@ -129,6 +129,9 @@ export function Teams() {
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
   const [potSize, setPotSize] = useState(15);
 
+  // Dish type: restricts all 3 meal slots to the same recipe type (ephemeral, frontend-only).
+  const [dishType, setDishType] = useState<'Curry' | 'Salad' | 'Dessert' | null>(null);
+
   // Island state (efímero, como meals).
   const [selectedIsland, setSelectedIsland] = useState<string | null>(null);
   const [favoriteBerries, setFavoriteBerries] = useState<string[]>([]);
@@ -270,6 +273,22 @@ export function Teams() {
 
   const removeMember = (id: string) =>
     setSelectedIds((prev) => prev.filter((x) => x !== id));
+
+  // Handler: set dishType and clear meals whose recipe type doesn't match the new type.
+  // When newType is null, all meals are kept (no restriction).
+  const handleDishTypeChange = (newType: 'Curry' | 'Salad' | 'Dessert' | null) => {
+    setDishType(newType);
+    if (newType !== null) {
+      setMeals((prev) =>
+        prev.map((m) => {
+          if (m === null) return null;
+          const recipe = recipeByName.get(m.recipe);
+          // If recipe not found in catalog or type mismatch, clear the slot.
+          return recipe && recipe.type === newType ? m : null;
+        }),
+      );
+    }
+  };
 
   // Catalog must be loaded for BoxPicker to work.
   if (catalog.isLoading) return <p className="muted">{t("common.loadingCatalog")}</p>;
@@ -1103,6 +1122,8 @@ export function Teams() {
           onSelectIsland={setSelectedIsland}
           onFavoriteBerries={setFavoriteBerries}
           onIslandBonus={setIslandBonus}
+          dishType={dishType}
+          onDishTypeChange={handleDishTypeChange}
         />
       )}
     </div>
