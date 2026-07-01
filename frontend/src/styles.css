@@ -190,6 +190,7 @@ select:focus {
 .btn:focus-visible,
 .tab:focus-visible,
 .filter-btn:focus-visible,
+.island-tab__island-trigger:focus-visible,
 .specialty-toggle__btn:focus-visible,
 .prod-box-item:focus-visible {
   outline: 2px solid var(--accent);
@@ -2445,6 +2446,31 @@ select:focus {
   border-color: var(--moon-border);
 }
 
+/* Resaltado de baya favorita: borde dorado lunar + sombra interior en dorado
+   tenue. Usa --moon-border/--moon-dim para no colisionar con el lenguaje de
+   selección/drag que usa --accent. */
+.prod-card--favorite-berry {
+  border-color: var(--moon-border);
+  box-shadow: inset 0 0 0 1px var(--moon-dim);
+}
+
+/* Badge "×2" junto al encabezado del bloque de bayas. Pill compacta, en
+   dorado lunar para ligar con el borde de resaltado. */
+.prod-card__fav-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--moon);
+  background: var(--moon-dim);
+  border: 1px solid var(--moon-border);
+  border-radius: 999px;
+  padding: 0 0.4rem;
+  line-height: 1.6;
+  margin-left: 0.35rem;
+  vertical-align: middle;
+}
+
 /* Fila de altura reservada para el chip/botón de base: aunque haya una sola card
    (sin chip), reserva el alto para que ninguna salte al pasar de 1 a 2. */
 .prod-card__base-row {
@@ -3749,4 +3775,277 @@ button.prod-card__base-tag--action:hover {
   align-items: center;
   gap: 0.25rem;
   color: var(--text);
+}
+
+/* ── Settings modal tab bar ──────────────────────────────────────────────────── */
+.settings-modal-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.25rem;
+  margin: 0 -1.25rem 1.25rem;
+}
+
+.settings-modal-tabs .specialty-toggle__btn {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  color: var(--muted);
+  font-size: var(--text-base);
+  font-weight: 600;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.12s;
+}
+
+.settings-modal-tabs .specialty-toggle__btn:hover {
+  color: var(--text);
+}
+
+.settings-modal-tabs .specialty-toggle__btn.is-on {
+  background: transparent;
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+.settings-modal-tabs .specialty-toggle__btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Stable height between island/meals tabs: both panels share a fixed height
+   with internal scroll, so switching tabs never resizes the modal and tall
+   content (Greengrass berry grid) scrolls instead of overflowing the viewport. */
+.settings-modal-panel {
+  height: 66vh;
+  overflow-y: auto;
+}
+
+/* ── Island Tab ──────────────────────────────────────────────────────────────── */
+.island-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1rem 0;
+}
+
+.island-tab__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.island-tab__label {
+  min-width: 9rem;
+  padding-top: 0.35rem;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* Dropdown custom de isla (reemplaza el <select> nativo) */
+.island-tab__island-control { flex: 1; min-width: 14rem; max-width: 22rem; }
+.island-tab__island-trigger { width: 100%; justify-content: space-between; }
+/* Ancho fijo para que la columna de íconos quede siempre en la misma posición x,
+   independientemente del largo del nombre de cada mapa. */
+.island-tab__island-pop { width: 17rem; }
+/* El label crece y empuja los íconos al borde derecho de cada fila. */
+.island-tab__island-pop .filter-list__label { flex: 1; }
+.island-tab__island-berries { display: inline-flex; gap: 0.2rem; margin-left: 0; padding-left: 0; flex-shrink: 0; }
+
+/* Item 2 — placeholder "?" para islas user_picks en el dropdown */
+.island-tab__berry-icon--unknown {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--muted); font-size: 10px; font-weight: 700; line-height: 1;
+  flex-shrink: 0; user-select: none;
+}
+
+/* Item 3 — "Sin isla" atenuada */
+.island-tab__island-none { color: var(--muted); font-style: italic; }
+.island-tab__island-none.is-selected { color: var(--text); font-style: normal; }
+
+/* Item 4 — grilla read-only para islas normales */
+.island-tab__berry-grid--readonly .island-tab__berry-toggle { cursor: default; pointer-events: none; }
+.island-tab__berry-grid--readonly .island-tab__berry-toggle:not(.is-selected) { opacity: 0.28; }
+
+/* Berry icon (used in both chips and pickers) */
+.island-tab__berry-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+/* user_picks: grilla togglable de bayas + contador debajo */
+.island-tab__berry-picker { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; flex: 1; min-width: 14rem; }
+
+.island-tab__berry-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  max-width: 32rem;
+}
+
+.island-tab__berry-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.1s, background 0.1s, color 0.1s;
+}
+
+.island-tab__berry-toggle:hover:not(:disabled) {
+  border-color: var(--moon-border);
+  color: var(--text);
+}
+
+.island-tab__berry-toggle.is-selected {
+  background: var(--moon-dim);
+  border-color: var(--moon-border);
+  color: var(--text);
+}
+
+/* Item 5 — baya principal (índice 0): anillo dorado + estrella */
+.island-tab__berry-toggle--primary {
+  border-color: var(--moon);
+  box-shadow: 0 0 0 1px var(--moon);
+  position: relative;
+}
+.island-tab__berry-toggle--primary::before {
+  content: "★"; position: absolute; top: -8px; left: -5px;
+  font-size: 12px; line-height: 1; color: var(--moon); pointer-events: none;
+}
+
+.island-tab__berry-toggle:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.island-tab__berry-count {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin: 0;
+}
+
+.island-tab__berry-count--full {
+  color: var(--moon);
+}
+
+/* ── Area Bonus Slider (custom: track+fill+thumb; input nativo oculto para a11y) ── */
+.bonus-slider { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; min-width: 14rem; max-width: 22rem; }
+.bonus-slider__row { display: flex; align-items: center; gap: 0.75rem; }
+.bonus-slider__track { position: relative; flex: 1; height: 20px; display: flex; align-items: center; }
+/* Riel gris de fondo, full-width del track */
+.bonus-slider__track::before {
+  content: ""; position: absolute; left: 0; right: 0; height: 4px; border-radius: 999px; background: var(--border);
+}
+/* Fill dorado: de left:0 hasta el borde derecho del thumb.
+   width = ratio*(100% - 14px) + 14px  → en 0: 14px (tapa el thumb); en 1: 100% (lleno). */
+.bonus-slider__fill {
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  height: 4px; border-radius: 999px; background: var(--moon);
+  width: calc(var(--ratio) * (100% - 14px) + 14px);
+  pointer-events: none; z-index: 0;
+}
+/* Thumb sólido 14px. left = ratio*(100% - 14px) → en 0 pegado a la izq, en 1 pegado a la der. */
+.bonus-slider__thumb {
+  position: absolute; top: 50%; left: calc(var(--ratio) * (100% - 14px)); transform: translateY(-50%);
+  width: 14px; height: 14px; border-radius: 999px;
+  background: var(--surface-2); border: 2px solid var(--moon); box-shadow: 0 1px 3px rgba(0,0,0,0.55);
+  pointer-events: none; transition: transform 0.08s ease-out, border-color 0.1s; z-index: 1;
+}
+.bonus-slider__track:hover .bonus-slider__thumb { transform: translateY(-50%) scale(1.2); }
+.bonus-slider__track:has(.bonus-slider__input:active) .bonus-slider__thumb {
+  background: var(--moon); transform: translateY(-50%) scale(1.1); border-color: var(--moon);
+}
+/* Foco DORADO tanto con mouse como con teclado — glow difuso (sin doble círculo) */
+.bonus-slider__track:focus-within .bonus-slider__thumb { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55), 0 0 8px 2px var(--moon-border); }
+/* Input nativo: invisible pero funcional (teclado/puntero/a11y). Sin outline propio. */
+.bonus-slider__input {
+  position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
+  -webkit-appearance: none; appearance: none; margin: 0; padding: 0; border: none; background: transparent; outline: none;
+}
+.bonus-slider__input:disabled { cursor: default; }
+.bonus-slider:has(.bonus-slider__input:disabled) { opacity: 0.38; pointer-events: none; }
+.bonus-slider__value { flex-shrink: 0; min-width: 3.2ch; text-align: right; font-size: var(--text-base); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--moon); }
+.bonus-slider__unit { font-size: var(--text-sm); color: var(--muted); font-weight: 400; }
+.bonus-slider__marks { display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--muted); padding: 0 7px; user-select: none; }
+
+/* ── StrengthValue tooltip ─────────────────────────────────────────────────
+   Shows a two-line breakdown (Base / Con bonus) when hovering a strength
+   value that has an island bonus applied. The wrapping span is position:
+   relative so the tooltip card can anchor to it. The tooltip is hidden by
+   default and shown on hover/focus; it is also available as a native `title`
+   and `aria-label` for screen readers and keyboard users.
+ ─────────────────────────────────────────────────────────────────────────── */
+.strength-value--has-tooltip {
+  position: relative;
+  cursor: help;
+  text-decoration: underline dotted var(--muted);
+  text-underline-offset: 2px;
+}
+
+.strength-value__tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  right: auto;
+  transform: none;
+  min-width: 13rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 0.4rem 0.6rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  font-size: var(--text-xs);
+  color: var(--text);
+  white-space: nowrap;
+  z-index: 200;
+  pointer-events: none;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.strength-value--has-tooltip:hover .strength-value__tooltip,
+.strength-value--has-tooltip:focus-within .strength-value__tooltip {
+  display: flex;
+}
+
+.strength-value__tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.strength-value__tooltip-label {
+  color: var(--muted);
+}
+
+.strength-value__tooltip-val {
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Separador entre las 2 filas del tooltip (Base / Con bonus). */
+.strength-value__tooltip-row + .strength-value__tooltip-row {
+  border-top: 1px solid var(--border);
+  padding-top: 0.2rem;
+  margin-top: 0.1rem;
+}
+
+/* Fila activa (con bonus): valor en dorado. */
+.strength-value__tooltip-row:last-child .strength-value__tooltip-val {
+  color: var(--moon);
 }

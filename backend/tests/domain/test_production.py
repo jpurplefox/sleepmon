@@ -454,6 +454,32 @@ def test_result_carries_species_berry() -> None:
     assert prod.berry is Berry.ORAN
 
 
+def test_favorite_berry_doubles_berry_strength() -> None:
+    species = _species()  # usar el helper del archivo — berry es Berry.ORAN
+    base = daily_production(species, _INGREDIENTS, level=10)
+    favored = daily_production(
+        species,
+        _INGREDIENTS,
+        level=10,
+        favorite_berries=frozenset({species.berry}),
+    )
+    assert favored.berry_strength == base.berry_strength * 2
+
+
+def test_non_favorite_berry_unchanged() -> None:
+    species = _species()
+    base = daily_production(species, _INGREDIENTS, level=10)
+    other = daily_production(
+        species,
+        _INGREDIENTS,
+        level=10,
+        favorite_berries=frozenset({Berry.YACHE})  # baya distinta a Berry.ORAN
+        if species.berry is not Berry.YACHE
+        else frozenset({Berry.ORAN}),
+    )
+    assert other.berry_strength == base.berry_strength
+
+
 # --- sub skills + naturaleza ---
 
 

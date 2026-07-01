@@ -95,6 +95,9 @@ interface Props {
   onDragEnter?: () => void;
   onDrop?: () => void;
   onDragEnd?: () => void;
+  // Resaltado de baya favorita: true cuando la baya de esta especie es favorita
+  // de la isla activa (recibe ×2 de fuerza). Reactivo: cambia al cambiar la isla.
+  isFavoriteBerry?: boolean;
 }
 
 export function ProductionCard({
@@ -123,6 +126,7 @@ export function ProductionCard({
   onDragEnter,
   onDrop,
   onDragEnd,
+  isFavoriteBerry = false,
 }: Props) {
   const { t, ingredient, berry, subSkill, natureStat, nature: natureName } = useI18n();
   const cardRef = useRef<HTMLElement>(null);
@@ -293,7 +297,8 @@ export function ProductionCard({
           (isBase ? " prod-card--base" : "") +
           (dragging ? " prod-card--dragging" : "") +
           (dragOver ? " prod-card--dragover" : "") +
-          (readOnly ? " prod-card--readonly" : "")
+          (readOnly ? " prod-card--readonly" : "") +
+          (isFavoriteBerry ? " prod-card--favorite-berry" : "")
         }
         onAnimationEnd={(e) => {
           if (e.animationName === "prod-card-in") setEntering(false);
@@ -490,6 +495,15 @@ export function ProductionCard({
           <div className="prod-card__block prod-card__block--berry">
             <div className="prod-card__block-head">
               {t("card.berries")} <span className="muted">{pct(d.berry_percentage)}</span>
+              {isFavoriteBerry && (
+                <span
+                  className="prod-card__fav-badge"
+                  title={t("card.favBerryBadge")}
+                  aria-label={t("card.favBerryBadge")}
+                >
+                  ×2
+                </span>
+              )}
             </div>
             <ul className="prod-card__ings">
               <li>

@@ -623,3 +623,51 @@ def test_team_production_returns_skill_effects(client: TestClient) -> None:
         assert isinstance(effect["kind"], str)
         assert isinstance(effect["total"], (int, float))
         assert isinstance(effect["triggers"], (int, float))
+
+
+# ---------------------------------------------------------------------------
+# Task 5: islands en /catalog y campos base/bonus en /teams/production
+# ---------------------------------------------------------------------------
+
+
+def _create_member(client: TestClient) -> str:
+    """Crea un miembro vía POST /team y devuelve su id."""
+    return client.post("/team", json=valid_payload()).json()["id"]
+
+
+def test_catalog_lists_islands(client: TestClient) -> None:
+    body = client.get("/catalog").json()
+    islands = {i["name"]: i for i in body["islands"]}
+    assert len(islands) == 8
+    assert islands["Cyan Beach"]["favorite_berries"] == ["Oran", "Pamtre", "Pecha"]
+    assert islands["Cyan Beach"]["user_picks"] is False
+    assert islands["Greengrass Isle"]["favorite_berries"] == []
+    assert islands["Greengrass Isle"]["user_picks"] is True
+
+
+def test_production_accepts_island_bonus_and_favorites(client: TestClient) -> None:
+    member_id = _create_member(client)
+    res = client.post(
+        "/teams/production",
+        json={
+            "member_ids": [member_id],
+            "meals": [],
+            "favorite_berries": ["Oran"],
+            "island_bonus": 0.3,
+        },
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["island_bonus"] == 0.3
+    assert body["total_berry_strength"] == pytest.approx(
+        body["total_berry_strength_base"] * 1.3
+    )
+
+
+def test_production_rejects_bonus_over_max(client: TestClient) -> None:
+    member_id = _create_member(client)
+    res = client.post(
+        "/teams/production",
+        json={"member_ids": [member_id], "meals": [], "island_bonus": 0.9},
+    )
+    assert res.status_code in (400, 422)

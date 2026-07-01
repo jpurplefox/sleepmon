@@ -225,6 +225,7 @@ def daily_production(
     sub_skills: tuple[SubSkill, ...] = (),
     ribbon: Ribbon = Ribbon.NONE,
     skill_level: int = 1,
+    favorite_berries: frozenset[Berry] = frozenset(),
 ) -> DailyProduction:
     """Estima la producción diaria con ingredientes, nivel, naturaleza y sub skills.
 
@@ -434,7 +435,10 @@ def daily_production(
     berry_amount = (normal_helps * berry_rate + overflow_helps) * berry_per_help
 
     # Fuerza directa de las bayas: cantidad de bayas × fuerza por baya del nivel.
-    berry_strength = berry_amount * berry_strength_for_level(species.berry, level)
+    # Si la baya del Pokémon es favorita de la isla activa, el multiplicador es ×2.
+    berry_strength = berry_amount * berry_strength_for_level(
+        species.berry, level, favorite=species.berry in favorite_berries
+    )
 
     helps_per_slot = normal_helps * ingredient_rate / unlocked
     slots = tuple(

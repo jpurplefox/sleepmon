@@ -231,3 +231,16 @@ class RecipeType(StrEnum):
     CURRY = "Curry"  # curries y guisos
     SALAD = "Salad"
     DESSERT = "Dessert"  # postres y bebidas
+
+
+class Island(StrEnum):
+    """Islas / áreas de investigación de Pokémon Sleep."""
+
+    GREENGRASS_ISLE = "Greengrass Isle"
+    GREENGRASS_EXPERT = "Greengrass Isle (Expert Mode)"
+    CYAN_BEACH = "Cyan Beach"
+    TAUPE_HOLLOW = "Taupe Hollow"
+    SNOWDROP_TUNDRA = "Snowdrop Tundra"
+    LAPIS_LAKESIDE = "Lapis Lakeside"
+    OLD_GOLD_POWER_PLANT = "Old Gold Power Plant"
+    AMBER_CANYON = "Amber Canyon"

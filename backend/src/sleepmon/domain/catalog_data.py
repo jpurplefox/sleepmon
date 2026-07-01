@@ -17,6 +17,7 @@ from typing import Final
 from sleepmon.domain.value_objects import (
     Berry,
     Ingredient,
+    Island,
     Nature,
     NatureStat,
     Ribbon,
@@ -226,6 +227,21 @@ BERRY_BASE_STRENGTH: Final[Mapping[Berry, int]] = {
     Berry.YACHE: 35,
 }
 
+ISLAND_FAVORITE_BERRIES: Final[Mapping[Island, tuple[Berry, ...]]] = {
+    Island.GREENGRASS_ISLE: (),
+    Island.GREENGRASS_EXPERT: (),
+    Island.CYAN_BEACH: (Berry.ORAN, Berry.PAMTRE, Berry.PECHA),
+    Island.TAUPE_HOLLOW: (Berry.FIGY, Berry.LEPPA, Berry.SITRUS),
+    Island.SNOWDROP_TUNDRA: (Berry.PERSIM, Berry.RAWST, Berry.WIKI),
+    Island.LAPIS_LAKESIDE: (Berry.CHERI, Berry.DURIN, Berry.MAGO),
+    Island.OLD_GOLD_POWER_PLANT: (Berry.BELUE, Berry.BLUK, Berry.GREPA),
+    Island.AMBER_CANYON: (Berry.CHESTO, Berry.LUM, Berry.YACHE),
+}
+
+ISLAND_USER_PICKS: Final[frozenset[Island]] = frozenset(
+    {Island.GREENGRASS_ISLE, Island.GREENGRASS_EXPERT}
+)
+
 # Fuerza base de cada ingrediente (valor a nivel 1 del Pokémon que lo produce).
 # Se usa para estimar la fuerza de los "fillers" en una receta. Fuente: nerolis-lab.
 INGREDIENT_STRENGTH: Final[dict[Ingredient, int]] = {
@@ -262,12 +278,16 @@ assert set(INGREDIENT_STRENGTH) == set(Ingredient), (
 _BERRY_STRENGTH_GROWTH_RATE: Final[float] = 1.025
 
 
-def berry_strength_for_level(berry: Berry, level: int) -> int:
-    """Fuerza que aporta UNA baya de ``berry`` para un Pokémon de nivel ``level``."""
+def berry_strength_for_level(berry: Berry, level: int, *, favorite: bool = False) -> int:
+    """Fuerza que aporta UNA baya de ``berry`` para un Pokémon de nivel ``level``.
+
+    Si la baya es favorita de la isla activa, aporta el doble.
+    """
     base = BERRY_BASE_STRENGTH[berry]
     linear = base + (level - 1)
     exponential = base * _BERRY_STRENGTH_GROWTH_RATE ** (level - 1)
-    return round(max(linear, exponential))
+    strength = round(max(linear, exponential))
+    return strength * 2 if favorite else strength
 
 
 # Multiplicador de fuerza de una receta según su nivel (1..MAX_RECIPE_LEVEL).

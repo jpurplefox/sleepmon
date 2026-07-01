@@ -79,6 +79,12 @@ class SpeciesOut(msgspec.Struct):
     base_inventory: int
 
 
+class IslandOut(msgspec.Struct):
+    name: str
+    favorite_berries: list[str]
+    user_picks: bool
+
+
 class CatalogOut(msgspec.Struct):
     natures: list[NatureOut]
     sub_skills: list[SubSkillOut]
@@ -86,6 +92,7 @@ class CatalogOut(msgspec.Struct):
     species: list[SpeciesOut]
     recipe_level_bonus: list[float]
     ingredient_strengths: dict[str, int]
+    islands: list[IslandOut]
 
 
 class DistributionsOut(msgspec.Struct):
@@ -163,6 +170,8 @@ class MealIn(msgspec.Struct, forbid_unknown_fields=True):
 class TeamProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     member_ids: list[str]
     meals: list[MealIn | None] = msgspec.field(default_factory=list)
+    favorite_berries: list[str] = msgspec.field(default_factory=list)
+    island_bonus: float = 0.0
 
 
 class IngredientBalanceOut(msgspec.Struct):
@@ -196,6 +205,7 @@ class MemberContributionOut(msgspec.Struct):
     member_id: str
     species: str
     strength: float
+    strength_base: float
     berry_amount: float
     ingredients_total: float
     skill_triggers: float
@@ -209,6 +219,10 @@ class TeamProductionOut(msgspec.Struct):
     total_berry_amount: float
     total_berry_strength: float
     total_skill_strength: float
+    total_strength_base: float
+    total_berry_strength_base: float
+    total_skill_strength_base: float
+    island_bonus: float
     ingredients: list[SlotProductionOut]
     total_ingredients: float
     skill_triggers: float
@@ -223,7 +237,9 @@ class TeamProductionOut(msgspec.Struct):
     skill_effects: list[SkillEffectAggOut]
     members: list[MemberContributionOut]
     cooking_strength: float
+    cooking_strength_base: float
     cooking_ingredients: list[IngredientBalanceOut]
     cooking_surplus: list[IngredientBalanceOut]
     cooking_meals: list[MealFeasibilityOut]
     grand_total_strength: float
+    grand_total_strength_base: float

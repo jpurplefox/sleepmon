@@ -14,6 +14,7 @@ from sleepmon.adapters.inbound.http.schemas import (
     DistributionsOut,
     IngredientBalanceOut,
     IngredientCountOut,
+    IslandOut,
     MealFeasibilityOut,
     MemberContributionOut,
     MemberIn,
@@ -42,13 +43,15 @@ from sleepmon.application.dto import (
 from sleepmon.application.services import TeamService
 from sleepmon.domain.catalog_data import (
     INGREDIENT_STRENGTH,
+    ISLAND_FAVORITE_BERRIES,
+    ISLAND_USER_PICKS,
     NATURE_EFFECTS,
     RECIPE_LEVEL_BONUS,
     SUB_SKILL_TIERS,
 )
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.ports import SpeciesCatalog
-from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
+from sleepmon.domain.value_objects import Ingredient, Island, Nature, SubSkill
 
 
 def _full_production_out(result: ProductionResult) -> ProductionOut:
@@ -238,6 +241,14 @@ class CatalogController(Controller):
                 )
                 for sp in catalog.all()
             ],
+            islands=[
+                IslandOut(
+                    name=island.value,
+                    favorite_berries=[b.value for b in ISLAND_FAVORITE_BERRIES[island]],
+                    user_picks=island in ISLAND_USER_PICKS,
+                )
+                for island in Island
+            ],
         )
 
 
@@ -274,6 +285,8 @@ class TeamProductionController(Controller):
                     None if m is None else MealSelectionInput(recipe=m.recipe, level=m.level)
                     for m in data.meals
                 ],
+                favorite_berries=data.favorite_berries,
+                island_bonus=data.island_bonus,
             )
         )
         return TeamProductionOut(
@@ -283,6 +296,10 @@ class TeamProductionController(Controller):
             total_berry_amount=result.total_berry_amount,
             total_berry_strength=result.total_berry_strength,
             total_skill_strength=result.total_skill_strength,
+            total_strength_base=result.total_strength_base,
+            total_berry_strength_base=result.total_berry_strength_base,
+            total_skill_strength_base=result.total_skill_strength_base,
+            island_bonus=result.island_bonus,
             ingredients=[
                 SlotProductionOut(ingredient=s.ingredient, amount=s.amount)
                 for s in result.ingredients
@@ -306,6 +323,7 @@ class TeamProductionController(Controller):
                     member_id=m.member_id,
                     species=m.species,
                     strength=m.strength,
+                    strength_base=m.strength_base,
                     berry_amount=m.berry_amount,
                     ingredients_total=m.ingredients_total,
                     skill_triggers=m.skill_triggers,
@@ -314,6 +332,7 @@ class TeamProductionController(Controller):
                 for m in result.members
             ],
             cooking_strength=result.cooking_strength,
+            cooking_strength_base=result.cooking_strength_base,
             cooking_ingredients=[
                 IngredientBalanceOut(
                     ingredient=b.ingredient,
@@ -350,4 +369,5 @@ class TeamProductionController(Controller):
                 for m in result.cooking_meals
             ],
             grand_total_strength=result.grand_total_strength,
+            grand_total_strength_base=result.grand_total_strength_base,
         )

@@ -13,9 +13,10 @@ import {
 import { api } from "../api/client";
 import { berryIcon } from "../berries";
 import { BoxPicker } from "../components/BoxPicker";
-import { MealPickerModal } from "../components/MealPickerModal";
+import { SettingsModal } from "../components/SettingsModal";
 import { Modal } from "../components/Modal";
 import { ProductionCard } from "../components/ProductionCard";
+import { StrengthValue } from "../components/StrengthValue";
 import {
   IconMagnifier,
   IconPackage,
@@ -24,6 +25,7 @@ import {
 } from "../components/icons";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
+import { fdown } from "../utils/format";
 import { recipeImage } from "../recipes";
 import { statIcon } from "../natures";
 import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
@@ -112,8 +114,6 @@ function configFromMember(catalog: Catalog, m: Member): MemberInput | null {
 const MEAL_SLOTS = ["breakfast", "lunch", "dinner"] as const;
 
 const fmtInt = (n: number) => Math.round(n).toLocaleString("en-US");
-// Floor-down helper: display integers always floored (never rounded up).
-const fdown = (n: number) => Math.floor(n).toLocaleString("en-US");
 
 export function Teams() {
   const { t, ingredient: ingName, berry: berryName } = useI18n();
@@ -129,17 +129,42 @@ export function Teams() {
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
   const [potSize, setPotSize] = useState(15);
 
+  // Dish type: restricts all 3 meal slots to the same recipe type (ephemeral, frontend-only).
+  const [dishType, setDishType] = useState<'Curry' | 'Salad' | 'Dessert' | null>(null);
+
+  // Island state (efímero, como meals).
+  const [selectedIsland, setSelectedIsland] = useState<string | null>(null);
+  const [favoriteBerries, setFavoriteBerries] = useState<string[]>([]);
+  const [islandBonus, setIslandBonus] = useState<number>(0);
+
   const inTeam = useMemo(() => new Set(selectedIds), [selectedIds]);
 
+  // Set de bayas favoritas activas para lookup O(1) al renderizar las cards.
+  const favBerrySet = useMemo(
+    () => new Set(favoriteBerries.filter(Boolean)),
+    [favoriteBerries],
+  );
+
+  // Bayas que realmente enviar al backend: filtrar strings vacíos (slots no elegidos).
+  const activeBerries = favoriteBerries.filter(Boolean);
+
   const teamQuery = useQuery({
-    queryKey: ["team-production", selectedIds, meals],
-    queryFn: () => api.computeTeamProduction({ member_ids: selectedIds, meals }),
+    queryKey: ["team-production", selectedIds, meals, activeBerries, islandBonus],
+    queryFn: () =>
+      api.computeTeamProduction({
+        member_ids: selectedIds,
+        meals,
+        favorite_berries: activeBerries,
+        island_bonus: islandBonus,
+      }),
     enabled: selectedIds.length > 0,
     placeholderData: keepPreviousData,
   });
 
   // Everything renders daily; the totals card shows daily + ×7 on its own.
   const factor = 1;
+  // Multiplicador de fuerza del bonus de isla (1 cuando no hay bonus).
+  const bonusFactor = 1 + islandBonus;
   const result = teamQuery.data;
 
   // Total extra pot ingredients/day from cooking_ingredients skill effect (or 0).
@@ -239,8 +264,8 @@ export function Teams() {
       remainingSlots -= usedUnits;
       total += Math.floor(usedUnits) * item.strength;
     }
-    return total;
-  }, [result, catalog.isLoading, catalog.data, potSize, cookingExtra, meals, recipeByName]);
+    return total * bonusFactor;
+  }, [result, catalog.isLoading, catalog.data, potSize, cookingExtra, meals, recipeByName, islandBonus]);
 
   // Cooking grand total (daily): recipes + fillers, +10% Extra Tasty.
   const grandTotalCooking = result
@@ -256,6 +281,25 @@ export function Teams() {
 
   const removeMember = (id: string) =>
     setSelectedIds((prev) => prev.filter((x) => x !== id));
+
+  // Handler: set dishType and clear meals that are incompatible with the new type.
+  // When newType is null (no restriction), also clear all meals so a mixed state
+  // (e.g. Curry + Salad) can never persist after the type selector is reset.
+  const handleDishTypeChange = (newType: 'Curry' | 'Salad' | 'Dessert' | null) => {
+    setDishType(newType);
+    if (newType === null) {
+      setMeals([null, null, null]);
+    } else {
+      setMeals((prev) =>
+        prev.map((m) => {
+          if (m === null) return null;
+          const recipe = recipeByName.get(m.recipe);
+          // If recipe not found in catalog or type mismatch, clear the slot.
+          return recipe && recipe.type === newType ? m : null;
+        }),
+      );
+    }
+  };
 
   // Catalog must be loaded for BoxPicker to work.
   if (catalog.isLoading) return <p className="muted">{t("common.loadingCatalog")}</p>;
@@ -301,6 +345,13 @@ export function Teams() {
           const contrib = result?.members.find((mc) => mc.member_id === id);
           const prod = contrib?.production ?? null;
 
+          // Determine if this member's berry is a favorite of the active island.
+          // The source of truth is the catalog species entry (not the production
+          // result), so the highlight is available even before the query resolves.
+          const speciesEntry = catalog.data.species.find((s) => s.name === m.species);
+          const isFavoriteBerry =
+            speciesEntry != null && favBerrySet.has(speciesEntry.berry);
+
           return (
             <ProductionCard
               key={id}
@@ -309,6 +360,7 @@ export function Teams() {
               production={prod}
               productionError={null}
               readOnly
+              isFavoriteBerry={isFavoriteBerry}
               onEdit={() => {/* no-op in readOnly */}}
               onClone={() => {/* no-op in readOnly */}}
               onRemove={() => removeMember(id)}
@@ -393,7 +445,7 @@ export function Teams() {
                             alt=""
                             style={{ width: 14, height: 14 }}
                           />{" "}
-                          {fdown(berry_strength * factor)}
+                          {fdown(berry_strength * bonusFactor)}
                         </span>
                       </li>
                     ))}
@@ -412,7 +464,11 @@ export function Teams() {
                       alt=""
                       style={{ width: 16, height: 16 }}
                     />
-                    {fdown(result.total_berry_strength * factor)}
+                    <StrengthValue
+                      value={result.total_berry_strength * factor}
+                      base={result.total_berry_strength_base * factor}
+                      bonus={islandBonus}
+                    />
                   </span>
                 </div>
               </div>
@@ -445,7 +501,11 @@ export function Teams() {
                           alt=""
                           style={{ width: 14, height: 14 }}
                         />
-                        {fdown(result.total_skill_strength * factor)}
+                        <StrengthValue
+                          value={result.total_skill_strength * factor}
+                          base={result.total_skill_strength_base * factor}
+                          bonus={islandBonus}
+                        />
                       </span>
                     </div>
                   </div>
@@ -465,7 +525,11 @@ export function Teams() {
                     alt=""
                     style={{ width: 16, height: 16 }}
                   />
-                  {fdown(result.total_strength * factor)}
+                  <StrengthValue
+                    value={result.total_strength * factor}
+                    base={result.total_strength_base * factor}
+                    bonus={islandBonus}
+                  />
                 </span>
               </div>
 
@@ -630,7 +694,7 @@ export function Teams() {
                                   alt=""
                                   style={{ width: 14, height: 14 }}
                                 />
-                                {fmtInt(feasibility.strength * factor)}
+                                {fmtInt(feasibility.strength * bonusFactor)}
                               </span>
                             )}
                           </div>
@@ -774,7 +838,11 @@ export function Teams() {
                             alt=""
                             style={{ width: 16, height: 16 }}
                           />
-                          {fdown(result.cooking_strength * factor)}
+                          <StrengthValue
+                            value={result.cooking_strength * factor}
+                            base={result.cooking_strength_base * factor}
+                            bonus={islandBonus}
+                          />
                         </span>
                       </div>
                     </div>
@@ -869,7 +937,7 @@ export function Teams() {
                             const isUsed = usedUnits > 0;
                             const usedFloor = Math.floor(usedUnits);
                             const availFloor = Math.floor(balance);
-                            const contributed = Math.floor(usedUnits * strength * factor);
+                            const contributed = Math.floor(usedUnits * strength * bonusFactor);
                             const tip = isRandom ? t("teams.randomIngredientsTip") : undefined;
                             return (
                               <li
@@ -942,7 +1010,11 @@ export function Teams() {
                               alt=""
                               style={{ width: 16, height: 16 }}
                             />
-                            {fdown(fillerStrengthTotal * factor)}
+                            <StrengthValue
+                              value={fillerStrengthTotal * factor}
+                              base={fillerStrengthTotal / bonusFactor * factor}
+                              bonus={islandBonus}
+                            />
                           </span>
                         </div>
                       </div>
@@ -996,7 +1068,11 @@ export function Teams() {
                                 alt=""
                                 style={{ width: 16, height: 16 }}
                               />
-                              {fdown(grandTotal)}
+                              <StrengthValue
+                                value={grandTotal}
+                                base={grandTotal / bonusFactor}
+                                bonus={islandBonus}
+                              />
                             </span>
                           </div>
                         </div>
@@ -1008,14 +1084,26 @@ export function Teams() {
             </div>
           </div>
 
-          {/* ── TEAM TOTALS card — the page's headline KPI (daily + weekly, always) ── */}
+          {/* ── TEAM TOTALS card — the page's headline KPI (daily + weekly, always) ──
+          Tooltip rule: StrengthValue (base/Area bonus breakdown) appears on ALL
+          subtotals and totals that receive Area bonus — berries subtotal, skills
+          subtotal, total berries+skills card, cooking_strength subtotal, fillers
+          subtotal, cooking grand total, totals-card cooking col, totals-card
+          grand total. NEVER on per-berry/per-recipe/per-filler rows, the
+          "Recetas"/"Fillers" repeat lines in Block 5, or the +10% extra tasty line.
+          When bonus=0 → bonusFactor=1 → base=value → floor(base)===floor(value)
+          → no tooltip rendered (identity, no visual change). ── */}
           <div className="card teams-totals">
             {/* Col 1 — Berries & skills */}
             <div className="teams-totals__col">
               <span className="teams-totals__label">{t("teams.berriesSkills")}</span>
               <span className="teams-totals__kpi">
                 <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" style={{ width: 18, height: 18 }} />
-                {fdown(result.total_strength)}
+                <StrengthValue
+                  value={result.total_strength}
+                  base={result.total_strength_base}
+                  bonus={islandBonus}
+                />
               </span>
               <span className="teams-totals__aside">
                 ×7 {fdown(result.total_strength * 7)}
@@ -1029,7 +1117,11 @@ export function Teams() {
               <span className="teams-totals__label">{t("teams.cooking")}</span>
               <span className="teams-totals__kpi">
                 <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" style={{ width: 18, height: 18 }} />
-                {fdown(grandTotalCooking)}
+                <StrengthValue
+                  value={grandTotalCooking}
+                  base={grandTotalCooking / bonusFactor}
+                  bonus={islandBonus}
+                />
               </span>
               <span className="teams-totals__aside">
                 ×7 {fdown(grandTotalCooking * 7)}
@@ -1043,7 +1135,11 @@ export function Teams() {
               <span className="teams-totals__label">{t("teams.grandTotal")}</span>
               <span className="teams-totals__kpi teams-totals__kpi--grand">
                 <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" style={{ width: 22, height: 22 }} />
-                {fdown(result.total_strength + grandTotalCooking)}
+                <StrengthValue
+                  value={result.total_strength + grandTotalCooking}
+                  base={result.total_strength_base + grandTotalCooking / bonusFactor}
+                  bonus={islandBonus}
+                />
               </span>
               <span className="teams-totals__aside">
                 ×7 {fdown((result.total_strength + grandTotalCooking) * 7)}
@@ -1071,9 +1167,9 @@ export function Teams() {
         </Modal>
       )}
 
-      {/* MealPickerModal */}
+      {/* SettingsModal */}
       {mealPickerOpen && (
-        <MealPickerModal
+        <SettingsModal
           recipes={recipes.data ?? []}
           levelBonus={catalog.data.recipe_level_bonus}
           meals={meals}
@@ -1082,6 +1178,15 @@ export function Teams() {
           potSize={potSize}
           onPotSizeChange={setPotSize}
           cookingExtra={cookingExtra}
+          catalog={catalog.data}
+          selectedIsland={selectedIsland}
+          favoriteBerries={favoriteBerries}
+          islandBonus={islandBonus}
+          onSelectIsland={setSelectedIsland}
+          onFavoriteBerries={setFavoriteBerries}
+          onIslandBonus={setIslandBonus}
+          dishType={dishType}
+          onDishTypeChange={handleDishTypeChange}
         />
       )}
     </div>

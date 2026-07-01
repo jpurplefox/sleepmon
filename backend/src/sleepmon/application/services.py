@@ -45,7 +45,7 @@ from sleepmon.domain.errors import SpeciesNotFoundError, TeamMemberNotFoundError
 from sleepmon.domain.ports import RecipeCatalog, SpeciesCatalog, TeamRepository
 from sleepmon.domain.production import DailyProduction, daily_production
 from sleepmon.domain.species import Species
-from sleepmon.domain.value_objects import Ingredient, Nature, Ribbon, SubSkill
+from sleepmon.domain.value_objects import Berry, Ingredient, Nature, Ribbon, SubSkill
 
 E = TypeVar("E", bound=StrEnum)
 
@@ -292,6 +292,22 @@ class DefaultTeamService(TeamService):
         if len(set(data.member_ids)) != len(data.member_ids):
             raise ValidationError("Un equipo no puede repetir miembros.")
 
+        if not 0.0 <= data.island_bonus <= 0.85:
+            raise ValidationError(
+                f"El bonus de isla debe estar entre 0 y 0.85; llegó {data.island_bonus}."
+            )
+        if len(data.favorite_berries) > 3:
+            raise ValidationError("Como máximo 3 bayas favoritas.")
+        if len(set(data.favorite_berries)) != len(data.favorite_berries):
+            raise ValidationError("Las bayas favoritas no pueden repetirse.")
+        favorites: set[Berry] = set()
+        for name in data.favorite_berries:
+            try:
+                favorites.add(Berry(name))
+            except ValueError as exc:
+                raise ValidationError(f"Baya desconocida: {name!r}.") from exc
+        favorite_frozen = frozenset(favorites)
+
         # Cargar miembros (404 si falta) y computar su producción. Los miembros con
         # especie fuera del catálogo curado se excluyen del agregado.
         entries: list[tuple[str, str, DailyProduction]] = []
@@ -315,12 +331,13 @@ class DefaultTeamService(TeamService):
                 member.sub_skills,
                 member.ribbon,
                 member.skill_level,
+                favorite_berries=favorite_frozen,
             )
             member_id_str = str(member.id)
             member_productions[member_id_str] = _production_result(daily)
             entries.append((member_id_str, member.species, daily))
 
-        aggregate = team_production(entries)
+        aggregate = team_production(entries, island_bonus=data.island_bonus)
 
         # Cocina: resolver cada comida (receta + nivel) contra el catálogo.
         meals: list[MealSelection | None] = []
@@ -340,6 +357,9 @@ class DefaultTeamService(TeamService):
 
         cooking = plan_cooking(meals, aggregate.ingredients)
 
+        factor = 1.0 + data.island_bonus
+        cooking_strength = cooking.cooking_strength * factor
+
         return TeamProductionResult(
             member_count=aggregate.member_count,
             excluded_count=excluded,
@@ -347,6 +367,10 @@ class DefaultTeamService(TeamService):
             total_berry_amount=aggregate.total_berry_amount,
             total_berry_strength=aggregate.total_berry_strength,
             total_skill_strength=aggregate.total_skill_strength,
+            total_strength_base=aggregate.total_strength_base,
+            total_berry_strength_base=aggregate.total_berry_strength_base,
+            total_skill_strength_base=aggregate.total_skill_strength_base,
+            island_bonus=data.island_bonus,
             ingredients=[
                 SlotAmount(ingredient=ing.value, amount=amount)
                 for ing, amount in aggregate.ingredients.items()
@@ -370,6 +394,7 @@ class DefaultTeamService(TeamService):
                     member_id=m.member_id,
                     species=m.species,
                     strength=m.strength,
+                    strength_base=m.strength_base,
                     berry_amount=m.berry_amount,
                     ingredients_total=m.ingredients_total,
                     skill_triggers=m.skill_triggers,
@@ -377,7 +402,8 @@ class DefaultTeamService(TeamService):
                 )
                 for m in aggregate.members
             ],
-            cooking_strength=cooking.cooking_strength,
+            cooking_strength=cooking_strength,
+            cooking_strength_base=cooking.cooking_strength,
             cooking_ingredients=[
                 IngredientBalanceDTO(
                     ingredient=b.ingredient.value,
@@ -413,7 +439,8 @@ class DefaultTeamService(TeamService):
                 )
                 for s in cooking.slots
             ],
-            grand_total_strength=aggregate.total_strength + cooking.cooking_strength,
+            grand_total_strength=aggregate.total_strength + cooking_strength,
+            grand_total_strength_base=aggregate.total_strength_base + cooking.cooking_strength,
         )
 
     def _build_member(self, data: TeamMemberInput, member_id: UUID | None = None) -> TeamMember:
