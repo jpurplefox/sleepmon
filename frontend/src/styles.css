@@ -3814,9 +3814,12 @@ button.prod-card__base-tag--action:hover {
   outline-offset: 2px;
 }
 
-/* Stable height between island/meals tabs */
-#settings-panel-island {
-  min-height: 320px;
+/* Stable height between island/meals tabs: both panels share a fixed height
+   with internal scroll, so switching tabs never resizes the modal and tall
+   content (Greengrass berry grid) scrolls instead of overflowing the viewport. */
+.settings-modal-panel {
+  height: 66vh;
+  overflow-y: auto;
 }
 
 /* ── Island Tab ──────────────────────────────────────────────────────────────── */
