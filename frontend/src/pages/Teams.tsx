@@ -1010,7 +1010,11 @@ export function Teams() {
                               alt=""
                               style={{ width: 16, height: 16 }}
                             />
-                            {fdown(fillerStrengthTotal * factor)}
+                            <StrengthValue
+                              value={fillerStrengthTotal * factor}
+                              base={fillerStrengthTotal / bonusFactor * factor}
+                              bonus={islandBonus}
+                            />
                           </span>
                         </div>
                       </div>
@@ -1064,7 +1068,11 @@ export function Teams() {
                                 alt=""
                                 style={{ width: 16, height: 16 }}
                               />
-                              {fdown(grandTotal)}
+                              <StrengthValue
+                                value={grandTotal}
+                                base={grandTotal / bonusFactor}
+                                bonus={islandBonus}
+                              />
                             </span>
                           </div>
                         </div>
@@ -1076,7 +1084,15 @@ export function Teams() {
             </div>
           </div>
 
-          {/* ── TEAM TOTALS card — the page's headline KPI (daily + weekly, always) ── */}
+          {/* ── TEAM TOTALS card — the page's headline KPI (daily + weekly, always) ──
+          Tooltip rule: StrengthValue (base/Area bonus breakdown) appears on ALL
+          subtotals and totals that receive Area bonus — berries subtotal, skills
+          subtotal, total berries+skills card, cooking_strength subtotal, fillers
+          subtotal, cooking grand total, totals-card cooking col, totals-card
+          grand total. NEVER on per-berry/per-recipe/per-filler rows, the
+          "Recetas"/"Fillers" repeat lines in Block 5, or the +10% extra tasty line.
+          When bonus=0 → bonusFactor=1 → base=value → floor(base)===floor(value)
+          → no tooltip rendered (identity, no visual change). ── */}
           <div className="card teams-totals">
             {/* Col 1 — Berries & skills */}
             <div className="teams-totals__col">
@@ -1101,7 +1117,11 @@ export function Teams() {
               <span className="teams-totals__label">{t("teams.cooking")}</span>
               <span className="teams-totals__kpi">
                 <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" style={{ width: 18, height: 18 }} />
-                {fdown(grandTotalCooking)}
+                <StrengthValue
+                  value={grandTotalCooking}
+                  base={grandTotalCooking / bonusFactor}
+                  bonus={islandBonus}
+                />
               </span>
               <span className="teams-totals__aside">
                 ×7 {fdown(grandTotalCooking * 7)}
@@ -1115,7 +1135,11 @@ export function Teams() {
               <span className="teams-totals__label">{t("teams.grandTotal")}</span>
               <span className="teams-totals__kpi teams-totals__kpi--grand">
                 <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" style={{ width: 22, height: 22 }} />
-                {fdown(result.total_strength + grandTotalCooking)}
+                <StrengthValue
+                  value={result.total_strength + grandTotalCooking}
+                  base={result.total_strength_base + grandTotalCooking / bonusFactor}
+                  bonus={islandBonus}
+                />
               </span>
               <span className="teams-totals__aside">
                 ×7 {fdown((result.total_strength + grandTotalCooking) * 7)}
