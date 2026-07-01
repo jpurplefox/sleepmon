@@ -17,6 +17,7 @@ from typing import Final
 from sleepmon.domain.value_objects import (
     Berry,
     Ingredient,
+    Island,
     Nature,
     NatureStat,
     Ribbon,
@@ -225,6 +226,21 @@ BERRY_BASE_STRENGTH: Final[Mapping[Berry, int]] = {
     Berry.WIKI: 31,
     Berry.YACHE: 35,
 }
+
+ISLAND_FAVORITE_BERRIES: Final[Mapping[Island, tuple[Berry, ...]]] = {
+    Island.GREENGRASS_ISLE: (),
+    Island.GREENGRASS_EXPERT: (),
+    Island.CYAN_BEACH: (Berry.ORAN, Berry.PAMTRE, Berry.PECHA),
+    Island.TAUPE_HOLLOW: (Berry.FIGY, Berry.LEPPA, Berry.SITRUS),
+    Island.SNOWDROP_TUNDRA: (Berry.PERSIM, Berry.RAWST, Berry.WIKI),
+    Island.LAPIS_LAKESIDE: (Berry.CHERI, Berry.DURIN, Berry.MAGO),
+    Island.OLD_GOLD_POWER_PLANT: (Berry.BELUE, Berry.BLUK, Berry.GREPA),
+    Island.AMBER_CANYON: (Berry.CHESTO, Berry.LUM, Berry.YACHE),
+}
+
+ISLAND_USER_PICKS: Final[frozenset[Island]] = frozenset(
+    {Island.GREENGRASS_ISLE, Island.GREENGRASS_EXPERT}
+)
 
 # Fuerza base de cada ingrediente (valor a nivel 1 del Pokémon que lo produce).
 # Se usa para estimar la fuerza de los "fillers" en una receta. Fuente: nerolis-lab.
