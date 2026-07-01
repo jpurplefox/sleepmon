@@ -274,11 +274,14 @@ export function Teams() {
   const removeMember = (id: string) =>
     setSelectedIds((prev) => prev.filter((x) => x !== id));
 
-  // Handler: set dishType and clear meals whose recipe type doesn't match the new type.
-  // When newType is null, all meals are kept (no restriction).
+  // Handler: set dishType and clear meals that are incompatible with the new type.
+  // When newType is null (no restriction), also clear all meals so a mixed state
+  // (e.g. Curry + Salad) can never persist after the type selector is reset.
   const handleDishTypeChange = (newType: 'Curry' | 'Salad' | 'Dessert' | null) => {
     setDishType(newType);
-    if (newType !== null) {
+    if (newType === null) {
+      setMeals([null, null, null]);
+    } else {
       setMeals((prev) =>
         prev.map((m) => {
           if (m === null) return null;
