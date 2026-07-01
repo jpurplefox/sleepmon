@@ -306,30 +306,28 @@ export function IslandTab({
         <label className="island-tab__label" htmlFor="area-bonus-range">
           {t("teams.islandBonus")}
         </label>
-        <div
-          className="area-bonus-slider"
-          style={{ "--slider-ratio": (bonusPct / 85).toFixed(4) } as React.CSSProperties}
-        >
-          <div className="area-bonus-slider__track-row">
-            <input
-              id="area-bonus-range"
-              type="range"
-              className="area-bonus-slider__input"
-              min={0}
-              max={85}
-              step={1}
-              value={bonusPct}
-              onChange={(e) => handleBonusChange(Number(e.target.value))}
-              aria-label={t("teams.islandBonus")}
-              aria-valuetext={`${bonusPct}%`}
-            />
-            <span className="area-bonus-slider__value" aria-hidden="true">
-              {bonusPct}<span className="area-bonus-slider__unit">%</span>
+        <div className="bonus-slider" style={{ "--ratio": (bonusPct / 85).toFixed(4) } as React.CSSProperties}>
+          <div className="bonus-slider__row">
+            <div className="bonus-slider__track">
+              <div className="bonus-slider__fill" />
+              <div className="bonus-slider__thumb" />
+              <input
+                id="area-bonus-range"
+                type="range"
+                className="bonus-slider__input"
+                min={0} max={85} step={1}
+                value={bonusPct}
+                onChange={(e) => handleBonusChange(Number(e.target.value))}
+                aria-label={t("teams.islandBonus")}
+                aria-valuetext={`${bonusPct}%`}
+              />
+            </div>
+            <span className="bonus-slider__value" aria-hidden="true">
+              {bonusPct}<span className="bonus-slider__unit">%</span>
             </span>
           </div>
-          <div className="area-bonus-slider__marks" aria-hidden="true">
-            <span>0%</span>
-            <span>85%</span>
+          <div className="bonus-slider__marks" aria-hidden="true">
+            <span>0%</span><span>85%</span>
           </div>
         </div>
       </div>
