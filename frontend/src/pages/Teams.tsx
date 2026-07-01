@@ -117,7 +117,6 @@ export function Teams() {
   // Ordered list of selected member ids (capped at MAX_TEAM).
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [meals, setMeals] = useState<(MealInput | null)[]>([null, null, null]);
-  const [weekly, setWeekly] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
   const [potSize, setPotSize] = useState(15);
@@ -131,7 +130,8 @@ export function Teams() {
     placeholderData: keepPreviousData,
   });
 
-  const factor = weekly ? 7 : 1;
+  // Everything renders daily; the totals card shows daily + ×7 on its own.
+  const factor = 1;
   const result = teamQuery.data;
 
   // Total extra pot ingredients/day from cooking_ingredients skill effect (or 0).
@@ -354,28 +354,6 @@ export function Teams() {
       {/* ── Aggregates + cooking (only when we have data) ── */}
       {result && (
         <>
-          {/* #1 — Page-level daily/weekly toggle: global control for all analysis below */}
-          <div className="teams-period-toolbar">
-            <div className="specialty-toggle" role="group" aria-label={t("teams.toggleLabel")}>
-              <button
-                type="button"
-                className={"specialty-toggle__btn" + (!weekly ? " is-on" : "")}
-                aria-pressed={!weekly}
-                onClick={() => setWeekly(false)}
-              >
-                {t("teams.daily")}
-              </button>
-              <button
-                type="button"
-                className={"specialty-toggle__btn" + (weekly ? " is-on" : "")}
-                aria-pressed={weekly}
-                onClick={() => setWeekly(true)}
-              >
-                {t("teams.weekly")}
-              </button>
-            </div>
-          </div>
-
           <div className="teams-aggregates">
 
             {/* Berries & skills card */}
@@ -440,14 +418,20 @@ export function Teams() {
                 </div>
               )}
 
-              {/* #4 & #5 — Skill effects with icon + total + triggers. Excludes cooking_ingredients (#6). */}
-              {result.skill_effects.filter((e: SkillEffectAgg) => e.kind !== "cooking_ingredients").length > 0 && (
+              {/* #4 & #5 — Skill effects with icon + total + triggers. Excludes
+                  cooking_ingredients (pot expansion) and ingredient_total (random
+                  ingredients) — both are represented in the cooking card / fillers. */}
+              {result.skill_effects.filter(
+                (e: SkillEffectAgg) => e.kind !== "cooking_ingredients" && e.kind !== "ingredient_total",
+              ).length > 0 && (
                 <>
                   <div className="prod-card__block-head" style={{ marginTop: "0.75rem" }}>
                     {t("card.skill")}
                   </div>
                   {result.skill_effects
-                    .filter((e: SkillEffectAgg) => e.kind !== "cooking_ingredients")
+                    .filter(
+                      (e: SkillEffectAgg) => e.kind !== "cooking_ingredients" && e.kind !== "ingredient_total",
+                    )
                     .map((e: SkillEffectAgg) => {
                       const meta = skillEffectMeta(e.kind);
                       const total = e.total * factor;
@@ -492,6 +476,16 @@ export function Teams() {
                   const meal = meals[idx];
                   const feasibility = meal ? feasibilityBySlot.get(idx) : undefined;
 
+                  // Per-meal pot capacity: base pot + its share of the skill
+                  // expansion. Warn only when the recipe's ingredient count
+                  // exceeds it (if it fits, the spare goes to fillers).
+                  const perMealPot = potSize + Math.floor(cookingExtra / 3);
+                  const recipeData = meal ? recipeByName.get(meal.recipe) : undefined;
+                  const recipeIngs = recipeData
+                    ? recipeData.ingredients.reduce((s, ic) => s + ic.count, 0)
+                    : 0;
+                  const exceedsPot = recipeData != null && recipeIngs > perMealPot;
+
                   return (
                     <div key={slot} className="teams-plan-row">
                       <span className="teams-plan-row__label muted">
@@ -522,6 +516,20 @@ export function Teams() {
                               </span>
                             )}
                           </div>
+                          {exceedsPot && (
+                            <span
+                              className="teams-plan-row__pot-warn"
+                              title={t("teams.potTooSmall")}
+                            >
+                              <img
+                                src="/pot.webp"
+                                alt=""
+                                className="mini-icon"
+                                style={{ width: 14, height: 14 }}
+                              />
+                              {t("teams.potTooSmall")} ({recipeIngs}/{perMealPot})
+                            </span>
+                          )}
                           {feasibility != null && feasibility.ingredients.length > 0 && (
                             <div className="cook-row__ings">
                               {feasibility.ingredients.map((ing) => {
@@ -623,6 +631,11 @@ export function Teams() {
                 // ── Cooking skill effect entry ─────────────────────────────
                 const cookingSkillEffect = result.skill_effects.find(
                   (e: SkillEffectAgg) => e.kind === "cooking_ingredients",
+                );
+                // Random-ingredients skill effect (Ingredient Magnet) — its
+                // triggers are shown on the random filler row.
+                const randomSkillEffect = result.skill_effects.find(
+                  (e: SkillEffectAgg) => e.kind === "ingredient_total",
                 );
 
                 // fillerStrengthTotal is lifted to component scope (reused by the
@@ -776,6 +789,15 @@ export function Teams() {
                                     />
                                   )}
                                   <span>{label}</span>
+                                  {isRandom && randomSkillEffect && (
+                                    <span
+                                      className="muted"
+                                      style={{ display: "inline-flex", alignItems: "center", gap: "0.15rem", fontSize: "var(--text-xs)" }}
+                                    >
+                                      (<IconSparkle width={11} height={11} />
+                                      {(randomSkillEffect.triggers * factor).toFixed(2)})
+                                    </span>
+                                  )}
                                   <span className="cook-filler-item__base-strength muted">
                                     {Math.round(strength)}
                                   </span>

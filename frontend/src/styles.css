@@ -2830,12 +2830,6 @@ button.prod-card__base-tag--action:hover {
 }
 
 /* Análisis de equipo — barra de período (toggle diario/semanal) a nivel de página */
-.teams-period-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1.5rem;
-}
-
 /* Análisis de equipo — sección de agregados y cocina */
 .teams-aggregates {
   display: grid;
@@ -3051,6 +3045,16 @@ button.prod-card__base-tag--action:hover {
 
 .cook-row__topline .teams-plan-row__name {
   flex: 1;
+}
+
+/* Warning when a recipe's ingredient count exceeds the per-meal pot capacity. */
+.teams-plan-row__pot-warn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--down);
+  font-size: var(--text-xs);
+  font-weight: 600;
 }
 
 .cook-row__strength {
