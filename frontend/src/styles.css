@@ -2838,9 +2838,78 @@ button.prod-card__base-tag--action:hover {
   margin-top: 1rem;
 }
 
-/* Cooking is the wide left column; berries & skills the narrow right column. */
+/* Cooking is the wide left column; the right column stacks berries & ranking. */
 .teams-aggregates__cooking { order: 1; }
-.teams-aggregates__berries { order: 2; }
+.teams-aggregates__right { order: 2; }
+
+/* Right column: berries & skills card, then member ranking card, stacked. */
+.teams-aggregates__right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+/* Member ranking: sprite + name + proportional bar + strength, one row each. */
+.teams-member-rank {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.teams-member-rank__row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--text-sm);
+}
+
+.teams-member-rank__sprite {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.teams-member-rank__mid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.teams-member-rank__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teams-member-rank__bar-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.teams-member-rank__bar {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.teams-member-rank__value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  justify-content: flex-end;
+}
 
 /* Config toolbar above the roster: right-aligned action. */
 .teams-config-toolbar {
@@ -2886,6 +2955,7 @@ button.prod-card__base-tag--action:hover {
   gap: 0.2rem;
   font-variant-numeric: tabular-nums;
   justify-content: flex-end;
+  color: var(--muted);
 }
 
 @media (max-width: 860px) {
@@ -2932,14 +3002,14 @@ button.prod-card__base-tag--action:hover {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--moon);
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
 .teams-totals__kpi--grand {
-  font-size: 2rem;
+  font-size: var(--text-xl);
   color: var(--moon);
 }
 
@@ -3433,8 +3503,9 @@ button.prod-card__base-tag--action:hover {
 }
 
 .cook-result-row--strength .cook-result-row__value {
-  font-size: var(--text-lg);
-  font-weight: 700;
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text);
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -3581,9 +3652,10 @@ button.prod-card__base-tag--action:hover {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
+  font-weight: 600;
   padding: 0.2rem 0;
-  color: var(--muted);
+  color: var(--text);
 }
 
 .cook-total-row__label {
@@ -3597,12 +3669,12 @@ button.prod-card__base-tag--action:hover {
   text-align: right;
 }
 
-/* Grand total row: bigger, gold */
+/* Grand total row: bigger, neutral (gold is reserved for the page grand total) */
 .cook-total-row--grand {
   border-top: 1px solid var(--border);
   margin-top: 0.4rem;
   padding-top: 0.5rem;
-  color: var(--moon);
+  color: var(--text);
   font-weight: 700;
 }
 
@@ -3612,5 +3684,5 @@ button.prod-card__base-tag--action:hover {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  color: var(--moon);
+  color: var(--text);
 }

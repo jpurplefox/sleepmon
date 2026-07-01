@@ -17,6 +17,7 @@ import {
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { recipeImage } from "../recipes";
+import { spriteUrl } from "../sprites";
 import { statIcon } from "../natures";
 import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
 import type { Catalog, MealInput, Member, MemberInput, SkillEffectAgg } from "../types";
@@ -194,6 +195,25 @@ export function Teams() {
       .sort((a, b) => b.berry_strength - a.berry_strength);
   }, [result]);
 
+  // Member ranking: members sorted by strength desc, with dex for the sprite.
+  const memberRanking = useMemo(() => {
+    if (!result) return [];
+    const bySpecies = new Map(catalog.data?.species.map((s) => [s.name, s]) ?? []);
+    return result.members
+      .map((mc) => ({
+        member_id: mc.member_id,
+        species: mc.species,
+        strength: mc.strength,
+        dex: bySpecies.get(mc.species)?.dex ?? 0,
+      }))
+      .sort((a, b) => b.strength - a.strength);
+  }, [result, catalog.data]);
+
+  const maxMemberStrength = useMemo(
+    () => memberRanking.reduce((m, r) => Math.max(m, r.strength), 0),
+    [memberRanking],
+  );
+
   // Filler strength total (daily) — same allocation logic the cooking card's
   // IIFE uses, lifted to component scope so the totals card can reuse it.
   // Surplus ingredients + the random pseudo-ingredient fill the leftover pot
@@ -356,6 +376,8 @@ export function Teams() {
         <>
           <div className="teams-aggregates">
 
+            {/* Right column: berries & skills card + member ranking card, stacked */}
+            <div className="teams-aggregates__right">
             {/* Berries & skills card */}
             <div className="card teams-aggregates__berries">
               {/* Berries & skills aggregates */}
@@ -462,6 +484,48 @@ export function Teams() {
                   {t("teams.excluded", { count: String(result.excluded_count) })}
                 </p>
               )}
+            </div>
+
+            {/* Member ranking card: contribution per member, sorted by strength */}
+            {memberRanking.length > 0 && (
+              <div className="card teams-member-rank-card">
+                <div className="prod-card__block-head">{t("teams.memberRanking")}</div>
+                <ul className="teams-member-rank">
+                  {memberRanking.map((r) => (
+                    <li key={r.member_id} className="teams-member-rank__row">
+                      <img
+                        className="teams-member-rank__sprite"
+                        src={spriteUrl(r.dex)}
+                        alt={r.species}
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
+                        }}
+                      />
+                      <span className="teams-member-rank__mid">
+                        <span className="teams-member-rank__name">{r.species}</span>
+                        <span className="teams-member-rank__bar-track">
+                          <span
+                            className="teams-member-rank__bar"
+                            style={{
+                              width: `${maxMemberStrength > 0 ? (r.strength / maxMemberStrength) * 100 : 0}%`,
+                            }}
+                          />
+                        </span>
+                      </span>
+                      <span className="teams-member-rank__value">
+                        <img
+                          className="mini-icon"
+                          src={CHARGE_STRENGTH_ICON}
+                          alt=""
+                          style={{ width: 13, height: 13 }}
+                        />
+                        {fdown(r.strength * factor)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             </div>
 
             {/* Cooking card */}
@@ -743,21 +807,8 @@ export function Teams() {
                     {/* Block 4 — Fillers (slot-based allocation: base strength + X/Y chip + contributed strength) */}
                     {fillerAllocation.length > 0 && (
                       <div className="cook-result-block">
-                        <div className="prod-card__block-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span>{t("teams.fillersLabel")}</span>
-                          {fillerStrengthTotal > 0 && (
-                            <span style={{ color: "var(--moon)", display: "inline-flex", alignItems: "center", gap: "0.2rem", fontWeight: 400, fontSize: "var(--text-xs)" }}>
-                              <img
-                                className="mini-icon"
-                                src={CHARGE_STRENGTH_ICON}
-                                alt=""
-                                style={{ width: 13, height: 13 }}
-                              />
-                              <span style={{ color: "var(--moon)" }}>
-                                {fdown(fillerStrengthTotal * factor)}
-                              </span>
-                            </span>
-                          )}
+                        <div className="prod-card__block-head">
+                          {t("teams.fillersLabel")}
                         </div>
                         <ul className="cook-filler-list">
                           {fillerAllocation.map(({ key, ingredient, label, strength, balance, usedUnits, isRandom }) => {
