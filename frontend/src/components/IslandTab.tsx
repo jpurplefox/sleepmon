@@ -44,6 +44,10 @@ export function IslandTab({
 
   // Estado del dropdown custom de isla
   const [islandOpen, setIslandOpen] = useState(false);
+
+  // Estado de slot principal pendiente: true cuando el usuario deseleccionó la
+  // principal y todavía no eligió una nueva (las secundarias se conservan).
+  const [primaryPending, setPrimaryPending] = useState(false);
   const islandWrapRef = useRef<HTMLDivElement>(null);
   const islandTriggerRef = useRef<HTMLButtonElement>(null);
 
@@ -79,10 +83,12 @@ export function IslandTab({
       // "Sin isla"
       onSelectIsland(null);
       onFavoriteBerries([]);
+      setPrimaryPending(false);
       // El bonus es independiente: no lo reseteamos.
     } else {
       const found = islands.find((i) => i.name === name) ?? null;
       onSelectIsland(name);
+      setPrimaryPending(false);
       if (found && !found.user_picks) {
         // Isla con favoritas fijas: las seteamos automáticamente.
         onFavoriteBerries(found.favorite_berries);
@@ -100,12 +106,26 @@ export function IslandTab({
 
   // Handlers para la grilla de chips (solo cuando user_picks === true).
   const handleBerryToggle = (berry: string) => {
-    if (favoriteBerries.includes(berry)) {
-      // Quitar
-      onFavoriteBerries(favoriteBerries.filter((b) => b !== berry));
+    const idx = favoriteBerries.indexOf(berry);
+    if (idx !== -1) {
+      // deseleccionar
+      if (!primaryPending && idx === 0) {
+        // era la principal → slot pendiente, se conservan las secundarias
+        onFavoriteBerries(favoriteBerries.slice(1));
+        setPrimaryPending(true);
+      } else {
+        // era una secundaria → solo se quita
+        onFavoriteBerries(favoriteBerries.filter((b) => b !== berry));
+      }
     } else if (favoriteBerries.length < 3) {
-      // Agregar si hay espacio
-      onFavoriteBerries([...favoriteBerries, berry]);
+      // seleccionar
+      if (primaryPending) {
+        // llena el slot principal pendiente: va al frente (índice 0)
+        onFavoriteBerries([berry, ...favoriteBerries]);
+        setPrimaryPending(false);
+      } else {
+        onFavoriteBerries([...favoriteBerries, berry]);
+      }
     }
     // Si ya hay 3 y el chip no está seleccionado, el botón está disabled: no hace falta else.
   };
@@ -232,7 +252,8 @@ export function IslandTab({
             >
               {allBerries.map((b) => {
                 const isSelected = favoriteBerries.includes(b);
-                const isPrimary = isSelected && favoriteBerries.indexOf(b) === 0;
+                const primaryBerry = primaryPending ? null : (favoriteBerries[0] ?? null);
+                const isPrimary = isSelected && b === primaryBerry;
                 const isDisabled = !isReadOnly && !isSelected && selectedCount >= 3;
 
                 // Item 5: clase --primary y aria-label para la baya principal
@@ -287,7 +308,7 @@ export function IslandTab({
         </label>
         <div
           className="area-bonus-slider"
-          style={{ "--slider-pct": `${((bonusPct / 85) * 100).toFixed(1)}%` } as React.CSSProperties}
+          style={{ "--slider-ratio": (bonusPct / 85).toFixed(4) } as React.CSSProperties}
         >
           <div className="area-bonus-slider__track-row">
             <input
@@ -296,7 +317,7 @@ export function IslandTab({
               className="area-bonus-slider__input"
               min={0}
               max={85}
-              step={5}
+              step={1}
               value={bonusPct}
               onChange={(e) => handleBonusChange(Number(e.target.value))}
               aria-label={t("teams.islandBonus")}
