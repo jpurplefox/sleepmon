@@ -28,6 +28,15 @@ export interface Species {
   base_inventory: number;
 }
 
+export interface Island {
+  name: string;
+  // Bayas que el juego establece como favoritas para esta isla (vacío si la isla
+  // permite elegir libremente, i.e. user_picks == true).
+  favorite_berries: string[];
+  // true = el jugador elige las bayas favoritas (Greengrass Isle).
+  user_picks: boolean;
+}
+
 export interface Catalog {
   natures: Nature[];
   sub_skills: SubSkill[];
@@ -39,6 +48,8 @@ export interface Catalog {
   // Fuerza base de cada ingrediente (a nivel 1); 19 entradas, una por ingrediente.
   // Usada por el frontend para estimar la fuerza de los fillers en una receta.
   ingredient_strengths: Record<string, number>;
+  // Las 8 islas del juego con sus bayas favoritas configuradas.
+  islands: Island[];
 }
 
 // Invariantes del contrato del backend (ver MemberInput):
@@ -150,6 +161,10 @@ export interface TeamProductionInput {
   member_ids: string[];
   // 3 slots (mañana/mediodía/noche); null = sin receta en ese slot.
   meals: (MealInput | null)[];
+  // Bayas favoritas de la isla seleccionada (≤3); opcional, default [] en el cliente.
+  favorite_berries?: string[];
+  // Bonus de isla aplicado a la fuerza (0.0–0.85); opcional, default 0 en el cliente.
+  island_bonus?: number;
 }
 
 export interface IngredientBalance {
@@ -183,6 +198,8 @@ export interface MemberContribution {
   member_id: string;
   species: string;
   strength: number;
+  // Fuerza base del miembro (sin bonus de isla aplicado).
+  strength_base: number;
   berry_amount: number;
   ingredients_total: number;
   skill_triggers: number;
@@ -196,6 +213,13 @@ export interface TeamProduction {
   total_berry_amount: number;
   total_berry_strength: number;
   total_skill_strength: number;
+  // Campos base (sin bonus de isla); presentes cuando se envía island_bonus.
+  island_bonus: number;
+  total_strength_base: number;
+  total_berry_strength_base: number;
+  total_skill_strength_base: number;
+  cooking_strength_base: number;
+  grand_total_strength_base: number;
   ingredients: SlotProduction[];
   total_ingredients: number;
   skill_triggers: number;
