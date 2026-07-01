@@ -149,6 +149,8 @@ class TeamProductionInput:
 
     member_ids: list[str]
     meals: list[MealSelectionInput | None]
+    favorite_berries: list[str] = field(default_factory=list)
+    island_bonus: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -189,6 +191,7 @@ class MemberContributionDTO:
     member_id: str
     species: str
     strength: float
+    strength_base: float
     berry_amount: float
     ingredients_total: float
     skill_triggers: float
@@ -201,11 +204,16 @@ class TeamProductionResult:
 
     member_count: int
     excluded_count: int
-    # Bayas y skills
+    # Bayas y skills (con bonus de isla)
     total_strength: float
     total_berry_amount: float
     total_berry_strength: float
     total_skill_strength: float
+    # Bayas y skills (sin bonus de isla)
+    total_strength_base: float
+    total_berry_strength_base: float
+    total_skill_strength_base: float
+    island_bonus: float
     ingredients: list[SlotAmount]  # agregados por tipo (reusa SlotAmount: ingredient+amount)
     total_ingredients: float
     skill_triggers: float
@@ -221,8 +229,10 @@ class TeamProductionResult:
     members: list[MemberContributionDTO]
     # Cocina
     cooking_strength: float
+    cooking_strength_base: float
     cooking_ingredients: list[IngredientBalanceDTO]
     cooking_surplus: list[IngredientBalanceDTO]
     cooking_meals: list[MealFeasibilityDTO]
     # Gran total
     grand_total_strength: float
+    grand_total_strength_base: float

@@ -752,6 +752,65 @@ def test_compute_team_production_rejects_malformed_member_id() -> None:
         )
 
 
+# ---------------------------------------------------------------------------
+# favorite_berries + island_bonus (Task 4)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def service_with_members() -> tuple[DefaultTeamService, list[str]]:
+    svc = _service_tp()
+    mid = _add_pikachu(svc)
+    return svc, [mid]
+
+
+def test_favorite_berries_and_bonus_flow(
+    service_with_members: tuple[DefaultTeamService, list[str]],
+) -> None:
+    service, member_ids = service_with_members
+    base = service.compute_team_production(
+        TeamProductionInput(member_ids=member_ids, meals=[])
+    )
+    boosted = service.compute_team_production(
+        TeamProductionInput(
+            member_ids=member_ids,
+            meals=[],
+            favorite_berries=[],       # sin favoritas para aislar el efecto del bonus
+            island_bonus=0.2,
+        )
+    )
+    assert boosted.island_bonus == 0.2
+    assert boosted.total_berry_strength_base == base.total_berry_strength
+    assert boosted.total_berry_strength == pytest.approx(base.total_berry_strength * 1.2)
+    assert boosted.grand_total_strength == pytest.approx(
+        boosted.grand_total_strength_base * 1.2
+    )
+
+
+def test_bonus_out_of_range_rejected(
+    service_with_members: tuple[DefaultTeamService, list[str]],
+) -> None:
+    service, member_ids = service_with_members
+    with pytest.raises(ValidationError):
+        service.compute_team_production(
+            TeamProductionInput(member_ids=member_ids, meals=[], island_bonus=0.9)
+        )
+
+
+def test_too_many_favorites_rejected(
+    service_with_members: tuple[DefaultTeamService, list[str]],
+) -> None:
+    service, member_ids = service_with_members
+    with pytest.raises(ValidationError):
+        service.compute_team_production(
+            TeamProductionInput(
+                member_ids=member_ids,
+                meals=[],
+                favorite_berries=["Oran", "Pecha", "Wiki", "Mago"],
+            )
+        )
+
+
 def test_compute_team_production_excludes_off_catalog_members() -> None:
     repo = InMemoryTeamRepository()
     member = TeamMember(
