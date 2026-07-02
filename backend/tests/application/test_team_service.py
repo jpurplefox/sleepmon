@@ -8,6 +8,8 @@ from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecip
 from sleepmon.application.dto import (
     MealSelectionInput,
     ProductionInput,
+    SlotEntryInput,
+    SlotInput,
     TeamMemberInput,
     TeamProductionInput,
 )
@@ -23,6 +25,11 @@ from sleepmon.domain.ports import SpeciesCatalog
 from sleepmon.domain.species import Species
 from sleepmon.domain.value_objects import Ingredient
 from tests.fakes import InMemoryTeamRepository
+
+
+def _slots(*member_ids: str) -> list[SlotInput]:
+    """Un slot simple (peso 1.0) por cada id — para migrar los tests existentes."""
+    return [SlotInput(entries=[SlotEntryInput(member_id=mid)]) for mid in member_ids]
 
 
 @pytest.fixture
@@ -619,11 +626,90 @@ def _add_pikachu(svc: DefaultTeamService) -> str:
     return str(member.id)
 
 
+def _service_with_member() -> tuple[DefaultTeamService, str]:
+    svc = _service_tp()
+    mid = _add_pikachu(svc)
+    return svc, mid
+
+
+def _service_with_two_members() -> tuple[DefaultTeamService, tuple[str, str]]:
+    svc = _service_tp()
+    a = _add_pikachu(svc)
+    b = _add_pikachu(svc)
+    return svc, (a, b)
+
+
+def test_compute_team_production_split_weights_scale_contribution() -> None:
+    svc, mid = _service_with_member()
+    full = svc.compute_team_production(
+        TeamProductionInput(slots=_slots(mid), meals=[None, None, None])
+    )
+    half = svc.compute_team_production(
+        TeamProductionInput(
+            slots=[SlotInput(entries=[SlotEntryInput(member_id=mid, weight=0.5)])],
+            meals=[None, None, None],
+        )
+    )
+    # weight 0.5 ⇒ la mitad de la fuerza total (un solo Pokémon al 50%).
+    assert half.total_strength == pytest.approx(full.total_strength * 0.5)
+    assert half.members[0].production.berry_amount == pytest.approx(
+        full.members[0].production.berry_amount * 0.5
+    )
+
+
+def test_compute_team_production_rejects_more_than_two_per_slot() -> None:
+    svc, mid = _service_with_member()
+    with pytest.raises(ValidationError):
+        svc.compute_team_production(
+            TeamProductionInput(
+                slots=[
+                    SlotInput(
+                        entries=[
+                            SlotEntryInput(member_id=mid, weight=0.34),
+                            SlotEntryInput(member_id=mid, weight=0.33),
+                            SlotEntryInput(member_id=mid, weight=0.33),
+                        ]
+                    )
+                ],
+                meals=[None, None, None],
+            )
+        )
+
+
+def test_compute_team_production_rejects_weights_not_summing_to_one() -> None:
+    svc, (a, b) = _service_with_two_members()
+    with pytest.raises(ValidationError):
+        svc.compute_team_production(
+            TeamProductionInput(
+                slots=[
+                    SlotInput(
+                        entries=[
+                            SlotEntryInput(member_id=a, weight=0.5),
+                            SlotEntryInput(member_id=b, weight=0.4),
+                        ]
+                    )
+                ],
+                meals=[None, None, None],
+            )
+        )
+
+
+def test_compute_team_production_rejects_zero_weight() -> None:
+    svc, mid = _service_with_member()
+    with pytest.raises(ValidationError):
+        svc.compute_team_production(
+            TeamProductionInput(
+                slots=[SlotInput(entries=[SlotEntryInput(member_id=mid, weight=0.0)])],
+                meals=[None, None, None],
+            )
+        )
+
+
 def test_compute_team_production_aggregates_members() -> None:
     svc = _service_tp()
     mid = _add_pikachu(svc)
     result = svc.compute_team_production(
-        TeamProductionInput(member_ids=[mid], meals=[None, None, None])
+        TeamProductionInput(slots=_slots(mid), meals=[None, None, None])
     )
     assert result.member_count == 1
     assert result.total_strength > 0
@@ -635,7 +721,7 @@ def test_compute_team_production_member_carries_full_production() -> None:
     svc = _service_tp()
     mid = _add_pikachu(svc)
     result = svc.compute_team_production(
-        TeamProductionInput(member_ids=[mid], meals=[None, None, None])
+        TeamProductionInput(slots=_slots(mid), meals=[None, None, None])
     )
     assert result.member_count == 1
     member = result.members[0]
@@ -669,7 +755,7 @@ def test_compute_team_production_adds_cooking_to_grand_total() -> None:
     recipe = svc.list_recipes()[0]
     result = svc.compute_team_production(
         TeamProductionInput(
-            member_ids=[mid],
+            slots=_slots(mid),
             meals=[MealSelectionInput(recipe=recipe.name, level=1), None, None],
         )
     )
@@ -682,7 +768,7 @@ def test_compute_team_production_rejects_missing_member() -> None:
     with pytest.raises(TeamMemberNotFoundError):
         svc.compute_team_production(
             TeamProductionInput(
-                member_ids=["00000000-0000-0000-0000-000000000000"], meals=[None, None, None]
+                slots=_slots("00000000-0000-0000-0000-000000000000"), meals=[None, None, None]
             )
         )
 
@@ -691,7 +777,9 @@ def test_compute_team_production_rejects_too_many_members() -> None:
     svc = _service_tp()
     ids = [_add_pikachu(svc) for _ in range(6)]
     with pytest.raises(ValidationError):
-        svc.compute_team_production(TeamProductionInput(member_ids=ids, meals=[None, None, None]))
+        svc.compute_team_production(
+            TeamProductionInput(slots=_slots(*ids), meals=[None, None, None])
+        )
 
 
 def test_compute_team_production_rejects_duplicate_members() -> None:
@@ -699,7 +787,7 @@ def test_compute_team_production_rejects_duplicate_members() -> None:
     mid = _add_pikachu(svc)
     with pytest.raises(ValidationError):
         svc.compute_team_production(
-            TeamProductionInput(member_ids=[mid, mid], meals=[None, None, None])
+            TeamProductionInput(slots=_slots(mid, mid), meals=[None, None, None])
         )
 
 
@@ -709,7 +797,7 @@ def test_compute_team_production_rejects_unknown_recipe() -> None:
     with pytest.raises(ValidationError):
         svc.compute_team_production(
             TeamProductionInput(
-                member_ids=[mid], meals=[MealSelectionInput(recipe="No Existe", level=1)]
+                slots=_slots(mid), meals=[MealSelectionInput(recipe="No Existe", level=1)]
             )
         )
 
@@ -721,14 +809,14 @@ def test_compute_team_production_rejects_recipe_level_out_of_range() -> None:
     with pytest.raises(ValidationError):
         svc.compute_team_production(
             TeamProductionInput(
-                member_ids=[mid],
+                slots=_slots(mid),
                 meals=[MealSelectionInput(recipe=recipe.name, level=0)],
             )
         )
     with pytest.raises(ValidationError):
         svc.compute_team_production(
             TeamProductionInput(
-                member_ids=[mid],
+                slots=_slots(mid),
                 meals=[MealSelectionInput(recipe=recipe.name, level=MAX_RECIPE_LEVEL + 1)],
             )
         )
@@ -747,7 +835,7 @@ def test_compute_team_production_rejects_malformed_member_id() -> None:
     with pytest.raises(ValidationError, match="inválido"):
         svc.compute_team_production(
             TeamProductionInput(
-                member_ids=["not-a-uuid"], meals=[None, None, None]
+                slots=_slots("not-a-uuid"), meals=[None, None, None]
             )
         )
 
@@ -769,11 +857,11 @@ def test_favorite_berries_and_bonus_flow(
 ) -> None:
     service, member_ids = service_with_members
     base = service.compute_team_production(
-        TeamProductionInput(member_ids=member_ids, meals=[])
+        TeamProductionInput(slots=_slots(*member_ids), meals=[])
     )
     boosted = service.compute_team_production(
         TeamProductionInput(
-            member_ids=member_ids,
+            slots=_slots(*member_ids),
             meals=[],
             favorite_berries=[],       # sin favoritas para aislar el efecto del bonus
             island_bonus=0.2,
@@ -793,7 +881,7 @@ def test_bonus_out_of_range_rejected(
     service, member_ids = service_with_members
     with pytest.raises(ValidationError):
         service.compute_team_production(
-            TeamProductionInput(member_ids=member_ids, meals=[], island_bonus=0.9)
+            TeamProductionInput(slots=_slots(*member_ids), meals=[], island_bonus=0.9)
         )
 
 
@@ -804,7 +892,7 @@ def test_too_many_favorites_rejected(
     with pytest.raises(ValidationError):
         service.compute_team_production(
             TeamProductionInput(
-                member_ids=member_ids,
+                slots=_slots(*member_ids),
                 meals=[],
                 favorite_berries=["Oran", "Pecha", "Wiki", "Mago"],
             )
@@ -818,7 +906,7 @@ def test_duplicate_favorites_rejected(
     with pytest.raises(ValidationError):
         service.compute_team_production(
             TeamProductionInput(
-                member_ids=member_ids,
+                slots=_slots(*member_ids),
                 meals=[],
                 favorite_berries=["Oran", "Oran"],
             )
@@ -832,7 +920,7 @@ def test_unknown_berry_rejected(
     with pytest.raises(ValidationError):
         service.compute_team_production(
             TeamProductionInput(
-                member_ids=member_ids,
+                slots=_slots(*member_ids),
                 meals=[],
                 favorite_berries=["Banana"],
             )
@@ -850,7 +938,7 @@ def test_compute_team_production_excludes_off_catalog_members() -> None:
     repo.add(member)
     svc = DefaultTeamService(repo, _EmptySpeciesCatalog(), StaticRecipeCatalog())
     result = svc.compute_team_production(
-        TeamProductionInput(member_ids=[str(member.id)], meals=[None, None, None])
+        TeamProductionInput(slots=_slots(str(member.id)), meals=[None, None, None])
     )
     assert result.excluded_count == 1
     assert result.member_count == 0
