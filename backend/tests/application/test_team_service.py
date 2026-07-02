@@ -640,21 +640,48 @@ def _service_with_two_members() -> tuple[DefaultTeamService, tuple[str, str]]:
 
 
 def test_compute_team_production_split_weights_scale_contribution() -> None:
-    svc, mid = _service_with_member()
-    full = svc.compute_team_production(
-        TeamProductionInput(slots=_slots(mid), meals=[None, None, None])
+    """Un slot 50/50 con dos miembros: cada uno recibe la mitad de su producción solo."""
+    svc, (a, b) = _service_with_two_members()
+
+    # Producción de 'a' en solitario (peso 1.0).
+    solo = svc.compute_team_production(
+        TeamProductionInput(slots=_slots(a), meals=[None, None, None])
     )
-    half = svc.compute_team_production(
+    solo_a = next(m for m in solo.members if m.member_id == a)
+
+    # Slot compartido 50/50 entre 'a' y 'b'.
+    split = svc.compute_team_production(
         TeamProductionInput(
-            slots=[SlotInput(entries=[SlotEntryInput(member_id=mid, weight=0.5)])],
+            slots=[
+                SlotInput(
+                    entries=[
+                        SlotEntryInput(member_id=a, weight=0.5),
+                        SlotEntryInput(member_id=b, weight=0.5),
+                    ]
+                )
+            ],
             meals=[None, None, None],
         )
     )
-    # weight 0.5 ⇒ la mitad de la fuerza total (un solo Pokémon al 50%).
-    assert half.total_strength == pytest.approx(full.total_strength * 0.5)
-    assert half.members[0].production.berry_amount == pytest.approx(
-        full.members[0].production.berry_amount * 0.5
+    split_a = next(m for m in split.members if m.member_id == a)
+
+    # weight 0.5 ⇒ la contribución de 'a' es la mitad de su producción solo.
+    assert split_a.production.berry_amount == pytest.approx(solo_a.production.berry_amount * 0.5)
+    assert split_a.production.berry_strength == pytest.approx(
+        solo_a.production.berry_strength * 0.5
     )
+
+
+def test_compute_team_production_rejects_single_entry_nonunit_weight() -> None:
+    """Un slot de 1 entrada con peso != 1.0 debe ser rechazado."""
+    svc, mid = _service_with_member()
+    with pytest.raises(ValidationError):
+        svc.compute_team_production(
+            TeamProductionInput(
+                slots=[SlotInput(entries=[SlotEntryInput(member_id=mid, weight=0.5)])],
+                meals=[None, None, None],
+            )
+        )
 
 
 def test_compute_team_production_rejects_more_than_two_per_slot() -> None:

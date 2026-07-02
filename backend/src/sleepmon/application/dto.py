@@ -153,7 +153,7 @@ class SlotEntryInput:
 
 @dataclass(frozen=True, slots=True)
 class SlotInput:
-    """Un slot del equipo: 1 Pokémon (peso 1.0) o 2 compartiéndolo (pesos suman 1)."""
+    """Un slot del equipo: 1 Pokémon (peso 1.0) o 2 compartiéndolo (pesos suman 1.0)."""
 
     entries: list[SlotEntryInput]
 

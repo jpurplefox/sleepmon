@@ -308,7 +308,7 @@ class DefaultTeamService(TeamService):
                 seen.add(entry.member_id)
                 total_weight += entry.weight
                 flat.append((entry.member_id, entry.weight))
-            if len(slot.entries) > 1 and abs(total_weight - 1.0) > self._WEIGHT_EPS:
+            if abs(total_weight - 1.0) > self._WEIGHT_EPS:
                 raise ValidationError("Los pesos de un slot deben sumar 1.")
 
         if not 0.0 <= data.island_bonus <= 0.85:
