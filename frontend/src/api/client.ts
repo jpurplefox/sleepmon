@@ -49,6 +49,7 @@ export const api = {
         meals: data.meals,
         favorite_berries: data.favorite_berries ?? [],
         island_bonus: data.island_bonus ?? 0,
+        good_camp_ticket: data.good_camp_ticket ?? false,
       }),
     }),
 };
