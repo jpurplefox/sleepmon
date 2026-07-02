@@ -304,8 +304,9 @@ export function Teams() {
         ),
       );
     } else {
-      if (atMax) return;
-      setSlots((prev) => [...prev, { entries: [{ memberId: m.id, weight: 1 }] }]);
+      setSlots((prev) =>
+        prev.length >= MAX_TEAM ? prev : [...prev, { entries: [{ memberId: m.id, weight: 1 }] }],
+      );
     }
     setPickerTarget(null);
   };
@@ -319,6 +320,7 @@ export function Teams() {
       prev.map((s, i) => {
         if (i !== slotIndex) return s;
         const kept = s.entries.filter((_, j) => j !== entryIndex);
+        if (kept.length === 0) return s;
         return { entries: kept.map((e) => ({ ...e, weight: 1 })) };
       }),
     );
