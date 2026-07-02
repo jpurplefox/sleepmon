@@ -205,3 +205,14 @@ export function IconSaveBox(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+// Dividir slot: eje central con dos mitades a los lados.
+export function IconSplit(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 3v18" />
+      <path d="M12 8a4 4 0 0 0-4-4H5v8h3a4 4 0 0 0 4-4Z" />
+      <path d="M12 16a4 4 0 0 1 4-4h3v8h-3a4 4 0 0 1-4-4Z" />
+    </svg>
+  );
+}

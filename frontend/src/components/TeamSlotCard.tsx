@@ -4,7 +4,7 @@ import type { Slot, Member, Catalog, TeamProduction } from "../types";
 import { ProductionCard } from "./ProductionCard";
 import { configFromMember } from "../pages/Teams";
 import { useI18n } from "../i18n";
-import { IconClose } from "./icons";
+import { IconClose, IconSplit } from "./icons";
 
 interface TeamSlotCardProps {
   slot: Slot;
@@ -58,25 +58,17 @@ export function TeamSlotCard({
     <div className="team-slot__split">
       <div className="team-slot__tabs" role="tablist">
         {slot.entries.map((e, i) => (
-          <div key={e.memberId} className="team-slot__tab-wrap">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={i === safeTab}
-              className={
-                "team-slot__tab" + (i === safeTab ? " team-slot__tab--active" : "")
-              }
-              onClick={() => setActiveTab(i)}
-            >
+          <div key={e.memberId} className={"team-slot__tab-wrap" + (i === safeTab ? " team-slot__tab-wrap--active" : "")}>
+            <button type="button" role="tab" aria-selected={i === safeTab} className="team-slot__tab" onClick={() => setActiveTab(i)}>
               {nameOf(e.memberId)}{" "}
               <span className="team-slot__tab-pct">{Math.round(e.weight * 100)}%</span>
             </button>
             <button
               type="button"
-              className="icon-btn team-slot__tab-remove"
+              className="team-slot__tab-remove"
               onClick={() => onRemoveEntry(slotIndex, i)}
               title={t("teams.splitRemove")}
-              aria-label={t("teams.splitRemove")}
+              aria-label={t("teams.splitRemove") + ": " + nameOf(e.memberId)}
             >
               <IconClose />
             </button>
@@ -84,11 +76,10 @@ export function TeamSlotCard({
         ))}
       </div>
       <div
-        className="bonus-slider team-slot__slider"
+        className="bonus-slider team-slot__slider team-slot__slider--split"
         style={{ "--ratio": (pctA / 100).toFixed(4) } as CSSProperties}
       >
         <div className="bonus-slider__row">
-          <span className="team-slot__slider-end">{nameOf(slot.entries[0].memberId)}</span>
           <div className="bonus-slider__track">
             <div className="bonus-slider__fill" />
             <div className="bonus-slider__thumb" />
@@ -104,7 +95,6 @@ export function TeamSlotCard({
               aria-valuetext={`${pctA}%`}
             />
           </div>
-          <span className="team-slot__slider-end">{nameOf(slot.entries[1].memberId)}</span>
         </div>
       </div>
     </div>
@@ -112,12 +102,13 @@ export function TeamSlotCard({
     <div className="team-slot__single">
       <button
         type="button"
-        className="btn btn--ghost team-slot__split-btn"
+        className="icon-btn"
         onClick={() => onRequestSplit(slotIndex)}
         disabled={!canSplit}
         title={t("teams.split")}
+        aria-label={t("teams.split")}
       >
-        {t("teams.split")}
+        <IconSplit />
       </button>
       <button
         type="button"
