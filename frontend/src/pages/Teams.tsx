@@ -129,8 +129,6 @@ export function Teams() {
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
   const [potSize, setPotSize] = useState(15);
   const [goodCampTicket, setGoodCampTicket] = useState(false);
-  // setGoodCampTicket will be wired to a toggle control in Task 6.
-  void setGoodCampTicket;
 
   // Dish type: restricts all 3 meal slots to the same recipe type (ephemeral, frontend-only).
   const [dishType, setDishType] = useState<'Curry' | 'Salad' | 'Dessert' | null>(null);
@@ -1205,6 +1203,8 @@ export function Teams() {
           onSelectIsland={setSelectedIsland}
           onFavoriteBerries={setFavoriteBerries}
           onIslandBonus={setIslandBonus}
+          goodCampTicket={goodCampTicket}
+          onGoodCampTicket={setGoodCampTicket}
           dishType={dishType}
           onDishTypeChange={handleDishTypeChange}
         />

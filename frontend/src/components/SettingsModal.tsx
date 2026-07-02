@@ -35,9 +35,11 @@ interface Props {
   selectedIsland: string | null;
   favoriteBerries: string[];
   islandBonus: number;
+  goodCampTicket: boolean;
   onSelectIsland: (name: string | null) => void;
   onFavoriteBerries: (berries: string[]) => void;
   onIslandBonus: (bonus: number) => void;
+  onGoodCampTicket: (value: boolean) => void;
   /** Active dish type for all 3 meal slots. null = no restriction yet. */
   dishType: Recipe["type"] | null;
   /** Called when the user selects a dish type or clears it (null). */
@@ -57,9 +59,11 @@ export function SettingsModal({
   selectedIsland,
   favoriteBerries,
   islandBonus,
+  goodCampTicket,
   onSelectIsland,
   onFavoriteBerries,
   onIslandBonus,
+  onGoodCampTicket,
   dishType,
   onDishTypeChange,
 }: Props) {
@@ -175,9 +179,11 @@ export function SettingsModal({
           selectedIsland={selectedIsland}
           favoriteBerries={favoriteBerries}
           islandBonus={islandBonus}
+          goodCampTicket={goodCampTicket}
           onSelectIsland={onSelectIsland}
           onFavoriteBerries={onFavoriteBerries}
           onIslandBonus={onIslandBonus}
+          onGoodCampTicket={onGoodCampTicket}
         />
       </div>
 
