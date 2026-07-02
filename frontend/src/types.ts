@@ -28,6 +28,14 @@ export interface Species {
   base_inventory: number;
 }
 
+export type RatingTier = "basic" | "great" | "ultra" | "master";
+
+export interface Rating {
+  tier: RatingTier;
+  level: number;
+  required_strength: number;
+}
+
 export interface Island {
   name: string;
   // Bayas que el juego establece como favoritas para esta isla (vacío si la isla
@@ -35,6 +43,8 @@ export interface Island {
   favorite_berries: string[];
   // true = el jugador elige las bayas favoritas (Greengrass Isle).
   user_picks: boolean;
+  // Los 35 ratings de Snorlax de la isla (Basic1..Master20), ascendentes por fuerza.
+  ratings: Rating[];
 }
 
 export interface Catalog {
