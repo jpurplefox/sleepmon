@@ -401,7 +401,9 @@ export function Teams() {
 
       {/* ── Per-slot cards ── */}
       <div className="prod-cards prod-cards--compact">
-        {slots.map((slot, i) => (
+        {slots.map((slot, i) => {
+          const teamHasSplit = slots.some((s) => s.entries.length === 2);
+          return (
           <TeamSlotCard
             key={slot.entries.map((e) => e.memberId).join("+")}
             slot={slot}
@@ -411,12 +413,14 @@ export function Teams() {
             contributions={result?.members}
             favBerrySet={favBerrySet}
             canSplit={canSplit}
+            teamHasSplit={teamHasSplit}
             onRequestSplit={(idx) => setPickerTarget({ kind: "split", slotIndex: idx })}
             onRemoveSlot={removeSlot}
             onRemoveEntry={removeEntry}
             onWeightChange={setSplitShare}
           />
-        ))}
+          );
+        })}
 
         {/* Trailing "add" slot — hidden once the team is full (max is obvious). */}
         {!atMax && (

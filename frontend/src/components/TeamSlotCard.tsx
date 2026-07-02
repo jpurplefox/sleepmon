@@ -15,6 +15,7 @@ interface TeamSlotCardProps {
   contributions: TeamProduction["members"] | undefined;
   favBerrySet: Set<string>;
   canSplit: boolean;            // false si el equipo está al máximo de slots o sin pokés libres
+  teamHasSplit?: boolean;       // true si algún slot del equipo está dividido (para igualar altura del header)
   onRequestSplit: (slotIndex: number) => void;    // abre el picker en modo "dividir"
   onRemoveSlot: (slotIndex: number) => void;      // quita el slot entero
   onRemoveEntry: (slotIndex: number, entryIndex: number) => void; // colapsa a single
@@ -29,6 +30,7 @@ export function TeamSlotCard({
   contributions,
   favBerrySet,
   canSplit,
+  teamHasSplit,
   onRequestSplit,
   onRemoveSlot,
   onRemoveEntry,
@@ -99,7 +101,7 @@ export function TeamSlotCard({
       </div>
     </div>
   ) : (
-    <div className="team-slot__single">
+    <div className={"team-slot__single" + (teamHasSplit ? " team-slot__single--reserve" : "")}>
       <button
         type="button"
         className="icon-btn"
