@@ -151,6 +151,7 @@ class TeamProductionInput:
     meals: list[MealSelectionInput | None]
     favorite_berries: list[str] = field(default_factory=list)
     island_bonus: float = 0.0
+    good_camp_ticket: bool = False
 
 
 @dataclass(frozen=True, slots=True)

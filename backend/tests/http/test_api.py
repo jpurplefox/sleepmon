@@ -682,3 +682,22 @@ def test_production_rejects_bonus_over_max(client: TestClient) -> None:
         json={"member_ids": [member_id], "meals": [], "island_bonus": 0.9},
     )
     assert res.status_code in (400, 422)
+
+
+def test_team_production_accepts_good_camp_ticket(client: TestClient) -> None:
+    member_id = _create_member(client)
+    off = client.post(
+        "/teams/production",
+        json={"member_ids": [member_id], "meals": []},
+    )
+    on = client.post(
+        "/teams/production",
+        json={"member_ids": [member_id], "meals": [], "good_camp_ticket": True},
+    )
+    assert off.status_code == 200
+    assert on.status_code == 200
+    off_member = off.json()["members"][0]["production"]
+    on_member = on.json()["members"][0]["production"]
+    # Con GCT ayuda más rápido → menos segundos por ayuda y más ayudas/día.
+    assert on_member["seconds_per_help"] < off_member["seconds_per_help"]
+    assert on_member["inventory"] > off_member["inventory"]
