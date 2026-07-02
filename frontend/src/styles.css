@@ -2974,6 +2974,22 @@ button.prod-card__base-tag--action:hover {
   justify-content: flex-end;
 }
 
+/* Slots compartidos (split) — toolbar con altura variable para las pestañas */
+.prod-card__toolbar--slot { display: block; height: auto; padding: 0.35rem 0.5rem; }
+.team-slot__single { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.team-slot__split { display: flex; flex-direction: column; gap: 0.4rem; }
+.team-slot__tabs { display: flex; gap: 0.35rem; }
+.team-slot__tab-wrap { display: flex; align-items: center; gap: 0.15rem; }
+.team-slot__tab {
+  padding: 0.15rem 0.5rem; border-radius: 999px; border: 1px solid var(--moon-border);
+  background: transparent; color: var(--muted); cursor: pointer; font-size: 0.8rem;
+}
+.team-slot__tab--active { background: var(--moon-border); color: var(--text); font-weight: 600; }
+.team-slot__tab-pct { opacity: 0.7; }
+.team-slot__tab-remove { padding: 0; width: 1.1rem; height: 1.1rem; }
+.team-slot__slider { min-width: 0; max-width: none; }
+.team-slot__slider-end { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+
 /* Análisis de equipo — barra de período (toggle diario/semanal) a nivel de página */
 /* Análisis de equipo — sección de agregados y cocina */
 .teams-aggregates {
