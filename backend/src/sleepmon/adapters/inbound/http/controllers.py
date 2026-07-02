@@ -38,6 +38,8 @@ from sleepmon.application.dto import (
     MemberProduction,
     ProductionInput,
     ProductionResult,
+    SlotEntryInput,
+    SlotInput,
     TeamMemberInput,
     TeamProductionInput,
 )
@@ -290,7 +292,15 @@ class TeamProductionController(Controller):
     ) -> TeamProductionOut:
         result = service.compute_team_production(
             TeamProductionInput(
-                member_ids=data.member_ids,
+                slots=[
+                    SlotInput(
+                        entries=[
+                            SlotEntryInput(member_id=e.member_id, weight=e.weight)
+                            for e in s.entries
+                        ]
+                    )
+                    for s in data.slots
+                ],
                 meals=[
                     None if m is None else MealSelectionInput(recipe=m.recipe, level=m.level)
                     for m in data.meals

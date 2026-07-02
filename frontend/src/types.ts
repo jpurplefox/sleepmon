@@ -167,15 +167,22 @@ export interface MealInput {
   level: number;
 }
 
+// Estado efímero del equipo en la página de Equipos. Un slot puede compartirse
+// entre 2 Pokémon; los weights de un slot suman 1.
+export interface SlotEntry {
+  memberId: string;
+  weight: number; // (0, 1]
+}
+
+export interface Slot {
+  entries: SlotEntry[]; // 1 o 2 entradas
+}
+
 export interface TeamProductionInput {
-  member_ids: string[];
-  // 3 slots (mañana/mediodía/noche); null = sin receta en ese slot.
+  slots: { entries: { member_id: string; weight: number }[] }[];
   meals: (MealInput | null)[];
-  // Bayas favoritas de la isla seleccionada (≤3); opcional, default [] en el cliente.
   favorite_berries?: string[];
-  // Bonus de isla aplicado a la fuerza (0.0–0.85); opcional, default 0 en el cliente.
   island_bonus?: number;
-  // Good Camp Ticket activo; opcional, default false en el cliente.
   good_camp_ticket?: boolean;
 }
 

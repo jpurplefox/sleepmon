@@ -174,8 +174,17 @@ class MealIn(msgspec.Struct, forbid_unknown_fields=True):
     level: int = 1
 
 
+class SlotEntryIn(msgspec.Struct, forbid_unknown_fields=True):
+    member_id: str
+    weight: float = 1.0
+
+
+class SlotIn(msgspec.Struct, forbid_unknown_fields=True):
+    entries: list[SlotEntryIn]
+
+
 class TeamProductionIn(msgspec.Struct, forbid_unknown_fields=True):
-    member_ids: list[str]
+    slots: list[SlotIn]
     meals: list[MealIn | None] = msgspec.field(default_factory=list)
     favorite_berries: list[str] = msgspec.field(default_factory=list)
     island_bonus: float = 0.0

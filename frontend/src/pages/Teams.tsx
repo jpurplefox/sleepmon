@@ -15,7 +15,7 @@ import { berryIcon } from "../berries";
 import { BoxPicker } from "../components/BoxPicker";
 import { SettingsModal } from "../components/SettingsModal";
 import { Modal } from "../components/Modal";
-import { ProductionCard } from "../components/ProductionCard";
+import { TeamSlotCard } from "../components/TeamSlotCard";
 import { StrengthValue } from "../components/StrengthValue";
 import { SnorlaxRatingBadge } from "../components/SnorlaxRatingBadge";
 import {
@@ -31,7 +31,7 @@ import { recipeImage } from "../recipes";
 import { perMealPot, dailyPotCapacity } from "../pot";
 import { statIcon } from "../natures";
 import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
-import type { Catalog, MealInput, Member, MemberInput, SkillEffectAgg } from "../types";
+import type { Catalog, MealInput, Member, MemberInput, SkillEffectAgg, Slot } from "../types";
 
 const MAX_TEAM = 5;
 
@@ -98,7 +98,7 @@ function skillEffectMeta(kind: string): SkillEffectMeta {
 }
 
 // Pure module-level helper — same logic as pickMember in Production.tsx.
-function configFromMember(catalog: Catalog, m: Member): MemberInput | null {
+export function configFromMember(catalog: Catalog, m: Member): MemberInput | null {
   const species = catalog.species.find((s) => s.name === m.species);
   if (!species || species.ingredient_slots.length === 0) return null;
   return {
@@ -124,10 +124,13 @@ export function Teams() {
   const members = useQuery({ queryKey: ["members"], queryFn: api.listMembers });
   const recipes = useQuery({ queryKey: ["recipes"], queryFn: api.getRecipes });
 
-  // Ordered list of selected member ids (capped at MAX_TEAM).
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  // Equipo como lista ordenada de slots (cada uno con 1–2 Pokémon con peso). Efímero.
+  const [slots, setSlots] = useState<Slot[]>([]);
+  // Intención del picker: agregar un slot nuevo, o dividir un slot existente.
+  const [pickerTarget, setPickerTarget] = useState<
+    { kind: "new" } | { kind: "split"; slotIndex: number } | null
+  >(null);
   const [meals, setMeals] = useState<(MealInput | null)[]>([null, null, null]);
-  const [pickerOpen, setPickerOpen] = useState(false);
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
   const [potSize, setPotSize] = useState(15);
   const [goodCampTicket, setGoodCampTicket] = useState(false);
@@ -140,7 +143,10 @@ export function Teams() {
   const [favoriteBerries, setFavoriteBerries] = useState<string[]>([]);
   const [islandBonus, setIslandBonus] = useState<number>(0);
 
-  const inTeam = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const usedIds = useMemo(
+    () => new Set(slots.flatMap((s) => s.entries.map((e) => e.memberId))),
+    [slots],
+  );
 
   // Set de bayas favoritas activas para lookup O(1) al renderizar las cards.
   const favBerrySet = useMemo(
@@ -152,16 +158,18 @@ export function Teams() {
   const activeBerries = favoriteBerries.filter(Boolean);
 
   const teamQuery = useQuery({
-    queryKey: ["team-production", selectedIds, meals, activeBerries, islandBonus, goodCampTicket],
+    queryKey: ["team-production", slots, meals, activeBerries, islandBonus, goodCampTicket],
     queryFn: () =>
       api.computeTeamProduction({
-        member_ids: selectedIds,
+        slots: slots.map((s) => ({
+          entries: s.entries.map((e) => ({ member_id: e.memberId, weight: e.weight })),
+        })),
         meals,
         favorite_berries: activeBerries,
         island_bonus: islandBonus,
         good_camp_ticket: goodCampTicket,
       }),
-    enabled: selectedIds.length > 0,
+    enabled: slots.length > 0,
     placeholderData: keepPreviousData,
   });
 
@@ -277,15 +285,63 @@ export function Teams() {
     ? (result.cooking_strength + fillerStrengthTotal) * result.extra_tasty_multiplier
     : 0;
 
+  const atMax = slots.length >= MAX_TEAM;
+
   const pickMember = (m: Member) => {
-    if (selectedIds.length >= MAX_TEAM) return;
-    if (selectedIds.includes(m.id)) return;
-    setSelectedIds((prev) => [...prev, m.id]);
-    setPickerOpen(false);
+    if (usedIds.has(m.id)) return;
+    if (pickerTarget?.kind === "split") {
+      const i = pickerTarget.slotIndex;
+      setSlots((prev) =>
+        prev.map((s, idx) =>
+          idx === i && s.entries.length === 1
+            ? {
+                entries: [
+                  { memberId: s.entries[0].memberId, weight: 0.5 },
+                  { memberId: m.id, weight: 0.5 },
+                ],
+              }
+            : s,
+        ),
+      );
+    } else {
+      setSlots((prev) =>
+        prev.length >= MAX_TEAM ? prev : [...prev, { entries: [{ memberId: m.id, weight: 1 }] }],
+      );
+    }
+    setPickerTarget(null);
   };
 
-  const removeMember = (id: string) =>
-    setSelectedIds((prev) => prev.filter((x) => x !== id));
+  const removeSlot = (slotIndex: number) =>
+    setSlots((prev) => prev.filter((_, i) => i !== slotIndex));
+
+  // Quita un Pokémon de un slot dividido; el que queda pasa a peso 1 (single).
+  const removeEntry = (slotIndex: number, entryIndex: number) =>
+    setSlots((prev) =>
+      prev.map((s, i) => {
+        if (i !== slotIndex) return s;
+        const kept = s.entries.filter((_, j) => j !== entryIndex);
+        if (kept.length === 0) return s;
+        return { entries: kept.map((e) => ({ ...e, weight: 1 })) };
+      }),
+    );
+
+  // pctA en 1..99 → weights [a, 1-a] del slot dividido.
+  const setSplitShare = (slotIndex: number, pctA: number) =>
+    setSlots((prev) =>
+      prev.map((s, i) => {
+        if (i !== slotIndex || s.entries.length !== 2) return s;
+        const a = pctA / 100;
+        return {
+          entries: [
+            { ...s.entries[0], weight: a },
+            { ...s.entries[1], weight: 1 - a },
+          ],
+        };
+      }),
+    );
+
+  // Se puede dividir si hay al menos un Pokémon de la caja libre (no usado ya).
+  const canSplit = (members.data ?? []).some((m) => !usedIds.has(m.id));
 
   // Handler: set dishType and clear meals that are incompatible with the new type.
   // When newType is null (no restriction), also clear all meals so a mixed state
@@ -318,8 +374,6 @@ export function Teams() {
       </p>
     );
 
-  const atMax = selectedIds.length >= MAX_TEAM;
-
   return (
     <div className="layout layout--wide">
       <header className="hero">
@@ -345,40 +399,26 @@ export function Teams() {
         </div>
       )}
 
-      {/* ── Per-member cards (mirrors Production.tsx selection model) ── */}
+      {/* ── Per-slot cards ── */}
       <div className="prod-cards prod-cards--compact">
-        {selectedIds.map((id) => {
-          const m = memberById.get(id);
-          if (!m) return null;
-          const config = configFromMember(catalog.data, m);
-          if (!config) return null;
-
-          // Find this member's per-member production from the team result.
-          const contrib = result?.members.find((mc) => mc.member_id === id);
-          const prod = contrib?.production ?? null;
-
-          // Determine if this member's berry is a favorite of the active island.
-          // The source of truth is the catalog species entry (not the production
-          // result), so the highlight is available even before the query resolves.
-          const speciesEntry = catalog.data.species.find((s) => s.name === m.species);
-          const isFavoriteBerry =
-            speciesEntry != null && favBerrySet.has(speciesEntry.berry);
-
+        {slots.map((slot, i) => {
+          const teamHasSplit = slots.some((s) => s.entries.length === 2);
           return (
-            <ProductionCard
-              key={id}
-              config={config}
-              catalog={catalog.data}
-              production={prod}
-              productionError={null}
-              readOnly
-              isFavoriteBerry={isFavoriteBerry}
-              onEdit={() => {/* no-op in readOnly */}}
-              onClone={() => {/* no-op in readOnly */}}
-              onRemove={() => removeMember(id)}
-              onMakeBase={() => {/* no-op in readOnly */}}
-              onSaveToBox={() => {/* no-op in readOnly */}}
-            />
+          <TeamSlotCard
+            key={slot.entries.map((e) => e.memberId).join("+")}
+            slot={slot}
+            slotIndex={i}
+            memberById={memberById}
+            catalog={catalog.data}
+            contributions={result?.members}
+            favBerrySet={favBerrySet}
+            canSplit={canSplit}
+            teamHasSplit={teamHasSplit}
+            onRequestSplit={(idx) => setPickerTarget({ kind: "split", slotIndex: idx })}
+            onRemoveSlot={removeSlot}
+            onRemoveEntry={removeEntry}
+            onWeightChange={setSplitShare}
+          />
           );
         })}
 
@@ -388,15 +428,13 @@ export function Teams() {
             <div className="prod-card__toolbar prod-card__toolbar--empty" aria-hidden="true" />
             <article className="prod-card prod-card--add">
               <p className="muted prod-add__hint">
-                {selectedIds.length === 0
-                  ? t("teams.empty")
-                  : t("teams.addHintMore")}
+                {slots.length === 0 ? t("teams.empty") : t("teams.addHintMore")}
               </p>
               <div className="prod-add__actions">
                 <button
                   type="button"
                   className="btn btn--primary"
-                  onClick={() => setPickerOpen(true)}
+                  onClick={() => setPickerTarget({ kind: "new" })}
                 >
                   {t("teams.addPokemon")}
                 </button>
@@ -407,10 +445,10 @@ export function Teams() {
       </div>
 
       {/* ── Loading / error states for the team query ── */}
-      {selectedIds.length > 0 && teamQuery.isLoading && (
+      {slots.length > 0 && teamQuery.isLoading && (
         <p className="muted" style={{ marginTop: "1.5rem" }}>{t("teams.calculating")}</p>
       )}
-      {selectedIds.length > 0 && teamQuery.isError && (
+      {slots.length > 0 && teamQuery.isError && (
         <p className="error" role="alert" style={{ marginTop: "1.5rem" }}>
           {t("teams.teamError")}{" "}
           <button type="button" className="btn btn--ghost" onClick={() => teamQuery.refetch()}>
@@ -1194,10 +1232,14 @@ export function Teams() {
       )}
 
       {/* BoxPicker modal — same pattern as Production.tsx */}
-      {pickerOpen && (
+      {pickerTarget !== null && (
         <Modal
-          title={t("teams.pickFromBox")}
-          onClose={() => setPickerOpen(false)}
+          title={
+            pickerTarget.kind === "split"
+              ? t("teams.pickSplitPartner")
+              : t("teams.pickFromBox")
+          }
+          onClose={() => setPickerTarget(null)}
         >
           <BoxPicker
             members={members.data}
@@ -1205,7 +1247,7 @@ export function Teams() {
             isError={members.isError}
             onRetry={() => members.refetch()}
             catalog={catalog.data}
-            inComparison={inTeam}
+            inComparison={usedIds}
             onPick={pickMember}
           />
         </Modal>

@@ -43,7 +43,7 @@ from sleepmon.domain.entities import (
 )
 from sleepmon.domain.errors import SpeciesNotFoundError, TeamMemberNotFoundError, ValidationError
 from sleepmon.domain.ports import RecipeCatalog, SpeciesCatalog, TeamRepository
-from sleepmon.domain.production import DailyProduction, daily_production
+from sleepmon.domain.production import DailyProduction, daily_production, scale_daily
 from sleepmon.domain.species import Species
 from sleepmon.domain.value_objects import Berry, Ingredient, Nature, Ribbon, SubSkill
 
@@ -281,16 +281,35 @@ class DefaultTeamService(TeamService):
         ]
 
     _MAX_TEAM = 5
+    _WEIGHT_EPS = 1e-6
 
     def compute_team_production(self, data: TeamProductionInput) -> TeamProductionResult:
-        # Validación de la selección: 1..5 ids, sin duplicados.
-        if not 1 <= len(data.member_ids) <= self._MAX_TEAM:
+        # Validación de la selección: 1..5 slots; cada slot 1..2 entradas; pesos de
+        # un slot suman 1.0; sin miembros repetidos en todo el equipo.
+        if not 1 <= len(data.slots) <= self._MAX_TEAM:
             raise ValidationError(
-                f"Un equipo tiene entre 1 y {self._MAX_TEAM} miembros; llegaron "
-                f"{len(data.member_ids)}."
+                f"Un equipo tiene entre 1 y {self._MAX_TEAM} slots; llegaron "
+                f"{len(data.slots)}."
             )
-        if len(set(data.member_ids)) != len(data.member_ids):
-            raise ValidationError("Un equipo no puede repetir miembros.")
+        flat: list[tuple[str, float]] = []
+        seen: set[str] = set()
+        for slot in data.slots:
+            if not 1 <= len(slot.entries) <= 2:
+                raise ValidationError("Un slot tiene 1 o 2 Pokémon.")
+            total_weight = 0.0
+            for entry in slot.entries:
+                if not 0.0 < entry.weight <= 1.0:
+                    raise ValidationError(
+                        f"El peso de un Pokémon debe estar en (0, 1]; llegó "
+                        f"{entry.weight}."
+                    )
+                if entry.member_id in seen:
+                    raise ValidationError("Un equipo no puede repetir Pokémon.")
+                seen.add(entry.member_id)
+                total_weight += entry.weight
+                flat.append((entry.member_id, entry.weight))
+            if abs(total_weight - 1.0) > self._WEIGHT_EPS:
+                raise ValidationError("Los pesos de un slot deben sumar 1.")
 
         if not 0.0 <= data.island_bonus <= 0.85:
             raise ValidationError(
@@ -308,12 +327,12 @@ class DefaultTeamService(TeamService):
                 raise ValidationError(f"Baya desconocida: {name!r}.") from exc
         favorite_frozen = frozenset(favorites)
 
-        # Cargar miembros (404 si falta) y computar su producción. Los miembros con
-        # especie fuera del catálogo curado se excluyen del agregado.
+        # Cargar miembros (404 si falta) y computar su producción escalada por peso.
+        # Los miembros con especie fuera del catálogo curado se excluyen del agregado.
         entries: list[tuple[str, str, DailyProduction]] = []
         member_productions: dict[str, ProductionResult] = {}
         excluded = 0
-        for raw_id in data.member_ids:
+        for raw_id, weight in flat:
             try:
                 member_uuid = UUID(raw_id)
             except ValueError as exc:
@@ -334,9 +353,10 @@ class DefaultTeamService(TeamService):
                 favorite_berries=favorite_frozen,
                 good_camp_ticket=data.good_camp_ticket,
             )
+            scaled = scale_daily(daily, weight)
             member_id_str = str(member.id)
-            member_productions[member_id_str] = _production_result(daily)
-            entries.append((member_id_str, member.species, daily))
+            member_productions[member_id_str] = _production_result(scaled)
+            entries.append((member_id_str, member.species, scaled))
 
         aggregate = team_production(entries, island_bonus=data.island_bonus)
 

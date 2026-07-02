@@ -18,6 +18,7 @@ Modelo:
 
 from __future__ import annotations
 
+import dataclasses
 import math
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -213,6 +214,47 @@ class DailyProduction:
     night_skill_chances: tuple[float, ...]
     inventory: int  # inventario efectivo (base + Inventory Up)
     inventory_fill_hours: float
+
+
+def scale_daily(daily: DailyProduction, weight: float) -> DailyProduction:
+    """Escala la producción diaria por ``weight`` (fracción de tiempo del slot).
+
+    Sólo escala magnitudes *extensivas* (cantidades/día, fuerza/día y
+    ``helps_per_day``): bayas, ingredientes, disparos y salidas de la main skill.
+    Las *intensivas* (porcentajes, ``seconds_per_help``, ``night_skill_chances``,
+    ``inventory``, ``inventory_fill_hours``) se dejan igual: describen el ritmo del
+    Pokémon, no su aporte al equipo. ``weight == 1.0`` devuelve algo equivalente al
+    original (identidad).
+    """
+    if weight == 1.0:
+        return daily
+
+    def _s(value: float | None) -> float | None:
+        return None if value is None else value * weight
+
+    return dataclasses.replace(
+        daily,
+        helps_per_day=daily.helps_per_day * weight,
+        berry_amount=daily.berry_amount * weight,
+        berry_strength=daily.berry_strength * weight,
+        ingredients=tuple(
+            SlotProduction(sp.ingredient, sp.amount * weight) for sp in daily.ingredients
+        ),
+        skill_triggers=daily.skill_triggers * weight,
+        skill_ingredients=tuple(
+            SlotProduction(sp.ingredient, sp.amount * weight)
+            for sp in daily.skill_ingredients
+        ),
+        skill_energy=_s(daily.skill_energy),
+        skill_ingredient_total=_s(daily.skill_ingredient_total),
+        skill_cooking_ingredients=_s(daily.skill_cooking_ingredients),
+        skill_strength=_s(daily.skill_strength),
+        skill_self_energy=_s(daily.skill_self_energy),
+        skill_dream_shards=_s(daily.skill_dream_shards),
+        skill_tasty_chance=_s(daily.skill_tasty_chance),
+        skill_extra_helpful=_s(daily.skill_extra_helpful),
+        skill_random_energy=_s(daily.skill_random_energy),
+    )
 
 
 def _berry_per_help(specialty: Specialty) -> int:

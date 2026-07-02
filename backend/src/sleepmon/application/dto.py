@@ -144,10 +144,25 @@ class MealSelectionInput:
 
 
 @dataclass(frozen=True, slots=True)
+class SlotEntryInput:
+    """Un Pokémon dentro de un slot, con su fracción de tiempo (peso)."""
+
+    member_id: str
+    weight: float = 1.0
+
+
+@dataclass(frozen=True, slots=True)
+class SlotInput:
+    """Un slot del equipo: 1 Pokémon (peso 1.0) o 2 compartiéndolo (pesos suman 1.0)."""
+
+    entries: list[SlotEntryInput]
+
+
+@dataclass(frozen=True, slots=True)
 class TeamProductionInput:
     """Datos crudos para computar la producción de un equipo (no se persiste)."""
 
-    member_ids: list[str]
+    slots: list[SlotInput]
     meals: list[MealSelectionInput | None]
     favorite_berries: list[str] = field(default_factory=list)
     island_bonus: float = 0.0

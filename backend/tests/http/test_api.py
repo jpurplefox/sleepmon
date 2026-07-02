@@ -8,6 +8,10 @@ from sleepmon.application.services import DefaultTeamService
 from tests.fakes import InMemoryTeamRepository
 
 
+def _slots_json(*ids: str) -> list[dict]:
+    return [{"entries": [{"member_id": i}]} for i in ids]
+
+
 @pytest.fixture
 def client() -> TestClient:
     service = DefaultTeamService(
@@ -523,7 +527,7 @@ def test_team_production_endpoint(client: TestClient) -> None:
     created = client.post("/team", json=valid_payload()).json()
     res = client.post(
         "/teams/production",
-        json={"member_ids": [created["id"]], "meals": [None, None, None]},
+        json={"slots": _slots_json(created["id"]), "meals": [None, None, None]},
     )
     assert res.status_code == 200
     body = res.json()
@@ -554,7 +558,7 @@ def test_team_production_exposes_extra_tasty(client: TestClient) -> None:
     created = client.post("/team", json=valid_payload()).json()
     body = client.post(
         "/teams/production",
-        json={"member_ids": [created["id"]], "meals": [None, None, None]},
+        json={"slots": _slots_json(created["id"]), "meals": [None, None, None]},
     ).json()
     # Sin main skill de Tasty Chance, la chance/multiplicador son la base del juego.
     assert body["extra_tasty_rate"] == pytest.approx(2.7 / 21)
@@ -564,7 +568,7 @@ def test_team_production_exposes_extra_tasty(client: TestClient) -> None:
 def test_team_production_endpoint_rejects_too_many(client: TestClient) -> None:
     ids = [client.post("/team", json=valid_payload()).json()["id"] for _ in range(6)]
     res = client.post(
-        "/teams/production", json={"member_ids": ids, "meals": [None, None, None]}
+        "/teams/production", json={"slots": _slots_json(*ids), "meals": [None, None, None]}
     )
     assert res.status_code == 400
 
@@ -575,7 +579,7 @@ def test_team_production_endpoint_with_recipe(client: TestClient) -> None:
     res = client.post(
         "/teams/production",
         json={
-            "member_ids": [created["id"]],
+            "slots": _slots_json(created["id"]),
             "meals": [{"recipe": recipe["name"], "level": 1}, None, None],
         },
     )
@@ -592,7 +596,7 @@ def test_team_production_cooking_meals_have_breakdown_fields(client: TestClient)
     res = client.post(
         "/teams/production",
         json={
-            "member_ids": [created["id"]],
+            "slots": _slots_json(created["id"]),
             "meals": [{"recipe": recipe["name"], "level": 2}, None, None],
         },
     )
@@ -631,7 +635,7 @@ def test_team_production_returns_skill_effects(client: TestClient) -> None:
     created = client.post("/team", json=valid_payload()).json()
     res = client.post(
         "/teams/production",
-        json={"member_ids": [created["id"]], "meals": [None, None, None]},
+        json={"slots": _slots_json(created["id"]), "meals": [None, None, None]},
     )
     assert res.status_code == 200
     body = res.json()
@@ -647,6 +651,48 @@ def test_team_production_returns_skill_effects(client: TestClient) -> None:
         assert isinstance(effect["kind"], str)
         assert isinstance(effect["total"], (int, float))
         assert isinstance(effect["triggers"], (int, float))
+
+
+def test_team_production_endpoint_split_slot(client: TestClient) -> None:
+    a = client.post("/team", json=valid_payload()).json()["id"]
+    b = client.post("/team", json=valid_payload()).json()["id"]
+    full = client.post(
+        "/teams/production",
+        json={"slots": _slots_json(a), "meals": [None, None, None]},
+    ).json()
+    split = client.post(
+        "/teams/production",
+        json={
+            "slots": [
+                {"entries": [
+                    {"member_id": a, "weight": 0.5},
+                    {"member_id": b, "weight": 0.5},
+                ]}
+            ],
+            "meals": [None, None, None],
+        },
+    ).json()
+    # Dos copias al 50% en un slot ≈ un Pokémon completo.
+    assert split["total_strength"] == pytest.approx(full["total_strength"])
+    assert split["member_count"] == 2
+
+
+def test_team_production_endpoint_rejects_weights_not_one(client: TestClient) -> None:
+    a = client.post("/team", json=valid_payload()).json()["id"]
+    b = client.post("/team", json=valid_payload()).json()["id"]
+    res = client.post(
+        "/teams/production",
+        json={
+            "slots": [
+                {"entries": [
+                    {"member_id": a, "weight": 0.5},
+                    {"member_id": b, "weight": 0.4},
+                ]}
+            ],
+            "meals": [None, None, None],
+        },
+    )
+    assert res.status_code == 400
 
 
 # ---------------------------------------------------------------------------
@@ -674,7 +720,7 @@ def test_production_accepts_island_bonus_and_favorites(client: TestClient) -> No
     res = client.post(
         "/teams/production",
         json={
-            "member_ids": [member_id],
+            "slots": _slots_json(member_id),
             "meals": [],
             "favorite_berries": ["Oran"],
             "island_bonus": 0.3,
@@ -692,7 +738,7 @@ def test_production_rejects_bonus_over_max(client: TestClient) -> None:
     member_id = _create_member(client)
     res = client.post(
         "/teams/production",
-        json={"member_ids": [member_id], "meals": [], "island_bonus": 0.9},
+        json={"slots": _slots_json(member_id), "meals": [], "island_bonus": 0.9},
     )
     assert res.status_code in (400, 422)
 
@@ -701,11 +747,11 @@ def test_team_production_accepts_good_camp_ticket(client: TestClient) -> None:
     member_id = _create_member(client)
     off = client.post(
         "/teams/production",
-        json={"member_ids": [member_id], "meals": []},
+        json={"slots": _slots_json(member_id), "meals": []},
     )
     on = client.post(
         "/teams/production",
-        json={"member_ids": [member_id], "meals": [], "good_camp_ticket": True},
+        json={"slots": _slots_json(member_id), "meals": [], "good_camp_ticket": True},
     )
     assert off.status_code == 200
     assert on.status_code == 200

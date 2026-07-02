@@ -362,6 +362,11 @@ export const UI: Record<Lang, Record<string, string>> = {
     // Tooltip de fuerza base / monto del Area bonus
     "teams.strengthBase": "Base",
     "teams.strengthBonusDelta": "Area bonus (+{bonus}%)",
+    // Slots compartidos (split)
+    "teams.split": "Dividir",
+    "teams.splitRemove": "Quitar del slot",
+    "teams.splitShare": "Reparto del slot",
+    "teams.pickSplitPartner": "Elegí el segundo Pokémon del slot",
     // Error boundary
     "error.title": "Algo salió mal",
     "error.body": "Ocurrió un error inesperado al mostrar esta vista. Probá recargar la página.",
@@ -724,6 +729,11 @@ export const UI: Record<Lang, Record<string, string>> = {
     // Strength base / Area bonus delta tooltip
     "teams.strengthBase": "Base",
     "teams.strengthBonusDelta": "Area bonus (+{bonus}%)",
+    // Slots compartidos (split)
+    "teams.split": "Split",
+    "teams.splitRemove": "Remove from slot",
+    "teams.splitShare": "Slot share",
+    "teams.pickSplitPartner": "Pick the slot's second Pokémon",
     // Error boundary
     "error.title": "Something went wrong",
     "error.body": "An unexpected error occurred while showing this view. Try reloading the page.",

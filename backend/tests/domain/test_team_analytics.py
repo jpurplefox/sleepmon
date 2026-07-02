@@ -2,7 +2,7 @@ import pytest
 
 from sleepmon.domain.analytics import SkillEffectAgg, team_production
 from sleepmon.domain.extra_tasty import expected_extra_tasty
-from sleepmon.domain.production import DailyProduction, SlotProduction
+from sleepmon.domain.production import DailyProduction, SlotProduction, scale_daily
 from sleepmon.domain.value_objects import Berry, Ingredient
 
 I = Ingredient  # noqa: E741
@@ -289,3 +289,22 @@ def test_zero_bonus_is_identity() -> None:
     assert base.total_strength == base.total_strength_base
     for member in base.members:
         assert member.strength == member.strength_base
+
+
+def test_two_half_weight_copies_equal_one_full_member() -> None:
+    d = _daily(
+        berry_amount=10.0,
+        berry_strength=100.0,
+        ingredients=(SlotProduction(I.HONEY, 8.0),),
+        skill_triggers=4.0,
+        skill_strength=20.0,
+    )
+    full = team_production([("a", "X", d)])
+    split = team_production(
+        [("a", "X", scale_daily(d, 0.5)), ("b", "Y", scale_daily(d, 0.5))]
+    )
+    assert split.total_strength == pytest.approx(full.total_strength)
+    assert split.total_berry_amount == pytest.approx(full.total_berry_amount)
+    assert split.total_ingredients == pytest.approx(full.total_ingredients)
+    assert split.skill_triggers == pytest.approx(full.skill_triggers)
+    assert split.ingredients[I.HONEY] == pytest.approx(full.ingredients[I.HONEY])

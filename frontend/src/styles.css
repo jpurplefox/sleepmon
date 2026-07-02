@@ -2974,6 +2974,56 @@ button.prod-card__base-tag--action:hover {
   justify-content: flex-end;
 }
 
+/* Slots compartidos (split) — toolbar con altura variable para las pestañas */
+.prod-card__toolbar--slot { display: block; height: auto; padding: 0.35rem 0.5rem; }
+.team-slot__single { display: flex; align-items: center; justify-content: flex-end; gap: 0.25rem; }
+/* Reservar la altura del header de 2 filas del split para que, en un equipo con
+   algún slot dividido, las cards single igualen la altura y los cuerpos alineen. */
+.team-slot__single--reserve { min-height: 3.25rem; align-items: flex-end; }
+.team-slot__split { display: flex; flex-direction: column; gap: 0.4rem; min-height: 3.25rem; }
+.team-slot__tabs { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.team-slot__tab-wrap {
+  display: inline-flex; align-items: center;
+  border-radius: 999px; border: 1px solid var(--moon-border);
+  background: transparent; overflow: hidden;
+}
+.team-slot__tab-wrap--active { background: var(--moon-border); }
+.team-slot__tab {
+  padding: 0.15rem 0.25rem 0.15rem 0.6rem;
+  background: transparent; border: none; cursor: pointer;
+  color: var(--muted); font-size: var(--text-xs); white-space: nowrap;
+}
+.team-slot__tab-wrap--active .team-slot__tab { color: var(--text); font-weight: 600; }
+.team-slot__tab-pct { opacity: 0.75; }
+.team-slot__tab-remove {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.15rem; height: 1.15rem; padding: 0; margin-right: 0.15rem;
+  background: transparent; border: none; cursor: pointer; line-height: 0;
+  color: var(--muted); opacity: 0.55; border-radius: 999px;
+}
+.team-slot__tab-wrap--active .team-slot__tab-remove { color: var(--text); }
+.team-slot__tab-remove:hover { opacity: 1; color: var(--error); }
+.team-slot__slider { min-width: 0; max-width: none; }
+/* Barra de reparto: dos porciones sólidas que se tocan en el thumb (el divisor).
+   Sin riel gris de fondo — ninguna zona queda "vacía". */
+.team-slot__slider--split .bonus-slider__track::before { display: none; }
+.team-slot__slider--split .bonus-slider__fill {
+  left: 0;
+  width: calc(var(--ratio) * (100% - 14px) + 7px);
+  background: var(--moon);
+  border-radius: 999px 0 0 999px;
+}
+.team-slot__slider--split .bonus-slider__track::after {
+  content: "";
+  position: absolute;
+  right: 0; top: 50%; transform: translateY(-50%);
+  height: 4px;
+  width: calc((1 - var(--ratio)) * (100% - 14px) + 7px);
+  background: var(--accent);
+  border-radius: 0 999px 999px 0;
+  z-index: 0; pointer-events: none;
+}
+
 /* Análisis de equipo — barra de período (toggle diario/semanal) a nivel de página */
 /* Análisis de equipo — sección de agregados y cocina */
 .teams-aggregates {
