@@ -128,6 +128,9 @@ export function Teams() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
   const [potSize, setPotSize] = useState(15);
+  const [goodCampTicket, setGoodCampTicket] = useState(false);
+  // setGoodCampTicket will be wired to a toggle control in Task 6.
+  void setGoodCampTicket;
 
   // Dish type: restricts all 3 meal slots to the same recipe type (ephemeral, frontend-only).
   const [dishType, setDishType] = useState<'Curry' | 'Salad' | 'Dessert' | null>(null);
@@ -149,13 +152,14 @@ export function Teams() {
   const activeBerries = favoriteBerries.filter(Boolean);
 
   const teamQuery = useQuery({
-    queryKey: ["team-production", selectedIds, meals, activeBerries, islandBonus],
+    queryKey: ["team-production", selectedIds, meals, activeBerries, islandBonus, goodCampTicket],
     queryFn: () =>
       api.computeTeamProduction({
         member_ids: selectedIds,
         meals,
         favorite_berries: activeBerries,
         island_bonus: islandBonus,
+        good_camp_ticket: goodCampTicket,
       }),
     enabled: selectedIds.length > 0,
     placeholderData: keepPreviousData,
@@ -333,6 +337,13 @@ export function Teams() {
           {t("teams.configure")}
         </button>
       </div>
+
+      {goodCampTicket && (
+        <div className="teams-gct-notice" role="status">
+          <img src="/pot.webp" alt="" className="mini-icon" style={{ width: 16, height: 16 }} />
+          {t("teams.gctActive")}
+        </div>
+      )}
 
       {/* ── Per-member cards (mirrors Production.tsx selection model) ── */}
       <div className="prod-cards prod-cards--compact">
