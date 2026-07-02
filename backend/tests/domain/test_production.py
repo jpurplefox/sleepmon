@@ -2,7 +2,12 @@ import math
 
 import pytest
 
-from sleepmon.domain.production import daily_production
+from sleepmon.domain.production import (
+    DailyProduction,
+    SlotProduction,
+    daily_production,
+    scale_daily,
+)
 from sleepmon.domain.species import Species
 from sleepmon.domain.value_objects import (
     Berry,
@@ -957,3 +962,86 @@ def test_no_good_camp_ticket_leaves_values_unchanged() -> None:
     )
     assert default.seconds_per_help == explicit_off.seconds_per_help
     assert default.inventory == explicit_off.inventory == 50
+
+
+# --- scale_daily: factory auxiliar y tests -------------------------------------
+
+_I = Ingredient  # alias local
+
+
+def _daily(
+    *,
+    berry_amount: float = 10.0,
+    berry_strength: float = 100.0,
+    ingredients: tuple[SlotProduction, ...] = (),
+    skill_triggers: float = 2.0,
+    skill_strength: float | None = None,
+    skill_energy: float | None = None,
+    skill_tasty_chance: float | None = None,
+) -> DailyProduction:
+    return DailyProduction(
+        helps_per_day=50.0,
+        seconds_per_help=3000,
+        berry=Berry.BELUE,
+        berry_amount=berry_amount,
+        berry_strength=berry_strength,
+        berry_percentage=80.0,
+        ingredient_percentage=20.0,
+        skill_percentage=5.0,
+        effective_skill_percentage=6.0,
+        ingredients=ingredients,
+        skill_triggers=skill_triggers,
+        skill_ingredients=(),
+        skill_energy=skill_energy,
+        skill_ingredient_total=None,
+        skill_cooking_ingredients=None,
+        skill_strength=skill_strength,
+        skill_self_energy=None,
+        skill_dream_shards=None,
+        skill_tasty_chance=skill_tasty_chance,
+        skill_extra_helpful=None,
+        skill_random_energy=None,
+        night_skill_chances=(),
+        inventory=100,
+        inventory_fill_hours=5.0,
+    )
+
+
+def test_scale_daily_identity_when_weight_is_one() -> None:
+    d = _daily(berry_amount=10.0, skill_strength=50.0)
+    assert scale_daily(d, 1.0) == d
+
+
+def test_scale_daily_halves_extensive_fields() -> None:
+    d = _daily(
+        berry_amount=10.0,
+        berry_strength=100.0,
+        ingredients=(SlotProduction(_I.HONEY, 8.0),),
+        skill_triggers=4.0,
+        skill_strength=20.0,
+        skill_energy=6.0,
+    )
+    s = scale_daily(d, 0.5)
+    assert s.berry_amount == 5.0
+    assert s.berry_strength == 50.0
+    assert s.ingredients == (SlotProduction(_I.HONEY, 4.0),)
+    assert s.skill_triggers == 2.0
+    assert s.skill_strength == 10.0
+    assert s.skill_energy == 3.0
+    assert s.helps_per_day == d.helps_per_day * 0.5
+
+
+def test_scale_daily_keeps_intensive_fields() -> None:
+    d = _daily()
+    s = scale_daily(d, 0.5)
+    assert s.berry_percentage == d.berry_percentage
+    assert s.seconds_per_help == d.seconds_per_help
+    assert s.inventory == d.inventory
+    assert s.night_skill_chances == d.night_skill_chances
+
+
+def test_scale_daily_leaves_none_skill_fields_none() -> None:
+    d = _daily(skill_strength=None, skill_energy=None)
+    s = scale_daily(d, 0.5)
+    assert s.skill_strength is None
+    assert s.skill_energy is None
