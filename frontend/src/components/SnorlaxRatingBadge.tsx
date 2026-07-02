@@ -27,6 +27,22 @@ export function SnorlaxRatingBadge({ weeklyStrength, ratings, islandName }: Prop
   const resolved = resolveRating(weeklyStrength, ratings);
   if (!resolved) return null;
   const { reached, next, remaining } = resolved;
+  // Tope del tramo actual, derivado de los datos (Basic/Great/Ultra = 5, Master = 20).
+  const tierMax = ratings.filter((r) => r.tier === reached.tier).length;
+  // Avance dentro del tramo actual hacia el siguiente rating (0–100).
+  const pct = next
+    ? Math.max(
+        0,
+        Math.min(
+          100,
+          Math.round(
+            ((weeklyStrength - reached.required_strength) /
+              (next.required_strength - reached.required_strength)) *
+              100,
+          ),
+        ),
+      )
+    : 100;
   return (
     <span
       className="snorlax-rating-badge"
@@ -34,29 +50,43 @@ export function SnorlaxRatingBadge({ weeklyStrength, ratings, islandName }: Prop
         island: islandName,
         tier: reached.tier,
         level: reached.level,
+        cap: tierMax,
       })}
     >
-      <img
-        className="snorlax-rating-badge__ball"
-        src={BALL[reached.tier]}
-        alt=""
-        title={`${reached.tier} ${reached.level}`}
-        width={18}
-        height={18}
-      />
-      <span className="snorlax-rating-badge__level">
-        {reached.tier === "master" ? `${reached.level}/20` : reached.level}
+      <span className="snorlax-rating-badge__top">
+        <img
+          className="snorlax-rating-badge__ball"
+          src={BALL[reached.tier]}
+          alt=""
+          width={18}
+          height={18}
+        />
+        <span className="snorlax-rating-badge__level">
+          {reached.level}/{tierMax}
+        </span>
+        <span
+          className={
+            next
+              ? "snorlax-rating-badge__next"
+              : "snorlax-rating-badge__next snorlax-rating-badge__next--max"
+          }
+        >
+          {next
+            ? t("teams.rating.toNext", { remaining: fcompact(remaining) })
+            : t("teams.rating.max")}
+        </span>
       </span>
       <span
-        className={
-          next
-            ? "snorlax-rating-badge__next"
-            : "snorlax-rating-badge__next snorlax-rating-badge__next--max"
-        }
+        className="snorlax-rating-badge__bar"
+        role="progressbar"
+        aria-valuenow={pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
       >
-        {next
-          ? t("teams.rating.toNext", { remaining: fcompact(remaining) })
-          : t("teams.rating.max")}
+        <span
+          className="snorlax-rating-badge__bar-fill"
+          style={{ width: `${pct}%` }}
+        />
       </span>
     </span>
   );

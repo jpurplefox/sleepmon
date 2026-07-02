@@ -3135,15 +3135,23 @@ button.prod-card__base-tag--action:hover {
 }
 
 /* ── Snorlax Rating Badge ───────────────────────────────────────────────────
-   Dentro del col--grand, alineado abajo a la derecha. El nivel es el único dato
-   cálido (--moon); el texto de progreso retrocede a --muted. Sin bordes ni
-   fondos: misma voz que el .teams-totals__aside. */
+   Dentro del col--grand, alineado abajo a la derecha, en dos filas: la fila
+   superior (ball + nivel/tope + faltante) y una barra fina de progreso hacia el
+   siguiente rating. El nivel es el único dato cálido (--moon); el faltante
+   retrocede a --muted. Sin bordes ni fondos: misma voz que .teams-totals__aside. */
 .snorlax-rating-badge {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-self: flex-end;
+  margin-top: 0.3rem;
+  min-width: 5.5rem;
+}
+
+.snorlax-rating-badge__top {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  align-self: flex-end;
-  margin-top: 0.25rem;
 }
 
 .snorlax-rating-badge__ball {
@@ -3165,8 +3173,7 @@ button.prod-card__base-tag--action:hover {
   font-variant-numeric: tabular-nums;
 }
 
-/* Separador tipográfico entre el nivel y el texto de progreso: evita un nodo
-   DOM extra y mantiene el markup mínimo. */
+/* Separador tipográfico entre el nivel y el faltante: evita un nodo DOM extra. */
 .snorlax-rating-badge__next::before {
   content: "·\00a0";
   color: var(--border);
@@ -3176,6 +3183,24 @@ button.prod-card__base-tag--action:hover {
 .snorlax-rating-badge__next--max {
   color: var(--moon);
   font-weight: 600;
+}
+
+/* Barra de progreso hacia el siguiente rating: track apenas visible (--moon-dim),
+   relleno en --moon. 3px, sin animación: es dato, no decoración. */
+.snorlax-rating-badge__bar {
+  display: block;
+  width: 100%;
+  height: 3px;
+  background: var(--moon-dim);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.snorlax-rating-badge__bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--moon);
+  border-radius: 999px;
 }
 
 /* Fila cabecera de los agregados: grand total + toggle diario/semanal en la misma línea. */
