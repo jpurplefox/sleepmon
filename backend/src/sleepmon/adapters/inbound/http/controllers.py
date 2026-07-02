@@ -23,6 +23,7 @@ from sleepmon.adapters.inbound.http.schemas import (
     NatureOut,
     ProductionIn,
     ProductionOut,
+    RatingOut,
     RecipeOut,
     SkillEffectAggOut,
     SlotIngredientStatusOut,
@@ -44,6 +45,7 @@ from sleepmon.application.services import TeamService
 from sleepmon.domain.catalog_data import (
     INGREDIENT_STRENGTH,
     ISLAND_FAVORITE_BERRIES,
+    ISLAND_RATING_THRESHOLDS,
     ISLAND_USER_PICKS,
     NATURE_EFFECTS,
     RECIPE_LEVEL_BONUS,
@@ -246,6 +248,14 @@ class CatalogController(Controller):
                     name=island.value,
                     favorite_berries=[b.value for b in ISLAND_FAVORITE_BERRIES[island]],
                     user_picks=island in ISLAND_USER_PICKS,
+                    ratings=[
+                        RatingOut(
+                            tier=r.tier.value,
+                            level=r.level,
+                            required_strength=r.required_strength,
+                        )
+                        for r in ISLAND_RATING_THRESHOLDS[island]
+                    ],
                 )
                 for island in Island
             ],
