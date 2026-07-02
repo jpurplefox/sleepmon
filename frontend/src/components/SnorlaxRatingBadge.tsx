@@ -30,17 +30,30 @@ export function SnorlaxRatingBadge({ weeklyStrength, ratings, islandName }: Prop
   return (
     <span
       className="snorlax-rating-badge"
-      aria-label={t("teams.rating.aria", { island: islandName })}
+      aria-label={t("teams.rating.aria", {
+        island: islandName,
+        tier: reached.tier,
+        level: reached.level,
+      })}
     >
       <img
         className="snorlax-rating-badge__ball"
         src={BALL[reached.tier]}
         alt=""
+        title={`${reached.tier} ${reached.level}`}
         width={18}
         height={18}
       />
-      <span className="snorlax-rating-badge__level">{reached.level}</span>
-      <span className="snorlax-rating-badge__next">
+      <span className="snorlax-rating-badge__level">
+        {reached.tier === "master" ? `${reached.level}/20` : reached.level}
+      </span>
+      <span
+        className={
+          next
+            ? "snorlax-rating-badge__next"
+            : "snorlax-rating-badge__next snorlax-rating-badge__next--max"
+        }
+      >
         {next
           ? t("teams.rating.toNext", { remaining: fcompact(remaining) })
           : t("teams.rating.max")}
