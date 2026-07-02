@@ -910,15 +910,21 @@ def test_cooking_minus_pot_and_random_energy() -> None:
 
 
 def test_good_camp_ticket_speeds_up_helps() -> None:
-    # El intervalo se multiplica por 0.8 antes del floor → menos segundos por ayuda.
-    without = daily_production(
-        _species(help_frequency_seconds=3600), _INGREDIENTS, level=1
-    )
+    # El 0.8 se aplica DENTRO del floor (antes de truncar), no sobre el entero ya truncado.
+    # hf=3750: hf/BONUS=1687.5 (no entero), así que:
+    #   inside  = floor(3750 * 0.8 / BONUS) = floor(1350.0) = 1350
+    #   outside = floor(floor(3750 / BONUS) * 0.8) = floor(1687 * 0.8) = floor(1349.6) = 1349
+    # → los dos resultados difieren; solo el modelo correcto (inside) pasa el assert.
+    HF = 3750
+    without = daily_production(_species(help_frequency_seconds=HF), _INGREDIENTS, level=1)
     with_gct = daily_production(
-        _species(help_frequency_seconds=3600), _INGREDIENTS, level=1,
+        _species(help_frequency_seconds=HF), _INGREDIENTS, level=1,
         good_camp_ticket=True,
     )
-    assert with_gct.seconds_per_help == math.floor(without.seconds_per_help * 0.8)
+    expected_inside = math.floor(HF * 0.8 / BONUS)
+    wrong_outside = math.floor(math.floor(HF / BONUS) * 0.8)
+    assert expected_inside != wrong_outside, "la elección de HF debe distinguir inside/outside"
+    assert with_gct.seconds_per_help == expected_inside
     assert with_gct.helps_per_day > without.helps_per_day
 
 
