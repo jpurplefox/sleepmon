@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useI18n } from "../i18n";
+import { perMealPot } from "../pot";
 import { ingredientIcon } from "../ingredients";
 import { recipeImage, recipeStrengthAtLevel } from "../recipes";
 import type { Catalog, MealInput, Recipe } from "../types";
@@ -84,8 +85,8 @@ export function SettingsModal({
     return m;
   });
 
-  // Effective pot = base pot + floor(cookingExtra / 3) (3 meals/day).
-  const effectivePot = potSize + Math.floor(cookingExtra / 3);
+  // Effective pot = base pot + floor(cookingExtra / 3) (3 meals/day); with GCT: ceil(×1.5).
+  const effectivePot = perMealPot(potSize, cookingExtra, goodCampTicket);
 
   const getLevelFor = (name: string) => recipeLevels.get(name) ?? 1;
 
@@ -257,12 +258,13 @@ export function SettingsModal({
                 }}
               />
             </div>
-            {cookingExtra > 0 && (
+            {goodCampTicket ? (
+              <span className="meal-picker-pot__effective muted">= {effectivePot}</span>
+            ) : cookingExtra > 0 ? (
               <span className="meal-picker-pot__effective muted">
                 +{Math.floor(cookingExtra / 3)} = <strong>{effectivePot}</strong>
               </span>
-            )}
-            {cookingExtra === 0 && (
+            ) : (
               <span className="meal-picker-pot__effective muted">= {effectivePot}</span>
             )}
           </div>
