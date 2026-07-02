@@ -17,6 +17,7 @@ import { SettingsModal } from "../components/SettingsModal";
 import { Modal } from "../components/Modal";
 import { ProductionCard } from "../components/ProductionCard";
 import { StrengthValue } from "../components/StrengthValue";
+import { SnorlaxRatingBadge } from "../components/SnorlaxRatingBadge";
 import {
   IconMagnifier,
   IconPackage,
@@ -1175,6 +1176,18 @@ export function Teams() {
               <span className="teams-totals__aside">
                 ×7 {fdown((result.total_strength + grandTotalCooking) * 7)}
               </span>
+              {selectedIsland &&
+                (() => {
+                  const isl = catalog.data.islands.find((i) => i.name === selectedIsland);
+                  if (!isl) return null;
+                  return (
+                    <SnorlaxRatingBadge
+                      weeklyStrength={(result.total_strength + grandTotalCooking) * 7}
+                      ratings={isl.ratings}
+                      islandName={selectedIsland}
+                    />
+                  );
+                })()}
             </div>
           </div>
         </>
