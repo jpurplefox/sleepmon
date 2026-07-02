@@ -45,7 +45,7 @@ export const api = {
     request<TeamProduction>("/teams/production", {
       method: "POST",
       body: JSON.stringify({
-        member_ids: data.member_ids,
+        slots: data.slots,
         meals: data.meals,
         favorite_berries: data.favorite_berries ?? [],
         island_bonus: data.island_bonus ?? 0,

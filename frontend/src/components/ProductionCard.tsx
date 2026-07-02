@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 
 import { berryIcon } from "../berries";
 import {
@@ -75,6 +76,9 @@ interface Props {
   // Modo solo lectura: oculta la barra de acciones (editar/clonar/guardar/mover/arrastre)
   // y los deltas/chip "Base". Conserva el botón × (onRemove) para poder quitar la card.
   readOnly?: boolean;
+  /** Cabecera de slot (página de Equipos): reemplaza la toolbar readOnly por este
+   *  nodo (pestañas de split + slider). Sin efecto fuera de readOnly. */
+  slotHeader?: ReactNode;
   onEdit: () => void;
   onClone: () => void;
   onRemove: () => void;
@@ -109,6 +113,7 @@ export function ProductionCard({
   isBase,
   comparing,
   readOnly = false,
+  slotHeader,
   onEdit,
   onClone,
   onRemove,
@@ -217,18 +222,24 @@ export function ProductionCard({
           primera fila de la card para el nombre / nivel / listón.
           En modo readOnly solo se muestra el botón × (quitar). */}
       {readOnly ? (
-        <div className="prod-card__toolbar prod-card__toolbar--readonly">
-          <span className="prod-card__toolbar-status" aria-hidden="true" />
-          <button
-            type="button"
-            className="icon-btn prod-card__remove"
-            onClick={onRemove}
-            title={t("card.remove")}
-            aria-label={t("card.remove")}
-          >
-            <IconClose />
-          </button>
-        </div>
+        slotHeader !== undefined ? (
+          <div className="prod-card__toolbar prod-card__toolbar--readonly prod-card__toolbar--slot">
+            {slotHeader}
+          </div>
+        ) : (
+          <div className="prod-card__toolbar prod-card__toolbar--readonly">
+            <span className="prod-card__toolbar-status" aria-hidden="true" />
+            <button
+              type="button"
+              className="icon-btn prod-card__remove"
+              onClick={onRemove}
+              title={t("card.remove")}
+              aria-label={t("card.remove")}
+            >
+              <IconClose />
+            </button>
+          </div>
+        )
       ) : (
       <div className="prod-card__toolbar">
         {/* Feedback del guardado, junto al botón que lo dispara. */}
