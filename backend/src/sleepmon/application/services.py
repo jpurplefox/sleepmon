@@ -332,6 +332,7 @@ class DefaultTeamService(TeamService):
                 member.ribbon,
                 member.skill_level,
                 favorite_berries=favorite_frozen,
+                good_camp_ticket=data.good_camp_ticket,
             )
             member_id_str = str(member.id)
             member_productions[member_id_str] = _production_result(daily)

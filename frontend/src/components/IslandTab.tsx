@@ -9,9 +9,11 @@ interface Props {
   selectedIsland: string | null;
   favoriteBerries: string[];
   islandBonus: number; // fracción 0.0–0.85
+  goodCampTicket: boolean;
   onSelectIsland: (islandName: string | null) => void;
   onFavoriteBerries: (berries: string[]) => void;
   onIslandBonus: (bonus: number) => void;
+  onGoodCampTicket: (value: boolean) => void;
 }
 
 // Derivar todas las bayas disponibles en el catálogo a partir de las especies.
@@ -29,9 +31,11 @@ export function IslandTab({
   selectedIsland,
   favoriteBerries,
   islandBonus,
+  goodCampTicket,
   onSelectIsland,
   onFavoriteBerries,
   onIslandBonus,
+  onGoodCampTicket,
 }: Props) {
   const { t, berry: berryName } = useI18n();
 
@@ -329,6 +333,29 @@ export function IslandTab({
           <div className="bonus-slider__marks" aria-hidden="true">
             <span>0%</span><span>85%</span>
           </div>
+        </div>
+      </div>
+
+      {/* Good Camp Ticket */}
+      <div className="island-tab__row">
+        <span className="island-tab__label">{t("teams.goodCampTicket")}</span>
+        <div className="specialty-toggle" role="group" aria-label={t("teams.goodCampTicket")}>
+          <button
+            type="button"
+            className={"specialty-toggle__btn" + (!goodCampTicket ? " is-on" : "")}
+            aria-pressed={!goodCampTicket}
+            onClick={() => onGoodCampTicket(false)}
+          >
+            {t("teams.gctOff")}
+          </button>
+          <button
+            type="button"
+            className={"specialty-toggle__btn" + (goodCampTicket ? " is-on" : "")}
+            aria-pressed={goodCampTicket}
+            onClick={() => onGoodCampTicket(true)}
+          >
+            {t("teams.gctOn")}
+          </button>
         </div>
       </div>
     </div>

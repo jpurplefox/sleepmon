@@ -3008,6 +3008,20 @@ button.prod-card__base-tag--action:hover {
   margin: 0.5rem 0 0.75rem;
 }
 
+.teams-gct-notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text);
+}
+
 /* Berry breakdown: name (grows) + amount + strength, both right-aligned, tabular. */
 .teams-berry-list {
   list-style: none;

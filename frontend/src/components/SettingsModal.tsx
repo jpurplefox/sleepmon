@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useI18n } from "../i18n";
+import { perMealPot } from "../pot";
 import { ingredientIcon } from "../ingredients";
 import { recipeImage, recipeStrengthAtLevel } from "../recipes";
 import type { Catalog, MealInput, Recipe } from "../types";
@@ -35,9 +36,11 @@ interface Props {
   selectedIsland: string | null;
   favoriteBerries: string[];
   islandBonus: number;
+  goodCampTicket: boolean;
   onSelectIsland: (name: string | null) => void;
   onFavoriteBerries: (berries: string[]) => void;
   onIslandBonus: (bonus: number) => void;
+  onGoodCampTicket: (value: boolean) => void;
   /** Active dish type for all 3 meal slots. null = no restriction yet. */
   dishType: Recipe["type"] | null;
   /** Called when the user selects a dish type or clears it (null). */
@@ -57,9 +60,11 @@ export function SettingsModal({
   selectedIsland,
   favoriteBerries,
   islandBonus,
+  goodCampTicket,
   onSelectIsland,
   onFavoriteBerries,
   onIslandBonus,
+  onGoodCampTicket,
   dishType,
   onDishTypeChange,
 }: Props) {
@@ -80,8 +85,8 @@ export function SettingsModal({
     return m;
   });
 
-  // Effective pot = base pot + floor(cookingExtra / 3) (3 meals/day).
-  const effectivePot = potSize + Math.floor(cookingExtra / 3);
+  // Effective pot = base pot + floor(cookingExtra / 3) (3 meals/day); with GCT: ceil(×1.5).
+  const effectivePot = perMealPot(potSize, cookingExtra, goodCampTicket);
 
   const getLevelFor = (name: string) => recipeLevels.get(name) ?? 1;
 
@@ -175,9 +180,11 @@ export function SettingsModal({
           selectedIsland={selectedIsland}
           favoriteBerries={favoriteBerries}
           islandBonus={islandBonus}
+          goodCampTicket={goodCampTicket}
           onSelectIsland={onSelectIsland}
           onFavoriteBerries={onFavoriteBerries}
           onIslandBonus={onIslandBonus}
+          onGoodCampTicket={onGoodCampTicket}
         />
       </div>
 
@@ -251,12 +258,13 @@ export function SettingsModal({
                 }}
               />
             </div>
-            {cookingExtra > 0 && (
+            {goodCampTicket ? (
+              <span className="meal-picker-pot__effective muted">= {effectivePot}</span>
+            ) : cookingExtra > 0 ? (
               <span className="meal-picker-pot__effective muted">
                 +{Math.floor(cookingExtra / 3)} = <strong>{effectivePot}</strong>
               </span>
-            )}
-            {cookingExtra === 0 && (
+            ) : (
               <span className="meal-picker-pot__effective muted">= {effectivePot}</span>
             )}
           </div>

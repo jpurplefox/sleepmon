@@ -287,6 +287,7 @@ class TeamProductionController(Controller):
                 ],
                 favorite_berries=data.favorite_berries,
                 island_bonus=data.island_bonus,
+                good_camp_ticket=data.good_camp_ticket,
             )
         )
         return TeamProductionOut(

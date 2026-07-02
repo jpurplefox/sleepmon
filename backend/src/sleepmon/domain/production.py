@@ -26,6 +26,8 @@ from typing import Final
 from sleepmon.domain.catalog_data import (
     DAY_HOURS,
     FREQUENCY_REDUCTION_PER_LEVEL,
+    GOOD_CAMP_TICKET_INVENTORY_FACTOR,
+    GOOD_CAMP_TICKET_SPEED_FACTOR,
     MAX_ENERGY_BONUS,
     MAX_INGREDIENTS,
     MAX_LEVEL,
@@ -226,6 +228,7 @@ def daily_production(
     ribbon: Ribbon = Ribbon.NONE,
     skill_level: int = 1,
     favorite_berries: frozenset[Berry] = frozenset(),
+    good_camp_ticket: bool = False,
 ) -> DailyProduction:
     """Estima la producción diaria con ingredientes, nivel, naturaleza y sub skills.
 
@@ -275,8 +278,13 @@ def daily_production(
         * ribbon_factor
         * _nature_factor(nature, NatureStat.SPEED_OF_HELP, *_NATURE_SPEED),
     )
+    camp_speed = GOOD_CAMP_TICKET_SPEED_FACTOR if good_camp_ticket else 1.0
     seconds_per_help = math.floor(
-        species.help_frequency_seconds * level_factor * speed_factor / MAX_ENERGY_BONUS
+        species.help_frequency_seconds
+        * level_factor
+        * speed_factor
+        * camp_speed
+        / MAX_ENERGY_BONUS
     )
     helps_per_second = 1 / seconds_per_help
     berry_per_help = _berry_per_help(species.specialty) + berry_finding
@@ -302,7 +310,11 @@ def daily_production(
         species.pity_helps,
     )
 
-    inventory = species.carry_limit + inventory_bonus + ribbon_inventory_bonus(ribbon)
+    camp_inventory = GOOD_CAMP_TICKET_INVENTORY_FACTOR if good_camp_ticket else 1.0
+    inventory = round(
+        (species.carry_limit + inventory_bonus + ribbon_inventory_bonus(ribbon))
+        * camp_inventory
+    )
 
     # Cantidades por slot desbloqueado (según el ingrediente elegido en cada uno). El
     # primer slot abre a nivel 1, así que con el rango de nivel ya validado unlocked >= 1.

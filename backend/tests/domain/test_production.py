@@ -907,3 +907,53 @@ def test_cooking_minus_pot_and_random_energy() -> None:
     assert prod.skill_cooking_ingredients == pytest.approx(prod.skill_triggers * 24)
     # Bonus: energía a un compañero al azar (35 a nivel 7).
     assert prod.skill_random_energy == pytest.approx(prod.skill_triggers * 35)
+
+
+def test_good_camp_ticket_speeds_up_helps() -> None:
+    # El 0.8 se aplica DENTRO del floor (antes de truncar), no sobre el entero ya truncado.
+    # hf=3750: hf/BONUS=1687.5 (no entero), así que:
+    #   inside  = floor(3750 * 0.8 / BONUS) = floor(1350.0) = 1350
+    #   outside = floor(floor(3750 / BONUS) * 0.8) = floor(1687 * 0.8) = floor(1349.6) = 1349
+    # → los dos resultados difieren; solo el modelo correcto (inside) pasa el assert.
+    HF = 3750
+    without = daily_production(_species(help_frequency_seconds=HF), _INGREDIENTS, level=1)
+    with_gct = daily_production(
+        _species(help_frequency_seconds=HF), _INGREDIENTS, level=1,
+        good_camp_ticket=True,
+    )
+    expected_inside = math.floor(HF * 0.8 / BONUS)
+    wrong_outside = math.floor(math.floor(HF / BONUS) * 0.8)
+    assert expected_inside != wrong_outside, "la elección de HF debe distinguir inside/outside"
+    assert with_gct.seconds_per_help == expected_inside
+    assert with_gct.helps_per_day > without.helps_per_day
+
+
+def test_good_camp_ticket_raises_inventory_by_20_percent_rounded() -> None:
+    # round(62 * 1.2) = round(74.4) = 74.
+    prod = daily_production(
+        _species(base_inventory=62), _INGREDIENTS, level=60,
+        good_camp_ticket=True,
+    )
+    assert prod.inventory == 74
+
+
+def test_good_camp_ticket_inventory_applies_over_total() -> None:
+    # El ×1.2 va sobre el total (base + Inventory Up + evoluciones), no solo la base.
+    # base 11 + INVENTORY_UP_M(12) + INVENTORY_UP_S(6) = 29 → round(29 * 1.2) = round(34.8) = 35.
+    prod = daily_production(
+        _species(base_inventory=11), _INGREDIENTS, level=60,
+        sub_skills=(SubSkill.INVENTORY_UP_M, SubSkill.INVENTORY_UP_S),
+        good_camp_ticket=True,
+    )
+    assert prod.inventory == 35
+
+
+def test_no_good_camp_ticket_leaves_values_unchanged() -> None:
+    # Sin GCT (default) los valores son idénticos al cálculo actual.
+    default = daily_production(_species(base_inventory=50), _INGREDIENTS, level=30)
+    explicit_off = daily_production(
+        _species(base_inventory=50), _INGREDIENTS, level=30,
+        good_camp_ticket=False,
+    )
+    assert default.seconds_per_help == explicit_off.seconds_per_help
+    assert default.inventory == explicit_off.inventory == 50

@@ -27,6 +27,7 @@ import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { fdown } from "../utils/format";
 import { recipeImage } from "../recipes";
+import { perMealPot, dailyPotCapacity } from "../pot";
 import { statIcon } from "../natures";
 import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
 import type { Catalog, MealInput, Member, MemberInput, SkillEffectAgg } from "../types";
@@ -128,6 +129,7 @@ export function Teams() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
   const [potSize, setPotSize] = useState(15);
+  const [goodCampTicket, setGoodCampTicket] = useState(false);
 
   // Dish type: restricts all 3 meal slots to the same recipe type (ephemeral, frontend-only).
   const [dishType, setDishType] = useState<'Curry' | 'Salad' | 'Dessert' | null>(null);
@@ -149,13 +151,14 @@ export function Teams() {
   const activeBerries = favoriteBerries.filter(Boolean);
 
   const teamQuery = useQuery({
-    queryKey: ["team-production", selectedIds, meals, activeBerries, islandBonus],
+    queryKey: ["team-production", selectedIds, meals, activeBerries, islandBonus, goodCampTicket],
     queryFn: () =>
       api.computeTeamProduction({
         member_ids: selectedIds,
         meals,
         favorite_berries: activeBerries,
         island_bonus: islandBonus,
+        good_camp_ticket: goodCampTicket,
       }),
     enabled: selectedIds.length > 0,
     placeholderData: keepPreviousData,
@@ -234,7 +237,7 @@ export function Teams() {
   const fillerStrengthTotal = useMemo(() => {
     if (!result || catalog.isLoading || !catalog.data) return 0;
     const ingredientStrengths = catalog.data.ingredient_strengths;
-    const totalCapacity = potSize * 3 + cookingExtra;
+    const totalCapacity = dailyPotCapacity(potSize, cookingExtra, goodCampTicket);
     const usedByRecipes = MEAL_SLOTS.reduce((sum, _slot, idx) => {
       const meal = meals[idx];
       if (!meal) return sum;
@@ -265,7 +268,7 @@ export function Teams() {
       total += Math.floor(usedUnits) * item.strength;
     }
     return total * bonusFactor;
-  }, [result, catalog.isLoading, catalog.data, potSize, cookingExtra, meals, recipeByName, islandBonus]);
+  }, [result, catalog.isLoading, catalog.data, potSize, cookingExtra, meals, recipeByName, islandBonus, goodCampTicket]);
 
   // Cooking grand total (daily): recipes + fillers × el multiplicador esperado de
   // Extra Tasty del equipo (base del juego ≈1.17; sube con Tasty Chance S).
@@ -333,6 +336,13 @@ export function Teams() {
           {t("teams.configure")}
         </button>
       </div>
+
+      {goodCampTicket && (
+        <div className="teams-gct-notice" role="status">
+          <img src="/good-camp-ticket.png" alt="" className="mini-icon" style={{ width: 20, height: 20 }} />
+          {t("teams.gctActive")}
+        </div>
+      )}
 
       {/* ── Per-member cards (mirrors Production.tsx selection model) ── */}
       <div className="prod-cards prod-cards--compact">
@@ -664,12 +674,12 @@ export function Teams() {
                   // Per-meal pot capacity: base pot + its share of the skill
                   // expansion. Warn only when the recipe's ingredient count
                   // exceeds it (if it fits, the spare goes to fillers).
-                  const perMealPot = potSize + Math.floor(cookingExtra / 3);
+                  const perMealPotValue = perMealPot(potSize, cookingExtra, goodCampTicket);
                   const recipeData = meal ? recipeByName.get(meal.recipe) : undefined;
                   const recipeIngs = recipeData
                     ? recipeData.ingredients.reduce((s, ic) => s + ic.count, 0)
                     : 0;
-                  const exceedsPot = recipeData != null && recipeIngs > perMealPot;
+                  const exceedsPot = recipeData != null && recipeIngs > perMealPotValue;
 
                   return (
                     <div key={slot} className="teams-plan-row">
@@ -712,7 +722,7 @@ export function Teams() {
                                 className="mini-icon"
                                 style={{ width: 14, height: 14 }}
                               />
-                              {t("teams.potTooSmall")} ({recipeIngs}/{perMealPot})
+                              {t("teams.potTooSmall")} ({recipeIngs}/{perMealPotValue})
                             </span>
                           )}
                           {feasibility != null && feasibility.ingredients.length > 0 && (
@@ -751,7 +761,9 @@ export function Teams() {
               {/* ── RESULTS AREA (4 blocks) ─────────────────────────────── */}
               {(() => {
                 // ── Daily capacity accounting ──────────────────────────────
-                const totalCapacity = potSize * 3 + cookingExtra;
+                const baseCapacity = potSize * 3 + cookingExtra;
+                const totalCapacity = dailyPotCapacity(potSize, cookingExtra, goodCampTicket);
+                const gctGain = totalCapacity - baseCapacity;
                 const usedByRecipes = MEAL_SLOTS.reduce((sum, _slot, idx) => {
                   const meal = meals[idx];
                   if (!meal) return sum;
@@ -909,6 +921,16 @@ export function Teams() {
                               </span>
                             </span>
                             <span className="cook-cap-row__value">+{fdown(cookingExtra)}</span>
+                          </li>
+                        )}
+                        {/* GCT (+50%) — solo con Good Camp Ticket activo */}
+                        {goodCampTicket && gctGain > 0 && (
+                          <li className="cook-cap-row">
+                            <span className="cook-cap-row__label">
+                              <img src="/pot.webp" alt="" className="mini-icon" style={{ width: 14, height: 14 }} />
+                              {t("teams.potGct")}
+                            </span>
+                            <span className="cook-cap-row__value">+{fdown(gctGain)}</span>
                           </li>
                         )}
                         {/* Used by recipes */}
@@ -1194,6 +1216,8 @@ export function Teams() {
           onSelectIsland={setSelectedIsland}
           onFavoriteBerries={setFavoriteBerries}
           onIslandBonus={setIslandBonus}
+          goodCampTicket={goodCampTicket}
+          onGoodCampTicket={setGoodCampTicket}
           dishType={dishType}
           onDishTypeChange={handleDishTypeChange}
         />

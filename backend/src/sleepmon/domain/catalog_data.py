@@ -58,6 +58,11 @@ DAY_HOURS: Final[float] = 24 - NIGHT_HOURS
 # por encima de 1 resta 0.2% de la frecuencia base -> freq = base * (1 - 0.002*(lvl-1)).
 FREQUENCY_REDUCTION_PER_LEVEL: Final[float] = 0.002
 
+# Good Camp Ticket: los Pokémon ayudan 20% más rápido (intervalo × 0.8) y cargan
+# 20% más de inventario (carry size × 1.2). El efecto de pote (×1.5) es frontend.
+GOOD_CAMP_TICKET_SPEED_FACTOR: Final[float] = 0.8
+GOOD_CAMP_TICKET_INVENTORY_FACTOR: Final[float] = 1.2
+
 # "Pity proc": si pasan N ayudas seguidas sin disparar la main skill, la siguiente la
 # dispara sí o sí. Sube la tasa efectiva de skill por encima de la base (clave en
 # especies de tasa baja).

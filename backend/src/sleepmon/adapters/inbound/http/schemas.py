@@ -172,6 +172,7 @@ class TeamProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     meals: list[MealIn | None] = msgspec.field(default_factory=list)
     favorite_berries: list[str] = msgspec.field(default_factory=list)
     island_bonus: float = 0.0
+    good_camp_ticket: bool = False
 
 
 class IngredientBalanceOut(msgspec.Struct):

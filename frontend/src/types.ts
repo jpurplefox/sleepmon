@@ -165,6 +165,8 @@ export interface TeamProductionInput {
   favorite_berries?: string[];
   // Bonus de isla aplicado a la fuerza (0.0–0.85); opcional, default 0 en el cliente.
   island_bonus?: number;
+  // Good Camp Ticket activo; opcional, default false en el cliente.
+  good_camp_ticket?: boolean;
 }
 
 export interface IngredientBalance {
