@@ -339,7 +339,7 @@ export function Teams() {
 
       {goodCampTicket && (
         <div className="teams-gct-notice" role="status">
-          <img src="/pot.webp" alt="" className="mini-icon" style={{ width: 16, height: 16 }} />
+          <img src="/good-camp-ticket.png" alt="" className="mini-icon" style={{ width: 20, height: 20 }} />
           {t("teams.gctActive")}
         </div>
       )}
