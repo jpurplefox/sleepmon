@@ -20,6 +20,8 @@ from sleepmon.domain.value_objects import (
     Island,
     Nature,
     NatureStat,
+    RatingThreshold,
+    RatingTier,
     Ribbon,
     SubSkill,
     SubSkillTier,
@@ -246,6 +248,84 @@ ISLAND_FAVORITE_BERRIES: Final[Mapping[Island, tuple[Berry, ...]]] = {
 ISLAND_USER_PICKS: Final[frozenset[Island]] = frozenset(
     {Island.GREENGRASS_ISLE, Island.GREENGRASS_EXPERT}
 )
+
+# Estructura fija de los 35 ratings (Basic1-5, Great1-5, Ultra1-5, Master1-20).
+_RATING_STRUCTURE: Final[tuple[tuple[RatingTier, int], ...]] = tuple(
+    [(RatingTier.BASIC, i) for i in range(1, 6)]
+    + [(RatingTier.GREAT, i) for i in range(1, 6)]
+    + [(RatingTier.ULTRA, i) for i in range(1, 6)]
+    + [(RatingTier.MASTER, i) for i in range(1, 21)]
+)
+
+# Fuerza (Snorlax Strength semanal) requerida por rating, por isla. 35 valores por
+# isla, ordenados Basic1..Master20. Fuentes: Serebii / game8 / Bulbapedia,
+# verificadas contra 2 fuentes (Expert Mode: Bulbapedia wikitext + RaenonX JP).
+_ISLAND_RATING_STRENGTHS: Final[Mapping[Island, tuple[int, ...]]] = {
+    Island.GREENGRASS_ISLE: (
+        0, 3118, 7171, 11693, 17149, 23385, 31492, 41314, 53006, 65634,
+        79197, 93540, 109130, 125032, 156121, 187832, 220177, 253169, 286821,
+        321146, 356158, 391870, 428296, 465451, 532707, 601308, 742056, 885619,
+        1029700, 1199506, 1486800, 1795052, 2165541, 2604280, 3245795,
+    ),
+    Island.GREENGRASS_EXPERT: (
+        0, 41895, 96358, 157104, 228205, 309675, 414995, 539088, 684812, 839478,
+        997610, 1178280, 1374658, 1580857, 1797364, 2014314, 2251791, 2501141,
+        2760321, 3057187, 3361630, 3667816, 4014149, 4378519, 4778794, 5184989,
+        5614239, 6067795, 6541407, 7152862, 7780648, 8414117, 9067058, 9752517,
+        10981171,
+    ),
+    Island.CYAN_BEACH: (
+        0, 4822, 11090, 18082, 26520, 36164, 48700, 63889, 81971, 101499,
+        122474, 144654, 168763, 195283, 224455, 256544, 291842, 330670, 373381,
+        420363, 472043, 528891, 591424, 660210, 735875, 819107, 910662, 1018462,
+        1184155, 1379432, 1709820, 2064310, 2490372, 2994922, 3732664,
+    ),
+    Island.TAUPE_HOLLOW: (
+        0, 6885, 15835, 25817, 37865, 51635, 69534, 91221, 117038, 144921,
+        174869, 206538, 240961, 278826, 320478, 366295, 416694, 472133, 533116,
+        600197, 673986, 755154, 844439, 942653, 1050688, 1169527, 1300250,
+        1444045, 1602220, 1776213, 1967605, 2333568, 2815203, 3385564, 4219534,
+    ),
+    Island.SNOWDROP_TUNDRA: (
+        0, 10486, 24118, 39323, 57673, 78645, 105909, 138940, 178262, 220730,
+        266344, 314580, 367010, 424683, 488123, 557907, 634669, 719107, 811989,
+        914159, 1026546, 1150172, 1286161, 1435749, 1600296, 1781298, 1980400,
+        2199412, 2440325, 2705329, 2996833, 3317487, 3670206, 4058197, 4706403,
+    ),
+    Island.LAPIS_LAKESIDE: (
+        0, 14702, 33814, 55131, 80859, 110262, 148486, 194796, 249927, 309469,
+        373421, 441048, 514556, 593210, 677370, 767421, 863776, 966876, 1077193,
+        1195232, 1321534, 1456677, 1601280, 1756005, 1921561, 2098706, 2288251,
+        2491064, 2708074, 2940275, 3188730, 3454577, 3739033, 4166848, 5193272,
+    ),
+    Island.OLD_GOLD_POWER_PLANT: (
+        0, 20142, 46326, 75531, 110779, 151061, 203429, 266875, 342406, 423979,
+        511595, 604246, 704953, 810696, 921725, 1038306, 1160717, 1289248,
+        1431702, 1582395, 1741777, 1910321, 2088527, 2276921, 2476059, 2686523,
+        2908932, 3143935, 3442846, 3744954, 4086475, 4451914, 4909073, 5472793,
+        6674166,
+    ),
+    Island.AMBER_CANYON: (
+        0, 26478, 60899, 99293, 145629, 198585, 264456, 344986, 440123, 541880,
+        654607, 774923, 900988, 1033561, 1176798, 1325740, 1485571, 1650692,
+        1828870, 2015408, 2215366, 2427642, 2655957, 2904897, 3179971, 3470704,
+        3774089, 4097770, 4430839, 4815792, 5236414, 5715237, 6304719, 7019168,
+        8528976,
+    ),
+}
+
+ISLAND_RATING_THRESHOLDS: Final[Mapping[Island, tuple[RatingThreshold, ...]]] = {
+    island: tuple(
+        RatingThreshold(tier=tier, level=level, required_strength=strength)
+        for (tier, level), strength in zip(_RATING_STRUCTURE, strengths, strict=True)
+    )
+    for island, strengths in _ISLAND_RATING_STRENGTHS.items()
+}
+
+
+def ratings_for(island: Island) -> tuple[RatingThreshold, ...]:
+    """Los 35 ratings de una isla, ordenados Basic1..Master20."""
+    return ISLAND_RATING_THRESHOLDS[island]
 
 # Fuerza base de cada ingrediente (valor a nivel 1 del Pokémon que lo produce).
 # Se usa para estimar la fuerza de los "fillers" en una receta. Fuente: nerolis-lab.

@@ -79,10 +79,17 @@ class SpeciesOut(msgspec.Struct):
     base_inventory: int
 
 
+class RatingOut(msgspec.Struct):
+    tier: str
+    level: int
+    required_strength: int
+
+
 class IslandOut(msgspec.Struct):
     name: str
     favorite_berries: list[str]
     user_picks: bool
+    ratings: list[RatingOut]
 
 
 class CatalogOut(msgspec.Struct):

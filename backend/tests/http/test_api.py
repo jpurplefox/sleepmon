@@ -61,6 +61,19 @@ def test_catalog_endpoint_lists_reference_data(client: TestClient) -> None:
     assert ing_str["Fancy Apple"] == 90
 
 
+def test_catalog_islands_expose_ratings(client: TestClient) -> None:
+    body = client.get("/catalog").json()
+    islands = {i["name"]: i for i in body["islands"]}
+    green = islands["Greengrass Isle"]
+    assert len(green["ratings"]) == 35
+    assert green["ratings"][0] == {"tier": "basic", "level": 1, "required_strength": 0}
+    assert green["ratings"][-1] == {
+        "tier": "master",
+        "level": 20,
+        "required_strength": 3245795,
+    }
+
+
 def test_create_and_list_member(client: TestClient) -> None:
     res = client.post("/team", json=valid_payload())
     assert res.status_code == 201

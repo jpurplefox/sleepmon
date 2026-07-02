@@ -8,6 +8,7 @@ el nombre propio tal como aparece en el juego (y tal como se persiste en la base
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import StrEnum
 
 
@@ -244,3 +245,21 @@ class Island(StrEnum):
     LAPIS_LAKESIDE = "Lapis Lakeside"
     OLD_GOLD_POWER_PLANT = "Old Gold Power Plant"
     AMBER_CANYON = "Amber Canyon"
+
+
+class RatingTier(StrEnum):
+    """Tramos del rating de Snorlax; cada uno se muestra con su ball."""
+
+    BASIC = "basic"
+    GREAT = "great"
+    ULTRA = "ultra"
+    MASTER = "master"
+
+
+@dataclass(frozen=True, slots=True)
+class RatingThreshold:
+    """Un rating de investigación y la fuerza (semanal) que exige."""
+
+    tier: RatingTier
+    level: int
+    required_strength: int
