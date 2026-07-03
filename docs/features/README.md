@@ -15,3 +15,6 @@ código). El norte **visual** transversal está en
 - [Formulario de Pokémon](./formulario-pokemon.md) — el modal compartido para
   crear/editar un Pokémon (especie, naturaleza, nivel, ingredientes, sub skills);
   lo usan la Caja y Comparación.
+- [Exp Calculator](./exp-calculator.md) — dado un nivel actual y uno deseado,
+  calcula cuántos caramelos y fragmentos de sueño cuesta el tramo (contempla las
+  4 curvas de EXP, naturalezas que afectan la subida y el candy/mini candy boost).
