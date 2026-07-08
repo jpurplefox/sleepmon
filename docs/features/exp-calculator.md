@@ -70,6 +70,9 @@ La experiencia **total** de un tramo `[actual → deseado]` es la suma de
 exp_tramo = Σ  exp_para_nivel(L, curva)     con L de (actual+1) a deseado
 ```
 
+> La tabla de EXP exacta cubre hasta **nivel 55**; la calculadora acota el objetivo
+> a ese máximo. Extender la tabla a niveles superiores es aditivo.
+
 ### 2. Caramelos: experiencia por caramelo
 
 Cada caramelo aporta una **cantidad base de EXP que depende del nivel** del
@@ -123,9 +126,10 @@ debe señalar que el resto se paga fuera del mini boost (a costo normal).
 - **Los shortcuts guían.** Los accesos rápidos a niveles clave reutilizan el mismo
   criterio que el [Formulario de Pokémon](./formulario-pokemon.md): los niveles que
   importan en el juego, no una escala arbitraria.
-- **La curva la define la especie, no el usuario.** El multiplicador (normal /
-  pseudo / legendario / mítico) sale del catálogo del dominio; el usuario no lo
-  elige a mano. La calculadora sólo lo **aplica**.
+- **La curva es un input explícito.** El usuario elige la curva (normal / pseudo /
+  legendario / mítico) con 4 botones; la calculadora es **independiente del
+  catálogo de especies**. El multiplicador vive en el dominio; la UI sólo lo
+  selecciona.
 - **El cálculo vive en el dominio.** El frontend **presenta** caramelos y
   fragmentos; la suma nivel a nivel, las tablas de EXP y los factores de boost son
   del backend. La UI no reimplementa la fórmula ni inventa números.
