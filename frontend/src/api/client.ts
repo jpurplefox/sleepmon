@@ -1,5 +1,7 @@
 import type {
   Catalog,
+  LevelUpCostInput,
+  LevelUpCostResult,
   Member,
   MemberInput,
   Production,
@@ -51,5 +53,10 @@ export const api = {
         island_bonus: data.island_bonus ?? 0,
         good_camp_ticket: data.good_camp_ticket ?? false,
       }),
+    }),
+  computeLevelUpCost: (data: LevelUpCostInput) =>
+    request<LevelUpCostResult>("/exp-calculator", {
+      method: "POST",
+      body: JSON.stringify(data),
     }),
 };
