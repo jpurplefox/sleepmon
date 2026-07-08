@@ -4182,3 +4182,68 @@ button.prod-card__base-tag--action:hover {
 .strength-value__tooltip-row:last-child .strength-value__tooltip-val {
   color: var(--moon);
 }
+
+/* Exp Calculator: grupos de opciones (curva, naturaleza, boost) y resultado. */
+.calc-group {
+  border: none;
+  padding: 0;
+  margin-top: 1rem;
+}
+
+.calc-group legend {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+}
+
+.calc-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* Chips clicables del calculador; escopeadas a .calc-options para no pisar el
+   .chip de solo lectura (ingredientes/sub skills) usado en el resto de la app. */
+.calc-options .chip {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 0.4rem 0.7rem;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.calc-options .chip--active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--text);
+}
+
+.calc-result {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.calc-result__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.calc-result__value {
+  font-size: var(--text-xl);
+  color: var(--moon);
+  font-weight: 700;
+}
+
+.calc-result__label {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.calc-error {
+  color: var(--error);
+  font-size: var(--text-sm);
+}
