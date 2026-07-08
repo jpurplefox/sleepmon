@@ -263,3 +263,28 @@ class RatingThreshold:
     tier: RatingTier
     level: int
     required_strength: int
+
+
+class GrowthCurve(StrEnum):
+    """Curva de experiencia de una especie (multiplicador sobre la normal)."""
+
+    NORMAL = "normal"
+    PSEUDO_LEGENDARY = "pseudo_legendary"
+    LEGENDARY = "legendary"
+    MYTHICAL = "mythical"
+
+
+class ExpNatureModifier(StrEnum):
+    """Efecto de la naturaleza sobre la EXP por caramelo."""
+
+    NEUTRAL = "neutral"
+    UP = "up"
+    DOWN = "down"
+
+
+class CandyBoost(StrEnum):
+    """Modo de boost al gastar caramelos."""
+
+    NONE = "none"
+    FULL = "full"
+    MINI = "mini"
