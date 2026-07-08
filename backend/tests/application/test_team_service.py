@@ -970,3 +970,59 @@ def test_compute_team_production_excludes_off_catalog_members() -> None:
     assert result.excluded_count == 1
     assert result.member_count == 0
     assert result.total_strength == 0.0
+
+
+def test_compute_level_up_cost_returns_candies_and_shards(
+    service: DefaultTeamService,
+) -> None:
+    from sleepmon.application.dto import LevelUpCostInput
+
+    result = service.compute_level_up_cost(
+        LevelUpCostInput(current_level=1, target_level=2)
+    )
+    assert result.current_level == 1
+    assert result.target_level == 2
+    assert result.candies == 2
+    assert result.dream_shards == 28
+    assert result.boosted_candies == 0
+
+
+def test_compute_level_up_cost_parses_curve_nature_boost(
+    service: DefaultTeamService,
+) -> None:
+    from sleepmon.application.dto import LevelUpCostInput
+
+    result = service.compute_level_up_cost(
+        LevelUpCostInput(
+            current_level=50,
+            target_level=51,
+            curve="normal",
+            nature="up",
+            boost="full",
+        )
+    )
+    # UP -> 30 EXP/candy, then boost x2 -> 60 EXP/candy; 1362/60 -> 23 candies.
+    assert result.candies == 23
+    assert result.boosted_candies == 23
+
+
+def test_compute_level_up_cost_rejects_bad_range(
+    service: DefaultTeamService,
+) -> None:
+    from sleepmon.application.dto import LevelUpCostInput
+
+    with pytest.raises(ValidationError):
+        service.compute_level_up_cost(
+            LevelUpCostInput(current_level=30, target_level=30)
+        )
+
+
+def test_compute_level_up_cost_rejects_unknown_curve(
+    service: DefaultTeamService,
+) -> None:
+    from sleepmon.application.dto import LevelUpCostInput
+
+    with pytest.raises(ValidationError):
+        service.compute_level_up_cost(
+            LevelUpCostInput(current_level=1, target_level=10, curve="ultra")
+        )

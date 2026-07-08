@@ -215,6 +215,29 @@ class MemberContributionDTO:
 
 
 @dataclass(frozen=True, slots=True)
+class LevelUpCostInput:
+    """Datos crudos para calcular el costo de subir de nivel."""
+
+    current_level: int
+    target_level: int
+    curve: str = "normal"
+    nature: str = "neutral"
+    boost: str = "none"
+
+
+@dataclass(frozen=True, slots=True)
+class LevelUpCostResult:
+    """Caramelos y fragmentos necesarios para subir de nivel."""
+
+    current_level: int
+    target_level: int
+    total_exp: int
+    candies: int
+    dream_shards: int
+    boosted_candies: int
+
+
+@dataclass(frozen=True, slots=True)
 class TeamProductionResult:
     """Producción diaria agregada de un equipo: bayas/skills + cocina + gran total."""
 
