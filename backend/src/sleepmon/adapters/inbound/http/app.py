@@ -17,6 +17,7 @@ from litestar.status_codes import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from sleepmon.adapters.inbound.http.controllers import (
     CatalogController,
+    ExpCalculatorController,
     ProductionController,
     RecipeController,
     TeamController,
@@ -77,6 +78,7 @@ def create_app(
             TeamController,
             CatalogController,
             ProductionController,
+            ExpCalculatorController,
             RecipeController,
             TeamProductionController,
         ],
