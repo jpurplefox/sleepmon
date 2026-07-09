@@ -32,9 +32,9 @@ You MUST create a task for each of these items and complete them in order:
 7. **Doc self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written doc** — ask user to review the feature doc before proceeding
 9. **Offer to commit the doc** — offer to commit the new PRD plus its index entry (stage only those two files); commit only if the user accepts
-10. **Transition to implementation** — invoke the `plan` skill to create implementation plan
+10. **Transition to architecture** — invoke the `architect` skill to design the technical architecture
 
-**The terminal state is invoking `plan`.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after design is `plan`.
+**The terminal state is invoking `architect`.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after design is `architect`.
 
 ## The Process
 
@@ -113,10 +113,10 @@ Once the doc is approved, offer to commit it:
 
 If the user accepts, commit exactly those two files and nothing else — e.g. `git add <path> docs/prd/README.md && git commit -m "docs(prd): add <slug>"`. If they decline, leave it uncommitted. Either way, then move on.
 
-**Implementation:**
+**Architecture:**
 
-- Invoke the `plan` skill to create the implementation plan.
-- Do NOT invoke any other skill. `plan` is the next step.
+- Invoke the `architect` skill to design the technical architecture.
+- Do NOT invoke any other skill. `architect` is the next step.
 
 ## Key Principles
 
