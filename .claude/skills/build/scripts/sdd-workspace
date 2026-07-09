@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Resolve and ensure the directory `build` uses for its short-lived
+# artifacts: task briefs, implementer reports, review packages, and the
+# progress ledger. Print the directory's absolute path.
+#
+# The workspace lives under the session's scratchpad directory, not in the
+# repo working tree: scaffolding (plans, briefs, reports, review packages)
+# is session-scoped and must never land in git history or require a
+# .gitignore trick to stay out of `git status`.
+#
+# Resolution order:
+#   1. $BUILD_WORKSPACE_DIR, if set — explicit override.
+#   2. If $CLAUDE_CODE_SESSION_ID is set, an ephemeral directory under
+#      TMPDIR keyed by that session id.
+#   3. Otherwise, an ephemeral directory under TMPDIR keyed by a hash of
+#      the repo's toplevel path, so runs against the same repo converge
+#      on the same fallback location.
+# Every branch resolves outside the repo working tree — none of them
+# may ever produce a path inside `git rev-parse --show-toplevel`.
+#
+# Single source of truth for the workspace location, so task-brief and
+# review-package cannot drift to different directories.
+#
+# Usage: sdd-workspace
+set -euo pipefail
+
+if [ -n "${BUILD_WORKSPACE_DIR:-}" ]; then
+  dir="$BUILD_WORKSPACE_DIR"
+elif [ -n "${CLAUDE_CODE_SESSION_ID:-}" ]; then
+  dir="${TMPDIR:-/tmp}/claude-build-${CLAUDE_CODE_SESSION_ID}/build"
+else
+  repo_hash=$(git rev-parse --show-toplevel | shasum | cut -c1-8)
+  dir="${TMPDIR:-/tmp}/claude-build-${repo_hash}/build"
+fi
+
+mkdir -p "$dir"
+cd "$dir" && pwd
