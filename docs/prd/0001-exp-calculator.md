@@ -22,6 +22,10 @@ You enter two values and read one result.
     jump to the levels where the game unlocks something (ingredients at 30 / 60,
     sub skills at 10 / 25 / 50 / 70 / 80) and to the relevant caps (e.g. the
     current maximum).
+- **Growth curve** (optional): the species' experience curve —**normal**,
+  **pseudo-legendary**, **legendary**, or **mythical**— as a set of mutually
+  exclusive buttons. **Normal** is selected by default (see
+  [Experience curves](#1-experience-curves-4-types)).
 - **Nature that affects experience** (optional): two mutually exclusive buttons
   —**EXP ⬆** and **EXP ⬇**— to indicate whether the Pokémon has a nature that
   **helps** or **hurts** leveling. Neither is selected by default (neutral nature).
@@ -45,7 +49,8 @@ the two totals.
 
 The total experience a Pokémon needs per level **depends on its species**. There
 are **four curves**, all proportional to the **normal** curve through a
-multiplier:
+multiplier. The user selects the curve as an optional modifier (default normal);
+the calculator applies it:
 
 | Curve | Multiplier | Examples |
 | --- | --- | --- |
@@ -141,9 +146,11 @@ to the first 350 candies and charges the remainder at **normal** cost.
   **optional modifier**, never a required step.
 - **Shortcuts guide.** Quick access to key levels reuses the same criterion as the
   Pokémon Form: the levels that matter in the game, not an arbitrary scale.
-- **The species defines the curve, not the user.** The multiplier (normal /
-  pseudo / legendary / mythical) comes from the domain's species catalog; the user
-  does not pick it by hand. The calculator only **applies** it.
+- **The curve is a modifier, not a species lookup.** The calculator is
+  standalone and does not select a species, so the user picks the curve (normal /
+  pseudo / legendary / mythical) as an optional modifier, defaulting to normal.
+  The four multipliers are fixed game values; the calculator only **applies** the
+  chosen one.
 - **The calculation lives in the domain.** The frontend **presents** candies and
   shards; the candy-by-candy simulation, the EXP tables, and the boost factors
   belong to the backend. The UI never reimplements the formula or invents numbers.
