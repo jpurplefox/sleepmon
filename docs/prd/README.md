@@ -10,3 +10,7 @@ PRDs are **numbered, not dated** (`NNNN-<slug>.md`, e.g. `0001-exp-calculator.md
 in the same style as the ADRs. Each is produced by the `design` skill.
 
 <!-- index — one line per PRD, most recent last -->
+
+- [0001 — Exp Calculator](0001-exp-calculator.md) — from a current and desired
+  level, computes how many candies and dream shards it costs to level a Pokémon,
+  with optional nature and candy-boost modifiers.
