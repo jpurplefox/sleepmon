@@ -18,10 +18,11 @@ computes the cost of leveling up so you can decide where to invest. It answers
 You enter two values and read one result.
 
 - **Current level** and **desired level** of the Pokémon.
-  - With **quick access to the key levels**, the same way the Pokémon Form does:
-    jump to the levels where the game unlocks something (ingredients at 30 / 60,
-    sub skills at 10 / 25 / 50 / 70 / 80) and to the relevant caps (e.g. the
-    current maximum).
+  - **Both** inputs expose the same **quick access to the key levels**, the same way
+    the Pokémon Form does: jump to the levels where the game unlocks something or
+    that matter in the game — **10, 25, 30, 50, 60, 70** (the last being the current
+    cap). The full set is offered on the current-level input and on the desired-level
+    input alike; the shortcut matching that input's value reads as active.
 - **Growth curve** (optional): the species' experience curve —**normal**,
   **pseudo-legendary**, **legendary**, or **mythical**— as a set of mutually
   exclusive buttons. **Normal** is selected by default (see
@@ -133,9 +134,11 @@ to the first 350 candies and charges the remainder at **normal** cost.
   two totals immediately; nothing is saved.
 - **Invalid range — desired ≤ current.** The tool shows a clear message that the
   desired level must be greater than the current level, and produces no cost.
+- **Highest span.** `current 69 → desired 70`, normal curve, neutral nature, no
+  boost → **3,255 total EXP, 131 candies, 166,632 dream shards**.
 - **Out-of-range levels.** A current level below **1** or a desired level above
-  **55** (the maximum levelable level) is rejected with a clear out-of-range
-  message, not a silent zero.
+  **70** (the current maximum levelable level) is rejected with a clear
+  out-of-range message, not a silent zero.
 - **Empty state.** With no levels entered yet, the result area shows a neutral
   empty state (a prompt to enter the levels), not an error and not `0 / 0`.
 
