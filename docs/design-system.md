@@ -152,8 +152,14 @@ states · where it lives. Feature one-offs are intentionally not here.
   saving; respects `prefers-reduced-motion`). States: hover, disabled, focus.
 - **`.filter-btn`** — trigger for filter/selector popovers (selected value +
   chevron). Subparts `__value/__icons/__placeholder/__chevron`; state `--open`.
-- **`.specialty-toggle`** — segmented toggle-button group; item state `.is-on`
-  (accent-dim + accent text). Fills the role of a switch (no native toggle).
+- **`.specialty-toggle`** — connected segmented toggle-button group (single border,
+  no gaps); item state `.is-on` (accent-dim + accent text). Fills the role of a
+  switch (no native toggle).
+- **`.option-toggle`** — single-select option group as **separate** bordered buttons
+  (`.option-toggle__btn`, `--r-md`) that **justify to fill the width** (items
+  `flex: 1`, small gaps); item state `.is-on` (accent-dim + accent border). The
+  gapped, full-width sibling of `.specialty-toggle`, for a few equal options across
+  the whole width.
 - **Selection chips** — `.level-chip` / `.lang-chip` (quick pick of key levels,
   language), state `--active` (solid accent fill).
 
