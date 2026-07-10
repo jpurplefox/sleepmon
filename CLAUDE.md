@@ -9,7 +9,7 @@ Una app full-stack para registrar los Pokémon de tu equipo —con su **naturale
 sus **sub skills** y sus **ingredientes**— y ver la **distribución agregada** del
 equipo. El backend es un sustrato realista (arquitectura hexagonal, validación de
 dominio rica) sobre el que practicar loops: auditarlo, refactorizarlo o ampliarlo
-en bucle. Ver [`docs/loop-engineering.md`](docs/loop-engineering.md).
+en bucle.
 
 ## Stack
 
