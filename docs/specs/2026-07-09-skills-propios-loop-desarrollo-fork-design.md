@@ -55,16 +55,23 @@ Se auditaron los 14 skills de superpowers (v6.0.3):
 
 ## Alcance
 
-Se crean **10** skills en `.claude/skills/` (nivel proyecto, versionados): 8 forks
-de superpowers + `architect` y `adr` (composiciones nuevas). La cadena resultante:
+Se crean **12** skills en `.claude/skills/` (nivel proyecto, versionados): 8 forks
+de superpowers + `architect`, `adr`, `visual` y `ds-update` (composiciones
+nuevas). La cadena resultante:
 
 ```
-design → architect → plan → prepare → build → request-review → finish
-                                        (receive-review, tdd y adr son sub-skills de apoyo)
+design → (architect + visual) → plan → prepare → build → request-review → finish
+                                          (receive-review, tdd, adr y ds-update son sub-skills de apoyo)
 ```
 
-`adr` es sub-skill: lo invoca `architect` (o el usuario) cuando hay que registrar
-una decisión transversal; `architect` solo detecta la necesidad.
+`architect` (técnico) y `visual` (presentacional) son **hermanos** del *cómo*:
+sin dependencia entre sí, ambos salen de `design` y alimentan `plan` (`visual`
+solo para features con UI; backend puro lo saltea).
+
+Sub-skills: `adr` lo invoca `architect` cuando hay que registrar una decisión
+transversal; `ds-update` lo invoca `visual` cuando hay que crecer/corregir el
+design system. En ambos casos el skill del *cómo* solo **detecta**; el usuario
+decide y el sub-skill registra.
 
 **Fuera de alcance:** visual-companion, `executing-plans` (sesión aparte),
 y forkear cualquier otro skill del listado.
@@ -76,6 +83,8 @@ y forkear cualquier otro skill del listado.
 | `brainstorming`                 | `design`           | decidido                               |
 | — (nuevo)                       | `architect`        | decisiones de arquitectura → doc al scratchpad; detecta ADRs |
 | — (nuevo)                       | `adr`              | escribe un ADR en docs/adr (Nygard, índice, supersession) |
+| — (nuevo)                       | `visual`           | diseño visual de la feature (explora opciones → doc al scratchpad); detecta gaps del design system |
+| — (nuevo)                       | `ds-update`        | actualiza docs/design-system.md (pieza/token + decisión) |
 | `writing-plans`                 | `plan`             | decidido                               |
 | `using-git-worktrees`           | `prepare`          | prepara workspace aislado + setup/baseline propios |
 | `subagent-driven-development`   | `build`            | ejecuta el plan con subagentes         |
@@ -155,11 +164,41 @@ persiste lo **funcional/producto**, no la arquitectura.
 - Ofrece commitear el ADR + índice (+ el superseded tocado), staged solo.
 - Sub-skill: lo invoca `architect` o el usuario directo.
 
+### `visual` (nuevo — hermano de `architect`)
+- **Presentación de la feature** a partir del PRD + el **design system**
+  (`docs/design-system.md`). Solo para features con UI.
+- **Explora primero:** presenta **≥2 opciones** como mockups estáticos y estilados
+  (sin funcionalidad), renderizados para que el usuario los vea; itera (elegir /
+  combinar) y **no escribe ni toca el design system hasta que el usuario elige**.
+- Recién con una dirección aprobada: **detecta** si falta una pieza/token o hay
+  inconsistencia → informa → el usuario decide → invoca `ds-update`. Escribe el
+  spec visual al scratchpad (`<scratchpad>/visual/…`), efímero. Self-review + user
+  gate. Handoff → `plan`.
+- Agnóstico: cero estética adentro (vive toda en `docs/design-system.md`).
+
+### `ds-update` (nuevo — hermano de `adr`)
+- Registra **un** cambio al design system en `docs/design-system.md`: agrega/edita
+  un **token o componente** (parte normativa) y/o **apendea una decisión** al log
+  §6 (Question → Resolution → Why). Chequea que refuerce el concepto (anti-goals).
+- Ofrece commitear `design-system.md`, staged solo.
+- Sub-skill: lo invoca `visual` o el usuario directo.
+
+### Documento y agentes visuales
+- El viejo `frontend/docs/ui-concept.md` se **reemplaza** por
+  `docs/design-system.md` (concepto/identidad + tokens + inventario de componentes
+  + log de decisiones). Es el registro vivo del plano visual (análogo a los ADRs).
+- Los agentes `frontend-ui-minimalist` y `frontend-ux-reviewer` pierden la
+  filosofía hardcodeada → **leen** `design-system.md`. Quedan como revisores
+  read-only sueltos, **no conectados al flujo de skills** (por ahora).
+- Se eliminan el viejo loop `docs/ux-ui-loop.md` y el workflow
+  `.claude/workflows/audit.js` (quedaron obsoletos frente a los skills).
+
 ### `plan` (← `writing-plans`)
-- **Ya no decide arquitectura** (eso es de `architect`). Lee el **doc de
-  arquitectura** (el *cómo*) + el documento de diseño (el *qué*) y los convierte
-  en un plan de tareas ejecutable, ordenado. No re-decide la arquitectura: la
-  sigue; si falta o contradice al diseño, lo plantea.
+- **Ya no decide arquitectura ni presentación.** Lee el documento de diseño (el
+  *qué*), el **doc de arquitectura** (el *cómo* técnico) y —para features con UI—
+  el **doc visual** (el *cómo* presentacional), y los convierte en un plan de
+  tareas ejecutable, ordenado. No re-decide ninguno: los sigue; si falta o
+  contradice al diseño, lo plantea.
 - Plan → **scratchpad de sesión** (`<scratchpad>/plans/YYYY-MM-DD-<feature>.md`),
   sin `git add`/`commit` del plan.
 - Cierre y handoff → **`build`** (mismo hilo); se elimina la opción de sesión
@@ -242,7 +281,7 @@ Sobre una feature de juguete, ejercitando el loop:
 
 - **Deriva del upstream:** los forks no heredan fixes de superpowers. Coste
   asumido (son skills propios).
-- **Superficie de mantenimiento mayor:** 10 skills, algunos con archivos de
+- **Superficie de mantenimiento mayor:** 12 skills, algunos con archivos de
   soporte y scripts. A cambio, control total del loop.
 - **`prepare` hereda lógica genérica valiosa** (detección de aislamiento, guard
   de submódulos). El fork solo diverge en Steps 2-3; mantener sincronizado el

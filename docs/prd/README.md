@@ -3,7 +3,7 @@
 One document per feature: its **purpose** and the **guidelines** it must respect
 as it evolves — not the implementation detail, which lives in the code. The
 cross-cutting **visual** direction lives in
-[`frontend/docs/ui-concept.md`](../../frontend/docs/ui-concept.md); durable
+[`docs/design-system.md`](../design-system.md); durable
 **technical decisions** live in [`docs/adr/`](../adr/).
 
 PRDs are **numbered, not dated** (`NNNN-<slug>.md`, e.g. `0001-exp-calculator.md`),

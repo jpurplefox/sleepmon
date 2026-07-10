@@ -66,4 +66,4 @@ Wait for the user's response. If they request changes, make them and re-run the 
 
 ## Handoff
 
-Invoke the `plan` skill to turn this architecture into a task-by-task implementation plan. Do NOT invoke any other skill. `plan` is the next step.
+Invoke the `plan` skill to turn this architecture into a task-by-task implementation plan. `plan` is the next step. For a feature with a UI, `visual` is your sibling — the feature needs both before `plan`; run it first if it hasn't run. Do not invoke any other skill.

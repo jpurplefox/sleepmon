@@ -2,7 +2,7 @@
 
 > Documento de producto/diseño. Define para qué existe esta herramienta y los
 > lineamientos que debe respetar. El "cómo se ve" se rige por
-> [`frontend/docs/ui-concept.md`](../../frontend/docs/ui-concept.md). Este doc
+> [`docs/design-system.md`](../design-system.md). Este doc
 > describe el **rediseño** de la herramienta (antes "Equipo"): de simple registro
 > a **pantallazo general** del equipo.
 

@@ -23,8 +23,8 @@ Cuando te invoquen:
      ambiguos, defaults que el usuario tiene que pensar.
    - **Accesibilidad básica**: foco, labels de inputs, contraste insuficiente,
      navegación con teclado.
-3. Si existe `frontend/docs/ui-concept.md` con un concepto de diseño definido,
-   respetalo: tus propuestas no deben contradecirlo.
+3. El design system del proyecto vive en `docs/design-system.md`; respetalo: tus
+   propuestas no deben contradecirlo.
 4. Devolvé una lista priorizada de propuestas. Cada una con: `archivo:línea`,
    severidad (alta/media/baja), qué problema resuelve en una frase, y el cambio
    concreto sugerido. NO edites archivos.

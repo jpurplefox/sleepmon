@@ -3,7 +3,7 @@
 Un documento por funcionalidad de la app: su **propósito** y los **lineamientos**
 que debe respetar al evolucionar (no el detalle de implementación, que vive en el
 código). El norte **visual** transversal está en
-[`frontend/docs/ui-concept.md`](../../frontend/docs/ui-concept.md).
+[`docs/design-system.md`](../design-system.md).
 
 - [Caja](./caja-equipo.md) — registro persistente del equipo (la fuente de verdad)
   y **pantallazo general**: cuánto produce cada Pokémon y qué aspectos del juego

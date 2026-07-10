@@ -20,7 +20,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 ## Input
 
-You're handed two things: a **design document** (the *what* — purpose, scope, rules, out-of-scope, acceptance criteria) and an **architecture doc** from the `architect` skill (the *how* — file structure, interfaces, data flow, error handling). Your job is neither of those: it's to turn that architecture into an ordered, task-by-task implementation plan. Don't re-decide the architecture — follow it. If it's missing, wrong, or contradicts the design document, raise it rather than inventing around it.
+You're handed a **design document** (the *what* — purpose, scope, rules, out-of-scope, acceptance criteria), an **architecture doc** (the technical *how* — file structure, interfaces, data flow, error handling), and — for a feature with a UI — a **visual design** (the presentational *how* — components, layout, states). Your job is none of those: it's to turn them into an ordered, task-by-task implementation plan. Don't re-decide the architecture or the visual design — follow them. If any is missing, wrong, or contradicts the design document, raise it rather than inventing around it.
 
 ## Scope Check
 

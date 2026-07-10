@@ -7,7 +7,7 @@ description: Records one architectural decision as an ADR in docs/adr — picks 
 
 ## Overview
 
-Record **one** significant architectural decision as an ADR in `docs/adr/`, using the Nygard format: **Title / Status / Context / Decision / Consequences**. Usually invoked when `architect` detects a durable, cross-cutting decision, but it can be run on its own.
+Record **one** significant architectural decision as an ADR in `docs/adr/`, using the Nygard format: **Title / Status / Context / Decision / Consequences**.
 
 **Announce at start:** "I'm using the adr skill to record an architectural decision."
 

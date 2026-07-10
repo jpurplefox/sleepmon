@@ -1,7 +1,7 @@
 # Formulario de Pokémon (crear / editar)
 
 > Documento de producto. El "cómo se ve" está en
-> [`frontend/docs/ui-concept.md`](../../frontend/docs/ui-concept.md).
+> [`docs/design-system.md`](../design-system.md).
 
 ## Propósito
 

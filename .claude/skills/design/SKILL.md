@@ -32,9 +32,9 @@ You MUST create a task for each of these items and complete them in order:
 7. **Doc self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written doc** — ask user to review the feature doc before proceeding
 9. **Offer to commit the doc** — offer to commit the new PRD plus its index entry (stage only those two files); commit only if the user accepts
-10. **Transition to architecture** — invoke the `architect` skill to design the technical architecture
+10. **Transition to the *how*** — invoke `architect` (technical); for a feature with a UI, also `visual` (presentational)
 
-**The terminal state is invoking `architect`.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after design is `architect`.
+**The terminal state is the *how* skills.** Do NOT invoke mcp-builder or any implementation skill. After design you invoke `architect` (always) and, for a feature with a UI, `visual` — nothing else.
 
 ## The Process
 
@@ -81,7 +81,7 @@ You MUST create a task for each of these items and complete them in order:
 **Documentation:**
 
 - Write the validated design to `docs/prd/NNNN-<slug>.md`, where `<slug>` is the feature name in kebab-case and `NNNN` is a zero-padded 4-digit number (e.g. `docs/prd/0001-<slug>.md`). Determine the next number by scanning the existing files in `docs/prd/`: take the highest existing `NNNN` and add 1; if the directory has no numbered docs yet, start at `0001`.
-- Follow the structure already used in `docs/prd/`: a header blockquote ("Product document...") pointing at the visual concept doc, then **Purpose**, **What it does (scope)**, a **How it works** section for the functional mechanics (no code, no architecture), **Acceptance criteria**, **Guidelines**, and **Out of scope**
+- Follow the structure already used in `docs/prd/`: a header blockquote ("Product document...") pointing at the design system (`docs/design-system.md`), then **Purpose**, **What it does (scope)**, a **How it works** section for the functional mechanics (no code, no architecture), **Acceptance criteria**, **Guidelines**, and **Out of scope**
 - **Acceptance criteria** are observable, product-level conditions that make the feature correct — concrete, checkable, with real values where possible. Cover the happy path *and* the edges: no input / empty state, invalid or out-of-range input, and boundary/limit cases. Phrase them as outcomes the user can observe, never as implementation — a specific input mapped to its exact expected result, plus what the user sees for empty and invalid inputs (e.g. `given <specific input> → <exact expected output>`; `empty input → a clear empty state, not an error`).
 - Add a bullet for the new feature to `docs/prd/README.md`, in the same style as the existing index entries (name, link, one-line description of what it does)
 - Do NOT write any separate architecture document — that's out of scope for this skill
@@ -113,10 +113,10 @@ Once the doc is approved, offer to commit it:
 
 If the user accepts, commit exactly those two files and nothing else — e.g. `git add <path> docs/prd/README.md && git commit -m "docs(prd): add <slug>"`. If they decline, leave it uncommitted. Either way, then move on.
 
-**Architecture:**
+**The *how*:**
 
-- Invoke the `architect` skill to design the technical architecture.
-- Do NOT invoke any other skill. `architect` is the next step.
+- Invoke the `architect` skill (technical architecture) and, for a feature with a UI, the `visual` skill (presentation). They are siblings and both feed `plan`.
+- Do NOT invoke any other skill.
 
 ## Key Principles
 
