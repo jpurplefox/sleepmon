@@ -1,6 +1,6 @@
 ---
 name: plan
-description: "Writes a detailed implementation plan to the session scratchpad (not the repo) and hands it off to `build`."
+description: Use when you have a spec or requirements for a multi-step task, before touching code
 ---
 
 # Writing Plans

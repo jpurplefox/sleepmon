@@ -1,6 +1,6 @@
 ---
 name: build
-description: Executes a scratchpad plan task by task with subagents (implementer → task-reviewer → fix) and a final review.
+description: Use when executing implementation plans with independent tasks in the current session
 ---
 
 # Build
@@ -18,19 +18,7 @@ ledger and the tool results carry the record.
 
 ## When to Use
 
-```dot
-digraph when_to_use {
-    "Have implementation plan?" [shape=diamond];
-    "Tasks mostly independent?" [shape=diamond];
-    "build" [shape=box];
-    "Manual execution or design first" [shape=box];
-
-    "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
-    "Have implementation plan?" -> "Manual execution or design first" [label="no"];
-    "Tasks mostly independent?" -> "build" [label="yes"];
-    "Tasks mostly independent?" -> "Manual execution or design first" [label="no - tightly coupled"];
-}
-```
+Use `build` when you have an implementation plan whose tasks are mostly independent and you want to execute it in the current session. If the tasks are tightly coupled, or there is no plan yet, execute manually or design first.
 
 **Same-session execution:**
 - No context switch, no session handoff
@@ -56,43 +44,14 @@ but that fallback is not session-durable across separate shell invocations —
 export it explicitly so every `scripts/` call in this skill agrees on the
 same directory.
 
-```dot
-digraph process {
-    rankdir=TB;
+Read the plan once, note its context and global constraints, and create todos. Then, **per task, in order**:
 
-    subgraph cluster_per_task {
-        label="Per Task";
-        "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
-        "Implementer subagent asks questions?" [shape=diamond];
-        "Answer questions, provide context" [shape=box];
-        "Implementer subagent implements, tests, commits, self-reviews" [shape=box];
-        "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" [shape=box];
-        "Task reviewer reports spec ✅ and quality approved?" [shape=diamond];
-        "Dispatch fix subagent for Critical/Important findings" [shape=box];
-        "Mark task complete in todo list and progress ledger" [shape=box];
-    }
+1. **Dispatch an implementer subagent** (`./implementer-prompt.md`). If it asks questions, answer them and re-dispatch; otherwise it implements, tests, commits, and self-reviews.
+2. **Task review:** write the diff file and dispatch a task reviewer (`./task-reviewer-prompt.md`). It reports two verdicts — spec compliance (✅/❌) and code quality.
+3. **Fix loop:** if the reviewer finds Critical/Important issues, dispatch a fix subagent, then re-review — repeat until spec ✅ and quality approved.
+4. **Mark the task complete** in the todo list and the progress ledger.
 
-    "Read plan, note context and global constraints, create todos" [shape=box];
-    "More tasks remain?" [shape=diamond];
-    "Dispatch final code reviewer subagent (../request-review/code-reviewer.md)" [shape=box];
-    "Use finish skill" [shape=box style=filled fillcolor=lightgreen];
-
-    "Read plan, note context and global constraints, create todos" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
-    "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, commits, self-reviews" [label="no"];
-    "Implementer subagent implements, tests, commits, self-reviews" -> "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)";
-    "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" -> "Task reviewer reports spec ✅ and quality approved?";
-    "Task reviewer reports spec ✅ and quality approved?" -> "Dispatch fix subagent for Critical/Important findings" [label="no"];
-    "Dispatch fix subagent for Critical/Important findings" -> "Write diff file, dispatch task reviewer subagent (./task-reviewer-prompt.md)" [label="re-review"];
-    "Task reviewer reports spec ✅ and quality approved?" -> "Mark task complete in todo list and progress ledger" [label="yes"];
-    "Mark task complete in todo list and progress ledger" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "More tasks remain?" -> "Dispatch final code reviewer subagent (../request-review/code-reviewer.md)" [label="no"];
-    "Dispatch final code reviewer subagent (../request-review/code-reviewer.md)" -> "Use finish skill";
-}
-```
+Repeat for each remaining task. When none remain, **dispatch the final whole-branch code reviewer** (`../request-review/code-reviewer.md`), then **use the `finish` skill**.
 
 ## Pre-Flight Plan Review
 
