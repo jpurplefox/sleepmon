@@ -150,11 +150,15 @@ export function ExpCalculator() {
             <p className="exp-calc__note">
               {t("expCalc.result.totalExp", { n: result.total_exp.toLocaleString() })}
             </p>
-            {result.boosted_candies > 0 && (
-              <p className="exp-calc__note">
-                {t("expCalc.result.boostedNote", { n: result.boosted_candies })}
-              </p>
-            )}
+            {/* Only meaningful when the Mini Boost cap actually bites: some
+                candies boosted, the rest at normal cost. Full Candy Boost
+                boosts every candy (no cap), so this never shows for it. */}
+            {result.boosted_candies > 0 &&
+              result.candies > result.boosted_candies && (
+                <p className="exp-calc__note">
+                  {t("expCalc.result.boostedNote", { n: result.boosted_candies })}
+                </p>
+              )}
           </>
         )}
       </div>
