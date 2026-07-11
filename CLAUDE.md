@@ -45,8 +45,7 @@ cd frontend && npm install && npm run dev
 - `frontend/src/` — React app (team editing, catalog-driven form, distribution
   charts).
 - `docs/` — `prd/` (product requirements, one numbered doc per feature), `adr/`
-  (architecture decision records), `design-system.md` (the visual language),
-  `specs/` (design records).
+  (architecture decision records), `design-system.md` (the visual language).
 
 ## Conventions
 
@@ -59,8 +58,16 @@ cd frontend && npm install && npm run dev
 - Every behavior change ships with its test.
 - The species catalog (`domain/species.py`) is a curated v1 subset; extending or
   fixing it means adding entries.
-- New docs and code are written in **English** (the repo is migrating from Spanish).
-- Product decisions live in `docs/prd/`, technical decisions in `docs/adr/`, and
-  the visual language in `docs/design-system.md`. Session scaffolding (plans,
-  architecture, visual specs) stays in the scratchpad, not the repo; skills never
-  commit on their own.
+- New docs and code are written in **English**.
+- **What goes where**:
+  - `docs/prd/` — **product**: one doc per feature (or shared building block) —
+    purpose, scope, behavior, guidelines: the *what* the user gets. This includes the
+    plain-language mechanics of a calculation when that behavior is user-facing.
+  - `docs/adr/` — **technical decisions**, but only **cross-cutting or recurring**
+    ones: a choice or pattern that can apply to, or affect, more than one feature
+    (e.g. the stack, hexagonal, the i18n approach). A decision or calculation that
+    lives in a **single** feature is **just code** — its user-facing behavior belongs
+    in that feature's PRD, not an ADR.
+  - `docs/design-system.md` — the visual language.
+  - Session scaffolding (plans, architecture, visual specs) stays in the scratchpad,
+    not the repo; skills never commit on their own.
