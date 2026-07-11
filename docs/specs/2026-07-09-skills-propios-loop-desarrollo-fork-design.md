@@ -60,13 +60,18 @@ de superpowers + `architect`, `adr`, `visual` y `ds-update` (composiciones
 nuevas). La cadena resultante:
 
 ```
-design → (architect + visual) → plan → prepare → build → request-review → finish
-                                          (receive-review, tdd, adr y ds-update son sub-skills de apoyo)
+design → visual → architect → plan → prepare → build → request-review → finish
+                                        (receive-review, tdd, adr y ds-update son sub-skills de apoyo)
 ```
 
-`architect` (técnico) y `visual` (presentacional) son **hermanos** del *cómo*:
-sin dependencia entre sí, ambos salen de `design` y alimentan `plan` (`visual`
-solo para features con UI; backend puro lo saltea).
+`visual` (presentacional) va **antes** que `architect` (técnico): ver el diseño
+puede reencuadrar el producto (y hasta actualizar el PRD), y `architect` decide
+la estructura técnica ya con lo visual resuelto. `visual` solo para features con
+UI; en backend puro la cadena es `design → architect → plan`.
+
+(Revisión: originalmente eran "hermanos en paralelo"; al ejercitar el loop se vio
+que corren secuenciales y que lo visual conviene primero — puede cambiar lo que
+`architect` decide.)
 
 Sub-skills: `adr` lo invoca `architect` cuando hay que registrar una decisión
 transversal; `ds-update` lo invoca `visual` cuando hay que crecer/corregir el
@@ -164,7 +169,7 @@ persiste lo **funcional/producto**, no la arquitectura.
 - Ofrece commitear el ADR + índice (+ el superseded tocado), staged solo.
 - Sub-skill: lo invoca `architect` o el usuario directo.
 
-### `visual` (nuevo — hermano de `architect`)
+### `visual` (nuevo — antes de `architect`)
 - **Presentación de la feature** a partir del PRD + el **design system**
   (`docs/design-system.md`). Solo para features con UI.
 - **Explora primero:** presenta **≥2 opciones** como mockups estáticos y estilados
@@ -173,7 +178,8 @@ persiste lo **funcional/producto**, no la arquitectura.
 - Recién con una dirección aprobada: **detecta** si falta una pieza/token o hay
   inconsistencia → informa → el usuario decide → invoca `ds-update`. Escribe el
   spec visual al scratchpad (`<scratchpad>/visual/…`), efímero. Self-review + user
-  gate. Handoff → `plan`.
+  gate. Handoff → `architect`. Si al explorar lo visual surge un cambio de
+  producto, lo plantea (puede actualizar el PRD) antes de seguir.
 - Agnóstico: cero estética adentro (vive toda en `docs/design-system.md`).
 
 ### `ds-update` (nuevo — hermano de `adr`)

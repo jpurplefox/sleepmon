@@ -32,9 +32,9 @@ You MUST create a task for each of these items and complete them in order:
 7. **Doc self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below)
 8. **User reviews written doc** — ask user to review the feature doc before proceeding
 9. **Offer to commit the doc** — offer to commit the new PRD plus its index entry (stage only those two files); commit only if the user accepts
-10. **Transition to the *how*** — invoke `architect` (technical); for a feature with a UI, also `visual` (presentational)
+10. **Transition to the *how*** — invoke `visual` for a feature with a UI, or `architect` for a backend-only one
 
-**The terminal state is the *how* skills.** Do NOT invoke mcp-builder or any implementation skill. After design you invoke `architect` (always) and, for a feature with a UI, `visual` — nothing else.
+**The terminal state is the *how*.** Do NOT invoke mcp-builder or any implementation skill. After design you invoke `visual` (for a feature with a UI) or `architect` (backend-only) — nothing else.
 
 ## The Process
 
@@ -115,7 +115,7 @@ If the user accepts, commit exactly those two files and nothing else — e.g. `g
 
 **The *how*:**
 
-- Invoke the `architect` skill (technical architecture) and, for a feature with a UI, the `visual` skill (presentation). They are siblings and both feed `plan`.
+- For a feature with a UI, invoke the `visual` skill; for a backend-only feature, invoke `architect` directly.
 - Do NOT invoke any other skill.
 
 ## Key Principles

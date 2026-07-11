@@ -11,11 +11,11 @@ Turn the *what* into the *how*. Given a design document that describes what to b
 
 **Announce at start:** "I'm using the architect skill to design the technical architecture."
 
-**Input:** the design document describing what to build — purpose, scope, rules, out-of-scope. Read it as the source of what to build; it deliberately leaves the *how* to you.
+**Input:** the design document (purpose, scope, rules, out-of-scope, acceptance criteria) and — for a feature with a UI — the **visual design** that `visual` already settled (components, layout, states). Read them as the source of what to build; they deliberately leave the technical *how* to you. The visual design is settled: structure it, don't second-guess it.
 
 ## Process
 
-1. **Read the design document** and understand the product intent and its acceptance criteria.
+1. **Read the design document** (and, for a UI feature, the visual design) — understand the product intent, its acceptance criteria, and the settled presentation.
 2. **Read the ADRs already in force.** Check the index at `docs/adr/README.md` and read the records whose status is **Accepted** (skip `Deprecated` and `Superseded` ones — they no longer bind). Your architecture must respect these decisions; if you think one should change, that's a new ADR, not something you quietly work around.
 3. **Explore the current codebase** before proposing anything — existing structure, patterns, and boundaries. Follow what's there.
 4. **Decide the architecture** (see what this skill owns). For any significant decision with real alternatives, propose 2-3 options with trade-offs, lead with your recommendation, and get the user's approval before locking it in.
@@ -66,4 +66,4 @@ Wait for the user's response. If they request changes, make them and re-run the 
 
 ## Handoff
 
-Invoke the `plan` skill to turn this architecture into a task-by-task implementation plan. `plan` is the next step. For a feature with a UI, `visual` is your sibling — the feature needs both before `plan`; run it first if it hasn't run. Do not invoke any other skill.
+Invoke the `plan` skill to turn this architecture into a task-by-task implementation plan. `plan` is the next step. Do not invoke any other skill.
