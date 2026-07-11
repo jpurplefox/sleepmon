@@ -954,6 +954,34 @@ def test_unknown_berry_rejected(
         )
 
 
+def test_compute_level_up_cost_happy_path(service):
+    from sleepmon.application.dto import LevelUpCostInput
+
+    result = service.compute_level_up_cost(
+        LevelUpCostInput(current_level=1, target_level=2)
+    )
+    assert (result.total_exp, result.candies, result.dream_shards) == (54, 2, 28)
+
+
+def test_compute_level_up_cost_parses_modifiers(service):
+    from sleepmon.application.dto import LevelUpCostInput
+
+    result = service.compute_level_up_cost(
+        LevelUpCostInput(current_level=1, target_level=2, boost="full")
+    )
+    assert result.candies == 1
+    assert result.dream_shards == 70
+
+
+def test_compute_level_up_cost_rejects_unknown_enum(service):
+    from sleepmon.application.dto import LevelUpCostInput
+
+    with pytest.raises(ValidationError):
+        service.compute_level_up_cost(
+            LevelUpCostInput(current_level=1, target_level=2, boost="turbo")
+        )
+
+
 def test_compute_team_production_excludes_off_catalog_members() -> None:
     repo = InMemoryTeamRepository()
     member = TeamMember(
