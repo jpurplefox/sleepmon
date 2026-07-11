@@ -23,13 +23,14 @@ A given change is often both: a new piece *and* the decision behind it.
 ## Steps
 
 1. **Decide what the change is:** a token, a component/pattern, a decision, or a combination.
-2. **Check it fits the concept.** A change must reinforce the identity, not fight it — respect the anti-goals (no gratuitous tokens/colors/effects; prefer removing to adding). If it doesn't fit, say so rather than recording it.
-3. **Edit `docs/design-system.md`:**
+2. **Ground it against the real code — don't trust the mockup.** If the change adds a variant of, or edits, an **existing** component, first read that component's actual implementation (CSS/markup) and confirm the approved design genuinely *is* that component. If it only looks similar but is a distinct pattern (different structure, borders, gaps, states), record it as its **own component**, not a variant of the other. Never extend a component you have not read — the design system is the source of truth, so a wrong entry here misleads every later use.
+3. **Check it fits the concept.** A change must reinforce the identity, not fight it — respect the anti-goals (no gratuitous tokens/colors/effects; prefer removing to adding). If it doesn't fit, say so rather than recording it.
+4. **Edit `docs/design-system.md`:**
    - New/changed **token** → the Tokens section, following the existing grouping and comment style.
    - New/changed **component/pattern** → the Component inventory, matching the existing entry shape (what it is · variants · states · where it lives).
    - **Decision** → append to the Decisions log: `**Title.** *Question:* … *Resolution:* … *Why:* …`.
    - Keep edits minimal and consistent with the surrounding format.
-4. **Offer to commit.** Offer to commit the `docs/design-system.md` change, staging **only** that file. Commit only if the user accepts.
+5. **Offer to commit.** Offer to commit the `docs/design-system.md` change, staging **only** that file. Commit only if the user accepts.
 
 ## Scope
 
