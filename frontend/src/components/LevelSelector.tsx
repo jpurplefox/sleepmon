@@ -8,13 +8,14 @@ interface Props {
   onChange: (level: number) => void;
   min?: number;
   max?: number;
+  label?: string;
 }
 
 function clamp(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));
 }
 
-export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL }: Props) {
+export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL, label }: Props) {
   const { t } = useI18n();
   const inputId = useId();
   // Draft local para permitir escribir libremente (incluido borrar el campo).
@@ -59,7 +60,7 @@ export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL }: Pro
     <div className="level-selector">
       <div className="level-stepper">
         <label className="level-stepper__label" htmlFor={inputId}>
-          {t("levelSel.label")}
+          {label ?? t("levelSel.label")}
         </label>
         <button
           type="button"
@@ -97,7 +98,7 @@ export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL }: Pro
       </div>
 
       <div className="level-shortcuts">
-        {LEVEL_SHORTCUTS.map((lvl) => (
+        {LEVEL_SHORTCUTS.filter((lvl) => lvl <= max).map((lvl) => (
           <button
             type="button"
             key={lvl}

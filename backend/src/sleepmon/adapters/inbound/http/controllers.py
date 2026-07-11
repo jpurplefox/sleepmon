@@ -15,6 +15,8 @@ from sleepmon.adapters.inbound.http.schemas import (
     IngredientBalanceOut,
     IngredientCountOut,
     IslandOut,
+    LevelUpCostIn,
+    LevelUpCostOut,
     MealFeasibilityOut,
     MemberContributionOut,
     MemberIn,
@@ -34,6 +36,7 @@ from sleepmon.adapters.inbound.http.schemas import (
     TeamProductionOut,
 )
 from sleepmon.application.dto import (
+    LevelUpCostInput,
     MealSelectionInput,
     MemberProduction,
     ProductionInput,
@@ -393,4 +396,32 @@ class TeamProductionController(Controller):
             ],
             grand_total_strength=result.grand_total_strength,
             grand_total_strength_base=result.grand_total_strength_base,
+        )
+
+
+class ExpCalculatorController(Controller):
+    path = "/exp-calculator"
+
+    @post("/", status_code=HTTP_200_OK, sync_to_thread=False)
+    def compute(
+        self,
+        service: NamedDependency[TeamService],
+        data: LevelUpCostIn,
+    ) -> LevelUpCostOut:
+        result = service.compute_level_up_cost(
+            LevelUpCostInput(
+                current_level=data.current_level,
+                target_level=data.target_level,
+                curve=data.curve,
+                nature=data.nature,
+                boost=data.boost,
+            )
+        )
+        return LevelUpCostOut(
+            current_level=result.current_level,
+            target_level=result.target_level,
+            total_exp=result.total_exp,
+            candies=result.candies,
+            dream_shards=result.dream_shards,
+            boosted_candies=result.boosted_candies,
         )

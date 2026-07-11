@@ -192,9 +192,107 @@ select:focus {
 .filter-btn:focus-visible,
 .island-tab__island-trigger:focus-visible,
 .specialty-toggle__btn:focus-visible,
-.prod-box-item:focus-visible {
+.prod-box-item:focus-visible,
+.option-toggle__btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* Exp Calculator */
+.exp-calc {
+  max-width: 520px;
+  margin: 2rem auto 4rem;
+}
+.exp-calc__label {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin: 0 0 0.55rem;
+}
+.exp-calc__group {
+  margin-top: 1.35rem;
+}
+
+/* .option-toggle — justified single-select option group (design system) */
+.option-toggle {
+  display: flex;
+  gap: 0.4rem;
+}
+.option-toggle__btn {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: var(--text-sm);
+  padding: 0.5rem 0.4rem;
+  text-align: center;
+  cursor: pointer;
+}
+.option-toggle__btn:hover {
+  border-color: var(--accent);
+}
+.option-toggle__btn.is-on {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+}
+/* Nature semantic tint (feature-scoped, not a design-system token change).
+   --up/--down exist as tokens; their dim backgrounds are inlined here since
+   there are no --up-dim/--down-dim tokens and this tint is a one-off. */
+.option-toggle__btn.is-on.up {
+  background: rgba(63, 185, 80, 0.15);
+  border-color: var(--up);
+  color: var(--up);
+}
+.option-toggle__btn.is-on.down {
+  background: rgba(247, 129, 102, 0.15);
+  border-color: var(--down);
+  color: var(--down);
+}
+
+/* Output region: shared top separator + reserved height so the range error,
+   the empty state and the result all occupy the same vertical space. */
+.exp-calc__output {
+  margin-top: 1.4rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  min-height: 8rem;
+}
+.exp-calc__result {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+}
+.exp-calc__metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+}
+.exp-calc__value {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.exp-calc__metric-label {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.exp-calc__note {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  margin: 1rem 0 0;
+  text-align: center;
+}
+.exp-calc__empty {
+  color: var(--muted);
+  font-size: var(--text-base);
+  text-align: center;
+}
+.exp-calc__error {
+  color: var(--error);
+  font-size: var(--text-sm);
+  text-align: center;
 }
 
 .btn {

@@ -17,6 +17,8 @@ from sleepmon.application.dto import (
     Distributions,
     IngredientBalanceDTO,
     IngredientCountDTO,
+    LevelUpCostInput,
+    LevelUpCostResult,
     MealFeasibilityDTO,
     MemberContributionDTO,
     MemberProduction,
@@ -42,10 +44,20 @@ from sleepmon.domain.entities import (
     validate_sub_skills,
 )
 from sleepmon.domain.errors import SpeciesNotFoundError, TeamMemberNotFoundError, ValidationError
+from sleepmon.domain.leveling import level_up_cost
 from sleepmon.domain.ports import RecipeCatalog, SpeciesCatalog, TeamRepository
 from sleepmon.domain.production import DailyProduction, daily_production, scale_daily
 from sleepmon.domain.species import Species
-from sleepmon.domain.value_objects import Berry, Ingredient, Nature, Ribbon, SubSkill
+from sleepmon.domain.value_objects import (
+    Berry,
+    CandyBoost,
+    ExpNatureModifier,
+    GrowthCurve,
+    Ingredient,
+    Nature,
+    Ribbon,
+    SubSkill,
+)
 
 E = TypeVar("E", bound=StrEnum)
 
@@ -146,6 +158,9 @@ class TeamService(ABC):
 
     @abstractmethod
     def compute_team_production(self, data: TeamProductionInput) -> TeamProductionResult: ...
+
+    @abstractmethod
+    def compute_level_up_cost(self, data: LevelUpCostInput) -> LevelUpCostResult: ...
 
 
 class DefaultTeamService(TeamService):
@@ -464,6 +479,27 @@ class DefaultTeamService(TeamService):
             ],
             grand_total_strength=aggregate.total_strength + cooking_strength,
             grand_total_strength_base=aggregate.total_strength_base + cooking.cooking_strength,
+        )
+
+    def compute_level_up_cost(self, data: LevelUpCostInput) -> LevelUpCostResult:
+        # Stateless: pure computation, touches neither the repo nor the catalog.
+        curve = _parse_enum(GrowthCurve, data.curve, "curve")
+        nature = _parse_enum(ExpNatureModifier, data.nature, "nature")
+        boost = _parse_enum(CandyBoost, data.boost, "boost")
+        cost = level_up_cost(
+            data.current_level,
+            data.target_level,
+            curve=curve,
+            nature=nature,
+            boost=boost,
+        )
+        return LevelUpCostResult(
+            current_level=cost.current_level,
+            target_level=cost.target_level,
+            total_exp=cost.total_exp,
+            candies=cost.candies,
+            dream_shards=cost.dream_shards,
+            boosted_candies=cost.boosted_candies,
         )
 
     def _build_member(self, data: TeamMemberInput, member_id: UUID | None = None) -> TeamMember:

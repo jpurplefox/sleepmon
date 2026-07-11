@@ -169,6 +169,25 @@ class ErrorOut(msgspec.Struct):
     detail: str
 
 
+class LevelUpCostIn(msgspec.Struct, forbid_unknown_fields=True):
+    """Payload to compute a level-up cost."""
+
+    current_level: int
+    target_level: int
+    curve: str = "normal"
+    nature: str = "neutral"
+    boost: str = "none"
+
+
+class LevelUpCostOut(msgspec.Struct):
+    current_level: int
+    target_level: int
+    total_exp: int
+    candies: int
+    dream_shards: int
+    boosted_candies: int
+
+
 class MealIn(msgspec.Struct, forbid_unknown_fields=True):
     recipe: str
     level: int = 1
