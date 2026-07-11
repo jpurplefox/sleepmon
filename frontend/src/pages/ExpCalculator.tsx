@@ -38,19 +38,17 @@ export function ExpCalculator() {
     setNature((prev) => (prev === n ? "neutral" : n));
 
   return (
-    <div className="card" style={{ maxWidth: 520, margin: "0 auto" }}>
+    <div className="card exp-calc">
       <h2>{t("expCalc.title")}</h2>
       <p className="muted">{t("expCalc.intro")}</p>
 
       <div className="exp-calc__group">
-        <p className="exp-calc__label">{t("expCalc.currentLevel")}</p>
         <LevelSelector
           value={current}
           onChange={setCurrent}
           max={MAX_LEVEL}
           label={t("expCalc.currentLevel")}
         />
-        <p className="exp-calc__label">{t("expCalc.targetLevel")}</p>
         <LevelSelector
           value={target}
           onChange={setTarget}

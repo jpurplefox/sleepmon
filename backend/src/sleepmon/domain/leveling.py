@@ -73,6 +73,7 @@ class LevelUpCost:
 
 def _r(x: float) -> int:
     """Half-up rounding for positive values."""
+    # Intentional half-up; do NOT use round() (banker's rounding shifts EXP on .5 boundaries).
     return int(x + 0.5)
 
 

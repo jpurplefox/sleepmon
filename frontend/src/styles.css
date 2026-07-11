@@ -199,6 +199,10 @@ select:focus {
 }
 
 /* Exp Calculator */
+.exp-calc {
+  max-width: 520px;
+  margin: 0 auto;
+}
 .exp-calc__label {
   font-size: var(--text-sm);
   color: var(--muted);
