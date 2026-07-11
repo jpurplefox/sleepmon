@@ -760,3 +760,36 @@ def test_team_production_accepts_good_camp_ticket(client: TestClient) -> None:
     # Con GCT ayuda más rápido → menos segundos por ayuda y más ayudas/día.
     assert on_member["seconds_per_help"] < off_member["seconds_per_help"]
     assert on_member["inventory"] > off_member["inventory"]
+
+
+def test_exp_calculator_happy_path(client):
+    res = client.post(
+        "/exp-calculator", json={"current_level": 1, "target_level": 2}
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["total_exp"] == 54
+    assert body["candies"] == 2
+    assert body["dream_shards"] == 28
+
+
+def test_exp_calculator_rejects_inverted_range(client):
+    res = client.post(
+        "/exp-calculator", json={"current_level": 5, "target_level": 5}
+    )
+    assert res.status_code == 400
+
+
+def test_exp_calculator_rejects_out_of_range(client):
+    res = client.post(
+        "/exp-calculator", json={"current_level": 1, "target_level": 71}
+    )
+    assert res.status_code == 400
+
+
+def test_exp_calculator_rejects_unknown_field(client):
+    res = client.post(
+        "/exp-calculator",
+        json={"current_level": 1, "target_level": 2, "bogus": 1},
+    )
+    assert res.status_code == 400
