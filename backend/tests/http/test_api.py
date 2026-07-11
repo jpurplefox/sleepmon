@@ -760,3 +760,42 @@ def test_team_production_accepts_good_camp_ticket(client: TestClient) -> None:
     # Con GCT ayuda más rápido → menos segundos por ayuda y más ayudas/día.
     assert on_member["seconds_per_help"] < off_member["seconds_per_help"]
     assert on_member["inventory"] > off_member["inventory"]
+
+
+def test_exp_calculator_returns_candies_and_shards(client: TestClient) -> None:
+    res = client.post(
+        "/exp-calculator",
+        json={"current_level": 1, "target_level": 2},
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["candies"] == 2
+    assert body["dream_shards"] == 28
+    assert body["boosted_candies"] == 0
+    assert body["total_exp"] == 54
+
+
+def test_exp_calculator_accepts_curve_nature_boost(client: TestClient) -> None:
+    res = client.post(
+        "/exp-calculator",
+        json={
+            "current_level": 50,
+            "target_level": 51,
+            "curve": "legendary",
+            "nature": "down",
+            "boost": "mini",
+        },
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["candies"] > 0
+    assert body["boosted_candies"] == body["candies"]
+
+
+def test_exp_calculator_rejects_bad_range(client: TestClient) -> None:
+    res = client.post(
+        "/exp-calculator",
+        json={"current_level": 30, "target_level": 30},
+    )
+    assert res.status_code == 400
+    assert "mayor" in res.json()["detail"].lower()

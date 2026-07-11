@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { LanguageSelector } from "./components/LanguageSelector";
 import { useI18n } from "./i18n";
+import { ExpCalculator } from "./pages/ExpCalculator";
 import { Production } from "./pages/Production";
 import { Team } from "./pages/Team";
 import { Teams } from "./pages/Teams";
@@ -12,9 +13,9 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false } },
 });
 
-type Tab = "team" | "production" | "teams";
+type Tab = "team" | "production" | "teams" | "expCalculator";
 
-const TABS: Tab[] = ["team", "production", "teams"];
+const TABS: Tab[] = ["team", "production", "teams", "expCalculator"];
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("team");
@@ -83,6 +84,19 @@ export default function App() {
         >
           {t("nav.teams")}
         </button>
+        <button
+          id="tab-expCalculator"
+          type="button"
+          role="tab"
+          aria-selected={tab === "expCalculator"}
+          aria-controls="tabpanel-expCalculator"
+          tabIndex={tab === "expCalculator" ? 0 : -1}
+          className={"tab" + (tab === "expCalculator" ? " tab--active" : "")}
+          onClick={() => setTab("expCalculator")}
+          onKeyDown={onTabKeyDown}
+        >
+          {t("nav.expCalculator")}
+        </button>
       </nav>
         <LanguageSelector />
       </div>
@@ -104,6 +118,16 @@ export default function App() {
       {tab === "teams" && (
         <div role="tabpanel" id="tabpanel-teams" aria-labelledby="tab-teams" tabIndex={0}>
           <Teams />
+        </div>
+      )}
+      {tab === "expCalculator" && (
+        <div
+          role="tabpanel"
+          id="tabpanel-expCalculator"
+          aria-labelledby="tab-expCalculator"
+          tabIndex={0}
+        >
+          <ExpCalculator />
         </div>
       )}
       </ErrorBoundary>

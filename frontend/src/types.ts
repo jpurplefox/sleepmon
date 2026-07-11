@@ -309,3 +309,24 @@ export interface Production {
   inventory: number;
   inventory_fill_hours: number;
 }
+
+export type GrowthCurve = "normal" | "pseudo_legendary" | "legendary" | "mythical";
+export type ExpNatureModifier = "neutral" | "up" | "down";
+export type CandyBoost = "none" | "full" | "mini";
+
+export interface LevelUpCostInput {
+  current_level: number;
+  target_level: number;
+  curve: GrowthCurve;
+  nature: ExpNatureModifier;
+  boost: CandyBoost;
+}
+
+export interface LevelUpCostResult {
+  current_level: number;
+  target_level: number;
+  total_exp: number;
+  candies: number;
+  dream_shards: number;
+  boosted_candies: number;
+}
