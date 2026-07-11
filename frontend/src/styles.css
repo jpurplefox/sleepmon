@@ -201,7 +201,7 @@ select:focus {
 /* Exp Calculator */
 .exp-calc {
   max-width: 520px;
-  margin: 0 auto;
+  margin: 2rem auto 4rem;
 }
 .exp-calc__label {
   font-size: var(--text-sm);
@@ -249,10 +249,15 @@ select:focus {
   color: var(--down);
 }
 
-.exp-calc__result {
+/* Output region: shared top separator + reserved height so the range error,
+   the empty state and the result all occupy the same vertical space. */
+.exp-calc__output {
   margin-top: 1.4rem;
   padding-top: 1.25rem;
   border-top: 1px solid var(--border);
+  min-height: 8rem;
+}
+.exp-calc__result {
   display: flex;
   justify-content: space-around;
   text-align: center;
@@ -283,17 +288,11 @@ select:focus {
   color: var(--muted);
   font-size: var(--text-base);
   text-align: center;
-  margin-top: 1.4rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--border);
 }
 .exp-calc__error {
   color: var(--error);
   font-size: var(--text-sm);
   text-align: center;
-  margin-top: 1.4rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--border);
 }
 
 .btn {

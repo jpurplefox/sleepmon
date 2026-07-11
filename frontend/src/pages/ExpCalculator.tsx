@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { LevelSelector } from "../components/LevelSelector";
 import { api } from "../api/client";
@@ -31,6 +31,9 @@ export function ExpCalculator() {
         boost,
       }),
     enabled: valid,
+    // Keep the previous result on screen while a new one is fetched, so
+    // changing a level doesn't flash the empty state between renders.
+    placeholderData: keepPreviousData,
   });
 
   const result = query.data;
@@ -109,48 +112,52 @@ export function ExpCalculator() {
         </div>
       </div>
 
-      {!valid && (
-        <p className="exp-calc__error" role="alert">
-          {t("expCalc.error.range")}
-        </p>
-      )}
-
-      {valid && !result && (
-        <p className="exp-calc__empty" role="status">
-          {t("expCalc.empty")}
-        </p>
-      )}
-
-      {valid && result && (
-        <>
-          <div className="exp-calc__result">
-            <div className="exp-calc__metric">
-              <span className="exp-calc__value">
-                {result.candies.toLocaleString()}
-              </span>
-              <span className="exp-calc__metric-label">
-                {t("expCalc.result.candies")}
-              </span>
-            </div>
-            <div className="exp-calc__metric">
-              <span className="exp-calc__value">
-                {result.dream_shards.toLocaleString()}
-              </span>
-              <span className="exp-calc__metric-label">
-                {t("expCalc.result.dreamShards")}
-              </span>
-            </div>
-          </div>
-          <p className="exp-calc__note">
-            {t("expCalc.result.totalExp", { n: result.total_exp.toLocaleString() })}
+      {/* Fixed-height output region so switching between the range error and a
+          result never changes the page height (avoids a scrollbar jump). */}
+      <div className="exp-calc__output">
+        {!valid && (
+          <p className="exp-calc__error" role="alert">
+            {t("expCalc.error.range")}
           </p>
-          {result.boosted_candies > 0 && (
+        )}
+
+        {valid && !result && (
+          <p className="exp-calc__empty" role="status">
+            {t("expCalc.empty")}
+          </p>
+        )}
+
+        {valid && result && (
+          <>
+            <div className="exp-calc__result">
+              <div className="exp-calc__metric">
+                <span className="exp-calc__value">
+                  {result.candies.toLocaleString()}
+                </span>
+                <span className="exp-calc__metric-label">
+                  {t("expCalc.result.candies")}
+                </span>
+              </div>
+              <div className="exp-calc__metric">
+                <span className="exp-calc__value">
+                  {result.dream_shards.toLocaleString()}
+                </span>
+                <span className="exp-calc__metric-label">
+                  {t("expCalc.result.dreamShards")}
+                </span>
+              </div>
+            </div>
             <p className="exp-calc__note">
-              {t("expCalc.result.boostedNote", { n: result.boosted_candies })}
+              {t("expCalc.result.totalExp", { n: result.total_exp.toLocaleString() })}
             </p>
-          )}
-        </>
-      )}
+            {result.boosted_candies > 0 && (
+              <p className="exp-calc__note">
+                {t("expCalc.result.boostedNote", { n: result.boosted_candies })}
+              </p>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
