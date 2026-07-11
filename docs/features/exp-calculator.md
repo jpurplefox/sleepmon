@@ -2,7 +2,7 @@
 
 > Documento de producto. Define para qué existe esta feature y los lineamientos
 > que debe respetar al evolucionar. El "cómo se ve" está en
-> [`frontend/docs/ui-concept.md`](../../frontend/docs/ui-concept.md).
+> [`docs/design-system.md`](../design-system.md).
 
 ## Propósito
 

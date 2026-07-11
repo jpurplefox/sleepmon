@@ -2,7 +2,7 @@
 
 > Documento de producto. Define para qué existe esta feature y los lineamientos
 > que debe respetar al evolucionar. El "cómo se ve" está en
-> [`frontend/docs/ui-concept.md`](../../frontend/docs/ui-concept.md).
+> [`docs/design-system.md`](../design-system.md).
 
 ## Propósito
 
@@ -53,7 +53,7 @@ Responde a: *"de estas configuraciones, ¿cuál rinde más y por qué?"*.
   no afecta el origen, salvo que se use explícitamente "editar en la caja".
 - **Sin jerarquía falsa.** Bayas, ingredientes y skill se muestran con **igual
   peso**; ninguno es "lo principal" (ver
-  [`ui-concept.md`](../../frontend/docs/ui-concept.md)).
+  [`design-system.md`](../design-system.md)).
 - **El cálculo vive en el dominio.** La card sólo **presenta**; puede **derivar**
   valores (p. ej. `P(=1) = P(≥1) − P(≥2)`) pero no reimplementa la fórmula ni
   inventa números.

@@ -3,7 +3,7 @@
 > Documento de producto. Define cómo debe funcionar el modal **"Mis Pokémon"**
 > que abre Comparación para traer una config guardada. Es un refinamiento de
 > [Comparación](./comparacion.md) (acción **Caja**). El "cómo se ve" se rige por
-> [`frontend/docs/ui-concept.md`](../../frontend/docs/ui-concept.md).
+> [`docs/design-system.md`](../design-system.md).
 
 ## Propósito
 
@@ -90,7 +90,7 @@ El loop UX/UI debe dejar el picker cumpliendo todo esto:
 - **Denso pero legible.** El picker puede mostrar muchos ejemplares; prioriza la
   lectura en paralelo y el escaneo rápido por sobre el detalle exhaustivo.
 - **Sin jerarquía falsa** entre bayas/ingredientes/skill, igual que el resto de la
-  app (ver [`ui-concept.md`](../../frontend/docs/ui-concept.md)).
+  app (ver [`design-system.md`](../design-system.md)).
 
 ## Fuera de alcance
 

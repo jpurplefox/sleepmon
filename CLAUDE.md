@@ -1,67 +1,66 @@
 # sleepmon
 
-Gestor web de tu **equipo en Pokémon Sleep**, usado también como sandbox de
-**loop engineering** con el tooling de Claude Code.
-
-## Qué es esto
-
-Una app full-stack para registrar los Pokémon de tu equipo —con su **naturaleza**,
-sus **sub skills** y sus **ingredientes**— y ver la **distribución agregada** del
-equipo. El backend es un sustrato realista (arquitectura hexagonal, validación de
-dominio rica) sobre el que practicar loops: auditarlo, refactorizarlo o ampliarlo
-en bucle. Ver [`docs/loop-engineering.md`](docs/loop-engineering.md).
+A web app to manage your **Pokémon Sleep** team: register each Pokémon with its
+**nature**, **sub skills**, and **ingredients**, and see the team's **aggregate
+distribution** and estimated production.
 
 ## Stack
 
-- **Backend**: Python ≥ 3.11, **Litestar**, **PostgreSQL** con **psycopg3** directo
-  (sin ORM) y **PyPika** para construir queries. Arquitectura **hexagonal** + SOLID.
+- **Backend**: Python ≥ 3.11, **Litestar**, **PostgreSQL** via **psycopg3**
+  directly (no ORM) with **PyPika** for building queries. **Hexagonal** + SOLID.
 - **Frontend**: **React** + TypeScript (Vite), TanStack Query, Recharts.
 - **Infra**: Docker Compose (db + backend + frontend).
-- Dev backend: `pytest`, `ruff`, `mypy` (strict).
+- Backend dev: `pytest`, `ruff`, `mypy` (strict).
 
-## Comandos
+## Commands
 
 ```bash
-# Todo el stack
+# Whole stack
 docker compose up --build         # db + backend(:8000) + frontend(:5173)
 
 # Backend (local)
 cd backend && python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-pytest -m "not integration"   # dominio + aplicación + HTTP (sin DB)
-pytest -m integration         # repo Postgres (necesita la DB del compose)
+pytest -m "not integration"   # domain + application + HTTP (no DB)
+pytest -m integration         # Postgres repo (needs the compose DB)
 mypy src && ruff check .
 
 # Frontend (local)
 cd frontend && npm install && npm run dev
 ```
 
-## Estructura
+## Structure
 
-- `backend/src/sleepmon/domain/` — núcleo: entidades, value objects (enums del
-  juego), reglas (`catalog_data.py`), catálogo de especies (`species.py`),
-  puertos (`ports.py`), distribuciones (`analytics.py`). **No importa
-  infraestructura.**
-- `backend/src/sleepmon/application/` — casos de uso (`TeamService`) + DTOs.
-  Depende solo de los puertos.
-- `backend/src/sleepmon/adapters/outbound/` — Postgres (psycopg + PyPika) y
-  catálogo estático.
-- `backend/src/sleepmon/adapters/inbound/http/` — controllers Litestar +
+- `backend/src/sleepmon/domain/` — core: entities, value objects (game enums),
+  rules (`catalog_data.py`), species catalog (`species.py`), ports (`ports.py`),
+  distributions (`analytics.py`). **Does not import infrastructure.**
+- `backend/src/sleepmon/application/` — use cases (`TeamService`) + DTOs. Depends
+  only on the ports.
+- `backend/src/sleepmon/adapters/outbound/` — Postgres (psycopg + PyPika) and the
+  static catalog.
+- `backend/src/sleepmon/adapters/inbound/http/` — Litestar controllers +
   composition root (`app.py`).
-- `backend/tests/` — `domain/`, `application/`, `http/` (sin DB) e `integration/`
-  (Postgres, marcados `integration`).
-- `frontend/src/` — app React (Team page, formulario dependiente del catálogo,
-  gráficos de distribución).
-- `.claude/agents/`, `.claude/workflows/` — tooling de loops apuntando al backend.
+- `backend/tests/` — `domain/`, `application/`, `http/` (no DB) and `integration/`
+  (Postgres, marked `integration`).
+- `frontend/src/` — React app (team editing, catalog-driven form, distribution
+  charts).
+- `docs/` — `prd/` (product requirements, one numbered doc per feature), `adr/`
+  (architecture decision records), `design-system.md` (the visual language),
+  `specs/` (design records).
 
-## Convenciones
+## Conventions
 
-- **Hexagonal estricto**: el dominio no conoce Litestar/psycopg/pypika; la
-  aplicación depende de abstracciones (puertos), no de implementaciones.
-- Type hints estrictos (mypy strict), dataclasses frozen donde aplique, enums
-  cerrados para los datos del juego.
-- Queries siempre parametrizadas (placeholders `%s` de psycopg); nunca interpolar
-  datos del usuario.
-- Cada cambio de comportamiento lleva su test.
-- El catálogo de especies (`domain/species.py`) es un subconjunto curado v1;
-  ampliarlo/corregirlo es agregar entradas.
+- **Strict hexagonal**: the domain knows nothing of Litestar/psycopg/pypika; the
+  application depends on abstractions (ports), not implementations.
+- Strict type hints (mypy strict), frozen dataclasses where applicable, closed
+  enums for game data.
+- Queries are always parameterized (psycopg `%s` placeholders); never interpolate
+  user data.
+- Every behavior change ships with its test.
+- The species catalog (`domain/species.py`) is a curated v1 subset; extending or
+  fixing it means adding entries.
+- New docs and code are written in **English** (the repo is migrating from Spanish).
+- Product decisions live in `docs/prd/`, technical decisions in `docs/adr/`, and
+  the visual language in `docs/design-system.md`. Session scaffolding (plans,
+  architecture, visual specs) stays in the scratchpad, not the repo; skills never
+  commit on their own.
