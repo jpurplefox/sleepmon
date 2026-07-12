@@ -77,10 +77,9 @@ rest are functional or semantic.
 --down:  #f78166;   /* stat that falls */
 --error: #f85149;
 
-/* Sub-skill tiers */
---tier-gold:    #d4a017;  /* the game's gold = the moon */
---tier-blue:    #58a6ff;
---tier-regular: #8b949e;
+/* Sub-skill tiers — blue is the tier-specific color; the gold and regular
+   tiers use --moon / --muted, mapped in .ss-icon */
+--tier-blue: #58a6ff;
 
 /* Elevated surfaces */
 --overlay:         rgba(13, 17, 23, 0.75);

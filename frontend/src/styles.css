@@ -22,10 +22,9 @@
   --up: #3fb950;
   --down: #f78166;
   --error: #f85149;
-  /* Tiers de sub skills */
-  --tier-gold: #d4a017;
+  /* Tier azul del sub skill; los tiers gold y regular usan --moon / --muted,
+     mapeados en .ss-icon. */
   --tier-blue: #58a6ff;
-  --tier-regular: #8b949e;
   /* Superficies elevadas */
   --overlay: rgba(13, 17, 23, 0.75);
   --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.5);
@@ -311,7 +310,7 @@ select:focus {
 }
 
 .ss-icon--gold {
-  --tier: var(--tier-gold);
+  --tier: var(--moon);
 }
 
 .ss-icon--blue {
@@ -319,7 +318,7 @@ select:focus {
 }
 
 .ss-icon--regular {
-  --tier: var(--tier-regular);
+  --tier: var(--muted);
 }
 
 .ss-icon--empty {
