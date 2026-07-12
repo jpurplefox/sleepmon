@@ -20,7 +20,12 @@ It comes from the game — Pokémon Sleep revolves around the moon, night, and
 nighttime production; everything valuable is warm inside the dark.
 
 **Voice:**
-- **Still and direct** — no animation except color transitions on hover (≤120ms).
+- **Still, but not frozen** — motion is allowed only when it does a job: state
+  feedback (the saving pulse), the entrance of new content (modals, production
+  cards), or a hover/selection transition. It stays short and sober (~80–150ms for
+  micro-interactions and entrances; the only loop is the saving pulse, and it *is*
+  the feedback), and always honors `prefers-reduced-motion`. Nothing moves to
+  decorate.
 - **Hierarchy by weight, not color** — gold is reserved for very few identity
   accents; indigo only for active/selection. When there is no real KPI, blocks
   share equal hierarchy (don't invent a "main number" where there isn't one).
@@ -28,7 +33,8 @@ nighttime production; everything valuable is warm inside the dark.
   the neutral frame that holds them.
 
 **Anti-goals:**
-1. No glassmorphism, heavy gradients, dramatic shadows, or excess animation.
+1. No glassmorphism, heavy gradients, dramatic shadows, or decorative/dramatic
+   animation (functional motion is fine — see Voice).
 2. No "spectacular" component that breaks the coherence of the rest.
 3. A new token only if justified — and remove one that's redundant. Prefer
    deleting to adding.
