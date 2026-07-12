@@ -7,10 +7,13 @@
   /* Texto */
   --text: #e6edf3;
   --muted: #8b949e;
-  /* Acento funcional (índigo) */
+  /* Acento funcional (índigo) — dos roles por contraste opuesto:
+     como RELLENO bajo texto blanco (accent / accent-strong) y como
+     TINTA sobre fondo oscuro (accent-text). Ver design-system §4 (Contrast). */
   --accent: #6366f1;
   --accent-strong: #4f46e5;
   --accent-dim: rgba(99, 102, 241, 0.15);
+  --accent-text: #818cf8; /* índigo como texto/ícono sobre oscuro (AA ≥4.5) */
   /* Acento identidad (dorado lunar) */
   --moon: #d4a017;
   --moon-dim: rgba(212, 160, 23, 0.15);
@@ -207,13 +210,13 @@ select:focus {
 }
 
 .btn--primary {
-  background: var(--accent);
+  background: var(--accent-strong);
   color: white;
   margin-top: 1rem;
 }
 
 .btn--primary:hover {
-  background: var(--accent-strong);
+  background: var(--accent);
 }
 
 .btn--primary:disabled {
@@ -814,7 +817,7 @@ select:focus {
 
 .level-stepper__btn:hover:not(:disabled) {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .level-stepper__btn:disabled {
@@ -1154,7 +1157,7 @@ select:focus {
 }
 
 .sort-control__dir:hover {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .box-toolbar__filters {
@@ -1436,7 +1439,7 @@ select:focus {
 
 .specialty-toggle__btn.is-on {
   background: var(--accent-dim);
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 600;
 }
 
@@ -1694,7 +1697,7 @@ select:focus {
 /* Ítems del menú neutros en reposo; el color aparece solo en hover (índigo en
    Comparar, rojo en Eliminar). Así ninguna acción "grita" estando en reposo. */
 .box-entry__menu-item--compare:hover {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .box-entry__menu-item--danger:hover {
@@ -2681,7 +2684,7 @@ button.prod-card__base-tag--action:hover {
 /* Pokémon que ya existe en la caja: el guardar tiñe a acento para señalar que
    ESCRIBE sobre el existente (vs crear uno nuevo). */
 .icon-btn--inbox {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .btn--ghost:disabled {
@@ -3557,7 +3560,7 @@ button.prod-card__base-tag--action:hover {
 .meal-picker-card__moment-btn.is-active {
   background: var(--accent-dim);
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .meal-picker-card__moment-btn:focus-visible {

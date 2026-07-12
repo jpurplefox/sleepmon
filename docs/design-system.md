@@ -53,10 +53,13 @@ rest are functional or semantic.
 --text:      #e6edf3;
 --muted:     #8b949e;
 
-/* Functional accent — indigo (selection, focus, active state) */
---accent:        #6366f1;
---accent-strong: #4f46e5;
+/* Functional accent — indigo. Two roles, because contrast pulls opposite
+   ways: as FILL under white text vs as INK on the dark background. One value
+   can't do both, so the palette splits the role, not the voice. */
+--accent:        #6366f1;   /* fill / border / focus outline */
+--accent-strong: #4f46e5;   /* fill under white text (primary button) */
 --accent-dim:    rgba(99, 102, 241, 0.15);
+--accent-text:   #818cf8;   /* indigo as text/icon on dark — AA (≥4.5:1) */
 
 /* Identity accent — moon gold (the only "warm" color allowed) */
 --moon:        #d4a017;
@@ -124,6 +127,12 @@ added here following the same stroke — no ad-hoc icons in components.
 
 ## 4. States & rules (cross-cutting)
 
+- **Contrast (WCAG AA):** all text meets **4.5:1** (normal) / **3:1** (large text,
+  icons, UI borders) against its actual background. Indigo is the one color that
+  needed splitting for this: `--accent-text` (#818cf8) whenever indigo is the
+  **ink** (text/icon on a dark surface), `--accent` / `--accent-strong` as
+  **fill/border**. The rest of the palette (`--muted`, `--moon`, semantic, tiers)
+  already clears AA; a new color must be checked against this before it's added.
 - **Focus:** unified `outline: 2px solid var(--accent)` on everything interactive
   (buttons, custom triggers, chips, stepper buttons, modal close, tabs). One
   combined selector owns this — new interactive elements join it.
@@ -232,6 +241,15 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   (e.g. coverage) without a new hue? *Resolution:* reuse the established
   dimmed/locked state (opacity + grayscale) instead of introducing a color. *Why:*
   every new color erodes the two-voices palette.
+- **Indigo splits by role, not by voice, for contrast.** *Question:* the same indigo
+  failed AA both as text on a dark surface (too dark) and, elsewhere, under white
+  text as a button fill (too light) — should we just pick one value? *Resolution:*
+  no single value works: #818cf8 reads at 5.80:1 as ink but only 2.98:1 under white,
+  while #4f46e5 reads at 6.29:1 under white but 2.75:1 as ink. So indigo keeps **one
+  voice, two roles** — `--accent-text` for ink, `--accent`/`--accent-strong` for
+  fill — and the primary button moved to `--accent-strong` as its base. *Why:*
+  foreground and background contrast pull in opposite directions; forcing one token
+  to serve both guarantees one of them fails AA.
 - **Two-row header for narrow cards.** *Question:* long names truncating in narrow
   comparison cards? *Resolution:* stack the header — sprite + actions on top,
   full-width name below. *Why:* names are content; the layout bends before the
