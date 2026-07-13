@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 import { useI18n } from "../i18n";
 import { maxSkillLevel, skillDescription } from "../skills";
+import { Stepper } from "./Stepper";
 
 interface Props {
   value: number;
@@ -36,38 +37,20 @@ export function SkillLevelSelector({ value, onChange, mainSkill }: Props) {
   const desc = skillDescription(mainSkill, value, lang);
 
   return (
-    <div className="skill-stepper">
-      <button
-        type="button"
-        className="skill-step"
-        onClick={() => go(-1)}
-        disabled={atStart}
-        aria-label={t("skillSel.down")}
-      >
-        ‹
-      </button>
-
-      <div className="skill-stepper__display">
-        <span className="skill-stepper__level" title={t("skillSel.title", { value, max })}>
+    <Stepper
+      onPrev={() => go(-1)}
+      onNext={() => go(1)}
+      disablePrev={atStart}
+      disableNext={atEnd}
+      prevLabel={t("skillSel.down")}
+      nextLabel={t("skillSel.up")}
+      leading={
+        <span className="stepper__level" title={t("skillSel.title", { value, max })}>
           {value}
         </span>
-        <div className="skill-stepper__text">
-          <span className="skill-stepper__name">
-            {mainSkill ? tMainSkill(mainSkill) : t("skillSel.pickSpecies")}
-          </span>
-          {desc && <span className="skill-stepper__desc">{desc}</span>}
-        </div>
-      </div>
-
-      <button
-        type="button"
-        className="skill-step"
-        onClick={() => go(1)}
-        disabled={atEnd}
-        aria-label={t("skillSel.up")}
-      >
-        ›
-      </button>
-    </div>
+      }
+      primary={mainSkill ? tMainSkill(mainSkill) : t("skillSel.pickSpecies")}
+      secondary={desc || undefined}
+    />
   );
 }

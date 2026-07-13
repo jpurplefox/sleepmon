@@ -20,7 +20,12 @@ It comes from the game — Pokémon Sleep revolves around the moon, night, and
 nighttime production; everything valuable is warm inside the dark.
 
 **Voice:**
-- **Still and direct** — no animation except color transitions on hover (≤120ms).
+- **Still, but not frozen** — motion is allowed only when it does a job: state
+  feedback (the saving pulse), the entrance of new content (modals, production
+  cards), or a hover/selection transition. It stays short and sober (~80–150ms for
+  micro-interactions and entrances; the only loop is the saving pulse, and it *is*
+  the feedback), and always honors `prefers-reduced-motion`. Nothing moves to
+  decorate.
 - **Hierarchy by weight, not color** — gold is reserved for very few identity
   accents; indigo only for active/selection. When there is no real KPI, blocks
   share equal hierarchy (don't invent a "main number" where there isn't one).
@@ -28,7 +33,8 @@ nighttime production; everything valuable is warm inside the dark.
   the neutral frame that holds them.
 
 **Anti-goals:**
-1. No glassmorphism, heavy gradients, dramatic shadows, or excess animation.
+1. No glassmorphism, heavy gradients, dramatic shadows, or decorative/dramatic
+   animation (functional motion is fine — see Voice).
 2. No "spectacular" component that breaks the coherence of the rest.
 3. A new token only if justified — and remove one that's redundant. Prefer
    deleting to adding.
@@ -53,10 +59,13 @@ rest are functional or semantic.
 --text:      #e6edf3;
 --muted:     #8b949e;
 
-/* Functional accent — indigo (selection, focus, active state) */
---accent:        #6366f1;
---accent-strong: #4f46e5;
+/* Functional accent — indigo. Two roles, because contrast pulls opposite
+   ways: as FILL under white text vs as INK on the dark background. One value
+   can't do both, so the palette splits the role, not the voice. */
+--accent:        #6366f1;   /* fill / border / focus outline */
+--accent-strong: #4f46e5;   /* fill under white text (primary button) */
 --accent-dim:    rgba(99, 102, 241, 0.15);
+--accent-text:   #818cf8;   /* indigo as text/icon on dark — AA (≥4.5:1) */
 
 /* Identity accent — moon gold (the only "warm" color allowed) */
 --moon:        #d4a017;
@@ -68,10 +77,9 @@ rest are functional or semantic.
 --down:  #f78166;   /* stat that falls */
 --error: #f85149;
 
-/* Sub-skill tiers */
---tier-gold:    #d4a017;  /* the game's gold = the moon */
---tier-blue:    #58a6ff;
---tier-regular: #8b949e;
+/* Sub-skill tiers — blue is the tier-specific color; the gold and regular
+   tiers use --moon / --muted, mapped in .ss-icon */
+--tier-blue: #58a6ff;
 
 /* Elevated surfaces */
 --overlay:         rgba(13, 17, 23, 0.75);
@@ -124,6 +132,12 @@ added here following the same stroke — no ad-hoc icons in components.
 
 ## 4. States & rules (cross-cutting)
 
+- **Contrast (WCAG AA):** all text meets **4.5:1** (normal) / **3:1** (large text,
+  icons, UI borders) against its actual background. Indigo is the one color that
+  needed splitting for this: `--accent-text` (#818cf8) whenever indigo is the
+  **ink** (text/icon on a dark surface), `--accent` / `--accent-strong` as
+  **fill/border**. The rest of the palette (`--muted`, `--moon`, semantic, tiers)
+  already clears AA; a new color must be checked against this before it's added.
 - **Focus:** unified `outline: 2px solid var(--accent)` on everything interactive
   (buttons, custom triggers, chips, stepper buttons, modal close, tabs). One
   combined selector owns this — new interactive elements join it.
@@ -188,15 +202,20 @@ states · where it lives. Feature one-offs are intentionally not here.
   `SubSkillSelect` share one skeleton: trigger (`aria-haspopup/expanded`) + absolute
   panel (`role="listbox"`), arrow/Enter nav, click-outside + Escape to close. Same
   pattern applied to filters as `.filter-pop / .filter-grid / .filter-list`.
-- **Tooltip** — two solutions: CSS attribute `[data-tooltip]` (auto-positions
-  above) and a bespoke React tooltip in `StrengthValue` (repositions to stay in
-  viewport).
+- **`Tooltip`** (`components/Tooltip.tsx`) — one bubble above its trigger, revealed
+  on hover and keyboard focus, with `aria-label` on the trigger. Centers over the
+  trigger and clamps to the viewport (any width, either edge). Plain string or rich
+  content via `Tooltip.Row / Tooltip.Label / Tooltip.Value` (e.g. a strength
+  base/bonus breakdown). Wraps the trigger element (`.tooltip` + `.tooltip__bubble`).
 
 ### Form controls
-- **Stepper pattern** (`‹ value ›`, buttons disable at bounds) — three flavors with
-  their own namespaces but the same interaction: `.level-stepper`
-  (`LevelSelector` + `LevelStepperInput`), `.skill-stepper` (`SkillLevelSelector`),
-  `.ribbon-select` (`RibbonSelect`).
+- **`Stepper`** (`components/Stepper.tsx`) — the `‹ value ›` shell: two nav buttons
+  flanking a display (leading visual + two-line label), buttons disable at bounds.
+  Shared by `SkillLevelSelector` (level badge + skill name/desc) and `RibbonSelect`
+  (ribbon icon + label/effect); the domain data and bounds live in each caller.
+- **Level stepper** (`.level-stepper`, `LevelSelector` + `LevelStepperInput`) — kept
+  separate: it has an editable number input and quick-pick level shortcuts, not just
+  prev/next.
 - **`LevelStepperInput`** — headless stepper (buttons + input, no container) to
   embed in another layout.
 - **`SpeciesSelect`** — searchable dropdown with sprite. **`NatureSelect`** —
@@ -209,8 +228,13 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **Tabs** — `.tabs / .tab / --active` (main nav and inner modal tabs).
 - **Error feedback** — `.error` (red text) + `ErrorBoundary` app fallback
   (`role="alert"`, title + "reload" `.btn--primary`).
-- **Empty / loading** — no shared component yet. Current empties use muted
-  centered text (`role="status"`); loading reserves height without a spinner.
+- **`Placeholder`** (`components/Placeholder.tsx`) — centered muted status line
+  standing in for absent content: an empty list, a search with no matches, or
+  content still loading (`loading` adds `aria-busy`). Always `role="status"` +
+  `aria-live`; may hold an inline action (e.g. "clear filters"). Error states are
+  separate (`.error` + `role="alert"`), as is a list's own empty item inside a
+  listbox (`SpeciesSelect`'s `.species-empty`) and a card reserving its loading
+  height (`.prod-card__calc`).
 
 ---
 
@@ -232,6 +256,15 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   (e.g. coverage) without a new hue? *Resolution:* reuse the established
   dimmed/locked state (opacity + grayscale) instead of introducing a color. *Why:*
   every new color erodes the two-voices palette.
+- **Indigo splits by role, not by voice, for contrast.** *Question:* the same indigo
+  failed AA both as text on a dark surface (too dark) and, elsewhere, under white
+  text as a button fill (too light) — should we just pick one value? *Resolution:*
+  no single value works: #818cf8 reads at 5.80:1 as ink but only 2.98:1 under white,
+  while #4f46e5 reads at 6.29:1 under white but 2.75:1 as ink. So indigo keeps **one
+  voice, two roles** — `--accent-text` for ink, `--accent`/`--accent-strong` for
+  fill — and the primary button moved to `--accent-strong` as its base. *Why:*
+  foreground and background contrast pull in opposite directions; forcing one token
+  to serve both guarantees one of them fails AA.
 - **Two-row header for narrow cards.** *Question:* long names truncating in narrow
   comparison cards? *Resolution:* stack the header — sprite + actions on top,
   full-width name below. *Why:* names are content; the layout bends before the

@@ -5,6 +5,7 @@ import { api } from "../api/client";
 import { BoxPicker } from "../components/BoxPicker";
 import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
+import { Placeholder } from "../components/Placeholder";
 import { ProductionCard } from "../components/ProductionCard";
 import { useI18n } from "../i18n";
 import type { Member, MemberInput } from "../types";
@@ -237,7 +238,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
 
   const saveToBox = (i: number) => save.mutate(entries[i]);
 
-  if (catalog.isLoading) return <p className="muted">{t("common.loadingCatalog")}</p>;
+  if (catalog.isLoading) return <Placeholder loading>{t("common.loadingCatalog")}</Placeholder>;
   if (catalog.isError || !catalog.data)
     return (
       <p className="error" role="alert">

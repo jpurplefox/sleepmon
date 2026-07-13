@@ -1,6 +1,7 @@
 import { RIBBONS } from "../constants";
 import { useI18n } from "../i18n";
 import { RibbonIcon } from "./RibbonIcon";
+import { Stepper } from "./Stepper";
 
 interface Props {
   value: string;
@@ -32,34 +33,16 @@ export function RibbonSelect({ value, onChange }: Props) {
       : t("ribbon.effect", { inv: tier.inventoryBonus }) + (tier.speed ? t("ribbon.speed") : "");
 
   return (
-    <div className="ribbon-select">
-      <button
-        type="button"
-        className="ribbon-step"
-        onClick={() => go(-1)}
-        disabled={atStart}
-        aria-label={t("ribbon.prev")}
-      >
-        ‹
-      </button>
-
-      <div className="ribbon-display">
-        <RibbonIcon index={index} size={34} title={label} />
-        <div className="ribbon-display__text">
-          <span className="ribbon-display__label">{label}</span>
-          <span className="ribbon-display__effect">{effect}</span>
-        </div>
-      </div>
-
-      <button
-        type="button"
-        className="ribbon-step"
-        onClick={() => go(1)}
-        disabled={atEnd}
-        aria-label={t("ribbon.next")}
-      >
-        ›
-      </button>
-    </div>
+    <Stepper
+      onPrev={() => go(-1)}
+      onNext={() => go(1)}
+      disablePrev={atStart}
+      disableNext={atEnd}
+      prevLabel={t("ribbon.prev")}
+      nextLabel={t("ribbon.next")}
+      leading={<RibbonIcon index={index} size={34} title={label} />}
+      primary={label}
+      secondary={effect}
+    />
   );
 }

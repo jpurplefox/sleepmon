@@ -8,6 +8,7 @@ import { mainSkillIcon } from "../skillIcons";
 import { subSkillIcon } from "../subskills";
 import type { Nature } from "../types";
 import { IngredientLineup } from "./IngredientLineup";
+import { Tooltip } from "./Tooltip";
 
 const TIER_CLASS: Record<string, string> = { Gold: "gold", Blue: "blue", Regular: "regular" };
 
@@ -121,13 +122,11 @@ export function MemberConfig({
               ? t("member.subSkillLocked", { name: subSkill(s), level: unlock })
               : t("member.subSkillSlotUnavailable", { name: subSkill(s) });
           return (
-            <span
-              key={`${s}-${idx}`}
-              className={`ss-icon ss-icon--${tier}` + (locked ? " is-locked" : "")}
-              data-tooltip={tooltip}
-            >
-              <img src={subSkillIcon(s)} alt={subSkill(s)} loading="lazy" />
-            </span>
+            <Tooltip key={`${s}-${idx}`} content={tooltip}>
+              <span className={`ss-icon ss-icon--${tier}` + (locked ? " is-locked" : "")}>
+                <img src={subSkillIcon(s)} alt={subSkill(s)} loading="lazy" />
+              </span>
+            </Tooltip>
           );
         })}
       </span>

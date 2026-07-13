@@ -4,6 +4,7 @@ import { maxSubSkillSlots, SUB_SKILL_UNLOCK_LEVELS } from "../constants";
 import { useI18n } from "../i18n";
 import { subSkillIcon } from "../subskills";
 import type { SubSkill } from "../types";
+import { Tooltip } from "./Tooltip";
 
 const MAX_SUB_SKILLS = 5;
 
@@ -113,14 +114,15 @@ export function SubSkillSelect({ subSkills, value, level, onChange, ariaLabel }:
             const locked = level < unlock;
             const tier = name ? TIER_CLASS[tierOf(name)] : "empty";
             return (
-              <span
+              <Tooltip
                 key={i}
-                className={`ss-icon ss-icon--${tier}` + (locked ? " is-locked" : "")}
-                data-tooltip={name ? subSkill(name) : t("subSel.slotEmpty", { unlock })}
+                content={name ? subSkill(name) : t("subSel.slotEmpty", { unlock })}
               >
-                {name && <img src={subSkillIcon(name)} alt={name} />}
-                <span className="ss-icon__lv">{unlock}</span>
-              </span>
+                <span className={`ss-icon ss-icon--${tier}` + (locked ? " is-locked" : "")}>
+                  {name && <img src={subSkillIcon(name)} alt={name} />}
+                  <span className="ss-icon__lv">{unlock}</span>
+                </span>
+              </Tooltip>
             );
           })}
         </div>

@@ -15,6 +15,7 @@ import { berryIcon } from "../berries";
 import { BoxPicker } from "../components/BoxPicker";
 import { SettingsModal } from "../components/SettingsModal";
 import { Modal } from "../components/Modal";
+import { Placeholder } from "../components/Placeholder";
 import { TeamSlotCard } from "../components/TeamSlotCard";
 import { StrengthValue } from "../components/StrengthValue";
 import { SnorlaxRatingBadge } from "../components/SnorlaxRatingBadge";
@@ -363,7 +364,7 @@ export function Teams() {
   };
 
   // Catalog must be loaded for BoxPicker to work.
-  if (catalog.isLoading) return <p className="muted">{t("common.loadingCatalog")}</p>;
+  if (catalog.isLoading) return <Placeholder loading>{t("common.loadingCatalog")}</Placeholder>;
   if (catalog.isError || !catalog.data)
     return (
       <p className="error" role="alert">
@@ -446,7 +447,7 @@ export function Teams() {
 
       {/* ── Loading / error states for the team query ── */}
       {slots.length > 0 && teamQuery.isLoading && (
-        <p className="muted" style={{ marginTop: "1.5rem" }}>{t("teams.calculating")}</p>
+        <Placeholder loading>{t("teams.calculating")}</Placeholder>
       )}
       {slots.length > 0 && teamQuery.isError && (
         <p className="error" role="alert" style={{ marginTop: "1.5rem" }}>

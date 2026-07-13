@@ -6,6 +6,7 @@ import { useI18n } from "../i18n";
 import { spriteUrl } from "../sprites";
 import type { Catalog, Member } from "../types";
 import { MemberConfig } from "./MemberConfig";
+import { Placeholder } from "./Placeholder";
 import { RibbonIcon } from "./RibbonIcon";
 
 // Normaliza para buscar: sin mayúsculas ni acentos, así "ralts" matchea "Ralts" y
@@ -76,12 +77,7 @@ export function BoxPicker({
     [catalog.natures],
   );
 
-  if (isLoading)
-    return (
-      <p className="muted" role="status">
-        {t("team.loadingBox")}
-      </p>
-    );
+  if (isLoading) return <Placeholder loading>{t("team.loadingBox")}</Placeholder>;
 
   if (isError)
     return (
@@ -94,7 +90,7 @@ export function BoxPicker({
     );
 
   if (!members || members.length === 0)
-    return <p className="muted">{t("prod.boxEmptyTab")}</p>;
+    return <Placeholder>{t("prod.boxEmptyTab")}</Placeholder>;
 
   // Filtra por nombre de especie. Hoy las especies no tienen traducción propia
   // (no hay tSpecies en i18n): m.species es el nombre canónico que también se
@@ -157,9 +153,7 @@ export function BoxPicker({
       </span>
 
       {filtered.length === 0 ? (
-        <p className="muted prod-box-empty" role="status">
-          {t("prod.boxSearchEmpty", { query: search })}
-        </p>
+        <Placeholder>{t("prod.boxSearchEmpty", { query: search })}</Placeholder>
       ) : (
         <ul id={listId} className="prod-box-list" role="listbox" ref={listRef}>
           {filtered.map((m, idx) => {

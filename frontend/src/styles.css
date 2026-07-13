@@ -7,10 +7,13 @@
   /* Texto */
   --text: #e6edf3;
   --muted: #8b949e;
-  /* Acento funcional (índigo) */
+  /* Acento funcional (índigo) — dos roles por contraste opuesto:
+     como RELLENO bajo texto blanco (accent / accent-strong) y como
+     TINTA sobre fondo oscuro (accent-text). Ver design-system §4 (Contrast). */
   --accent: #6366f1;
   --accent-strong: #4f46e5;
   --accent-dim: rgba(99, 102, 241, 0.15);
+  --accent-text: #818cf8; /* índigo como texto/ícono sobre oscuro (AA ≥4.5) */
   /* Acento identidad (dorado lunar) */
   --moon: #d4a017;
   --moon-dim: rgba(212, 160, 23, 0.15);
@@ -19,10 +22,9 @@
   --up: #3fb950;
   --down: #f78166;
   --error: #f85149;
-  /* Tiers de sub skills */
-  --tier-gold: #d4a017;
+  /* Tier azul del sub skill; los tiers gold y regular usan --moon / --muted,
+     mapeados en .ss-icon. */
   --tier-blue: #58a6ff;
-  --tier-regular: #8b949e;
   /* Superficies elevadas */
   --overlay: rgba(13, 17, 23, 0.75);
   --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.5);
@@ -77,23 +79,37 @@ body {
   color: var(--muted);
 }
 
+/* Placeholder de contenido ausente (vacío o cargando): línea muted centrada.
+   Los errores son aparte (.error + role=alert). */
+.placeholder {
+  margin: 0;
+  padding: 1rem 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
 .error {
   color: var(--error);
   font-size: var(--text-base);
 }
 
-/* Tooltip simple (CSS) para íconos con data-tooltip. */
-[data-tooltip] {
+/* Tooltip (componente Tooltip.tsx): burbuja arriba del trigger, en hover/focus.
+   El offset horizontal lo fija JS (clamp al viewport); acá va el look. */
+.tooltip {
   position: relative;
+  display: inline-flex;
 }
 
-[data-tooltip]:hover::after {
-  content: attr(data-tooltip);
+.tooltip__bubble {
   position: absolute;
   bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
+  left: 0;
+  width: max-content;
+  max-width: min(16rem, 90vw);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
   background: var(--surface-2);
   border: 1px solid var(--border);
   color: var(--text);
@@ -102,7 +118,43 @@ body {
   border-radius: var(--r-sm);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
   pointer-events: none;
-  z-index: 100;
+  z-index: 200;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.tooltip:hover .tooltip__bubble,
+.tooltip:focus-within .tooltip__bubble {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Contenido rico: filas label/valor (p. ej. desglose base / con bonus). */
+.tooltip__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.25rem;
+  min-width: 12rem;
+}
+
+.tooltip__label {
+  color: var(--muted);
+}
+
+.tooltip__val {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.tooltip__row + .tooltip__row {
+  border-top: 1px solid var(--border);
+  padding-top: 0.2rem;
+  margin-top: 0.1rem;
+}
+
+/* Fila activa (con bonus): valor en dorado. */
+.tooltip__row:last-child .tooltip__val {
+  color: var(--moon);
 }
 
 .grid {
@@ -185,6 +237,7 @@ select:focus {
 .species-trigger:focus-visible,
 .icon-btn:focus-visible,
 .level-stepper__btn:focus-visible,
+.stepper__btn:focus-visible,
 .modal-close:focus-visible,
 .level-chip:focus-visible,
 .btn:focus-visible,
@@ -207,13 +260,13 @@ select:focus {
 }
 
 .btn--primary {
-  background: var(--accent);
+  background: var(--accent-strong);
   color: white;
   margin-top: 1rem;
 }
 
 .btn--primary:hover {
-  background: var(--accent-strong);
+  background: var(--accent);
 }
 
 .btn--primary:disabled {
@@ -308,7 +361,7 @@ select:focus {
 }
 
 .ss-icon--gold {
-  --tier: var(--tier-gold);
+  --tier: var(--moon);
 }
 
 .ss-icon--blue {
@@ -316,7 +369,7 @@ select:focus {
 }
 
 .ss-icon--regular {
-  --tier: var(--tier-regular);
+  --tier: var(--muted);
 }
 
 .ss-icon--empty {
@@ -814,7 +867,7 @@ select:focus {
 
 .level-stepper__btn:hover:not(:disabled) {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .level-stepper__btn:disabled {
@@ -890,13 +943,15 @@ select:focus {
 
 /* Stepper del nivel de skill: mismo patrón visual que el de listones (botones a
    los lados + panel), con un badge circular para el nivel y la bajada de la skill. */
-.skill-stepper {
+/* Stepper ‹ valor › (Stepper.tsx): shell compartido por skill-level y ribbon.
+   El de nivel (.level-stepper) es aparte: tiene input editable y atajos. */
+.stepper {
   display: flex;
   align-items: stretch;
   gap: 0.5rem;
 }
 
-.skill-step {
+.stepper__btn {
   flex: 0 0 auto;
   width: 2.4rem;
   background: var(--surface-2);
@@ -909,16 +964,16 @@ select:focus {
   transition: background 0.15s, border-color 0.15s;
 }
 
-.skill-step:hover:not(:disabled) {
+.stepper__btn:hover:not(:disabled) {
   border-color: var(--accent);
 }
 
-.skill-step:disabled {
+.stepper__btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
 
-.skill-stepper__display {
+.stepper__display {
   flex: 1 1 auto;
   display: flex;
   align-items: center;
@@ -929,7 +984,7 @@ select:focus {
   border-radius: var(--r-md);
 }
 
-.skill-stepper__level {
+.stepper__level {
   flex: 0 0 auto;
   width: 34px;
   height: 34px;
@@ -942,20 +997,20 @@ select:focus {
   font-size: var(--text-base);
 }
 
-.skill-stepper__text {
+.stepper__text {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
   min-width: 0;
 }
 
-.skill-stepper__name {
+.stepper__primary {
   color: var(--text);
   font-size: var(--text-base);
   font-weight: 600;
 }
 
-.skill-stepper__desc {
+.stepper__secondary {
   color: var(--muted);
   font-size: var(--text-sm);
 }
@@ -1154,7 +1209,7 @@ select:focus {
 }
 
 .sort-control__dir:hover {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .box-toolbar__filters {
@@ -1436,7 +1491,7 @@ select:focus {
 
 .specialty-toggle__btn.is-on {
   background: var(--accent-dim);
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 600;
 }
 
@@ -1694,7 +1749,7 @@ select:focus {
 /* Ítems del menú neutros en reposo; el color aparece solo en hover (índigo en
    Comparar, rojo en Eliminar). Así ninguna acción "grita" estando en reposo. */
 .box-entry__menu-item--compare:hover {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .box-entry__menu-item--danger:hover {
@@ -2153,13 +2208,6 @@ select:focus {
 .prod-box-search:focus {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
-}
-
-.prod-box-empty {
-  margin: 0;
-  padding: 0.5rem 0;
-  font-size: var(--text-sm);
-  text-align: center;
 }
 
 .prod-box-list {
@@ -2681,7 +2729,7 @@ button.prod-card__base-tag--action:hover {
 /* Pokémon que ya existe en la caja: el guardar tiñe a acento para señalar que
    ESCRIBE sobre el existente (vs crear uno nuevo). */
 .icon-btn--inbox {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .btn--ghost:disabled {
@@ -2879,64 +2927,6 @@ button.prod-card__base-tag--action:hover {
 }
 
 /* Stepper del formulario: ‹ ícono+horas ›. */
-.ribbon-select {
-  display: flex;
-  align-items: stretch;
-  gap: 0.5rem;
-}
-
-.ribbon-step {
-  flex: 0 0 auto;
-  width: 2.4rem;
-  background: var(--surface-2);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  font-size: var(--text-xl);
-  line-height: 1;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.ribbon-step:hover:not(:disabled) {
-  background: var(--surface-2);
-  border-color: var(--accent);
-}
-
-.ribbon-step:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.ribbon-display {
-  flex: 1 1 auto;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.4rem 0.7rem;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-}
-
-.ribbon-display__text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-width: 0;
-}
-
-.ribbon-display__label {
-  color: var(--text);
-  font-size: var(--text-base);
-  font-weight: 600;
-}
-
-.ribbon-display__effect {
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
 /* Respeta a quien prefiere menos movimiento: nada de animaciones de presencia. */
 @media (prefers-reduced-motion: reduce) {
   .prod-card--enter,
@@ -3557,7 +3547,7 @@ button.prod-card__base-tag--action:hover {
 .meal-picker-card__moment-btn.is-active {
   background: var(--accent-dim);
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .meal-picker-card__moment-btn:focus-visible {
@@ -4115,70 +4105,9 @@ button.prod-card__base-tag--action:hover {
 .bonus-slider__unit { font-size: var(--text-sm); color: var(--muted); font-weight: 400; }
 .bonus-slider__marks { display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--muted); padding: 0 7px; user-select: none; }
 
-/* ── StrengthValue tooltip ─────────────────────────────────────────────────
-   Shows a two-line breakdown (Base / Con bonus) when hovering a strength
-   value that has an island bonus applied. The wrapping span is position:
-   relative so the tooltip card can anchor to it. The tooltip is hidden by
-   default and shown on hover/focus; it is also available as a native `title`
-   and `aria-label` for screen readers and keyboard users.
- ─────────────────────────────────────────────────────────────────────────── */
-.strength-value--has-tooltip {
-  position: relative;
+/* El número con desglose: pista de que hay tooltip (subrayado punteado). */
+.strength-value__cue {
   cursor: help;
   text-decoration: underline dotted var(--muted);
   text-underline-offset: 2px;
-}
-
-.strength-value__tooltip {
-  display: none;
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 0;
-  right: auto;
-  transform: none;
-  min-width: 13rem;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  padding: 0.4rem 0.6rem;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
-  font-size: var(--text-xs);
-  color: var(--text);
-  white-space: nowrap;
-  z-index: 200;
-  pointer-events: none;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.strength-value--has-tooltip:hover .strength-value__tooltip,
-.strength-value--has-tooltip:focus-within .strength-value__tooltip {
-  display: flex;
-}
-
-.strength-value__tooltip-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 1.25rem;
-}
-
-.strength-value__tooltip-label {
-  color: var(--muted);
-}
-
-.strength-value__tooltip-val {
-  font-weight: 600;
-  color: var(--text);
-}
-
-/* Separador entre las 2 filas del tooltip (Base / Con bonus). */
-.strength-value__tooltip-row + .strength-value__tooltip-row {
-  border-top: 1px solid var(--border);
-  padding-top: 0.2rem;
-  margin-top: 0.1rem;
-}
-
-/* Fila activa (con bonus): valor en dorado. */
-.strength-value__tooltip-row:last-child .strength-value__tooltip-val {
-  color: var(--moon);
 }
