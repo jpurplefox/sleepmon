@@ -84,18 +84,22 @@ body {
   font-size: var(--text-base);
 }
 
-/* Tooltip simple (CSS) para íconos con data-tooltip. */
-[data-tooltip] {
+/* Tooltip (componente Tooltip.tsx): burbuja arriba del trigger, en hover/focus.
+   El offset horizontal lo fija JS (clamp al viewport); acá va el look. */
+.tooltip {
   position: relative;
+  display: inline-flex;
 }
 
-[data-tooltip]:hover::after {
-  content: attr(data-tooltip);
+.tooltip__bubble {
   position: absolute;
   bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
+  left: 0;
+  width: max-content;
+  max-width: min(16rem, 90vw);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
   background: var(--surface-2);
   border: 1px solid var(--border);
   color: var(--text);
@@ -104,7 +108,43 @@ body {
   border-radius: var(--r-sm);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
   pointer-events: none;
-  z-index: 100;
+  z-index: 200;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.tooltip:hover .tooltip__bubble,
+.tooltip:focus-within .tooltip__bubble {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Contenido rico: filas label/valor (p. ej. desglose base / con bonus). */
+.tooltip__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.25rem;
+  min-width: 12rem;
+}
+
+.tooltip__label {
+  color: var(--muted);
+}
+
+.tooltip__val {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.tooltip__row + .tooltip__row {
+  border-top: 1px solid var(--border);
+  padding-top: 0.2rem;
+  margin-top: 0.1rem;
+}
+
+/* Fila activa (con bonus): valor en dorado. */
+.tooltip__row:last-child .tooltip__val {
+  color: var(--moon);
 }
 
 .grid {
@@ -4117,70 +4157,9 @@ button.prod-card__base-tag--action:hover {
 .bonus-slider__unit { font-size: var(--text-sm); color: var(--muted); font-weight: 400; }
 .bonus-slider__marks { display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--muted); padding: 0 7px; user-select: none; }
 
-/* ── StrengthValue tooltip ─────────────────────────────────────────────────
-   Shows a two-line breakdown (Base / Con bonus) when hovering a strength
-   value that has an island bonus applied. The wrapping span is position:
-   relative so the tooltip card can anchor to it. The tooltip is hidden by
-   default and shown on hover/focus; it is also available as a native `title`
-   and `aria-label` for screen readers and keyboard users.
- ─────────────────────────────────────────────────────────────────────────── */
-.strength-value--has-tooltip {
-  position: relative;
+/* El número con desglose: pista de que hay tooltip (subrayado punteado). */
+.strength-value__cue {
   cursor: help;
   text-decoration: underline dotted var(--muted);
   text-underline-offset: 2px;
-}
-
-.strength-value__tooltip {
-  display: none;
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 0;
-  right: auto;
-  transform: none;
-  min-width: 13rem;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  padding: 0.4rem 0.6rem;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
-  font-size: var(--text-xs);
-  color: var(--text);
-  white-space: nowrap;
-  z-index: 200;
-  pointer-events: none;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.strength-value--has-tooltip:hover .strength-value__tooltip,
-.strength-value--has-tooltip:focus-within .strength-value__tooltip {
-  display: flex;
-}
-
-.strength-value__tooltip-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 1.25rem;
-}
-
-.strength-value__tooltip-label {
-  color: var(--muted);
-}
-
-.strength-value__tooltip-val {
-  font-weight: 600;
-  color: var(--text);
-}
-
-/* Separador entre las 2 filas del tooltip (Base / Con bonus). */
-.strength-value__tooltip-row + .strength-value__tooltip-row {
-  border-top: 1px solid var(--border);
-  padding-top: 0.2rem;
-  margin-top: 0.1rem;
-}
-
-/* Fila activa (con bonus): valor en dorado. */
-.strength-value__tooltip-row:last-child .strength-value__tooltip-val {
-  color: var(--moon);
 }

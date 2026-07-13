@@ -202,9 +202,11 @@ states · where it lives. Feature one-offs are intentionally not here.
   `SubSkillSelect` share one skeleton: trigger (`aria-haspopup/expanded`) + absolute
   panel (`role="listbox"`), arrow/Enter nav, click-outside + Escape to close. Same
   pattern applied to filters as `.filter-pop / .filter-grid / .filter-list`.
-- **Tooltip** — two solutions: CSS attribute `[data-tooltip]` (auto-positions
-  above) and a bespoke React tooltip in `StrengthValue` (repositions to stay in
-  viewport).
+- **`Tooltip`** (`components/Tooltip.tsx`) — one bubble above its trigger, revealed
+  on hover and keyboard focus, with `aria-label` on the trigger. Centers over the
+  trigger and clamps to the viewport (any width, either edge). Plain string or rich
+  content via `Tooltip.Row / Tooltip.Label / Tooltip.Value` (e.g. a strength
+  base/bonus breakdown). Wraps the trigger element (`.tooltip` + `.tooltip__bubble`).
 
 ### Form controls
 - **Stepper pattern** (`‹ value ›`, buttons disable at bounds) — three flavors with
