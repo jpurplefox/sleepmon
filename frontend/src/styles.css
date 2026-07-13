@@ -237,6 +237,7 @@ select:focus {
 .species-trigger:focus-visible,
 .icon-btn:focus-visible,
 .level-stepper__btn:focus-visible,
+.stepper__btn:focus-visible,
 .modal-close:focus-visible,
 .level-chip:focus-visible,
 .btn:focus-visible,
@@ -942,13 +943,15 @@ select:focus {
 
 /* Stepper del nivel de skill: mismo patrón visual que el de listones (botones a
    los lados + panel), con un badge circular para el nivel y la bajada de la skill. */
-.skill-stepper {
+/* Stepper ‹ valor › (Stepper.tsx): shell compartido por skill-level y ribbon.
+   El de nivel (.level-stepper) es aparte: tiene input editable y atajos. */
+.stepper {
   display: flex;
   align-items: stretch;
   gap: 0.5rem;
 }
 
-.skill-step {
+.stepper__btn {
   flex: 0 0 auto;
   width: 2.4rem;
   background: var(--surface-2);
@@ -961,16 +964,16 @@ select:focus {
   transition: background 0.15s, border-color 0.15s;
 }
 
-.skill-step:hover:not(:disabled) {
+.stepper__btn:hover:not(:disabled) {
   border-color: var(--accent);
 }
 
-.skill-step:disabled {
+.stepper__btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
 }
 
-.skill-stepper__display {
+.stepper__display {
   flex: 1 1 auto;
   display: flex;
   align-items: center;
@@ -981,7 +984,7 @@ select:focus {
   border-radius: var(--r-md);
 }
 
-.skill-stepper__level {
+.stepper__level {
   flex: 0 0 auto;
   width: 34px;
   height: 34px;
@@ -994,20 +997,20 @@ select:focus {
   font-size: var(--text-base);
 }
 
-.skill-stepper__text {
+.stepper__text {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
   min-width: 0;
 }
 
-.skill-stepper__name {
+.stepper__primary {
   color: var(--text);
   font-size: var(--text-base);
   font-weight: 600;
 }
 
-.skill-stepper__desc {
+.stepper__secondary {
   color: var(--muted);
   font-size: var(--text-sm);
 }
@@ -2924,64 +2927,6 @@ button.prod-card__base-tag--action:hover {
 }
 
 /* Stepper del formulario: ‹ ícono+horas ›. */
-.ribbon-select {
-  display: flex;
-  align-items: stretch;
-  gap: 0.5rem;
-}
-
-.ribbon-step {
-  flex: 0 0 auto;
-  width: 2.4rem;
-  background: var(--surface-2);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  font-size: var(--text-xl);
-  line-height: 1;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.ribbon-step:hover:not(:disabled) {
-  background: var(--surface-2);
-  border-color: var(--accent);
-}
-
-.ribbon-step:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.ribbon-display {
-  flex: 1 1 auto;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.4rem 0.7rem;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-}
-
-.ribbon-display__text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-width: 0;
-}
-
-.ribbon-display__label {
-  color: var(--text);
-  font-size: var(--text-base);
-  font-weight: 600;
-}
-
-.ribbon-display__effect {
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
 /* Respeta a quien prefiere menos movimiento: nada de animaciones de presencia. */
 @media (prefers-reduced-motion: reduce) {
   .prod-card--enter,

@@ -209,10 +209,13 @@ states · where it lives. Feature one-offs are intentionally not here.
   base/bonus breakdown). Wraps the trigger element (`.tooltip` + `.tooltip__bubble`).
 
 ### Form controls
-- **Stepper pattern** (`‹ value ›`, buttons disable at bounds) — three flavors with
-  their own namespaces but the same interaction: `.level-stepper`
-  (`LevelSelector` + `LevelStepperInput`), `.skill-stepper` (`SkillLevelSelector`),
-  `.ribbon-select` (`RibbonSelect`).
+- **`Stepper`** (`components/Stepper.tsx`) — the `‹ value ›` shell: two nav buttons
+  flanking a display (leading visual + two-line label), buttons disable at bounds.
+  Shared by `SkillLevelSelector` (level badge + skill name/desc) and `RibbonSelect`
+  (ribbon icon + label/effect); the domain data and bounds live in each caller.
+- **Level stepper** (`.level-stepper`, `LevelSelector` + `LevelStepperInput`) — kept
+  separate: it has an editable number input and quick-pick level shortcuts, not just
+  prev/next.
 - **`LevelStepperInput`** — headless stepper (buttons + input, no container) to
   embed in another layout.
 - **`SpeciesSelect`** — searchable dropdown with sprite. **`NatureSelect`** —
