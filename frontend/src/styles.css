@@ -79,6 +79,16 @@ body {
   color: var(--muted);
 }
 
+/* Placeholder de contenido ausente (vacío o cargando): línea muted centrada.
+   Los errores son aparte (.error + role=alert). */
+.placeholder {
+  margin: 0;
+  padding: 1rem 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
 .error {
   color: var(--error);
   font-size: var(--text-base);
@@ -2195,13 +2205,6 @@ select:focus {
 .prod-box-search:focus {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
-}
-
-.prod-box-empty {
-  margin: 0;
-  padding: 0.5rem 0;
-  font-size: var(--text-sm);
-  text-align: center;
 }
 
 .prod-box-list {

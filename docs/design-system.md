@@ -225,8 +225,13 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **Tabs** — `.tabs / .tab / --active` (main nav and inner modal tabs).
 - **Error feedback** — `.error` (red text) + `ErrorBoundary` app fallback
   (`role="alert"`, title + "reload" `.btn--primary`).
-- **Empty / loading** — no shared component yet. Current empties use muted
-  centered text (`role="status"`); loading reserves height without a spinner.
+- **`Placeholder`** (`components/Placeholder.tsx`) — centered muted status line
+  standing in for absent content: an empty list, a search with no matches, or
+  content still loading (`loading` adds `aria-busy`). Always `role="status"` +
+  `aria-live`; may hold an inline action (e.g. "clear filters"). Error states are
+  separate (`.error` + `role="alert"`), as is a list's own empty item inside a
+  listbox (`SpeciesSelect`'s `.species-empty`) and a card reserving its loading
+  height (`.prod-card__calc`).
 
 ---
 

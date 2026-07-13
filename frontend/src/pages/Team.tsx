@@ -13,6 +13,7 @@ import {
 import { BoxCoverage } from "../components/BoxCoverage";
 import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
+import { Placeholder } from "../components/Placeholder";
 import { useI18n } from "../i18n";
 import { totalIngredients } from "../ingredientProduction";
 import type { Catalog, Member, MemberInput, Species } from "../types";
@@ -148,7 +149,7 @@ export function Team({ onCompare }: TeamProps) {
   const speciesByName = new Map((catalog.data?.species ?? []).map((s) => [s.name, s]));
   const tierBySubSkill = new Map((catalog.data?.sub_skills ?? []).map((s) => [s.name, s.tier]));
 
-  if (catalog.isLoading) return <p className="muted">{t("common.loadingCatalog")}</p>;
+  if (catalog.isLoading) return <Placeholder loading>{t("common.loadingCatalog")}</Placeholder>;
   if (catalog.isError || !catalog.data)
     return <p className="error">{t("common.catalogError")}</p>;
 
@@ -211,7 +212,7 @@ export function Team({ onCompare }: TeamProps) {
           </button>
         </div>
 
-        {members.isLoading && <p className="muted">{t("team.loadingBox")}</p>}
+        {members.isLoading && <Placeholder loading>{t("team.loadingBox")}</Placeholder>}
         {members.isError && (
           <p className="error" role="alert">
             {t("team.boxError")}{" "}
@@ -232,11 +233,7 @@ export function Team({ onCompare }: TeamProps) {
             </button>
           </p>
         )}
-        {members.data?.length === 0 && (
-          <p className="muted" role="status">
-            {t("team.boxEmpty")}
-          </p>
-        )}
+        {members.data?.length === 0 && <Placeholder>{t("team.boxEmpty")}</Placeholder>}
 
         {/* Con un solo Pokémon, ordenar y filtrar no aporta: se oculta la barra. */}
         {allMembers.length > 1 && (
@@ -256,12 +253,12 @@ export function Team({ onCompare }: TeamProps) {
         )}
 
         {allMembers.length > 0 && visible.length === 0 && (
-          <p className="muted" role="status">
+          <Placeholder>
             {t("box.noMatch")}{" "}
             <button type="button" className="btn btn--ghost" onClick={() => setFilters(EMPTY_FILTERS)}>
               {t("box.clearFilters")}
             </button>
-          </p>
+          </Placeholder>
         )}
 
         <div className="members">
