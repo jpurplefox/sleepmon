@@ -52,6 +52,20 @@ describe("SubSkillSelect", () => {
     expect(screen.queryByRole("option", { selected: true })).toBeNull();
   });
 
+  it("lets you preload a slot the level has not unlocked yet", async () => {
+    const user = userEvent.setup();
+    // Level 1 unlocks no sub-skill slots, but the game still lets you load them;
+    // they simply activate once the Pokémon reaches the unlock level.
+    render(<Harness level={1} />);
+    await user.click(screen.getByRole("button", { name: "Sub skills" }));
+
+    await user.click(screen.getByRole("option", { name: "Helping Speed S" }));
+
+    expect(screen.getByRole("option", { selected: true })).toHaveAccessibleName(
+      "Remove Helping Speed S",
+    );
+  });
+
   it("caps selections at five and disables the remaining options", async () => {
     const user = userEvent.setup();
     render(<Harness />);
