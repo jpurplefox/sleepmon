@@ -954,7 +954,12 @@ export function Teams() {
                         {cookingExtra > 0 && cookingSkillEffect && (
                           <li className="cook-cap-row">
                             <span className="cook-cap-row__label">
-                              <IconSparkle width={14} height={14} />
+                              <img
+                                className="mini-icon"
+                                src={POT_EXPANSION_ICON}
+                                alt=""
+                                style={{ width: 14, height: 14 }}
+                              />
                               {t("teams.potSkill")}
                               <span className="muted" style={{ fontSize: "var(--text-xs)", display: "inline-flex", alignItems: "center", gap: "0.15rem" }}>
                                 &ensp;(<IconSparkle width={11} height={11} />{(cookingSkillEffect.triggers * factor).toFixed(2)})
