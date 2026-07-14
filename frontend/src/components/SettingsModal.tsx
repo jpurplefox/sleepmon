@@ -4,6 +4,7 @@ import { useI18n } from "../i18n";
 import { perMealPot } from "../pot";
 import { ingredientIcon } from "../ingredients";
 import { recipeImage, recipeStrengthAtLevel } from "../recipes";
+import { CHARGE_STRENGTH_ICON } from "../skillIcons";
 import type { Catalog, MealInput, Recipe } from "../types";
 import { IslandTab } from "./IslandTab";
 import { LevelStepperInput } from "./LevelStepperInput";
@@ -319,6 +320,12 @@ export function SettingsModal({
 
                   {/* Strength at current level */}
                   <div className="meal-picker-card__strength">
+                    <img
+                      className="mini-icon"
+                      src={CHARGE_STRENGTH_ICON}
+                      alt=""
+                      style={{ width: 14, height: 14 }}
+                    />{" "}
                     {strength.toLocaleString()}
                   </div>
 
