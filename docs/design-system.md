@@ -128,6 +128,27 @@ Current catalog: `IconClock`, `IconHelp`, `IconPackage`, `IconHourglass`,
 `IconEdit`, `IconCopy`, `IconCheck`, `IconSaveBox`, `IconSplit`. A new UI icon is
 added here following the same stroke — no ad-hoc icons in components.
 
+**Metric display.** A metric reads as **its own icon + the number**. Metrics with a
+game icon use it (berry → its berry, ingredient → its ingredient, dream shards →
+shard, strength → `CHARGE_STRENGTH_ICON`, cooking / pot expansion → `pot` /
+`POT_EXPANSION_ICON`, extra tasty → its icon, energy → its stat icon). Metrics with
+no game icon get one **designated** UI icon that stands for them, used the same way
+everywhere: procs / triggers → `IconSparkle`, help cadence → `IconClock`, helps →
+`IconHelp` (a helping hand), inventory fill time → `IconHourglass`, inventory
+capacity → `IconPackage`, nighttime proc chance → `IconMoon`, help multiplier →
+`IconMagnifier`.
+
+Shown **without** a metric icon: plain percentages (block-head berry/ingredient/
+skill %, the area-bonus %), counts and ratios (coverage `X/Y`, filter/showing
+counts, `X/3`, pot `N/M`), and levels (`Lv N`, including the gold Pokémon-level
+badge — already its own accent exception). The one exception among percentages is a
+% that is a skill mechanic with its own icon (extra tasty), which keeps it. Edit
+steppers show nav arrows, not a metric icon; total / closing rows and the `×7`
+weekly asides omit the icon. In a **breakdown row** the icon rides the row's final
+metric (the strength); the intermediate figures it decomposes into — a berry's
+count, a filler's base strength — stay bare, since the row already names the
+entity and the space is better spent on the name.
+
 ---
 
 ## 4. States & rules (cross-cutting)
