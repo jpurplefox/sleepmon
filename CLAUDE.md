@@ -27,6 +27,7 @@ mypy src && ruff check .
 
 # Frontend (local)
 cd frontend && npm install && npm run dev
+npm run test                  # Vitest (logic + catalogue-driven form)
 ```
 
 ## Structure

@@ -26,3 +26,4 @@ format: **Title / Status / Context / Decision / Consequences**.
 | [0002](0002-hexagonal-architecture.md) | Hexagonal architecture (ports and adapters) | Accepted |
 | [0003](0003-frontend-technology-stack.md) | Frontend technology stack | Accepted |
 | [0004](0004-internationalization.md) | Custom lightweight internationalization (i18n) | Accepted |
+| [0005](0005-frontend-testing-strategy.md) | Frontend testing strategy | Accepted |
