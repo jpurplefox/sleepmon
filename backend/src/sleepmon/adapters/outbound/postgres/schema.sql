@@ -30,3 +30,26 @@ CREATE TABLE IF NOT EXISTS team_member_ingredient (
     ingredient  TEXT    NOT NULL,
     PRIMARY KEY (member_id, slot)
 );
+
+-- Autenticación: usuarios (identidad de Google) y tokens de refresco (rotables,
+-- agrupados por familia para poder revocar toda la cadena ante un reuso).
+CREATE TABLE IF NOT EXISTS app_user (
+    id           UUID PRIMARY KEY,
+    google_sub   TEXT NOT NULL UNIQUE,
+    email        TEXT NOT NULL,
+    display_name TEXT NOT NULL,
+    avatar_url   TEXT,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS refresh_token (
+    id          UUID PRIMARY KEY,
+    family_id   UUID NOT NULL,
+    user_id     UUID NOT NULL REFERENCES app_user (id) ON DELETE CASCADE,
+    token_hash  TEXT NOT NULL UNIQUE,
+    consumed    BOOLEAN NOT NULL DEFAULT false,
+    expires_at  TIMESTAMPTZ NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS refresh_token_family_idx ON refresh_token (family_id);
+CREATE INDEX IF NOT EXISTS refresh_token_expires_idx ON refresh_token (expires_at);
