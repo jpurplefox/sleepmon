@@ -82,6 +82,20 @@ def create_app(
     if recipe_catalog is None:
         recipe_catalog = StaticRecipeCatalog()
 
+    # Fail fast, before opening any DB connection, if we are about to build any
+    # part of the REAL stack (service/access/auth_service not injected) and the
+    # secrets it depends on are missing. An empty jwt_secret would sign/verify
+    # access tokens under "" — trivial forgery and a full auth bypass — and an
+    # empty google_client_id would accept Google ID tokens without pinning an
+    # audience. Test injection paths (service/access/auth_service all provided)
+    # never read Settings.from_env() and so never hit this check.
+    if service is None or access is None or auth_service is None:
+        settings = settings or Settings.from_env()
+        if not settings.jwt_secret:
+            raise RuntimeError("JWT_SECRET must be set")
+        if not settings.google_client_id:
+            raise RuntimeError("GOOGLE_CLIENT_ID must be set")
+
     if service is None:
         settings = settings or Settings.from_env()
         team_pool = create_pool(settings.database_url)

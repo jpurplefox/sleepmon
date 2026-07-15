@@ -1,8 +1,9 @@
 """HTTP edge for authentication: Google login, refresh rotation, logout.
 
 Depends on the ``AuthService`` primary port (DI), never on a concrete adapter.
-The refresh token travels ONLY as an ``HttpOnly`` cookie scoped to
-``/auth/refresh`` — it is never present in a JSON response body.
+The refresh token travels ONLY as an ``HttpOnly`` cookie scoped to ``/auth``
+(so it reaches ``/auth/refresh`` and ``/auth/logout``) — it is never present
+in a JSON response body.
 """
 
 from __future__ import annotations
@@ -19,7 +20,10 @@ from sleepmon.application.auth_service import AuthResult, AuthService
 from sleepmon.domain.auth import InvalidRefreshError
 
 REFRESH_COOKIE = "refresh_token"
-REFRESH_PATH = "/auth/refresh"
+# Scoped to the whole /auth prefix (not just /auth/refresh) so the browser also
+# sends the cookie on POST /auth/logout — otherwise logout can never revoke the
+# refresh-token family server-side and it stays valid until it expires.
+REFRESH_PATH = "/auth"
 
 
 def _user_out(result: AuthResult) -> UserOut:
