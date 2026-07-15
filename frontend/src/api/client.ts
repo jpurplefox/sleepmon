@@ -8,14 +8,44 @@ import type {
   TeamProduction,
   TeamProductionInput,
 } from "../types";
+import { tokenStore } from "../auth/tokenStore";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
+// Injected by AuthContext (Task 13). Returns true if a new access token is now available.
+type RefreshHandler = () => Promise<boolean>;
+let refreshHandler: RefreshHandler = async () => false;
+export function __setRefreshHandler(h: RefreshHandler): void {
+  refreshHandler = h;
+}
+
+let inFlight: Promise<boolean> | null = null; // single-flight refresh
+function refreshOnce(): Promise<boolean> {
+  if (!inFlight) {
+    inFlight = refreshHandler().finally(() => {
+      inFlight = null;
+    });
+  }
+  return inFlight;
+}
+
+function authedInit(init?: RequestInit): RequestInit {
+  const token = tokenStore.get();
+  return {
     ...init,
-  });
+    headers: {
+      "Content-Type": "application/json",
+      ...(init?.headers as Record<string, string> | undefined),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  };
+}
+
+async function request<T>(path: string, init?: RequestInit, retry = true): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, authedInit(init));
+  if (res.status === 401 && retry) {
+    if (await refreshOnce()) return request<T>(path, init, false);
+  }
   if (!res.ok) {
     let detail = `Error ${res.status}`;
     try {
