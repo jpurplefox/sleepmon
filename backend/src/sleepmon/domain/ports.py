@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from uuid import UUID
 
+from sleepmon.domain.auth import ExternalIdentity
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.recipes import Recipe
 from sleepmon.domain.species import Species
@@ -78,3 +79,10 @@ class RefreshTokenCodec(ABC):
 
     @abstractmethod
     def hash(self, clear: str) -> str: ...
+
+
+class IdentityProvider(ABC):
+    """Proveedor de identidad (validación de credenciales)."""
+
+    @abstractmethod
+    def verify(self, credential: str) -> ExternalIdentity: ...
