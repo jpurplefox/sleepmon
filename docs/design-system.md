@@ -125,8 +125,8 @@ Two icon languages that never mix:
 Current catalog: `IconClock`, `IconHelp`, `IconPackage`, `IconHourglass`,
 `IconSparkle`, `IconPot`, `IconMagnifier`, `IconMoon`, `IconGrip`,
 `IconChevronDown`, `IconArrowUp`, `IconArrowDown`, `IconMore`, `IconClose`,
-`IconEdit`, `IconCopy`, `IconCheck`, `IconSaveBox`, `IconSplit`. A new UI icon is
-added here following the same stroke — no ad-hoc icons in components.
+`IconEdit`, `IconCopy`, `IconCheck`, `IconSaveBox`, `IconSplit`, `IconSignOut`. A new
+UI icon is added here following the same stroke — no ad-hoc icons in components.
 
 **Metric display.** A metric reads as **its own icon + the number** — the icon marks
 the figure a line *reports*. Metrics with a
@@ -184,7 +184,10 @@ states · where it lives. Feature one-offs are intentionally not here.
 ### Buttons & actions
 - **`.btn`** — generic action button. Variants: `--primary` (accent fill),
   `--ghost` (transparent, muted border), `--danger` (red, reserved for confirming
-  a delete). States: hover per variant, `:disabled`, unified focus.
+  a delete), `--google` (neutral `--surface-2` surface + `--border`, `--text` label,
+  hover `border-color: --accent`; leads with the Google "G" mark — the one place a
+  brand color is allowed, treated as artwork, not a voiced color). States: hover per
+  variant, `:disabled`, unified focus.
 - **`.icon-btn`** — icon-only button (grip, move, remove, save). Variants:
   `--inbox` (tints to accent = "already in the box"), `--saving` (pulse while
   saving; respects `prefers-reduced-motion`). States: hover, disabled, focus.
@@ -226,6 +229,14 @@ states · where it lives. Feature one-offs are intentionally not here.
   `SubSkillSelect` share one skeleton: trigger (`aria-haspopup/expanded`) + absolute
   panel (`role="listbox"`), arrow/Enter nav, click-outside + Escape to close. Same
   pattern applied to filters as `.filter-pop / .filter-grid / .filter-list`.
+- **Account menu** (`.avatar-btn` + profile dropdown) — the signed-in identity in the
+  top bar. Trigger: a round `.avatar-btn` showing the user's **photo**
+  (`object-fit: cover`, clipped to the circle), falling back to **initials** on a
+  neutral circle (`--surface-2` / `--muted`, the `.mini-icon--empty` vocabulary) when
+  there is no photo; border `--border`, open/focus → `--accent`. Panel: reuses the
+  dropdown skeleton (`.filter-pop` + `.filter-list__item`) with a header (avatar +
+  name + email) and a **Sign out** item (leading `IconSignOut`, **neutral** hover —
+  red is reserved for confirming a delete). Click-outside + Escape to close.
 - **`Tooltip`** (`components/Tooltip.tsx`) — one bubble above its trigger, revealed
   on hover and keyboard focus, with `aria-label` on the trigger. Centers over the
   trigger and clamps to the viewport (any width, either edge). Plain string or rich
@@ -252,6 +263,13 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **Tabs** — `.tabs / .tab / --active` (main nav and inner modal tabs).
 - **Error feedback** — `.error` (red text) + `ErrorBoundary` app fallback
   (`role="alert"`, title + "reload" `.btn--primary`).
+- **`.gate-card`** — the anonymous gate that replaces a **reserved page's** content
+  when there is no session (the Box, Team Analysis). A centered `.card` composition:
+  a **moon roundel** (`IconMoon` in `--moon` on `--moon-dim` / `--moon-border` — the
+  single identity gold, per "one gold accent per card"), a title, a `--muted` line,
+  and a `.btn--google`. Sits alongside the empty/loading `Placeholder` vocabulary but
+  is a distinct pattern (a call to sign in, not an empty list). The empty **Box**
+  state is separate and only shown once signed in.
 - **`Placeholder`** (`components/Placeholder.tsx`) — centered muted status line
   standing in for absent content: an empty list, a search with no matches, or
   content still loading (`loading` adds `aria-busy`). Always `role="status"` +
