@@ -12,8 +12,9 @@ from typing import Any
 
 from litestar import Litestar, Request, Response
 from litestar.config.cors import CORSConfig
+from litestar.datastructures import State
 from litestar.di import Provide
-from litestar.status_codes import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from litestar.status_codes import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
 
 from sleepmon.adapters.inbound.http.controllers import (
     CatalogController,
@@ -22,15 +23,18 @@ from sleepmon.adapters.inbound.http.controllers import (
     TeamController,
     TeamProductionController,
 )
+from sleepmon.adapters.inbound.http.guards import current_user_id
 from sleepmon.adapters.inbound.http.schemas import ErrorOut
+from sleepmon.adapters.outbound.auth.jwt_access_token import JwtAccessTokenService
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.adapters.outbound.postgres.pool import create_pool
 from sleepmon.adapters.outbound.postgres.repository import PostgresTeamRepository
 from sleepmon.application.services import DefaultTeamService, TeamService
 from sleepmon.config import Settings
+from sleepmon.domain.auth import InvalidCredentialError, InvalidRefreshError, InvalidTokenError
 from sleepmon.domain.errors import TeamMemberNotFoundError, ValidationError
-from sleepmon.domain.ports import RecipeCatalog, SpeciesCatalog
+from sleepmon.domain.ports import AccessTokenService, RecipeCatalog, SpeciesCatalog
 
 
 def _validation_handler(_: Request[Any, Any, Any], exc: ValidationError) -> Response[ErrorOut]:
@@ -43,12 +47,19 @@ def _not_found_handler(
     return Response(ErrorOut(detail=f"No existe el miembro {exc}."), status_code=HTTP_404_NOT_FOUND)
 
 
+def _unauthorized_handler(_: Request[Any, Any, Any], exc: Exception) -> Response[ErrorOut]:
+    return Response(
+        ErrorOut(detail=str(exc) or "No autenticado."), status_code=HTTP_401_UNAUTHORIZED
+    )
+
+
 def create_app(
     *,
     service: TeamService | None = None,
     catalog: SpeciesCatalog | None = None,
     recipe_catalog: RecipeCatalog | None = None,
     settings: Settings | None = None,
+    access: AccessTokenService | None = None,
 ) -> Litestar:
     # ``object`` y no ``Any``: el valor de retorno de los hooks se descarta, pero
     # ``Any`` apagaría el chequeo de tipos sobre el cuerpo de cada callback.
@@ -68,6 +79,10 @@ def create_app(
         # `pool.close` recibiría el app como su parámetro `timeout` y reventaría.
         on_shutdown.append(lambda: pool.close())
 
+    if access is None:
+        settings = settings or Settings.from_env()
+        access = JwtAccessTokenService(settings.jwt_secret, settings.access_ttl)
+
     # Singletons inyectados por DI (sync_to_thread=False: solo devuelven la instancia).
     bound_service = service
     bound_catalog = catalog
@@ -80,13 +95,18 @@ def create_app(
             RecipeController,
             TeamProductionController,
         ],
+        state=State({"access": access}),
         dependencies={
             "service": Provide(lambda: bound_service, sync_to_thread=False),
             "catalog": Provide(lambda: bound_catalog, sync_to_thread=False),
+            "current_user_id": Provide(current_user_id, sync_to_thread=False),
         },
         exception_handlers={
             ValidationError: _validation_handler,
             TeamMemberNotFoundError: _not_found_handler,
+            InvalidCredentialError: _unauthorized_handler,
+            InvalidTokenError: _unauthorized_handler,
+            InvalidRefreshError: _unauthorized_handler,
         },
         cors_config=CORSConfig(
             allow_origins=["http://localhost:5173", "http://localhost:3000"]
