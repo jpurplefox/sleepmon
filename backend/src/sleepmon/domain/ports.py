@@ -58,3 +58,13 @@ class TeamRepository(ABC):
     @abstractmethod
     def delete(self, member_id: UUID) -> bool:
         """Borra un miembro. Devuelve ``False`` si no existía."""
+
+
+class AccessTokenService(ABC):
+    """Servicio de tokens de acceso."""
+
+    @abstractmethod
+    def issue(self, user_id: UUID) -> str: ...
+
+    @abstractmethod
+    def verify(self, token: str) -> UUID: ...
