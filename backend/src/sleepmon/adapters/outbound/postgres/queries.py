@@ -13,8 +13,8 @@ _P = Parameter("%s")
 
 INSERT_MEMBER = (
     Query.into(member)
-    .columns("id", "species", "level", "nature", "ribbon", "skill_level")
-    .insert(_P, _P, _P, _P, _P, _P)
+    .columns("id", "species", "level", "nature", "ribbon", "skill_level", "user_id")
+    .insert(_P, _P, _P, _P, _P, _P, _P)
     .get_sql()
 )
 
@@ -36,18 +36,31 @@ _MEMBER_COLS = (
 )
 
 SELECT_MEMBERS_ALL = (
-    Query.from_(member).select(*_MEMBER_COLS).orderby(member.created_at, order=Order.asc).get_sql()
+    Query.from_(member)
+    .select(*_MEMBER_COLS)
+    .where(member.user_id == _P)
+    .orderby(member.created_at, order=Order.asc)
+    .get_sql()
 )
 
 SELECT_MEMBER_BY_ID = (
-    Query.from_(member).select(*_MEMBER_COLS).where(member.id == _P).get_sql()
+    Query.from_(member)
+    .select(*_MEMBER_COLS)
+    .where((member.id == _P) & (member.user_id == _P))
+    .get_sql()
 )
 
 # El valor (sub_skill / ingredient) se aliasea a ``value`` para que ambas tablas
-# de hijos compartan la misma forma de fila tipada en el repositorio.
+# de hijos compartan la misma forma de fila tipada en el repositorio. Scopeadas al
+# usuario vía subquery sobre los miembros que le pertenecen.
 SELECT_SUBSKILLS_ALL = (
     Query.from_(subskill)
     .select(subskill.member_id, subskill.slot, subskill.sub_skill.as_("value"))
+    .where(
+        subskill.member_id.isin(
+            Query.from_(member).select(member.id).where(member.user_id == _P)
+        )
+    )
     .orderby(subskill.member_id)
     .orderby(subskill.slot)
     .get_sql()
@@ -64,6 +77,11 @@ SELECT_SUBSKILLS_BY_MEMBER = (
 SELECT_INGREDIENTS_ALL = (
     Query.from_(ingredient)
     .select(ingredient.member_id, ingredient.slot, ingredient.ingredient.as_("value"))
+    .where(
+        ingredient.member_id.isin(
+            Query.from_(member).select(member.id).where(member.user_id == _P)
+        )
+    )
     .orderby(ingredient.member_id)
     .orderby(ingredient.slot)
     .get_sql()
@@ -84,7 +102,7 @@ UPDATE_MEMBER = (
     .set(member.nature, _P)
     .set(member.ribbon, _P)
     .set(member.skill_level, _P)
-    .where(member.id == _P)
+    .where((member.id == _P) & (member.user_id == _P))
     .get_sql()
 )
 
@@ -96,7 +114,9 @@ DELETE_INGREDIENTS_BY_MEMBER = (
     Query.from_(ingredient).where(ingredient.member_id == _P).delete().get_sql()
 )
 
-DELETE_MEMBER = Query.from_(member).where(member.id == _P).delete().get_sql()
+DELETE_MEMBER = (
+    Query.from_(member).where((member.id == _P) & (member.user_id == _P)).delete().get_sql()
+)
 
 app_user = Table("app_user")
 refresh_token = Table("refresh_token")

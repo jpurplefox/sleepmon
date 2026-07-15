@@ -26,6 +26,10 @@ from sleepmon.domain.species import Species
 from sleepmon.domain.value_objects import Ingredient
 from tests.fakes import InMemoryTeamRepository
 
+UID = uuid4()
+"""Usuario fijo para los tests que no ejercitan el aislamiento entre usuarios
+(cada test arma su propio repo/servicio, así que reusar un id es seguro)."""
+
 
 def _slots(*member_ids: str) -> list[SlotInput]:
     """Un slot simple (peso 1.0) por cada id — para migrar los tests existentes."""
@@ -52,15 +56,26 @@ def valid_input(**overrides: object) -> TeamMemberInput:
 
 
 def test_add_member_persists_and_returns(service: DefaultTeamService) -> None:
-    member = service.add_member(valid_input())
+    member = service.add_member(UID, valid_input())
     assert member.species == "Pikachu"
-    assert service.get_member(member.id) == member
-    assert len(service.list_members()) == 1
+    assert service.get_member(UID, member.id) == member
+    assert len(service.list_members(UID)) == 1
+
+
+def test_service_passes_user_id_to_repo() -> None:
+    repo = InMemoryTeamRepository()
+    service = DefaultTeamService(repo, StaticSpeciesCatalog(), StaticRecipeCatalog())
+    uid = uuid4()
+    created = service.add_member(uid, valid_input())
+    assert service.get_member(uid, created.id).id == created.id
+    other = uuid4()
+    with pytest.raises(TeamMemberNotFoundError):
+        service.get_member(other, created.id)
 
 
 def test_list_members_with_production(service: DefaultTeamService) -> None:
-    member = service.add_member(valid_input())
-    rows = service.list_members_with_production()
+    member = service.add_member(UID, valid_input())
+    rows = service.list_members_with_production(UID)
     assert len(rows) == 1
     m, production = rows[0]
     assert m.id == member.id
@@ -77,82 +92,84 @@ def test_list_members_with_production(service: DefaultTeamService) -> None:
 
 
 def test_species_lookup_is_case_insensitive(service: DefaultTeamService) -> None:
-    member = service.add_member(valid_input(species="pikachu"))
+    member = service.add_member(UID, valid_input(species="pikachu"))
     assert member.species == "Pikachu"  # se normaliza al nombre canónico del catálogo
 
 
 def test_unknown_species_rejected(service: DefaultTeamService) -> None:
     with pytest.raises(SpeciesNotFoundError):
-        service.add_member(valid_input(species="Mewtwo"))
+        service.add_member(UID, valid_input(species="Mewtwo"))
 
 
 def test_invalid_nature_rejected(service: DefaultTeamService) -> None:
     with pytest.raises(ValidationError):
-        service.add_member(valid_input(nature="Sleepy"))
+        service.add_member(UID, valid_input(nature="Sleepy"))
 
 
 def test_add_member_without_nature(service: DefaultTeamService) -> None:
     # naturaleza opcional: nature="" se traduce a None ("sin naturaleza").
-    member = service.add_member(valid_input(nature=""))
+    member = service.add_member(UID, valid_input(nature=""))
     assert member.nature is None
     # No aporta a la distribución de naturalezas.
-    assert service.distributions().natures == {}
+    assert service.distributions(UID).natures == {}
 
 
 def test_invalid_ingredient_value_rejected(service: DefaultTeamService) -> None:
     with pytest.raises(ValidationError):
-        service.add_member(valid_input(ingredients=["Pizza"]))
+        service.add_member(UID, valid_input(ingredients=["Pizza"]))
 
 
 def test_ingredient_not_valid_for_species_slot_rejected(service: DefaultTeamService) -> None:
     # Large Leek no es un ingrediente válido para Pikachu (en el primer slot).
     with pytest.raises(ValidationError):
         service.add_member(
-            valid_input(ingredients=["Large Leek", "Warming Ginger", "Fancy Egg"])
+            UID, valid_input(ingredients=["Large Leek", "Warming Ginger", "Fancy Egg"])
         )
 
 
 def test_invalid_sub_skill_value_rejected(service: DefaultTeamService) -> None:
     with pytest.raises(ValidationError):
-        service.add_member(valid_input(sub_skills=["Mega Helper XL"]))
+        service.add_member(UID, valid_input(sub_skills=["Mega Helper XL"]))
 
 
 def test_invalid_ribbon_value_rejected(service: DefaultTeamService) -> None:
     with pytest.raises(ValidationError):
-        service.add_member(valid_input(ribbon="9999h"))
+        service.add_member(UID, valid_input(ribbon="9999h"))
 
 
 def test_more_ingredients_than_species_slots_rejected(service: DefaultTeamService) -> None:
     # Pikachu tiene 3 slots; cuatro ingredientes debe dar ValidationError, no reventar.
     with pytest.raises(ValidationError):
         service.add_member(
+            UID,
             valid_input(
                 level=60,
                 ingredients=["Fancy Apple", "Warming Ginger", "Fancy Apple", "Warming Ginger"],
-            )
+            ),
         )
 
 
 def test_level_1_can_have_all_three_ingredients(service: DefaultTeamService) -> None:
     # Los ingredientes ya están definidos: se registran los 3 aunque sea nivel 1.
     member = service.add_member(
+        UID,
         valid_input(
             level=1,
             ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"],
             sub_skills=[],  # nivel 1 no tiene slots de sub skill todavía
-        )
+        ),
     )
     assert len(member.ingredients) == 3
 
 
 def test_get_missing_member_raises(service: DefaultTeamService) -> None:
     with pytest.raises(TeamMemberNotFoundError):
-        service.get_member(uuid4())
+        service.get_member(UID, uuid4())
 
 
 def test_update_member_replaces_fields(service: DefaultTeamService) -> None:
-    member = service.add_member(valid_input())
-    updated = service.update_member(member.id, valid_input(level=60, nature="Modest"))
+    member = service.add_member(UID, valid_input())
+    updated = service.update_member(UID, member.id, valid_input(level=60, nature="Modest"))
     assert updated.id == member.id
     assert updated.level == 60
     assert updated.nature.value == "Modest"
@@ -160,15 +177,15 @@ def test_update_member_replaces_fields(service: DefaultTeamService) -> None:
 
 def test_update_missing_member_raises(service: DefaultTeamService) -> None:
     with pytest.raises(TeamMemberNotFoundError):
-        service.update_member(uuid4(), valid_input())
+        service.update_member(UID, uuid4(), valid_input())
 
 
 def test_update_with_invalid_ingredient_rejected(service: DefaultTeamService) -> None:
     # La revalidación vía _build_member(member_id=...) también rechaza datos inválidos.
-    member = service.add_member(valid_input())
+    member = service.add_member(UID, valid_input())
     with pytest.raises(ValidationError):
         service.update_member(
-            member.id, valid_input(ingredients=["Large Leek", "Warming Ginger", "Fancy Egg"])
+            UID, member.id, valid_input(ingredients=["Large Leek", "Warming Ginger", "Fancy Egg"])
         )
 
 
@@ -178,10 +195,12 @@ def test_update_changing_species_revalidates_ingredients_against_new_slots(
     # Fancy Apple es válido para Pikachu pero NO para Squirtle: al cambiar de
     # especie en el update, los ingredientes se revalidan contra los slots nuevos.
     member = service.add_member(
-        valid_input(species="Pikachu", ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"])
+        UID,
+        valid_input(species="Pikachu", ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"]),
     )
     with pytest.raises(ValidationError):
         service.update_member(
+            UID,
             member.id,
             valid_input(
                 species="Squirtle", ingredients=["Fancy Apple", "Soothing Cacao", "Bean Sausage"]
@@ -193,11 +212,12 @@ def test_update_changing_species_preserves_id_and_accepts_valid_ingredients(
     service: DefaultTeamService,
 ) -> None:
     member = service.add_member(
-        valid_input(species="Pikachu", ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"])
+        UID,
+        valid_input(species="Pikachu", ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"]),
     )
     squirtle_ingredients = ["Moomoo Milk", "Soothing Cacao", "Bean Sausage"]
     updated = service.update_member(
-        member.id, valid_input(species="Squirtle", ingredients=squirtle_ingredients)
+        UID, member.id, valid_input(species="Squirtle", ingredients=squirtle_ingredients)
     )
     assert updated.id == member.id  # el id se preserva pese al cambio de especie
     assert updated.species == "Squirtle"
@@ -210,15 +230,16 @@ def test_short_species_reports_three_slots_and_rejects_overflow(
     # Mareep tiene 2 ingredientes pero igual ofrece 3 slots: 3 se aceptan,
     # 4 disparan el error con el conteo correcto.
     member = service.add_member(
-        valid_input(species="Mareep", ingredients=["Fiery Herb", "Fancy Egg", "Fancy Egg"])
+        UID, valid_input(species="Mareep", ingredients=["Fiery Herb", "Fancy Egg", "Fancy Egg"])
     )
     assert len(member.ingredients) == 3
     with pytest.raises(ValidationError, match="solo tiene 3 slots"):
         service.add_member(
+            UID,
             valid_input(
                 species="Mareep",
                 ingredients=["Fiery Herb", "Fancy Egg", "Fancy Egg", "Fancy Egg"],
-            )
+            ),
         )
 
 
@@ -352,7 +373,7 @@ def test_compute_production_invalid_ingredient_for_slot_rejected(
 
 
 def test_distributions_empty_team(service: DefaultTeamService) -> None:
-    dist = service.distributions()
+    dist = service.distributions(UID)
     assert dist.natures == {}
     assert dist.ingredients == {}
     assert dist.sub_skills == {}
@@ -367,26 +388,27 @@ def test_distributions_empty_team(service: DefaultTeamService) -> None:
 
 
 def test_delete_member(service: DefaultTeamService) -> None:
-    member = service.add_member(valid_input())
-    service.delete_member(member.id)
-    assert service.list_members() == []
+    member = service.add_member(UID, valid_input())
+    service.delete_member(UID, member.id)
+    assert service.list_members(UID) == []
 
 
 def test_delete_missing_member_raises(service: DefaultTeamService) -> None:
     with pytest.raises(TeamMemberNotFoundError):
-        service.delete_member(uuid4())
+        service.delete_member(UID, uuid4())
 
 
 def test_distributions_aggregate_team(service: DefaultTeamService) -> None:
-    service.add_member(valid_input())
+    service.add_member(UID, valid_input())
     service.add_member(
+        UID,
         valid_input(
             species="Squirtle",
             ingredients=["Moomoo Milk", "Soothing Cacao", "Bean Sausage"],
             sub_skills=[],
-        )
+        ),
     )
-    dist = service.distributions()
+    dist = service.distributions(UID)
     assert dist.natures["Adamant"] == 2
     assert dist.ingredients["Fancy Apple"] == 1
     assert dist.sub_skills["Helping Speed S"] == 1
@@ -396,18 +418,18 @@ def test_distributions_aggregate_team(service: DefaultTeamService) -> None:
 
 
 def test_skill_level_persists_through_service(service: DefaultTeamService) -> None:
-    member = service.add_member(valid_input(skill_level=6))
+    member = service.add_member(UID, valid_input(skill_level=6))
     assert member.skill_level == 6
-    assert service.get_member(member.id).skill_level == 6
+    assert service.get_member(UID, member.id).skill_level == 6
 
 
 def test_skill_level_defaults_to_one(service: DefaultTeamService) -> None:
-    assert service.add_member(valid_input()).skill_level == 1
+    assert service.add_member(UID, valid_input()).skill_level == 1
 
 
 def test_skill_level_out_of_range_rejected_on_add(service: DefaultTeamService) -> None:
     with pytest.raises(ValidationError):
-        service.add_member(valid_input(skill_level=9))
+        service.add_member(UID, valid_input(skill_level=9))
 
 
 def test_production_skill_level_out_of_range_rejected(service: DefaultTeamService) -> None:
@@ -615,6 +637,7 @@ def _service_tp() -> DefaultTeamService:
 
 def _add_pikachu(svc: DefaultTeamService) -> str:
     member = svc.add_member(
+        UID,
         TeamMemberInput(
             species="Pikachu",
             level=30,
@@ -645,12 +668,14 @@ def test_compute_team_production_split_weights_scale_contribution() -> None:
 
     # Producción de 'a' en solitario (peso 1.0).
     solo = svc.compute_team_production(
+        UID,
         TeamProductionInput(slots=_slots(a), meals=[None, None, None])
     )
     solo_a = next(m for m in solo.members if m.member_id == a)
 
     # Slot compartido 50/50 entre 'a' y 'b'.
     split = svc.compute_team_production(
+        UID,
         TeamProductionInput(
             slots=[
                 SlotInput(
@@ -677,6 +702,7 @@ def test_compute_team_production_rejects_single_entry_nonunit_weight() -> None:
     svc, mid = _service_with_member()
     with pytest.raises(ValidationError):
         svc.compute_team_production(
+            UID,
             TeamProductionInput(
                 slots=[SlotInput(entries=[SlotEntryInput(member_id=mid, weight=0.5)])],
                 meals=[None, None, None],
@@ -688,6 +714,7 @@ def test_compute_team_production_rejects_more_than_two_per_slot() -> None:
     svc, mid = _service_with_member()
     with pytest.raises(ValidationError):
         svc.compute_team_production(
+            UID,
             TeamProductionInput(
                 slots=[
                     SlotInput(
@@ -707,6 +734,7 @@ def test_compute_team_production_rejects_weights_not_summing_to_one() -> None:
     svc, (a, b) = _service_with_two_members()
     with pytest.raises(ValidationError):
         svc.compute_team_production(
+            UID,
             TeamProductionInput(
                 slots=[
                     SlotInput(
@@ -725,6 +753,7 @@ def test_compute_team_production_rejects_zero_weight() -> None:
     svc, mid = _service_with_member()
     with pytest.raises(ValidationError):
         svc.compute_team_production(
+            UID,
             TeamProductionInput(
                 slots=[SlotInput(entries=[SlotEntryInput(member_id=mid, weight=0.0)])],
                 meals=[None, None, None],
@@ -736,6 +765,7 @@ def test_compute_team_production_aggregates_members() -> None:
     svc = _service_tp()
     mid = _add_pikachu(svc)
     result = svc.compute_team_production(
+        UID,
         TeamProductionInput(slots=_slots(mid), meals=[None, None, None])
     )
     assert result.member_count == 1
@@ -748,6 +778,7 @@ def test_compute_team_production_member_carries_full_production() -> None:
     svc = _service_tp()
     mid = _add_pikachu(svc)
     result = svc.compute_team_production(
+        UID,
         TeamProductionInput(slots=_slots(mid), meals=[None, None, None])
     )
     assert result.member_count == 1
@@ -781,6 +812,7 @@ def test_compute_team_production_adds_cooking_to_grand_total() -> None:
     mid = _add_pikachu(svc)
     recipe = svc.list_recipes()[0]
     result = svc.compute_team_production(
+        UID,
         TeamProductionInput(
             slots=_slots(mid),
             meals=[MealSelectionInput(recipe=recipe.name, level=1), None, None],
@@ -794,6 +826,7 @@ def test_compute_team_production_rejects_missing_member() -> None:
     svc = _service_tp()
     with pytest.raises(TeamMemberNotFoundError):
         svc.compute_team_production(
+            UID,
             TeamProductionInput(
                 slots=_slots("00000000-0000-0000-0000-000000000000"), meals=[None, None, None]
             )
@@ -805,6 +838,7 @@ def test_compute_team_production_rejects_too_many_members() -> None:
     ids = [_add_pikachu(svc) for _ in range(6)]
     with pytest.raises(ValidationError):
         svc.compute_team_production(
+            UID,
             TeamProductionInput(slots=_slots(*ids), meals=[None, None, None])
         )
 
@@ -814,6 +848,7 @@ def test_compute_team_production_rejects_duplicate_members() -> None:
     mid = _add_pikachu(svc)
     with pytest.raises(ValidationError):
         svc.compute_team_production(
+            UID,
             TeamProductionInput(slots=_slots(mid, mid), meals=[None, None, None])
         )
 
@@ -823,6 +858,7 @@ def test_compute_team_production_rejects_unknown_recipe() -> None:
     mid = _add_pikachu(svc)
     with pytest.raises(ValidationError):
         svc.compute_team_production(
+            UID,
             TeamProductionInput(
                 slots=_slots(mid), meals=[MealSelectionInput(recipe="No Existe", level=1)]
             )
@@ -835,6 +871,7 @@ def test_compute_team_production_rejects_recipe_level_out_of_range() -> None:
     recipe = svc.list_recipes()[0]
     with pytest.raises(ValidationError):
         svc.compute_team_production(
+            UID,
             TeamProductionInput(
                 slots=_slots(mid),
                 meals=[MealSelectionInput(recipe=recipe.name, level=0)],
@@ -842,6 +879,7 @@ def test_compute_team_production_rejects_recipe_level_out_of_range() -> None:
         )
     with pytest.raises(ValidationError):
         svc.compute_team_production(
+            UID,
             TeamProductionInput(
                 slots=_slots(mid),
                 meals=[MealSelectionInput(recipe=recipe.name, level=MAX_RECIPE_LEVEL + 1)],
@@ -861,6 +899,7 @@ def test_compute_team_production_rejects_malformed_member_id() -> None:
     svc = _service_tp()
     with pytest.raises(ValidationError, match="inválido"):
         svc.compute_team_production(
+            UID,
             TeamProductionInput(
                 slots=_slots("not-a-uuid"), meals=[None, None, None]
             )
@@ -884,9 +923,11 @@ def test_favorite_berries_and_bonus_flow(
 ) -> None:
     service, member_ids = service_with_members
     base = service.compute_team_production(
+        UID,
         TeamProductionInput(slots=_slots(*member_ids), meals=[])
     )
     boosted = service.compute_team_production(
+        UID,
         TeamProductionInput(
             slots=_slots(*member_ids),
             meals=[],
@@ -908,6 +949,7 @@ def test_bonus_out_of_range_rejected(
     service, member_ids = service_with_members
     with pytest.raises(ValidationError):
         service.compute_team_production(
+            UID,
             TeamProductionInput(slots=_slots(*member_ids), meals=[], island_bonus=0.9)
         )
 
@@ -918,6 +960,7 @@ def test_too_many_favorites_rejected(
     service, member_ids = service_with_members
     with pytest.raises(ValidationError):
         service.compute_team_production(
+            UID,
             TeamProductionInput(
                 slots=_slots(*member_ids),
                 meals=[],
@@ -932,6 +975,7 @@ def test_duplicate_favorites_rejected(
     service, member_ids = service_with_members
     with pytest.raises(ValidationError):
         service.compute_team_production(
+            UID,
             TeamProductionInput(
                 slots=_slots(*member_ids),
                 meals=[],
@@ -946,6 +990,7 @@ def test_unknown_berry_rejected(
     service, member_ids = service_with_members
     with pytest.raises(ValidationError):
         service.compute_team_production(
+            UID,
             TeamProductionInput(
                 slots=_slots(*member_ids),
                 meals=[],
@@ -962,9 +1007,10 @@ def test_compute_team_production_excludes_off_catalog_members() -> None:
         nature=None,
         ingredients=(Ingredient.FANCY_APPLE, Ingredient.WARMING_GINGER, Ingredient.FANCY_EGG),
     )
-    repo.add(member)
+    repo.add(member, UID)
     svc = DefaultTeamService(repo, _EmptySpeciesCatalog(), StaticRecipeCatalog())
     result = svc.compute_team_production(
+        UID,
         TeamProductionInput(slots=_slots(str(member.id)), meals=[None, None, None])
     )
     assert result.excluded_count == 1

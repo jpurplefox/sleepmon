@@ -53,3 +53,16 @@ CREATE TABLE IF NOT EXISTS refresh_token (
 );
 CREATE INDEX IF NOT EXISTS refresh_token_family_idx ON refresh_token (family_id);
 CREATE INDEX IF NOT EXISTS refresh_token_expires_idx ON refresh_token (expires_at);
+
+-- Clean slate: legacy prototype members have no owner and are discarded (PRD 0010).
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_name = 'team_member' AND column_name = 'user_id') THEN
+    DELETE FROM team_member;
+  END IF;
+END $$;
+
+ALTER TABLE team_member ADD COLUMN IF NOT EXISTS user_id UUID
+  NOT NULL REFERENCES app_user (id) ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS team_member_user_idx ON team_member (user_id);

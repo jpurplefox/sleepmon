@@ -66,7 +66,7 @@ class PostgresTeamRepository(TeamRepository):
     def __init__(self, pool: ConnectionPool) -> None:
         self._pool = pool
 
-    def add(self, member: TeamMember) -> None:
+    def add(self, member: TeamMember, user_id: UUID) -> None:
         with self._pool.connection() as conn, conn.cursor() as cur:
             cur.execute(
                 queries.INSERT_MEMBER,
@@ -77,14 +77,15 @@ class PostgresTeamRepository(TeamRepository):
                     member.nature.value if member.nature else "",
                     member.ribbon.value,
                     member.skill_level,
+                    user_id,
                 ),
             )
             self._insert_children(cur, member)
 
-    def get(self, member_id: UUID) -> TeamMember | None:
+    def get(self, member_id: UUID, user_id: UUID) -> TeamMember | None:
         with self._pool.connection() as conn:
             with conn.cursor(row_factory=class_row(_MemberRow)) as cur:
-                cur.execute(queries.SELECT_MEMBER_BY_ID, (member_id,))
+                cur.execute(queries.SELECT_MEMBER_BY_ID, (member_id, user_id))
                 row = cur.fetchone()
             if row is None:
                 return None
@@ -95,15 +96,15 @@ class PostgresTeamRepository(TeamRepository):
                 ings = tuple(_decode(Ingredient, r.value) for r in cur.fetchall())
         return _build_member(row, subs, ings)
 
-    def list(self) -> list[TeamMember]:
+    def list(self, user_id: UUID) -> list[TeamMember]:
         with self._pool.connection() as conn:
             with conn.cursor(row_factory=class_row(_MemberRow)) as cur:
-                cur.execute(queries.SELECT_MEMBERS_ALL)
+                cur.execute(queries.SELECT_MEMBERS_ALL, (user_id,))
                 rows = cur.fetchall()
             with conn.cursor(row_factory=class_row(_MemberSlotValueRow)) as cur:
-                cur.execute(queries.SELECT_SUBSKILLS_ALL)
+                cur.execute(queries.SELECT_SUBSKILLS_ALL, (user_id,))
                 subs_by_member = _group(cur.fetchall())
-                cur.execute(queries.SELECT_INGREDIENTS_ALL)
+                cur.execute(queries.SELECT_INGREDIENTS_ALL, (user_id,))
                 ings_by_member = _group(cur.fetchall())
 
         members: list[TeamMember] = []
@@ -113,7 +114,7 @@ class PostgresTeamRepository(TeamRepository):
             members.append(_build_member(row, subs, ings))
         return members
 
-    def update(self, member: TeamMember) -> bool:
+    def update(self, member: TeamMember, user_id: UUID) -> bool:
         with self._pool.connection() as conn, conn.cursor() as cur:
             cur.execute(
                 queries.UPDATE_MEMBER,
@@ -124,6 +125,7 @@ class PostgresTeamRepository(TeamRepository):
                     member.ribbon.value,
                     member.skill_level,
                     member.id,
+                    user_id,
                 ),
             )
             if cur.rowcount == 0:
@@ -133,9 +135,9 @@ class PostgresTeamRepository(TeamRepository):
             self._insert_children(cur, member)
             return True
 
-    def delete(self, member_id: UUID) -> bool:
+    def delete(self, member_id: UUID, user_id: UUID) -> bool:
         with self._pool.connection() as conn, conn.cursor() as cur:
-            cur.execute(queries.DELETE_MEMBER, (member_id,))
+            cur.execute(queries.DELETE_MEMBER, (member_id, user_id))
             return cur.rowcount > 0
 
     @staticmethod

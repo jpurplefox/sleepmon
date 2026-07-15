@@ -42,23 +42,23 @@ class RecipeCatalog(ABC):
 
 
 class TeamRepository(ABC):
-    """Persistencia de los miembros del equipo."""
+    """Persistencia de los miembros del equipo, aislada por usuario dueño."""
 
     @abstractmethod
-    def add(self, member: TeamMember) -> None: ...
+    def add(self, member: TeamMember, user_id: UUID) -> None: ...
 
     @abstractmethod
-    def get(self, member_id: UUID) -> TeamMember | None: ...
+    def get(self, member_id: UUID, user_id: UUID) -> TeamMember | None: ...
 
     @abstractmethod
-    def list(self) -> list[TeamMember]: ...
+    def list(self, user_id: UUID) -> list[TeamMember]: ...
 
     @abstractmethod
-    def update(self, member: TeamMember) -> bool:
+    def update(self, member: TeamMember, user_id: UUID) -> bool:
         """Reemplaza un miembro existente. Devuelve ``False`` si no existía."""
 
     @abstractmethod
-    def delete(self, member_id: UUID) -> bool:
+    def delete(self, member_id: UUID, user_id: UUID) -> bool:
         """Borra un miembro. Devuelve ``False`` si no existía."""
 
 

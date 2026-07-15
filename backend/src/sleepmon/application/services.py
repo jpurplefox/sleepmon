@@ -113,30 +113,38 @@ def _validate_ingredients(species: Species, ingredients: tuple[Ingredient, ...])
 
 
 class TeamService(ABC):
-    """Puerto primario: lo que el borde HTTP puede pedirle a la aplicación."""
+    """Puerto primario: lo que el borde HTTP puede pedirle a la aplicación.
+
+    Las operaciones sobre la caja de un usuario reciben ``user_id`` como primer
+    argumento y lo delegan al ``TeamRepository`` para aislar los datos entre
+    usuarios. ``compute_production`` y ``list_recipes`` son stateless (no tocan
+    el repo) y no llevan ``user_id``.
+    """
 
     @abstractmethod
-    def add_member(self, data: TeamMemberInput) -> TeamMember: ...
+    def add_member(self, user_id: UUID, data: TeamMemberInput) -> TeamMember: ...
 
     @abstractmethod
-    def get_member(self, member_id: UUID) -> TeamMember: ...
+    def get_member(self, user_id: UUID, member_id: UUID) -> TeamMember: ...
 
     @abstractmethod
-    def list_members(self) -> list[TeamMember]: ...
+    def list_members(self, user_id: UUID) -> list[TeamMember]: ...
 
     @abstractmethod
     def list_members_with_production(
-        self,
+        self, user_id: UUID
     ) -> list[tuple[TeamMember, MemberProduction | None]]: ...
 
     @abstractmethod
-    def update_member(self, member_id: UUID, data: TeamMemberInput) -> TeamMember: ...
+    def update_member(
+        self, user_id: UUID, member_id: UUID, data: TeamMemberInput
+    ) -> TeamMember: ...
 
     @abstractmethod
-    def delete_member(self, member_id: UUID) -> None: ...
+    def delete_member(self, user_id: UUID, member_id: UUID) -> None: ...
 
     @abstractmethod
-    def distributions(self) -> Distributions: ...
+    def distributions(self, user_id: UUID) -> Distributions: ...
 
     @abstractmethod
     def compute_production(self, data: ProductionInput) -> ProductionResult: ...
@@ -145,7 +153,9 @@ class TeamService(ABC):
     def list_recipes(self) -> list[RecipeDTO]: ...
 
     @abstractmethod
-    def compute_team_production(self, data: TeamProductionInput) -> TeamProductionResult: ...
+    def compute_team_production(
+        self, user_id: UUID, data: TeamProductionInput
+    ) -> TeamProductionResult: ...
 
 
 class DefaultTeamService(TeamService):
@@ -159,27 +169,27 @@ class DefaultTeamService(TeamService):
         self._catalog = catalog
         self._recipes = recipe_catalog
 
-    def add_member(self, data: TeamMemberInput) -> TeamMember:
+    def add_member(self, user_id: UUID, data: TeamMemberInput) -> TeamMember:
         member = self._build_member(data)
-        self._repo.add(member)
+        self._repo.add(member, user_id)
         return member
 
-    def get_member(self, member_id: UUID) -> TeamMember:
-        member = self._repo.get(member_id)
+    def get_member(self, user_id: UUID, member_id: UUID) -> TeamMember:
+        member = self._repo.get(member_id, user_id)
         if member is None:
             raise TeamMemberNotFoundError(str(member_id))
         return member
 
-    def list_members(self) -> list[TeamMember]:
-        return self._repo.list()
+    def list_members(self, user_id: UUID) -> list[TeamMember]:
+        return self._repo.list(user_id)
 
     def list_members_with_production(
-        self,
+        self, user_id: UUID
     ) -> list[tuple[TeamMember, MemberProduction | None]]:
         # Overview de la caja: producción por miembro reutilizando el cálculo del
         # dominio (el mismo que /production). El miembro ya está validado (sus enums
         # vienen del repo), así que no re-parseamos ni re-validamos.
-        return [(m, self._member_production(m)) for m in self._repo.list()]
+        return [(m, self._member_production(m)) for m in self._repo.list(user_id)]
 
     def _member_production(self, member: TeamMember) -> MemberProduction | None:
         species = self._catalog.get(member.species)
@@ -218,19 +228,19 @@ class DefaultTeamService(TeamService):
             skill_random_energy=result.skill_random_energy,
         )
 
-    def update_member(self, member_id: UUID, data: TeamMemberInput) -> TeamMember:
+    def update_member(self, user_id: UUID, member_id: UUID, data: TeamMemberInput) -> TeamMember:
         # Preservamos el id; reconstruimos el resto para revalidar todo.
         member = self._build_member(data, member_id=member_id)
-        if not self._repo.update(member):
+        if not self._repo.update(member, user_id):
             raise TeamMemberNotFoundError(str(member_id))
         return member
 
-    def delete_member(self, member_id: UUID) -> None:
-        if not self._repo.delete(member_id):
+    def delete_member(self, user_id: UUID, member_id: UUID) -> None:
+        if not self._repo.delete(member_id, user_id):
             raise TeamMemberNotFoundError(str(member_id))
 
-    def distributions(self) -> Distributions:
-        members = self._repo.list()
+    def distributions(self, user_id: UUID) -> Distributions:
+        members = self._repo.list(user_id)
         return Distributions(
             natures={k.value: v for k, v in analytics.nature_distribution(members).items()},
             ingredients={k.value: v for k, v in analytics.ingredient_distribution(members).items()},
@@ -283,7 +293,9 @@ class DefaultTeamService(TeamService):
     _MAX_TEAM = 5
     _WEIGHT_EPS = 1e-6
 
-    def compute_team_production(self, data: TeamProductionInput) -> TeamProductionResult:
+    def compute_team_production(
+        self, user_id: UUID, data: TeamProductionInput
+    ) -> TeamProductionResult:
         # Validación de la selección: 1..5 slots; cada slot 1..2 entradas; pesos de
         # un slot suman 1.0; sin miembros repetidos en todo el equipo.
         if not 1 <= len(data.slots) <= self._MAX_TEAM:
@@ -337,7 +349,7 @@ class DefaultTeamService(TeamService):
                 member_uuid = UUID(raw_id)
             except ValueError as exc:
                 raise ValidationError(f"Id de miembro inválido: {raw_id!r}.") from exc
-            member = self.get_member(member_uuid)  # levanta TeamMemberNotFoundError
+            member = self.get_member(user_id, member_uuid)  # levanta TeamMemberNotFoundError
             species = self._catalog.get(member.species)
             if species is None:
                 excluded += 1
