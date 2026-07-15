@@ -68,3 +68,13 @@ class AccessTokenService(ABC):
 
     @abstractmethod
     def verify(self, token: str) -> UUID: ...
+
+
+class RefreshTokenCodec(ABC):
+    """Codec para generar y verificar tokens de refresco."""
+
+    @abstractmethod
+    def generate(self) -> tuple[str, str]: ...
+
+    @abstractmethod
+    def hash(self, clear: str) -> str: ...
