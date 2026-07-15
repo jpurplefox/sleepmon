@@ -6,9 +6,14 @@ from dataclasses import replace
 from datetime import datetime
 from uuid import UUID
 
-from sleepmon.domain.auth import RefreshToken, User
+from sleepmon.domain.auth import ExternalIdentity, RefreshToken, User
 from sleepmon.domain.entities import TeamMember
-from sleepmon.domain.ports import RefreshTokenRepository, TeamRepository, UserRepository
+from sleepmon.domain.ports import (
+    IdentityProvider,
+    RefreshTokenRepository,
+    TeamRepository,
+    UserRepository,
+)
 
 
 class InMemoryTeamRepository(TeamRepository):
@@ -94,3 +99,17 @@ class InMemoryRefreshTokenRepository(RefreshTokenRepository):
 
     def all(self) -> list[RefreshToken]:
         return list(self._by_id.values())
+
+
+class StubIdentityProvider(IdentityProvider):
+    """Devuelve una identidad fija; nunca llama a Google. Para tests que necesitan
+    un ``AuthService`` real cableado sin infraestructura (ej. verificar que las
+    rutas no-auth siguen andando), no para ejercitar el login en sí."""
+
+    def __init__(self, identity: ExternalIdentity | None = None) -> None:
+        self._identity = identity or ExternalIdentity(
+            subject="stub-sub", email="stub@example.com", display_name="Stub", avatar_url=None
+        )
+
+    def verify(self, credential: str) -> ExternalIdentity:
+        return self._identity

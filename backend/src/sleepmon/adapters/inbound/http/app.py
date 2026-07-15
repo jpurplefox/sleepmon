@@ -8,6 +8,7 @@ Postgres + catálogo estático). En tests se le inyecta un ``service`` y un
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from litestar import Litestar, Request, Response
@@ -15,7 +16,9 @@ from litestar.config.cors import CORSConfig
 from litestar.datastructures import State
 from litestar.di import Provide
 from litestar.status_codes import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
+from psycopg_pool import ConnectionPool
 
+from sleepmon.adapters.inbound.http.auth_controller import AuthController
 from sleepmon.adapters.inbound.http.controllers import (
     CatalogController,
     ProductionController,
@@ -25,11 +28,18 @@ from sleepmon.adapters.inbound.http.controllers import (
 )
 from sleepmon.adapters.inbound.http.guards import current_user_id
 from sleepmon.adapters.inbound.http.schemas import ErrorOut
+from sleepmon.adapters.outbound.auth.google_identity import GoogleIdentityProvider
 from sleepmon.adapters.outbound.auth.jwt_access_token import JwtAccessTokenService
+from sleepmon.adapters.outbound.auth.refresh_token import SecretsRefreshTokenCodec
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.adapters.outbound.postgres.pool import create_pool
-from sleepmon.adapters.outbound.postgres.repository import PostgresTeamRepository
+from sleepmon.adapters.outbound.postgres.repository import (
+    PostgresRefreshTokenRepository,
+    PostgresTeamRepository,
+    PostgresUserRepository,
+)
+from sleepmon.application.auth_service import AuthService, DefaultAuthService
 from sleepmon.application.services import DefaultTeamService, TeamService
 from sleepmon.config import Settings
 from sleepmon.domain.auth import InvalidCredentialError, InvalidRefreshError, InvalidTokenError
@@ -60,10 +70,12 @@ def create_app(
     recipe_catalog: RecipeCatalog | None = None,
     settings: Settings | None = None,
     access: AccessTokenService | None = None,
+    auth_service: AuthService | None = None,
 ) -> Litestar:
     # ``object`` y no ``Any``: el valor de retorno de los hooks se descarta, pero
     # ``Any`` apagaría el chequeo de tipos sobre el cuerpo de cada callback.
     on_shutdown: list[Callable[[], object]] = []
+    pool: ConnectionPool | None = None
 
     if catalog is None:
         catalog = StaticSpeciesCatalog()
@@ -72,20 +84,49 @@ def create_app(
 
     if service is None:
         settings = settings or Settings.from_env()
-        pool = create_pool(settings.database_url)
-        repository = PostgresTeamRepository(pool)
+        team_pool = create_pool(settings.database_url)
+        pool = team_pool
+        repository = PostgresTeamRepository(team_pool)
         service = DefaultTeamService(repository, catalog, recipe_catalog)
         # Litestar pasa el app a los hooks que aceptan un argumento; sin el lambda,
         # `pool.close` recibiría el app como su parámetro `timeout` y reventaría.
-        on_shutdown.append(lambda: pool.close())
+        # ``team_pool`` (a diferencia de ``pool``) tiene un único sitio de asignación,
+        # así que mypy lo tipa como ``ConnectionPool`` (no ``| None``) dentro del closure.
+        on_shutdown.append(lambda: team_pool.close())
 
     if access is None:
         settings = settings or Settings.from_env()
         access = JwtAccessTokenService(settings.jwt_secret, settings.access_ttl)
 
+    if auth_service is None:
+        settings = settings or Settings.from_env()
+        # Reutiliza el pool del team repository si ya existe; si no, abre uno solo
+        # (nunca dos pools contra la misma base).
+        if pool is None:
+            auth_pool = create_pool(settings.database_url)
+            pool = auth_pool
+            on_shutdown.append(lambda: auth_pool.close())
+        else:
+            auth_pool = pool
+        auth_service = DefaultAuthService(
+            identity=GoogleIdentityProvider(settings.google_client_id),
+            users=PostgresUserRepository(auth_pool),
+            tokens=PostgresRefreshTokenRepository(auth_pool),
+            access=access,
+            refresh=SecretsRefreshTokenCodec(),
+            clock=lambda: datetime.now(UTC),
+            refresh_ttl=settings.refresh_ttl,
+        )
+
     # Singletons inyectados por DI (sync_to_thread=False: solo devuelven la instancia).
     bound_service = service
     bound_catalog = catalog
+    bound_auth_service = auth_service
+
+    cookie_secure = settings.cookie_secure if settings is not None else True
+    refresh_max_age = int(
+        (settings.refresh_ttl if settings is not None else timedelta(days=30)).total_seconds()
+    )
 
     return Litestar(
         route_handlers=[
@@ -94,12 +135,20 @@ def create_app(
             ProductionController,
             RecipeController,
             TeamProductionController,
+            AuthController,
         ],
-        state=State({"access": access}),
+        state=State(
+            {
+                "access": access,
+                "cookie_secure": cookie_secure,
+                "refresh_max_age": refresh_max_age,
+            }
+        ),
         dependencies={
             "service": Provide(lambda: bound_service, sync_to_thread=False),
             "catalog": Provide(lambda: bound_catalog, sync_to_thread=False),
             "current_user_id": Provide(current_user_id, sync_to_thread=False),
+            "auth_service": Provide(lambda: bound_auth_service, sync_to_thread=False),
         },
         exception_handlers={
             ValidationError: _validation_handler,
@@ -109,7 +158,8 @@ def create_app(
             InvalidRefreshError: _unauthorized_handler,
         },
         cors_config=CORSConfig(
-            allow_origins=["http://localhost:5173", "http://localhost:3000"]
+            allow_origins=["http://localhost:5173", "http://localhost:3000"],
+            allow_credentials=True,
         ),
         on_shutdown=on_shutdown,
     )

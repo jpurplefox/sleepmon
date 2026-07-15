@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -6,10 +6,17 @@ from litestar.testing import TestClient
 
 from sleepmon.adapters.inbound.http.app import create_app
 from sleepmon.adapters.outbound.auth.jwt_access_token import JwtAccessTokenService
+from sleepmon.adapters.outbound.auth.refresh_token import SecretsRefreshTokenCodec
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
+from sleepmon.application.auth_service import DefaultAuthService
 from sleepmon.application.services import DefaultTeamService
-from tests.fakes import InMemoryTeamRepository
+from tests.fakes import (
+    InMemoryRefreshTokenRepository,
+    InMemoryTeamRepository,
+    InMemoryUserRepository,
+    StubIdentityProvider,
+)
 
 ACCESS = JwtAccessTokenService("test-secret", timedelta(minutes=15))
 USER_ID = uuid4()
@@ -24,11 +31,23 @@ def client() -> TestClient:
     service = DefaultTeamService(
         InMemoryTeamRepository(), StaticSpeciesCatalog(), StaticRecipeCatalog()
     )
+    # Un ``AuthService`` real cableado con dobles en memoria: sin esto, ``create_app``
+    # abriría un pool Postgres real (no hay DB en este entorno de test).
+    auth_service = DefaultAuthService(
+        identity=StubIdentityProvider(),
+        users=InMemoryUserRepository(),
+        tokens=InMemoryRefreshTokenRepository(),
+        access=ACCESS,
+        refresh=SecretsRefreshTokenCodec(),
+        clock=lambda: datetime.now(UTC),
+        refresh_ttl=timedelta(days=30),
+    )
     app = create_app(
         service=service,
         catalog=StaticSpeciesCatalog(),
         recipe_catalog=StaticRecipeCatalog(),
         access=ACCESS,
+        auth_service=auth_service,
     )
     with TestClient(app=app) as client:
         yield client
