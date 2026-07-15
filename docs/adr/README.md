@@ -27,3 +27,4 @@ format: **Title / Status / Context / Decision / Consequences**.
 | [0003](0003-frontend-technology-stack.md) | Frontend technology stack | Accepted |
 | [0004](0004-internationalization.md) | Custom lightweight internationalization (i18n) | Accepted |
 | [0005](0005-frontend-testing-strategy.md) | Frontend testing strategy | Accepted |
+| [0006](0006-authentication-and-session-model.md) | Authentication and session model | Accepted |
