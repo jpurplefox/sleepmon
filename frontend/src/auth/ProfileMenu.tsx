@@ -89,7 +89,7 @@ export function ProfileMenu() {
               void logout();
             }}
           >
-            <IconSignOut />
+            <IconSignOut className="mini-icon" />
             {t("auth.signOut")}
           </button>
         </div>

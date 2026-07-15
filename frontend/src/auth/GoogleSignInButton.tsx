@@ -67,10 +67,10 @@ export function GoogleSignInButton() {
         <button
           type="button"
           className="btn btn--google"
+          data-autofocus
           tabIndex={-1}
           aria-hidden="true"
           disabled={busy}
-          aria-busy={busy || undefined}
         >
           <span className="g" aria-hidden="true">G</span>
           {t("auth.signInGoogle")}

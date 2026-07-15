@@ -10,7 +10,7 @@ import { GoogleSignInButton } from "./GoogleSignInButton";
 export function GateCard() {
   const { t } = useI18n();
   return (
-    <div className="layout">
+    <div className="layout layout--wide">
       <div className="card gate-card">
         <div className="gate-card__moon">
           <IconMoon width={20} height={20} />

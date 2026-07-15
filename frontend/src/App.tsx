@@ -9,6 +9,7 @@ import { SignInDialog } from "./auth/SignInDialog";
 import { GateProvider } from "./auth/useGate";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { LanguageSelector } from "./components/LanguageSelector";
+import { Placeholder } from "./components/Placeholder";
 import { useI18n } from "./i18n";
 import { Production } from "./pages/Production";
 import { Team } from "./pages/Team";
@@ -63,6 +64,7 @@ function AppShell() {
   };
 
   const authenticated = status === "authenticated";
+  const checking = status === "checking";
 
   return (
     <>
@@ -109,13 +111,25 @@ function AppShell() {
         </button>
       </nav>
         <div className="topbar__right">
-          {authenticated ? <ProfileMenu /> : <GoogleSignInButton />}
+          {checking ? (
+            <div className="auth-slot-placeholder" aria-hidden="true" />
+          ) : authenticated ? (
+            <ProfileMenu />
+          ) : (
+            <GoogleSignInButton />
+          )}
           <LanguageSelector />
         </div>
       </div>
       {tab === "team" && (
         <div role="tabpanel" id="tabpanel-team" aria-labelledby="tab-team" tabIndex={0}>
-          {authenticated ? <Team onCompare={openCompare} /> : <GateCard />}
+          {checking ? (
+            <Placeholder loading>{t("auth.checkingSession")}</Placeholder>
+          ) : authenticated ? (
+            <Team onCompare={openCompare} />
+          ) : (
+            <GateCard />
+          )}
         </div>
       )}
       {tab === "production" && (
@@ -131,7 +145,13 @@ function AppShell() {
       )}
       {tab === "teams" && (
         <div role="tabpanel" id="tabpanel-teams" aria-labelledby="tab-teams" tabIndex={0}>
-          {authenticated ? <Teams /> : <GateCard />}
+          {checking ? (
+            <Placeholder loading>{t("auth.checkingSession")}</Placeholder>
+          ) : authenticated ? (
+            <Teams />
+          ) : (
+            <GateCard />
+          )}
         </div>
       )}
       <SignInDialog />

@@ -21,6 +21,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     // Autenticación
     "auth.signInGoogle": "Iniciar sesión con Google",
     "auth.signInFailed": "No se completó el inicio de sesión.",
+    "auth.checkingSession": "Comprobando tu sesión…",
     "auth.signOut": "Cerrar sesión",
     "auth.accountAria": "{name} — cuenta",
     "auth.dialogTitle": "Iniciá sesión para continuar",
@@ -401,6 +402,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     // Authentication
     "auth.signInGoogle": "Sign in with Google",
     "auth.signInFailed": "Sign-in wasn't completed.",
+    "auth.checkingSession": "Checking your session…",
     "auth.signOut": "Sign out",
     "auth.accountAria": "{name} — account",
     "auth.dialogTitle": "Sign in to continue",
