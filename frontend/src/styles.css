@@ -245,6 +245,7 @@ select:focus {
 .filter-btn:focus-visible,
 .island-tab__island-trigger:focus-visible,
 .specialty-toggle__btn:focus-visible,
+.avatar-btn:focus-visible,
 .prod-box-item:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -4113,4 +4114,216 @@ button.prod-card__base-tag--action:hover {
   cursor: help;
   text-decoration: underline dotted var(--muted);
   text-underline-offset: 2px;
+}
+
+/* ============================================================
+   Autenticación — sign-in con Google, menú de cuenta, gate.
+   ============================================================ */
+
+/* Cluster derecho de la topbar: control de sesión (botón Google / avatar) +
+   selector de idioma, agrupados para que el space-between de .topbar los
+   empuje juntos a la derecha. */
+.topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Botón "Sign in with Google": superficie neutra (no un color "con voz" — el
+   dorado queda reservado para el acento de identidad). El único lugar donde se
+   permite el color de marca de Google es el glifo "G", tratado como artwork del
+   juego, no como color de la UI. */
+.btn--google {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  margin-top: 0;
+}
+
+.btn--google:hover {
+  border-color: var(--accent);
+}
+
+.btn--google:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.btn--google .g {
+  width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 13px;
+  border-radius: 3px;
+  background: #fff;
+  color: #4285f4;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  line-height: 1;
+}
+
+/* Wrapper del botón de Google real (GIS): se superpone, transparente, encima
+   del `.btn--google` visible — ver el comentario en GoogleSignInButton.tsx. */
+.google-signin__control {
+  position: relative;
+  display: inline-block;
+}
+
+.google-signin__overlay {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* El botón real de Google es el que recibe el foco de teclado (el visible
+   tiene tabIndex=-1); reflejamos el foco acá para que el anillo se vea. */
+.google-signin__control:focus-within .btn--google {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.auth-error {
+  margin: 0.5rem 0 0;
+}
+
+/* Avatar (signed in) — foto de Google recortada al círculo, o iniciales sobre
+   un círculo neutro cuando no hay foto (mismo vocabulario que .mini-icon--empty). */
+.avatar-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--muted);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  padding: 0;
+  overflow: hidden;
+}
+
+.avatar-btn:hover,
+.avatar-btn.is-open {
+  border-color: var(--accent);
+}
+
+.avatar-btn img,
+.avatar-lg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-wrap {
+  position: relative;
+}
+
+/* El menú de cuenta reusa .filter-pop pero alineado a la derecha bajo el
+   avatar (los usos existentes de .filter-pop van a la izquierda del trigger). */
+.profile-wrap .filter-pop {
+  left: auto;
+  right: 0;
+  width: 15rem;
+}
+
+.profile-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.5rem 0.65rem;
+}
+
+.profile-head .avatar-lg {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: var(--muted);
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
+.profile-head__name {
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.profile-head__mail {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+.filter-list__sep {
+  height: 1px;
+  background: var(--border);
+  margin: 0.15rem 0;
+}
+
+/* El ícono de línea (IconSignOut) dentro de .filter-list__item, al lado de
+   .mini-icon (imagen) que usan los otros items de esta misma clase. */
+.filter-list__item svg {
+  width: 15px;
+  height: 15px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+/* Un único botón centrado en .modal-actions (el diálogo de sign-in no lleva
+   secundario: Escape / ✕ / backdrop son el "ahora no"). */
+.modal-actions--center {
+  justify-content: center;
+}
+
+/* Gate de página reservada (Caja, Análisis de equipo) mientras no hay sesión:
+   una .card centrada con el roundel de luna — el único acento gold de la card,
+   per "one gold accent per card". */
+.gate-card {
+  max-width: 420px;
+  margin: 2.5rem auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 2rem 1.75rem;
+}
+
+.gate-card__moon {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--moon-dim);
+  border: 1px solid var(--moon-border);
+  color: var(--moon);
+}
+
+.gate-card__title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin: 0;
+}
+
+.gate-card__body {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 34ch;
 }
