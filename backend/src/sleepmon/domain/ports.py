@@ -8,9 +8,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
+from datetime import datetime
 from uuid import UUID
 
-from sleepmon.domain.auth import ExternalIdentity
+from sleepmon.domain.auth import ExternalIdentity, RefreshToken, User
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.recipes import Recipe
 from sleepmon.domain.species import Species
@@ -86,3 +87,36 @@ class IdentityProvider(ABC):
 
     @abstractmethod
     def verify(self, credential: str) -> ExternalIdentity: ...
+
+
+class UserRepository(ABC):
+    """Persistencia de usuarios."""
+
+    @abstractmethod
+    def get_by_google_sub(self, sub: str) -> User | None: ...
+
+    @abstractmethod
+    def get(self, user_id: UUID) -> User | None: ...
+
+    @abstractmethod
+    def add(self, user: User) -> None: ...
+
+
+class RefreshTokenRepository(ABC):
+    """Persistencia de refresh tokens, con soporte para revocar toda una familia."""
+
+    @abstractmethod
+    def add(self, token: RefreshToken) -> None: ...
+
+    @abstractmethod
+    def find_by_hash(self, token_hash: str) -> RefreshToken | None: ...
+
+    @abstractmethod
+    def consume(self, token_id: UUID) -> None: ...
+
+    @abstractmethod
+    def delete_family(self, family_id: UUID) -> None: ...
+
+    @abstractmethod
+    def delete_expired(self, now: datetime) -> int:
+        """Borra los tokens vencidos a partir de ``now``. Devuelve cuántos borró."""
