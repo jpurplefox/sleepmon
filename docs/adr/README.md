@@ -28,3 +28,4 @@ format: **Title / Status / Context / Decision / Consequences**.
 | [0004](0004-internationalization.md) | Custom lightweight internationalization (i18n) | Accepted |
 | [0005](0005-frontend-testing-strategy.md) | Frontend testing strategy | Accepted |
 | [0006](0006-authentication-and-session-model.md) | Authentication and session model | Accepted |
+| [0007](0007-database-migrations-with-yoyo.md) | Database schema migrations with yoyo | Accepted |
