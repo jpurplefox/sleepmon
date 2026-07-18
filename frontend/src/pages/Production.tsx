@@ -2,6 +2,8 @@ import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/rea
 import { useEffect, useRef, useState } from "react";
 
 import { api } from "../api/client";
+import { useAuth } from "../auth/AuthContext";
+import { useGate } from "../auth/useGate";
 import { BoxPicker } from "../components/BoxPicker";
 import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
@@ -34,9 +36,17 @@ interface ProductionProps {
 
 export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {}) {
   const { t } = useI18n();
+  const { status } = useAuth();
+  const { guard } = useGate();
   const qc = useQueryClient();
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
-  const members = useQuery({ queryKey: ["members"], queryFn: api.listMembers });
+  // Reading the Box is reserved: only fetch it once signed in, so the open
+  // ephemeral comparator makes no /team request (and no 401) while anonymous.
+  const members = useQuery({
+    queryKey: ["members"],
+    queryFn: api.listMembers,
+    enabled: status === "authenticated",
+  });
 
   const [entries, setEntries] = useState<CompareEntry[]>([]);
   const [modal, setModal] = useState<"form" | "box" | null>(null);
@@ -279,7 +289,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
             onMakeBase={() => swapEntries(i, 0)}
             onMoveLeft={i > 0 ? () => swapEntries(i, i - 1) : undefined}
             onMoveRight={i < entries.length - 1 ? () => swapEntries(i, i + 1) : undefined}
-            onSaveToBox={() => saveToBox(i)}
+            onSaveToBox={() => guard(() => saveToBox(i))}
             cloneDisabled={atMax}
             inBox={e.sourceId !== undefined}
             saveState={e.save?.state ?? "idle"}
@@ -317,7 +327,11 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
                   <button type="button" className="btn btn--primary" onClick={() => openAdd("form")}>
                     {t("prod.new")}
                   </button>
-                  <button type="button" className="btn btn--ghost" onClick={() => openAdd("box")}>
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={() => guard(() => openAdd("box"))}
+                  >
                     {t("prod.myPokemon")}
                   </button>
                 </div>
