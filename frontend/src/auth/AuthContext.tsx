@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { __setRefreshHandler } from "../api/client";
 import { postGoogle, postLogout, postRefresh, type AuthUser } from "./authApi";
-import { tokenStore } from "./tokenStore";
+import { sessionHint, tokenStore } from "./tokenStore";
 
 type Status = "checking" | "anonymous" | "authenticated";
 interface AuthValue {
@@ -26,24 +26,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const r = await postRefresh();
         tokenStore.set(r.access_token);
+        sessionHint.mark();
         setUser(r.user);
         setStatus("authenticated");
         return true;
       } catch {
         tokenStore.clear();
+        sessionHint.clear();
         setUser(null);
         setStatus("anonymous");
         return false;
       }
     });
-    // Try to restore a session on load (cookie may still be valid even if access is gone).
+    // Try to restore a session on load — but only if this browser has had one.
+    // Without the hint there is nothing to restore, so we skip the request (and
+    // its guaranteed 401) and settle straight to anonymous.
+    if (!sessionHint.present()) {
+      setStatus("anonymous");
+      return;
+    }
     postRefresh()
       .then((r) => {
         tokenStore.set(r.access_token);
+        sessionHint.mark();
         setUser(r.user);
         setStatus("authenticated");
       })
       .catch(() => {
+        tokenStore.clear();
+        sessionHint.clear();
         setStatus("anonymous");
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -55,11 +66,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login: async (credential) => {
       const r = await postGoogle(credential);
       tokenStore.set(r.access_token);
+      sessionHint.mark();
       setUser(r.user);
       setStatus("authenticated");
     },
     logout: async () => {
-      try { await postLogout(); } finally { tokenStore.clear(); setUser(null); setStatus("anonymous"); }
+      try {
+        await postLogout();
+      } finally {
+        tokenStore.clear();
+        sessionHint.clear();
+        setUser(null);
+        setStatus("anonymous");
+      }
     },
   }), [user, status]);
 

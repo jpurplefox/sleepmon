@@ -5,6 +5,29 @@ import { useAuth } from "./AuthContext";
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 
+// GIS `initialize()` is GLOBAL config; calling it once per button instance (or
+// twice under React StrictMode) triggers a "called multiple times" warning and
+// only the last callback wins. So we initialize GIS exactly once for the whole
+// app and route its callback through a module-level ref to whichever button is
+// currently mounted — each instance then only renders its own button.
+let gsiInitialized = false;
+let currentCredentialHandler: ((credential: string) => void) | null = null;
+
+// Returns the GIS `id` namespace once it's available (initializing it exactly
+// once), or null while the async GIS script is still loading.
+function ensureGsiInitialized(clientId: string) {
+  const id = window.google?.accounts?.id;
+  if (!id) return null;
+  if (!gsiInitialized) {
+    id.initialize({
+      client_id: clientId,
+      callback: (response) => currentCredentialHandler?.(response.credential),
+    });
+    gsiInitialized = true;
+  }
+  return id;
+}
+
 // Botón "Sign in with Google" (`.btn--google`). Google Identity Services no deja
 // re-estilar el botón que renderiza, así que mantenemos el `.btn--google` real
 // (visible, es lo que el usuario ve) y superponemos el botón que GIS renderiza,
@@ -19,7 +42,6 @@ export function GoogleSignInButton() {
   const { login } = useAuth();
   const { t } = useI18n();
   const overlayRef = useRef<HTMLDivElement>(null);
-  const initialized = useRef(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -32,32 +54,32 @@ export function GoogleSignInButton() {
     let cancelled = false;
     let attempts = 0;
 
-    const tryInit = () => {
-      if (cancelled || initialized.current) return;
-      const id = window.google?.accounts?.id;
+    // This instance is the active credential target while it's mounted.
+    const handler = (credential: string) => {
+      setFailed(false);
+      setBusy(true);
+      login(credential)
+        .catch(() => setFailed(true))
+        .finally(() => setBusy(false));
+    };
+    currentCredentialHandler = handler;
+
+    const tryRender = () => {
+      if (cancelled) return;
+      const id = ensureGsiInitialized(CLIENT_ID);
       const overlay = overlayRef.current;
+      // The GIS script loads `async`; it (and the overlay) may not be ready yet.
       if (!id || !overlay) {
-        // El script de GIS se carga con `async`; puede no estar listo todavía.
-        if (attempts++ < 40) setTimeout(tryInit, 250);
+        if (attempts++ < 40) setTimeout(tryRender, 250);
         return;
       }
-      id.initialize({
-        client_id: CLIENT_ID,
-        callback: (response) => {
-          setFailed(false);
-          setBusy(true);
-          login(response.credential)
-            .catch(() => setFailed(true))
-            .finally(() => setBusy(false));
-        },
-      });
       id.renderButton(overlay, { type: "standard", width: 260 });
-      initialized.current = true;
     };
 
-    tryInit();
+    tryRender();
     return () => {
       cancelled = true;
+      if (currentCredentialHandler === handler) currentCredentialHandler = null;
     };
   }, [login]);
 
