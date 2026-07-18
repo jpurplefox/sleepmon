@@ -49,9 +49,14 @@ Run the pieces directly when iterating on one of them.
 cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-python -m sleepmon.adapters.outbound.postgres.migrate
+python -m sleepmon.adapters.outbound.postgres.migrate   # apply pending yoyo migrations
 litestar --app sleepmon.adapters.inbound.http.app:create_app run --reload
 ```
+
+Migrations live in `src/sleepmon/adapters/outbound/postgres/migrations/` and are managed
+with [yoyo](https://ollycope.com/software/yoyo/). The runner applies only the pending
+ones (yoyo tracks history in its own `_yoyo_migration` table) and is safe to re-run on
+every boot; the backend container runs it before starting Litestar.
 
 Tests and quality gates:
 
