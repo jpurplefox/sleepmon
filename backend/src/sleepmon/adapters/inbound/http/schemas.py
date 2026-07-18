@@ -169,6 +169,22 @@ class ErrorOut(msgspec.Struct):
     detail: str
 
 
+class GoogleLoginIn(msgspec.Struct, forbid_unknown_fields=True):
+    credential: str
+
+
+class UserOut(msgspec.Struct):
+    id: str
+    email: str
+    display_name: str
+    avatar_url: str | None
+
+
+class AuthOut(msgspec.Struct):
+    access_token: str
+    user: UserOut
+
+
 class MealIn(msgspec.Struct, forbid_unknown_fields=True):
     recipe: str
     level: int = 1

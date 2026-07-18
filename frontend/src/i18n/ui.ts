@@ -18,6 +18,18 @@ export const UI: Record<Lang, Record<string, string>> = {
     "nav.team": "Caja",
     "nav.comparison": "Comparación",
     "nav.language": "Idioma",
+    // Autenticación
+    "auth.signInGoogle": "Iniciar sesión con Google",
+    "auth.signInFailed": "No se completó el inicio de sesión.",
+    "auth.checkingSession": "Comprobando tu sesión…",
+    "auth.signOut": "Cerrar sesión",
+    "auth.accountAria": "{name} — cuenta",
+    "auth.dialogTitle": "Iniciá sesión para continuar",
+    "auth.dialogBody":
+      "Tu Caja guarda tus Pokémon entre visitas. Iniciá sesión con Google para continuar.",
+    "auth.gateTitle": "Tu Caja es donde viven tus Pokémon",
+    "auth.gateBody":
+      "Iniciá sesión con Google para empezar tu Caja, registrar tu equipo y encontrarlo en cada visita.",
     // Página Equipo
     "team.title": "Mi caja de Pokémon Sleep",
     "team.subtitle":
@@ -387,6 +399,17 @@ export const UI: Record<Lang, Record<string, string>> = {
     "nav.team": "Box",
     "nav.comparison": "Comparison",
     "nav.language": "Language",
+    // Authentication
+    "auth.signInGoogle": "Sign in with Google",
+    "auth.signInFailed": "Sign-in wasn't completed.",
+    "auth.checkingSession": "Checking your session…",
+    "auth.signOut": "Sign out",
+    "auth.accountAria": "{name} — account",
+    "auth.dialogTitle": "Sign in to continue",
+    "auth.dialogBody": "Your Box keeps your Pokémon across visits. Sign in with Google to continue.",
+    "auth.gateTitle": "Your Box is where your Pokémon live",
+    "auth.gateBody":
+      "Sign in with Google to start your Box, register your team, and find it again on every visit.",
     // Team page
     "team.title": "My Pokémon Sleep box",
     "team.subtitle":

@@ -9,6 +9,7 @@ from litestar.di import NamedDependency
 from litestar.params import FromPath
 from litestar.status_codes import HTTP_200_OK, HTTP_201_CREATED
 
+from sleepmon.adapters.inbound.http.guards import require_user
 from sleepmon.adapters.inbound.http.schemas import (
     CatalogOut,
     DistributionsOut,
@@ -160,18 +161,28 @@ def _to_input(payload: MemberIn) -> TeamMemberInput:
 
 class TeamController(Controller):
     path = "/team"
+    guards = [require_user]
 
     @get("/", sync_to_thread=True)
-    def list_members(self, service: NamedDependency[TeamService]) -> list[MemberOut]:
-        return [_to_out(m, p) for m, p in service.list_members_with_production()]
+    def list_members(
+        self, service: NamedDependency[TeamService], current_user_id: NamedDependency[UUID]
+    ) -> list[MemberOut]:
+        return [_to_out(m, p) for m, p in service.list_members_with_production(current_user_id)]
 
     @post("/", status_code=HTTP_201_CREATED, sync_to_thread=True)
-    def add_member(self, service: NamedDependency[TeamService], data: MemberIn) -> MemberOut:
-        return _to_out(service.add_member(_to_input(data)))
+    def add_member(
+        self,
+        service: NamedDependency[TeamService],
+        current_user_id: NamedDependency[UUID],
+        data: MemberIn,
+    ) -> MemberOut:
+        return _to_out(service.add_member(current_user_id, _to_input(data)))
 
     @get("/distributions", sync_to_thread=True)
-    def distributions(self, service: NamedDependency[TeamService]) -> DistributionsOut:
-        dist = service.distributions()
+    def distributions(
+        self, service: NamedDependency[TeamService], current_user_id: NamedDependency[UUID]
+    ) -> DistributionsOut:
+        dist = service.distributions(current_user_id)
         return DistributionsOut(
             natures=dist.natures,
             ingredients=dist.ingredients,
@@ -181,21 +192,31 @@ class TeamController(Controller):
 
     @get("/{member_id:uuid}", sync_to_thread=True)
     def get_member(
-        self, service: NamedDependency[TeamService], member_id: FromPath[UUID]
+        self,
+        service: NamedDependency[TeamService],
+        current_user_id: NamedDependency[UUID],
+        member_id: FromPath[UUID],
     ) -> MemberOut:
-        return _to_out(service.get_member(member_id))
+        return _to_out(service.get_member(current_user_id, member_id))
 
     @put("/{member_id:uuid}", sync_to_thread=True)
     def update_member(
-        self, service: NamedDependency[TeamService], member_id: FromPath[UUID], data: MemberIn
+        self,
+        service: NamedDependency[TeamService],
+        current_user_id: NamedDependency[UUID],
+        member_id: FromPath[UUID],
+        data: MemberIn,
     ) -> MemberOut:
-        return _to_out(service.update_member(member_id, _to_input(data)))
+        return _to_out(service.update_member(current_user_id, member_id, _to_input(data)))
 
     @delete("/{member_id:uuid}", sync_to_thread=True)
     def delete_member(
-        self, service: NamedDependency[TeamService], member_id: FromPath[UUID]
+        self,
+        service: NamedDependency[TeamService],
+        current_user_id: NamedDependency[UUID],
+        member_id: FromPath[UUID],
     ) -> None:
-        service.delete_member(member_id)
+        service.delete_member(current_user_id, member_id)
 
 
 class ProductionController(Controller):
@@ -285,12 +306,17 @@ class RecipeController(Controller):
 
 class TeamProductionController(Controller):
     path = "/teams/production"
+    guards = [require_user]
 
     @post("/", status_code=HTTP_200_OK, sync_to_thread=True)
     def compute(
-        self, service: NamedDependency[TeamService], data: TeamProductionIn
+        self,
+        service: NamedDependency[TeamService],
+        current_user_id: NamedDependency[UUID],
+        data: TeamProductionIn,
     ) -> TeamProductionOut:
         result = service.compute_team_production(
+            current_user_id,
             TeamProductionInput(
                 slots=[
                     SlotInput(

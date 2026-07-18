@@ -1,11 +1,25 @@
+from datetime import UTC, datetime, timedelta
+from uuid import uuid4
+
 import pytest
 from litestar.testing import TestClient
 
 from sleepmon.adapters.inbound.http.app import create_app
+from sleepmon.adapters.outbound.auth.jwt_access_token import JwtAccessTokenService
+from sleepmon.adapters.outbound.auth.refresh_token import SecretsRefreshTokenCodec
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
+from sleepmon.application.auth_service import DefaultAuthService
 from sleepmon.application.services import DefaultTeamService
-from tests.fakes import InMemoryTeamRepository
+from tests.fakes import (
+    InMemoryRefreshTokenRepository,
+    InMemoryTeamRepository,
+    InMemoryUserRepository,
+    StubIdentityProvider,
+)
+
+ACCESS = JwtAccessTokenService("test-secret", timedelta(minutes=15))
+USER_ID = uuid4()
 
 
 def _slots_json(*ids: str) -> list[dict]:
@@ -17,11 +31,44 @@ def client() -> TestClient:
     service = DefaultTeamService(
         InMemoryTeamRepository(), StaticSpeciesCatalog(), StaticRecipeCatalog()
     )
+    # Un ``AuthService`` real cableado con dobles en memoria: sin esto, ``create_app``
+    # abriría un pool Postgres real (no hay DB en este entorno de test).
+    auth_service = DefaultAuthService(
+        identity=StubIdentityProvider(),
+        users=InMemoryUserRepository(),
+        tokens=InMemoryRefreshTokenRepository(),
+        access=ACCESS,
+        refresh=SecretsRefreshTokenCodec(),
+        clock=lambda: datetime.now(UTC),
+        refresh_ttl=timedelta(days=30),
+    )
     app = create_app(
-        service=service, catalog=StaticSpeciesCatalog(), recipe_catalog=StaticRecipeCatalog()
+        service=service,
+        catalog=StaticSpeciesCatalog(),
+        recipe_catalog=StaticRecipeCatalog(),
+        access=ACCESS,
+        auth_service=auth_service,
     )
     with TestClient(app=app) as client:
         yield client
+
+
+@pytest.fixture
+def auth_header() -> dict[str, str]:
+    return {"Authorization": f"Bearer {ACCESS.issue(USER_ID)}"}
+
+
+def test_reserved_route_without_token_is_401(client: TestClient) -> None:
+    assert client.get("/team").status_code == 401
+
+
+def test_reserved_route_with_token_is_ok(client: TestClient, auth_header: dict[str, str]) -> None:
+    assert client.get("/team", headers=auth_header).status_code == 200
+
+
+def test_open_routes_need_no_token(client: TestClient) -> None:
+    assert client.get("/catalog").status_code == 200
+    assert client.post("/production", json=valid_payload()).status_code == 200
 
 
 def valid_payload(**overrides: object) -> dict[str, object]:
@@ -78,50 +125,62 @@ def test_catalog_islands_expose_ratings(client: TestClient) -> None:
     }
 
 
-def test_create_and_list_member(client: TestClient) -> None:
-    res = client.post("/team", json=valid_payload())
+def test_create_and_list_member(client: TestClient, auth_header: dict[str, str]) -> None:
+    res = client.post("/team", json=valid_payload(), headers=auth_header)
     assert res.status_code == 201
     created = res.json()
     assert created["species"] == "Pikachu"
 
-    listing = client.get("/team").json()
+    listing = client.get("/team", headers=auth_header).json()
     assert len(listing) == 1
     assert listing[0]["id"] == created["id"]
 
 
-def test_create_member_without_nature(client: TestClient) -> None:
+def test_create_member_without_nature(client: TestClient, auth_header: dict[str, str]) -> None:
     # naturaleza opcional: nature="" = "sin naturaleza".
-    res = client.post("/team", json=valid_payload(nature=""))
+    res = client.post("/team", json=valid_payload(nature=""), headers=auth_header)
     assert res.status_code == 201
     created = res.json()
     assert created["nature"] == ""
 
-    listing = client.get("/team").json()
+    listing = client.get("/team", headers=auth_header).json()
     assert listing[0]["nature"] == ""
 
     # No aparece en la distribución de naturalezas.
-    dist = client.get("/team/distributions").json()
+    dist = client.get("/team/distributions", headers=auth_header).json()
     assert dist["natures"] == {}
 
 
-def test_create_member_nature_omitted_defaults_to_empty(client: TestClient) -> None:
+def test_create_member_nature_omitted_defaults_to_empty(
+    client: TestClient,
+    auth_header: dict[str,
+    str],
+) -> None:
     # El campo nature es opcional en el payload (default vacío).
     payload = valid_payload()
     del payload["nature"]
-    res = client.post("/team", json=payload)
+    res = client.post("/team", json=payload, headers=auth_header)
     assert res.status_code == 201
     assert res.json()["nature"] == ""
 
 
-def test_create_member_with_ribbon_roundtrips(client: TestClient) -> None:
-    res = client.post("/team", json=valid_payload(ribbon="500h"))
+def test_create_member_with_ribbon_roundtrips(
+    client: TestClient,
+    auth_header: dict[str,
+    str],
+) -> None:
+    res = client.post("/team", json=valid_payload(ribbon="500h"), headers=auth_header)
     assert res.status_code == 201
     assert res.json()["ribbon"] == "500h"
-    assert client.get("/team").json()[0]["ribbon"] == "500h"
+    assert client.get("/team", headers=auth_header).json()[0]["ribbon"] == "500h"
 
 
-def test_ribbon_defaults_to_empty_when_omitted(client: TestClient) -> None:
-    res = client.post("/team", json=valid_payload())
+def test_ribbon_defaults_to_empty_when_omitted(
+    client: TestClient,
+    auth_header: dict[str,
+    str],
+) -> None:
+    res = client.post("/team", json=valid_payload(), headers=auth_header)
     assert res.status_code == 201
     assert res.json()["ribbon"] == ""
 
@@ -140,20 +199,20 @@ def test_production_ribbon_raises_inventory(client: TestClient) -> None:
     assert ribboned["seconds_per_help"] < base["seconds_per_help"]
 
 
-def test_distributions_endpoint(client: TestClient) -> None:
-    client.post("/team", json=valid_payload())
-    dist = client.get("/team/distributions").json()
+def test_distributions_endpoint(client: TestClient, auth_header: dict[str, str]) -> None:
+    client.post("/team", json=valid_payload(), headers=auth_header)
+    dist = client.get("/team/distributions", headers=auth_header).json()
     assert dist["natures"]["Adamant"] == 1
     assert dist["ingredients"]["Fancy Apple"] == 1
 
 
-def test_unknown_species_returns_400(client: TestClient) -> None:
-    res = client.post("/team", json=valid_payload(species="Mewtwo"))
+def test_unknown_species_returns_400(client: TestClient, auth_header: dict[str, str]) -> None:
+    res = client.post("/team", json=valid_payload(species="Mewtwo"), headers=auth_header)
     assert res.status_code == 400
     assert "Mewtwo" in res.json()["detail"]
 
 
-def test_too_many_ingredients_returns_400(client: TestClient) -> None:
+def test_too_many_ingredients_returns_400(client: TestClient, auth_header: dict[str, str]) -> None:
     # Más ingredientes que slots de la especie: 400 limpio, no 500.
     res = client.post(
         "/team",
@@ -161,6 +220,7 @@ def test_too_many_ingredients_returns_400(client: TestClient) -> None:
             level=60,
             ingredients=["Fancy Apple", "Warming Ginger", "Fancy Apple", "Warming Ginger"],
         ),
+        headers=auth_header
     )
     assert res.status_code == 400
 
@@ -210,30 +270,36 @@ def test_production_requires_three_ingredients(client: TestClient) -> None:
     assert res.status_code == 400
 
 
-def test_get_missing_member_returns_404(client: TestClient) -> None:
-    res = client.get("/team/00000000-0000-0000-0000-000000000000")
+def test_get_missing_member_returns_404(client: TestClient, auth_header: dict[str, str]) -> None:
+    res = client.get("/team/00000000-0000-0000-0000-000000000000", headers=auth_header)
     assert res.status_code == 404
 
 
-def test_update_and_delete_flow(client: TestClient) -> None:
-    member_id = client.post("/team", json=valid_payload()).json()["id"]
+def test_update_and_delete_flow(client: TestClient, auth_header: dict[str, str]) -> None:
+    member_id = client.post("/team", json=valid_payload(), headers=auth_header).json()["id"]
 
-    upd = client.put(f"/team/{member_id}", json=valid_payload(level=60, nature="Modest"))
+    upd = client.put(
+        f"/team/{member_id}", json=valid_payload(level=60, nature="Modest"), headers=auth_header
+    )
     assert upd.status_code == 200
     assert upd.json()["level"] == 60
 
-    assert client.delete(f"/team/{member_id}").status_code == 204
-    assert client.get("/team").json() == []
+    assert client.delete(f"/team/{member_id}", headers=auth_header).status_code == 204
+    assert client.get("/team", headers=auth_header).json() == []
 
 
-def test_member_skill_level_roundtrips_and_defaults(client: TestClient) -> None:
+def test_member_skill_level_roundtrips_and_defaults(
+    client: TestClient,
+    auth_header: dict[str,
+    str],
+) -> None:
     # Omitido -> default 1.
-    created = client.post("/team", json=valid_payload()).json()
+    created = client.post("/team", json=valid_payload(), headers=auth_header).json()
     assert created["skill_level"] == 1
     # Explícito -> se preserva.
-    with_skill = client.post("/team", json=valid_payload(skill_level=5)).json()
+    with_skill = client.post("/team", json=valid_payload(skill_level=5), headers=auth_header).json()
     assert with_skill["skill_level"] == 5
-    assert client.get(f"/team/{with_skill['id']}").json()["skill_level"] == 5
+    assert client.get(f"/team/{with_skill['id']}", headers=auth_header).json()["skill_level"] == 5
 
 
 def test_production_exposes_skill_ingredients_for_ingredient_draw(client: TestClient) -> None:
@@ -523,11 +589,12 @@ def test_recipes_endpoint_lists_recipes(client: TestClient) -> None:
     assert all({"ingredient", "count"} <= ing.keys() for ing in first["ingredients"])
 
 
-def test_team_production_endpoint(client: TestClient) -> None:
-    created = client.post("/team", json=valid_payload()).json()
+def test_team_production_endpoint(client: TestClient, auth_header: dict[str, str]) -> None:
+    created = client.post("/team", json=valid_payload(), headers=auth_header).json()
     res = client.post(
         "/teams/production",
         json={"slots": _slots_json(created["id"]), "meals": [None, None, None]},
+        headers=auth_header
     )
     assert res.status_code == 200
     body = res.json()
@@ -554,27 +621,45 @@ def test_team_production_endpoint(client: TestClient) -> None:
         assert key in prod, f"missing key {key!r} in member production"
 
 
-def test_team_production_exposes_extra_tasty(client: TestClient) -> None:
-    created = client.post("/team", json=valid_payload()).json()
+def test_team_production_exposes_extra_tasty(
+    client: TestClient,
+    auth_header: dict[str,
+    str],
+) -> None:
+    created = client.post("/team", json=valid_payload(), headers=auth_header).json()
     body = client.post(
         "/teams/production",
         json={"slots": _slots_json(created["id"]), "meals": [None, None, None]},
+        headers=auth_header
     ).json()
     # Sin main skill de Tasty Chance, la chance/multiplicador son la base del juego.
     assert body["extra_tasty_rate"] == pytest.approx(2.7 / 21)
     assert body["extra_tasty_multiplier"] == pytest.approx(24.6 / 21)
 
 
-def test_team_production_endpoint_rejects_too_many(client: TestClient) -> None:
-    ids = [client.post("/team", json=valid_payload()).json()["id"] for _ in range(6)]
+def test_team_production_endpoint_rejects_too_many(
+    client: TestClient,
+    auth_header: dict[str,
+    str],
+) -> None:
+    ids = [
+        client.post("/team", json=valid_payload(), headers=auth_header).json()["id"]
+        for _ in range(6)
+    ]
     res = client.post(
-        "/teams/production", json={"slots": _slots_json(*ids), "meals": [None, None, None]}
+        "/teams/production",
+        json={"slots": _slots_json(*ids), "meals": [None, None, None]},
+        headers=auth_header,
     )
     assert res.status_code == 400
 
 
-def test_team_production_endpoint_with_recipe(client: TestClient) -> None:
-    created = client.post("/team", json=valid_payload()).json()
+def test_team_production_endpoint_with_recipe(
+    client: TestClient,
+    auth_header: dict[str,
+    str],
+) -> None:
+    created = client.post("/team", json=valid_payload(), headers=auth_header).json()
     recipe = client.get("/recipes").json()[0]
     res = client.post(
         "/teams/production",
@@ -582,6 +667,7 @@ def test_team_production_endpoint_with_recipe(client: TestClient) -> None:
             "slots": _slots_json(created["id"]),
             "meals": [{"recipe": recipe["name"], "level": 1}, None, None],
         },
+        headers=auth_header
     )
     assert res.status_code == 200
     body = res.json()
@@ -589,9 +675,13 @@ def test_team_production_endpoint_with_recipe(client: TestClient) -> None:
     assert body["grand_total_strength"] == body["total_strength"] + body["cooking_strength"]
 
 
-def test_team_production_cooking_meals_have_breakdown_fields(client: TestClient) -> None:
+def test_team_production_cooking_meals_have_breakdown_fields(
+    client: TestClient,
+    auth_header: dict[str,
+    str],
+) -> None:
     """cooking_meals incluye level, strength e ingredients (desglose X/Y por ingrediente)."""
-    created = client.post("/team", json=valid_payload()).json()
+    created = client.post("/team", json=valid_payload(), headers=auth_header).json()
     recipe = client.get("/recipes").json()[0]
     res = client.post(
         "/teams/production",
@@ -599,6 +689,7 @@ def test_team_production_cooking_meals_have_breakdown_fields(client: TestClient)
             "slots": _slots_json(created["id"]),
             "meals": [{"recipe": recipe["name"], "level": 2}, None, None],
         },
+        headers=auth_header
     )
     assert res.status_code == 200
     body = res.json()
@@ -630,12 +721,17 @@ def test_team_production_cooking_meals_have_breakdown_fields(client: TestClient)
     assert isinstance(first_ing["available"], (int, float))
 
 
-def test_team_production_returns_skill_effects(client: TestClient) -> None:
+def test_team_production_returns_skill_effects(
+    client: TestClient,
+    auth_header: dict[str,
+    str],
+) -> None:
     """/teams/production incluye skill_effects como lista de {kind, total, triggers}."""
-    created = client.post("/team", json=valid_payload()).json()
+    created = client.post("/team", json=valid_payload(), headers=auth_header).json()
     res = client.post(
         "/teams/production",
         json={"slots": _slots_json(created["id"]), "meals": [None, None, None]},
+        headers=auth_header
     )
     assert res.status_code == 200
     body = res.json()
@@ -653,12 +749,17 @@ def test_team_production_returns_skill_effects(client: TestClient) -> None:
         assert isinstance(effect["triggers"], (int, float))
 
 
-def test_team_production_endpoint_split_slot(client: TestClient) -> None:
-    a = client.post("/team", json=valid_payload()).json()["id"]
-    b = client.post("/team", json=valid_payload()).json()["id"]
+def test_team_production_endpoint_split_slot(
+    client: TestClient,
+    auth_header: dict[str,
+    str],
+) -> None:
+    a = client.post("/team", json=valid_payload(), headers=auth_header).json()["id"]
+    b = client.post("/team", json=valid_payload(), headers=auth_header).json()["id"]
     full = client.post(
         "/teams/production",
         json={"slots": _slots_json(a), "meals": [None, None, None]},
+        headers=auth_header
     ).json()
     split = client.post(
         "/teams/production",
@@ -671,15 +772,20 @@ def test_team_production_endpoint_split_slot(client: TestClient) -> None:
             ],
             "meals": [None, None, None],
         },
+        headers=auth_header
     ).json()
     # Dos copias al 50% en un slot ≈ un Pokémon completo.
     assert split["total_strength"] == pytest.approx(full["total_strength"])
     assert split["member_count"] == 2
 
 
-def test_team_production_endpoint_rejects_weights_not_one(client: TestClient) -> None:
-    a = client.post("/team", json=valid_payload()).json()["id"]
-    b = client.post("/team", json=valid_payload()).json()["id"]
+def test_team_production_endpoint_rejects_weights_not_one(
+    client: TestClient,
+    auth_header: dict[str,
+    str],
+) -> None:
+    a = client.post("/team", json=valid_payload(), headers=auth_header).json()["id"]
+    b = client.post("/team", json=valid_payload(), headers=auth_header).json()["id"]
     res = client.post(
         "/teams/production",
         json={
@@ -691,6 +797,7 @@ def test_team_production_endpoint_rejects_weights_not_one(client: TestClient) ->
             ],
             "meals": [None, None, None],
         },
+        headers=auth_header
     )
     assert res.status_code == 400
 
@@ -700,9 +807,9 @@ def test_team_production_endpoint_rejects_weights_not_one(client: TestClient) ->
 # ---------------------------------------------------------------------------
 
 
-def _create_member(client: TestClient) -> str:
+def _create_member(client: TestClient, auth_header: dict[str, str]) -> str:
     """Crea un miembro vía POST /team y devuelve su id."""
-    return client.post("/team", json=valid_payload()).json()["id"]
+    return client.post("/team", json=valid_payload(), headers=auth_header).json()["id"]
 
 
 def test_catalog_lists_islands(client: TestClient) -> None:
@@ -715,8 +822,12 @@ def test_catalog_lists_islands(client: TestClient) -> None:
     assert islands["Greengrass Isle"]["user_picks"] is True
 
 
-def test_production_accepts_island_bonus_and_favorites(client: TestClient) -> None:
-    member_id = _create_member(client)
+def test_production_accepts_island_bonus_and_favorites(
+    client: TestClient,
+    auth_header: dict[str,
+    str],
+) -> None:
+    member_id = _create_member(client, auth_header)
     res = client.post(
         "/teams/production",
         json={
@@ -725,6 +836,7 @@ def test_production_accepts_island_bonus_and_favorites(client: TestClient) -> No
             "favorite_berries": ["Oran"],
             "island_bonus": 0.3,
         },
+        headers=auth_header
     )
     assert res.status_code == 200
     body = res.json()
@@ -734,24 +846,31 @@ def test_production_accepts_island_bonus_and_favorites(client: TestClient) -> No
     )
 
 
-def test_production_rejects_bonus_over_max(client: TestClient) -> None:
-    member_id = _create_member(client)
+def test_production_rejects_bonus_over_max(client: TestClient, auth_header: dict[str, str]) -> None:
+    member_id = _create_member(client, auth_header)
     res = client.post(
         "/teams/production",
         json={"slots": _slots_json(member_id), "meals": [], "island_bonus": 0.9},
+        headers=auth_header
     )
     assert res.status_code in (400, 422)
 
 
-def test_team_production_accepts_good_camp_ticket(client: TestClient) -> None:
-    member_id = _create_member(client)
+def test_team_production_accepts_good_camp_ticket(
+    client: TestClient,
+    auth_header: dict[str,
+    str],
+) -> None:
+    member_id = _create_member(client, auth_header)
     off = client.post(
         "/teams/production",
         json={"slots": _slots_json(member_id), "meals": []},
+        headers=auth_header
     )
     on = client.post(
         "/teams/production",
         json={"slots": _slots_json(member_id), "meals": [], "good_camp_ticket": True},
+        headers=auth_header
     )
     assert off.status_code == 200
     assert on.status_code == 200

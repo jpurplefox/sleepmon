@@ -1,8 +1,15 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 
+import { AuthProvider, useAuth } from "./auth/AuthContext";
+import { GateCard } from "./auth/GateCard";
+import { GoogleSignInButton } from "./auth/GoogleSignInButton";
+import { ProfileMenu } from "./auth/ProfileMenu";
+import { SignInDialog } from "./auth/SignInDialog";
+import { GateProvider } from "./auth/useGate";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { LanguageSelector } from "./components/LanguageSelector";
+import { Placeholder } from "./components/Placeholder";
 import { useI18n } from "./i18n";
 import { Production } from "./pages/Production";
 import { Team } from "./pages/Team";
@@ -17,10 +24,27 @@ type Tab = "team" | "production" | "teams";
 const TABS: Tab[] = ["team", "production", "teams"];
 
 export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <GateProvider>
+          <ErrorBoundary>
+            <AppShell />
+          </ErrorBoundary>
+        </GateProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+}
+
+// Shell de la app: tabs + topbar + páginas. Aparte de App() para poder usar
+// useAuth()/useGate() (necesitan estar debajo de sus providers).
+function AppShell() {
   const [tab, setTab] = useState<Tab>("team");
   // "Comparar" desde la Caja: lleva a Comparación con ese Pokémon como base.
   const [compareBase, setCompareBase] = useState<string | null>(null);
   const { t } = useI18n();
+  const { status } = useAuth();
 
   const openCompare = (memberId: string) => {
     setCompareBase(memberId);
@@ -39,10 +63,12 @@ export default function App() {
     }
   };
 
+  const authenticated = status === "authenticated";
+  const checking = status === "checking";
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        <div className="topbar">
+    <>
+      <div className="topbar">
         <nav className="tabs" role="tablist" aria-label={t("nav.aria")}>
         <button
           id="tab-team"
@@ -84,11 +110,26 @@ export default function App() {
           {t("nav.teams")}
         </button>
       </nav>
-        <LanguageSelector />
+        <div className="topbar__right">
+          {checking ? (
+            <div className="auth-slot-placeholder" aria-hidden="true" />
+          ) : authenticated ? (
+            <ProfileMenu />
+          ) : (
+            <GoogleSignInButton />
+          )}
+          <LanguageSelector />
+        </div>
       </div>
       {tab === "team" && (
         <div role="tabpanel" id="tabpanel-team" aria-labelledby="tab-team" tabIndex={0}>
-          <Team onCompare={openCompare} />
+          {checking ? (
+            <Placeholder loading>{t("auth.checkingSession")}</Placeholder>
+          ) : authenticated ? (
+            <Team onCompare={openCompare} />
+          ) : (
+            <GateCard />
+          )}
         </div>
       )}
       {tab === "production" && (
@@ -98,15 +139,22 @@ export default function App() {
           aria-labelledby="tab-production"
           tabIndex={0}
         >
+          {/* Comparador efímero: abierto para cualquiera, sin gate. */}
           <Production baseMemberId={compareBase} onBaseConsumed={() => setCompareBase(null)} />
         </div>
       )}
       {tab === "teams" && (
         <div role="tabpanel" id="tabpanel-teams" aria-labelledby="tab-teams" tabIndex={0}>
-          <Teams />
+          {checking ? (
+            <Placeholder loading>{t("auth.checkingSession")}</Placeholder>
+          ) : authenticated ? (
+            <Teams />
+          ) : (
+            <GateCard />
+          )}
         </div>
       )}
-      </ErrorBoundary>
-    </QueryClientProvider>
+      <SignInDialog />
+    </>
   );
 }
