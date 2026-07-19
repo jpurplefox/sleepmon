@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
+import { Redirect, Route, Switch, useLocation } from "wouter";
 
 import { AuthProvider, useAuth } from "./auth/AuthContext";
 import { GateCard } from "./auth/GateCard";
@@ -9,19 +10,17 @@ import { SignInDialog } from "./auth/SignInDialog";
 import { GateProvider } from "./auth/useGate";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { LanguageSelector } from "./components/LanguageSelector";
+import { NavTabs } from "./components/NavTabs";
 import { Placeholder } from "./components/Placeholder";
 import { useI18n } from "./i18n";
 import { Production } from "./pages/Production";
 import { Team } from "./pages/Team";
 import { Teams } from "./pages/Teams";
+import { ROUTES } from "./routes";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false } },
 });
-
-type Tab = "team" | "production" | "teams";
-
-const TABS: Tab[] = ["team", "production", "teams"];
 
 export default function App() {
   return (
@@ -37,79 +36,35 @@ export default function App() {
   );
 }
 
-// Shell de la app: tabs + topbar + páginas. Aparte de App() para poder usar
-// useAuth()/useGate() (necesitan estar debajo de sus providers).
+// App shell: topbar (nav + auth + language) and the routed tool pages. Kept
+// separate from App() so it can use useAuth()/useLocation() below their
+// providers.
 function AppShell() {
-  const [tab, setTab] = useState<Tab>("team");
-  // "Comparar" desde la Caja: lleva a Comparación con ese Pokémon como base.
+  // "Compare" from the Box hands the picked Pokémon to the Comparison page as
+  // its base. The shell stays mounted across route changes, so this survives the
+  // navigation and is cleared once consumed.
   const [compareBase, setCompareBase] = useState<string | null>(null);
   const { t } = useI18n();
   const { status } = useAuth();
-
-  const openCompare = (memberId: string) => {
-    setCompareBase(memberId);
-    setTab("production");
-  };
-
-  // Navegación entre tabs con flechas izquierda/derecha (patrón ARIA de tablist).
-  const onTabKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
-    const idx = TABS.indexOf(tab);
-    if (e.key === "ArrowRight") {
-      e.preventDefault();
-      setTab(TABS[(idx + 1) % TABS.length]);
-    } else if (e.key === "ArrowLeft") {
-      e.preventDefault();
-      setTab(TABS[(idx - 1 + TABS.length) % TABS.length]);
-    }
-  };
+  const [, navigate] = useLocation();
 
   const authenticated = status === "authenticated";
   const checking = status === "checking";
 
+  const openCompare = (memberId: string) => {
+    setCompareBase(memberId);
+    navigate(ROUTES.compare);
+  };
+
+  // Reserved tools render a login prompt in place (no redirect), matching the
+  // previous per-panel gating.
+  const gated = (node: React.ReactNode) =>
+    checking ? <Placeholder loading>{t("auth.checkingSession")}</Placeholder> : authenticated ? node : <GateCard />;
+
   return (
     <>
       <div className="topbar">
-        <nav className="tabs" role="tablist" aria-label={t("nav.aria")}>
-        <button
-          id="tab-team"
-          type="button"
-          role="tab"
-          aria-selected={tab === "team"}
-          aria-controls="tabpanel-team"
-          tabIndex={tab === "team" ? 0 : -1}
-          className={"tab" + (tab === "team" ? " tab--active" : "")}
-          onClick={() => setTab("team")}
-          onKeyDown={onTabKeyDown}
-        >
-          {t("nav.team")}
-        </button>
-        <button
-          id="tab-production"
-          type="button"
-          role="tab"
-          aria-selected={tab === "production"}
-          aria-controls="tabpanel-production"
-          tabIndex={tab === "production" ? 0 : -1}
-          className={"tab" + (tab === "production" ? " tab--active" : "")}
-          onClick={() => setTab("production")}
-          onKeyDown={onTabKeyDown}
-        >
-          {t("nav.comparison")}
-        </button>
-        <button
-          id="tab-teams"
-          type="button"
-          role="tab"
-          aria-selected={tab === "teams"}
-          aria-controls="tabpanel-teams"
-          tabIndex={tab === "teams" ? 0 : -1}
-          className={"tab" + (tab === "teams" ? " tab--active" : "")}
-          onClick={() => setTab("teams")}
-          onKeyDown={onTabKeyDown}
-        >
-          {t("nav.teams")}
-        </button>
-      </nav>
+        <NavTabs />
         <div className="topbar__right">
           {checking ? (
             <div className="auth-slot-placeholder" aria-hidden="true" />
@@ -121,39 +76,23 @@ function AppShell() {
           <LanguageSelector />
         </div>
       </div>
-      {tab === "team" && (
-        <div role="tabpanel" id="tabpanel-team" aria-labelledby="tab-team" tabIndex={0}>
-          {checking ? (
-            <Placeholder loading>{t("auth.checkingSession")}</Placeholder>
-          ) : authenticated ? (
-            <Team onCompare={openCompare} />
-          ) : (
-            <GateCard />
-          )}
-        </div>
-      )}
-      {tab === "production" && (
-        <div
-          role="tabpanel"
-          id="tabpanel-production"
-          aria-labelledby="tab-production"
-          tabIndex={0}
-        >
-          {/* Comparador efímero: abierto para cualquiera, sin gate. */}
-          <Production baseMemberId={compareBase} onBaseConsumed={() => setCompareBase(null)} />
-        </div>
-      )}
-      {tab === "teams" && (
-        <div role="tabpanel" id="tabpanel-teams" aria-labelledby="tab-teams" tabIndex={0}>
-          {checking ? (
-            <Placeholder loading>{t("auth.checkingSession")}</Placeholder>
-          ) : authenticated ? (
-            <Teams />
-          ) : (
-            <GateCard />
-          )}
-        </div>
-      )}
+      <main>
+        <Switch>
+          <Route path={ROUTES.box}>{gated(<Team onCompare={openCompare} />)}</Route>
+          <Route path={ROUTES.compare}>
+            {/* Ephemeral comparator: open to anyone, no gate. */}
+            <Production baseMemberId={compareBase} onBaseConsumed={() => setCompareBase(null)} />
+          </Route>
+          <Route path={ROUTES.teamAnalysis}>{gated(<Teams />)}</Route>
+          {/* Default and unknown paths land on the Box. */}
+          <Route path="/">
+            <Redirect to={ROUTES.box} />
+          </Route>
+          <Route>
+            <Redirect to={ROUTES.box} />
+          </Route>
+        </Switch>
+      </main>
       <SignInDialog />
     </>
   );

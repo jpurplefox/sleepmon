@@ -1984,6 +1984,8 @@ select:focus {
 }
 
 .tab {
+  display: inline-flex;
+  align-items: center;
   background: transparent;
   border: 1px solid transparent;
   color: var(--muted);
@@ -1992,6 +1994,7 @@ select:focus {
   padding: 0.55rem 1rem;
   border-radius: var(--r-md);
   cursor: pointer;
+  text-decoration: none;
 }
 
 .tab:hover {
