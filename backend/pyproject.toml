@@ -24,6 +24,11 @@ dev = [
     "mypy>=1.11",
     "httpx>=0.27",
 ]
+# Solo para el empaquetado en AWS Lambda: adaptador ASGI→Lambda. No se instala en
+# el runtime local (docker compose corre Litestar directo con uvicorn).
+lambda = [
+    "mangum>=0.18",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -55,4 +60,9 @@ mypy_path = "src"
 [[tool.mypy.overrides]]
 # yoyo-migrations ships no stubs or py.typed marker.
 module = "yoyo.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# mangum is an optional (Lambda-only) dep; not installed in the type-check env.
+module = "mangum.*"
 ignore_missing_imports = true

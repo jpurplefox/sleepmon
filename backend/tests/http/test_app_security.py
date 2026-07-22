@@ -32,6 +32,8 @@ def _settings(*, jwt_secret: str = "s3cr3t", google_client_id: str = "cid") -> S
         access_ttl=timedelta(minutes=15),
         refresh_ttl=timedelta(days=30),
         cookie_secure=True,
+        cors_origins=("http://localhost:5173",),
+        cookie_samesite="strict",
     )
 
 
