@@ -33,6 +33,10 @@ lambda = [
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+# setuptools ships only .py by default; without this the wheel has no migrations.
+"sleepmon.adapters.outbound.postgres" = ["migrations/*.sql"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]

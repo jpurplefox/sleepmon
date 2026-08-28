@@ -27,8 +27,14 @@ def _yoyo_uri(dsn: str) -> str:
 
 def run(dsn: str) -> None:
     """Apply the pending migrations against ``dsn``."""
-    backend = get_backend(_yoyo_uri(dsn))
+    # Read before connecting: a missing directory yields an empty list rather
+    # than an error, which would apply nothing and exit successfully.
     migrations = read_migrations(str(MIGRATIONS_DIR))
+    if not migrations:
+        raise RuntimeError(
+            f"No migrations found in {MIGRATIONS_DIR}: installed without its package data?"
+        )
+    backend = get_backend(_yoyo_uri(dsn))
     with backend.lock():
         backend.apply_migrations(backend.to_apply(migrations))
 
