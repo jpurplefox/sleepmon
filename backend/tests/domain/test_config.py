@@ -1,5 +1,7 @@
 from datetime import timedelta
 
+import pytest
+
 from sleepmon.config import Settings
 
 
@@ -26,3 +28,38 @@ def test_ttls_have_defaults(monkeypatch) -> None:
     assert s.access_ttl == timedelta(seconds=900)
     assert s.refresh_ttl == timedelta(seconds=2592000)
     assert s.cookie_secure is True
+
+
+def test_cors_and_samesite_have_local_defaults(monkeypatch) -> None:
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "cid")
+    monkeypatch.setenv("JWT_SECRET", "x")
+    monkeypatch.delenv("CORS_ORIGINS", raising=False)
+    monkeypatch.delenv("COOKIE_SAMESITE", raising=False)
+    s = Settings.from_env()
+    assert s.cors_origins == ("http://localhost:5173", "http://localhost:3000")
+    assert s.cookie_samesite == "strict"
+
+
+def test_cors_origins_parses_and_trims_comma_list(monkeypatch) -> None:
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "cid")
+    monkeypatch.setenv("JWT_SECRET", "x")
+    # Espacios y una entrada vacía por coma colgante: se ignoran.
+    monkeypatch.setenv("CORS_ORIGINS", "https://app.example.com, https://www.example.com,")
+    s = Settings.from_env()
+    assert s.cors_origins == ("https://app.example.com", "https://www.example.com")
+
+
+def test_cookie_samesite_none_for_cross_site_deploy(monkeypatch) -> None:
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "cid")
+    monkeypatch.setenv("JWT_SECRET", "x")
+    monkeypatch.setenv("COOKIE_SAMESITE", "None")  # case-insensitive
+    s = Settings.from_env()
+    assert s.cookie_samesite == "none"
+
+
+def test_invalid_samesite_is_rejected(monkeypatch) -> None:
+    monkeypatch.setenv("GOOGLE_CLIENT_ID", "cid")
+    monkeypatch.setenv("JWT_SECRET", "x")
+    monkeypatch.setenv("COOKIE_SAMESITE", "bogus")
+    with pytest.raises(ValueError, match="COOKIE_SAMESITE"):
+        Settings.from_env()

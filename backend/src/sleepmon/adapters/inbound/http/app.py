@@ -138,6 +138,12 @@ def create_app(
     bound_auth_service = auth_service
 
     cookie_secure = settings.cookie_secure if settings is not None else True
+    cookie_samesite = settings.cookie_samesite if settings is not None else "strict"
+    cors_origins = (
+        list(settings.cors_origins)
+        if settings is not None
+        else ["http://localhost:5173", "http://localhost:3000"]
+    )
     refresh_max_age = int(
         (settings.refresh_ttl if settings is not None else timedelta(days=30)).total_seconds()
     )
@@ -155,6 +161,7 @@ def create_app(
             {
                 "access": access,
                 "cookie_secure": cookie_secure,
+                "cookie_samesite": cookie_samesite,
                 "refresh_max_age": refresh_max_age,
             }
         ),
@@ -172,7 +179,7 @@ def create_app(
             InvalidRefreshError: _unauthorized_handler,
         },
         cors_config=CORSConfig(
-            allow_origins=["http://localhost:5173", "http://localhost:3000"],
+            allow_origins=cors_origins,
             allow_credentials=True,
         ),
         on_shutdown=on_shutdown,

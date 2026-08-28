@@ -31,6 +31,8 @@ def test_app_lifespan_closes_pool_cleanly(test_dsn: str) -> None:
             access_ttl=timedelta(minutes=15),
             refresh_ttl=timedelta(days=30),
             cookie_secure=False,
+            cors_origins=("http://localhost:5173",),
+            cookie_samesite="strict",
         )
     )
     # El context manager del TestClient corre on_startup y on_shutdown.

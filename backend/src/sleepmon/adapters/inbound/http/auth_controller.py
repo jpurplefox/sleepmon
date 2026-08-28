@@ -17,6 +17,7 @@ from litestar.status_codes import HTTP_200_OK, HTTP_204_NO_CONTENT
 
 from sleepmon.adapters.inbound.http.schemas import AuthOut, GoogleLoginIn, UserOut
 from sleepmon.application.auth_service import AuthResult, AuthService
+from sleepmon.config import SameSite
 from sleepmon.domain.auth import InvalidRefreshError
 
 REFRESH_COOKIE = "refresh_token"
@@ -39,7 +40,7 @@ class AuthController(Controller):
     path = "/auth"
 
     def _with_refresh_cookie(
-        self, result: AuthResult, *, secure: bool, max_age: int
+        self, result: AuthResult, *, secure: bool, samesite: SameSite, max_age: int
     ) -> Response[AuthOut]:
         cookie = Cookie(
             key=REFRESH_COOKIE,
@@ -47,7 +48,7 @@ class AuthController(Controller):
             path=REFRESH_PATH,
             httponly=True,
             secure=secure,
-            samesite="strict",
+            samesite=samesite,
             max_age=max_age,
         )
         return Response(
@@ -65,8 +66,11 @@ class AuthController(Controller):
     ) -> Response[AuthOut]:
         result = auth_service.login_with_google(data.credential)
         cookie_secure: bool = request.app.state.cookie_secure
+        cookie_samesite: SameSite = request.app.state.cookie_samesite
         refresh_max_age: int = request.app.state.refresh_max_age
-        return self._with_refresh_cookie(result, secure=cookie_secure, max_age=refresh_max_age)
+        return self._with_refresh_cookie(
+            result, secure=cookie_secure, samesite=cookie_samesite, max_age=refresh_max_age
+        )
 
     @post("/refresh", sync_to_thread=True)
     def refresh(
@@ -77,8 +81,11 @@ class AuthController(Controller):
             raise InvalidRefreshError("no refresh cookie")
         result = auth_service.refresh(token)
         cookie_secure: bool = request.app.state.cookie_secure
+        cookie_samesite: SameSite = request.app.state.cookie_samesite
         refresh_max_age: int = request.app.state.refresh_max_age
-        return self._with_refresh_cookie(result, secure=cookie_secure, max_age=refresh_max_age)
+        return self._with_refresh_cookie(
+            result, secure=cookie_secure, samesite=cookie_samesite, max_age=refresh_max_age
+        )
 
     @post("/logout", status_code=HTTP_204_NO_CONTENT, sync_to_thread=True)
     def logout(
@@ -88,13 +95,14 @@ class AuthController(Controller):
         if token:
             auth_service.logout(token)
         cookie_secure: bool = request.app.state.cookie_secure
+        cookie_samesite: SameSite = request.app.state.cookie_samesite
         cleared = Cookie(
             key=REFRESH_COOKIE,
             value="",
             path=REFRESH_PATH,
             httponly=True,
             secure=cookie_secure,
-            samesite="strict",
+            samesite=cookie_samesite,
             max_age=0,
         )
         return Response(None, status_code=HTTP_204_NO_CONTENT, cookies=[cleared])

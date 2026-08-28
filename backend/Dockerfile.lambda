@@ -1,0 +1,12 @@
+# Imagen de contenedor para AWS Lambda (backend Litestar vía Mangum).
+# Se construye en CI (deploy.yml) para linux/amd64 y se publica en ECR.
+FROM public.ecr.aws/lambda/python:3.12
+
+# Instala el paquete + el extra `lambda` (mangum) en el site-packages del runtime.
+# psycopg[binary] trae wheels manylinux, así que no hace falta toolchain de compilación.
+COPY pyproject.toml ${LAMBDA_TASK_ROOT}/
+COPY src ${LAMBDA_TASK_ROOT}/src
+RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}[lambda]"
+
+# module.function que Lambda invoca en cada request.
+CMD ["sleepmon.adapters.inbound.http.lambda_handler.handler"]
