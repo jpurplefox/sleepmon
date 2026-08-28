@@ -34,9 +34,7 @@ lambda = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-# Los .sql de yoyo no son código: sin esto setuptools los deja fuera del wheel y
-# una instalación no editable (`pip install .`, la imagen de Lambda, el job de
-# migraciones) se queda sin migraciones que aplicar.
+# setuptools ships only .py by default; without this the wheel has no migrations.
 "sleepmon.adapters.outbound.postgres" = ["migrations/*.sql"]
 
 [tool.pytest.ini_options]
