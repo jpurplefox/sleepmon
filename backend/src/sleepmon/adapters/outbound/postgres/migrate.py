@@ -27,8 +27,19 @@ def _yoyo_uri(dsn: str) -> str:
 
 def run(dsn: str) -> None:
     """Apply the pending migrations against ``dsn``."""
-    backend = get_backend(_yoyo_uri(dsn))
+    # Se leen ANTES de conectar: si el directorio no llegó al paquete instalado,
+    # ``read_migrations`` devuelve una lista vacía en silencio (no falla), yoyo
+    # crea sus tablas de bookkeeping, no aplica nada y sale con exit code 0 —
+    # un deploy en verde contra una base vacía. Un directorio vacío nunca es
+    # legítimo aquí: el repo siempre tiene al menos 0001.
     migrations = read_migrations(str(MIGRATIONS_DIR))
+    if not migrations:
+        raise RuntimeError(
+            f"No migrations found in {MIGRATIONS_DIR}. "
+            "Si el paquete se instaló de forma no editable, revisá que "
+            "[tool.setuptools.package-data] incluya migrations/*.sql."
+        )
+    backend = get_backend(_yoyo_uri(dsn))
     with backend.lock():
         backend.apply_migrations(backend.to_apply(migrations))
 
