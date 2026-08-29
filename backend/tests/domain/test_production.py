@@ -543,7 +543,7 @@ def test_the_main_favorite_raises_the_effective_skill_level() -> None:
 
 
 def test_a_pokemon_at_its_skill_cap_gains_no_level() -> None:
-    """PRD: un miembro ya en el máximo de su skill no gana nivel."""
+    """PRD: un miembro ya en el máximo de su skill no gana nivel ni produce de más."""
     species = _species(main_skill="Energy for Everyone S")  # topa en 6
     prod = daily_production(
         species,
@@ -552,7 +552,14 @@ def test_a_pokemon_at_its_skill_cap_gains_no_level() -> None:
         skill_level=6,
         map_bonuses=_fav(species.berry, expert=True),
     )
+    without_map = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
     assert prod.effective_skill_level == 6
+    # Same effective level -> same per-trigger skill output. Compare the per-trigger
+    # amount, not the raw total: the main favorite's x0.9 speed still raises how often
+    # the skill fires, which would confound a direct comparison of the totals.
+    assert prod.skill_energy / prod.skill_triggers == pytest.approx(
+        without_map.skill_energy / without_map.skill_triggers
+    )
 
 
 def test_without_the_main_favorite_the_effective_level_is_the_members_own() -> None:
@@ -603,6 +610,37 @@ def test_the_ingredient_bonus_raises_ingredient_output() -> None:
     diagonal_sum = 2 + 4 + 6
     expected_total = base_total * (diagonal_sum + unlocked) / diagonal_sum
     assert expert_total == pytest.approx(expected_total)
+
+
+def test_the_ingredient_bonus_raises_output_when_inventory_fills() -> None:
+    """Almost every real species fills its inventory before night ends; the
+    synthetic species above (base_inventory=100_000) never does, so it never
+    exercises the interaction between the +1 bonus and the inventory fill.
+    """
+    # Sub-favorite (not main): isolates the +1 ingredient bonus from the main
+    # berry's x0.9 speed, same technique as the fixture above.
+    species = _species(base_inventory=10, help_frequency_seconds=1800)
+    base = daily_production(species, _INGREDIENTS, level=60)
+    expert = daily_production(
+        species,
+        _INGREDIENTS,
+        level=60,
+        map_bonuses=MapBonuses(
+            subs=frozenset({species.berry}),
+            expert=True,
+            weekly_bonus=WeeklyBonus.INGREDIENT,
+        ),
+    )
+    # Sanity check: this fixture actually fills before the night ends (unlike the
+    # one above), so it exercises the fill-hours interaction the bonus feeds into.
+    assert base.inventory_fill_hours < 8.5
+    assert expert.inventory_fill_hours < 8.5
+
+    base_total = sum(s.amount for s in base.ingredients)
+    expert_total = sum(s.amount for s in expert.ingredients)
+    assert expert_total > base_total
+    # The extra ingredient occupies inventory too, so it fills sooner.
+    assert expert.inventory_fill_hours < base.inventory_fill_hours
 
 
 def test_the_skill_trigger_bonus_raises_the_effective_skill_rate() -> None:

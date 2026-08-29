@@ -174,9 +174,9 @@ class DailyProduction:
     seconds_per_help: int  # intervalo entre ayudas (ya truncado a segundos enteros)
     berry: Berry
     berry_amount: float
-    # Fuerza/día que aportan las bayas a Snorlax (DIRECTA, sin contar la main skill):
-    # ``berry_amount`` × la fuerza por baya del nivel. Sube con el nivel y depende del
-    # tipo de baya. No incluye Area Bonus ni el x2 de baya favorita.
+    # Daily direct berry strength to Snorlax (main skill excluded): ``berry_amount``
+    # x the berry's strength at this level. Already includes the favorite-berry
+    # multiplier (x2 / x2.4); does NOT include the Area Bonus.
     berry_strength: float
     berry_percentage: float
     ingredient_percentage: float
