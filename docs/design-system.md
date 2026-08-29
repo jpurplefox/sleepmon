@@ -72,10 +72,15 @@ rest are functional or semantic.
 --moon-dim:    rgba(212, 160, 23, 0.15);
 --moon-border: rgba(212, 160, 23, 0.4);
 
-/* Semantic — natures and errors */
---up:    #3fb950;   /* stat that rises */
---down:  #f78166;   /* stat that falls */
---error: #f85149;
+/* Semantic — natures and errors. `--down` carries the same two alpha variants
+   as `--moon`, and at the same alphas, because a cost is marked the way a bonus
+   is: `--down-border` outlines, `--down-dim` fills. `rgba()` needs channels, so
+   a variant cannot be composed from the base token at use time. */
+--up:          #3fb950;   /* stat that rises */
+--down:        #f78166;   /* stat that falls */
+--down-dim:    rgba(247, 129, 102, 0.15);
+--down-border: rgba(247, 129, 102, 0.4);
+--error:       #f85149;
 
 /* Sub-skill tiers — blue is the tier-specific color; the gold and regular
    tiers use --moon / --muted, mapped in .ss-icon */
@@ -174,9 +179,10 @@ Edit steppers show nav arrows, not a metric icon.
 - **Cost vs. destruction (the two reds):** a **cost** — a value the rules push down
   (a gameplay penalty, a stat that falls) — is `--down`, never `--error`. It may
   reach past a badge onto a **whole surface**: a card whose subject is being
-  penalized carries a `--down` border (in alpha, ~.45) plus a faint inset. That
-  surface-level red is reserved for a real, rule-driven penalty and must vanish
-  where the penalty does not apply — a state, never decoration.
+  penalized carries a `--down-border` outline plus a `--down-dim` inset — the same
+  two roles, at the same alphas, that `--moon-border` / `--moon-dim` play for a
+  bonus. That surface-level red is reserved for a real, rule-driven penalty and
+  must vanish where the penalty does not apply — a state, never decoration.
 - **Empty placeholders:** a dim same-size square keeps rows aligned when a value is
   missing (`.mini-icon--empty`).
 
@@ -221,7 +227,7 @@ states · where it lives. Feature one-offs are intentionally not here.
   or `×1,25` on skill, `−10%` / `+15%` on help cadence). Smaller and bolder than
   `.badge` (`--text-xs`, weight 700) and tinted rather than neutral, so it reads as
   attached to the number instead of standing on its own. Variants: `--good` (moon
-  gold on `--moon-dim`) and `--bad` (`--down` on red alpha). Always carries `title`
+  gold on `--moon-dim`) and `--bad` (`--down` on `--down-dim`). Always carries `title`
   + `aria-label` with the full effect — the sign and the text carry the meaning, so
   color is never the only cue. Generalized from `.prod-card__fav-badge` (the berry
   `×2`), which is its gold variant.
