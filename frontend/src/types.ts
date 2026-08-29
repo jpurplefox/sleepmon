@@ -317,4 +317,6 @@ export interface Production {
   night_skill_chances: number[];
   inventory: number;
   inventory_fill_hours: number;
+  /** Skill level actually used (with the main favorite's +1, already capped). */
+  effective_skill_level: number;
 }
