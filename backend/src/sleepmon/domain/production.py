@@ -226,14 +226,14 @@ class DailyProduction:
 
 
 def scale_daily(daily: DailyProduction, weight: float) -> DailyProduction:
-    """Escala la producción diaria por ``weight`` (fracción de tiempo del slot).
+    """Scales daily production by ``weight`` (fraction of the slot's time).
 
-    Sólo escala magnitudes *extensivas* (cantidades/día, fuerza/día y
-    ``helps_per_day``): bayas, ingredientes, disparos y salidas de la main skill.
-    Las *intensivas* (porcentajes, ``seconds_per_help``, ``night_skill_chances``,
-    ``inventory``, ``inventory_fill_hours``, ``effective_skill_level``) se dejan
-    igual: describen el ritmo del Pokémon, no su aporte al equipo. ``weight == 1.0``
-    devuelve algo equivalente al original (identidad).
+    Only scales *extensive* magnitudes (amounts/day, strength/day and
+    ``helps_per_day``): berries, ingredients, triggers and main skill outputs.
+    The *intensive* ones (percentages, ``seconds_per_help``, ``night_skill_chances``,
+    ``inventory``, ``inventory_fill_hours``, ``effective_skill_level``) are left
+    unchanged: they describe the Pokémon's pace, not its contribution to the team.
+    ``weight == 1.0`` returns something equivalent to the original (identity).
     """
     if weight == 1.0:
         return daily
@@ -281,14 +281,14 @@ def daily_production(
     map_bonuses: MapBonuses = _NO_MAP,
     good_camp_ticket: bool = False,
 ) -> DailyProduction:
-    """Estima la producción diaria con ingredientes, nivel, naturaleza y sub skills.
+    """Estimates daily production from ingredients, level, nature and sub skills.
 
-    ``ingredients`` debe tener un ingrediente por slot (``MAX_INGREDIENTS``); la
-    validación vive en la capa de aplicación. Por defecto, sin naturaleza (``None``)
-    ni sub skills (sin modificadores). ``skill_level`` (1..MAX_SKILL_LEVEL) define
-    cuántos ingredientes entrega cada disparo de las skills tipo Ingredient Draw S.
-    ``map_bonuses`` (neutral por defecto) trae los efectos del modo experto; el nivel
-    de skill que realmente se usa se reporta en ``effective_skill_level``.
+    ``ingredients`` must have one ingredient per slot (``MAX_INGREDIENTS``);
+    validation lives in the application layer. Defaults to no nature (``None``)
+    and no sub skills (no modifiers). ``skill_level`` (1..MAX_SKILL_LEVEL) defines
+    how many ingredients each trigger of Ingredient Draw S-type skills delivers.
+    ``map_bonuses`` (neutral by default) brings the expert-mode effects; the skill
+    level actually used is reported in ``effective_skill_level``.
     """
     if len(ingredients) != MAX_INGREDIENTS:
         raise ValueError(

@@ -393,11 +393,11 @@ _BERRY_STRENGTH_GROWTH_RATE: Final[float] = 1.025
 
 
 def berry_strength_for_level(berry: Berry, level: int, *, multiplier: float = 1.0) -> int:
-    """Fuerza que aporta UNA baya de ``berry`` para un Pokémon de nivel ``level``.
+    """Strength contributed by ONE ``berry`` for a Pokémon of level ``level``.
 
-    ``multiplier`` es el del mapa: 1.0 sin favorita, 2.0 favorita, 2.4 favorita con
-    el bonus semanal de fuerza. Se redondea al entero más cercano (la fuerza a
-    Snorlax es entera); con 2.0 el redondeo es identidad.
+    ``multiplier`` is the map's: 1.0 without favorite, 2.0 favorite, 2.4 favorite
+    with the weekly strength bonus. Rounded to the nearest integer (strength
+    delivered to Snorlax is an integer); with 2.0 the rounding is identity.
     """
     base = BERRY_BASE_STRENGTH[berry]
     linear = base + (level - 1)
