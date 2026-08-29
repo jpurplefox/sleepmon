@@ -240,6 +240,7 @@ class Island(StrEnum):
     GREENGRASS_ISLE = "Greengrass Isle"
     GREENGRASS_EXPERT = "Greengrass Isle (Expert Mode)"
     CYAN_BEACH = "Cyan Beach"
+    CYAN_BEACH_EXPERT = "Cyan Beach (Expert)"
     TAUPE_HOLLOW = "Taupe Hollow"
     SNOWDROP_TUNDRA = "Snowdrop Tundra"
     LAPIS_LAKESIDE = "Lapis Lakeside"

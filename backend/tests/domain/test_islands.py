@@ -1,4 +1,5 @@
 from sleepmon.domain.catalog_data import (
+    ISLAND_EXPERT,
     ISLAND_FAVORITE_BERRIES,
     ISLAND_USER_PICKS,
 )
@@ -19,8 +20,20 @@ def test_normal_islands_have_exactly_three_favorites() -> None:
             assert len(set(favorites)) == 3
 
 
-def test_greengrass_islands_pick_berries() -> None:
-    assert {Island.GREENGRASS_ISLE, Island.GREENGRASS_EXPERT} == ISLAND_USER_PICKS
+def test_user_picks_are_greengrass_and_the_expert_areas() -> None:
+    assert {
+        Island.GREENGRASS_ISLE,
+        Island.GREENGRASS_EXPERT,
+        Island.CYAN_BEACH_EXPERT,
+    } == ISLAND_USER_PICKS
+
+
+def test_expert_areas_are_greengrass_expert_and_cyan_beach_expert() -> None:
+    assert {Island.GREENGRASS_EXPERT, Island.CYAN_BEACH_EXPERT} == ISLAND_EXPERT
+
+
+def test_every_expert_area_lets_the_user_pick() -> None:
+    assert ISLAND_EXPERT <= ISLAND_USER_PICKS
 
 
 def test_cyan_beach_favorites() -> None:

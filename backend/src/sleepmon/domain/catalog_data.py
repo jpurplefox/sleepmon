@@ -234,10 +234,14 @@ BERRY_BASE_STRENGTH: Final[Mapping[Berry, int]] = {
     Berry.YACHE: 35,
 }
 
+# Tope de bayas favoritas de un mapa (el juego permite tres).
+MAX_FAVORITE_BERRIES: Final[int] = 3
+
 ISLAND_FAVORITE_BERRIES: Final[Mapping[Island, tuple[Berry, ...]]] = {
     Island.GREENGRASS_ISLE: (),
     Island.GREENGRASS_EXPERT: (),
     Island.CYAN_BEACH: (Berry.ORAN, Berry.PAMTRE, Berry.PECHA),
+    Island.CYAN_BEACH_EXPERT: (),
     Island.TAUPE_HOLLOW: (Berry.FIGY, Berry.LEPPA, Berry.SITRUS),
     Island.SNOWDROP_TUNDRA: (Berry.PERSIM, Berry.RAWST, Berry.WIKI),
     Island.LAPIS_LAKESIDE: (Berry.CHERI, Berry.DURIN, Berry.MAGO),
@@ -246,7 +250,13 @@ ISLAND_FAVORITE_BERRIES: Final[Mapping[Island, tuple[Berry, ...]]] = {
 }
 
 ISLAND_USER_PICKS: Final[frozenset[Island]] = frozenset(
-    {Island.GREENGRASS_ISLE, Island.GREENGRASS_EXPERT}
+    {Island.GREENGRASS_ISLE, Island.GREENGRASS_EXPERT, Island.CYAN_BEACH_EXPERT}
+)
+
+# Mapas de modo experto: aplican los cuatro efectos del PRD 0007 y tienen sus
+# propios umbrales de rating, muy por encima de los del mapa normal homónimo.
+ISLAND_EXPERT: Final[frozenset[Island]] = frozenset(
+    {Island.GREENGRASS_EXPERT, Island.CYAN_BEACH_EXPERT}
 )
 
 # Estructura fija de los 35 ratings (Basic1-5, Great1-5, Ultra1-5, Master1-20).
@@ -273,6 +283,13 @@ _ISLAND_RATING_STRENGTHS: Final[Mapping[Island, tuple[int, ...]]] = {
         2760321, 3057187, 3361630, 3667816, 4014149, 4378519, 4778794, 5184989,
         5614239, 6067795, 6541407, 7152862, 7780648, 8414117, 9067058, 9752517,
         10981171,
+    ),
+    Island.CYAN_BEACH_EXPERT: (
+        0, 41895, 96358, 157104, 228205, 309675, 418230, 548434, 698799, 860468,
+        1037612, 1235275, 1444644, 1665846, 1907355, 2194292, 2495790, 2813784,
+        3141221, 3489192, 3851643, 4237798, 4654094, 5118523, 5609891, 6124856,
+        6656321, 7217801, 7802011, 8552888, 9410567, 10274627, 11147108,
+        12160074, 14780152,
     ),
     Island.CYAN_BEACH: (
         0, 4822, 11090, 18082, 26520, 36164, 48700, 63889, 81971, 101499,
