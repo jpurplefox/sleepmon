@@ -238,7 +238,7 @@ class Island(StrEnum):
     """Islas / áreas de investigación de Pokémon Sleep."""
 
     GREENGRASS_ISLE = "Greengrass Isle"
-    GREENGRASS_EXPERT = "Greengrass Isle (Expert Mode)"
+    GREENGRASS_EXPERT = "Greengrass Isle (Expert)"
     CYAN_BEACH = "Cyan Beach"
     CYAN_BEACH_EXPERT = "Cyan Beach (Expert)"
     TAUPE_HOLLOW = "Taupe Hollow"

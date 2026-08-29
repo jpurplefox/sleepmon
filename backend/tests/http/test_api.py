@@ -887,4 +887,4 @@ def test_team_production_accepts_good_camp_ticket(
 def test_the_catalog_marks_the_expert_areas(client: TestClient) -> None:
     catalog = client.get("/catalog").json()
     expert = {i["name"] for i in catalog["islands"] if i["expert"]}
-    assert expert == {"Greengrass Isle (Expert Mode)", "Cyan Beach (Expert)"}
+    assert expert == {"Greengrass Isle (Expert)", "Cyan Beach (Expert)"}
