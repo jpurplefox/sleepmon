@@ -248,6 +248,22 @@ class Island(StrEnum):
     AMBER_CANYON = "Amber Canyon"
 
 
+class WeeklyBonus(StrEnum):
+    """An expert map's weekly bonus. Exactly one is active at a time."""
+
+    BERRY_STRENGTH = "berry_strength"  # berry strength x2.4 (REPLACES the x2)
+    INGREDIENT = "ingredient"  # +1 ingredient per gather
+    SKILL_TRIGGER = "skill_trigger"  # main skill chance x1.25
+
+
+class BerryRole(StrEnum):
+    """What a Pokemon's berry is with respect to the chosen map."""
+
+    MAIN = "main"
+    SUB = "sub"
+    NONE = "none"
+
+
 class RatingTier(StrEnum):
     """Tramos del rating de Snorlax; cada uno se muestra con su ball."""
 
