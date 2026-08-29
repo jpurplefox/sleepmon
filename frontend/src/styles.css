@@ -21,6 +21,9 @@
   /* Semántico */
   --up: #3fb950;
   --down: #f78166;
+  /* --down-dim/--down-border mirror --moon-dim/--moon-border: same two roles, same alphas. */
+  --down-dim: rgba(247, 129, 102, 0.15);
+  --down-border: rgba(247, 129, 102, 0.4);
   --error: #f85149;
   /* Tier azul del sub skill; los tiers gold y regular usan --moon / --muted,
      mapeados en .ss-icon. */
@@ -2518,8 +2521,8 @@ select:focus {
    that falls"), never --error, which is reserved for destructive actions
    (design-system §4). */
 .prod-card--no-favorite {
-  border-color: rgba(247, 129, 102, 0.45);
-  box-shadow: inset 0 0 0 1px rgba(247, 129, 102, 0.1);
+  border-color: var(--down-border);
+  box-shadow: inset 0 0 0 1px var(--down-dim);
 }
 
 /* Annotation pinned to a metric: what the map does to THAT number
@@ -2546,8 +2549,8 @@ select:focus {
 
 .metric-mark--bad {
   color: var(--down);
-  background: rgba(247, 129, 102, 0.12);
-  border-color: rgba(247, 129, 102, 0.4);
+  background: var(--down-dim);
+  border-color: var(--down-border);
 }
 
 /* Fila de altura reservada para el chip/botón de base: aunque haya una sola card
