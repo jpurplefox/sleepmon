@@ -234,7 +234,7 @@ BERRY_BASE_STRENGTH: Final[Mapping[Berry, int]] = {
     Berry.YACHE: 35,
 }
 
-# Tope de bayas favoritas de un mapa (el juego permite tres).
+# A map's favorite-berry cap (the game allows three).
 MAX_FAVORITE_BERRIES: Final[int] = 3
 
 ISLAND_FAVORITE_BERRIES: Final[Mapping[Island, tuple[Berry, ...]]] = {
@@ -253,8 +253,8 @@ ISLAND_USER_PICKS: Final[frozenset[Island]] = frozenset(
     {Island.GREENGRASS_ISLE, Island.GREENGRASS_EXPERT, Island.CYAN_BEACH_EXPERT}
 )
 
-# Mapas de modo experto: aplican los cuatro efectos del PRD 0007 y tienen sus
-# propios umbrales de rating, muy por encima de los del mapa normal homónimo.
+# Expert-mode maps: they apply the four expert effects and carry their own rating
+# thresholds, far above those of the normal map of the same name.
 ISLAND_EXPERT: Final[frozenset[Island]] = frozenset(
     {Island.GREENGRASS_EXPERT, Island.CYAN_BEACH_EXPERT}
 )

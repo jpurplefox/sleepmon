@@ -11,6 +11,7 @@ from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatal
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.auth_service import DefaultAuthService
 from sleepmon.application.services import DefaultTeamService
+from sleepmon.domain.value_objects import Island
 from tests.fakes import (
     InMemoryRefreshTokenRepository,
     InMemoryTeamRepository,
@@ -815,7 +816,9 @@ def _create_member(client: TestClient, auth_header: dict[str, str]) -> str:
 def test_catalog_lists_islands(client: TestClient) -> None:
     body = client.get("/catalog").json()
     islands = {i["name"]: i for i in body["islands"]}
-    assert len(islands) == 8
+    # Compared against the enum, not a hardcoded count: adding an area must not
+    # break this test, but silently dropping one still must.
+    assert len(islands) == len(Island)
     assert islands["Cyan Beach"]["favorite_berries"] == ["Oran", "Pamtre", "Pecha"]
     assert islands["Cyan Beach"]["user_picks"] is False
     assert islands["Greengrass Isle"]["favorite_berries"] == []
