@@ -491,7 +491,9 @@ def daily_production(
     # Fuerza directa de las bayas: cantidad de bayas × fuerza por baya del nivel.
     # Si la baya del Pokémon es favorita de la isla activa, el multiplicador es ×2.
     berry_strength = berry_amount * berry_strength_for_level(
-        species.berry, level, favorite=species.berry in favorite_berries
+        species.berry,
+        level,
+        multiplier=2.0 if species.berry in favorite_berries else 1.0,
     )
 
     helps_per_slot = normal_helps * ingredient_rate / unlocked

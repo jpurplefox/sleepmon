@@ -392,16 +392,18 @@ assert set(INGREDIENT_STRENGTH) == set(Ingredient), (
 _BERRY_STRENGTH_GROWTH_RATE: Final[float] = 1.025
 
 
-def berry_strength_for_level(berry: Berry, level: int, *, favorite: bool = False) -> int:
+def berry_strength_for_level(berry: Berry, level: int, *, multiplier: float = 1.0) -> int:
     """Fuerza que aporta UNA baya de ``berry`` para un Pokémon de nivel ``level``.
 
-    Si la baya es favorita de la isla activa, aporta el doble.
+    ``multiplier`` es el del mapa: 1.0 sin favorita, 2.0 favorita, 2.4 favorita con
+    el bonus semanal de fuerza. Se redondea al entero más cercano (la fuerza a
+    Snorlax es entera); con 2.0 el redondeo es identidad.
     """
     base = BERRY_BASE_STRENGTH[berry]
     linear = base + (level - 1)
     exponential = base * _BERRY_STRENGTH_GROWTH_RATE ** (level - 1)
     strength = round(max(linear, exponential))
-    return strength * 2 if favorite else strength
+    return round(strength * multiplier)
 
 
 # Multiplicador de fuerza de una receta según su nivel (1..MAX_RECIPE_LEVEL).
