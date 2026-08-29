@@ -42,6 +42,7 @@ from sleepmon.domain.entities import (
     validate_sub_skills,
 )
 from sleepmon.domain.errors import SpeciesNotFoundError, TeamMemberNotFoundError, ValidationError
+from sleepmon.domain.map_bonuses import MapBonuses
 from sleepmon.domain.ports import RecipeCatalog, SpeciesCatalog, TeamRepository
 from sleepmon.domain.production import DailyProduction, daily_production, scale_daily
 from sleepmon.domain.species import Species
@@ -338,6 +339,9 @@ class DefaultTeamService(TeamService):
             except ValueError as exc:
                 raise ValidationError(f"Baya desconocida: {name!r}.") from exc
         favorite_frozen = frozenset(favorites)
+        # Temporary until Task 6 wires island/main_favorite/weekly_bonus from the
+        # request: a normal map with only the sub-favorites (no main, no expert).
+        map_bonuses = MapBonuses(subs=favorite_frozen)
 
         # Cargar miembros (404 si falta) y computar su producción escalada por peso.
         # Los miembros con especie fuera del catálogo curado se excluyen del agregado.
@@ -362,7 +366,7 @@ class DefaultTeamService(TeamService):
                 member.sub_skills,
                 member.ribbon,
                 member.skill_level,
-                favorite_berries=favorite_frozen,
+                map_bonuses=map_bonuses,
                 good_camp_ticket=data.good_camp_ticket,
             )
             scaled = scale_daily(daily, weight)

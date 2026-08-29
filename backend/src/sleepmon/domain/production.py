@@ -40,6 +40,7 @@ from sleepmon.domain.catalog_data import (
     ribbon_inventory_bonus,
     ribbon_speed_bonus,
 )
+from sleepmon.domain.map_bonuses import MapBonuses, berry_effects
 from sleepmon.domain.skills import (
     boosts_tasty_chance,
     charge_energy_amount,
@@ -64,6 +65,7 @@ from sleepmon.domain.skills import (
     magnet_plus_bonus_amount,
     magnet_plus_bonus_ingredient,
     magnets_ingredients,
+    max_skill_level,
     powers_up_cooking,
     restores_team_energy,
     tasty_chance_amount,
@@ -82,6 +84,10 @@ from sleepmon.domain.value_objects import (
 _BERRY_PER_HELP_SPECIALTY: Final[int] = 2
 _BERRY_PER_HELP_OTHER: Final[int] = 1
 _SECONDS_PER_HOUR: Final[int] = 3600
+# Neutral map (no favorites, no expert mode): the Box/Comparison default. A
+# module-level singleton avoids constructing one on every call (and the B008
+# lint against calling a function in a default argument) — safe since it's frozen.
+_NO_MAP: Final[MapBonuses] = MapBonuses()
 
 # Efectos de sub skills sobre la producción (magnitudes de RaenonX).
 _SPEED_SUBSKILLS: Final[Mapping[SubSkill, float]] = {
@@ -178,6 +184,10 @@ class DailyProduction:
     effective_skill_percentage: float  # tasa efectiva con pity proc
     ingredients: tuple[SlotProduction, ...]
     skill_triggers: float
+    # Nivel de skill con el que se calculó: el del miembro más el +1 de la baya
+    # principal, saturado por el tope real de esa skill. Igual al del miembro si no
+    # hubo bonus o si ya estaba al tope. La UI lo compara para decidir la marca.
+    effective_skill_level: int
     # Ingredientes/día que aporta la main skill (p. ej. Ingredient Draw S), uno por
     # ingrediente del pool. Vacío si la skill de la especie no produce ingredientes.
     skill_ingredients: tuple[SlotProduction, ...]
@@ -222,9 +232,9 @@ def scale_daily(daily: DailyProduction, weight: float) -> DailyProduction:
     Sólo escala magnitudes *extensivas* (cantidades/día, fuerza/día y
     ``helps_per_day``): bayas, ingredientes, disparos y salidas de la main skill.
     Las *intensivas* (porcentajes, ``seconds_per_help``, ``night_skill_chances``,
-    ``inventory``, ``inventory_fill_hours``) se dejan igual: describen el ritmo del
-    Pokémon, no su aporte al equipo. ``weight == 1.0`` devuelve algo equivalente al
-    original (identidad).
+    ``inventory``, ``inventory_fill_hours``, ``effective_skill_level``) se dejan
+    igual: describen el ritmo del Pokémon, no su aporte al equipo. ``weight == 1.0``
+    devuelve algo equivalente al original (identidad).
     """
     if weight == 1.0:
         return daily
@@ -269,7 +279,7 @@ def daily_production(
     sub_skills: tuple[SubSkill, ...] = (),
     ribbon: Ribbon = Ribbon.NONE,
     skill_level: int = 1,
-    favorite_berries: frozenset[Berry] = frozenset(),
+    map_bonuses: MapBonuses = _NO_MAP,
     good_camp_ticket: bool = False,
 ) -> DailyProduction:
     """Estima la producción diaria con ingredientes, nivel, naturaleza y sub skills.
@@ -278,6 +288,8 @@ def daily_production(
     validación vive en la capa de aplicación. Por defecto, sin naturaleza (``None``)
     ni sub skills (sin modificadores). ``skill_level`` (1..MAX_SKILL_LEVEL) define
     cuántos ingredientes entrega cada disparo de las skills tipo Ingredient Draw S.
+    ``map_bonuses`` (neutral por defecto) trae los efectos del modo experto; el nivel
+    de skill que realmente se usa se reporta en ``effective_skill_level``.
     """
     if len(ingredients) != MAX_INGREDIENTS:
         raise ValueError(
@@ -289,6 +301,13 @@ def daily_production(
     # y max_ingredient_slots(0)=0.
     if not 1 <= level <= MAX_LEVEL:
         raise ValueError(f"El nivel debe estar entre 1 y {MAX_LEVEL}; llegó {level}.")
+
+    # Expert-mode effects for this member's berry, and the skill level they actually
+    # use (capped at the skill's real max — a maxed-out member gains nothing).
+    effects = berry_effects(map_bonuses, species.berry)
+    effective_skill_level = min(
+        skill_level + effects.skill_level_bonus, max_skill_level(species.main_skill)
+    )
 
     # Solo cuentan las sub skills DESBLOQUEADAS al nivel (cada slot abre a 10/25/50/
     # 70/80); las que el nivel todavía no activó se ignoran.
@@ -326,6 +345,7 @@ def daily_production(
         * level_factor
         * speed_factor
         * camp_speed
+        * effects.speed_factor
         / MAX_ENERGY_BONUS
     )
     helps_per_second = 1 / seconds_per_help
@@ -347,7 +367,8 @@ def daily_production(
             species.skill_percentage
             / 100
             * (1 + skill_ss)
-            * _nature_factor(nature, NatureStat.MAIN_SKILL_CHANCE, *_NATURE_SKILL),
+            * _nature_factor(nature, NatureStat.MAIN_SKILL_CHANCE, *_NATURE_SKILL)
+            * effects.skill_rate_factor,
         ),
         species.pity_helps,
     )
@@ -362,7 +383,7 @@ def daily_production(
     # primer slot abre a nivel 1, así que con el rango de nivel ya validado unlocked >= 1.
     unlocked = max_ingredient_slots(level)
     slot_amounts = [species.ingredient_amount(i, ingredients[i]) for i in range(unlocked)]
-    avg_amount = sum(slot_amounts) / unlocked
+    avg_amount = sum(slot_amounts) / unlocked + effects.extra_ingredients
 
     # Ítems que ocupan inventario por ayuda (bayas + ingredientes; skills no).
     items_per_help = berry_rate * berry_per_help + ingredient_rate * avg_amount
@@ -395,24 +416,26 @@ def daily_production(
     skill_triggers = day_helps * effective_skill_rate + night_skill
 
     # Ingredientes por la main skill (Ingredient Draw S y variantes): cada disparo
-    # entrega ``ingredient_draw_amount(skill_level)`` ingredientes repartidos en
+    # entrega ``ingredient_draw_amount(effective_skill_level)`` ingredientes repartidos en
     # partes iguales entre el pool de la especie. Es independiente de la mecánica
     # normal de ingredientes y no ocupa inventario en este modelo.
     skill_ingredients: tuple[SlotProduction, ...] = ()
     if draws_ingredients(species):
         pool = ingredient_draw_pool(species)
         if pool:
-            per_ingredient = skill_triggers * ingredient_draw_amount(skill_level) / len(pool)
+            per_ingredient = (
+                skill_triggers * ingredient_draw_amount(effective_skill_level) / len(pool)
+            )
             skill_ingredients = tuple(
                 SlotProduction(ingredient=ing, amount=per_ingredient) for ing in pool
             )
 
     # Energía por la main skill (Energy for Everyone S): cada disparo restaura
-    # ``energy_for_everyone_amount(skill_level)`` de energía a CADA compañero, así que
+    # ``energy_for_everyone_amount(effective_skill_level)`` de energía a CADA compañero, así que
     # por día y por compañero es disparos × esa cantidad.
     skill_energy: float | None = None
     if restores_team_energy(species):
-        skill_energy = skill_triggers * energy_for_everyone_amount(skill_level)
+        skill_energy = skill_triggers * energy_for_everyone_amount(effective_skill_level)
 
     # Ingredientes al azar por la main skill (Ingredient Magnet S): solo el total,
     # sin desglosar por tipo (el tipo es impredecible). La variante (Plus) de Plusle
@@ -421,31 +444,31 @@ def daily_production(
     # ``skill_ingredients`` (se muestra en la sección Ingredientes, no en Skill).
     skill_ingredient_total: float | None = None
     if is_magnet_plus(species):
-        skill_ingredient_total = skill_triggers * magnet_plus_base_amount(skill_level)
+        skill_ingredient_total = skill_triggers * magnet_plus_base_amount(effective_skill_level)
         bonus_ingredient = magnet_plus_bonus_ingredient(species)
         if bonus_ingredient is not None:
             skill_ingredients = (
                 SlotProduction(
                     ingredient=bonus_ingredient,
-                    amount=skill_triggers * magnet_plus_bonus_amount(skill_level),
+                    amount=skill_triggers * magnet_plus_bonus_amount(effective_skill_level),
                 ),
             )
     elif magnets_ingredients(species):
-        skill_ingredient_total = skill_triggers * ingredient_magnet_amount(skill_level)
+        skill_ingredient_total = skill_triggers * ingredient_magnet_amount(effective_skill_level)
 
     # Ingredientes extra de pote por la main skill (Cooking Power-Up S): cada disparo
     # agranda el pote en N slots, así que por día es disparos × N. La variante (Minus)
     # de Minun usa su propia tabla base de pote (más chica que la regular).
     skill_cooking_ingredients: float | None = None
     if is_cooking_minus(species):
-        skill_cooking_ingredients = skill_triggers * cooking_minus_pot_amount(skill_level)
+        skill_cooking_ingredients = skill_triggers * cooking_minus_pot_amount(effective_skill_level)
     elif powers_up_cooking(species):
-        skill_cooking_ingredients = skill_triggers * cooking_power_up_amount(skill_level)
+        skill_cooking_ingredients = skill_triggers * cooking_power_up_amount(effective_skill_level)
 
     # Fuerza por la main skill (Charge Strength S / M): cada disparo suma la fuerza
     # esperada del nivel (punto medio si el monto es aleatorio), así que por día es
     # disparos × esa fuerza. ``None`` si la skill no es una Charge Strength modelada.
-    per_strength = charge_strength_amount(species.main_skill, skill_level)
+    per_strength = charge_strength_amount(species.main_skill, effective_skill_level)
     skill_strength: float | None = (
         skill_triggers * per_strength if per_strength is not None else None
     )
@@ -454,11 +477,11 @@ def daily_production(
     # energía del nivel.
     skill_self_energy: float | None = None
     if charges_self_energy(species):
-        skill_self_energy = skill_triggers * charge_energy_amount(skill_level)
+        skill_self_energy = skill_triggers * charge_energy_amount(effective_skill_level)
 
     # Fragmentos de sueño por la main skill (Dream Shard Magnet S): disparos × la
     # cantidad esperada del nivel (punto medio si es aleatorio).
-    per_shards = dream_shard_amount(species.main_skill, skill_level)
+    per_shards = dream_shard_amount(species.main_skill, effective_skill_level)
     skill_dream_shards: float | None = (
         skill_triggers * per_shards if per_shards is not None else None
     )
@@ -467,13 +490,17 @@ def daily_production(
     # con cada disparo (disparos × %_del_nivel). No lo acotamos al tope de stack del
     # juego (70%): a ese nivel un crítico lo consume y se sigue sumando.
     skill_tasty_chance: float | None = (
-        skill_triggers * tasty_chance_amount(skill_level) if boosts_tasty_chance(species) else None
+        skill_triggers * tasty_chance_amount(effective_skill_level)
+        if boosts_tasty_chance(species)
+        else None
     )
 
     # Multiplicador de ayuda por la main skill (Extra Helpful S): cada disparo da ×N la
     # ayuda normal, así que el total del día es disparos × N.
     skill_extra_helpful: float | None = (
-        skill_triggers * extra_helpful_amount(skill_level) if is_extra_helpful(species) else None
+        skill_triggers * extra_helpful_amount(effective_skill_level)
+        if is_extra_helpful(species)
+        else None
     )
 
     # Energía a un compañero al azar: la da Energizing Cheer S y también el BONUS de
@@ -481,19 +508,17 @@ def daily_production(
     # El total repartido en el día es disparos × cantidad_del_nivel.
     skill_random_energy: float | None = None
     if cheers_random_energy(species):
-        skill_random_energy = skill_triggers * energizing_cheer_amount(skill_level)
+        skill_random_energy = skill_triggers * energizing_cheer_amount(effective_skill_level)
     elif is_cooking_minus(species):
-        skill_random_energy = skill_triggers * cooking_minus_energy_amount(skill_level)
+        skill_random_energy = skill_triggers * cooking_minus_energy_amount(effective_skill_level)
 
     # En el overflow nocturno TODAS las ayudas producen bayas.
     berry_amount = (normal_helps * berry_rate + overflow_helps) * berry_per_help
 
     # Fuerza directa de las bayas: cantidad de bayas × fuerza por baya del nivel.
-    # Si la baya del Pokémon es favorita de la isla activa, el multiplicador es ×2.
+    # El multiplicador (favorita normal x2, principal experta x2.4, o x1) viene del mapa.
     berry_strength = berry_amount * berry_strength_for_level(
-        species.berry,
-        level,
-        multiplier=2.0 if species.berry in favorite_berries else 1.0,
+        species.berry, level, multiplier=effects.berry_multiplier
     )
 
     helps_per_slot = normal_helps * ingredient_rate / unlocked
@@ -514,6 +539,7 @@ def daily_production(
         effective_skill_percentage=effective_skill_rate * 100,
         ingredients=slots,
         skill_triggers=skill_triggers,
+        effective_skill_level=effective_skill_level,
         skill_ingredients=skill_ingredients,
         skill_energy=skill_energy,
         skill_ingredient_total=skill_ingredient_total,
