@@ -21,8 +21,9 @@ interface Args {
 }
 
 /**
- * Marks for a member based on its berry and the current map (max three).
- * Normal map: just the x2 favorite, as before. Expert map: one mark per active effect.
+ * Marks for a member based on its berry and the current map (max four).
+ * Normal map: just the x2 favorite, as before. Expert map: one mark per active
+ * effect, plus the berry doubling that always applies to a favorite (main or sub).
  */
 export function expertMarks({
   role,
@@ -76,6 +77,8 @@ export function expertMarks({
     }
   }
 
+  // A favorite berry (main or sub) always doubles the berry strength; the weekly
+  // berry-strength bonus replaces that plain ×2 with ×2.4 (it doesn't stack).
   if (weeklyBonus === "berry_strength") {
     marks.push({
       metric: "berries",
@@ -83,14 +86,23 @@ export function expertMarks({
       tone: "good",
       effect: t("card.expertBerryStrength"),
     });
-  } else if (weeklyBonus === "ingredient") {
+  } else {
+    marks.push({
+      metric: "berries",
+      label: "×2",
+      tone: "good",
+      effect: t("card.expertFavorite"),
+    });
+  }
+
+  if (weeklyBonus === "ingredient") {
     marks.push({
       metric: "ingredients",
       label: "+1",
       tone: "good",
       effect: t("card.expertIngredient"),
     });
-  } else {
+  } else if (weeklyBonus === "skill_trigger") {
     marks.push({
       metric: "skill",
       label: "×1,25",

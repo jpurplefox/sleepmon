@@ -182,6 +182,7 @@ export function ProductionCard({
           key={m.label}
           className={`metric-mark metric-mark--${m.tone}`}
           title={m.effect}
+          role="img"
           aria-label={m.effect}
         >
           {m.label}

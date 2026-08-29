@@ -50,7 +50,7 @@ describe("expertMarks", () => {
     ]);
   });
 
-  it("puts the ingredient bonus on the ingredients block", () => {
+  it("puts the ingredient bonus on the ingredients block, alongside the plain ×2", () => {
     const marks = expertMarks({
       ...args,
       role: "sub",
@@ -58,11 +58,12 @@ describe("expertMarks", () => {
       effectiveSkillLevel: 3,
     });
     expect(marks).toEqual([
+      expect.objectContaining({ metric: "berries", label: "×2", tone: "good" }),
       expect.objectContaining({ metric: "ingredients", label: "+1", tone: "good" }),
     ]);
   });
 
-  it("puts the skill trigger bonus on the skill block", () => {
+  it("puts the skill trigger bonus on the skill block, alongside the plain ×2", () => {
     const marks = expertMarks({
       ...args,
       role: "sub",
@@ -70,13 +71,28 @@ describe("expertMarks", () => {
       effectiveSkillLevel: 3,
     });
     expect(marks).toEqual([
+      expect.objectContaining({ metric: "berries", label: "×2", tone: "good" }),
       expect.objectContaining({ metric: "skill", label: "×1,25", tone: "good" }),
     ]);
   });
 
-  it("never exceeds three marks", () => {
+  it("gives a main favorite four marks with the ingredient weekly bonus", () => {
+    const marks = expertMarks({ ...args, weeklyBonus: "ingredient" });
+    expect(marks.map((m) => m.metric).sort()).toEqual([
+      "berries",
+      "cadence",
+      "ingredients",
+      "skill",
+    ]);
+    expect(marks.find((m) => m.metric === "cadence")?.label).toBe("−10%");
+    expect(marks.find((m) => m.metric === "skill")?.label).toBe("Skill +1");
+    expect(marks.find((m) => m.metric === "berries")?.label).toBe("×2");
+    expect(marks.find((m) => m.metric === "ingredients")?.label).toBe("+1");
+  });
+
+  it("never exceeds four marks", () => {
     for (const weeklyBonus of ["berry_strength", "ingredient", "skill_trigger"] as const) {
-      expect(expertMarks({ ...args, weeklyBonus }).length).toBeLessThanOrEqual(3);
+      expect(expertMarks({ ...args, weeklyBonus }).length).toBeLessThanOrEqual(4);
     }
   });
 });
