@@ -128,44 +128,27 @@ def _map_bonuses(data: TeamProductionInput) -> MapBonuses:
     for expert effects on a normal map.
     """
     if len(data.favorite_berries) > MAX_FAVORITE_BERRIES:
-        raise ValidationError(f"At most {MAX_FAVORITE_BERRIES} favorite berries.")
+        raise ValidationError(f"Como máximo {MAX_FAVORITE_BERRIES} bayas favoritas.")
     if len(set(data.favorite_berries)) != len(data.favorite_berries):
-        raise ValidationError("Favorite berries can't repeat.")
+        raise ValidationError("Las bayas favoritas no pueden repetirse.")
 
-    favorites: set[Berry] = set()
-    for name in data.favorite_berries:
-        try:
-            favorites.add(Berry(name))
-        except ValueError as exc:
-            raise ValidationError(f"Unknown berry: {name!r}.") from exc
+    favorites = {_parse_enum(Berry, name, "Baya") for name in data.favorite_berries}
 
-    island: Island | None = None
-    if data.island is not None:
-        try:
-            island = Island(data.island)
-        except ValueError as exc:
-            raise ValidationError(f"Unknown map: {data.island!r}.") from exc
+    island = _parse_enum(Island, data.island, "Mapa") if data.island is not None else None
     expert = island is not None and island in ISLAND_EXPERT
 
     main: Berry | None = None
     if data.main_favorite is not None:
-        try:
-            main = Berry(data.main_favorite)
-        except ValueError as exc:
-            raise ValidationError(f"Unknown berry: {data.main_favorite!r}.") from exc
+        main = _parse_enum(Berry, data.main_favorite, "Baya principal")
         if main not in favorites:
-            raise ValidationError("The main berry must be among the favorites.")
+            raise ValidationError("La baya principal debe estar entre las favoritas.")
 
     weekly = WeeklyBonus.BERRY_STRENGTH
     if data.weekly_bonus is not None:
-        try:
-            weekly = WeeklyBonus(data.weekly_bonus)
-        except ValueError as exc:
-            raise ValidationError(f"Unknown weekly bonus: {data.weekly_bonus!r}.") from exc
+        weekly = _parse_enum(WeeklyBonus, data.weekly_bonus, "Bonus semanal")
 
-    # Outside expert mode the main berry has no effects of its own and there's no
-    # weekly bonus: they're ignored rather than rejected (switching maps can leave
-    # them behind as stale client state).
+    # Outside expert mode the main berry/weekly bonus are ignored rather than
+    # rejected (switching maps can leave them behind as stale client state).
     if not expert:
         return MapBonuses(subs=frozenset(favorites))
 
