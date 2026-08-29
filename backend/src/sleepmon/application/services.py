@@ -104,7 +104,8 @@ def _parse_enum(enum_cls: type[E], value: str, field: str) -> E:
         return enum_cls(value)
     except ValueError as exc:
         valid = ", ".join(e.value for e in enum_cls)
-        raise ValidationError(f"{field} inválido: {value!r}. Opciones: {valid}.") from exc
+        msg = f"Valor inválido para {field}: {value!r}. Opciones: {valid}."
+        raise ValidationError(msg) from exc
 
 
 def _validate_ingredients(species: Species, ingredients: tuple[Ingredient, ...]) -> None:

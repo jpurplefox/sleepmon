@@ -999,6 +999,23 @@ def test_unknown_berry_rejected(
         )
 
 
+def test_unknown_berry_error_message_has_correct_gender_agreement(
+    service_with_members: tuple[DefaultTeamService, list[str]],
+) -> None:
+    """Error message uses 'Valor inválido para' to ensure gender agreement works
+    regardless of field label gender (feminine 'Baya', masculine labels, or English)."""
+    service, member_ids = service_with_members
+    with pytest.raises(ValidationError, match=r"Valor inválido para Baya: 'Banana'\."):
+        service.compute_team_production(
+            UID,
+            TeamProductionInput(
+                slots=_slots(*member_ids),
+                meals=[],
+                favorite_berries=["Banana"],
+            )
+        )
+
+
 # ---------------------------------------------------------------------------
 # island / main_favorite / weekly_bonus (Task 6)
 # ---------------------------------------------------------------------------
