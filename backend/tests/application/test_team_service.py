@@ -999,6 +999,142 @@ def test_unknown_berry_rejected(
         )
 
 
+# ---------------------------------------------------------------------------
+# island / main_favorite / weekly_bonus (Task 6)
+# ---------------------------------------------------------------------------
+
+
+def test_an_expert_map_penalizes_a_member_without_a_favorite_berry(
+    service_with_members: tuple[DefaultTeamService, list[str]],
+) -> None:
+    """With no favorites picked, an expert map penalizes the whole team."""
+    service, member_ids = service_with_members
+    normal = service.compute_team_production(
+        UID, TeamProductionInput(slots=_slots(*member_ids), meals=[])
+    )
+    expert = service.compute_team_production(
+        UID,
+        TeamProductionInput(
+            slots=_slots(*member_ids), meals=[], island="Cyan Beach (Expert)"
+        ),
+    )
+    assert expert.total_strength < normal.total_strength
+
+
+def test_the_main_favorite_speeds_up_the_member_that_gathers_it(
+    service_with_members: tuple[DefaultTeamService, list[str]],
+) -> None:
+    service, member_ids = service_with_members
+    sub_only = service.compute_team_production(
+        UID,
+        TeamProductionInput(
+            slots=_slots(*member_ids),
+            meals=[],
+            island="Cyan Beach (Expert)",
+            favorite_berries=["Grepa"],
+        ),
+    )
+    as_main = service.compute_team_production(
+        UID,
+        TeamProductionInput(
+            slots=_slots(*member_ids),
+            meals=[],
+            island="Cyan Beach (Expert)",
+            favorite_berries=["Grepa"],
+            main_favorite="Grepa",
+        ),
+    )
+    assert as_main.total_strength > sub_only.total_strength
+
+
+def test_the_client_cannot_ask_for_expert_effects_on_a_normal_map(
+    service_with_members: tuple[DefaultTeamService, list[str]],
+) -> None:
+    """``expert`` is derived from the map, never received: a normal map ignores the bonus."""
+    service, member_ids = service_with_members
+    plain = service.compute_team_production(
+        UID,
+        TeamProductionInput(
+            slots=_slots(*member_ids),
+            meals=[],
+            island="Cyan Beach",
+            favorite_berries=["Grepa"],
+        ),
+    )
+    with_bonus = service.compute_team_production(
+        UID,
+        TeamProductionInput(
+            slots=_slots(*member_ids),
+            meals=[],
+            island="Cyan Beach",
+            favorite_berries=["Grepa"],
+            main_favorite="Grepa",
+            weekly_bonus="skill_trigger",
+        ),
+    )
+    assert plain.total_strength == with_bonus.total_strength
+
+
+def test_the_main_favorite_must_be_one_of_the_favorites(
+    service_with_members: tuple[DefaultTeamService, list[str]],
+) -> None:
+    service, member_ids = service_with_members
+    with pytest.raises(ValidationError):
+        service.compute_team_production(
+            UID,
+            TeamProductionInput(
+                slots=_slots(*member_ids),
+                meals=[],
+                island="Cyan Beach (Expert)",
+                favorite_berries=["Oran"],
+                main_favorite="Pecha",
+            ),
+        )
+
+
+def test_an_unknown_map_is_rejected(
+    service_with_members: tuple[DefaultTeamService, list[str]],
+) -> None:
+    service, member_ids = service_with_members
+    with pytest.raises(ValidationError):
+        service.compute_team_production(
+            UID, TeamProductionInput(slots=_slots(*member_ids), meals=[], island="Atlantis")
+        )
+
+
+def test_an_unknown_weekly_bonus_is_rejected(
+    service_with_members: tuple[DefaultTeamService, list[str]],
+) -> None:
+    service, member_ids = service_with_members
+    with pytest.raises(ValidationError):
+        service.compute_team_production(
+            UID,
+            TeamProductionInput(
+                slots=_slots(*member_ids),
+                meals=[],
+                island="Cyan Beach (Expert)",
+                weekly_bonus="free_candy",
+            ),
+        )
+
+
+def test_a_weekly_bonus_without_an_expert_map_is_ignored_not_rejected(
+    service_with_members: tuple[DefaultTeamService, list[str]],
+) -> None:
+    """Switching maps can leave a stale bonus behind: it's ignored, not an error."""
+    service, member_ids = service_with_members
+    result = service.compute_team_production(
+        UID,
+        TeamProductionInput(
+            slots=_slots(*member_ids),
+            meals=[],
+            island="Cyan Beach",
+            weekly_bonus="ingredient",
+        ),
+    )
+    assert result.total_strength > 0
+
+
 def test_compute_team_production_excludes_off_catalog_members() -> None:
     repo = InMemoryTeamRepository()
     member = TeamMember(

@@ -32,7 +32,7 @@ from sleepmon.application.dto import (
 )
 from sleepmon.domain import analytics
 from sleepmon.domain.analytics import team_production
-from sleepmon.domain.catalog_data import MAX_RECIPE_LEVEL
+from sleepmon.domain.catalog_data import ISLAND_EXPERT, MAX_FAVORITE_BERRIES, MAX_RECIPE_LEVEL
 from sleepmon.domain.cooking import MealSelection, plan_cooking
 from sleepmon.domain.entities import (
     TeamMember,
@@ -46,7 +46,15 @@ from sleepmon.domain.map_bonuses import MapBonuses
 from sleepmon.domain.ports import RecipeCatalog, SpeciesCatalog, TeamRepository
 from sleepmon.domain.production import DailyProduction, daily_production, scale_daily
 from sleepmon.domain.species import Species
-from sleepmon.domain.value_objects import Berry, Ingredient, Nature, Ribbon, SubSkill
+from sleepmon.domain.value_objects import (
+    Berry,
+    Ingredient,
+    Island,
+    Nature,
+    Ribbon,
+    SubSkill,
+    WeeklyBonus,
+)
 
 E = TypeVar("E", bound=StrEnum)
 
@@ -111,6 +119,58 @@ def _validate_ingredients(species: Species, ingredients: tuple[Ingredient, ...])
                 f"{ingredient.value} no es válido para {species.name} en el slot "
                 f"{slot + 1}. Válidos: {allowed}."
             )
+
+
+def _map_bonuses(data: TeamProductionInput) -> MapBonuses:
+    """Translate the raw request into the domain's value object. Validates; doesn't compute.
+
+    `expert` is NOT received: it's derived from the map, so a client can't ask
+    for expert effects on a normal map.
+    """
+    if len(data.favorite_berries) > MAX_FAVORITE_BERRIES:
+        raise ValidationError(f"At most {MAX_FAVORITE_BERRIES} favorite berries.")
+    if len(set(data.favorite_berries)) != len(data.favorite_berries):
+        raise ValidationError("Favorite berries can't repeat.")
+
+    favorites: set[Berry] = set()
+    for name in data.favorite_berries:
+        try:
+            favorites.add(Berry(name))
+        except ValueError as exc:
+            raise ValidationError(f"Unknown berry: {name!r}.") from exc
+
+    island: Island | None = None
+    if data.island is not None:
+        try:
+            island = Island(data.island)
+        except ValueError as exc:
+            raise ValidationError(f"Unknown map: {data.island!r}.") from exc
+    expert = island is not None and island in ISLAND_EXPERT
+
+    main: Berry | None = None
+    if data.main_favorite is not None:
+        try:
+            main = Berry(data.main_favorite)
+        except ValueError as exc:
+            raise ValidationError(f"Unknown berry: {data.main_favorite!r}.") from exc
+        if main not in favorites:
+            raise ValidationError("The main berry must be among the favorites.")
+
+    weekly = WeeklyBonus.BERRY_STRENGTH
+    if data.weekly_bonus is not None:
+        try:
+            weekly = WeeklyBonus(data.weekly_bonus)
+        except ValueError as exc:
+            raise ValidationError(f"Unknown weekly bonus: {data.weekly_bonus!r}.") from exc
+
+    # Outside expert mode the main berry has no effects of its own and there's no
+    # weekly bonus: they're ignored rather than rejected (switching maps can leave
+    # them behind as stale client state).
+    if not expert:
+        return MapBonuses(subs=frozenset(favorites))
+
+    subs = frozenset(favorites - {main}) if main is not None else frozenset(favorites)
+    return MapBonuses(main=main, subs=subs, expert=True, weekly_bonus=weekly)
 
 
 class TeamService(ABC):
@@ -328,20 +388,7 @@ class DefaultTeamService(TeamService):
             raise ValidationError(
                 f"El bonus de isla debe estar entre 0 y 0.85; llegó {data.island_bonus}."
             )
-        if len(data.favorite_berries) > 3:
-            raise ValidationError("Como máximo 3 bayas favoritas.")
-        if len(set(data.favorite_berries)) != len(data.favorite_berries):
-            raise ValidationError("Las bayas favoritas no pueden repetirse.")
-        favorites: set[Berry] = set()
-        for name in data.favorite_berries:
-            try:
-                favorites.add(Berry(name))
-            except ValueError as exc:
-                raise ValidationError(f"Baya desconocida: {name!r}.") from exc
-        favorite_frozen = frozenset(favorites)
-        # Temporary until Task 6 wires island/main_favorite/weekly_bonus from the
-        # request: a normal map with only the sub-favorites (no main, no expert).
-        map_bonuses = MapBonuses(subs=favorite_frozen)
+        map_bonuses = _map_bonuses(data)
 
         # Cargar miembros (404 si falta) y computar su producción escalada por peso.
         # Los miembros con especie fuera del catálogo curado se excluyen del agregado.

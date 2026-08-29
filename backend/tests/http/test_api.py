@@ -882,3 +882,9 @@ def test_team_production_accepts_good_camp_ticket(
     # Con GCT ayuda más rápido → menos segundos por ayuda y más ayudas/día.
     assert on_member["seconds_per_help"] < off_member["seconds_per_help"]
     assert on_member["inventory"] > off_member["inventory"]
+
+
+def test_the_catalog_marks_the_expert_areas(client: TestClient) -> None:
+    catalog = client.get("/catalog").json()
+    expert = {i["name"] for i in catalog["islands"] if i["expert"]}
+    assert expert == {"Greengrass Isle (Expert Mode)", "Cyan Beach (Expert)"}
