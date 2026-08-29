@@ -128,6 +128,9 @@ describe("skillDescription", () => {
 
   it("returns null for skills we do not estimate yet", () => {
     expect(skillDescription("Charge Strength S (Stockpile)", 3, "en")).toBeNull();
+    // Lucario's variant shares the prefix with the base skill, so it must be
+    // discarded before the generic Dream Shard branch.
+    expect(skillDescription("Dream Shard Magnet S (Aura Sphere)", 3, "en")).toBeNull();
     expect(skillDescription("Some Unknown Skill", 3, "en")).toBeNull();
     expect(skillDescription(undefined, 3, "en")).toBeNull();
   });

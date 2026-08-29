@@ -157,6 +157,7 @@ const SKILL_VARIANTS_ES: Record<string, string> = {
   "Berry Juice": "Zumo de Baya",
   "Bulk Up": "Corpulencia",
   Mimic: "Mimético",
+  "Aura Sphere": "Esfera Aural",
   Transform: "Transformación",
 };
 
