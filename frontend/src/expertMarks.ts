@@ -1,11 +1,11 @@
 import type { BerryRole, WeeklyBonus } from "./types";
 
-/** Una anotación pegada a una métrica de la card: qué le hace el mapa a ese número. */
+/** An annotation attached to a card metric: what the map does to that number. */
 export interface MetricMark {
   metric: "cadence" | "berries" | "ingredients" | "skill";
   label: string;
   tone: "good" | "bad";
-  /** Texto completo del efecto, para title y aria-label. */
+  /** Full effect text, used for the title and aria-label. */
   effect: string;
 }
 
@@ -13,18 +13,16 @@ interface Args {
   role: BerryRole;
   expert: boolean;
   weeklyBonus: WeeklyBonus;
-  /** Nivel de skill del propio miembro. */
+  /** The member's own skill level. */
   skillLevel: number;
-  /** Nivel con el que el dominio calculó (ya saturado por el tope de la skill). */
+  /** Level the domain actually used (already capped at the skill's max). */
   effectiveSkillLevel: number;
   t: (key: string) => string;
 }
 
 /**
- * Las marcas que corresponden a un miembro según su baya y el mapa.
- *
- * En un mapa normal, como mucho el ×2 de favorita — igual que hoy. En uno experto,
- * cada efecto se marca sobre la métrica que cambia, con un máximo de tres.
+ * Marks for a member based on its berry and the current map (max three).
+ * Normal map: just the x2 favorite, as before. Expert map: one mark per active effect.
  */
 export function expertMarks({
   role,
@@ -67,7 +65,7 @@ export function expertMarks({
       tone: "good",
       effect: t("card.expertMainSpeed"),
     });
-    // Solo si el +1 realmente aplicó: un Pokémon ya al tope de su skill no gana nada.
+    // Only if the +1 actually applied: a Pokemon already at its skill cap gains nothing.
     if (effectiveSkillLevel > skillLevel) {
       marks.push({
         metric: "skill",

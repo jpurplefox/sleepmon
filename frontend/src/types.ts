@@ -45,8 +45,8 @@ export interface Island {
   user_picks: boolean;
   // Los 35 ratings de Snorlax de la isla (Basic1..Master20), ascendentes por fuerza.
   ratings: Rating[];
-  // true = área de modo experto: parte las favoritas en principal y sub-favoritas
-  // y aplica los cuatro efectos del PRD 0007.
+  // true = expert-mode area: splits favorites into main and sub-favorites and
+  // applies the four PRD 0007 effects.
   expert: boolean;
 }
 

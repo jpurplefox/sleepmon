@@ -98,7 +98,7 @@ export function IslandTab({
       const found = islands.find((i) => i.name === name) ?? null;
       onSelectIsland(name);
       if (found && !found.user_picks) {
-        // Isla con favoritas fijas: las seteamos automáticamente, la primera es la principal.
+        // Map with fixed favorites: set them automatically, the first one is the main.
         onFavoriteBerries(found.favorite_berries);
         onMainFavorite(found.favorite_berries[0] ?? null);
       } else {
@@ -118,11 +118,11 @@ export function IslandTab({
   const handleBerryToggle = (berry: string) => {
     if (favoriteBerries.includes(berry)) {
       onFavoriteBerries(favoriteBerries.filter((b) => b !== berry));
-      // Quitar la principal deja el slot vacante y conserva las sub-favoritas.
+      // Removing the main leaves its slot open and keeps the sub-favorites.
       if (berry === mainFavorite) onMainFavorite(null);
     } else if (favoriteBerries.length < 3) {
       onFavoriteBerries([...favoriteBerries, berry]);
-      // La primera elegida (o la que llena el slot vacante) pasa a ser la principal.
+      // The first one picked (or the one that fills an open slot) becomes the main.
       if (mainFavorite === null) onMainFavorite(berry);
     }
     // Si ya hay 3 y el chip no está seleccionado, el botón está disabled: no hace falta else.
@@ -298,7 +298,7 @@ export function IslandTab({
         </div>
       )}
 
-      {/* Bonus semanal — solo en mapas de modo experto */}
+      {/* Weekly bonus — expert-mode maps only */}
       {island?.expert && (
         <div className="island-tab__row">
           <span className="island-tab__label">{t("teams.weeklyBonus")}</span>

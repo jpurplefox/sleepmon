@@ -562,9 +562,8 @@ def test_without_the_main_favorite_the_effective_level_is_the_members_own() -> N
 
 
 def test_the_berry_strength_bonus_gives_two_point_four_not_four_point_eight() -> None:
-    # Sub-favorita (no principal): así solo entra el multiplicador de fuerza, sin el
-    # x0.9 de velocidad de la principal, que también movería las bayas/día y ensuciaría
-    # el ratio que este test aísla.
+    # Sub-favorite (not main): isolates the strength multiplier, since the main
+    # berry's x0.9 speed would also shift helps/day and skew the ratio under test.
     species = _species()
     base = daily_production(species, _INGREDIENTS, level=10)
     expert = daily_production(
@@ -582,9 +581,8 @@ def test_the_berry_strength_bonus_gives_two_point_four_not_four_point_eight() ->
 
 
 def test_the_ingredient_bonus_raises_ingredient_output() -> None:
-    # Sub-favorita (no principal): así solo entra el bonus de +1 ingrediente, sin el
-    # x0.9 de velocidad de la principal, que también movería las ayudas/día y haría
-    # que la subida observada viniera de la velocidad y no del bonus de ingrediente.
+    # Sub-favorite (not main): isolates the +1 ingredient bonus, since the main
+    # berry's x0.9 speed would also shift helps/day and confound the observed rise.
     species = _species()
     base = daily_production(species, _INGREDIENTS, level=60)
     expert = daily_production(
@@ -599,10 +597,8 @@ def test_the_ingredient_bonus_raises_ingredient_output() -> None:
     )
     base_total = sum(s.amount for s in base.ingredients)
     expert_total = sum(s.amount for s in expert.ingredients)
-    # Con sub-favorita las ayudas/slot no cambian: el único efecto es +1 ingrediente
-    # por hallazgo en cada slot desbloqueado. A nivel 60 hay 3 slots y su diagonal
-    # (ver _AMOUNTS arriba) suma 12, así que el total sube en la misma proporción
-    # en que sumar +1 a cada uno de los 3 slots sube esa suma: (12+3)/12.
+    # With a sub-favorite, helps/slot are unchanged: the only effect is +1 ingredient
+    # per find in each unlocked slot. At level 60, 3 slots sum to 12, so total scales (12+3)/12.
     unlocked = max_ingredient_slots(60)
     diagonal_sum = 2 + 4 + 6
     expected_total = base_total * (diagonal_sum + unlocked) / diagonal_sum

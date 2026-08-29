@@ -184,9 +184,8 @@ class DailyProduction:
     effective_skill_percentage: float  # tasa efectiva con pity proc
     ingredients: tuple[SlotProduction, ...]
     skill_triggers: float
-    # Nivel de skill con el que se calculó: el del miembro más el +1 de la baya
-    # principal, saturado por el tope real de esa skill. Igual al del miembro si no
-    # hubo bonus o si ya estaba al tope. La UI lo compara para decidir la marca.
+    # Skill level actually used: the member's level plus the main berry's +1,
+    # capped at the skill's real max. The UI compares it to the member's own level.
     effective_skill_level: int
     # Ingredientes/día que aporta la main skill (p. ej. Ingredient Draw S), uno por
     # ingrediente del pool. Vacío si la skill de la especie no produce ingredientes.

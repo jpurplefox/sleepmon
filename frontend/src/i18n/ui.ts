@@ -379,7 +379,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.splitRemove": "Quitar del slot",
     "teams.splitShare": "Reparto del slot",
     "teams.pickSplitPartner": "Elegí el segundo Pokémon del slot",
-    // Modo experto
+    // Expert mode
     "teams.weeklyBonus": "Bonus semanal",
     "teams.weeklyBerryStrength": "Fuerza ×2,4",
     "teams.weeklyIngredient": "+1 ingrediente",
