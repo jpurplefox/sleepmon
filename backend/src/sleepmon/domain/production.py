@@ -84,9 +84,9 @@ from sleepmon.domain.value_objects import (
 _BERRY_PER_HELP_SPECIALTY: Final[int] = 2
 _BERRY_PER_HELP_OTHER: Final[int] = 1
 _SECONDS_PER_HOUR: Final[int] = 3600
-# Neutral map (no favorites, no expert mode): the Box/Comparison default. A
-# module-level singleton avoids constructing one on every call (and the B008
-# lint against calling a function in a default argument) — safe since it's frozen.
+# Neutral map (no favorites, no expert mode): the Box/Comparison default.
+# A singleton sidesteps ruff's B008 (no function calls in default arguments) —
+# safe since it's frozen.
 _NO_MAP: Final[MapBonuses] = MapBonuses()
 
 # Efectos de sub skills sobre la producción (magnitudes de RaenonX).
@@ -523,7 +523,10 @@ def daily_production(
 
     helps_per_slot = normal_helps * ingredient_rate / unlocked
     slots = tuple(
-        SlotProduction(ingredient=ingredients[i], amount=helps_per_slot * slot_amounts[i])
+        SlotProduction(
+            ingredient=ingredients[i],
+            amount=helps_per_slot * (slot_amounts[i] + effects.extra_ingredients),
+        )
         for i in range(unlocked)
     )
 
