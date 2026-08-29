@@ -622,6 +622,41 @@ def test_team_production_endpoint(client: TestClient, auth_header: dict[str, str
         assert key in prod, f"missing key {key!r} in member production"
 
 
+def test_team_production_exposes_effective_skill_level(
+    client: TestClient, auth_header: dict[str, str]
+) -> None:
+    created = client.post("/team", json=valid_payload(), headers=auth_header).json()
+    body = client.post(
+        "/teams/production",
+        json={"slots": _slots_json(created["id"]), "meals": [None, None, None]},
+        headers=auth_header,
+    ).json()
+    member = body["members"][0]["production"]
+    # No expert map selected: the effective level equals the member's own.
+    assert member["effective_skill_level"] == created["skill_level"] == 1
+
+
+def test_team_production_main_favorite_bumps_effective_skill_level(
+    client: TestClient, auth_header: dict[str, str]
+) -> None:
+    created = client.post("/team", json=valid_payload(), headers=auth_header).json()
+    body = client.post(
+        "/teams/production",
+        json={
+            "slots": _slots_json(created["id"]),
+            "meals": [None, None, None],
+            "island": "Cyan Beach (Expert)",
+            "favorite_berries": ["Grepa"],
+            "main_favorite": "Grepa",
+        },
+        headers=auth_header,
+    ).json()
+    member = body["members"][0]["production"]
+    # Gathering the map's main favorite (Pikachu's berry is Grepa) grants +1 Main
+    # Skill level, capped at the skill's max (Charge Strength S caps at 7).
+    assert member["effective_skill_level"] == created["skill_level"] + 1 == 2
+
+
 def test_team_production_exposes_extra_tasty(
     client: TestClient,
     auth_header: dict[str,

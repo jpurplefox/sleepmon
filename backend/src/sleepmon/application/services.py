@@ -75,6 +75,7 @@ def _production_result(daily: DailyProduction) -> ProductionResult:
         ingredient_percentage=daily.ingredient_percentage,
         skill_percentage=daily.skill_percentage,
         effective_skill_percentage=daily.effective_skill_percentage,
+        effective_skill_level=daily.effective_skill_level,
         ingredients=[
             SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
             for slot in daily.ingredients

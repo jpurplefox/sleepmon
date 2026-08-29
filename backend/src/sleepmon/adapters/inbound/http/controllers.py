@@ -72,6 +72,7 @@ def _full_production_out(result: ProductionResult) -> ProductionOut:
         ingredient_percentage=result.ingredient_percentage,
         skill_percentage=result.skill_percentage,
         effective_skill_percentage=result.effective_skill_percentage,
+        effective_skill_level=result.effective_skill_level,
         ingredients=[
             SlotProductionOut(ingredient=slot.ingredient, amount=slot.amount)
             for slot in result.ingredients

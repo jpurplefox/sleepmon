@@ -137,6 +137,7 @@ class ProductionOut(msgspec.Struct):
     ingredient_percentage: float
     skill_percentage: float
     effective_skill_percentage: float
+    effective_skill_level: int
     ingredients: list[SlotProductionOut]
     skill_triggers: float
     skill_ingredients: list[SlotProductionOut]
