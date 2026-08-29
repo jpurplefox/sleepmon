@@ -96,7 +96,8 @@ export const COOKING_POWER_UP_MINUS_POT = [5, 7, 9, 12, 16, 20, 24];
 export const COOKING_POWER_UP_MINUS_ENERGY = [8, 10, 13, 17, 23, 30, 35];
 
 // Dream Shard Magnet S: fragmentos de sueño por nivel (1..8). Variante fija y otra
-// S (Random) con rango (min, max). Llega a nivel 8.
+// S (Random) con rango (min, max). Llega a nivel 8. La variante S (Aura Sphere) suma
+// Vigor además de fragmentos y no se modela todavía.
 export const DREAM_SHARD_MAGNET_S_AMOUNTS = [240, 340, 480, 670, 920, 1260, 1800, 2500];
 export const DREAM_SHARD_MAGNET_S_RANDOM_RANGES: [number, number][] = [
   [120, 480],
@@ -247,7 +248,11 @@ export function skillDescription(
       ? `Restaura ${n} de Energía al usuario.`
       : `Restores ${n} Energy to the user.`;
   }
-  // Dream Shard Magnet: el orden importa porque (Random) empieza con el mismo prefijo.
+  // Dream Shard Magnet: el orden importa porque las variantes empiezan con el mismo
+  // prefijo que la base.
+  if (mainSkill?.startsWith("Dream Shard Magnet S (Aura Sphere)")) {
+    return null; // suma Vigor además de fragmentos; no la estimamos todavía
+  }
   if (mainSkill?.startsWith("Dream Shard Magnet S (Random)")) {
     const [lo, hi] = DREAM_SHARD_MAGNET_S_RANDOM_RANGES[dsIdx(level)];
     return es

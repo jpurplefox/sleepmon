@@ -3,7 +3,7 @@
 Cada especie fija su número de Pokédex, qué baya carga, su tipo de sueño, su main
 skill y —lo que usa la validación— qué ingredientes son posibles en cada slot.
 
-Dataset completo del juego: 230 especies/formas. Generado desde nitoyon
+Dataset completo del juego: 244 especies/formas. Generado desde nitoyon
 (``pokesleep-tool``, ``src/data/pokemon.json``: sleep type, especialidad, skill,
 frecuencia, %ingrediente/%skill, ingredientes con cantidades por slot, inventario
 base y ``evolutionCount`` -> ``evolution_stage``)
@@ -15,7 +15,8 @@ fija del juego). Ampliarlo o corregirlo es solo agregar/editar entradas de
 Se omiten Mew y Darkrai (los dos especialistas "All"): usan un mecanismo
 "Versatile"/comodín y el juego no publica sus cantidades de ingrediente por slot,
 así que no se pueden cargar con datos reales en el modelo de 3 ingredientes
-ordenados.
+ordenados. También se omite Mewtwo: todavía no tiene datos publicados (la fuente
+trae ingredientes ``unknown`` y frecuencia/inventario en 0).
 """
 
 from __future__ import annotations
@@ -291,6 +292,12 @@ SEED_SPECIES: tuple[Species, ...] = (
         2500, 21.8, 2.8, ((1,), (2, 2), (4, 3, 3)), 18,
     ),
     Species(
+        "Pikachu (Captain)", 25, Specialty.BERRIES, Berry.GREPA, SleepType.SNOOZING,
+        "Ingredient Magnet S",
+        (I.FANCY_APPLE, I.WARMING_GINGER, I.FANCY_EGG),
+        2500, 17.5, 1.8, ((1,), (2, 2), (4, 3, 3)), 21,
+    ),
+    Species(
         "Raichu", 26, Specialty.BERRIES, Berry.GREPA, SleepType.SNOOZING,
         "Charge Strength S",
         (I.FANCY_APPLE, I.WARMING_GINGER, I.FANCY_EGG),
@@ -318,7 +325,7 @@ SEED_SPECIES: tuple[Species, ...] = (
         "Clefable", 36, Specialty.BERRIES, Berry.PECHA, SleepType.SNOOZING,
         "Metronome",
         (I.FANCY_APPLE, I.HONEY, I.GREENGRASS_SOYBEANS),
-        2800, 16.8, 3.6, ((1,), (2, 2), (4, 3, 3)), 24, 2, 2,
+        2800, 16.8, 4, ((1,), (2, 2), (4, 3, 3)), 24, 2, 2,
     ),
     Species(
         "Vulpix", 37, Specialty.BERRIES, Berry.LEPPA, SleepType.SNOOZING,
@@ -1119,6 +1126,60 @@ SEED_SPECIES: tuple[Species, ...] = (
         2800, 19.8, 3, ((1,), (2, 2), (4, 3, 4)), 19,
     ),
     Species(
+        "Turtwig", 387, Specialty.SKILLS, Berry.DURIN, SleepType.DOZING,
+        "Energy for Everyone S",
+        (I.TASTY_MUSHROOM, I.SOFT_POTATO, I.WARMING_GINGER),
+        4500, 13.2, 4.1, ((1,), (2, 3), (4, 5, 6)), 12, 0, 2,
+    ),
+    Species(
+        "Grotle", 388, Specialty.SKILLS, Berry.DURIN, SleepType.DOZING,
+        "Energy for Everyone S",
+        (I.TASTY_MUSHROOM, I.SOFT_POTATO, I.WARMING_GINGER),
+        3700, 15, 4.6, ((1,), (2, 3), (4, 5, 6)), 14, 1, 2,
+    ),
+    Species(
+        "Torterra", 389, Specialty.SKILLS, Berry.FIGY, SleepType.SLUMBERING,
+        "Energy for Everyone S",
+        (I.TASTY_MUSHROOM, I.SOFT_POTATO, I.WARMING_GINGER),
+        2900, 15.6, 4.8, ((1,), (2, 3), (4, 5, 6)), 17, 2, 2,
+    ),
+    Species(
+        "Chimchar", 390, Specialty.SKILLS, Berry.LEPPA, SleepType.SNOOZING,
+        "Berry Burst",
+        (I.FIERY_HERB, I.WARMING_GINGER, I.ROUSING_COFFEE),
+        4100, 11.4, 3.3, ((1,), (2, 3), (4, 4, 3)), 10, 0, 2,
+    ),
+    Species(
+        "Monferno", 391, Specialty.SKILLS, Berry.CHERI, SleepType.SLUMBERING,
+        "Berry Burst",
+        (I.FIERY_HERB, I.WARMING_GINGER, I.ROUSING_COFFEE),
+        3100, 11.4, 3.3, ((1,), (2, 3), (4, 4, 3)), 14, 1, 2,
+    ),
+    Species(
+        "Infernape", 392, Specialty.SKILLS, Berry.CHERI, SleepType.SLUMBERING,
+        "Berry Burst",
+        (I.FIERY_HERB, I.WARMING_GINGER, I.ROUSING_COFFEE),
+        2400, 10.6, 3.3, ((1,), (2, 3), (4, 4, 3)), 18, 2, 2,
+    ),
+    Species(
+        "Piplup", 393, Specialty.BERRIES, Berry.ORAN, SleepType.SLUMBERING,
+        "Extra Helpful S",
+        (I.FANCY_EGG, I.LARGE_LEEK, I.HONEY),
+        4500, 15.9, 2.6, ((1,), (2, 1), (4, 2, 4)), 11, 0, 2,
+    ),
+    Species(
+        "Prinplup", 394, Specialty.BERRIES, Berry.ORAN, SleepType.SLUMBERING,
+        "Extra Helpful S",
+        (I.FANCY_EGG, I.LARGE_LEEK, I.HONEY),
+        3700, 16.3, 3.5, ((1,), (2, 1), (4, 2, 4)), 15, 1, 2,
+    ),
+    Species(
+        "Empoleon", 395, Specialty.BERRIES, Berry.BELUE, SleepType.SLUMBERING,
+        "Extra Helpful S",
+        (I.FANCY_EGG, I.LARGE_LEEK, I.HONEY),
+        3200, 16.8, 3.8, ((1,), (2, 1), (4, 2, 4)), 18, 2, 2,
+    ),
+    Species(
         "Shinx", 403, Specialty.INGREDIENTS, Berry.GREPA, SleepType.SNOOZING,
         "Cooking Power-Up S",
         (I.SNOOZY_TOMATO, I.PURE_OIL, I.ROUSING_COFFEE),
@@ -1186,7 +1247,7 @@ SEED_SPECIES: tuple[Species, ...] = (
     ),
     Species(
         "Lucario", 448, Specialty.SKILLS, Berry.CHERI, SleepType.SLUMBERING,
-        "Dream Shard Magnet S",
+        "Dream Shard Magnet S (Aura Sphere)",
         (I.PURE_OIL, I.SOFT_POTATO, I.FANCY_EGG),
         2600, 15, 5.1, ((1,), (2, 2), (4, 4, 4)), 14, 1, 1,
     ),
@@ -1309,6 +1370,12 @@ SEED_SPECIES: tuple[Species, ...] = (
         "Energy for Everyone S",
         (I.MOOMOO_MILK, I.SOOTHING_CACAO, I.BEAN_SAUSAGE),
         2600, 17.8, 4, ((1,), (2, 1), (4, 2, 3)), 15, 1, 1,
+    ),
+    Species(
+        "Hawlucha", 701, Specialty.SKILLS, Berry.PAMTRE, SleepType.SLUMBERING,
+        "Ingredient Draw S",
+        (I.FIERY_HERB, I.WARMING_GINGER, I.BEAN_SAUSAGE),
+        2400, 19.2, 5.2, ((1,), (2, 3), (4, 4, 5)), 21, 0, 0,
     ),
     Species(
         "Dedenne", 702, Specialty.SKILLS, Berry.GREPA, SleepType.SNOOZING,
@@ -1537,6 +1604,24 @@ SEED_SPECIES: tuple[Species, ...] = (
         "Energy for Everyone S",
         (I.SOOTHING_CACAO, I.MOOMOO_MILK, I.FANCY_EGG),
         2400, 14.1, 3.9, ((1,), (2, 3), (4, 6, 5)), 18, 2, 2,
+    ),
+    Species(
+        "Tinkatink", 957, Specialty.BERRIES, Berry.PECHA, SleepType.SNOOZING,
+        "Charge Strength M",
+        (I.SNOOZY_TOMATO, I.SOOTHING_CACAO, I.SOFT_POTATO),
+        4500, 20.2, 1.6, ((1,), (2, 2), (4, 3, 3)), 12, 0, 2,
+    ),
+    Species(
+        "Tinkatuff", 958, Specialty.BERRIES, Berry.PECHA, SleepType.SNOOZING,
+        "Charge Strength M",
+        (I.SNOOZY_TOMATO, I.SOOTHING_CACAO, I.SOFT_POTATO),
+        3300, 18.6, 1.8, ((1,), (2, 2), (4, 3, 3)), 16, 1, 2,
+    ),
+    Species(
+        "Tinkaton", 959, Specialty.BERRIES, Berry.PECHA, SleepType.SNOOZING,
+        "Charge Strength M",
+        (I.SNOOZY_TOMATO, I.SOOTHING_CACAO, I.SOFT_POTATO),
+        2400, 18.5, 2, ((1,), (2, 2), (4, 3, 3)), 20, 2, 2,
     ),
     Species(
         "Cetoddle", 974, Specialty.INGREDIENTS, Berry.RAWST, SleepType.SLUMBERING,

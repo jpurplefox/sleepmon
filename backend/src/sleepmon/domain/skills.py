@@ -21,7 +21,8 @@ Modela, por ahora, tres main skills:
   Pokémon (no al equipo), según el nivel de la skill.
 - **Dream Shard Magnet S**: al dispararse consigue fragmentos de sueño. Tiene una
   variante de monto fijo y otra S (Random) con monto aleatorio uniforme entre dos
-  valores (usamos el punto medio para estimar). Llega hasta nivel 8.
+  valores (usamos el punto medio para estimar). Llega hasta nivel 8. La variante
+  S (Aura Sphere) suma además Vigor a Snorlax y no se modela todavía.
 - **Tasty Chance S**: al dispararse sube la probabilidad de "Extra Tasty" al cocinar
   en un porcentaje fijo (según el nivel). El boost se ACUMULA con cada disparo, así que
   se reporta ``disparos × %_del_nivel`` (sin acotar al tope de stack del juego).
@@ -300,10 +301,13 @@ def dream_shard_amount(main_skill: str, skill_level: int) -> float | None:
     """Fragmentos de sueño ESPERADOS por disparo de Dream Shard Magnet S al nivel dado.
 
     Monto fijo para la variante base; punto medio del rango para S (Random). ``None``
-    si la skill no es Dream Shard Magnet. El orden importa: (Random) empieza con el
-    mismo prefijo que la base, así que se descarta antes.
+    si la skill no es Dream Shard Magnet o es una variante que no estimamos todavía
+    (Aura Sphere, que además de fragmentos suma Vigor). El orden importa: las
+    variantes empiezan con el mismo prefijo que la base, así que se descartan antes.
     """
     level = min(max(skill_level, 1), len(DREAM_SHARD_MAGNET_S_AMOUNTS))
+    if main_skill.startswith("Dream Shard Magnet S (Aura Sphere)"):
+        return None
     if main_skill.startswith("Dream Shard Magnet S (Random)"):
         low, high = DREAM_SHARD_MAGNET_S_RANDOM_RANGES[level - 1]
         return (low + high) / 2

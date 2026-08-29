@@ -243,6 +243,13 @@ def test_dream_shard_amount_none_for_other_skills() -> None:
     assert dream_shard_amount("Ingredient Draw S", 8) is None
 
 
+def test_dream_shard_aura_sphere_not_estimated() -> None:
+    # Lucario's variant also charges Snorlax's Strength: not modelled yet, so it must
+    # not fall through to the base table via the shared prefix.
+    assert dream_shard_amount("Dream Shard Magnet S (Aura Sphere)", 1) is None
+    assert dream_shard_amount("Dream Shard Magnet S (Aura Sphere)", 8) is None
+
+
 # --- Tasty Chance S (aumento de Extra Tasty, % por activación) -----------------
 
 

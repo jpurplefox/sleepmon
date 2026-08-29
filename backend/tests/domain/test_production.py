@@ -965,6 +965,12 @@ def test_charge_strength_stockpile_not_estimated() -> None:
     assert prod.skill_strength is None
 
 
+def test_dream_shard_aura_sphere_not_estimated() -> None:
+    species = _species(main_skill="Dream Shard Magnet S (Aura Sphere)")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
+    assert prod.skill_dream_shards is None
+
+
 # --- Charge Energy S: energía al propio Pokémon --------------------------------
 
 

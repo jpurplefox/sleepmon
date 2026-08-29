@@ -160,8 +160,9 @@ def test_species_names_are_unique() -> None:
 
 def test_catalog_covers_the_full_helper_roster() -> None:
     # Dataset completo del juego (nitoyon cruzado con nerolis-lab), salvo Mew/Darkrai
-    # (especialistas "All" con cantidades de ingrediente no publicadas).
-    assert len(SEED_SPECIES) == 230
+    # (especialistas "All" con cantidades de ingrediente no publicadas) y Mewtwo
+    # (todavía sin datos publicados).
+    assert len(SEED_SPECIES) == 244
     assert {sp.specialty for sp in SEED_SPECIES} == {
         Specialty.BERRIES,
         Specialty.INGREDIENTS,
@@ -178,6 +179,61 @@ def test_known_species_have_the_correct_real_data() -> None:
     assert charmander.main_skill == "Ingredient Magnet S"
     assert charmander.berry is Berry.LEPPA
     assert _by_name("Bulbasaur").sleep_type is SleepType.DOZING
+
+
+def test_gen4_starters_hawlucha_and_tinkatink_line_have_their_real_data() -> None:
+    # Latest arrivals (nitoyon crossed with nerolis-lab): full lines, so the
+    # evolution fields and the per-slot amounts are pinned too.
+    torterra = _by_name("Torterra")
+    assert torterra.specialty is Specialty.SKILLS
+    assert torterra.main_skill == "Energy for Everyone S"
+    assert torterra.berry is Berry.FIGY  # ground, unlike Turtwig/Grotle (grass)
+    assert torterra.ingredients == (
+        Ingredient.TASTY_MUSHROOM,
+        Ingredient.SOFT_POTATO,
+        Ingredient.WARMING_GINGER,
+    )
+    assert torterra.ingredient_amounts == ((1,), (2, 3), (4, 5, 6))
+    assert (torterra.evolution_stage, torterra.line_evolutions) == (2, 2)
+
+    infernape = _by_name("Infernape")
+    assert infernape.main_skill == "Berry Burst"
+    assert infernape.berry is Berry.CHERI  # fighting, unlike Chimchar (fire)
+    assert infernape.ingredients[2] is Ingredient.ROUSING_COFFEE
+
+    empoleon = _by_name("Empoleon")
+    assert empoleon.specialty is Specialty.BERRIES
+    assert empoleon.main_skill == "Extra Helpful S"
+    assert empoleon.berry is Berry.BELUE  # steel, unlike Piplup/Prinplup (water)
+
+    hawlucha = _by_name("Hawlucha")
+    assert hawlucha.berry is Berry.PAMTRE
+    assert hawlucha.main_skill == "Ingredient Draw S"
+    # Does not evolve: no ribbon speed bonus.
+    assert (hawlucha.evolution_stage, hawlucha.line_evolutions) == (0, 0)
+    assert hawlucha.evolutions_remaining == 0
+
+    tinkatink, tinkaton = _by_name("Tinkatink"), _by_name("Tinkaton")
+    assert tinkatink.specialty is tinkaton.specialty is Specialty.BERRIES
+    assert tinkatink.berry is tinkaton.berry is Berry.PECHA
+    assert tinkatink.main_skill == tinkaton.main_skill == "Charge Strength M"
+    assert tinkatink.ingredients == tinkaton.ingredients
+    assert (tinkatink.evolution_stage, tinkatink.line_evolutions) == (0, 2)
+    assert (tinkaton.evolution_stage, tinkaton.line_evolutions) == (2, 2)
+    # Evolving raises the carry limit: base inventory plus 5 per evolution.
+    assert tinkaton.carry_limit == 20 + 5 * 2
+
+
+def test_captain_pikachu_is_its_own_form_alongside_the_other_pikachus() -> None:
+    # Event forms share the dex with base Pikachu; the name is the catalog key.
+    captain = _by_name("Pikachu (Captain)")
+    assert captain.dex == _by_name("Pikachu").dex == 25
+    assert captain.specialty is Specialty.BERRIES
+    assert captain.main_skill == "Ingredient Magnet S"  # not the base Charge Strength S
+    assert captain.berry is Berry.GREPA
+    # Event forms do not evolve, so the carry limit gets no evolution bonus.
+    assert (captain.evolution_stage, captain.line_evolutions) == (0, 0)
+    assert captain.carry_limit == captain.base_inventory == 21
 
 
 def test_berry_matches_the_type_to_berry_mapping_via_known_anchors() -> None:
