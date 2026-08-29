@@ -1,17 +1,21 @@
 import React, { useEffect, useRef, useState } from "react";
 import { berryIcon } from "../berries";
 import { useI18n } from "../i18n";
-import type { Catalog, Island } from "../types";
+import type { Catalog, Island, WeeklyBonus } from "../types";
 import { IconChevronDown } from "./icons";
 
 interface Props {
   catalog: Catalog;
   selectedIsland: string | null;
   favoriteBerries: string[];
+  mainFavorite: string | null;
+  weeklyBonus: WeeklyBonus;
   islandBonus: number; // fracción 0.0–0.85
   goodCampTicket: boolean;
   onSelectIsland: (islandName: string | null) => void;
   onFavoriteBerries: (berries: string[]) => void;
+  onMainFavorite: (berry: string | null) => void;
+  onWeeklyBonus: (bonus: WeeklyBonus) => void;
   onIslandBonus: (bonus: number) => void;
   onGoodCampTicket: (value: boolean) => void;
 }
@@ -30,10 +34,14 @@ export function IslandTab({
   catalog,
   selectedIsland,
   favoriteBerries,
+  mainFavorite,
+  weeklyBonus,
   islandBonus,
   goodCampTicket,
   onSelectIsland,
   onFavoriteBerries,
+  onMainFavorite,
+  onWeeklyBonus,
   onIslandBonus,
   onGoodCampTicket,
 }: Props) {
@@ -49,9 +57,6 @@ export function IslandTab({
   // Estado del dropdown custom de isla
   const [islandOpen, setIslandOpen] = useState(false);
 
-  // Estado de slot principal pendiente: true cuando el usuario deseleccionó la
-  // principal y todavía no eligió una nueva (las secundarias se conservan).
-  const [primaryPending, setPrimaryPending] = useState(false);
   const islandWrapRef = useRef<HTMLDivElement>(null);
   const islandTriggerRef = useRef<HTMLButtonElement>(null);
 
@@ -87,18 +92,19 @@ export function IslandTab({
       // "Sin isla"
       onSelectIsland(null);
       onFavoriteBerries([]);
-      setPrimaryPending(false);
+      onMainFavorite(null);
       // El bonus es independiente: no lo reseteamos.
     } else {
       const found = islands.find((i) => i.name === name) ?? null;
       onSelectIsland(name);
-      setPrimaryPending(false);
       if (found && !found.user_picks) {
-        // Isla con favoritas fijas: las seteamos automáticamente.
+        // Map with fixed favorites: set them automatically, the first one is the main.
         onFavoriteBerries(found.favorite_berries);
+        onMainFavorite(found.favorite_berries[0] ?? null);
       } else {
         // user_picks: array limpio, el usuario elige.
         onFavoriteBerries([]);
+        onMainFavorite(null);
       }
     }
   };
@@ -110,26 +116,14 @@ export function IslandTab({
 
   // Handlers para la grilla de chips (solo cuando user_picks === true).
   const handleBerryToggle = (berry: string) => {
-    const idx = favoriteBerries.indexOf(berry);
-    if (idx !== -1) {
-      // deseleccionar
-      if (!primaryPending && idx === 0) {
-        // era la principal → slot pendiente, se conservan las secundarias
-        onFavoriteBerries(favoriteBerries.slice(1));
-        setPrimaryPending(true);
-      } else {
-        // era una secundaria → solo se quita
-        onFavoriteBerries(favoriteBerries.filter((b) => b !== berry));
-      }
+    if (favoriteBerries.includes(berry)) {
+      onFavoriteBerries(favoriteBerries.filter((b) => b !== berry));
+      // Removing the main leaves its slot open and keeps the sub-favorites.
+      if (berry === mainFavorite) onMainFavorite(null);
     } else if (favoriteBerries.length < 3) {
-      // seleccionar
-      if (primaryPending) {
-        // llena el slot principal pendiente: va al frente (índice 0)
-        onFavoriteBerries([berry, ...favoriteBerries]);
-        setPrimaryPending(false);
-      } else {
-        onFavoriteBerries([...favoriteBerries, berry]);
-      }
+      onFavoriteBerries([...favoriteBerries, berry]);
+      // The first one picked (or the one that fills an open slot) becomes the main.
+      if (mainFavorite === null) onMainFavorite(berry);
     }
     // Si ya hay 3 y el chip no está seleccionado, el botón está disabled: no hace falta else.
   };
@@ -256,8 +250,7 @@ export function IslandTab({
             >
               {allBerries.map((b) => {
                 const isSelected = favoriteBerries.includes(b);
-                const primaryBerry = primaryPending ? null : (favoriteBerries[0] ?? null);
-                const isPrimary = isSelected && b === primaryBerry;
+                const isPrimary = isSelected && b === mainFavorite;
                 const isDisabled = !isReadOnly && !isSelected && selectedCount >= 3;
 
                 // Item 5: clase --primary y aria-label para la baya principal
@@ -301,6 +294,32 @@ export function IslandTab({
                 {selectedCount} / 3
               </p>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Weekly bonus — expert-mode maps only */}
+      {island?.expert && (
+        <div className="island-tab__row">
+          <span className="island-tab__label">{t("teams.weeklyBonus")}</span>
+          <div className="specialty-toggle" role="group" aria-label={t("teams.weeklyBonus")}>
+            {(
+              [
+                ["berry_strength", "teams.weeklyBerryStrength"],
+                ["ingredient", "teams.weeklyIngredient"],
+                ["skill_trigger", "teams.weeklySkillTrigger"],
+              ] as const
+            ).map(([value, key]) => (
+              <button
+                key={value}
+                type="button"
+                className={"specialty-toggle__btn" + (weeklyBonus === value ? " is-on" : "")}
+                aria-pressed={weeklyBonus === value}
+                onClick={() => onWeeklyBonus(value)}
+              >
+                {t(key)}
+              </button>
+            ))}
           </div>
         </div>
       )}

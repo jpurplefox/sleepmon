@@ -33,6 +33,7 @@ from sleepmon.domain.skills import (
     magnet_plus_bonus_amount,
     magnet_plus_bonus_ingredient,
     magnets_ingredients,
+    max_skill_level,
     powers_up_cooking,
     restores_team_energy,
     tasty_chance_amount,
@@ -368,3 +369,26 @@ def test_cooking_minus_detected_with_own_pot_and_energy_tables() -> None:
     # bonus de energía nivel 7 = 35 ; nivel 1 = 8
     assert cooking_minus_energy_amount(7) == 35
     assert cooking_minus_energy_amount(1) == 8
+
+
+# --- max_skill_level: real cap of each main skill --------------------------------
+
+
+def test_skills_that_cap_at_six() -> None:
+    for skill in (
+        "Energy for Everyone S",
+        "Tasty Chance S",
+        "Charge Energy S",
+        "Energizing Cheer S",
+    ):
+        assert max_skill_level(skill) == 6
+
+
+def test_dream_shard_magnet_reaches_eight() -> None:
+    assert max_skill_level("Dream Shard Magnet S") == 8
+    assert max_skill_level("Dream Shard Magnet S (Random)") == 8
+
+
+def test_every_other_skill_uses_the_general_cap() -> None:
+    for skill in ("Ingredient Draw S", "Charge Strength M", "Cooking Power-Up S"):
+        assert max_skill_level(skill) == MAX_SKILL_LEVEL

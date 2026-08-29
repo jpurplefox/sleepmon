@@ -72,10 +72,15 @@ rest are functional or semantic.
 --moon-dim:    rgba(212, 160, 23, 0.15);
 --moon-border: rgba(212, 160, 23, 0.4);
 
-/* Semantic — natures and errors */
---up:    #3fb950;   /* stat that rises */
---down:  #f78166;   /* stat that falls */
---error: #f85149;
+/* Semantic — natures and errors. `--down` carries the same two alpha variants
+   as `--moon`, and at the same alphas, because a cost is marked the way a bonus
+   is: `--down-border` outlines, `--down-dim` fills. `rgba()` needs channels, so
+   a variant cannot be composed from the base token at use time. */
+--up:          #3fb950;   /* stat that rises */
+--down:        #f78166;   /* stat that falls */
+--down-dim:    rgba(247, 129, 102, 0.15);
+--down-border: rgba(247, 129, 102, 0.4);
+--error:       #f85149;
 
 /* Sub-skill tiers — blue is the tier-specific color; the gold and regular
    tiers use --moon / --muted, mapped in .ss-icon */
@@ -171,6 +176,13 @@ Edit steppers show nav arrows, not a metric icon.
   `disabled` for this case.
 - **Destructive:** red (`--error`) only on the hover of a delete action; all other
   hovers are neutral.
+- **Cost vs. destruction (the two reds):** a **cost** — a value the rules push down
+  (a gameplay penalty, a stat that falls) — is `--down`, never `--error`. It may
+  reach past a badge onto a **whole surface**: a card whose subject is being
+  penalized carries a `--down-border` outline plus a `--down-dim` inset — the same
+  two roles, at the same alphas, that `--moon-border` / `--moon-dim` play for a
+  bonus. That surface-level red is reserved for a real, rule-driven penalty and
+  must vanish where the penalty does not apply — a state, never decoration.
 - **Empty placeholders:** a dim same-size square keeps rows aligned when a value is
   missing (`.mini-icon--empty`).
 
@@ -210,6 +222,15 @@ states · where it lives. Feature one-offs are intentionally not here.
 ### Chips & badges
 - **`.badge`** — compact pill for short metrics. Variants: `--level` (moon gold),
   `--ok` (`--up` green), `--low` (`--down` red).
+- **`.metric-mark`** — inline annotation pinned to a figure, saying what a rule is
+  doing to *that* metric (`×2` / `×2,4` on berries, `+1` on ingredients, `Skill +1`
+  or `×1,25` on skill, `−10%` / `+15%` on help cadence). Smaller and bolder than
+  `.badge` (`--text-xs`, weight 700) and tinted rather than neutral, so it reads as
+  attached to the number instead of standing on its own. Variants: `--good` (moon
+  gold on `--moon-dim`) and `--bad` (`--down` on `--down-dim`). Always carries `title`
+  + `aria-label` with the full effect — the sign and the text carry the meaning, so
+  color is never the only cue. Generalized from `.prod-card__fav-badge` (the berry
+  `×2`), which is its gold variant.
 - **`.chip` / `.chips`** — small thematic tag (container wraps). Variants:
   `--ingredient` (gold-dim), `--subskill` (accent-dim).
 - **`.mini-icon`** — small inline icon (nature stat, ingredient, sub-skill) with
@@ -311,3 +332,23 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   comparison cards? *Resolution:* stack the header — sprite + actions on top,
   full-width name below. *Why:* names are content; the layout bends before the
   content truncates.
+- **Which red for a penalty.** *Question:* a gameplay rule makes a Pokémon produce
+  *less* — is that `--error` or `--down`? *Resolution:* `--down`, and it may reach
+  past a badge onto the card's own border. `--error` stays with destruction (the
+  delete confirmation). *Why:* a penalty is a value falling, which is exactly what
+  `--down` already means (`.badge--low`, a nature's `↓`); calling it an error would
+  say something went wrong, when nothing did. It also keeps the two-voiced palette
+  intact — `--down` is semantic, not a third voice.
+- **Gold marks a state, and then it may repeat.** *Question:* "one gold accent per
+  card" says a single element carries `--moon`, but a card the rules favor now has
+  a gold border *and* a gold mark on each metric the favor touches. Which wins?
+  *Resolution:* the one-accent rule governs **identity** — the single key figure,
+  like a level badge. When gold encodes a **state the rules impose**, it may repeat:
+  the border says *this one is favored*, each mark says what the favor does to that
+  number. Scarcity is kept a different way — gold appears only on cards actually
+  favored, and only beside metrics actually changed. *Why:* the rule existed to stop
+  decorative gold, not to stop gold from carrying meaning; the card had already
+  outgrown it (border + `×2` badge) before this was written down. Corollary: when
+  two gold states stack (favored vs. *most* favored), the step between them stays
+  quiet — a full `--moon` border against a `--moon-border` one is deliberately
+  subtle, because the marks carry the hierarchy and hue does not.

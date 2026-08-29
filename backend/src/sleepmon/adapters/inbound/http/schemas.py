@@ -89,6 +89,7 @@ class IslandOut(msgspec.Struct):
     name: str
     favorite_berries: list[str]
     user_picks: bool
+    expert: bool
     ratings: list[RatingOut]
 
 
@@ -136,6 +137,7 @@ class ProductionOut(msgspec.Struct):
     ingredient_percentage: float
     skill_percentage: float
     effective_skill_percentage: float
+    effective_skill_level: int
     ingredients: list[SlotProductionOut]
     skill_triggers: float
     skill_ingredients: list[SlotProductionOut]
@@ -203,6 +205,9 @@ class TeamProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     slots: list[SlotIn]
     meals: list[MealIn | None] = msgspec.field(default_factory=list)
     favorite_berries: list[str] = msgspec.field(default_factory=list)
+    island: str | None = None
+    main_favorite: str | None = None
+    weekly_bonus: str | None = None
     island_bonus: float = 0.0
     good_camp_ticket: bool = False
 

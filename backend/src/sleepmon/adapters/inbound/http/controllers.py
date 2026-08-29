@@ -47,6 +47,7 @@ from sleepmon.application.dto import (
 from sleepmon.application.services import TeamService
 from sleepmon.domain.catalog_data import (
     INGREDIENT_STRENGTH,
+    ISLAND_EXPERT,
     ISLAND_FAVORITE_BERRIES,
     ISLAND_RATING_THRESHOLDS,
     ISLAND_USER_PICKS,
@@ -71,6 +72,7 @@ def _full_production_out(result: ProductionResult) -> ProductionOut:
         ingredient_percentage=result.ingredient_percentage,
         skill_percentage=result.skill_percentage,
         effective_skill_percentage=result.effective_skill_percentage,
+        effective_skill_level=result.effective_skill_level,
         ingredients=[
             SlotProductionOut(ingredient=slot.ingredient, amount=slot.amount)
             for slot in result.ingredients
@@ -271,6 +273,7 @@ class CatalogController(Controller):
                     name=island.value,
                     favorite_berries=[b.value for b in ISLAND_FAVORITE_BERRIES[island]],
                     user_picks=island in ISLAND_USER_PICKS,
+                    expert=island in ISLAND_EXPERT,
                     ratings=[
                         RatingOut(
                             tier=r.tier.value,
@@ -332,6 +335,9 @@ class TeamProductionController(Controller):
                     for m in data.meals
                 ],
                 favorite_berries=data.favorite_berries,
+                island=data.island,
+                main_favorite=data.main_favorite,
+                weekly_bonus=data.weekly_bonus,
                 island_bonus=data.island_bonus,
                 good_camp_ticket=data.good_camp_ticket,
             )

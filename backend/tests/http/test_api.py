@@ -11,6 +11,7 @@ from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatal
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.auth_service import DefaultAuthService
 from sleepmon.application.services import DefaultTeamService
+from sleepmon.domain.value_objects import Island
 from tests.fakes import (
     InMemoryRefreshTokenRepository,
     InMemoryTeamRepository,
@@ -621,6 +622,41 @@ def test_team_production_endpoint(client: TestClient, auth_header: dict[str, str
         assert key in prod, f"missing key {key!r} in member production"
 
 
+def test_team_production_exposes_effective_skill_level(
+    client: TestClient, auth_header: dict[str, str]
+) -> None:
+    created = client.post("/team", json=valid_payload(), headers=auth_header).json()
+    body = client.post(
+        "/teams/production",
+        json={"slots": _slots_json(created["id"]), "meals": [None, None, None]},
+        headers=auth_header,
+    ).json()
+    member = body["members"][0]["production"]
+    # No expert map selected: the effective level equals the member's own.
+    assert member["effective_skill_level"] == created["skill_level"] == 1
+
+
+def test_team_production_main_favorite_bumps_effective_skill_level(
+    client: TestClient, auth_header: dict[str, str]
+) -> None:
+    created = client.post("/team", json=valid_payload(), headers=auth_header).json()
+    body = client.post(
+        "/teams/production",
+        json={
+            "slots": _slots_json(created["id"]),
+            "meals": [None, None, None],
+            "island": "Cyan Beach (Expert)",
+            "favorite_berries": ["Grepa"],
+            "main_favorite": "Grepa",
+        },
+        headers=auth_header,
+    ).json()
+    member = body["members"][0]["production"]
+    # Gathering the map's main favorite (Pikachu's berry is Grepa) grants +1 Main
+    # Skill level, capped at the skill's max (Charge Strength S caps at 7).
+    assert member["effective_skill_level"] == created["skill_level"] + 1 == 2
+
+
 def test_team_production_exposes_extra_tasty(
     client: TestClient,
     auth_header: dict[str,
@@ -815,7 +851,9 @@ def _create_member(client: TestClient, auth_header: dict[str, str]) -> str:
 def test_catalog_lists_islands(client: TestClient) -> None:
     body = client.get("/catalog").json()
     islands = {i["name"]: i for i in body["islands"]}
-    assert len(islands) == 8
+    # Compared against the enum, not a hardcoded count: adding an area must not
+    # break this test, but silently dropping one still must.
+    assert len(islands) == len(Island)
     assert islands["Cyan Beach"]["favorite_berries"] == ["Oran", "Pamtre", "Pecha"]
     assert islands["Cyan Beach"]["user_picks"] is False
     assert islands["Greengrass Isle"]["favorite_berries"] == []
@@ -879,3 +917,9 @@ def test_team_production_accepts_good_camp_ticket(
     # Con GCT ayuda más rápido → menos segundos por ayuda y más ayudas/día.
     assert on_member["seconds_per_help"] < off_member["seconds_per_help"]
     assert on_member["inventory"] > off_member["inventory"]
+
+
+def test_the_catalog_marks_the_expert_areas(client: TestClient) -> None:
+    catalog = client.get("/catalog").json()
+    expert = {i["name"] for i in catalog["islands"] if i["expert"]}
+    assert expert == {"Greengrass Isle (Expert)", "Cyan Beach (Expert)"}

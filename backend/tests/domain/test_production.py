@@ -2,6 +2,8 @@ import math
 
 import pytest
 
+from sleepmon.domain.catalog_data import FREQUENCY_REDUCTION_PER_LEVEL, max_ingredient_slots
+from sleepmon.domain.map_bonuses import MapBonuses
 from sleepmon.domain.production import (
     DailyProduction,
     SlotProduction,
@@ -17,6 +19,7 @@ from sleepmon.domain.value_objects import (
     SleepType,
     Specialty,
     SubSkill,
+    WeeklyBonus,
 )
 
 I = Ingredient  # noqa: E741 — alias local para que el dataset se lea compacto
@@ -459,14 +462,19 @@ def test_result_carries_species_berry() -> None:
     assert prod.berry is Berry.ORAN
 
 
+def _fav(berry: Berry, *, expert: bool = False, weekly: WeeklyBonus | None = None) -> MapBonuses:
+    return MapBonuses(
+        main=berry,
+        expert=expert,
+        weekly_bonus=weekly or WeeklyBonus.BERRY_STRENGTH,
+    )
+
+
 def test_favorite_berry_doubles_berry_strength() -> None:
-    species = _species()  # usar el helper del archivo — berry es Berry.ORAN
+    species = _species()
     base = daily_production(species, _INGREDIENTS, level=10)
     favored = daily_production(
-        species,
-        _INGREDIENTS,
-        level=10,
-        favorite_berries=frozenset({species.berry}),
+        species, _INGREDIENTS, level=10, map_bonuses=_fav(species.berry)
     )
     assert favored.berry_strength == base.berry_strength * 2
 
@@ -475,14 +483,188 @@ def test_non_favorite_berry_unchanged() -> None:
     species = _species()
     base = daily_production(species, _INGREDIENTS, level=10)
     other = daily_production(
+        species, _INGREDIENTS, level=10, map_bonuses=_fav(Berry.YACHE)
+    )
+    assert other.berry_strength == base.berry_strength
+
+
+def test_the_main_favorite_helps_more_often() -> None:
+    species = _species(help_frequency_seconds=3600)
+    normal = daily_production(species, _INGREDIENTS, level=10, map_bonuses=_fav(species.berry))
+    expert = daily_production(
+        species, _INGREDIENTS, level=10, map_bonuses=_fav(species.berry, expert=True)
+    )
+    assert expert.seconds_per_help < normal.seconds_per_help
+    assert expert.helps_per_day > normal.helps_per_day
+
+
+def test_a_berry_that_is_not_favorite_helps_less_often_on_an_expert_map() -> None:
+    species = _species(help_frequency_seconds=3600)
+    base = daily_production(species, _INGREDIENTS, level=10)
+    penalized = daily_production(
+        species, _INGREDIENTS, level=10, map_bonuses=_fav(Berry.YACHE, expert=True)
+    )
+    assert penalized.seconds_per_help > base.seconds_per_help
+
+
+def test_the_speed_effects_compose_with_the_good_camp_ticket() -> None:
+    """PRD: la principal con el ticket ayuda a x0.8 * 0.9 del intervalo base.
+
+    El esperado se deriva de la fórmula cruda (freq * level_factor * ... / BONUS),
+    no de ``base.seconds_per_help`` — ese ya está truncado, y multiplicar un entero
+    ya truncado por 0.8*0.9 y volver a truncar puede diferir en 1s del resultado real
+    (que trunca una sola vez, al final, como hace la propia daily_production).
+    """
+    help_frequency_seconds = 3600
+    level = 10
+    species = _species(help_frequency_seconds=help_frequency_seconds)
+    both = daily_production(
+        species,
+        _INGREDIENTS,
+        level=level,
+        map_bonuses=_fav(species.berry, expert=True),
+        good_camp_ticket=True,
+    )
+    level_factor = 1 - FREQUENCY_REDUCTION_PER_LEVEL * (level - 1)
+    expected = math.floor(help_frequency_seconds * level_factor * 0.8 * 0.9 / BONUS)
+    assert both.seconds_per_help == expected
+
+
+def test_the_main_favorite_raises_the_effective_skill_level() -> None:
+    species = _species()
+    prod = daily_production(
+        species,
+        _INGREDIENTS,
+        level=60,
+        skill_level=3,
+        map_bonuses=_fav(species.berry, expert=True),
+    )
+    assert prod.effective_skill_level == 4
+
+
+def test_a_pokemon_at_its_skill_cap_gains_no_level() -> None:
+    """PRD: un miembro ya en el máximo de su skill no gana nivel ni produce de más."""
+    species = _species(main_skill="Energy for Everyone S")  # topa en 6
+    prod = daily_production(
+        species,
+        _INGREDIENTS,
+        level=60,
+        skill_level=6,
+        map_bonuses=_fav(species.berry, expert=True),
+    )
+    without_map = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
+    assert prod.effective_skill_level == 6
+    # Same effective level -> same per-trigger skill output. Compare the per-trigger
+    # amount, not the raw total: the main favorite's x0.9 speed still raises how often
+    # the skill fires, which would confound a direct comparison of the totals.
+    assert prod.skill_energy / prod.skill_triggers == pytest.approx(
+        without_map.skill_energy / without_map.skill_triggers
+    )
+
+
+def test_without_the_main_favorite_the_effective_level_is_the_members_own() -> None:
+    species = _species()
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=3)
+    assert prod.effective_skill_level == 3
+
+
+def test_the_berry_strength_bonus_gives_two_point_four_not_four_point_eight() -> None:
+    # Sub-favorite (not main): isolates the strength multiplier, since the main
+    # berry's x0.9 speed would also shift helps/day and skew the ratio under test.
+    species = _species()
+    base = daily_production(species, _INGREDIENTS, level=10)
+    expert = daily_production(
         species,
         _INGREDIENTS,
         level=10,
-        favorite_berries=frozenset({Berry.YACHE})  # baya distinta a Berry.ORAN
-        if species.berry is not Berry.YACHE
-        else frozenset({Berry.ORAN}),
+        map_bonuses=MapBonuses(
+            subs=frozenset({species.berry}),
+            expert=True,
+            weekly_bonus=WeeklyBonus.BERRY_STRENGTH,
+        ),
     )
-    assert other.berry_strength == base.berry_strength
+    ratio = expert.berry_strength / base.berry_strength
+    assert 2.35 < ratio < 2.45
+
+
+def test_the_ingredient_bonus_raises_ingredient_output() -> None:
+    # Sub-favorite (not main): isolates the +1 ingredient bonus, since the main
+    # berry's x0.9 speed would also shift helps/day and confound the observed rise.
+    species = _species()
+    base = daily_production(species, _INGREDIENTS, level=60)
+    expert = daily_production(
+        species,
+        _INGREDIENTS,
+        level=60,
+        map_bonuses=MapBonuses(
+            subs=frozenset({species.berry}),
+            expert=True,
+            weekly_bonus=WeeklyBonus.INGREDIENT,
+        ),
+    )
+    base_total = sum(s.amount for s in base.ingredients)
+    expert_total = sum(s.amount for s in expert.ingredients)
+    # With a sub-favorite, helps/slot are unchanged: the only effect is +1 ingredient
+    # per find in each unlocked slot. At level 60, 3 slots sum to 12, so total scales (12+3)/12.
+    unlocked = max_ingredient_slots(60)
+    diagonal_sum = 2 + 4 + 6
+    expected_total = base_total * (diagonal_sum + unlocked) / diagonal_sum
+    assert expert_total == pytest.approx(expected_total)
+
+
+def test_the_ingredient_bonus_raises_output_when_inventory_fills() -> None:
+    """Almost every real species fills its inventory before night ends; the
+    synthetic species above (base_inventory=100_000) never does, so it never
+    exercises the interaction between the +1 bonus and the inventory fill.
+    """
+    # Sub-favorite (not main): isolates the +1 ingredient bonus from the main
+    # berry's x0.9 speed, same technique as the fixture above.
+    species = _species(base_inventory=10, help_frequency_seconds=1800)
+    base = daily_production(species, _INGREDIENTS, level=60)
+    expert = daily_production(
+        species,
+        _INGREDIENTS,
+        level=60,
+        map_bonuses=MapBonuses(
+            subs=frozenset({species.berry}),
+            expert=True,
+            weekly_bonus=WeeklyBonus.INGREDIENT,
+        ),
+    )
+    # Sanity check: this fixture actually fills before the night ends (unlike the
+    # one above), so it exercises the fill-hours interaction the bonus feeds into.
+    assert base.inventory_fill_hours < 8.5
+    assert expert.inventory_fill_hours < 8.5
+
+    base_total = sum(s.amount for s in base.ingredients)
+    expert_total = sum(s.amount for s in expert.ingredients)
+    assert expert_total > base_total
+    # The extra ingredient occupies inventory too, so it fills sooner.
+    assert expert.inventory_fill_hours < base.inventory_fill_hours
+
+
+def test_the_skill_trigger_bonus_raises_the_effective_skill_rate() -> None:
+    species = _species(skill_percentage=5)
+    base = daily_production(species, _INGREDIENTS, level=60)
+    expert = daily_production(
+        species,
+        _INGREDIENTS,
+        level=60,
+        map_bonuses=_fav(species.berry, expert=True, weekly=WeeklyBonus.SKILL_TRIGGER),
+    )
+    assert expert.effective_skill_percentage > base.effective_skill_percentage
+    assert expert.skill_triggers > base.skill_triggers
+
+
+def test_a_neutral_map_leaves_production_identical() -> None:
+    """Regresión: no pasar mapa (Box/Comparación) equivale a un ``MapBonuses()``
+    explícito, que es el mapa neutro (sin favoritos, sin modo experto)."""
+    species = _species()
+    implicit = daily_production(species, _INGREDIENTS, level=60, skill_level=3)
+    explicit = daily_production(
+        species, _INGREDIENTS, level=60, skill_level=3, map_bonuses=MapBonuses()
+    )
+    assert implicit == explicit
 
 
 # --- sub skills + naturaleza ---
@@ -978,6 +1160,7 @@ def _daily(
     skill_strength: float | None = None,
     skill_energy: float | None = None,
     skill_tasty_chance: float | None = None,
+    effective_skill_level: int = 4,
 ) -> DailyProduction:
     return DailyProduction(
         helps_per_day=50.0,
@@ -1004,6 +1187,7 @@ def _daily(
         night_skill_chances=(),
         inventory=100,
         inventory_fill_hours=5.0,
+        effective_skill_level=effective_skill_level,
     )
 
 
@@ -1038,6 +1222,7 @@ def test_scale_daily_keeps_intensive_fields() -> None:
     assert s.seconds_per_help == d.seconds_per_help
     assert s.inventory == d.inventory
     assert s.night_skill_chances == d.night_skill_chances
+    assert s.effective_skill_level == d.effective_skill_level
 
 
 def test_scale_daily_leaves_none_skill_fields_none() -> None:

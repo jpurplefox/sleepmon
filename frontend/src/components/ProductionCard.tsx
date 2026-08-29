@@ -8,13 +8,14 @@ import {
   SUB_SKILL_NEVER_UNLOCKS,
   SUB_SKILL_UNLOCK_LEVELS,
 } from "../constants";
+import { expertMarks, type MetricMark } from "../expertMarks";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { statIcon } from "../natures";
 import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
 import { spriteUrl } from "../sprites";
 import { subSkillIcon } from "../subskills";
-import type { Catalog, MemberInput, Production } from "../types";
+import type { BerryRole, Catalog, MemberInput, Production, WeeklyBonus } from "../types";
 import { RibbonIcon } from "./RibbonIcon";
 import {
   IconClock,
@@ -99,9 +100,10 @@ interface Props {
   onDragEnter?: () => void;
   onDrop?: () => void;
   onDragEnd?: () => void;
-  // Resaltado de baya favorita: true cuando la baya de esta especie es favorita
-  // de la isla activa (recibe ×2 de fuerza). Reactivo: cambia al cambiar la isla.
-  isFavoriteBerry?: boolean;
+  /** Role of this species' berry relative to the active map. */
+  berryRole?: BerryRole;
+  expert?: boolean;
+  weeklyBonus?: WeeklyBonus;
 }
 
 export function ProductionCard({
@@ -131,7 +133,9 @@ export function ProductionCard({
   onDragEnter,
   onDrop,
   onDragEnd,
-  isFavoriteBerry = false,
+  berryRole = "none",
+  expert = false,
+  weeklyBonus = "berry_strength",
 }: Props) {
   const { t, ingredient, berry, subSkill, natureStat, nature: natureName } = useI18n();
   const cardRef = useRef<HTMLElement>(null);
@@ -156,6 +160,34 @@ export function ProductionCard({
     TIER_CLASS[catalog.sub_skills.find((s) => s.name === name)?.tier ?? "Regular"];
 
   const d = production;
+
+  const marks = d
+    ? expertMarks({
+        role: berryRole,
+        expert,
+        weeklyBonus,
+        skillLevel: config.skill_level,
+        effectiveSkillLevel: d.effective_skill_level,
+        t,
+      })
+    : [];
+
+  // A metric can carry more than one mark at once (e.g. the main favorite's
+  // "Skill +1" alongside the skill-trigger weekly bonus's "×1,25").
+  const markFor = (metric: MetricMark["metric"]) =>
+    marks
+      .filter((m) => m.metric === metric)
+      .map((m) => (
+        <span
+          key={m.label}
+          className={`metric-mark metric-mark--${m.tone}`}
+          title={m.effect}
+          role="img"
+          aria-label={m.effect}
+        >
+          {m.label}
+        </span>
+      ));
 
   // Si dos slots dan el mismo ingrediente, se muestra una vez sumando.
   const grouped = useMemo(() => {
@@ -309,7 +341,9 @@ export function ProductionCard({
           (dragging ? " prod-card--dragging" : "") +
           (dragOver ? " prod-card--dragover" : "") +
           (readOnly ? " prod-card--readonly" : "") +
-          (isFavoriteBerry ? " prod-card--favorite-berry" : "")
+          (berryRole !== "none" ? " prod-card--favorite-berry" : "") +
+          (berryRole === "main" ? " prod-card--main-favorite" : "") +
+          (expert && berryRole === "none" ? " prod-card--no-favorite" : "")
         }
         onAnimationEnd={(e) => {
           if (e.animationName === "prod-card-in") setEntering(false);
@@ -488,6 +522,7 @@ export function ProductionCard({
           <div className="prod-card__line">
             <span title={t("card.helpCadence")}>
               <IconClock /> {mmss(d.seconds_per_help)}
+              {markFor("cadence")}
             </span>
             <span title={t("card.helpsPerDay")}>
               <IconHelp /> {fmt(d.helps_per_day)} <Delta value={d.helps_per_day} base={base?.helps_per_day} />
@@ -506,15 +541,7 @@ export function ProductionCard({
           <div className="prod-card__block prod-card__block--berry">
             <div className="prod-card__block-head">
               {t("card.berries")} <span className="muted">{pct(d.berry_percentage)}</span>
-              {isFavoriteBerry && (
-                <span
-                  className="prod-card__fav-badge"
-                  title={t("card.favBerryBadge")}
-                  aria-label={t("card.favBerryBadge")}
-                >
-                  ×2
-                </span>
-              )}
+              {markFor("berries")}
             </div>
             <ul className="prod-card__ings">
               <li>
@@ -553,6 +580,7 @@ export function ProductionCard({
                 {pct(d.ingredient_percentage)}
                 {skillIng.size > 0 && ` ${t("card.plusSkill")}`}
               </span>
+              {markFor("ingredients")}
             </div>
             <ul className="prod-card__ings">
               {combined.map((g) => (
@@ -575,6 +603,7 @@ export function ProductionCard({
           <div className="prod-card__block prod-card__block--skill">
             <div className="prod-card__block-head">
               {t("card.skill")} <span className="muted">{pct(d.effective_skill_percentage)}</span>
+              {markFor("skill")}
             </div>
             <div className="prod-card__line">
               <span title={t("card.triggersTitle")}>

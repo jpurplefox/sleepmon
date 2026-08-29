@@ -34,4 +34,15 @@ def test_master_20_known_anchors() -> None:
 
     assert m20(Island.GREENGRASS_ISLE) == 3_245_795
     assert m20(Island.GREENGRASS_EXPERT) == 10_981_171
+    assert m20(Island.CYAN_BEACH_EXPERT) == 14_780_152
     assert m20(Island.AMBER_CANYON) == 8_528_976
+
+
+def test_cyan_beach_expert_master_1_boundary() -> None:
+    """El umbral exacto de Master 1 y el punto justo por debajo (PRD 0007)."""
+    ratings = ratings_for(Island.CYAN_BEACH_EXPERT)
+    master_1 = next(r for r in ratings if r.tier is RatingTier.MASTER and r.level == 1)
+    assert master_1.required_strength == 2_194_292
+
+    reached = [r for r in ratings if r.required_strength <= 2_194_291][-1]
+    assert (reached.tier, reached.level) == (RatingTier.ULTRA, 5)

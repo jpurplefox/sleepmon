@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { CSSProperties } from "react";
-import type { Slot, Member, Catalog, TeamProduction } from "../types";
+import type { Slot, Member, Catalog, TeamProduction, BerryRole, WeeklyBonus } from "../types";
 import { ProductionCard } from "./ProductionCard";
 import { configFromMember } from "../pages/Teams";
 import { useI18n } from "../i18n";
@@ -13,7 +13,10 @@ interface TeamSlotCardProps {
   catalog: Catalog;
   // members[] del resultado del equipo; cada uno con production ya ponderada.
   contributions: TeamProduction["members"] | undefined;
-  favBerrySet: Set<string>;
+  // Resolves a berry name to its role ("main" / "sub" / "none") for the current map/favorite.
+  berryRoleOf: (berry: string) => BerryRole;
+  expert: boolean;
+  weeklyBonus: WeeklyBonus;
   canSplit: boolean;            // false si el equipo está al máximo de slots o sin pokés libres
   teamHasSplit?: boolean;       // true si algún slot del equipo está dividido (para igualar altura del header)
   onRequestSplit: (slotIndex: number) => void;    // abre el picker en modo "dividir"
@@ -28,7 +31,9 @@ export function TeamSlotCard({
   memberById,
   catalog,
   contributions,
-  favBerrySet,
+  berryRoleOf,
+  expert,
+  weeklyBonus,
   canSplit,
   teamHasSplit,
   onRequestSplit,
@@ -50,8 +55,7 @@ export function TeamSlotCard({
   const prod = contrib?.production ?? null;
 
   const speciesEntry = catalog.species.find((s) => s.name === member.species);
-  const isFavoriteBerry =
-    speciesEntry != null && favBerrySet.has(speciesEntry.berry);
+  const berryRole: BerryRole = speciesEntry ? berryRoleOf(speciesEntry.berry) : "none";
 
   const nameOf = (id: string) => memberById.get(id)?.species ?? "?";
   const pctA = Math.round(slot.entries[0].weight * 100);
@@ -131,7 +135,9 @@ export function TeamSlotCard({
       production={prod}
       productionError={null}
       readOnly
-      isFavoriteBerry={isFavoriteBerry}
+      berryRole={berryRole}
+      expert={expert}
+      weeklyBonus={weeklyBonus}
       slotHeader={header}
       onEdit={() => {}}
       onClone={() => {}}

@@ -238,13 +238,30 @@ class Island(StrEnum):
     """Islas / áreas de investigación de Pokémon Sleep."""
 
     GREENGRASS_ISLE = "Greengrass Isle"
-    GREENGRASS_EXPERT = "Greengrass Isle (Expert Mode)"
+    GREENGRASS_EXPERT = "Greengrass Isle (Expert)"
     CYAN_BEACH = "Cyan Beach"
+    CYAN_BEACH_EXPERT = "Cyan Beach (Expert)"
     TAUPE_HOLLOW = "Taupe Hollow"
     SNOWDROP_TUNDRA = "Snowdrop Tundra"
     LAPIS_LAKESIDE = "Lapis Lakeside"
     OLD_GOLD_POWER_PLANT = "Old Gold Power Plant"
     AMBER_CANYON = "Amber Canyon"
+
+
+class WeeklyBonus(StrEnum):
+    """An expert map's weekly bonus. Exactly one is active at a time."""
+
+    BERRY_STRENGTH = "berry_strength"  # berry strength x2.4 (REPLACES the x2)
+    INGREDIENT = "ingredient"  # +1 ingredient per gather
+    SKILL_TRIGGER = "skill_trigger"  # main skill chance x1.25
+
+
+class BerryRole(StrEnum):
+    """What a Pokemon's berry is with respect to the chosen map."""
+
+    MAIN = "main"
+    SUB = "sub"
+    NONE = "none"
 
 
 class RatingTier(StrEnum):

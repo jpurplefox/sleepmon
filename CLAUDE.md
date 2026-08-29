@@ -59,7 +59,8 @@ npm run test                  # Vitest (logic + catalogue-driven form)
 - Every behavior change ships with its test.
 - The species catalog (`domain/species.py`) is a curated v1 subset; extending or
   fixing it means adding entries.
-- New docs and code are written in **English**.
+- New docs, code, comments and docstrings are written in **English**, even in
+  files whose older comments are Spanish; only user-facing strings (validation messages, i18n values) stay Spanish.
 - **What goes where**:
   - `docs/prd/` — **product**: one doc per feature (or shared building block) —
     purpose, scope, behavior, guidelines: the *what* the user gets. This includes the

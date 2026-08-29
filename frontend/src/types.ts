@@ -45,7 +45,13 @@ export interface Island {
   user_picks: boolean;
   // Los 35 ratings de Snorlax de la isla (Basic1..Master20), ascendentes por fuerza.
   ratings: Rating[];
+  // true = expert-mode area: splits favorites into main and sub-favorites and
+  // applies the four PRD 0007 effects.
+  expert: boolean;
 }
+
+export type WeeklyBonus = "berry_strength" | "ingredient" | "skill_trigger";
+export type BerryRole = "main" | "sub" | "none";
 
 export interface Catalog {
   natures: Nature[];
@@ -182,6 +188,9 @@ export interface TeamProductionInput {
   slots: { entries: { member_id: string; weight: number }[] }[];
   meals: (MealInput | null)[];
   favorite_berries?: string[];
+  island?: string | null;
+  main_favorite?: string | null;
+  weekly_bonus?: WeeklyBonus;
   island_bonus?: number;
   good_camp_ticket?: boolean;
 }
@@ -308,4 +317,6 @@ export interface Production {
   night_skill_chances: number[];
   inventory: number;
   inventory_fill_hours: number;
+  /** Skill level actually used (with the main favorite's +1, already capped). */
+  effective_skill_level: number;
 }

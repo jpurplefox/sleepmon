@@ -234,10 +234,14 @@ BERRY_BASE_STRENGTH: Final[Mapping[Berry, int]] = {
     Berry.YACHE: 35,
 }
 
+# A map's favorite-berry cap (the game allows three).
+MAX_FAVORITE_BERRIES: Final[int] = 3
+
 ISLAND_FAVORITE_BERRIES: Final[Mapping[Island, tuple[Berry, ...]]] = {
     Island.GREENGRASS_ISLE: (),
     Island.GREENGRASS_EXPERT: (),
     Island.CYAN_BEACH: (Berry.ORAN, Berry.PAMTRE, Berry.PECHA),
+    Island.CYAN_BEACH_EXPERT: (),
     Island.TAUPE_HOLLOW: (Berry.FIGY, Berry.LEPPA, Berry.SITRUS),
     Island.SNOWDROP_TUNDRA: (Berry.PERSIM, Berry.RAWST, Berry.WIKI),
     Island.LAPIS_LAKESIDE: (Berry.CHERI, Berry.DURIN, Berry.MAGO),
@@ -246,8 +250,26 @@ ISLAND_FAVORITE_BERRIES: Final[Mapping[Island, tuple[Berry, ...]]] = {
 }
 
 ISLAND_USER_PICKS: Final[frozenset[Island]] = frozenset(
-    {Island.GREENGRASS_ISLE, Island.GREENGRASS_EXPERT}
+    {Island.GREENGRASS_ISLE, Island.GREENGRASS_EXPERT, Island.CYAN_BEACH_EXPERT}
 )
+
+# Expert-mode maps: they apply the four expert effects and carry their own rating
+# thresholds, far above those of the normal map of the same name.
+ISLAND_EXPERT: Final[frozenset[Island]] = frozenset(
+    {Island.GREENGRASS_EXPERT, Island.CYAN_BEACH_EXPERT}
+)
+
+# Expert-mode effects (PRD 0007). Sources: Bulbapedia (Expert Mode wikitext)
+# and pokemonsleep.net. The x2.4 REPLACES the x2 favorite bonus, it does not stack.
+FAVORITE_BERRY_MULTIPLIER: Final[float] = 2.0
+EXPERT_BERRY_MULTIPLIER: Final[float] = 2.4
+EXPERT_MAIN_SPEED_FACTOR: Final[float] = 0.9  # the main berry helps 10% faster
+EXPERT_PENALTY_SPEED_FACTOR: Final[float] = 1.15  # no favorite: 15% slower
+EXPERT_MAIN_SKILL_LEVEL_BONUS: Final[int] = 1
+EXPERT_SKILL_RATE_FACTOR: Final[float] = 1.25
+# +1 per gather, regardless of specialty: the game gives ingredient specialists a
+# *chance* at +2, but doesn't publish the probability (out of scope per the PRD).
+EXPERT_EXTRA_INGREDIENTS: Final[float] = 1.0
 
 # Estructura fija de los 35 ratings (Basic1-5, Great1-5, Ultra1-5, Master1-20).
 _RATING_STRUCTURE: Final[tuple[tuple[RatingTier, int], ...]] = tuple(
@@ -273,6 +295,13 @@ _ISLAND_RATING_STRENGTHS: Final[Mapping[Island, tuple[int, ...]]] = {
         2760321, 3057187, 3361630, 3667816, 4014149, 4378519, 4778794, 5184989,
         5614239, 6067795, 6541407, 7152862, 7780648, 8414117, 9067058, 9752517,
         10981171,
+    ),
+    Island.CYAN_BEACH_EXPERT: (
+        0, 41895, 96358, 157104, 228205, 309675, 418230, 548434, 698799, 860468,
+        1037612, 1235275, 1444644, 1665846, 1907355, 2194292, 2495790, 2813784,
+        3141221, 3489192, 3851643, 4237798, 4654094, 5118523, 5609891, 6124856,
+        6656321, 7217801, 7802011, 8552888, 9410567, 10274627, 11147108,
+        12160074, 14780152,
     ),
     Island.CYAN_BEACH: (
         0, 4822, 11090, 18082, 26520, 36164, 48700, 63889, 81971, 101499,
@@ -363,16 +392,18 @@ assert set(INGREDIENT_STRENGTH) == set(Ingredient), (
 _BERRY_STRENGTH_GROWTH_RATE: Final[float] = 1.025
 
 
-def berry_strength_for_level(berry: Berry, level: int, *, favorite: bool = False) -> int:
-    """Fuerza que aporta UNA baya de ``berry`` para un Pokémon de nivel ``level``.
+def berry_strength_for_level(berry: Berry, level: int, *, multiplier: float = 1.0) -> int:
+    """Strength contributed by ONE ``berry`` for a Pokémon of level ``level``.
 
-    Si la baya es favorita de la isla activa, aporta el doble.
+    ``multiplier`` is the map's: 1.0 without favorite, 2.0 favorite, 2.4 favorite
+    with the weekly strength bonus. Rounded to the nearest integer (strength
+    delivered to Snorlax is an integer); with 2.0 the rounding is identity.
     """
     base = BERRY_BASE_STRENGTH[berry]
     linear = base + (level - 1)
     exponential = base * _BERRY_STRENGTH_GROWTH_RATE ** (level - 1)
     strength = round(max(linear, exponential))
-    return strength * 2 if favorite else strength
+    return round(strength * multiplier)
 
 
 # Multiplicador de fuerza de una receta según su nivel (1..MAX_RECIPE_LEVEL).

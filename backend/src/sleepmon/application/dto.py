@@ -118,6 +118,7 @@ class ProductionResult:
     ingredient_percentage: float
     skill_percentage: float
     effective_skill_percentage: float
+    effective_skill_level: int
     ingredients: list[SlotAmount]
     skill_triggers: float
     skill_ingredients: list[SlotAmount]
@@ -165,6 +166,13 @@ class TeamProductionInput:
     slots: list[SlotInput]
     meals: list[MealSelectionInput | None]
     favorite_berries: list[str] = field(default_factory=list)
+    # The chosen map. The domain derives whether it's expert from it: the client
+    # never sends an `expert` flag, so it can't ask for expert effects on a normal map.
+    island: str | None = None
+    # The main berry (expert mode). Must be among `favorite_berries`.
+    # None = not picked yet: nobody gets the main-berry effects.
+    main_favorite: str | None = None
+    weekly_bonus: str | None = None
     island_bonus: float = 0.0
     good_camp_ticket: bool = False
 

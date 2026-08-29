@@ -5,7 +5,7 @@ import { perMealPot } from "../pot";
 import { ingredientIcon } from "../ingredients";
 import { recipeImage, recipeStrengthAtLevel } from "../recipes";
 import { CHARGE_STRENGTH_ICON } from "../skillIcons";
-import type { Catalog, MealInput, Recipe } from "../types";
+import type { Catalog, MealInput, Recipe, WeeklyBonus } from "../types";
 import { IslandTab } from "./IslandTab";
 import { LevelStepperInput } from "./LevelStepperInput";
 import { Modal } from "./Modal";
@@ -38,10 +38,14 @@ interface Props {
   favoriteBerries: string[];
   islandBonus: number;
   goodCampTicket: boolean;
+  mainFavorite: string | null;
+  weeklyBonus: WeeklyBonus;
   onSelectIsland: (name: string | null) => void;
   onFavoriteBerries: (berries: string[]) => void;
   onIslandBonus: (bonus: number) => void;
   onGoodCampTicket: (value: boolean) => void;
+  onMainFavorite: (berry: string | null) => void;
+  onWeeklyBonus: (bonus: WeeklyBonus) => void;
   /** Active dish type for all 3 meal slots. null = no restriction yet. */
   dishType: Recipe["type"] | null;
   /** Called when the user selects a dish type or clears it (null). */
@@ -62,10 +66,14 @@ export function SettingsModal({
   favoriteBerries,
   islandBonus,
   goodCampTicket,
+  mainFavorite,
+  weeklyBonus,
   onSelectIsland,
   onFavoriteBerries,
   onIslandBonus,
   onGoodCampTicket,
+  onMainFavorite,
+  onWeeklyBonus,
   dishType,
   onDishTypeChange,
 }: Props) {
@@ -182,10 +190,14 @@ export function SettingsModal({
           favoriteBerries={favoriteBerries}
           islandBonus={islandBonus}
           goodCampTicket={goodCampTicket}
+          mainFavorite={mainFavorite}
+          weeklyBonus={weeklyBonus}
           onSelectIsland={onSelectIsland}
           onFavoriteBerries={onFavoriteBerries}
           onIslandBonus={onIslandBonus}
           onGoodCampTicket={onGoodCampTicket}
+          onMainFavorite={onMainFavorite}
+          onWeeklyBonus={onWeeklyBonus}
         />
       </div>
 

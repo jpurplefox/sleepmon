@@ -32,7 +32,7 @@ from sleepmon.application.dto import (
 )
 from sleepmon.domain import analytics
 from sleepmon.domain.analytics import team_production
-from sleepmon.domain.catalog_data import MAX_RECIPE_LEVEL
+from sleepmon.domain.catalog_data import ISLAND_EXPERT, MAX_FAVORITE_BERRIES, MAX_RECIPE_LEVEL
 from sleepmon.domain.cooking import MealSelection, plan_cooking
 from sleepmon.domain.entities import (
     TeamMember,
@@ -42,10 +42,19 @@ from sleepmon.domain.entities import (
     validate_sub_skills,
 )
 from sleepmon.domain.errors import SpeciesNotFoundError, TeamMemberNotFoundError, ValidationError
+from sleepmon.domain.map_bonuses import MapBonuses
 from sleepmon.domain.ports import RecipeCatalog, SpeciesCatalog, TeamRepository
 from sleepmon.domain.production import DailyProduction, daily_production, scale_daily
 from sleepmon.domain.species import Species
-from sleepmon.domain.value_objects import Berry, Ingredient, Nature, Ribbon, SubSkill
+from sleepmon.domain.value_objects import (
+    Berry,
+    Ingredient,
+    Island,
+    Nature,
+    Ribbon,
+    SubSkill,
+    WeeklyBonus,
+)
 
 E = TypeVar("E", bound=StrEnum)
 
@@ -66,6 +75,7 @@ def _production_result(daily: DailyProduction) -> ProductionResult:
         ingredient_percentage=daily.ingredient_percentage,
         skill_percentage=daily.skill_percentage,
         effective_skill_percentage=daily.effective_skill_percentage,
+        effective_skill_level=daily.effective_skill_level,
         ingredients=[
             SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
             for slot in daily.ingredients
@@ -95,7 +105,8 @@ def _parse_enum(enum_cls: type[E], value: str, field: str) -> E:
         return enum_cls(value)
     except ValueError as exc:
         valid = ", ".join(e.value for e in enum_cls)
-        raise ValidationError(f"{field} inválido: {value!r}. Opciones: {valid}.") from exc
+        msg = f"Valor inválido para {field}: {value!r}. Opciones: {valid}."
+        raise ValidationError(msg) from exc
 
 
 def _validate_ingredients(species: Species, ingredients: tuple[Ingredient, ...]) -> None:
@@ -110,6 +121,41 @@ def _validate_ingredients(species: Species, ingredients: tuple[Ingredient, ...])
                 f"{ingredient.value} no es válido para {species.name} en el slot "
                 f"{slot + 1}. Válidos: {allowed}."
             )
+
+
+def _map_bonuses(data: TeamProductionInput) -> MapBonuses:
+    """Translate the raw request into the domain's value object. Validates; doesn't compute.
+
+    `expert` is NOT received: it's derived from the map, so a client can't ask
+    for expert effects on a normal map.
+    """
+    if len(data.favorite_berries) > MAX_FAVORITE_BERRIES:
+        raise ValidationError(f"Como máximo {MAX_FAVORITE_BERRIES} bayas favoritas.")
+    if len(set(data.favorite_berries)) != len(data.favorite_berries):
+        raise ValidationError("Las bayas favoritas no pueden repetirse.")
+
+    favorites = {_parse_enum(Berry, name, "Baya") for name in data.favorite_berries}
+
+    island = _parse_enum(Island, data.island, "Mapa") if data.island is not None else None
+    expert = island is not None and island in ISLAND_EXPERT
+
+    main: Berry | None = None
+    if data.main_favorite is not None:
+        main = _parse_enum(Berry, data.main_favorite, "Baya principal")
+        if main not in favorites:
+            raise ValidationError("La baya principal debe estar entre las favoritas.")
+
+    weekly = WeeklyBonus.BERRY_STRENGTH
+    if data.weekly_bonus is not None:
+        weekly = _parse_enum(WeeklyBonus, data.weekly_bonus, "Bonus semanal")
+
+    # Outside expert mode the main berry/weekly bonus are ignored rather than
+    # rejected (switching maps can leave them behind as stale client state).
+    if not expert:
+        return MapBonuses(subs=frozenset(favorites))
+
+    subs = frozenset(favorites - {main}) if main is not None else frozenset(favorites)
+    return MapBonuses(main=main, subs=subs, expert=True, weekly_bonus=weekly)
 
 
 class TeamService(ABC):
@@ -327,17 +373,7 @@ class DefaultTeamService(TeamService):
             raise ValidationError(
                 f"El bonus de isla debe estar entre 0 y 0.85; llegó {data.island_bonus}."
             )
-        if len(data.favorite_berries) > 3:
-            raise ValidationError("Como máximo 3 bayas favoritas.")
-        if len(set(data.favorite_berries)) != len(data.favorite_berries):
-            raise ValidationError("Las bayas favoritas no pueden repetirse.")
-        favorites: set[Berry] = set()
-        for name in data.favorite_berries:
-            try:
-                favorites.add(Berry(name))
-            except ValueError as exc:
-                raise ValidationError(f"Baya desconocida: {name!r}.") from exc
-        favorite_frozen = frozenset(favorites)
+        map_bonuses = _map_bonuses(data)
 
         # Cargar miembros (404 si falta) y computar su producción escalada por peso.
         # Los miembros con especie fuera del catálogo curado se excluyen del agregado.
@@ -362,7 +398,7 @@ class DefaultTeamService(TeamService):
                 member.sub_skills,
                 member.ribbon,
                 member.skill_level,
-                favorite_berries=favorite_frozen,
+                map_bonuses=map_bonuses,
                 good_camp_ticket=data.good_camp_ticket,
             )
             scaled = scale_daily(daily, weight)

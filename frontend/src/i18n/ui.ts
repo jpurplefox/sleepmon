@@ -370,7 +370,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.islandBonus": "Bonus de la zona",
     "teams.berryPrimary": "Baya principal",
     "teams.berrySecondary": "Baya secundaria",
-    "card.favBerryBadge": "×2 — baya favorita del mapa",
     // Tooltip de fuerza base / monto del Area bonus
     "teams.strengthBase": "Base",
     "teams.strengthBonusDelta": "Area bonus (+{bonus}%)",
@@ -379,6 +378,18 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.splitRemove": "Quitar del slot",
     "teams.splitShare": "Reparto del slot",
     "teams.pickSplitPartner": "Elegí el segundo Pokémon del slot",
+    // Expert mode
+    "teams.weeklyBonus": "Bonus semanal",
+    "teams.weeklyBerryStrength": "Fuerza ×2,4",
+    "teams.weeklyIngredient": "+1 ingrediente",
+    "teams.weeklySkillTrigger": "Skill ×1,25",
+    "card.expertMainSpeed": "Baya principal: ayuda 10% más rápida",
+    "card.expertSkillLevel": "Baya principal: Main Skill un nivel más arriba",
+    "card.expertBerryStrength": "Baya favorita: fuerza ×2,4",
+    "card.expertFavorite": "Baya favorita: fuerza ×2",
+    "card.expertIngredient": "Baya favorita: +1 ingrediente por recolección",
+    "card.expertSkillTrigger": "Baya favorita: probabilidad de Main Skill ×1,25",
+    "card.expertPenalty": "Sin baya favorita: ayuda 15% más lenta",
     // Error boundary
     "error.title": "Algo salió mal",
     "error.body": "Ocurrió un error inesperado al mostrar esta vista. Probá recargar la página.",
@@ -748,7 +759,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.islandBonus": "Area bonus",
     "teams.berryPrimary": "Primary berry",
     "teams.berrySecondary": "Secondary berry",
-    "card.favBerryBadge": "×2 — map favorite berry",
     // Strength base / Area bonus delta tooltip
     "teams.strengthBase": "Base",
     "teams.strengthBonusDelta": "Area bonus (+{bonus}%)",
@@ -757,6 +767,18 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.splitRemove": "Remove from slot",
     "teams.splitShare": "Slot share",
     "teams.pickSplitPartner": "Pick the slot's second Pokémon",
+    // Expert mode
+    "teams.weeklyBonus": "Weekly bonus",
+    "teams.weeklyBerryStrength": "Strength ×2.4",
+    "teams.weeklyIngredient": "+1 ingredient",
+    "teams.weeklySkillTrigger": "Skill ×1.25",
+    "card.expertMainSpeed": "Main favorite: helps 10% faster",
+    "card.expertSkillLevel": "Main favorite: Main Skill acts one level higher",
+    "card.expertBerryStrength": "Favorite berry: strength ×2.4",
+    "card.expertFavorite": "Favorite berry: strength ×2",
+    "card.expertIngredient": "Favorite berry: +1 ingredient per find",
+    "card.expertSkillTrigger": "Favorite berry: Main Skill trigger chance ×1.25",
+    "card.expertPenalty": "No favorite berry: helps 15% slower",
     // Error boundary
     "error.title": "Something went wrong",
     "error.body": "An unexpected error occurred while showing this view. Try reloading the page.",

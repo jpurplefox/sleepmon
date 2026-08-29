@@ -32,7 +32,16 @@ import { recipeImage } from "../recipes";
 import { perMealPot, dailyPotCapacity } from "../pot";
 import { statIcon } from "../natures";
 import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
-import type { Catalog, MealInput, Member, MemberInput, SkillEffectAgg, Slot } from "../types";
+import type {
+  BerryRole,
+  Catalog,
+  MealInput,
+  Member,
+  MemberInput,
+  SkillEffectAgg,
+  Slot,
+  WeeklyBonus,
+} from "../types";
 
 const MAX_TEAM = 5;
 
@@ -143,6 +152,8 @@ export function Teams() {
   const [selectedIsland, setSelectedIsland] = useState<string | null>(null);
   const [favoriteBerries, setFavoriteBerries] = useState<string[]>([]);
   const [islandBonus, setIslandBonus] = useState<number>(0);
+  const [mainFavorite, setMainFavorite] = useState<string | null>(null);
+  const [weeklyBonus, setWeeklyBonus] = useState<WeeklyBonus>("berry_strength");
 
   const usedIds = useMemo(
     () => new Set(slots.flatMap((s) => s.entries.map((e) => e.memberId))),
@@ -158,8 +169,29 @@ export function Teams() {
   // Bayas que realmente enviar al backend: filtrar strings vacíos (slots no elegidos).
   const activeBerries = favoriteBerries.filter(Boolean);
 
+  // Expert mode is derived from the selected island's own flag, not sent by the client.
+  const island = catalog.data?.islands.find((i) => i.name === selectedIsland) ?? null;
+  const isExpert = island?.expert ?? false;
+
+  // Role of a berry relative to the map: drives the card's state and marks.
+  const berryRoleOf = (berry: string): BerryRole => {
+    if (isExpert && berry === mainFavorite) return "main";
+    if (favBerrySet.has(berry)) return "sub";
+    return "none";
+  };
+
   const teamQuery = useQuery({
-    queryKey: ["team-production", slots, meals, activeBerries, islandBonus, goodCampTicket],
+    queryKey: [
+      "team-production",
+      slots,
+      meals,
+      activeBerries,
+      selectedIsland,
+      mainFavorite,
+      weeklyBonus,
+      islandBonus,
+      goodCampTicket,
+    ],
     queryFn: () =>
       api.computeTeamProduction({
         slots: slots.map((s) => ({
@@ -167,6 +199,9 @@ export function Teams() {
         })),
         meals,
         favorite_berries: activeBerries,
+        island: selectedIsland,
+        main_favorite: mainFavorite,
+        weekly_bonus: weeklyBonus,
         island_bonus: islandBonus,
         good_camp_ticket: goodCampTicket,
       }),
@@ -412,7 +447,9 @@ export function Teams() {
             memberById={memberById}
             catalog={catalog.data}
             contributions={result?.members}
-            favBerrySet={favBerrySet}
+            berryRoleOf={berryRoleOf}
+            expert={isExpert}
+            weeklyBonus={weeklyBonus}
             canSplit={canSplit}
             teamHasSplit={teamHasSplit}
             onRequestSplit={(idx) => setPickerTarget({ kind: "split", slotIndex: idx })}
@@ -1274,9 +1311,13 @@ export function Teams() {
           selectedIsland={selectedIsland}
           favoriteBerries={favoriteBerries}
           islandBonus={islandBonus}
+          mainFavorite={mainFavorite}
+          weeklyBonus={weeklyBonus}
           onSelectIsland={setSelectedIsland}
           onFavoriteBerries={setFavoriteBerries}
           onIslandBonus={setIslandBonus}
+          onMainFavorite={setMainFavorite}
+          onWeeklyBonus={setWeeklyBonus}
           goodCampTicket={goodCampTicket}
           onGoodCampTicket={setGoodCampTicket}
           dishType={dishType}

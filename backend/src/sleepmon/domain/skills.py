@@ -376,3 +376,23 @@ def energizing_cheer_amount(skill_level: int) -> int:
     """
     level = min(max(skill_level, 1), len(ENERGIZING_CHEER_S_AMOUNTS))
     return ENERGIZING_CHEER_S_AMOUNTS[level - 1]
+
+
+def max_skill_level(main_skill: str) -> int:
+    """The real cap of a given main skill: the length of its own amounts table.
+
+    Most skills cap at MAX_SKILL_LEVEL (7); Energy for Everyone S, Tasty Chance S,
+    Charge Energy S, and Energizing Cheer S cap at 6; Dream Shard Magnet S reaches 8.
+    Matched by prefix like the amount functions in this module.
+    """
+    if main_skill.startswith("Dream Shard Magnet S"):
+        return len(DREAM_SHARD_MAGNET_S_AMOUNTS)
+    if main_skill.startswith(_ENERGY_FOR_EVERYONE_PREFIX):
+        return len(ENERGY_FOR_EVERYONE_AMOUNTS)
+    if main_skill.startswith(_TASTY_CHANCE_PREFIX):
+        return len(TASTY_CHANCE_S_AMOUNTS)
+    if main_skill.startswith(_CHARGE_ENERGY_PREFIX):
+        return len(CHARGE_ENERGY_S_AMOUNTS)
+    if main_skill.startswith(_ENERGIZING_CHEER_PREFIX):
+        return len(ENERGIZING_CHEER_S_AMOUNTS)
+    return MAX_SKILL_LEVEL

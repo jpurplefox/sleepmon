@@ -361,3 +361,15 @@ def test_berry_type_drives_strength_difference() -> None:
     yache = berry_strength_for_level(Berry.YACHE, 50)  # base 35
     lum = berry_strength_for_level(Berry.LUM, 50)  # base 24
     assert yache > lum
+
+
+def test_the_multiplier_scales_the_berry_strength() -> None:
+    plain = berry_strength_for_level(Berry.ORAN, 30)
+    assert berry_strength_for_level(Berry.ORAN, 30, multiplier=2.0) == plain * 2
+    assert berry_strength_for_level(Berry.ORAN, 30, multiplier=2.4) == round(plain * 2.4)
+
+
+def test_the_default_multiplier_is_neutral() -> None:
+    assert berry_strength_for_level(Berry.ORAN, 30, multiplier=1.0) == berry_strength_for_level(
+        Berry.ORAN, 30
+    )
