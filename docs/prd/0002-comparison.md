@@ -85,7 +85,7 @@ the base.
 Comparison doesn't pick a map — that's [Team analysis](0007-map-bonuses-rating.md).
 It offers the **assumption**: one scenario for the whole comparison, off by default.
 
-**No bonus** · **Favorite berry** (berry strength ×2) · **Expert: strength ×2.4**
+**No berry bonus** · **Favorite berry** (berry strength ×2) · **Expert: strength ×2.4**
 (replaces the ×2, doesn't stack) · **Expert: +1 ingredient** per gather · **Expert:
 skill ×1.25**. The three expert scenarios read every card as a favorite berry too.
 
@@ -137,7 +137,7 @@ for the rest.
   the skill firing while asleep.
 - The scenario applies to **every card, the base included**, so the deltas keep
   comparing like with like.
-- The comparison **starts with no bonus** on every visit — reloading resets it.
+- The comparison **starts with no berry bonus** on every visit — reloading resets it.
 
 ## Guidelines
 
