@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { berryIcon } from "../berries";
 import { RIBBONS } from "../constants";
@@ -8,7 +8,7 @@ import { statIcon } from "../natures";
 import { spriteUrl } from "../sprites";
 import type { Member, Nature, Species } from "../types";
 import { CHARGE_STRENGTH_ICON, mainSkillIcon } from "../skillIcons";
-import { IconMore } from "./icons";
+import { IconChevronDown, IconMore } from "./icons";
 import { IngredientLineup } from "./IngredientLineup";
 import { MemberConfig } from "./MemberConfig";
 import { RibbonIcon } from "./RibbonIcon";
@@ -19,6 +19,24 @@ const fmt = (n: number) =>
   n.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 // Para magnitudes grandes y enteras (Vigor, fragmentos de sueño).
 const fmtInt = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+
+// Ancho a partir del cual la card deja de ser una fila plegable y pasa a las
+// columnas (mismo corte que el bloque "COMPACTO MOBILE" de styles.css).
+const MOBILE_QUERY = "(max-width: 640px)";
+
+// El plegado solo existe en mobile: arriba de ese ancho no se renderiza ni el
+// disparador ni las etiquetas, así aria-expanded nunca miente sobre lo que se ve.
+function useIsMobile(): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia(MOBILE_QUERY);
+      mq.addEventListener("change", onChange);
+      return () => mq.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia(MOBILE_QUERY).matches,
+    () => false,
+  );
+}
 
 interface Props {
   member: Member;
@@ -48,6 +66,10 @@ export function BoxEntry({
   // visibles: con muchas filas saturan). El borrado abre un modal de confirmación
   // (lo maneja la página), más claro que un paso inline.
   const [menuOpen, setMenuOpen] = useState(false);
+  // En mobile la card arranca plegada: solo identidad + la métrica que define al
+  // Pokémon. El resto (build + producción completa) se despliega al tocarla.
+  const isMobile = useIsMobile();
+  const [expanded, setExpanded] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -179,28 +201,168 @@ export function BoxEntry({
     return null;
   }, [prod, t]);
 
-  return (
-    <article className="card box-entry">
-      {/* Columna 1 — Identidad: sprite a la izquierda; a su derecha el nombre con
-          el listón en una línea y el nivel (dorado) debajo. */}
-      <div className="box-entry__identity">
-        {species && (
-          <img className="box-entry__sprite" src={spriteUrl(species.dex)} alt="" loading="lazy" />
-        )}
-        <div className="box-entry__id-text">
-          <div className="box-entry__title">
-            <span className="box-entry__name">{member.species}</span>
-            {ribbonIdx > 0 && (
-              <RibbonIcon
-                index={ribbonIdx}
-                size={18}
-                title={t("member.ribbon", { hours: RIBBONS[ribbonIdx].hours })}
-              />
+  // Fuerza a Snorlax: se muestra cuando hay algo que mostrar (bayas y/o skill).
+  const hasStrength = !!prod && (prod.berry_strength > 0 || prod.skill_strength != null);
+
+  // Resumen plegado (solo mobile): la métrica POR LA QUE existe ese Pokémon en el
+  // equipo, según su especialidad. El resto del detalle vive detrás del disparador.
+  const summary = (
+    <span className="box-entry__summary">
+      {species?.specialty === "Ingredients" ? (
+        combined.length === 0 ? (
+          <span className="box-entry__metric-value">{t("common.dash")}</span>
+        ) : (
+          combined.map((g) => (
+            <span key={g.ingredient} className="box-entry__metric" title={ingredient(g.ingredient)}>
+              <img className="mini-icon" src={ingredientIcon(g.ingredient)} alt="" aria-hidden="true" />
+              <span className="box-entry__metric-value">{fmt(g.total)}</span>
+              <span className="sr-only">
+                {t("box.ingredientsPlainAria", {
+                  value: fmt(g.total),
+                  ingredient: ingredient(g.ingredient),
+                })}
+              </span>
+            </span>
+          ))
+        )
+      ) : species?.specialty === "Skills" ? (
+        <>
+          <span className="box-entry__metric" title={t("box.triggersTitle")}>
+            <span className="box-entry__skill-icon box-entry__skill-icon--inline">
+              {skillIcon.kind === "img" ? (
+                <img src={skillIcon.src} alt="" aria-hidden="true" />
+              ) : (
+                <skillIcon.Component aria-hidden="true" />
+              )}
+            </span>
+            <span className="box-entry__metric-value">
+              {prod ? `\u00d7${fmt(prod.skill_triggers)}` : t("common.dash")}
+            </span>
+            <span className="sr-only">
+              {t("box.triggersAria", { value: prod ? fmt(prod.skill_triggers) : t("common.dash") })}
+            </span>
+          </span>
+          {skillYield && (
+            <span className="box-entry__metric" title={skillYield.title}>
+              <span className="box-entry__metric-value">{skillYield.text}</span>
+              <span className="sr-only">{skillYield.title}</span>
+            </span>
+          )}
+        </>
+      ) : (
+        <>
+          <span className="box-entry__metric" title={t("box.berriesTitle")}>
+            {species ? (
+              <img className="mini-icon" src={berryIcon(species.berry)} alt="" aria-hidden="true" />
+            ) : (
+              <span className="mini-icon" aria-hidden="true" />
             )}
-          </div>
-          <span className="badge badge--level">{t("common.level", { level: member.level })}</span>
+            <span className="box-entry__metric-value">
+              {prod ? fmt(prod.berries) : t("common.dash")}
+            </span>
+            <span className="sr-only">
+              {t("box.berriesAria", {
+                value: prod ? fmt(prod.berries) : t("common.dash"),
+                berry: species ? berry(species.berry) : "",
+              })}
+            </span>
+          </span>
+          {hasStrength && prod && (
+            <span className="box-entry__metric" title={t("box.strengthTitle")}>
+              <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" aria-hidden="true" />
+              <span className="box-entry__metric-value">
+                {fmtInt(prod.berry_strength + (prod.skill_strength ?? 0))}
+              </span>
+              <span className="sr-only">
+                {t("box.strengthAria", {
+                  value: fmtInt(prod.berry_strength + (prod.skill_strength ?? 0)),
+                })}
+              </span>
+            </span>
+          )}
+        </>
+      )}
+    </span>
+  );
+
+  // Identidad: sprite + nombre/listón + nivel. En mobile es además el disparador
+  // del plegado (botón con aria-expanded) y lleva el resumen y el chevron.
+  const identity = (
+    <>
+      {species && (
+        <img className="box-entry__sprite" src={spriteUrl(species.dex)} alt="" loading="lazy" />
+      )}
+      <div className="box-entry__id-text">
+        <div className="box-entry__title">
+          <span className="box-entry__name">{member.species}</span>
+          {ribbonIdx > 0 && (
+            <RibbonIcon
+              index={ribbonIdx}
+              size={18}
+              title={t("member.ribbon", { hours: RIBBONS[ribbonIdx].hours })}
+            />
+          )}
         </div>
+        <span className="badge badge--level">{t("common.level", { level: member.level })}</span>
+        {isMobile && (
+          <IconChevronDown
+            className={"box-entry__chevron" + (expanded ? " is-open" : "")}
+            aria-hidden="true"
+          />
+        )}
+        {/* El resumen es lo que la fila plegada muestra EN LUGAR del detalle: con
+            la card abierta sería la misma cifra repetida cuatro filas más abajo. */}
+        {isMobile && !expanded && summary}
       </div>
+    </>
+  );
+
+  const open = !isMobile || expanded;
+
+  return (
+    <article className={"card box-entry" + (open ? " is-expanded" : "")}>
+      {/* Columna 1 — Identidad: sprite a la izquierda; a su derecha el nombre con
+          el listón en una línea y el nivel (dorado) debajo. En mobile es el
+          disparador que pliega/despliega el resto de la card. */}
+      {isMobile ? (
+        <button
+          type="button"
+          className="box-entry__identity box-entry__identity--toggle"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((e) => !e)}
+        >
+          {identity}
+        </button>
+      ) : (
+        <div className="box-entry__identity">{identity}</div>
+      )}
+
+      {/* Etiquetas del detalle desplegado, solo en mobile: sin las columnas, los
+          números quedarían sueltos sin nada que diga qué son. En pantallas anchas
+          la posición de cada columna ya cumple ese papel. */}
+      {isMobile && expanded && (
+        <>
+          <p className="box-entry__section box-entry__section--build">{t("box.sectionBuild")}</p>
+          <span className="box-entry__label box-entry__label--nature">{t("member.nature")}</span>
+          <span className="box-entry__label box-entry__label--ss">{t("member.subSkills")}</span>
+          <span className="box-entry__label box-entry__label--ing-config">
+            {t("member.ingredients")}
+          </span>
+          <p className="box-entry__section box-entry__section--prod">
+            {t("box.sectionProduction")}
+          </p>
+          <span className="box-entry__label box-entry__label--berries">{t("card.berries")}</span>
+          {hasStrength && (
+            <span className="box-entry__label box-entry__label--strength">
+              {t("box.labelStrength")}
+            </span>
+          )}
+          <span className="box-entry__label box-entry__label--ingredients">
+            {t("member.ingredients")}
+          </span>
+          <span className="box-entry__label box-entry__label--skill">{t("box.labelSkill")}</span>
+        </>
+      )}
 
       {/* Columna 2 — Ingredientes equipados: su propia columna (antes vivían arriba
           de la config). Atenuada igual que la config. */}
@@ -250,7 +412,7 @@ export function BoxEntry({
         {/* Fuerza a Snorlax: directa por bayas + indirecta por la main skill
             (Charge Strength). Es la métrica que más importa en un Pokémon de bayas,
             por eso va junto a las bayas y no escondida en el aporte de skill. */}
-        {prod && (prod.berry_strength > 0 || prod.skill_strength != null) && (
+        {hasStrength && prod && (
           <div
             className="box-entry__metric"
             title={
