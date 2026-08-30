@@ -230,12 +230,15 @@ states · where it lives. Feature one-offs are intentionally not here.
 ### Chips & badges
 - **`.badge`** — compact pill for short metrics. Variants: `--level` (moon gold),
   `--ok` (`--up` green), `--low` (`--down` red).
-- **`.metric-mark`** — inline annotation pinned to a figure, saying what a rule is
-  doing to *that* metric (`×2` / `×2,4` on berries, `+1` on ingredients, `Skill +1`
-  or `×1,25` on skill, `−10%` / `+15%` on help cadence). Smaller and bolder than
-  `.badge` (`--text-xs`, weight 700) and tinted rather than neutral, so it reads as
-  attached to the number instead of standing on its own. Variants: `--good` (moon
-  gold on `--moon-dim`) and `--bad` (`--down` on `--down-dim`). Always carries `title`
+- **`.metric-mark`** — inline annotation of what a rule is doing (`×2` / `×2,4` on
+  berries, `+1` on ingredients, `Skill +1` or `×1,25` on skill, `−10%` / `+15%` on
+  help cadence). It rides either the **figure** the rule changed, or the **control
+  that turns that rule on** — inside a `.filter-btn__value` or a
+  `.filter-list__item`, where the same mark labels the option that produces it.
+  Smaller and bolder than `.badge` (`--text-xs`, weight 700) and tinted rather than
+  neutral, so it reads as attached to what it annotates instead of standing on its
+  own. Variants: `--good` (moon gold on `--moon-dim`) and `--bad` (`--down` on
+  `--down-dim`). Always carries `title`
   + `aria-label` with the full effect — the sign and the text carry the meaning, so
   color is never the only cue. Generalized from `.prod-card__fav-badge` (the berry
   `×2`), which is its gold variant.
@@ -380,3 +383,11 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   by position, and position is exactly what a narrow screen takes away; once the
   columns go, the labels have to come back, and the phone has room for labels only
   if it stops showing everything at once.
+- **A mark may ride the control, not only the figure.** *Question:* a selector that
+  turns a rule on for a whole screen — should its options repeat the `.metric-mark`
+  the affected figures will carry, or say the multiplier in plain text? *Resolution:*
+  they repeat the mark, in the trigger and in the option list, identical to the one
+  that lands on the metric. *Why:* the mark is the name of the effect, not decoration
+  on a number; naming it the same way where it is chosen and where it lands lets the
+  reader connect cause and consequence without a legend. It stays scarce because it
+  is still the *same* effect being named twice, not a new gold accent.
