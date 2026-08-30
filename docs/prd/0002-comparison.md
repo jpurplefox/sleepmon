@@ -22,7 +22,9 @@ is the comparison.
 3. **Compare with a base and deltas** — the first card is the base; the rest show
    the difference against it. The base can be reordered or changed.
 4. **Act on each card** — edit, clone, remove, reorder, and save to the Box.
-5. **Persist by explicit action only** — save a config to the Box (as new, or
+5. **Pick a map scenario** — an optional assumption (favorite berry, or one of the
+   expert bonuses) applied to every card alike.
+6. **Persist by explicit action only** — save a config to the Box (as new, or
    updating the origin Pokémon a card came from).
 
 ## How it works
@@ -78,6 +80,21 @@ the base.
   from the Box, **updates that origin** Pokémon. Shows inline "Saving… / Saved"
   feedback.
 
+### Map scenario
+
+Comparison doesn't pick a map — that's [Team analysis](0007-map-bonuses-rating.md).
+It offers the **assumption**: one scenario for the whole comparison, off by default.
+
+**No bonus** · **Favorite berry** (berry strength ×2) · **Expert: strength ×2.4**
+(replaces the ×2, doesn't stack) · **Expert: +1 ingredient** per gather · **Expert:
+skill ×1.25**. The three expert scenarios read every card as a favorite berry too.
+
+Every card counts as a **sub-favorite**, never as the **main** favorite: only one
+berry can be the main one, so its exclusive effects aren't reproducible for a whole
+comparison. The scenario reaches the **base** as well, so the deltas keep comparing
+like with like, and each affected metric carries the same **mark** the team's cards
+use (`×2`, `×2.4`, `+1`, `×1.25`).
+
 ## Calculation assumptions
 
 The per-card estimate comes from the shared [Production model](0008-production-model.md)
@@ -112,6 +129,15 @@ for the rest.
   1) and P(2)); other Pokémon show a **single** P(at least 1).
 - **Berries, ingredients, and skill** are shown at **equal weight** — none is
   presented as the primary metric.
+- **Favorite berry** → berry strength **doubles** and nothing else moves (a Pikachu
+  at level 60 with no nature or sub skills goes from **14,469** to **28,937**).
+- Each **expert** scenario moves its own metric and marks it: strength goes to
+  **×2.4**; **+1 ingredient** raises the ingredients per day *and* fills the
+  inventory sooner; **skill ×1.25** raises the triggers per day *and* the chance of
+  the skill firing while asleep.
+- The scenario applies to **every card, the base included**, so the deltas keep
+  comparing like with like.
+- The comparison **starts with no bonus** on every visit — reloading resets it.
 
 ## Guidelines
 
@@ -125,6 +151,8 @@ for the rest.
   copy never affects its origin unless the user explicitly saves onto that origin.
 - **No false hierarchy.** Berries, ingredients, and skill are shown with **equal
   weight**; none is "the main thing".
+- **One assumption for the whole comparison**, never per card — and the scenario is
+  a **secondary control**: it sets the terms, the cards remain the tool.
 - **The computation lives in the domain.** The card only **presents** the shared
   [Production model](0008-production-model.md); it may **derive** values (e.g.
   P(exactly 1) = P(≥1) − P(≥2)) but does not reimplement the formula or invent numbers.
@@ -135,3 +163,5 @@ for the rest.
   and compares.
 - **Being the team record** — that's the [Box](0001-box.md). Comparison touches the
   Box only by explicit save.
+- **Choosing a map** — the island, its favorite berries, the area bonus and the
+  Snorlax rating belong to [Team analysis](0007-map-bonuses-rating.md).
