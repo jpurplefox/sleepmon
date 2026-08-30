@@ -60,6 +60,13 @@ body {
   padding: 2rem 1.5rem 4rem;
 }
 
+/* Mobile: narrower gutters, so the cards keep as much width as possible. */
+@media (max-width: 640px) {
+  .layout {
+    padding: 1.5rem 1rem 3rem;
+  }
+}
+
 /* La comparación usa todo el ancho disponible: las cards lado a lado aprovechan
    el espacio que la columna angosta dejaba libre a los costados. */
 .layout--wide {
@@ -110,7 +117,6 @@ body {
   left: 0;
   width: max-content;
   max-width: min(16rem, 90vw);
-  display: flex;
   flex-direction: column;
   gap: 0.2rem;
   background: var(--surface-2);
@@ -122,14 +128,15 @@ body {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
   pointer-events: none;
   z-index: 200;
-  visibility: hidden;
-  opacity: 0;
+  /* Hidden with display:none, not visibility/opacity: an absolutely positioned
+     bubble still counts toward the page's scroll width, and on mobile the ones
+     near the right edge caused a horizontal scroll. */
+  display: none;
 }
 
 .tooltip:hover .tooltip__bubble,
 .tooltip:focus-within .tooltip__bubble {
-  visibility: visible;
-  opacity: 1;
+  display: flex;
 }
 
 /* Contenido rico: filas label/valor (p. ej. desglose base / con bonus). */
@@ -250,6 +257,7 @@ select:focus {
 .specialty-toggle__btn:focus-visible,
 .avatar-btn:focus-visible,
 .prod-box-item:focus-visible,
+.box-entry__identity--toggle:focus-visible,
 .filter-list__item:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -1635,6 +1643,14 @@ select:focus {
   height: 26px;
 }
 
+/* Mismo ícono dentro del resumen plegado: al tamaño de los íconos inline de las
+   métricas, no al de encabezado de columna. */
+.box-entry__skill-icon--inline img,
+.box-entry__skill-icon--inline svg {
+  width: 18px;
+  height: 18px;
+}
+
 /* Cifras de la skill apiladas a la derecha del ícono. */
 .box-entry__skill-stats {
   display: flex;
@@ -1838,6 +1854,157 @@ select:focus {
   }
 }
 
+/* ── COMPACTO MOBILE (< 640px) ───────────────────────────────────────────────
+   En un teléfono la grilla de 2 columnas sigue siendo un muro de íconos sin
+   etiquetas: cuatro números neutros seguidos y nada que diga qué es cada uno.
+   Acá la card se pliega: en reposo es una FILA (sprite · nombre · nivel · la
+   métrica por la que ese Pokémon está en el equipo, según su especialidad) y al
+   tocarla se despliega el detalle como filas etiqueta/valor en dos secciones
+   (build y producción). Las etiquetas solo existen acá: en pantalla ancha, la
+   posición de cada columna ya cumple ese papel. */
+@media (max-width: 640px) {
+  .box-entry {
+    /* etiqueta | valor. Las filas se numeran explícitamente más abajo, así el
+       orden visual no depende del orden del DOM. */
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: center;
+    gap: 0.4rem 0.7rem;
+    padding: 0.8rem 0.9rem;
+  }
+
+  /* Plegada: solo identidad y el menú "···". */
+  .box-entry:not(.is-expanded) > *:not(.box-entry__identity):not(.box-entry__actions) {
+    display: none;
+  }
+
+  .box-entry__identity {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    padding-right: 2rem;
+  }
+
+  /* La identidad es el disparador del plegado: botón sin cromo propio (la card
+     entera ya es la superficie), con el chevron como única señal de estado. */
+  .box-entry__identity--toggle {
+    width: 100%;
+    background: none;
+    border: 0;
+    padding: 0 2rem 0 0;
+    margin: 0;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    /* Tocar la fila para plegarla no debería seleccionar el nombre. */
+    user-select: none;
+  }
+
+  .box-entry__sprite {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* nombre · nivel · chevron en una línea; el resumen debajo, alineado con el
+     nombre (no con el sprite). */
+  .box-entry__id-text {
+    display: grid;
+    grid-template-columns: minmax(0, auto) auto 1fr;
+    grid-template-areas:
+      "name  level chevron"
+      "sum   sum   sum";
+    align-items: center;
+    column-gap: 0.5rem;
+    row-gap: 0.2rem;
+    width: 100%;
+  }
+
+  .box-entry__title {
+    grid-area: name;
+  }
+
+  .box-entry__id-text > .badge--level {
+    grid-area: level;
+  }
+
+  .box-entry__chevron {
+    grid-area: chevron;
+    justify-self: start;
+    width: 16px;
+    height: 16px;
+    color: var(--muted);
+    transition: transform 120ms ease;
+  }
+
+  .box-entry__chevron.is-open {
+    transform: rotate(180deg);
+  }
+
+  .box-entry__summary {
+    grid-area: sum;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.15rem 0.75rem;
+  }
+
+  /* Encabezados de sección: separan build de producción sin cajas ni color. */
+  .box-entry__section {
+    grid-column: 1 / -1;
+    margin: 0.35rem 0 0;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: var(--text-xs);
+    color: var(--muted);
+  }
+
+  .box-entry__label {
+    grid-column: 1;
+    font-size: var(--text-sm);
+    color: var(--muted);
+  }
+
+  /* Config y bayas dejan de ser cajas: sus hijos pasan a ser celdas de la grilla,
+     para que cada uno tenga su propia fila con etiqueta. */
+  .box-entry__config.prod-box-item__config,
+  .box-entry__berries {
+    display: contents;
+  }
+
+  .box-entry__section--build { grid-row: 2; }
+  .box-entry__label--nature { grid-row: 3; }
+  .box-entry__config > .prod-box-item__nature { grid-row: 3; grid-column: 2; }
+  .box-entry__label--ss { grid-row: 4; }
+  .box-entry__config > .ingredient-row { grid-row: 4; grid-column: 2; }
+  .box-entry__label--ing-config { grid-row: 5; }
+  /* Ya no necesita atenuarse para retroceder: la etiqueta a la izquierda es la
+     que marca la jerarquía en esta forma. */
+  .box-entry__ing-config { grid-row: 5; grid-column: 2; opacity: 1; }
+
+  .box-entry__section--prod { grid-row: 6; }
+  .box-entry__label--berries { grid-row: 7; }
+  .box-entry__berries > .box-entry__metric:first-child { grid-row: 7; grid-column: 2; }
+  .box-entry__label--strength { grid-row: 8; }
+  .box-entry__berries > .box-entry__metric:nth-child(2) { grid-row: 8; grid-column: 2; }
+  .box-entry__label--ingredients { grid-row: 9; }
+  .box-entry__ingredients { grid-row: 9; grid-column: 2; }
+  .box-entry__label--skill { grid-row: 10; }
+  .box-entry__skill { grid-row: 10; grid-column: 2; }
+
+  /* Las cifras de la skill en una línea: ya tienen la etiqueta a la izquierda. */
+  .box-entry__skill-stats {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .box-entry__actions {
+    top: 0.8rem;
+    right: 0.8rem;
+  }
+}
+
 .ingredient-row {
   display: flex;
   flex-wrap: wrap;
@@ -2025,6 +2192,43 @@ select:focus {
 .topbar .tabs {
   margin: 0;
   padding: 0;
+}
+
+/* Mobile: the three tabs plus the account + language cluster never fit on one
+   375px row, and the overflow was scrolling the whole page sideways. The bar
+   wraps into two rows — utility cluster on top (right aligned), nav below at
+   full width — and the tabs get a compact size so they fit; if a longer
+   translation still doesn't, the strip scrolls inside itself instead of the
+   page. */
+@media (max-width: 640px) {
+  .topbar {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 1rem 1rem 0;
+  }
+
+  .topbar__right {
+    order: -1;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .topbar .tabs {
+    width: 100%;
+    gap: 0.25rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .topbar .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab {
+    flex: 0 0 auto;
+    font-size: var(--text-base);
+    padding: 0.5rem 0.6rem;
+  }
 }
 
 .lang-select {

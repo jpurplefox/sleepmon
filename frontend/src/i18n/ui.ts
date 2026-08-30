@@ -62,6 +62,11 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.randomIngredients": "{value}",
     "box.randomIngredientsTitle": "{value} ingredientes al azar por día (main skill)",
     "box.skillAria": "Habilidad",
+    // Detalle desplegado de la card en mobile (en pantalla ancha lo dicen las columnas).
+    "box.sectionBuild": "Build",
+    "box.sectionProduction": "Producción",
+    "box.labelStrength": "Fuerza",
+    "box.labelSkill": "Habilidad",
     "box.triggersTitle": "Disparos de habilidad por día",
     "box.triggersAria": "{value} disparos de habilidad por día",
     "box.sortBy": "Ordenar por",
@@ -453,6 +458,11 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.randomIngredients": "{value}",
     "box.randomIngredientsTitle": "{value} random ingredients per day (main skill)",
     "box.skillAria": "Skill",
+    // Expanded card detail on mobile (on wide screens the columns say it).
+    "box.sectionBuild": "Build",
+    "box.sectionProduction": "Production",
+    "box.labelStrength": "Strength",
+    "box.labelSkill": "Skill",
     "box.triggersTitle": "Skill triggers per day",
     "box.triggersAria": "{value} skill triggers per day",
     "box.sortBy": "Sort by",

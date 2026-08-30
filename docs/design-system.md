@@ -185,6 +185,14 @@ Edit steppers show nav arrows, not a metric icon.
   must vanish where the penalty does not apply — a state, never decoration.
 - **Empty placeholders:** a dim same-size square keeps rows aligned when a value is
   missing (`.mini-icon--empty`).
+- **Hidden overlays are hidden from layout too:** anything absolutely positioned
+  that is only *sometimes* visible (tooltip bubbles, popovers) is hidden with
+  `display: none`, never with `visibility`/`opacity`. A hidden absolute element
+  still counts toward the page's **scroll width** — the ones near the right edge
+  turn into a phantom horizontal scroll on a phone.
+- **Nothing scrolls the page sideways:** the page's `scrollWidth` must equal the
+  viewport at 375px. When a row genuinely can't fit (a nav strip, a wide table),
+  it scrolls **inside itself**, not by dragging the whole page.
 
 ---
 
@@ -281,7 +289,11 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **Base inputs** — global `input, select` styles with the unified focus outline.
 
 ### Shared patterns
-- **Tabs** — `.tabs / .tab / --active` (main nav and inner modal tabs).
+- **Tabs** — `.tabs / .tab / --active` (main nav and inner modal tabs). In the top
+  bar under **640px** the row splits in two: the utility cluster (account +
+  language) on top, right aligned, and the tabs below at full width, compact
+  (`--text-base`, tighter padding) and scrollable inside themselves if a longer
+  translation still overflows.
 - **Error feedback** — `.error` (red text) + `ErrorBoundary` app fallback
   (`role="alert"`, title + "reload" `.btn--primary`).
 - **`.gate-card`** — the anonymous gate that replaces a **reserved page's** content
@@ -352,3 +364,19 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   two gold states stack (favored vs. *most* favored), the step between them stays
   quiet — a full `--moon` border against a `--moon-border` one is deliberately
   subtle, because the marks carry the hierarchy and hue does not.
+- **Nothing hidden may widen the page.** *Question:* on a phone the whole page
+  scrolled sideways with nothing visible out there — where from? *Resolution:* the
+  tooltip bubbles: absolutely positioned, hidden with `visibility: hidden`, and
+  still adding to the document's scroll width. They hide with `display: none` now.
+  *Why:* "invisible" is not "absent" — an off-screen hidden element is as real to
+  the scroll box as a visible one, so hiding must remove it from layout, not just
+  from sight.
+- **Under 640px the shape changes, it doesn't shrink.** *Question:* a row of
+  columns (top bar, Box entry) has no width left on a phone — squeeze it, or scroll
+  it? *Resolution:* neither: it becomes a different shape. The top bar wraps into
+  two rows; a Box entry becomes a **collapsible row** — identity plus only the
+  metric its specialty is for, opening on tap into label/value rows grouped in two
+  sections. Nothing is dropped, only deferred one tap. *Why:* columns carry meaning
+  by position, and position is exactly what a narrow screen takes away; once the
+  columns go, the labels have to come back, and the phone has room for labels only
+  if it stops showing everything at once.
