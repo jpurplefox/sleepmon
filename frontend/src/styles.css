@@ -60,6 +60,13 @@ body {
   padding: 2rem 1.5rem 4rem;
 }
 
+/* Mobile: narrower gutters, so the cards keep as much width as possible. */
+@media (max-width: 640px) {
+  .layout {
+    padding: 1.5rem 1rem 3rem;
+  }
+}
+
 /* La comparación usa todo el ancho disponible: las cards lado a lado aprovechan
    el espacio que la columna angosta dejaba libre a los costados. */
 .layout--wide {
@@ -110,7 +117,6 @@ body {
   left: 0;
   width: max-content;
   max-width: min(16rem, 90vw);
-  display: flex;
   flex-direction: column;
   gap: 0.2rem;
   background: var(--surface-2);
@@ -122,14 +128,15 @@ body {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
   pointer-events: none;
   z-index: 200;
-  visibility: hidden;
-  opacity: 0;
+  /* Hidden with display:none, not visibility/opacity: an absolutely positioned
+     bubble still counts toward the page's scroll width, and on mobile the ones
+     near the right edge caused a horizontal scroll. */
+  display: none;
 }
 
 .tooltip:hover .tooltip__bubble,
 .tooltip:focus-within .tooltip__bubble {
-  visibility: visible;
-  opacity: 1;
+  display: flex;
 }
 
 /* Contenido rico: filas label/valor (p. ej. desglose base / con bonus). */
@@ -2025,6 +2032,43 @@ select:focus {
 .topbar .tabs {
   margin: 0;
   padding: 0;
+}
+
+/* Mobile: the three tabs plus the account + language cluster never fit on one
+   375px row, and the overflow was scrolling the whole page sideways. The bar
+   wraps into two rows — utility cluster on top (right aligned), nav below at
+   full width — and the tabs get a compact size so they fit; if a longer
+   translation still doesn't, the strip scrolls inside itself instead of the
+   page. */
+@media (max-width: 640px) {
+  .topbar {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 1rem 1rem 0;
+  }
+
+  .topbar__right {
+    order: -1;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .topbar .tabs {
+    width: 100%;
+    gap: 0.25rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .topbar .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab {
+    flex: 0 0 auto;
+    font-size: var(--text-base);
+    padding: 0.5rem 0.6rem;
+  }
 }
 
 .lang-select {
