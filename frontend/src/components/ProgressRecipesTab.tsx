@@ -2,11 +2,10 @@ import { useState } from "react";
 
 import { useI18n } from "../i18n";
 import { recipeLevelOf } from "../progress";
+import { RECIPE_TYPES } from "../recipes";
 import type { PlayerProgress, ProgressPatch, Recipe } from "../types";
 import { Placeholder } from "./Placeholder";
 import { RecipeCard, normalizeSearch } from "./RecipeCard";
-
-const RECIPE_TYPES: Recipe["type"][] = ["Curry", "Salad", "Dessert"];
 
 interface Props {
   progress: PlayerProgress;

@@ -2,13 +2,12 @@ import { useState } from "react";
 
 import { useI18n } from "../i18n";
 import { perMealPot } from "../pot";
+import { RECIPE_TYPES } from "../recipes";
 import type { Catalog, MealInput, Recipe, WeeklyBonus } from "../types";
 import { IslandTab } from "./IslandTab";
 import { LevelStepperInput } from "./LevelStepperInput";
 import { Modal } from "./Modal";
 import { RecipeCard, normalizeSearch } from "./RecipeCard";
-
-const RECIPE_TYPES: Recipe["type"][] = ["Curry", "Salad", "Dessert"];
 
 type TabId = "island" | "meals";
 
@@ -305,42 +304,42 @@ export function SettingsModal({
                   level={level}
                   levelBonus={levelBonus}
                   onLevelChange={(n) => setLevelFor(r.name, n)}
-                  footer={
-                    <>
-                      <div
-                        className={`meal-picker-card__pot-fit ${fits ? "meal-picker-card__pot-fit--ok" : "meal-picker-card__pot-fit--no"}`}
-                      >
-                        <img src="/pot.webp" alt="" className="meal-picker-pot__icon" />
-                        {fits ? (
-                          <span>
-                            {t("teams.potFits")} · {t("teams.fillers", { n: String(fillers) })}
-                          </span>
-                        ) : (
-                          <span>
-                            {t("teams.potNoFit")} ({totalIngs}/{effectivePot})
-                          </span>
-                        )}
-                      </div>
-                      <div className="meal-picker-card__moments">
-                        {MOMENT_LABELS.map((label, idx) => {
-                          const isActive = meals[idx]?.recipe === r.name;
-                          return (
-                            <button
-                              key={idx}
-                              type="button"
-                              className={
-                                "meal-picker-card__moment-btn" + (isActive ? " is-active" : "")
-                              }
-                              aria-pressed={isActive}
-                              onClick={() => toggleMoment(r, idx)}
-                              title={label}
-                            >
-                              {label.slice(0, 2)}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </>
+                  beforeStepper={
+                    <div
+                      className={`meal-picker-card__pot-fit ${fits ? "meal-picker-card__pot-fit--ok" : "meal-picker-card__pot-fit--no"}`}
+                    >
+                      <img src="/pot.webp" alt="" className="meal-picker-pot__icon" />
+                      {fits ? (
+                        <span>
+                          {t("teams.potFits")} · {t("teams.fillers", { n: String(fillers) })}
+                        </span>
+                      ) : (
+                        <span>
+                          {t("teams.potNoFit")} ({totalIngs}/{effectivePot})
+                        </span>
+                      )}
+                    </div>
+                  }
+                  afterStepper={
+                    <div className="meal-picker-card__moments">
+                      {MOMENT_LABELS.map((label, idx) => {
+                        const isActive = meals[idx]?.recipe === r.name;
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            className={
+                              "meal-picker-card__moment-btn" + (isActive ? " is-active" : "")
+                            }
+                            aria-pressed={isActive}
+                            onClick={() => toggleMoment(r, idx)}
+                            title={label}
+                          >
+                            {label.slice(0, 2)}
+                          </button>
+                        );
+                      })}
+                    </div>
                   }
                 />
               );

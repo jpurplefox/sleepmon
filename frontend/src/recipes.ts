@@ -1,6 +1,10 @@
 /**
  * Helpers para las recetas del juego.
  */
+import type { Recipe } from "./types";
+
+/** The three dish types, in the display order used across recipe pickers. */
+export const RECIPE_TYPES: Recipe["type"][] = ["Curry", "Salad", "Dessert"];
 
 /**
  * Slug de la imagen de una receta: baja los acentos, quita todo lo que no sea

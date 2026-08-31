@@ -20,11 +20,20 @@ interface Props {
   level: number;
   levelBonus: number[];
   onLevelChange: (level: number) => void;
-  /** Meal-plan extras (pot fit, the three moment toggles). Absent in Player progress. */
-  footer?: ReactNode;
+  /** Content rendered above the level stepper (e.g. the pot-fit line). Absent in Player progress. */
+  beforeStepper?: ReactNode;
+  /** Content rendered below the level stepper (e.g. the moment toggles). Absent in Player progress. */
+  afterStepper?: ReactNode;
 }
 
-export function RecipeCard({ recipe, level, levelBonus, onLevelChange, footer }: Props) {
+export function RecipeCard({
+  recipe,
+  level,
+  levelBonus,
+  onLevelChange,
+  beforeStepper,
+  afterStepper,
+}: Props) {
   const { t } = useI18n();
   const strength = recipeStrengthAtLevel(recipe.base_strength, level, levelBonus);
 
@@ -66,7 +75,7 @@ export function RecipeCard({ recipe, level, levelBonus, onLevelChange, footer }:
         ))}
       </div>
 
-      {footer}
+      {beforeStepper}
 
       <div className="level-stepper meal-picker-card__stepper">
         <LevelStepperInput
@@ -81,6 +90,8 @@ export function RecipeCard({ recipe, level, levelBonus, onLevelChange, footer }:
           }}
         />
       </div>
+
+      {afterStepper}
     </div>
   );
 }
