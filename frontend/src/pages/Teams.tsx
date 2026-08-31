@@ -30,6 +30,7 @@ import { ingredientIcon } from "../ingredients";
 import { fdown } from "../utils/format";
 import { recipeImage } from "../recipes";
 import { perMealPot, dailyPotCapacity } from "../pot";
+import { areaBonusOf, recipeLevelOf } from "../progress";
 import { statIcon } from "../natures";
 import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
 import { useProgress } from "../useProgress";
@@ -155,7 +156,7 @@ export function Teams() {
   const [mainFavorite, setMainFavorite] = useState<string | null>(null);
   const [weeklyBonus, setWeeklyBonus] = useState<WeeklyBonus>("berry_strength");
 
-  const { progress } = useProgress();
+  const { progress, save: saveProgress, saveError: progressSaveError } = useProgress();
 
   // Session-only edits, layered over the saved progress. Everything shown is
   // derived: override ?? saved ?? default, so there is no window where local
@@ -164,6 +165,9 @@ export function Teams() {
     potSize,
     areaBonusPct,
     recipeLevelFor,
+    potUnsaved,
+    areaBonusUnsaved,
+    recipeLevelUnsaved,
     setPotOverride,
     setAreaBonusOverride,
     setRecipeLevelOverride,
@@ -171,6 +175,19 @@ export function Teams() {
 
   // Percentage points in progress; the payload and the cards want a 0–0.85 fraction.
   const islandBonus = areaBonusPct / 100;
+
+  // The saved area bonus for the currently selected island, in percentage points.
+  const savedBonusPct = areaBonusOf(progress, selectedIsland);
+
+  const savedLevelFor = (name: string): number => recipeLevelOf(progress, name);
+
+  const savePot = () => saveProgress({ pot_size: potSize });
+  const saveBonus = () => {
+    if (selectedIsland === null) return;
+    saveProgress({ area_bonuses: { [selectedIsland]: areaBonusPct } });
+  };
+  const saveLevel = (name: string) =>
+    saveProgress({ recipe_levels: { [name]: recipeLevelFor(name) } });
 
   const usedIds = useMemo(
     () => new Set(slots.flatMap((s) => s.entries.map((e) => e.memberId))),
@@ -443,6 +460,11 @@ export function Teams() {
         >
           {t("teams.configure")}
         </button>
+        {progressSaveError && (
+          <p className="error" role="alert">
+            {t("progress.saveError")}
+          </p>
+        )}
       </div>
 
       {goodCampTicket && (
@@ -1342,6 +1364,16 @@ export function Teams() {
           onDishTypeChange={handleDishTypeChange}
           levelFor={recipeLevelFor}
           onRecipeLevelChange={setRecipeLevelOverride}
+          potUnsaved={potUnsaved}
+          savedPotSize={progress.pot_size}
+          onSavePot={savePot}
+          bonusUnsaved={areaBonusUnsaved}
+          savedBonusPct={savedBonusPct}
+          onSaveBonus={saveBonus}
+          levelUnsaved={recipeLevelUnsaved}
+          savedLevelFor={savedLevelFor}
+          onSaveLevel={saveLevel}
+          favoriteFor={(type) => progress.favorite_recipes[type] ?? null}
         />
       )}
     </div>

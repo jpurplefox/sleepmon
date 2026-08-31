@@ -85,6 +85,45 @@ describe("useSessionOverrides", () => {
     expect(result.current.recipeLevelFor("Fancy Apple Curry")).toBe(1);
   });
 
+  it("marks the pot unsaved once overridden, and clears the mark when put back to what is saved", () => {
+    const { result } = renderHook(() => useSessionOverrides(saved, "Cyan Beach"));
+    expect(result.current.potUnsaved).toBe(false);
+    act(() => result.current.setPotOverride(36));
+    expect(result.current.potUnsaved).toBe(true);
+    act(() => result.current.setPotOverride(33));
+    expect(result.current.potUnsaved).toBe(false);
+  });
+
+  it("marks the area bonus unsaved once overridden, and clears the mark when put back to what is saved", () => {
+    const { result } = renderHook(() => useSessionOverrides(saved, "Cyan Beach"));
+    expect(result.current.areaBonusUnsaved).toBe(false);
+    act(() => result.current.setAreaBonusOverride(70));
+    expect(result.current.areaBonusUnsaved).toBe(true);
+    act(() => result.current.setAreaBonusOverride(42));
+    expect(result.current.areaBonusUnsaved).toBe(false);
+  });
+
+  it("is never unsaved for the area bonus with no island selected, regardless of overrides", () => {
+    const { result, rerender } = renderHook(
+      ({ island }: { island: string | null }) => useSessionOverrides(saved, island),
+      { initialProps: { island: "Cyan Beach" as string | null } },
+    );
+    act(() => result.current.setAreaBonusOverride(70));
+    rerender({ island: null });
+    expect(result.current.areaBonusUnsaved).toBe(false);
+  });
+
+  it("marks a recipe level unsaved once overridden, and clears the mark when put back to what is saved", () => {
+    const { result } = renderHook(() => useSessionOverrides(saved, "Cyan Beach"));
+    expect(result.current.recipeLevelUnsaved("Beanburger Curry")).toBe(false);
+    act(() => result.current.setRecipeLevelOverride("Beanburger Curry", 60));
+    expect(result.current.recipeLevelUnsaved("Beanburger Curry")).toBe(true);
+    act(() => result.current.setRecipeLevelOverride("Beanburger Curry", 55));
+    expect(result.current.recipeLevelUnsaved("Beanburger Curry")).toBe(false);
+    // An untouched recipe is never marked.
+    expect(result.current.recipeLevelUnsaved("Fancy Apple Curry")).toBe(false);
+  });
+
   it("reflects a changed saved progress for un-overridden values, but not for overridden ones", () => {
     const { result, rerender } = renderHook(
       ({ progress }: { progress: PlayerProgress }) =>

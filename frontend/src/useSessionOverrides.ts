@@ -6,6 +6,7 @@ import {
   DEFAULT_RECIPE_LEVEL,
   areaBonusOf,
   effective,
+  isUnsaved,
 } from "./progress";
 import type { PlayerProgress } from "./types";
 
@@ -16,6 +17,12 @@ export interface SessionOverrides {
   areaBonusPct: number;
   /** Override ?? saved ?? default for one recipe's level. */
   recipeLevelFor: (name: string) => number;
+  /** True when the shown pot size differs from what is saved. */
+  potUnsaved: boolean;
+  /** True when the shown area bonus differs from what is saved. False with no island selected. */
+  areaBonusUnsaved: boolean;
+  /** True when the shown level for one recipe differs from what is saved. */
+  recipeLevelUnsaved: (name: string) => boolean;
   /** Pass undefined to clear the override and fall back to saved/default again. */
   setPotOverride: (value: number | undefined) => void;
   /** No-op with no island selected — there is nothing to key the override to. */
@@ -50,6 +57,13 @@ export function useSessionOverrides(
   const recipeLevelFor = (name: string): number =>
     effective(levelOverrides[name], progress.recipe_levels[name], DEFAULT_RECIPE_LEVEL);
 
+  const potUnsaved = isUnsaved(potOverride, progress.pot_size, DEFAULT_POT_SIZE);
+  const areaBonusUnsaved =
+    selectedIsland !== null &&
+    isUnsaved(bonusOverrides[selectedIsland], savedBonusPct, DEFAULT_AREA_BONUS);
+  const recipeLevelUnsaved = (name: string): boolean =>
+    isUnsaved(levelOverrides[name], progress.recipe_levels[name], DEFAULT_RECIPE_LEVEL);
+
   const setAreaBonusOverride = (pct: number): void => {
     if (selectedIsland === null) return;
     setBonusOverrides((prev) => ({ ...prev, [selectedIsland]: pct }));
@@ -63,6 +77,9 @@ export function useSessionOverrides(
     potSize,
     areaBonusPct,
     recipeLevelFor,
+    potUnsaved,
+    areaBonusUnsaved,
+    recipeLevelUnsaved,
     setPotOverride,
     setAreaBonusOverride,
     setRecipeLevelOverride,

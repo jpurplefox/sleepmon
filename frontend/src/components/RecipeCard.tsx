@@ -24,6 +24,8 @@ interface Props {
   beforeStepper?: ReactNode;
   /** Content rendered below the level stepper (e.g. the moment toggles). Absent in Player progress. */
   afterStepper?: ReactNode;
+  /** The unsaved mark for this recipe's level. Absent in Player progress, where every edit is already saved. */
+  mark?: ReactNode;
 }
 
 export function RecipeCard({
@@ -33,6 +35,7 @@ export function RecipeCard({
   onLevelChange,
   beforeStepper,
   afterStepper,
+  mark,
 }: Props) {
   const { t } = useI18n();
   const strength = recipeStrengthAtLevel(recipe.base_strength, level, levelBonus);
@@ -90,6 +93,8 @@ export function RecipeCard({
           }}
         />
       </div>
+
+      {mark}
 
       {afterStepper}
     </div>

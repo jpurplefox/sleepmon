@@ -58,12 +58,15 @@ function renderTab(overrides: Partial<React.ComponentProps<typeof IslandTab>> = 
     islandBonus: 0,
     bonusDisabled: false,
     goodCampTicket: false,
+    bonusUnsaved: false,
+    savedBonusPct: 0,
     onSelectIsland: vi.fn(),
     onFavoriteBerries: vi.fn(),
     onMainFavorite: vi.fn(),
     onWeeklyBonus: vi.fn(),
     onIslandBonus: vi.fn(),
     onGoodCampTicket: vi.fn(),
+    onSaveBonus: vi.fn(),
     ...overrides,
   };
   render(

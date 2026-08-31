@@ -8,6 +8,7 @@ import { IslandTab } from "./IslandTab";
 import { LevelStepperInput } from "./LevelStepperInput";
 import { Modal } from "./Modal";
 import { RecipeCard, normalizeSearch } from "./RecipeCard";
+import { UnsavedMark } from "./UnsavedMark";
 
 type TabId = "island" | "meals";
 
@@ -43,6 +44,23 @@ interface Props {
   /** Effective level of a recipe: session override, else saved progress, else 1. */
   levelFor: (recipe: string) => number;
   onRecipeLevelChange: (recipe: string, level: number) => void;
+  /** True when the shown pot size differs from what is saved in Player progress. */
+  potUnsaved: boolean;
+  /** The saved pot size, shown in the unsaved mark's tooltip. */
+  savedPotSize: number;
+  onSavePot: () => void;
+  /** True when the shown area bonus differs from what is saved. */
+  bonusUnsaved: boolean;
+  /** The saved area bonus, in percentage points. */
+  savedBonusPct: number;
+  onSaveBonus: () => void;
+  /** True when the shown level for one recipe differs from what is saved. */
+  levelUnsaved: (recipe: string) => boolean;
+  /** The saved level for one recipe, shown in the unsaved mark's tooltip. */
+  savedLevelFor: (recipe: string) => number;
+  onSaveLevel: (recipe: string) => void;
+  /** The saved favorite recipe for a dish type, or null if none is set. */
+  favoriteFor: (type: Recipe["type"]) => string | null;
 }
 
 export function SettingsModal({
@@ -72,6 +90,16 @@ export function SettingsModal({
   onDishTypeChange,
   levelFor,
   onRecipeLevelChange,
+  potUnsaved,
+  savedPotSize,
+  onSavePot,
+  bonusUnsaved,
+  savedBonusPct,
+  onSaveBonus,
+  levelUnsaved,
+  savedLevelFor,
+  onSaveLevel,
+  favoriteFor,
 }: Props) {
   const { t } = useI18n();
 
@@ -106,6 +134,22 @@ export function SettingsModal({
     if (!isRemoving && dishType === null && meals.every((m) => m === null)) {
       onDishTypeChange(recipe.type);
     }
+  };
+
+  // Picking a dish type on an empty plan prefills all 3 meals from the saved
+  // favorite, at its effective level. A plan with anything already in it is untouched.
+  const pickDishType = (type: Recipe["type"] | null) => {
+    onDishTypeChange(type);
+    if (type === null) return;
+    if (!meals.every((m) => m === null)) return;
+    const favorite = favoriteFor(type);
+    if (favorite === null) return;
+    const level = levelFor(favorite);
+    onChangeMeals([
+      { recipe: favorite, level },
+      { recipe: favorite, level },
+      { recipe: favorite, level },
+    ]);
   };
 
   // Filter recipes. When dishType is set, only show recipes of that type.
@@ -175,12 +219,15 @@ export function SettingsModal({
           goodCampTicket={goodCampTicket}
           mainFavorite={mainFavorite}
           weeklyBonus={weeklyBonus}
+          bonusUnsaved={bonusUnsaved}
+          savedBonusPct={savedBonusPct}
           onSelectIsland={onSelectIsland}
           onFavoriteBerries={onFavoriteBerries}
           onIslandBonus={onIslandBonus}
           onGoodCampTicket={onGoodCampTicket}
           onMainFavorite={onMainFavorite}
           onWeeklyBonus={onWeeklyBonus}
+          onSaveBonus={onSaveBonus}
         />
       </div>
 
@@ -218,7 +265,7 @@ export function SettingsModal({
                     type="button"
                     className={"specialty-toggle__btn" + (dishType === type ? " is-on" : "")}
                     aria-pressed={dishType === type}
-                    onClick={() => onDishTypeChange(type)}
+                    onClick={() => pickDishType(type)}
                   >
                     {t(labelKey)}
                   </button>
@@ -263,6 +310,11 @@ export function SettingsModal({
             ) : (
               <span className="meal-picker-pot__effective muted">= {effectivePot}</span>
             )}
+            <UnsavedMark
+              unsaved={potUnsaved}
+              savedLabel={String(savedPotSize)}
+              onSave={onSavePot}
+            />
           </div>
 
           <button
@@ -298,6 +350,13 @@ export function SettingsModal({
                   level={level}
                   levelBonus={levelBonus}
                   onLevelChange={(n) => setLevelFor(r.name, n)}
+                  mark={
+                    <UnsavedMark
+                      unsaved={levelUnsaved(r.name)}
+                      savedLabel={String(savedLevelFor(r.name))}
+                      onSave={() => onSaveLevel(r.name)}
+                    />
+                  }
                   beforeStepper={
                     <div
                       className={`meal-picker-card__pot-fit ${fits ? "meal-picker-card__pot-fit--ok" : "meal-picker-card__pot-fit--no"}`}

@@ -3,6 +3,7 @@ import { berryIcon } from "../berries";
 import { useI18n } from "../i18n";
 import type { Catalog, Island, WeeklyBonus } from "../types";
 import { IconChevronDown } from "./icons";
+import { UnsavedMark } from "./UnsavedMark";
 
 interface Props {
   catalog: Catalog;
@@ -13,12 +14,17 @@ interface Props {
   islandBonus: number; // fracción 0.0–0.85
   bonusDisabled: boolean;
   goodCampTicket: boolean;
+  /** True when the shown area bonus differs from what is saved in Player progress. */
+  bonusUnsaved: boolean;
+  /** The saved area bonus, in percentage points, shown in the unsaved mark's tooltip. */
+  savedBonusPct: number;
   onSelectIsland: (islandName: string | null) => void;
   onFavoriteBerries: (berries: string[]) => void;
   onMainFavorite: (berry: string | null) => void;
   onWeeklyBonus: (bonus: WeeklyBonus) => void;
   onIslandBonus: (bonus: number) => void;
   onGoodCampTicket: (value: boolean) => void;
+  onSaveBonus: () => void;
 }
 
 // Derivar todas las bayas disponibles en el catálogo a partir de las especies.
@@ -40,12 +46,15 @@ export function IslandTab({
   islandBonus,
   bonusDisabled,
   goodCampTicket,
+  bonusUnsaved,
+  savedBonusPct,
   onSelectIsland,
   onFavoriteBerries,
   onMainFavorite,
   onWeeklyBonus,
   onIslandBonus,
   onGoodCampTicket,
+  onSaveBonus,
 }: Props) {
   const { t, berry: berryName } = useI18n();
 
@@ -357,6 +366,11 @@ export function IslandTab({
             <span>0%</span><span>85%</span>
           </div>
         </div>
+        <UnsavedMark
+          unsaved={bonusUnsaved}
+          savedLabel={`${savedBonusPct}%`}
+          onSave={onSaveBonus}
+        />
       </div>
 
       {/* Good Camp Ticket */}

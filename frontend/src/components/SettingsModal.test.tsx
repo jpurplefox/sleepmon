@@ -1,0 +1,170 @@
+import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type React from "react";
+
+import { LanguageProvider } from "../i18n";
+import type { Catalog, Recipe } from "../types";
+import { SettingsModal } from "./SettingsModal";
+
+beforeEach(() => {
+  // Force English so the copy asserted below is stable.
+  localStorage.setItem("sleepmon.lang", "en");
+});
+
+const catalog: Catalog = {
+  natures: [],
+  sub_skills: [],
+  ingredients: [],
+  species: [],
+  recipe_level_bonus: [],
+  ingredient_strengths: {},
+  islands: [],
+  pot_ladder: [],
+};
+
+// Merges `overrides` over a complete default props object built from
+// SettingsModal's real Props, renders it, then opens the Meals tab — the
+// dish-type buttons and the pot stepper live there, and the modal defaults to
+// the Map (island) tab.
+function renderModal(overrides: Partial<React.ComponentProps<typeof SettingsModal>> = {}) {
+  const props: React.ComponentProps<typeof SettingsModal> = {
+    recipes: [],
+    levelBonus: [],
+    meals: [null, null, null],
+    onChangeMeals: vi.fn(),
+    onClose: vi.fn(),
+    potSize: 21,
+    onPotSizeChange: vi.fn(),
+    cookingExtra: 0,
+    catalog,
+    selectedIsland: null,
+    favoriteBerries: [],
+    islandBonus: 0,
+    bonusDisabled: true,
+    goodCampTicket: false,
+    mainFavorite: null,
+    weeklyBonus: "berry_strength",
+    onSelectIsland: vi.fn(),
+    onFavoriteBerries: vi.fn(),
+    onIslandBonus: vi.fn(),
+    onGoodCampTicket: vi.fn(),
+    onMainFavorite: vi.fn(),
+    onWeeklyBonus: vi.fn(),
+    dishType: null,
+    onDishTypeChange: vi.fn(),
+    levelFor: () => 1,
+    onRecipeLevelChange: vi.fn(),
+    potUnsaved: false,
+    savedPotSize: 21,
+    onSavePot: vi.fn(),
+    bonusUnsaved: false,
+    savedBonusPct: 0,
+    onSaveBonus: vi.fn(),
+    levelUnsaved: () => false,
+    savedLevelFor: () => 1,
+    onSaveLevel: vi.fn(),
+    favoriteFor: () => null,
+    ...overrides,
+  };
+
+  render(
+    <LanguageProvider>
+      <SettingsModal {...props} />
+    </LanguageProvider>,
+  );
+  fireEvent.click(screen.getByRole("tab", { name: "Meals" }));
+
+  return props;
+}
+
+describe("SettingsModal — the unsaved mark", () => {
+  it("marks a pot that differs from what is saved", () => {
+    renderModal({ potSize: 36, savedPotSize: 33, potUnsaved: true });
+    expect(screen.getByText("unsaved")).toBeInTheDocument();
+  });
+
+  it("marks nothing when the pot matches what is saved", () => {
+    renderModal({ potSize: 33, savedPotSize: 33, potUnsaved: false });
+    expect(screen.queryByText("unsaved")).not.toBeInTheDocument();
+  });
+
+  it("saves the shown value", async () => {
+    const onSavePot = vi.fn();
+    renderModal({ potSize: 36, savedPotSize: 33, potUnsaved: true, onSavePot });
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(onSavePot).toHaveBeenCalledOnce();
+  });
+});
+
+describe("SettingsModal — the area bonus mark", () => {
+  it("marks a bonus that differs from what is saved, and saves it", async () => {
+    const onSaveBonus = vi.fn();
+    renderModal({ bonusUnsaved: true, savedBonusPct: 40, onSaveBonus });
+    // The bonus lives on the Map tab.
+    await userEvent.click(screen.getByRole("tab", { name: "Map" }));
+    expect(screen.getByText("unsaved")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(onSaveBonus).toHaveBeenCalledOnce();
+  });
+});
+
+describe("SettingsModal — the recipe level mark", () => {
+  const beanburger: Recipe = {
+    name: "Beanburger Curry",
+    type: "Curry",
+    ingredients: [],
+    base_strength: 100,
+  };
+
+  it("marks a recipe level that differs from what is saved, and saves it", async () => {
+    const onSaveLevel = vi.fn();
+    renderModal({
+      recipes: [beanburger],
+      levelBonus: [1],
+      levelFor: () => 10,
+      savedLevelFor: () => 5,
+      levelUnsaved: () => true,
+      onSaveLevel,
+    });
+    expect(screen.getByText("unsaved")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(onSaveLevel).toHaveBeenCalledWith("Beanburger Curry");
+  });
+});
+
+describe("SettingsModal — the favorite prefill", () => {
+  it("fills the three meals from the favorite of the chosen type", async () => {
+    const onChangeMeals = vi.fn();
+    renderModal({
+      meals: [null, null, null],
+      favoriteFor: () => "Beanburger Curry",
+      levelFor: () => 55,
+      onChangeMeals,
+    });
+    await userEvent.click(screen.getByRole("button", { name: "Curry" }));
+    expect(onChangeMeals).toHaveBeenCalledWith([
+      { recipe: "Beanburger Curry", level: 55 },
+      { recipe: "Beanburger Curry", level: 55 },
+      { recipe: "Beanburger Curry", level: 55 },
+    ]);
+  });
+
+  it("changes nothing when a meal is already planned", async () => {
+    const onChangeMeals = vi.fn();
+    renderModal({
+      meals: [{ recipe: "Fancy Apple Curry", level: 1 }, null, null],
+      favoriteFor: () => "Beanburger Curry",
+      onChangeMeals,
+    });
+    await userEvent.click(screen.getByRole("button", { name: "Curry" }));
+    expect(onChangeMeals).not.toHaveBeenCalled();
+  });
+
+  it("leaves the meals empty when the type has no favorite", async () => {
+    const onChangeMeals = vi.fn();
+    renderModal({ meals: [null, null, null], favoriteFor: () => null, onChangeMeals });
+    await userEvent.click(screen.getByRole("button", { name: "Curry" }));
+    expect(onChangeMeals).not.toHaveBeenCalled();
+  });
+});
