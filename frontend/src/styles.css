@@ -1397,6 +1397,9 @@ select:focus {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  /* A button's auto width is shrink-to-fit, so outside .filter-list (the account
+     menu) the row — and its hover — collapsed to the text. */
+  width: 100%;
   background: none;
   border: 1px solid transparent;
   border-radius: var(--r-sm);
@@ -4659,6 +4662,18 @@ button.prod-card__base-tag--action:hover {
 .progress-fav-row .filter-control {
   flex: 1;
   max-width: 22rem;
+}
+
+/* Trigger and panel both fill the control, so the picker reads as one select
+   instead of a narrow button with a wider panel hanging off it. */
+.progress-fav-row .filter-btn {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.progress-fav-row .filter-pop,
+.progress-fav-row .filter-list {
+  width: 100%;
 }
 
 /* One row per area: name + its own bonus slider. */
