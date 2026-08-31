@@ -2576,9 +2576,8 @@ select:focus {
   background: var(--accent-dim);
 }
 
-/* Escenario de Comparación: su propia línea sobre la grilla, alineado a la derecha.
-   Reusa .section-head sin lado izquierdo, así que el margen de la grilla lo aporta
-   esta fila. */
+/* Comparison's scenario: its own row above the grid, right-aligned.
+   It reuses .section-head with no left side, so this row supplies the grid's top margin. */
 .prod-scenario {
   justify-content: flex-end;
   margin: 1.5rem 0 0.5rem;
@@ -2588,8 +2587,8 @@ select:focus {
   margin-top: 0;
 }
 
-/* El panel se abre hacia adentro: el control es el único pegado al borde derecho,
-   y .filter-pop ancla a la izquierda (se saldría de la página). */
+/* The panel opens inward: this is the only trigger flush against the right edge,
+   and .filter-pop anchors left by default (it would run off the page). */
 .prod-scenario .filter-pop {
   left: auto;
   right: 0;
