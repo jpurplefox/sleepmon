@@ -3,9 +3,34 @@ import { useState } from "react";
 import { useI18n } from "../i18n";
 import { recipeLevelOf } from "../progress";
 import { RECIPE_TYPES } from "../recipes";
+import { useDebouncedSave } from "../useDebouncedSave";
 import type { PlayerProgress, ProgressPatch, Recipe } from "../types";
 import { Placeholder } from "./Placeholder";
 import { RecipeCard, normalizeSearch } from "./RecipeCard";
+
+// One row's local, debounced level — so a burst of stepper clicks collapses
+// into a single save instead of each click recomputing from a stale level.
+function RecipeLevelCard({
+  recipe,
+  level,
+  levelBonus,
+  onSave,
+}: {
+  recipe: Recipe;
+  level: number;
+  levelBonus: number[];
+  onSave: (level: number) => void;
+}) {
+  const [value, handleChange] = useDebouncedSave(level, onSave);
+  return (
+    <RecipeCard
+      recipe={recipe}
+      level={value}
+      levelBonus={levelBonus}
+      onLevelChange={handleChange}
+    />
+  );
+}
 
 interface Props {
   progress: PlayerProgress;
@@ -30,6 +55,7 @@ export function ProgressRecipesTab({ progress, recipes, levelBonus, onSave }: Pr
 
   return (
     <>
+      <h3 className="progress-section__head">{t("progress.recipeLevels")}</h3>
       <div className="meal-picker-topbar">
         <div className="meal-picker-dish-type">
           <span className="meal-picker-dish-type__label muted">{t("teams.dishType")}:</span>
@@ -72,12 +98,12 @@ export function ProgressRecipesTab({ progress, recipes, levelBonus, onSave }: Pr
           <Placeholder>{t("teams.noResults")}</Placeholder>
         ) : (
           shown.map((r) => (
-            <RecipeCard
+            <RecipeLevelCard
               key={r.name}
               recipe={r}
               level={recipeLevelOf(progress, r.name)}
               levelBonus={levelBonus}
-              onLevelChange={(level) => onSave({ recipe_levels: { [r.name]: level } })}
+              onSave={(level) => onSave({ recipe_levels: { [r.name]: level } })}
             />
           ))
         )}

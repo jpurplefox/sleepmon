@@ -177,6 +177,52 @@ describe("ProgressModal", () => {
     expect(await screen.findByText("42")).toBeInTheDocument();
   });
 
+  it("collapses a burst of pot clicks into a single save at the final rung", async () => {
+    vi.spyOn(api, "getProgress").mockResolvedValue(makeProgress({ pot_size: 21 }));
+    // Never resolves — mirrors a slow connection where no click's response
+    // lands before the next click fires.
+    vi.spyOn(api, "patchProgress").mockImplementation(() => new Promise<PlayerProgress>(() => {}));
+    renderModal();
+    await screen.findByText("21 ingredients");
+
+    // Other tests' calls share this spy (no mock-clearing between tests), so
+    // compare against a baseline instead of asserting an absolute call count.
+    const callsBefore = vi.mocked(api.patchProgress).mock.calls.length;
+
+    vi.useFakeTimers();
+    const up = screen.getByRole("button", { name: "Bigger pot" });
+    for (let i = 0; i < 5; i++) fireEvent.click(up);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+
+    // 21 -> 23 -> 25 -> 27 -> 29 -> 31: one save, at the fully-advanced rung.
+    expect(api.patchProgress).toHaveBeenCalledTimes(callsBefore + 1);
+    expect(api.patchProgress).toHaveBeenLastCalledWith({ pot_size: 31 }, expect.anything());
+  });
+
+  it("collapses a burst of recipe-level clicks into a single save at the final level", async () => {
+    vi.spyOn(api, "patchProgress").mockImplementation(() => new Promise<PlayerProgress>(() => {}));
+    renderModal();
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("tab", { name: "Recipes" }));
+    const [up] = await screen.findAllByRole("button", { name: "Raise level" });
+    const callsBefore = vi.mocked(api.patchProgress).mock.calls.length;
+
+    vi.useFakeTimers();
+    for (let i = 0; i < 5; i++) fireEvent.click(up);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+
+    // Default level 1, five raises -> 6: one save, not five saves stuck at 2.
+    expect(api.patchProgress).toHaveBeenCalledTimes(callsBefore + 1);
+    expect(api.patchProgress).toHaveBeenLastCalledWith(
+      { recipe_levels: { "Beanburger Curry": 6 } },
+      expect.anything(),
+    );
+  });
+
   it("debounces a slider drag into a single save", async () => {
     renderModal();
     await screen.findByText("33 ingredients");

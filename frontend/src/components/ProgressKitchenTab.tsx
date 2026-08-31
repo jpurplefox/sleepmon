@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useI18n } from "../i18n";
 import { potBounds, recipeLevelOf, stepPot } from "../progress";
 import { recipeImage } from "../recipes";
+import { useDebouncedSave } from "../useDebouncedSave";
 import type { PlayerProgress, ProgressPatch, Recipe } from "../types";
 import { FilterPopover, gridKeyDown } from "./FilterPopover";
 import { Stepper } from "./Stepper";
@@ -18,11 +19,15 @@ interface Props {
 
 export function ProgressKitchenTab({ progress, recipes, potLadder, onSave }: Props) {
   const { t } = useI18n();
-  const { atMin, atMax } = potBounds(potLadder, progress.pot_size);
+  const [potSize, setPotSize] = useDebouncedSave(progress.pot_size, (pot_size) =>
+    onSave({ pot_size }),
+  );
+  const { atMin, atMax } = potBounds(potLadder, potSize);
   const [openType, setOpenType] = useState<Recipe["type"] | null>(null);
 
-  const movePot = (dir: 1 | -1) =>
-    onSave({ pot_size: stepPot(potLadder, progress.pot_size, dir) });
+  // Steps from the locally-shown pot, not the server-echoed one, so a burst of
+  // clicks advances rung by rung instead of recomputing from a stale value.
+  const movePot = (dir: 1 | -1) => setPotSize(stepPot(potLadder, potSize, dir));
 
   return (
     <>
@@ -38,7 +43,7 @@ export function ProgressKitchenTab({ progress, recipes, potLadder, onSave }: Pro
           prevLabel={t("progress.potDown")}
           nextLabel={t("progress.potUp")}
           leading={<img src="/pot.webp" alt="" style={{ width: 26, height: 26 }} />}
-          primary={t("progress.potUnit", { n: String(progress.pot_size) })}
+          primary={t("progress.potUnit", { n: String(potSize) })}
         />
       </div>
 
