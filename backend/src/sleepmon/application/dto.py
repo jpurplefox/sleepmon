@@ -7,6 +7,7 @@ para serializar derecho.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 
@@ -263,3 +264,17 @@ class TeamProductionResult:
     # Gran total
     grand_total_strength: float
     grand_total_strength_base: float
+
+
+@dataclass(frozen=True, slots=True)
+class ProgressPatchInput:
+    """Cambio parcial del progreso, tal como llega del cliente (claves string).
+
+    Un campo en ``None`` no se toca. Dentro de un mapping, el valor por defecto
+    borra la clave: nivel 1, bonus 0, favorita ``None``.
+    """
+
+    pot_size: int | None = None
+    recipe_levels: Mapping[str, int] | None = None
+    favorite_recipes: Mapping[str, str | None] | None = None
+    area_bonuses: Mapping[str, int] | None = None
