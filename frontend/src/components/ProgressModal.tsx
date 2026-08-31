@@ -6,6 +6,7 @@ import { useI18n } from "../i18n";
 import { useProgress } from "../useProgress";
 import { Modal } from "./Modal";
 import { Placeholder } from "./Placeholder";
+import { ProgressAreasTab } from "./ProgressAreasTab";
 import { ProgressKitchenTab } from "./ProgressKitchenTab";
 import { ProgressRecipesTab } from "./ProgressRecipesTab";
 
@@ -62,6 +63,13 @@ export function ProgressModal({ onClose }: { onClose: () => void }) {
               progress={progress}
               recipes={recipes.data ?? []}
               levelBonus={catalog.data?.recipe_level_bonus ?? []}
+              onSave={save}
+            />
+          )) ||
+          (activeTab === "areas" && (
+            <ProgressAreasTab
+              progress={progress}
+              islands={catalog.data?.islands ?? []}
               onSave={save}
             />
           ))

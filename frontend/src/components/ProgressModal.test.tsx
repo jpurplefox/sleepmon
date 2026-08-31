@@ -1,14 +1,26 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { api } from "../api/client";
 import { LanguageProvider } from "../i18n";
-import type { Catalog, PlayerProgress, Recipe } from "../types";
+import type { Catalog, Island, PlayerProgress, Recipe } from "../types";
 import { ProgressModal } from "./ProgressModal";
 
 const LADDER = [21, 23, 25, 27, 29, 31, 33, 36];
+
+// `Island` is { name, favorite_berries, user_picks, ratings, expert }.
+const islands: Island[] = [
+  { name: "Cyan Beach", favorite_berries: [], user_picks: false, expert: false, ratings: [] },
+  {
+    name: "Cyan Beach (Expert)",
+    favorite_berries: [],
+    user_picks: true,
+    expert: true,
+    ratings: [],
+  },
+];
 
 // `Recipe` is { name, type, ingredients: IngredientCount[], base_strength } — all four.
 const recipes: Recipe[] = [
@@ -69,10 +81,14 @@ beforeEach(() => {
   localStorage.setItem("sleepmon.lang", "en");
   vi.spyOn(api, "getProgress").mockResolvedValue(makeProgress());
   vi.spyOn(api, "getRecipes").mockResolvedValue(recipes);
-  vi.spyOn(api, "getCatalog").mockResolvedValue(makeCatalog({ pot_ladder: LADDER }));
+  vi.spyOn(api, "getCatalog").mockResolvedValue(makeCatalog({ pot_ladder: LADDER, islands }));
   vi.spyOn(api, "patchProgress").mockImplementation(async (patch) =>
     makeProgress(patch as Partial<PlayerProgress>),
   );
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("ProgressModal", () => {
@@ -133,5 +149,58 @@ describe("ProgressModal", () => {
     await userEvent.click(screen.getByRole("tab", { name: "Recipes" }));
     await userEvent.type(await screen.findByLabelText(/search/i), "zzzzz");
     expect(await screen.findByText("No results")).toBeInTheDocument();
+  });
+
+  it("shows one row per area and marks the expert ones", async () => {
+    renderModal();
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("tab", { name: "Areas" }));
+    expect(await screen.findByText("Cyan Beach")).toBeInTheDocument();
+    expect(screen.getByText("Expert")).toBeInTheDocument();
+  });
+
+  it("shows an area with no bonus as an ordinary starting state", async () => {
+    renderModal();
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("tab", { name: "Areas" }));
+    expect(await screen.findAllByText("no bonus yet")).toHaveLength(2);
+  });
+
+  it("saves an area bonus", async () => {
+    vi.spyOn(api, "getProgress").mockResolvedValue(
+      makeProgress({ area_bonuses: { "Cyan Beach": 42 } }),
+    );
+    renderModal();
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("tab", { name: "Areas" }));
+    expect(await screen.findByText("42")).toBeInTheDocument();
+  });
+
+  it("debounces a slider drag into a single save", async () => {
+    renderModal();
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("tab", { name: "Areas" }));
+    const slider = await screen.findByLabelText("Area bonus — Cyan Beach");
+    // Other tests' calls share this spy (no mock-clearing between tests), so
+    // compare against a baseline instead of asserting an absolute call count.
+    const callsBefore = vi.mocked(api.patchProgress).mock.calls.length;
+
+    vi.useFakeTimers();
+    // A drag fires onChange on every pixel — simulate a burst, not one clean step.
+    fireEvent.change(slider, { target: { value: "10" } });
+    fireEvent.change(slider, { target: { value: "35" } });
+    fireEvent.change(slider, { target: { value: "60" } });
+    expect(api.patchProgress).toHaveBeenCalledTimes(callsBefore);
+
+    // Async variant: also flushes the microtask react-query uses to invoke mutationFn.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+
+    expect(api.patchProgress).toHaveBeenCalledTimes(callsBefore + 1);
+    expect(api.patchProgress).toHaveBeenLastCalledWith(
+      { area_bonuses: { "Cyan Beach": 60 } },
+      expect.anything(),
+    );
   });
 });
