@@ -45,9 +45,15 @@ function AreaRow({
   // responsive and isn't shadowed once the debounced save resolves.
   const [value, setValue] = useState(pct);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The value this row last sent, while that save is outstanding (no response yet).
+  const lastSentRef = useRef<number | null>(null);
 
-  // Follow the saved value when it changes from outside (query resolving).
+  // Follow the saved value only when this row has nothing in flight: while a save
+  // is outstanding, an incoming value that is not the one we sent is stale.
   useEffect(() => {
+    if (timerRef.current !== null) return;
+    if (lastSentRef.current !== null && pct !== lastSentRef.current) return;
+    lastSentRef.current = null;
     setValue(pct);
   }, [pct]);
 
@@ -62,6 +68,8 @@ function AreaRow({
     setValue(next);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
+      timerRef.current = null;
+      lastSentRef.current = next;
       onSave({ area_bonuses: { [island.name]: next } });
     }, SAVE_DEBOUNCE_MS);
   };

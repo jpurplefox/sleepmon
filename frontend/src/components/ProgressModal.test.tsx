@@ -68,13 +68,14 @@ function renderModal() {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-  return render(
+  const result = render(
     <QueryClientProvider client={client}>
       <LanguageProvider>
         <ProgressModal onClose={() => {}} />
       </LanguageProvider>
     </QueryClientProvider>,
   );
+  return { ...result, client };
 }
 
 beforeEach(() => {
@@ -202,5 +203,74 @@ describe("ProgressModal", () => {
       { area_bonuses: { "Cyan Beach": 60 } },
       expect.anything(),
     );
+  });
+
+  it("cancels a pending save when the modal unmounts before the debounce fires", async () => {
+    const { unmount } = renderModal();
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("tab", { name: "Areas" }));
+    const slider = await screen.findByLabelText("Area bonus — Cyan Beach");
+    const callsBefore = vi.mocked(api.patchProgress).mock.calls.length;
+
+    vi.useFakeTimers();
+    fireEvent.change(slider, { target: { value: "77" } });
+    unmount();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+
+    expect(api.patchProgress).toHaveBeenCalledTimes(callsBefore);
+  });
+
+  it("follows an external progress change when no save is pending", async () => {
+    const { client } = renderModal();
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("tab", { name: "Areas" }));
+    const slider = (await screen.findByLabelText(
+      "Area bonus — Cyan Beach",
+    )) as HTMLInputElement;
+    expect(slider.value).toBe("0");
+
+    act(() => {
+      client.setQueryData<PlayerProgress>(
+        ["progress"],
+        makeProgress({ area_bonuses: { "Cyan Beach": 50 } }),
+      );
+    });
+
+    await waitFor(() => expect(slider.value).toBe("50"));
+  });
+
+  it("ignores a stale response for a row with a save outstanding", async () => {
+    // This save never resolves, so the row's own request stays outstanding
+    // for the whole test — any cache write we make below is from elsewhere.
+    vi.spyOn(api, "patchProgress").mockImplementation(() => new Promise(() => {}));
+    const { client } = renderModal();
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("tab", { name: "Areas" }));
+    const slider = (await screen.findByLabelText(
+      "Area bonus — Cyan Beach",
+    )) as HTMLInputElement;
+
+    vi.useFakeTimers();
+    fireEvent.change(slider, { target: { value: "60" } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300); // fires the debounced save for 60
+    });
+
+    // A stale response for a different value lands while 60's save is outstanding.
+    act(() => {
+      client.setQueryData<PlayerProgress>(
+        ["progress"],
+        makeProgress({ area_bonuses: { "Cyan Beach": 45 } }),
+      );
+    });
+    // Give react-query's (microtask-scheduled) cache notification a chance to land.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(slider.value).toBe("60");
   });
 });
