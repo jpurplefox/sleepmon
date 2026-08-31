@@ -56,6 +56,7 @@ function renderTab(overrides: Partial<React.ComponentProps<typeof IslandTab>> = 
     mainFavorite: null,
     weeklyBonus: "berry_strength" as const,
     islandBonus: 0,
+    bonusDisabled: false,
     goodCampTicket: false,
     onSelectIsland: vi.fn(),
     onFavoriteBerries: vi.fn(),
@@ -97,6 +98,20 @@ describe("IslandTab weekly bonus", () => {
     const props = renderTab({ selectedIsland: "Cyan Beach (Expert)" });
     await userEvent.click(screen.getByRole("button", { name: "+1 ingredient" }));
     expect(props.onWeeklyBonus).toHaveBeenCalledWith("ingredient");
+  });
+});
+
+describe("IslandTab bonus slider", () => {
+  it("disables the slider and shows the pick-a-map hint with no island selected", () => {
+    renderTab({ selectedIsland: null, bonusDisabled: true });
+    expect(screen.getByLabelText("Area bonus")).toBeDisabled();
+    expect(screen.getByText("pick a map")).toBeInTheDocument();
+  });
+
+  it("leaves the slider enabled and hides the hint once a map is picked", () => {
+    renderTab({ selectedIsland: "Cyan Beach", favoriteBerries: ["Oran"], bonusDisabled: false });
+    expect(screen.getByLabelText("Area bonus")).not.toBeDisabled();
+    expect(screen.queryByText("pick a map")).not.toBeInTheDocument();
   });
 });
 

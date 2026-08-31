@@ -26,6 +26,7 @@ interface Props {
   selectedIsland: string | null;
   favoriteBerries: string[];
   islandBonus: number;
+  bonusDisabled: boolean;
   goodCampTicket: boolean;
   mainFavorite: string | null;
   weeklyBonus: WeeklyBonus;
@@ -39,6 +40,9 @@ interface Props {
   dishType: Recipe["type"] | null;
   /** Called when the user selects a dish type or clears it (null). */
   onDishTypeChange: (type: Recipe["type"] | null) => void;
+  /** Effective level of a recipe: session override, else saved progress, else 1. */
+  levelFor: (recipe: string) => number;
+  onRecipeLevelChange: (recipe: string, level: number) => void;
 }
 
 export function SettingsModal({
@@ -54,6 +58,7 @@ export function SettingsModal({
   selectedIsland,
   favoriteBerries,
   islandBonus,
+  bonusDisabled,
   goodCampTicket,
   mainFavorite,
   weeklyBonus,
@@ -65,6 +70,8 @@ export function SettingsModal({
   onWeeklyBonus,
   dishType,
   onDishTypeChange,
+  levelFor,
+  onRecipeLevelChange,
 }: Props) {
   const { t } = useI18n();
 
@@ -74,32 +81,18 @@ export function SettingsModal({
   // Text search.
   const [search, setSearch] = useState("");
 
-  // Per-recipe levels: initialized from meals so existing selections show their level.
-  const [recipeLevels, setRecipeLevels] = useState<Map<string, number>>(() => {
-    const m = new Map<string, number>();
-    for (const meal of meals) {
-      if (meal) m.set(meal.recipe, meal.level);
-    }
-    return m;
-  });
-
   // Effective pot = base pot + floor(cookingExtra / 3) (3 meals/day); with GCT: ceil(×1.5).
   const effectivePot = perMealPot(potSize, cookingExtra, goodCampTicket);
 
-  const getLevelFor = (name: string) => recipeLevels.get(name) ?? 1;
-
   const setLevelFor = (name: string, level: number) => {
     const clamped = Math.max(1, Math.min(70, level));
-    setRecipeLevels((prev) => new Map(prev).set(name, clamped));
-    // Update every meal slot that holds this recipe.
-    const next = meals.map((m) =>
-      m?.recipe === name ? { recipe: name, level: clamped } : m,
-    );
-    onChangeMeals(next);
+    onRecipeLevelChange(name, clamped);
+    // Keep every meal slot holding this recipe in step with its new level.
+    onChangeMeals(meals.map((m) => (m?.recipe === name ? { recipe: name, level: clamped } : m)));
   };
 
   const toggleMoment = (recipe: Recipe, momentIdx: number) => {
-    const level = getLevelFor(recipe.name);
+    const level = levelFor(recipe.name);
     const isRemoving = meals[momentIdx]?.recipe === recipe.name;
     const next = meals.map((m, i) => {
       if (i !== momentIdx) return m;
@@ -178,6 +171,7 @@ export function SettingsModal({
           selectedIsland={selectedIsland}
           favoriteBerries={favoriteBerries}
           islandBonus={islandBonus}
+          bonusDisabled={bonusDisabled}
           goodCampTicket={goodCampTicket}
           mainFavorite={mainFavorite}
           weeklyBonus={weeklyBonus}
@@ -291,7 +285,7 @@ export function SettingsModal({
             </p>
           ) : (
             sorted.map((r) => {
-              const level = getLevelFor(r.name);
+              const level = levelFor(r.name);
 
               const totalIngs = r.ingredients.reduce((s, ic) => s + ic.count, 0);
               const fits = totalIngs <= effectivePot;

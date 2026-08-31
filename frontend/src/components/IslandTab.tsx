@@ -11,6 +11,7 @@ interface Props {
   mainFavorite: string | null;
   weeklyBonus: WeeklyBonus;
   islandBonus: number; // fracción 0.0–0.85
+  bonusDisabled: boolean;
   goodCampTicket: boolean;
   onSelectIsland: (islandName: string | null) => void;
   onFavoriteBerries: (berries: string[]) => void;
@@ -37,6 +38,7 @@ export function IslandTab({
   mainFavorite,
   weeklyBonus,
   islandBonus,
+  bonusDisabled,
   goodCampTicket,
   onSelectIsland,
   onFavoriteBerries,
@@ -329,6 +331,7 @@ export function IslandTab({
         <label className="island-tab__label" htmlFor="area-bonus-range">
           {t("teams.islandBonus")}
         </label>
+        {bonusDisabled && <span className="muted">{t("progress.pickMap")}</span>}
         <div className="bonus-slider" style={{ "--ratio": (bonusPct / 85).toFixed(4) } as React.CSSProperties}>
           <div className="bonus-slider__row">
             <div className="bonus-slider__track">
@@ -340,6 +343,7 @@ export function IslandTab({
                 className="bonus-slider__input"
                 min={0} max={85} step={1}
                 value={bonusPct}
+                disabled={bonusDisabled}
                 onChange={(e) => handleBonusChange(Number(e.target.value))}
                 aria-label={t("teams.islandBonus")}
                 aria-valuetext={`${bonusPct}%`}

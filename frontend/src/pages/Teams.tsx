@@ -31,7 +31,15 @@ import { fdown } from "../utils/format";
 import { recipeImage } from "../recipes";
 import { perMealPot, dailyPotCapacity } from "../pot";
 import { statIcon } from "../natures";
+import {
+  DEFAULT_AREA_BONUS,
+  DEFAULT_POT_SIZE,
+  DEFAULT_RECIPE_LEVEL,
+  areaBonusOf,
+  effective,
+} from "../progress";
 import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
+import { useProgress } from "../useProgress";
 import type {
   BerryRole,
   Catalog,
@@ -142,7 +150,6 @@ export function Teams() {
   >(null);
   const [meals, setMeals] = useState<(MealInput | null)[]>([null, null, null]);
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
-  const [potSize, setPotSize] = useState(15);
   const [goodCampTicket, setGoodCampTicket] = useState(false);
 
   // Dish type: restricts all 3 meal slots to the same recipe type (ephemeral, frontend-only).
@@ -151,9 +158,29 @@ export function Teams() {
   // Island state (efímero, como meals).
   const [selectedIsland, setSelectedIsland] = useState<string | null>(null);
   const [favoriteBerries, setFavoriteBerries] = useState<string[]>([]);
-  const [islandBonus, setIslandBonus] = useState<number>(0);
   const [mainFavorite, setMainFavorite] = useState<string | null>(null);
   const [weeklyBonus, setWeeklyBonus] = useState<WeeklyBonus>("berry_strength");
+
+  const { progress } = useProgress();
+
+  // Session-only edits. Everything shown is derived: override ?? saved ?? default,
+  // so there is no window where local state and the query disagree.
+  const [potOverride, setPotOverride] = useState<number | undefined>(undefined);
+  const [bonusOverrides, setBonusOverrides] = useState<Record<string, number>>({});
+  const [levelOverrides, setLevelOverrides] = useState<Record<string, number>>({});
+
+  const potSize = effective(potOverride, progress.pot_size, DEFAULT_POT_SIZE);
+
+  // Percentage points in progress; the payload and the cards want a 0–0.85 fraction.
+  const savedBonusPct = areaBonusOf(progress, selectedIsland);
+  const bonusPct =
+    selectedIsland === null
+      ? 0
+      : effective(bonusOverrides[selectedIsland], savedBonusPct, DEFAULT_AREA_BONUS);
+  const islandBonus = bonusPct / 100;
+
+  const recipeLevelFor = (name: string): number =>
+    effective(levelOverrides[name], progress.recipe_levels[name], DEFAULT_RECIPE_LEVEL);
 
   const usedIds = useMemo(
     () => new Set(slots.flatMap((s) => s.entries.map((e) => e.memberId))),
@@ -1305,23 +1332,34 @@ export function Teams() {
           onChangeMeals={setMeals}
           onClose={() => setMealPickerOpen(false)}
           potSize={potSize}
-          onPotSizeChange={setPotSize}
+          onPotSizeChange={(n) => setPotOverride(n)}
           cookingExtra={cookingExtra}
           catalog={catalog.data}
           selectedIsland={selectedIsland}
           favoriteBerries={favoriteBerries}
           islandBonus={islandBonus}
+          bonusDisabled={selectedIsland === null}
           mainFavorite={mainFavorite}
           weeklyBonus={weeklyBonus}
           onSelectIsland={setSelectedIsland}
           onFavoriteBerries={setFavoriteBerries}
-          onIslandBonus={setIslandBonus}
+          onIslandBonus={(fraction) => {
+            if (selectedIsland === null) return;
+            setBonusOverrides((prev) => ({
+              ...prev,
+              [selectedIsland]: Math.round(fraction * 100),
+            }));
+          }}
           onMainFavorite={setMainFavorite}
           onWeeklyBonus={setWeeklyBonus}
           goodCampTicket={goodCampTicket}
           onGoodCampTicket={setGoodCampTicket}
           dishType={dishType}
           onDishTypeChange={handleDishTypeChange}
+          levelFor={recipeLevelFor}
+          onRecipeLevelChange={(name, level) =>
+            setLevelOverrides((prev) => ({ ...prev, [name]: level }))
+          }
         />
       )}
     </div>
