@@ -9,7 +9,9 @@ import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
 import { Placeholder } from "../components/Placeholder";
 import { ProductionCard } from "../components/ProductionCard";
+import { ScenarioSelect } from "../components/ScenarioSelect";
 import { useI18n } from "../i18n";
+import { scenarioCardProps, type Scenario } from "../scenarios";
 import type { Member, MemberInput } from "../types";
 
 // Tope de la comparación: el máximo del equipo en el juego.
@@ -49,6 +51,10 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   });
 
   const [entries, setEntries] = useState<CompareEntry[]>([]);
+  // The map scenario applies to EVERY card: it's an assumption of the
+  // comparison, not a property of any single Pokémon. Not persisted.
+  const [scenario, setScenario] = useState<Scenario>("none");
+  const cardMarks = scenarioCardProps(scenario);
   const [modal, setModal] = useState<"form" | "box" | null>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   // Reordenamiento por arrastre: la card que se arrastra y el destino actual.
@@ -64,7 +70,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   // react-query (keyed por config) evita recalcular al reordenar.
   const productions = useQueries({
     queries: entries.map((e) => ({
-      queryKey: ["production", e.config],
+      queryKey: ["production", e.config, scenario],
       queryFn: () =>
         api.computeProduction({
           species: e.config.species,
@@ -74,6 +80,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
           sub_skills: e.config.sub_skills,
           ribbon: e.config.ribbon,
           skill_level: e.config.skill_level,
+          scenario,
         }),
       // El resultado de una config es estable: no re-pedir ni reflashear
       // "Calculando…" al reordenar o revisitar una card ya calculada.
@@ -272,6 +279,8 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
         )}
       </header>
 
+      <ScenarioSelect value={scenario} onChange={setScenario} />
+
       <div className="prod-cards">
         {entries.map((e, i) => (
           <ProductionCard
@@ -283,6 +292,9 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
             base={i === 0 ? null : baseProduction}
             isBase={i === 0 && entries.length > 1}
             comparing={entries.length > 1}
+            berryRole={cardMarks.berryRole}
+            expert={cardMarks.expert}
+            weeklyBonus={cardMarks.weeklyBonus}
             onEdit={() => openEdit(i)}
             onClone={() => cloneAt(i)}
             onRemove={() => removeAt(i)}
