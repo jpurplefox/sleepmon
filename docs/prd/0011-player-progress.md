@@ -36,7 +36,7 @@ signed in.
 - The pot does not take arbitrary values: it climbs a **fixed ladder** of 23 steps —
   **21, 23, 25, 27, 29, 31, 33**, then **+3** all the way to **81**.
 - You **pick a step**; a value off the ladder (22, 40) cannot be entered.
-- A new profile starts at **21**, the game's base pot.
+- Untouched, it reads **21**, the game's base pot.
 - Skill expansions and the **Good Camp Ticket** still apply on top of this inside the
   analysis. They are not progress: one depends on the team you assembled, the other on
   a ticket you may or may not be running today.
@@ -63,7 +63,7 @@ signed in.
 - Expert areas are separate entries with separate bonuses, matching the game and what
   [Map bonuses & Snorlax rating](0007-map-bonuses-rating.md) already says about expert
   maps carrying their own bonus.
-- A new profile starts every area at **0%**.
+- Untouched, every area reads **0%**.
 
 ### The bridge to Team Analysis
 
@@ -77,19 +77,21 @@ Player progress is the analysis's **starting point**, never its master copy:
 - Every recipe added to the plan enters at its **saved level**.
 
 What you change inside the analysis belongs to **that session**. A value that differs
-from your profile is **marked as such**, showing what the profile holds, and offers to
-be **saved into your progress**. Saving is always explicit: the profile is never
-updated on your behalf, and an unsaved change disappears on reload.
+from what you saved is marked **unsaved** and offers to be **saved into your progress**;
+the saved value itself is one hover or keyboard focus away, not printed beside every
+control — at nine areas and seventy recipes, repeating it would be noise. Saving is
+always explicit: your progress is never updated on your behalf, and an unsaved change
+disappears on reload.
 
 ## Acceptance criteria
 
-- A **new profile** reads: pot **21**, every recipe at level **1**, no favorites, every
+- A **new account** reads: pot **21**, every recipe at level **1**, no favorites, every
   area at **0%**. This is an ordinary starting state, not an empty state or an error.
 - The pot control offers **exactly** the 23 ladder steps (21, 23, 25, 27, 29, 31, 33,
   36, …, 81). A value off the ladder cannot be selected.
 - A recipe level outside **1–70** and an area bonus outside **0–85%** are **clamped to
   the nearest limit**, not rejected with an error.
-- Given a saved profile with pot **33** and Cyan Beach at **40%**: opening Team
+- Given saved progress with pot **33** and Cyan Beach at **40%**: opening Team
   Analysis shows pot **33**, and selecting **Cyan Beach** moves the area bonus to
   **40%**. Selecting **Lapis Lakeside** then shows Lapis Lakeside's own saved bonus.
 - With **no map** selected, **no area bonus applies** — strength shows its base value,
@@ -101,11 +103,11 @@ updated on your behalf, and an unsaved change disappears on reload.
   in the plan.
 - Choosing a dish type with **no favorite saved** for it leaves the three meals
   **empty** — no error, no fallback pick.
-- Changing a value in the analysis so it **differs** from the profile marks it as
-  changed and shows the profile's value alongside; **saving** it makes the profile
-  read the new value, and the mark disappears.
-- A value changed **back** to what the profile holds is **not** marked as changed and
-  offers nothing to save.
+- Changing a value in the analysis so it **differs** from what you saved marks it
+  **unsaved**, and the saved value is readable **on hover or keyboard focus**;
+  **saving** it makes your progress read the new value, and the mark disappears.
+- A value changed **back** to what you saved is **not** marked unsaved and offers
+  nothing to save.
 - An unsaved change is **gone** after a reload; a saved one is present on **another
   device**, signed into the same account.
 
@@ -114,12 +116,12 @@ updated on your behalf, and an unsaved change disappears on reload.
 - **Progress is what only moves forward.** A setting belongs here when it records
   something you unlocked or levelled in the game, not something you are trying out. If
   it changes week to week or depends on the team you assembled, it stays ephemeral.
-- **The profile is never written implicitly.** Every save is an act the user takes.
-  The cost of that choice is a profile that can fall behind, which is why divergence is
-  always **visible** where it happens rather than left to be discovered.
+- **Progress is never written implicitly.** Every save is an act the user takes.
+  The cost of that choice is a record that can fall behind, which is why an unsaved
+  value is always **marked** where it happens rather than left to be discovered.
 - **One value, one home.** A progress value is edited in Player progress, or overridden
-  for a session in the analysis — but the profile stays the single answer to "what do I
-  have".
+  for a session in the analysis — but Player progress stays the single answer to "what
+  do I have".
 - **Game data stays honest.** The pot ladder and the recipe level cap are the game's,
   not ours; when the game changes them, the ladder changes with it.
 
@@ -132,6 +134,6 @@ updated on your behalf, and an unsaved change disappears on reload.
   values.
 - **Suggesting or optimizing** — it records the favorite you name; it does not pick one
   for you.
-- **Importing, exporting, or resetting the profile** — no bulk operations, no factory
+- **Importing, exporting, or resetting your progress** — no bulk operations, no factory
   reset.
 - **Which Pokémon you own** — that's the [Box](0001-box.md).
