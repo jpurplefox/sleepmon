@@ -19,9 +19,10 @@ from sleepmon.adapters.outbound.auth.jwt_access_token import JwtAccessTokenServi
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.auth_service import AuthResult, AuthService
+from sleepmon.application.progress_service import DefaultPlayerProgressService
 from sleepmon.application.services import DefaultTeamService
 from sleepmon.config import Settings
-from tests.fakes import InMemoryTeamRepository
+from tests.fakes import InMemoryPlayerProgressRepository, InMemoryTeamRepository
 
 
 def _settings(*, jwt_secret: str = "s3cr3t", google_client_id: str = "cid") -> Settings:
@@ -62,10 +63,10 @@ def test_create_app_raises_on_empty_google_client_id() -> None:
 
 
 def test_create_app_does_not_raise_when_secrets_are_injected() -> None:
-    # Injecting service/access/auth_service means create_app never reads
-    # Settings.from_env() for the real stack, so an empty/absent settings object
-    # must not trigger the fail-fast guard. Covered already by the fixtures in
-    # tests/http/test_api.py and tests/http/test_auth_api.py; this test pins the
+    # Injecting service/access/auth_service/progress_service means create_app never
+    # reads Settings.from_env() for the real stack, so an empty/absent settings
+    # object must not trigger the fail-fast guard. Covered already by the fixtures
+    # in tests/http/test_api.py and tests/http/test_auth_api.py; this test pins the
     # contract explicitly for the guard added in this change.
     app = create_app(
         service=DefaultTeamService(
@@ -75,5 +76,38 @@ def test_create_app_does_not_raise_when_secrets_are_injected() -> None:
         recipe_catalog=StaticRecipeCatalog(),
         access=JwtAccessTokenService("test-secret", timedelta(minutes=15)),
         auth_service=_FakeAuth(),
+        progress_service=DefaultPlayerProgressService(
+            InMemoryPlayerProgressRepository(), StaticRecipeCatalog()
+        ),
+    )
+    assert app is not None
+
+
+def test_create_app_opens_no_pool_when_every_service_is_injected(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Regression for a real leak: Task 6 added progress_service without updating
+    # the pre-existing HTTP test fixtures to inject it, so they silently fell into
+    # the "build the real stack" branch and opened a real ConnectionPool (with
+    # background retry threads) against Settings.from_env(). ConnectionPool.open()
+    # defaults to wait=False, so nothing raised and the suite stayed green. Pins
+    # that "all four injected" never calls create_pool, regardless of which new
+    # real-stack component a future task adds.
+    def _fail_if_called(*_args: object, **_kwargs: object) -> None:
+        pytest.fail("create_app must not open a pool when every service is injected")
+
+    monkeypatch.setattr("sleepmon.adapters.inbound.http.app.create_pool", _fail_if_called)
+
+    app = create_app(
+        service=DefaultTeamService(
+            InMemoryTeamRepository(), StaticSpeciesCatalog(), StaticRecipeCatalog()
+        ),
+        catalog=StaticSpeciesCatalog(),
+        recipe_catalog=StaticRecipeCatalog(),
+        access=JwtAccessTokenService("test-secret", timedelta(minutes=15)),
+        auth_service=_FakeAuth(),
+        progress_service=DefaultPlayerProgressService(
+            InMemoryPlayerProgressRepository(), StaticRecipeCatalog()
+        ),
     )
     assert app is not None

@@ -10,9 +10,11 @@ from sleepmon.adapters.outbound.auth.refresh_token import SecretsRefreshTokenCod
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.auth_service import DefaultAuthService
+from sleepmon.application.progress_service import DefaultPlayerProgressService
 from sleepmon.application.services import DefaultTeamService
 from sleepmon.domain.value_objects import Island
 from tests.fakes import (
+    InMemoryPlayerProgressRepository,
     InMemoryRefreshTokenRepository,
     InMemoryTeamRepository,
     InMemoryUserRepository,
@@ -49,6 +51,9 @@ def client() -> TestClient:
         recipe_catalog=StaticRecipeCatalog(),
         access=ACCESS,
         auth_service=auth_service,
+        progress_service=DefaultPlayerProgressService(
+            InMemoryPlayerProgressRepository(), StaticRecipeCatalog()
+        ),
     )
     with TestClient(app=app) as client:
         yield client
