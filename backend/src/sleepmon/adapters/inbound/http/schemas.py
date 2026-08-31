@@ -172,6 +172,28 @@ class ErrorOut(msgspec.Struct):
     detail: str
 
 
+class ProgressOut(msgspec.Struct):
+    """The user's full progress. GET and PATCH both return this."""
+
+    pot_size: int
+    recipe_levels: dict[str, int]
+    favorite_recipes: dict[str, str]
+    area_bonuses: dict[str, int]
+
+
+class ProgressPatchIn(msgspec.Struct, forbid_unknown_fields=True):
+    """A partial change: an absent (``None``) field is left untouched.
+
+    Inside a mapping, the default value clears the key: level 1, bonus 0,
+    favorite ``null``.
+    """
+
+    pot_size: int | None = None
+    recipe_levels: dict[str, int] | None = None
+    favorite_recipes: dict[str, str | None] | None = None
+    area_bonuses: dict[str, int] | None = None
+
+
 class GoogleLoginIn(msgspec.Struct, forbid_unknown_fields=True):
     credential: str
 
