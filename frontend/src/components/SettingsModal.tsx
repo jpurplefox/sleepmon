@@ -2,25 +2,15 @@ import { useState } from "react";
 
 import { useI18n } from "../i18n";
 import { perMealPot } from "../pot";
-import { ingredientIcon } from "../ingredients";
-import { recipeImage, recipeStrengthAtLevel } from "../recipes";
-import { CHARGE_STRENGTH_ICON } from "../skillIcons";
 import type { Catalog, MealInput, Recipe, WeeklyBonus } from "../types";
 import { IslandTab } from "./IslandTab";
 import { LevelStepperInput } from "./LevelStepperInput";
 import { Modal } from "./Modal";
+import { RecipeCard, normalizeSearch } from "./RecipeCard";
 
 const RECIPE_TYPES: Recipe["type"][] = ["Curry", "Salad", "Dessert"];
 
 type TabId = "island" | "meals";
-
-// Normaliza para búsqueda: sin mayúsculas ni acentos.
-function normalize(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "");
-}
 
 interface Props {
   recipes: Recipe[];
@@ -127,10 +117,10 @@ export function SettingsModal({
   };
 
   // Filter recipes. When dishType is set, only show recipes of that type.
-  const q = normalize(search.trim());
+  const q = normalizeSearch(search.trim());
   const filtered = recipes.filter((r) => {
     if (dishType && r.type !== dishType) return false;
-    if (q && !normalize(r.name).includes(q)) return false;
+    if (q && !normalizeSearch(r.name).includes(q)) return false;
     return true;
   });
 
@@ -303,104 +293,56 @@ export function SettingsModal({
           ) : (
             sorted.map((r) => {
               const level = getLevelFor(r.name);
-              const strength = recipeStrengthAtLevel(r.base_strength, level, levelBonus);
 
               const totalIngs = r.ingredients.reduce((s, ic) => s + ic.count, 0);
               const fits = totalIngs <= effectivePot;
               const fillers = effectivePot - totalIngs;
 
               return (
-                <div key={r.name} className="meal-picker-card">
-                  {/* Dish image */}
-                  <div className="meal-picker-card__img-wrap">
-                    <img
-                      className="meal-picker-card__img"
-                      src={recipeImage(r.name)}
-                      alt={r.name}
-                      loading="lazy"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  </div>
-
-                  {/* Name + type badge */}
-                  <div className="meal-picker-card__header">
-                    <span className="meal-picker-card__name">{r.name}</span>
-                    <span className="meal-picker-card__type-badge">{r.type}</span>
-                  </div>
-
-                  {/* Strength at current level */}
-                  <div className="meal-picker-card__strength">
-                    <img
-                      className="mini-icon"
-                      src={CHARGE_STRENGTH_ICON}
-                      alt=""
-                      style={{ width: 14, height: 14 }}
-                    />{" "}
-                    {strength.toLocaleString()}
-                  </div>
-
-                  {/* Ingredient icons row */}
-                  <div className="meal-picker-card__ings">
-                    {r.ingredients.map((ic) => (
-                      <span key={ic.ingredient} className="meal-picker-card__ing">
-                        <img
-                          src={ingredientIcon(ic.ingredient)}
-                          alt={ic.ingredient}
-                          title={ic.ingredient}
-                          style={{ width: 16, height: 16 }}
-                        />
-                        <span className="meal-picker-card__ing-count">×{ic.count}</span>
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Pot fit indicator */}
-                  <div className={`meal-picker-card__pot-fit ${fits ? "meal-picker-card__pot-fit--ok" : "meal-picker-card__pot-fit--no"}`}>
-                    <img src="/pot.webp" alt="" className="meal-picker-pot__icon" />
-                    {fits
-                      ? <span>{t("teams.potFits")} · {t("teams.fillers", { n: String(fillers) })}</span>
-                      : <span>{t("teams.potNoFit")} ({totalIngs}/{effectivePot})</span>
-                    }
-                  </div>
-
-                  {/* Level stepper */}
-                  <div className="level-stepper meal-picker-card__stepper">
-                    <LevelStepperInput
-                      value={level}
-                      onChange={(n) => setLevelFor(r.name, n)}
-                      min={1}
-                      max={70}
-                      ariaLabels={{
-                        down: t("teams.levelDown"),
-                        input: t("teams.recipeLevel"),
-                        up: t("teams.levelUp"),
-                      }}
-                    />
-                  </div>
-
-                  {/* 3 moment toggles */}
-                  <div className="meal-picker-card__moments">
-                    {MOMENT_LABELS.map((label, idx) => {
-                      const isActive = meals[idx]?.recipe === r.name;
-                      return (
-                        <button
-                          key={idx}
-                          type="button"
-                          className={
-                            "meal-picker-card__moment-btn" + (isActive ? " is-active" : "")
-                          }
-                          aria-pressed={isActive}
-                          onClick={() => toggleMoment(r, idx)}
-                          title={label}
-                        >
-                          {label.slice(0, 2)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                <RecipeCard
+                  key={r.name}
+                  recipe={r}
+                  level={level}
+                  levelBonus={levelBonus}
+                  onLevelChange={(n) => setLevelFor(r.name, n)}
+                  footer={
+                    <>
+                      <div
+                        className={`meal-picker-card__pot-fit ${fits ? "meal-picker-card__pot-fit--ok" : "meal-picker-card__pot-fit--no"}`}
+                      >
+                        <img src="/pot.webp" alt="" className="meal-picker-pot__icon" />
+                        {fits ? (
+                          <span>
+                            {t("teams.potFits")} · {t("teams.fillers", { n: String(fillers) })}
+                          </span>
+                        ) : (
+                          <span>
+                            {t("teams.potNoFit")} ({totalIngs}/{effectivePot})
+                          </span>
+                        )}
+                      </div>
+                      <div className="meal-picker-card__moments">
+                        {MOMENT_LABELS.map((label, idx) => {
+                          const isActive = meals[idx]?.recipe === r.name;
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              className={
+                                "meal-picker-card__moment-btn" + (isActive ? " is-active" : "")
+                              }
+                              aria-pressed={isActive}
+                              onClick={() => toggleMoment(r, idx)}
+                              title={label}
+                            >
+                              {label.slice(0, 2)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  }
+                />
               );
             })
           )}

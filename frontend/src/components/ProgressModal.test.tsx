@@ -111,4 +111,27 @@ describe("ProgressModal", () => {
     await screen.findByText("33 ingredients");
     expect(screen.getAllByText("None").length).toBeGreaterThan(0);
   });
+
+  it("saves a recipe level from the recipes tab", async () => {
+    renderModal();
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("tab", { name: "Recipes" }));
+    const inputs = await screen.findAllByLabelText("Recipe level");
+    await userEvent.clear(inputs[0]);
+    await userEvent.type(inputs[0], "55");
+    await waitFor(() =>
+      expect(api.patchProgress).toHaveBeenCalledWith(
+        { recipe_levels: expect.objectContaining({ "Beanburger Curry": 55 }) },
+        expect.anything(),
+      ),
+    );
+  });
+
+  it("shows the empty state when a search matches nothing", async () => {
+    renderModal();
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("tab", { name: "Recipes" }));
+    await userEvent.type(await screen.findByLabelText(/search/i), "zzzzz");
+    expect(await screen.findByText("No results")).toBeInTheDocument();
+  });
 });

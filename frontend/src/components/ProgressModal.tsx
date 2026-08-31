@@ -7,6 +7,7 @@ import { useProgress } from "../useProgress";
 import { Modal } from "./Modal";
 import { Placeholder } from "./Placeholder";
 import { ProgressKitchenTab } from "./ProgressKitchenTab";
+import { ProgressRecipesTab } from "./ProgressRecipesTab";
 
 type TabId = "kitchen" | "recipes" | "areas";
 
@@ -48,14 +49,22 @@ export function ProgressModal({ onClose }: { onClose: () => void }) {
         {loading ? (
           <Placeholder loading>{t("teams.calculating")}</Placeholder>
         ) : (
-          activeTab === "kitchen" && (
+          (activeTab === "kitchen" && (
             <ProgressKitchenTab
               progress={progress}
               recipes={recipes.data ?? []}
               potLadder={catalog.data?.pot_ladder ?? []}
               onSave={save}
             />
-          )
+          )) ||
+          (activeTab === "recipes" && (
+            <ProgressRecipesTab
+              progress={progress}
+              recipes={recipes.data ?? []}
+              levelBonus={catalog.data?.recipe_level_bonus ?? []}
+              onSave={save}
+            />
+          ))
         )}
       </div>
     </Modal>
