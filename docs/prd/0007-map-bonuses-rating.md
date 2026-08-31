@@ -45,6 +45,10 @@ it helps and which bonus it carries.
 
 - An **area bonus** from **0% to 85%**, adjustable, multiplies **all** strength
   (berries, skills, cooking, fillers).
+- The bonus belongs to the **area**: each map carries its own, saved in [Player
+  progress](0011-player-progress.md) and loaded when that map is selected. With **no
+  map** selected there is no area, and so **no area bonus** — the same way no
+  favorite-berry bonus applies.
 - Strength values show their **base** and **base + bonus** so the effect is legible
   (e.g. on hover).
 - Expert maps carry their own bonus, separate from the normal one, but it behaves
@@ -103,9 +107,10 @@ Berry strength ×2.4 is the default.
 - Favorite berries are capped at **three**; on **Greengrass Isle** and both **expert**
   maps the user chooses them, on other maps they are **fixed** by the map.
 - The **area bonus** accepts **0–85%** and multiplies **all** strength; strength
-  readouts expose **base vs base + bonus**.
-- With **no map**, no favorite-berry bonus applies and the Snorlax rating is
-  **hidden**.
+  readouts expose **base vs base + bonus**. Switching maps switches to that map's
+  own saved bonus.
+- With **no map**, no favorite-berry bonus applies, **no area bonus** applies, and
+  the Snorlax rating is **hidden**.
 - The **Snorlax rating** is computed on **weekly** strength (daily × 7) against the
   map's 35 thresholds, and shows the tier, level, and **progress to the next**.
 - Raising the **area bonus** raises the grand total and can raise the Snorlax rating

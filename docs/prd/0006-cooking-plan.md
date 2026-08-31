@@ -30,7 +30,9 @@ It answers: *"with what my team produces, how good is this meal plan?"*.
   level, or empty.
 - An optional **dish-type filter** (Curry / Salad / Dessert) narrows the recipe
   choices; it does **not** restrict by map.
-- A **pot size** (base capacity) is a user input.
+- A **pot size** (base capacity) comes from [Player
+  progress](0011-player-progress.md): one step of the game's pot ladder, overridable
+  for the session.
 
 ### Ingredient balance
 
