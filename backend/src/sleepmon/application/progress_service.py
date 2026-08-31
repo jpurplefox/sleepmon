@@ -1,8 +1,8 @@
-"""Casos de uso del progreso del jugador (PRD 0011).
+"""Player progress use cases (PRD 0011).
 
-El dominio valida rangos; acá se valida la *identidad* contra el catálogo — que la
-receta exista, que el tipo de plato y el área sean los del juego — antes de que el
-merge puro del dominio corra.
+The domain validates ranges; here we validate *identity* against the catalog — that
+the recipe exists, that the dish type and area are the game's own — before the
+domain's pure merge runs.
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from collections.abc import Mapping
 from uuid import UUID
 
 from sleepmon.application.dto import ProgressPatchInput
-from sleepmon.application.services import _parse_enum
+from sleepmon.application.parsing import parse_enum
 from sleepmon.domain.errors import ValidationError
 from sleepmon.domain.ports import PlayerProgressRepository, RecipeCatalog
 from sleepmon.domain.progress import PlayerProgress, ProgressPatch, apply_patch
@@ -21,7 +21,7 @@ from sleepmon.domain.value_objects import Island, RecipeType
 
 
 class PlayerProgressService(ABC):
-    """Puerto primario: leer y actualizar el progreso de un usuario."""
+    """Primary port: read and update a user's progress."""
 
     @abstractmethod
     def get(self, user_id: UUID) -> PlayerProgress: ...
@@ -64,7 +64,7 @@ class DefaultPlayerProgressService(PlayerProgressService):
             return None
         parsed: dict[RecipeType, str | None] = {}
         for raw_type, name in favorites.items():
-            dish_type = _parse_enum(RecipeType, raw_type, "Tipo de plato")
+            dish_type = parse_enum(RecipeType, raw_type, "Tipo de plato")
             if name is None:
                 # Clearing a favorite names no recipe, so there is nothing to look up.
                 parsed[dish_type] = None
@@ -82,7 +82,7 @@ class DefaultPlayerProgressService(PlayerProgressService):
         if bonuses is None:
             return None
         return {
-            _parse_enum(Island, raw_area, "Área"): pct for raw_area, pct in bonuses.items()
+            parse_enum(Island, raw_area, "Área"): pct for raw_area, pct in bonuses.items()
         }
 
     def _require_recipe(self, name: str) -> Recipe:
