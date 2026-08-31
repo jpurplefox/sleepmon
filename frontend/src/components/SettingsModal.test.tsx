@@ -133,6 +133,41 @@ describe("SettingsModal — the recipe level mark", () => {
   });
 });
 
+describe("SettingsModal — the pot control walks the ladder", () => {
+  const LADDER = [21, 23, 25, 27, 29, 31, 33, 36];
+
+  it("steps to the previous ladder rung instead of an arbitrary value", async () => {
+    const onPotSizeChange = vi.fn();
+    renderModal({
+      catalog: { ...catalog, pot_ladder: LADDER },
+      potSize: 33,
+      savedPotSize: 33,
+      onPotSizeChange,
+    });
+    await userEvent.click(screen.getByLabelText("−"));
+    // The backend only accepts ladder rungs (validate_pot_size); 32 would be rejected.
+    expect(onPotSizeChange).toHaveBeenCalledWith(31);
+    expect(onPotSizeChange).not.toHaveBeenCalledWith(32);
+  });
+
+  it("disables the down button at the bottom rung", () => {
+    renderModal({ catalog: { ...catalog, pot_ladder: LADDER }, potSize: 21, savedPotSize: 21 });
+    expect(screen.getByLabelText("−")).toBeDisabled();
+  });
+});
+
+describe("SettingsModal — surfacing a failed save", () => {
+  it("shows an alert inside the modal when a save has failed", () => {
+    renderModal({ saveError: true });
+    expect(screen.getByRole("alert")).toHaveTextContent("Couldn't save the change.");
+  });
+
+  it("shows nothing when there is no error", () => {
+    renderModal({ saveError: false });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+});
+
 describe("SettingsModal — the favorite prefill", () => {
   it("fills the three meals from the favorite of the chosen type", async () => {
     const onChangeMeals = vi.fn();

@@ -460,11 +460,6 @@ export function Teams() {
         >
           {t("teams.configure")}
         </button>
-        {progressSaveError && (
-          <p className="error" role="alert">
-            {t("progress.saveError")}
-          </p>
-        )}
       </div>
 
       {goodCampTicket && (
@@ -1374,6 +1369,7 @@ export function Teams() {
           savedLevelFor={savedLevelFor}
           onSaveLevel={saveLevel}
           favoriteFor={(type) => progress.favorite_recipes[type] ?? null}
+          saveError={progressSaveError !== null}
         />
       )}
     </div>

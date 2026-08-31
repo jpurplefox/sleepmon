@@ -2,13 +2,56 @@ import { useState } from "react";
 
 import { useI18n } from "../i18n";
 import { perMealPot } from "../pot";
+import { potBounds, stepPot } from "../progress";
 import { RECIPE_TYPES } from "../recipes";
 import type { Catalog, MealInput, Recipe, WeeklyBonus } from "../types";
 import { IslandTab } from "./IslandTab";
-import { LevelStepperInput } from "./LevelStepperInput";
 import { Modal } from "./Modal";
 import { RecipeCard, normalizeSearch } from "./RecipeCard";
 import { UnsavedMark } from "./UnsavedMark";
+
+interface PotLadderStepperProps {
+  value: number;
+  ladder: number[];
+  onChange: (n: number) => void;
+  ariaLabels: { down: string; input: string; up: string };
+}
+
+// Same markup/classes as LevelStepperInput (so it inherits its CSS), but steps
+// through the game's actual pot ladder instead of accepting any typed value.
+function PotLadderStepper({ value, ladder, onChange, ariaLabels }: PotLadderStepperProps) {
+  const { atMin, atMax } = potBounds(ladder, value);
+  return (
+    <>
+      <button
+        type="button"
+        className="level-stepper__btn"
+        disabled={atMin}
+        aria-label={ariaLabels.down}
+        onClick={() => onChange(stepPot(ladder, value, -1))}
+      >
+        −
+      </button>
+      <input
+        type="text"
+        className="level-stepper__input"
+        inputMode="numeric"
+        readOnly
+        value={value}
+        aria-label={ariaLabels.input}
+      />
+      <button
+        type="button"
+        className="level-stepper__btn"
+        disabled={atMax}
+        aria-label={ariaLabels.up}
+        onClick={() => onChange(stepPot(ladder, value, 1))}
+      >
+        +
+      </button>
+    </>
+  );
+}
 
 type TabId = "island" | "meals";
 
@@ -61,6 +104,8 @@ interface Props {
   onSaveLevel: (recipe: string) => void;
   /** The saved favorite recipe for a dish type, or null if none is set. */
   favoriteFor: (type: Recipe["type"]) => string | null;
+  /** True when the last save attempt (any of the three) failed. */
+  saveError?: boolean;
 }
 
 export function SettingsModal({
@@ -100,6 +145,7 @@ export function SettingsModal({
   savedLevelFor,
   onSaveLevel,
   favoriteFor,
+  saveError = false,
 }: Props) {
   const { t } = useI18n();
 
@@ -210,6 +256,11 @@ export function SettingsModal({
         hidden={activeTab !== "island"}
         className="settings-modal-panel"
       >
+        {saveError && (
+          <p className="error" role="alert">
+            {t("progress.saveError")}
+          </p>
+        )}
         <IslandTab
           catalog={catalog}
           selectedIsland={selectedIsland}
@@ -239,6 +290,11 @@ export function SettingsModal({
         hidden={activeTab !== "meals"}
         className="settings-modal-panel"
       >
+        {saveError && (
+          <p className="error" role="alert">
+            {t("progress.saveError")}
+          </p>
+        )}
         {/* Top bar: dish type selector + search */}
         <div className="meal-picker-topbar">
           <div className="meal-picker-dish-type">
@@ -289,11 +345,10 @@ export function SettingsModal({
             <img src="/pot.webp" alt="" className="meal-picker-pot__icon" />
             <span className="meal-picker-pot__label muted">{t("teams.potSize")}</span>
             <div className="level-stepper meal-picker-pot__stepper">
-              <LevelStepperInput
+              <PotLadderStepper
                 value={potSize}
+                ladder={catalog.pot_ladder}
                 onChange={onPotSizeChange}
-                min={1}
-                max={150}
                 ariaLabels={{
                   down: "−",
                   input: t("teams.potSize"),
