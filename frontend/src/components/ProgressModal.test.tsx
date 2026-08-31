@@ -273,4 +273,73 @@ describe("ProgressModal", () => {
 
     expect(slider.value).toBe("60");
   });
+
+  it("keeps the slider on the last value sent when two saves resolve out of order", async () => {
+    // Control resolution order ourselves: two overlapping sends, the older one
+    // (60) settling after the newer one (75) has already landed.
+    const resolvers: Array<(value: PlayerProgress) => void> = [];
+    vi.spyOn(api, "patchProgress").mockImplementation(
+      () => new Promise<PlayerProgress>((resolve) => resolvers.push(resolve)),
+    );
+    renderModal();
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("tab", { name: "Areas" }));
+    const slider = (await screen.findByLabelText(
+      "Area bonus — Cyan Beach",
+    )) as HTMLInputElement;
+
+    vi.useFakeTimers();
+    fireEvent.change(slider, { target: { value: "60" } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300); // sends request A (60)
+    });
+    fireEvent.change(slider, { target: { value: "75" } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300); // sends request B (75), A still outstanding
+    });
+    expect(resolvers).toHaveLength(2);
+
+    // B, the newer request, resolves first.
+    await act(async () => {
+      resolvers[1](makeProgress({ area_bonuses: { "Cyan Beach": 75 } }));
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    // A resolves late, carrying its now-stale snapshot.
+    await act(async () => {
+      resolvers[0](makeProgress({ area_bonuses: { "Cyan Beach": 60 } }));
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(slider.value).toBe("75");
+  });
+
+  it("follows an external change after a failed save instead of staying pinned", async () => {
+    vi.spyOn(api, "patchProgress").mockRejectedValue(new Error("network error"));
+    const { client } = renderModal();
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("tab", { name: "Areas" }));
+    const slider = (await screen.findByLabelText(
+      "Area bonus — Cyan Beach",
+    )) as HTMLInputElement;
+
+    vi.useFakeTimers();
+    fireEvent.change(slider, { target: { value: "60" } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300); // fires the save, which will reject
+      await vi.advanceTimersByTimeAsync(0); // flush the rejection's microtasks
+    });
+
+    // An external update arrives after the failed save; the row must follow it.
+    act(() => {
+      client.setQueryData<PlayerProgress>(
+        ["progress"],
+        makeProgress({ area_bonuses: { "Cyan Beach": 20 } }),
+      );
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0); // flush the cache notification
+    });
+
+    expect(slider.value).toBe("20");
+  });
 });

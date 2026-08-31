@@ -13,7 +13,7 @@ const SAVE_DEBOUNCE_MS = 300;
 interface Props {
   progress: PlayerProgress;
   islands: Island[];
-  onSave: (patch: ProgressPatch) => void;
+  onSave: (patch: ProgressPatch) => Promise<void>;
 }
 
 export function ProgressAreasTab({ progress, islands, onSave }: Props) {
@@ -38,29 +38,46 @@ function AreaRow({
 }: {
   island: Island;
   pct: number;
-  onSave: (patch: ProgressPatch) => void;
+  onSave: (patch: ProgressPatch) => Promise<void>;
 }) {
   const { t } = useI18n();
   // Shown value while dragging; kept separate from `pct` so the slider stays
   // responsive and isn't shadowed once the debounced save resolves.
   const [value, setValue] = useState(pct);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // The value this row last sent, while that save is outstanding (no response yet).
+  // Count of saves in flight. A single "last value" slot can't represent two
+  // overlapping sends; this gates any resync at all while something is still out.
+  const pendingRef = useRef(0);
+  // The value of the most recently issued send, consulted only once nothing is
+  // outstanding (see the resync effect below): unlike the old single-slot guard,
+  // this is never cleared just because one response happens to match it while a
+  // newer send is still in flight — only once pendingRef reaches zero do we look
+  // at it at all, and every path that reaches zero also releases it.
   const lastSentRef = useRef<number | null>(null);
+  const mountedRef = useRef(true);
 
-  // Follow the saved value only when this row has nothing in flight: while a save
-  // is outstanding, an incoming value that is not the one we sent is stale.
+  // Follow the saved value only when this row has nothing outstanding at all: no
+  // armed debounce timer and no save in flight. Even then, an incoming value that
+  // doesn't match our last send is the stale echo of an older, superseded send
+  // settling last (its response can still land after a newer one's) — keep the
+  // value we already show and release the guard so the *next* change is trusted.
   useEffect(() => {
     if (timerRef.current !== null) return;
-    if (lastSentRef.current !== null && pct !== lastSentRef.current) return;
+    if (pendingRef.current !== 0) return;
+    if (lastSentRef.current !== null && pct !== lastSentRef.current) {
+      lastSentRef.current = null;
+      return;
+    }
     lastSentRef.current = null;
     setValue(pct);
   }, [pct]);
 
-  // A pending save cannot fire after the modal (and this row) unmounts.
+  // A pending save/timer cannot touch state after the modal (and this row) unmounts.
   useEffect(() => {
     return () => {
+      mountedRef.current = false;
       if (timerRef.current) clearTimeout(timerRef.current);
+      pendingRef.current = 0;
     };
   }, []);
 
@@ -69,8 +86,19 @@ function AreaRow({
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       timerRef.current = null;
+      pendingRef.current += 1;
       lastSentRef.current = next;
-      onSave({ area_bonuses: { [island.name]: next } });
+      onSave({ area_bonuses: { [island.name]: next } })
+        .catch(() => {
+          // A failed save has no informed opinion about the value anymore
+          // (surfaced to the user via the hook's `saveError`); release the guard
+          // so a later external update isn't mistaken for a stale echo forever.
+          lastSentRef.current = null;
+        })
+        .finally(() => {
+          if (!mountedRef.current) return;
+          pendingRef.current = Math.max(0, pendingRef.current - 1);
+        });
     }, SAVE_DEBOUNCE_MS);
   };
 

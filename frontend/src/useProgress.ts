@@ -16,6 +16,7 @@ export function useProgress(): {
   isLoading: boolean;
   isError: boolean;
   save: (patch: ProgressPatch) => void;
+  saveAsync: (patch: ProgressPatch) => Promise<void>;
   saveError: Error | null;
 } {
   const client = useQueryClient();
@@ -32,6 +33,12 @@ export function useProgress(): {
     isLoading: query.isLoading,
     isError: query.isError,
     save: mutation.mutate,
+    // Awaitable variant for callers that need to track completion (success or failure)
+    // themselves, e.g. to count outstanding saves. `save` above is unchanged for callers
+    // that just fire-and-forget.
+    saveAsync: async (patch) => {
+      await mutation.mutateAsync(patch);
+    },
     saveError: mutation.error,
   };
 }

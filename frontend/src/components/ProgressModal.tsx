@@ -21,7 +21,7 @@ const TABS: { id: TabId; labelKey: string }[] = [
 export function ProgressModal({ onClose }: { onClose: () => void }) {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<TabId>("kitchen");
-  const { progress, isLoading, isError, save, saveError } = useProgress();
+  const { progress, isLoading, isError, save, saveAsync, saveError } = useProgress();
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
   const recipes = useQuery({ queryKey: ["recipes"], queryFn: api.getRecipes });
 
@@ -70,7 +70,7 @@ export function ProgressModal({ onClose }: { onClose: () => void }) {
             <ProgressAreasTab
               progress={progress}
               islands={catalog.data?.islands ?? []}
-              onSave={save}
+              onSave={saveAsync}
             />
           ))
         )}
