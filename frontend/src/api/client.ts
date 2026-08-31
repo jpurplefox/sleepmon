@@ -2,8 +2,10 @@ import type {
   Catalog,
   Member,
   MemberInput,
+  PlayerProgress,
   Production,
   ProductionInput,
+  ProgressPatch,
   Recipe,
   TeamProduction,
   TeamProductionInput,
@@ -85,4 +87,7 @@ export const api = {
         good_camp_ticket: data.good_camp_ticket ?? false,
       }),
     }),
+  getProgress: () => request<PlayerProgress>("/progress"),
+  patchProgress: (patch: ProgressPatch) =>
+    request<PlayerProgress>("/progress", { method: "PATCH", body: JSON.stringify(patch) }),
 };

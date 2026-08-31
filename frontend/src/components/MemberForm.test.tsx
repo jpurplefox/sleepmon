@@ -40,6 +40,7 @@ const catalog: Catalog = {
   recipe_level_bonus: [1.0],
   ingredient_strengths: { "Fancy Apple": 90 },
   islands: [],
+  pot_ladder: [],
 };
 
 function renderForm(props: Partial<React.ComponentProps<typeof MemberForm>> = {}) {
