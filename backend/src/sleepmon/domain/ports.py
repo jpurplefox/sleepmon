@@ -7,12 +7,13 @@ ningún detalle de almacenamiento (DIP).
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import datetime
 from uuid import UUID
 
 from sleepmon.domain.auth import ExternalIdentity, RefreshToken, User
 from sleepmon.domain.entities import TeamMember
+from sleepmon.domain.progress import PlayerProgress
 from sleepmon.domain.recipes import Recipe
 from sleepmon.domain.species import Species
 
@@ -60,6 +61,24 @@ class TeamRepository(ABC):
     @abstractmethod
     def delete(self, member_id: UUID, user_id: UUID) -> bool:
         """Borra un miembro. Devuelve ``False`` si no existía."""
+
+
+class PlayerProgressRepository(ABC):
+    """Persistencia del progreso del jugador, una fila por usuario."""
+
+    @abstractmethod
+    def get(self, user_id: UUID) -> PlayerProgress:
+        """El progreso del usuario, o los valores por defecto si no hay fila."""
+
+    @abstractmethod
+    def transform(
+        self, user_id: UUID, change: Callable[[PlayerProgress], PlayerProgress]
+    ) -> PlayerProgress:
+        """Lee, aplica ``change`` y escribe, de forma atómica. Devuelve lo guardado.
+
+        El adapter es dueño de la transacción; ``change`` es puro. Si ``change``
+        levanta, la transacción se revierte y la fila queda intacta.
+        """
 
 
 class AccessTokenService(ABC):
