@@ -3,7 +3,11 @@ psycopg parametrice los valores (nunca interpolamos datos del usuario)."""
 
 from __future__ import annotations
 
-from pypika import Order, Parameter, Query, Table
+from typing import cast
+
+from pypika import Order, Parameter, PostgreSQLQuery, Query, Table
+from pypika.dialects import PostgreSQLQueryBuilder
+from pypika.terms import Function
 
 member = Table("team_member")
 subskill = Table("team_member_subskill")
@@ -195,20 +199,49 @@ SELECT_PROGRESS = (
     Query.from_(progress).select(*_PROGRESS_COLS).where(progress.user_id == _P).get_sql()
 )
 
-# FOR UPDATE locks the row for the read-modify-write in ``transform``: two tabs
-# saving at once serialize instead of losing an update. PyPika has no FOR UPDATE
-# builder, so it is appended to the built SQL — no user data is involved.
-SELECT_PROGRESS_FOR_UPDATE = SELECT_PROGRESS + " FOR UPDATE"
+# Locks the row for the read-modify-write in ``transform``: two tabs saving at once
+# serialize instead of one clobbering the other's update.
+SELECT_PROGRESS_FOR_UPDATE = (
+    Query.from_(progress)
+    .select(*_PROGRESS_COLS)
+    .where(progress.user_id == _P)
+    .for_update()
+    .get_sql()
+)
+
+# Makes the row exist (all-defaults) before ``transform`` takes its lock. Without
+# this, two concurrent first-writes for the same user both read the in-memory
+# defaults, and whichever UPSERT_PROGRESS commits last wins outright — the other's
+# columns are silently lost. INSERT ... ON CONFLICT DO NOTHING makes the second
+# caller block on the unique index and then take the lock for real, instead of
+# racing on a row that isn't there yet.
+#
+# The ``cast`` below (and in UPSERT_PROGRESS) is only to satisfy mypy: PyPika types
+# ``into().columns().insert()`` on the base ``QueryBuilder``, which doesn't declare
+# ``on_conflict``/``do_update``/``do_nothing`` — at runtime the object returned is
+# already the ``PostgreSQLQueryBuilder`` that does.
+ENSURE_PROGRESS_ROW = (
+    cast(
+        PostgreSQLQueryBuilder,
+        PostgreSQLQuery.into(progress).columns("user_id").insert(_P),
+    )
+    .on_conflict(progress.user_id)
+    .do_nothing()
+    .get_sql()
+)
 
 UPSERT_PROGRESS = (
-    Query.into(progress)
-    .columns("user_id", "pot_size", "recipe_levels", "favorite_recipes", "area_bonuses")
-    .insert(_P, _P, _P, _P, _P)
+    cast(
+        PostgreSQLQueryBuilder,
+        PostgreSQLQuery.into(progress)
+        .columns("user_id", "pot_size", "recipe_levels", "favorite_recipes", "area_bonuses")
+        .insert(_P, _P, _P, _P, _P),
+    )
+    .on_conflict(progress.user_id)
+    .do_update("pot_size")
+    .do_update("recipe_levels")
+    .do_update("favorite_recipes")
+    .do_update("area_bonuses")
+    .do_update("updated_at", Function("now"))
     .get_sql()
-    + " ON CONFLICT (user_id) DO UPDATE SET"
-    " pot_size = EXCLUDED.pot_size,"
-    " recipe_levels = EXCLUDED.recipe_levels,"
-    " favorite_recipes = EXCLUDED.favorite_recipes,"
-    " area_bonuses = EXCLUDED.area_bonuses,"
-    " updated_at = now()"
 )

@@ -363,6 +363,11 @@ class PostgresPlayerProgressRepository(PlayerProgressRepository):
         self, user_id: UUID, change: Callable[[PlayerProgress], PlayerProgress]
     ) -> PlayerProgress:
         with self._pool.connection() as conn:
+            # Ensures the row exists before locking it: on a fresh account the SELECT
+            # FOR UPDATE below would lock nothing, and two concurrent first writes
+            # would both compute from defaults and race on the final UPSERT.
+            with conn.cursor() as cur:
+                cur.execute(queries.ENSURE_PROGRESS_ROW, (user_id,))
             with conn.cursor(row_factory=class_row(_ProgressRow)) as cur:
                 cur.execute(queries.SELECT_PROGRESS_FOR_UPDATE, (user_id,))
                 row = cur.fetchone()
