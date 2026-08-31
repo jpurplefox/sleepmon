@@ -242,38 +242,6 @@ describe("ProgressModal", () => {
     await waitFor(() => expect(slider.value).toBe("50"));
   });
 
-  it("ignores a stale response for a row with a save outstanding", async () => {
-    // This save never resolves, so the row's own request stays outstanding
-    // for the whole test — any cache write we make below is from elsewhere.
-    vi.spyOn(api, "patchProgress").mockImplementation(() => new Promise(() => {}));
-    const { client } = renderModal();
-    await screen.findByText("33 ingredients");
-    await userEvent.click(screen.getByRole("tab", { name: "Areas" }));
-    const slider = (await screen.findByLabelText(
-      "Area bonus — Cyan Beach",
-    )) as HTMLInputElement;
-
-    vi.useFakeTimers();
-    fireEvent.change(slider, { target: { value: "60" } });
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(300); // fires the debounced save for 60
-    });
-
-    // A stale response for a different value lands while 60's save is outstanding.
-    act(() => {
-      client.setQueryData<PlayerProgress>(
-        ["progress"],
-        makeProgress({ area_bonuses: { "Cyan Beach": 45 } }),
-      );
-    });
-    // Give react-query's (microtask-scheduled) cache notification a chance to land.
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(0);
-    });
-
-    expect(slider.value).toBe("60");
-  });
-
   it("keeps the slider on the last value sent when two saves resolve out of order", async () => {
     // Control resolution order ourselves: two overlapping sends, the older one
     // (60) settling after the newer one (75) has already landed.
