@@ -342,4 +342,34 @@ describe("ProgressModal", () => {
 
     expect(slider.value).toBe("20");
   });
+
+  it("follows a genuine external change after its own save has already succeeded", async () => {
+    // The ordinary case: our own send's success is what advances `pct` to 60.
+    // A second, genuine external change to 80 must still be picked up afterwards.
+    const { client } = renderModal();
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("tab", { name: "Areas" }));
+    const slider = (await screen.findByLabelText(
+      "Area bonus — Cyan Beach",
+    )) as HTMLInputElement;
+
+    vi.useFakeTimers();
+    fireEvent.change(slider, { target: { value: "60" } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300); // fires the debounced save for 60
+      await vi.advanceTimersByTimeAsync(0); // flush its resolution into the cache
+    });
+    expect(slider.value).toBe("60");
+
+    act(() => {
+      client.setQueryData<PlayerProgress>(
+        ["progress"],
+        makeProgress({ area_bonuses: { "Cyan Beach": 80 } }),
+      );
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0); // flush the cache notification
+    });
+    expect(slider.value).toBe("80");
+  });
 });
