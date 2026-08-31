@@ -36,7 +36,7 @@ export function ProgressModal({ onClose }: { onClose: () => void }) {
             type="button"
             role="tab"
             id={`progress-tab-${id}`}
-            aria-controls={`progress-panel-${id}`}
+            aria-controls="progress-panel"
             aria-selected={activeTab === id}
             className={"specialty-toggle__btn" + (activeTab === id ? " is-on" : "")}
             onClick={() => setActiveTab(id)}
@@ -47,7 +47,7 @@ export function ProgressModal({ onClose }: { onClose: () => void }) {
       </div>
 
       <div
-        id={`progress-panel-${activeTab}`}
+        id="progress-panel"
         role="tabpanel"
         aria-labelledby={`progress-tab-${activeTab}`}
         className="settings-modal-panel"

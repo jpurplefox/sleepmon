@@ -148,6 +148,8 @@ describe("SettingsModal — the pot control walks the ladder", () => {
     // The backend only accepts ladder rungs (validate_pot_size); 32 would be rejected.
     expect(onPotSizeChange).toHaveBeenCalledWith(31);
     expect(onPotSizeChange).not.toHaveBeenCalledWith(32);
+    // Pot input is not typeable: only stepped via the ladder.
+    expect(screen.getByLabelText("Pot size")).toHaveAttribute("readOnly");
   });
 
   it("disables the down button at the bottom rung", () => {
