@@ -5,6 +5,7 @@ import { potBounds, recipeLevelOf, stepPot } from "../progress";
 import { recipeImage } from "../recipes";
 import type { PlayerProgress, ProgressPatch, Recipe } from "../types";
 import { FilterPopover, gridKeyDown } from "./FilterPopover";
+import { Stepper } from "./Stepper";
 
 const DISH_TYPES: Recipe["type"][] = ["Curry", "Salad", "Dessert"];
 
@@ -28,34 +29,17 @@ export function ProgressKitchenTab({ progress, recipes, potLadder, onSave }: Pro
       <div className="progress-section">
         <h3 className="progress-section__head">{t("progress.potSize")}</h3>
         {/* The stepper walks the game's real ladder, so it never spells the steps out. */}
-        <div className="stepper progress-pot">
-          <button
-            type="button"
-            className="stepper__btn"
-            onClick={() => movePot(-1)}
-            disabled={atMin}
-            aria-label={t("progress.potDown")}
-          >
-            ‹
-          </button>
-          <div className="stepper__display">
-            <img src="/pot.webp" alt="" style={{ width: 26, height: 26 }} />
-            <div className="stepper__text">
-              <span className="stepper__primary">
-                {t("progress.potUnit", { n: String(progress.pot_size) })}
-              </span>
-            </div>
-          </div>
-          <button
-            type="button"
-            className="stepper__btn"
-            onClick={() => movePot(1)}
-            disabled={atMax}
-            aria-label={t("progress.potUp")}
-          >
-            ›
-          </button>
-        </div>
+        <Stepper
+          className="progress-pot"
+          onPrev={() => movePot(-1)}
+          onNext={() => movePot(1)}
+          disablePrev={atMin}
+          disableNext={atMax}
+          prevLabel={t("progress.potDown")}
+          nextLabel={t("progress.potUp")}
+          leading={<img src="/pot.webp" alt="" style={{ width: 26, height: 26 }} />}
+          primary={t("progress.potUnit", { n: String(progress.pot_size) })}
+        />
       </div>
 
       <div className="progress-section">
