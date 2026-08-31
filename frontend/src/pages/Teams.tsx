@@ -168,6 +168,7 @@ export function Teams() {
     potUnsaved,
     areaBonusUnsaved,
     recipeLevelUnsaved,
+    unsavedRecipeNames,
     setPotOverride,
     setAreaBonusOverride,
     setRecipeLevelOverride,
@@ -1370,6 +1371,7 @@ export function Teams() {
           onSaveLevel={saveLevel}
           favoriteFor={(type) => progress.favorite_recipes[type] ?? null}
           saveError={progressSaveError !== null}
+          unsavedRecipeNames={unsavedRecipeNames}
         />
       )}
     </div>

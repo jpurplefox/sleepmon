@@ -3,50 +3,35 @@ import { useState } from "react";
 import { useI18n } from "../i18n";
 import { recipeLevelOf } from "../progress";
 import { RECIPE_TYPES } from "../recipes";
-import { useDebouncedSave } from "../useDebouncedSave";
 import type { PlayerProgress, ProgressPatch, Recipe } from "../types";
 import { Placeholder } from "./Placeholder";
 import { RecipeCard, normalizeSearch } from "./RecipeCard";
 
-// One row's local, debounced level — so a burst of stepper clicks collapses
-// into a single save instead of each click recomputing from a stale level.
-function RecipeLevelCard({
-  recipe,
-  level,
-  levelBonus,
-  onSave,
-}: {
-  recipe: Recipe;
-  level: number;
-  levelBonus: number[];
-  onSave: (level: number) => void;
-}) {
-  const [value, handleChange] = useDebouncedSave(level, onSave);
-  return (
-    <RecipeCard
-      recipe={recipe}
-      level={value}
-      levelBonus={levelBonus}
-      onLevelChange={handleChange}
-    />
-  );
-}
-
 interface Props {
-  progress: PlayerProgress;
+  /** The in-memory draft being edited (PRD 0011) — nothing here is saved yet. */
+  draft: PlayerProgress;
   recipes: Recipe[];
   levelBonus: number[];
-  onSave: (patch: ProgressPatch) => void;
+  onChange: (patch: ProgressPatch) => void;
 }
 
-export function ProgressRecipesTab({ progress, recipes, levelBonus, onSave }: Props) {
+export function ProgressRecipesTab({
+  draft,
+  recipes,
+  levelBonus,
+  onChange,
+}: Props) {
   const { t } = useI18n();
   const [search, setSearch] = useState("");
   const [type, setType] = useState<Recipe["type"] | null>(null);
 
   const q = normalizeSearch(search.trim());
   const shown = recipes
-    .filter((r) => (type === null || r.type === type) && (!q || normalizeSearch(r.name).includes(q)))
+    .filter(
+      (r) =>
+        (type === null || r.type === type) &&
+        (!q || normalizeSearch(r.name).includes(q)),
+    )
     .sort((a, b) => {
       const ta = RECIPE_TYPES.indexOf(a.type);
       const tb = RECIPE_TYPES.indexOf(b.type);
@@ -58,11 +43,19 @@ export function ProgressRecipesTab({ progress, recipes, levelBonus, onSave }: Pr
       <h3 className="progress-section__head">{t("progress.recipeLevels")}</h3>
       <div className="meal-picker-topbar">
         <div className="meal-picker-dish-type">
-          <span className="meal-picker-dish-type__label muted">{t("teams.dishType")}:</span>
-          <div className="specialty-toggle" role="group" aria-label={t("teams.dishType")}>
+          <span className="meal-picker-dish-type__label muted">
+            {t("teams.dishType")}:
+          </span>
+          <div
+            className="specialty-toggle"
+            role="group"
+            aria-label={t("teams.dishType")}
+          >
             <button
               type="button"
-              className={"specialty-toggle__btn" + (type === null ? " is-on" : "")}
+              className={
+                "specialty-toggle__btn" + (type === null ? " is-on" : "")
+              }
               aria-pressed={type === null}
               onClick={() => setType(null)}
             >
@@ -72,7 +65,9 @@ export function ProgressRecipesTab({ progress, recipes, levelBonus, onSave }: Pr
               <button
                 key={rt}
                 type="button"
-                className={"specialty-toggle__btn" + (type === rt ? " is-on" : "")}
+                className={
+                  "specialty-toggle__btn" + (type === rt ? " is-on" : "")
+                }
                 aria-pressed={type === rt}
                 onClick={() => setType(rt)}
               >
@@ -98,12 +93,14 @@ export function ProgressRecipesTab({ progress, recipes, levelBonus, onSave }: Pr
           <Placeholder>{t("teams.noResults")}</Placeholder>
         ) : (
           shown.map((r) => (
-            <RecipeLevelCard
+            <RecipeCard
               key={r.name}
               recipe={r}
-              level={recipeLevelOf(progress, r.name)}
+              level={recipeLevelOf(draft, r.name)}
               levelBonus={levelBonus}
-              onSave={(level) => onSave({ recipe_levels: { [r.name]: level } })}
+              onLevelChange={(level) =>
+                onChange({ recipe_levels: { [r.name]: level } })
+              }
             />
           ))
         )}

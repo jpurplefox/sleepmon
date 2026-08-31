@@ -23,13 +23,21 @@ export function useProgress(): {
   isLoading: boolean;
   isError: boolean;
   save: (patch: ProgressPatch) => void;
+  /** Same mutation as `save`, awaitable — lets a caller (Player progress's
+   * Guardar) know whether the save succeeded before deciding to close. */
+  saveAsync: (patch: ProgressPatch) => Promise<PlayerProgress>;
   saveError: Error | null;
 } {
   const client = useQueryClient();
   const query = useQuery({ queryKey: KEY, queryFn: api.getProgress });
   const latestSend = useRef(0);
 
-  const mutation = useMutation<PlayerProgress, Error, ProgressPatch, SendContext>({
+  const mutation = useMutation<
+    PlayerProgress,
+    Error,
+    ProgressPatch,
+    SendContext
+  >({
     mutationFn: api.patchProgress,
     onMutate: () => ({ id: ++latestSend.current }),
     // Responses can land out of order; only the newest send may write the
@@ -44,6 +52,7 @@ export function useProgress(): {
     isLoading: query.isLoading,
     isError: query.isError,
     save: mutation.mutate,
+    saveAsync: mutation.mutateAsync,
     saveError: mutation.error,
   };
 }

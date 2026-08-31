@@ -31,6 +31,12 @@ Player progress is its own screen, reached from the **profile menu** — it belo
 *you*, not to any one tool. Like the Box and Team Analysis, it is available only when
 signed in.
 
+It is a **draft**: what you change there is yours to review until you press **Guardar**,
+which writes it and closes the screen. Nothing is written as you type — a screen that
+saved silently would give you no moment where you confirmed anything, which is the
+opposite of the guideline below. Leaving with unsaved changes asks first (see *Leaving
+with changes*).
+
 ### Pot size
 
 - The pot does not take arbitrary values: it climbs a **fixed ladder** of 23 steps —
@@ -83,6 +89,21 @@ control — at nine areas and seventy recipes, repeating it would be noise. Savi
 always explicit: your progress is never updated on your behalf, and an unsaved change
 disappears on reload.
 
+### Leaving with changes
+
+Both screens that hold unsaved values ask before letting them go, and the question is
+the same shape in each — **guardar**, **salir sin guardar**, **cancelar** — but it means
+different things, because the two screens hold different kinds of "unsaved":
+
+- **Player progress** holds a draft of your progress. Leaving without saving **discards**
+  it; nothing about your account changes.
+- **Team Analysis** holds session values you are analysing with. Leaving without saving
+  **keeps** them for the session — the analysis on screen is unaffected — and only
+  declines to write them into your progress. The question exists so a real change you
+  meant to keep does not quietly disappear on the next reload.
+
+The question is asked however you leave: the close button, Escape, or a click outside.
+
 ## Acceptance criteria
 
 - A **new account** reads: pot **21**, every recipe at level **1**, no favorites, every
@@ -110,6 +131,15 @@ disappears on reload.
   nothing to save.
 - An unsaved change is **gone** after a reload; a saved one is present on **another
   device**, signed into the same account.
+- Editing anything in Player progress writes **nothing** until **Guardar** is pressed;
+  Guardar writes every pending change at once and closes the screen.
+- Leaving Player progress with changes — by the close button, Escape, or a click outside
+  — asks **guardar / salir sin guardar / cancelar**. *Salir sin guardar* discards the
+  draft; *cancelar* returns to the screen with the draft intact.
+- Leaving Player progress with **nothing** changed closes it immediately, with no question.
+- Leaving Team Analysis's settings with values marked unsaved asks the same three
+  ways out, and *salir sin guardar* **keeps** those values in the session — only the
+  write to your progress is declined.
 
 ## Guidelines
 

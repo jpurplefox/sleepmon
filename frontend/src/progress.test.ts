@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   EMPTY_PROGRESS,
+  applyProgressPatch,
   areaBonusOf,
+  diffProgress,
   effective,
   isUnsaved,
   potBounds,
@@ -130,5 +132,120 @@ describe("lookups", () => {
     expect(EMPTY_PROGRESS.pot_size).toBe(21);
     expect(recipeLevelOf(EMPTY_PROGRESS, "Beanburger Curry")).toBe(1);
     expect(areaBonusOf(EMPTY_PROGRESS, "Cyan Beach")).toBe(0);
+  });
+});
+
+describe("applyProgressPatch", () => {
+  it("overwrites the pot size", () => {
+    expect(applyProgressPatch(EMPTY_PROGRESS, { pot_size: 36 }).pot_size).toBe(
+      36,
+    );
+  });
+
+  it("sets a recipe level", () => {
+    const next = applyProgressPatch(EMPTY_PROGRESS, {
+      recipe_levels: { "Beanburger Curry": 20 },
+    });
+    expect(next.recipe_levels).toEqual({ "Beanburger Curry": 20 });
+  });
+
+  it("removes a recipe level when patched back to the default (1)", () => {
+    const next = applyProgressPatch(saved, {
+      recipe_levels: { "Beanburger Curry": 1 },
+    });
+    expect(next.recipe_levels).toEqual({});
+  });
+
+  it("sets and clears a favorite", () => {
+    const withFav = applyProgressPatch(EMPTY_PROGRESS, {
+      favorite_recipes: { Curry: "Beanburger Curry" },
+    });
+    expect(withFav.favorite_recipes).toEqual({ Curry: "Beanburger Curry" });
+
+    const cleared = applyProgressPatch(withFav, {
+      favorite_recipes: { Curry: null },
+    });
+    expect(cleared.favorite_recipes).toEqual({});
+  });
+
+  it("removes an area bonus when patched back to the default (0)", () => {
+    const next = applyProgressPatch(saved, {
+      area_bonuses: { "Cyan Beach": 0 },
+    });
+    expect(next.area_bonuses).toEqual({});
+  });
+
+  it("leaves untouched fields alone", () => {
+    const next = applyProgressPatch(saved, { pot_size: 36 });
+    expect(next.recipe_levels).toBe(saved.recipe_levels);
+    expect(next.area_bonuses).toBe(saved.area_bonuses);
+  });
+});
+
+describe("diffProgress", () => {
+  it("is empty when nothing changed", () => {
+    expect(diffProgress(saved, saved)).toEqual({});
+  });
+
+  it("includes only the pot size when only it changed", () => {
+    const draft = { ...saved, pot_size: 36 };
+    expect(diffProgress(saved, draft)).toEqual({ pot_size: 36 });
+  });
+
+  it("includes a recipe level that changed, and omits one that did not", () => {
+    const draft = applyProgressPatch(saved, {
+      recipe_levels: { "Beanburger Curry": 60 },
+    });
+    expect(diffProgress(saved, draft)).toEqual({
+      recipe_levels: { "Beanburger Curry": 60 },
+    });
+  });
+
+  it("sends the default level to revert a recipe that was saved above 1", () => {
+    // The draft reverted "Beanburger Curry" to its default — applyProgressPatch
+    // already dropped the key, so the draft's map no longer mentions it.
+    const draft = applyProgressPatch(saved, {
+      recipe_levels: { "Beanburger Curry": 1 },
+    });
+    expect(diffProgress(saved, draft)).toEqual({
+      recipe_levels: { "Beanburger Curry": 1 },
+    });
+  });
+
+  it("is empty again once a change is undone back to what is saved", () => {
+    let draft = applyProgressPatch(saved, { pot_size: 36 });
+    draft = applyProgressPatch(draft, { pot_size: saved.pot_size });
+    expect(diffProgress(saved, draft)).toEqual({});
+  });
+
+  it("includes a favorite set and a favorite cleared", () => {
+    const draft = applyProgressPatch(saved, {
+      favorite_recipes: { Curry: null, Salad: "Snoozy Tomato Salad" },
+    });
+    expect(diffProgress(saved, draft)).toEqual({
+      favorite_recipes: { Curry: null, Salad: "Snoozy Tomato Salad" },
+    });
+  });
+
+  it("includes an area bonus that changed", () => {
+    const draft = applyProgressPatch(saved, {
+      area_bonuses: { "Cyan Beach": 60 },
+    });
+    expect(diffProgress(saved, draft)).toEqual({
+      area_bonuses: { "Cyan Beach": 60 },
+    });
+  });
+
+  it("combines changes across every field into one patch", () => {
+    let draft = applyProgressPatch(saved, { pot_size: 36 });
+    draft = applyProgressPatch(draft, {
+      recipe_levels: { "Beanburger Curry": 60 },
+    });
+    draft = applyProgressPatch(draft, { area_bonuses: { "Cyan Beach": 60 } });
+    expect(diffProgress(saved, draft)).toEqual({
+      pot_size: 36,
+      recipe_levels: { "Beanburger Curry": 60 },
+      area_bonuses: { "Cyan Beach": 60 },
+    });
   });
 });

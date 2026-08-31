@@ -23,6 +23,9 @@ export interface SessionOverrides {
   areaBonusUnsaved: boolean;
   /** True when the shown level for one recipe differs from what is saved. */
   recipeLevelUnsaved: (name: string) => boolean;
+  /** Names of every recipe currently overridden away from its saved level —
+   * used to ask before leaving (PRD 0011) and to save them all at once. */
+  unsavedRecipeNames: string[];
   /** Pass undefined to clear the override and fall back to saved/default again. */
   setPotOverride: (value: number | undefined) => void;
   /** No-op with no island selected — there is nothing to key the override to. */
@@ -42,8 +45,12 @@ export function useSessionOverrides(
   selectedIsland: string | null,
 ): SessionOverrides {
   const [potOverride, setPotOverride] = useState<number | undefined>(undefined);
-  const [bonusOverrides, setBonusOverrides] = useState<Record<string, number>>({});
-  const [levelOverrides, setLevelOverrides] = useState<Record<string, number>>({});
+  const [bonusOverrides, setBonusOverrides] = useState<Record<string, number>>(
+    {},
+  );
+  const [levelOverrides, setLevelOverrides] = useState<Record<string, number>>(
+    {},
+  );
 
   const potSize = effective(potOverride, progress.pot_size, DEFAULT_POT_SIZE);
 
@@ -52,17 +59,42 @@ export function useSessionOverrides(
   const areaBonusPct =
     selectedIsland === null
       ? DEFAULT_AREA_BONUS
-      : effective(bonusOverrides[selectedIsland], savedBonusPct, DEFAULT_AREA_BONUS);
+      : effective(
+          bonusOverrides[selectedIsland],
+          savedBonusPct,
+          DEFAULT_AREA_BONUS,
+        );
 
   const recipeLevelFor = (name: string): number =>
-    effective(levelOverrides[name], progress.recipe_levels[name], DEFAULT_RECIPE_LEVEL);
+    effective(
+      levelOverrides[name],
+      progress.recipe_levels[name],
+      DEFAULT_RECIPE_LEVEL,
+    );
 
-  const potUnsaved = isUnsaved(potOverride, progress.pot_size, DEFAULT_POT_SIZE);
+  const potUnsaved = isUnsaved(
+    potOverride,
+    progress.pot_size,
+    DEFAULT_POT_SIZE,
+  );
   const areaBonusUnsaved =
     selectedIsland !== null &&
-    isUnsaved(bonusOverrides[selectedIsland], savedBonusPct, DEFAULT_AREA_BONUS);
+    isUnsaved(
+      bonusOverrides[selectedIsland],
+      savedBonusPct,
+      DEFAULT_AREA_BONUS,
+    );
   const recipeLevelUnsaved = (name: string): boolean =>
-    isUnsaved(levelOverrides[name], progress.recipe_levels[name], DEFAULT_RECIPE_LEVEL);
+    isUnsaved(
+      levelOverrides[name],
+      progress.recipe_levels[name],
+      DEFAULT_RECIPE_LEVEL,
+    );
+
+  // Only overridden recipes can possibly be unsaved, so scanning that (small)
+  // map is enough — no need to walk every recipe in the catalogue.
+  const unsavedRecipeNames =
+    Object.keys(levelOverrides).filter(recipeLevelUnsaved);
 
   const setAreaBonusOverride = (pct: number): void => {
     if (selectedIsland === null) return;
@@ -80,6 +112,7 @@ export function useSessionOverrides(
     potUnsaved,
     areaBonusUnsaved,
     recipeLevelUnsaved,
+    unsavedRecipeNames,
     setPotOverride,
     setAreaBonusOverride,
     setRecipeLevelOverride,

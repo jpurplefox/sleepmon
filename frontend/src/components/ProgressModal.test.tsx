@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { api } from "../api/client";
 import { LanguageProvider } from "../i18n";
@@ -64,14 +64,14 @@ function makeProgress(overrides: Partial<PlayerProgress> = {}): PlayerProgress {
   };
 }
 
-function renderModal() {
+function renderModal(onClose: () => void = () => {}) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
   const result = render(
     <QueryClientProvider client={client}>
       <LanguageProvider>
-        <ProgressModal onClose={() => {}} />
+        <ProgressModal onClose={onClose} />
       </LanguageProvider>
     </QueryClientProvider>,
   );
@@ -88,24 +88,10 @@ beforeEach(() => {
   );
 });
 
-afterEach(() => {
-  vi.useRealTimers();
-});
-
-describe("ProgressModal", () => {
+describe("ProgressModal — reading the draft", () => {
   it("shows the saved pot size", async () => {
     renderModal();
     expect(await screen.findByText("33 ingredients")).toBeInTheDocument();
-  });
-
-  it("saves the next ladder step when the pot is raised", async () => {
-    renderModal();
-    await screen.findByText("33 ingredients");
-    await userEvent.click(screen.getByRole("button", { name: "Bigger pot" }));
-    // TanStack Query v5 calls mutationFn with a second (internal) context argument.
-    await waitFor(() =>
-      expect(api.patchProgress).toHaveBeenCalledWith({ pot_size: 36 }, expect.anything()),
-    );
   });
 
   it("disables the up button at the top of the ladder", async () => {
@@ -127,21 +113,6 @@ describe("ProgressModal", () => {
     renderModal();
     await screen.findByText("33 ingredients");
     expect(screen.getAllByText("None").length).toBeGreaterThan(0);
-  });
-
-  it("saves a recipe level from the recipes tab", async () => {
-    renderModal();
-    await screen.findByText("33 ingredients");
-    await userEvent.click(screen.getByRole("tab", { name: "Recipes" }));
-    const inputs = await screen.findAllByLabelText("Recipe level");
-    await userEvent.clear(inputs[0]);
-    await userEvent.type(inputs[0], "55");
-    await waitFor(() =>
-      expect(api.patchProgress).toHaveBeenCalledWith(
-        { recipe_levels: expect.objectContaining({ "Beanburger Curry": 55 }) },
-        expect.anything(),
-      ),
-    );
   });
 
   it("shows the empty state when a search matches nothing", async () => {
@@ -167,7 +138,7 @@ describe("ProgressModal", () => {
     expect(await screen.findAllByText("no bonus yet")).toHaveLength(2);
   });
 
-  it("saves an area bonus", async () => {
+  it("shows a saved area bonus", async () => {
     vi.spyOn(api, "getProgress").mockResolvedValue(
       makeProgress({ area_bonuses: { "Cyan Beach": 42 } }),
     );
@@ -176,214 +147,197 @@ describe("ProgressModal", () => {
     await userEvent.click(screen.getByRole("tab", { name: "Areas" }));
     expect(await screen.findByText("42")).toBeInTheDocument();
   });
+});
 
-  it("collapses a burst of pot clicks into a single save at the final rung", async () => {
-    vi.spyOn(api, "getProgress").mockResolvedValue(makeProgress({ pot_size: 21 }));
-    // Never resolves — mirrors a slow connection where no click's response
-    // lands before the next click fires.
-    vi.spyOn(api, "patchProgress").mockImplementation(() => new Promise<PlayerProgress>(() => {}));
+describe("ProgressModal — the draft is not saved until Guardar", () => {
+  it("raises the pot in the draft without sending a PATCH", async () => {
     renderModal();
-    await screen.findByText("21 ingredients");
-
-    // Other tests' calls share this spy (no mock-clearing between tests), so
-    // compare against a baseline instead of asserting an absolute call count.
+    await screen.findByText("33 ingredients");
     const callsBefore = vi.mocked(api.patchProgress).mock.calls.length;
 
-    vi.useFakeTimers();
-    const up = screen.getByRole("button", { name: "Bigger pot" });
-    for (let i = 0; i < 5; i++) fireEvent.click(up);
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(300);
-    });
+    await userEvent.click(screen.getByRole("button", { name: "Bigger pot" }));
 
-    // 21 -> 23 -> 25 -> 27 -> 29 -> 31: one save, at the fully-advanced rung.
-    expect(api.patchProgress).toHaveBeenCalledTimes(callsBefore + 1);
-    expect(api.patchProgress).toHaveBeenLastCalledWith({ pot_size: 31 }, expect.anything());
+    expect(await screen.findByText("36 ingredients")).toBeInTheDocument();
+    expect(api.patchProgress).toHaveBeenCalledTimes(callsBefore);
   });
 
-  it("collapses a burst of recipe-level clicks into a single save at the final level", async () => {
-    vi.spyOn(api, "patchProgress").mockImplementation(() => new Promise<PlayerProgress>(() => {}));
+  it("changes a recipe level in the draft without sending a PATCH", async () => {
     renderModal();
     await screen.findByText("33 ingredients");
     await userEvent.click(screen.getByRole("tab", { name: "Recipes" }));
-    const [up] = await screen.findAllByRole("button", { name: "Raise level" });
     const callsBefore = vi.mocked(api.patchProgress).mock.calls.length;
 
-    vi.useFakeTimers();
-    for (let i = 0; i < 5; i++) fireEvent.click(up);
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(300);
-    });
+    const [input] = await screen.findAllByLabelText("Recipe level");
+    await userEvent.clear(input);
+    await userEvent.type(input, "55");
 
-    // Default level 1, five raises -> 6: one save, not five saves stuck at 2.
-    expect(api.patchProgress).toHaveBeenCalledTimes(callsBefore + 1);
-    expect(api.patchProgress).toHaveBeenLastCalledWith(
-      { recipe_levels: { "Beanburger Curry": 6 } },
-      expect.anything(),
-    );
-  });
-
-  it("debounces a slider drag into a single save", async () => {
-    renderModal();
-    await screen.findByText("33 ingredients");
-    await userEvent.click(screen.getByRole("tab", { name: "Areas" }));
-    const slider = await screen.findByLabelText("Area bonus — Cyan Beach");
-    // Other tests' calls share this spy (no mock-clearing between tests), so
-    // compare against a baseline instead of asserting an absolute call count.
-    const callsBefore = vi.mocked(api.patchProgress).mock.calls.length;
-
-    vi.useFakeTimers();
-    // A drag fires onChange on every pixel — simulate a burst, not one clean step.
-    fireEvent.change(slider, { target: { value: "10" } });
-    fireEvent.change(slider, { target: { value: "35" } });
-    fireEvent.change(slider, { target: { value: "60" } });
-    expect(api.patchProgress).toHaveBeenCalledTimes(callsBefore);
-
-    // Async variant: also flushes the microtask react-query uses to invoke mutationFn.
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(300);
-    });
-
-    expect(api.patchProgress).toHaveBeenCalledTimes(callsBefore + 1);
-    expect(api.patchProgress).toHaveBeenLastCalledWith(
-      { area_bonuses: { "Cyan Beach": 60 } },
-      expect.anything(),
-    );
-  });
-
-  it("cancels a pending save when the modal unmounts before the debounce fires", async () => {
-    const { unmount } = renderModal();
-    await screen.findByText("33 ingredients");
-    await userEvent.click(screen.getByRole("tab", { name: "Areas" }));
-    const slider = await screen.findByLabelText("Area bonus — Cyan Beach");
-    const callsBefore = vi.mocked(api.patchProgress).mock.calls.length;
-
-    vi.useFakeTimers();
-    fireEvent.change(slider, { target: { value: "77" } });
-    unmount();
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(300);
-    });
-
+    expect(input).toHaveValue(55);
     expect(api.patchProgress).toHaveBeenCalledTimes(callsBefore);
   });
 
-  it("follows an external progress change when no save is pending", async () => {
-    const { client } = renderModal();
-    await screen.findByText("33 ingredients");
-    await userEvent.click(screen.getByRole("tab", { name: "Areas" }));
-    const slider = (await screen.findByLabelText(
-      "Area bonus — Cyan Beach",
-    )) as HTMLInputElement;
-    expect(slider.value).toBe("0");
-
-    act(() => {
-      client.setQueryData<PlayerProgress>(
-        ["progress"],
-        makeProgress({ area_bonuses: { "Cyan Beach": 50 } }),
-      );
-    });
-
-    await waitFor(() => expect(slider.value).toBe("50"));
-  });
-
-  it("keeps the slider on the last value sent when two saves resolve out of order", async () => {
-    // Control resolution order ourselves: two overlapping sends, the older one
-    // (60) settling after the newer one (75) has already landed.
-    const resolvers: Array<(value: PlayerProgress) => void> = [];
-    vi.spyOn(api, "patchProgress").mockImplementation(
-      () => new Promise<PlayerProgress>((resolve) => resolvers.push(resolve)),
-    );
+  it("changes an area bonus in the draft without sending a PATCH", async () => {
     renderModal();
     await screen.findByText("33 ingredients");
     await userEvent.click(screen.getByRole("tab", { name: "Areas" }));
-    const slider = (await screen.findByLabelText(
-      "Area bonus — Cyan Beach",
-    )) as HTMLInputElement;
+    const callsBefore = vi.mocked(api.patchProgress).mock.calls.length;
 
-    vi.useFakeTimers();
-    fireEvent.change(slider, { target: { value: "60" } });
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(300); // sends request A (60)
-    });
-    fireEvent.change(slider, { target: { value: "75" } });
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(300); // sends request B (75), A still outstanding
-    });
-    expect(resolvers).toHaveLength(2);
+    const slider = await screen.findByLabelText("Area bonus — Cyan Beach");
+    fireEvent.change(slider, { target: { value: "42" } });
 
-    // B, the newer request, resolves first.
-    await act(async () => {
-      resolvers[1](makeProgress({ area_bonuses: { "Cyan Beach": 75 } }));
-      await vi.advanceTimersByTimeAsync(0);
-    });
-    // A resolves late, carrying its now-stale snapshot.
-    await act(async () => {
-      resolvers[0](makeProgress({ area_bonuses: { "Cyan Beach": 60 } }));
-      await vi.advanceTimersByTimeAsync(0);
-    });
-
-    expect(slider.value).toBe("75");
+    expect(await screen.findByText("42")).toBeInTheDocument();
+    expect(api.patchProgress).toHaveBeenCalledTimes(callsBefore);
   });
 
-  it("follows an external change after a failed save instead of staying pinned", async () => {
-    vi.spyOn(api, "patchProgress").mockRejectedValue(new Error("network error"));
+  it("keeps the draft unaffected by a background cache update", async () => {
     const { client } = renderModal();
     await screen.findByText("33 ingredients");
-    await userEvent.click(screen.getByRole("tab", { name: "Areas" }));
-    const slider = (await screen.findByLabelText(
-      "Area bonus — Cyan Beach",
-    )) as HTMLInputElement;
+    await userEvent.click(screen.getByRole("button", { name: "Bigger pot" }));
+    await screen.findByText("36 ingredients");
 
-    vi.useFakeTimers();
-    fireEvent.change(slider, { target: { value: "60" } });
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(300); // fires the save, which will reject
-      await vi.advanceTimersByTimeAsync(0); // flush the rejection's microtasks
-    });
-
-    // An external update arrives after the failed save; the row must follow it.
+    // A save from elsewhere (or a refetch) lands in the cache mid-edit; the
+    // draft was seeded once and must not be clobbered by it.
     act(() => {
-      client.setQueryData<PlayerProgress>(
-        ["progress"],
-        makeProgress({ area_bonuses: { "Cyan Beach": 20 } }),
-      );
-    });
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(0); // flush the cache notification
+      client.setQueryData<PlayerProgress>(["progress"], makeProgress({ pot_size: 25 }));
     });
 
-    expect(slider.value).toBe("20");
+    expect(screen.getByText("36 ingredients")).toBeInTheDocument();
+  });
+});
+
+describe("ProgressModal — Guardar", () => {
+  it("is disabled with no changes", async () => {
+    renderModal();
+    await screen.findByText("33 ingredients");
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
   });
 
-  it("follows a genuine external change after its own save has already succeeded", async () => {
-    // The ordinary case: our own send's success is what advances `pct` to 60.
-    // A second, genuine external change to 80 must still be picked up afterwards.
-    const { client } = renderModal();
+  it("sends one PATCH with exactly the changed fields, across every tab, and closes", async () => {
+    const onClose = vi.fn();
+    renderModal(onClose);
     await screen.findByText("33 ingredients");
+
+    await userEvent.click(screen.getByRole("button", { name: "Bigger pot" })); // 33 -> 36
+
+    await userEvent.click(screen.getByRole("tab", { name: "Recipes" }));
+    const [levelInput] = await screen.findAllByLabelText("Recipe level");
+    await userEvent.clear(levelInput);
+    await userEvent.type(levelInput, "55");
+
     await userEvent.click(screen.getByRole("tab", { name: "Areas" }));
-    const slider = (await screen.findByLabelText(
-      "Area bonus — Cyan Beach",
-    )) as HTMLInputElement;
+    const slider = await screen.findByLabelText("Area bonus — Cyan Beach");
+    fireEvent.change(slider, { target: { value: "42" } });
 
-    vi.useFakeTimers();
-    fireEvent.change(slider, { target: { value: "60" } });
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(300); // fires the debounced save for 60
-      await vi.advanceTimersByTimeAsync(0); // flush its resolution into the cache
-    });
-    expect(slider.value).toBe("60");
+    const callsBefore = vi.mocked(api.patchProgress).mock.calls.length;
+    expect(api.patchProgress).toHaveBeenCalledTimes(callsBefore); // nothing sent yet
 
-    act(() => {
-      client.setQueryData<PlayerProgress>(
-        ["progress"],
-        makeProgress({ area_bonuses: { "Cyan Beach": 80 } }),
-      );
-    });
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(0); // flush the cache notification
-    });
-    expect(slider.value).toBe("80");
+    const saveButton = screen.getByRole("button", { name: "Save" });
+    expect(saveButton).not.toBeDisabled();
+    await userEvent.click(saveButton);
+
+    // TanStack Query v5 calls mutationFn with a second (internal) context argument.
+    await waitFor(() => expect(api.patchProgress).toHaveBeenCalledTimes(callsBefore + 1));
+    expect(api.patchProgress).toHaveBeenLastCalledWith(
+      {
+        pot_size: 36,
+        recipe_levels: { "Beanburger Curry": 55 },
+        area_bonuses: { "Cyan Beach": 42 },
+      },
+      expect.anything(),
+    );
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the modal open with the draft intact and shows the error when the save fails", async () => {
+    vi.spyOn(api, "patchProgress").mockRejectedValueOnce(new Error("network error"));
+    const onClose = vi.fn();
+    renderModal(onClose);
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("button", { name: "Bigger pot" }));
+    await screen.findByText("36 ingredients");
+
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't save the change.");
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByText("36 ingredients")).toBeInTheDocument();
+  });
+});
+
+describe("ProgressModal — leaving with changes", () => {
+  it("closes immediately with no changes, asking nothing", async () => {
+    const onClose = vi.fn();
+    renderModal(onClose);
+    await screen.findByText("33 ingredients");
+
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
+
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(screen.queryByText(/leaving without saving discards/i)).not.toBeInTheDocument();
+  });
+
+  it("asks before closing with changes, and cancelar keeps the modal and the draft", async () => {
+    const onClose = vi.fn();
+    renderModal(onClose);
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("button", { name: "Bigger pot" }));
+    await screen.findByText("36 ingredients");
+
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(await screen.findByText(/leaving without saving discards/i)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.queryByText(/leaving without saving discards/i)).not.toBeInTheDocument();
+    expect(await screen.findByText("36 ingredients")).toBeInTheDocument();
+  });
+
+  it("salir sin guardar closes and discards the draft, without saving", async () => {
+    const onClose = vi.fn();
+    renderModal(onClose);
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("button", { name: "Bigger pot" }));
+    await screen.findByText("36 ingredients");
+    const callsBefore = vi.mocked(api.patchProgress).mock.calls.length;
+
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
+    await userEvent.click(screen.getByRole("button", { name: "Leave without saving" }));
+
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(api.patchProgress).toHaveBeenCalledTimes(callsBefore);
+  });
+
+  it("guardar from the exit question saves the draft and closes", async () => {
+    const onClose = vi.fn();
+    renderModal(onClose);
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("button", { name: "Bigger pot" }));
+    await screen.findByText("36 ingredients");
+
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() =>
+      expect(api.patchProgress).toHaveBeenLastCalledWith({ pot_size: 36 }, expect.anything()),
+    );
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("cancels the question on Escape instead of closing the modal", async () => {
+    const onClose = vi.fn();
+    renderModal(onClose);
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("button", { name: "Bigger pot" }));
+    await screen.findByText("36 ingredients");
+
+    fireEvent.keyDown(document, { key: "Escape" }); // ✕/Escape/overlay all ask first
+    expect(await screen.findByText(/leaving without saving discards/i)).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: "Escape" }); // Escape again cancels the question
+    await waitFor(() =>
+      expect(screen.queryByText(/leaving without saving discards/i)).not.toBeInTheDocument(),
+    );
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByText("36 ingredients")).toBeInTheDocument();
   });
 });

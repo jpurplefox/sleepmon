@@ -65,6 +65,7 @@ function renderModal(overrides: Partial<React.ComponentProps<typeof SettingsModa
     savedLevelFor: () => 1,
     onSaveLevel: vi.fn(),
     favoriteFor: () => null,
+    unsavedRecipeNames: [],
     ...overrides,
   };
 
@@ -203,5 +204,76 @@ describe("SettingsModal — the favorite prefill", () => {
     renderModal({ meals: [null, null, null], favoriteFor: () => null, onChangeMeals });
     await userEvent.click(screen.getByRole("button", { name: "Curry" }));
     expect(onChangeMeals).not.toHaveBeenCalled();
+  });
+});
+
+describe("SettingsModal — leaving with unsaved session values", () => {
+  it("closes immediately when nothing is unsaved", async () => {
+    const onClose = vi.fn();
+    renderModal({ onClose });
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("asks before closing when a value is unsaved", async () => {
+    const onClose = vi.fn();
+    renderModal({ potUnsaved: true, onClose });
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
+    // The copy must say the session values are kept — the opposite of Player
+    // progress's "salir sin guardar", which discards the draft.
+    expect(screen.getByText(/stay in the session/i)).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("cancelar keeps the modal open, asking nothing further", async () => {
+    const onClose = vi.fn();
+    renderModal({ bonusUnsaved: true, onClose });
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.queryByText(/stay in the session/i)).not.toBeInTheDocument();
+  });
+
+  it("salir sin guardar closes without reverting the value or saving it", async () => {
+    const onClose = vi.fn();
+    const onSavePot = vi.fn();
+    const onSaveBonus = vi.fn();
+    const onSaveLevel = vi.fn();
+    renderModal({ potUnsaved: true, onClose, onSavePot, onSaveBonus, onSaveLevel });
+
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
+    await userEvent.click(screen.getByRole("button", { name: "Leave without saving" }));
+
+    expect(onClose).toHaveBeenCalledOnce();
+    // Nothing was written — the session value the user was analysing with is
+    // untouched, only the write into Player progress was declined.
+    expect(onSavePot).not.toHaveBeenCalled();
+    expect(onSaveBonus).not.toHaveBeenCalled();
+    expect(onSaveLevel).not.toHaveBeenCalled();
+  });
+
+  it("guardar saves every unsaved value — pot, bonus, and every changed recipe level — then closes", async () => {
+    const onClose = vi.fn();
+    const onSavePot = vi.fn();
+    const onSaveBonus = vi.fn();
+    const onSaveLevel = vi.fn();
+    renderModal({
+      potUnsaved: true,
+      bonusUnsaved: true,
+      unsavedRecipeNames: ["Beanburger Curry", "Fancy Apple Curry"],
+      onClose,
+      onSavePot,
+      onSaveBonus,
+      onSaveLevel,
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(onSavePot).toHaveBeenCalledOnce();
+    expect(onSaveBonus).toHaveBeenCalledOnce();
+    expect(onSaveLevel).toHaveBeenCalledWith("Beanburger Curry");
+    expect(onSaveLevel).toHaveBeenCalledWith("Fancy Apple Curry");
+    expect(onClose).toHaveBeenCalledOnce();
   });
 });
