@@ -181,3 +181,34 @@ DELETE_REFRESH_FAMILY = (
 DELETE_REFRESH_EXPIRED = (
     Query.from_(refresh_token).where(refresh_token.expires_at <= _P).delete().get_sql()
 )
+
+progress = Table("player_progress")
+
+_PROGRESS_COLS = (
+    progress.pot_size,
+    progress.recipe_levels,
+    progress.favorite_recipes,
+    progress.area_bonuses,
+)
+
+SELECT_PROGRESS = (
+    Query.from_(progress).select(*_PROGRESS_COLS).where(progress.user_id == _P).get_sql()
+)
+
+# FOR UPDATE locks the row for the read-modify-write in ``transform``: two tabs
+# saving at once serialize instead of losing an update. PyPika has no FOR UPDATE
+# builder, so it is appended to the built SQL — no user data is involved.
+SELECT_PROGRESS_FOR_UPDATE = SELECT_PROGRESS + " FOR UPDATE"
+
+UPSERT_PROGRESS = (
+    Query.into(progress)
+    .columns("user_id", "pot_size", "recipe_levels", "favorite_recipes", "area_bonuses")
+    .insert(_P, _P, _P, _P, _P)
+    .get_sql()
+    + " ON CONFLICT (user_id) DO UPDATE SET"
+    " pot_size = EXCLUDED.pot_size,"
+    " recipe_levels = EXCLUDED.recipe_levels,"
+    " favorite_recipes = EXCLUDED.favorite_recipes,"
+    " area_bonuses = EXCLUDED.area_bonuses,"
+    " updated_at = now()"
+)

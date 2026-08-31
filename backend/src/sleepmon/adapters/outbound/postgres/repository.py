@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
@@ -10,14 +11,21 @@ from uuid import UUID
 
 from psycopg import Cursor
 from psycopg.rows import TupleRow, class_row
+from psycopg.types.json import Jsonb
 from psycopg_pool import ConnectionPool
 
 from sleepmon.adapters.outbound.postgres import queries
 from sleepmon.domain.auth import RefreshToken, User
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.errors import ValidationError
-from sleepmon.domain.ports import RefreshTokenRepository, TeamRepository, UserRepository
-from sleepmon.domain.value_objects import Ingredient, Nature, Ribbon, SubSkill
+from sleepmon.domain.ports import (
+    PlayerProgressRepository,
+    RefreshTokenRepository,
+    TeamRepository,
+    UserRepository,
+)
+from sleepmon.domain.progress import PlayerProgress
+from sleepmon.domain.value_objects import Ingredient, Island, Nature, RecipeType, Ribbon, SubSkill
 
 _E = TypeVar("_E", bound=Enum)
 
@@ -295,3 +303,82 @@ def _build_member(
         ribbon=_decode(Ribbon, row.ribbon),
         skill_level=row.skill_level,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class _ProgressRow:
+    """Row of ``player_progress`` (pot_size plus the three JSONB documents)."""
+
+    pot_size: int
+    recipe_levels: dict[str, int]
+    favorite_recipes: dict[str, str]
+    area_bonuses: dict[str, int]
+
+
+def _decode_optional(enum_cls: type[_E], value: str) -> _E | None:
+    """Like ``_decode``, but returns ``None`` instead of raising.
+
+    A key the catalogue no longer has (a renamed area) is dropped on read: the
+    catalogue is the source of truth and cannot turn the screen into a 500. The
+    same key is still rejected on write, where the user can still act on it.
+    """
+    try:
+        return enum_cls(value)
+    except ValueError:
+        return None
+
+
+def _to_progress(row: _ProgressRow) -> PlayerProgress:
+    favorites: dict[RecipeType, str] = {}
+    for raw_type, name in row.favorite_recipes.items():
+        dish_type = _decode_optional(RecipeType, raw_type)
+        if dish_type is not None:
+            favorites[dish_type] = name
+
+    bonuses: dict[Island, int] = {}
+    for raw_area, pct in row.area_bonuses.items():
+        area = _decode_optional(Island, raw_area)
+        if area is not None:
+            bonuses[area] = pct
+
+    # Recipe names are catalogue strings, not an enum: nothing to decode, and a level
+    # for a recipe the catalogue dropped is harmless where it sits.
+    return PlayerProgress(row.pot_size, dict(row.recipe_levels), favorites, bonuses)
+
+
+class PostgresPlayerProgressRepository(PlayerProgressRepository):
+    def __init__(self, pool: ConnectionPool) -> None:
+        self._pool = pool
+
+    def get(self, user_id: UUID) -> PlayerProgress:
+        with (
+            self._pool.connection() as conn,
+            conn.cursor(row_factory=class_row(_ProgressRow)) as cur,
+        ):
+            cur.execute(queries.SELECT_PROGRESS, (user_id,))
+            row = cur.fetchone()
+        return PlayerProgress() if row is None else _to_progress(row)
+
+    def transform(
+        self, user_id: UUID, change: Callable[[PlayerProgress], PlayerProgress]
+    ) -> PlayerProgress:
+        with self._pool.connection() as conn:
+            with conn.cursor(row_factory=class_row(_ProgressRow)) as cur:
+                cur.execute(queries.SELECT_PROGRESS_FOR_UPDATE, (user_id,))
+                row = cur.fetchone()
+            current = PlayerProgress() if row is None else _to_progress(row)
+            # If ``change`` raises, leaving the block rolls the transaction back and
+            # the row is untouched.
+            updated = change(current)
+            with conn.cursor() as cur:
+                cur.execute(
+                    queries.UPSERT_PROGRESS,
+                    (
+                        user_id,
+                        updated.pot_size,
+                        Jsonb(dict(updated.recipe_levels)),
+                        Jsonb({t.value: n for t, n in updated.favorite_recipes.items()}),
+                        Jsonb({a.value: p for a, p in updated.area_bonuses.items()}),
+                    ),
+                )
+        return updated
