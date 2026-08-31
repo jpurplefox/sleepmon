@@ -235,6 +235,7 @@ class ProductionController(Controller):
                 sub_skills=data.sub_skills,
                 ribbon=data.ribbon,
                 skill_level=data.skill_level,
+                scenario=data.scenario,
             )
         )
         return _full_production_out(result)
