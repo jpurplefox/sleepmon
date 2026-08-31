@@ -126,6 +126,13 @@ def test_catalog_islands_expose_ratings(client: TestClient) -> None:
     }
 
 
+def test_catalog_serves_the_pot_ladder(client: TestClient) -> None:
+    body = client.get("/catalog").json()
+    assert body["pot_ladder"][0] == 21
+    assert body["pot_ladder"][-1] == 81
+    assert len(body["pot_ladder"]) == 23
+
+
 def test_create_and_list_member(client: TestClient, auth_header: dict[str, str]) -> None:
     res = client.post("/team", json=valid_payload(), headers=auth_header)
     assert res.status_code == 201

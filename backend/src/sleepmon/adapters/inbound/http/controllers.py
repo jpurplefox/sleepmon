@@ -52,6 +52,7 @@ from sleepmon.domain.catalog_data import (
     ISLAND_RATING_THRESHOLDS,
     ISLAND_USER_PICKS,
     NATURE_EFFECTS,
+    POT_LADDER,
     RECIPE_LEVEL_BONUS,
     SUB_SKILL_TIERS,
 )
@@ -250,6 +251,7 @@ class CatalogController(Controller):
             sub_skills=[SubSkillOut(name=s.value, tier=SUB_SKILL_TIERS[s].value) for s in SubSkill],
             ingredients=[i.value for i in Ingredient],
             recipe_level_bonus=list(RECIPE_LEVEL_BONUS),
+            pot_ladder=list(POT_LADDER),
             ingredient_strengths={ing.value: INGREDIENT_STRENGTH[ing] for ing in Ingredient},
             species=[
                 SpeciesOut(

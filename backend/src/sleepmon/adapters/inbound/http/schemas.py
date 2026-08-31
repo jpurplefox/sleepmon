@@ -99,6 +99,7 @@ class CatalogOut(msgspec.Struct):
     ingredients: list[str]
     species: list[SpeciesOut]
     recipe_level_bonus: list[float]
+    pot_ladder: list[int]
     ingredient_strengths: dict[str, int]
     islands: list[IslandOut]
 
