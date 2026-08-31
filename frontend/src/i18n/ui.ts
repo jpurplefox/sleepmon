@@ -400,6 +400,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "error.body": "Ocurrió un error inesperado al mostrar esta vista. Probá recargar la página.",
     // Player progress
     "progress.title": "Mi progreso",
+    "progress.loading": "Cargando tu progreso…",
     "progress.tabKitchen": "Cocina",
     "progress.tabRecipes": "Recetas",
     "progress.tabAreas": "Áreas",
@@ -816,6 +817,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "error.body": "An unexpected error occurred while showing this view. Try reloading the page.",
     // Player progress
     "progress.title": "My progress",
+    "progress.loading": "Loading your progress…",
     "progress.tabKitchen": "Kitchen",
     "progress.tabRecipes": "Recipes",
     "progress.tabAreas": "Areas",

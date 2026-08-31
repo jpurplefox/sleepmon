@@ -35,6 +35,8 @@ export function ProgressModal({ onClose }: { onClose: () => void }) {
             key={id}
             type="button"
             role="tab"
+            id={`progress-tab-${id}`}
+            aria-controls={`progress-panel-${id}`}
             aria-selected={activeTab === id}
             className={"specialty-toggle__btn" + (activeTab === id ? " is-on" : "")}
             onClick={() => setActiveTab(id)}
@@ -44,11 +46,16 @@ export function ProgressModal({ onClose }: { onClose: () => void }) {
         ))}
       </div>
 
-      <div className="settings-modal-panel">
+      <div
+        id={`progress-panel-${activeTab}`}
+        role="tabpanel"
+        aria-labelledby={`progress-tab-${activeTab}`}
+        className="settings-modal-panel"
+      >
         {saveError && <p className="error" role="alert">{t("progress.saveError")}</p>}
         {isError && <p className="error" role="alert">{t("progress.loadError")}</p>}
         {loading ? (
-          <Placeholder loading>{t("teams.calculating")}</Placeholder>
+          <Placeholder loading>{t("progress.loading")}</Placeholder>
         ) : (
           (activeTab === "kitchen" && (
             <ProgressKitchenTab

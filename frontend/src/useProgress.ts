@@ -32,10 +32,8 @@ export function useProgress(): {
   const mutation = useMutation<PlayerProgress, Error, ProgressPatch, SendContext>({
     mutationFn: api.patchProgress,
     onMutate: () => ({ id: ++latestSend.current }),
-    // Responses can land out of order; a response for a send that isn't the
-    // newest would overwrite the cache with a stale document, so only the
-    // newest send is allowed to write. This is what lets every consumer of
-    // `progress` trust the cache instead of re-deriving it themselves.
+    // Responses can land out of order; only the newest send may write the
+    // cache, so a stale one never clobbers a fresher document.
     onSuccess: (updated, _patch, context) => {
       if (context.id === latestSend.current) client.setQueryData(KEY, updated);
     },

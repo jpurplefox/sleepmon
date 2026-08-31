@@ -31,7 +31,7 @@ export interface SessionOverrides {
 }
 
 /**
- * Session-only edits (PRD 0012) layered over the saved `progress`: pot size, the
+ * Session-only edits (PRD 0011) layered over the saved `progress`: pot size, the
  * per-island area bonus, and per-recipe levels. Everything returned is DERIVED —
  * override ?? saved ?? default — never synced into state with an effect, so a
  * fresh `progress` (the query resolving mid-session) is reflected immediately for

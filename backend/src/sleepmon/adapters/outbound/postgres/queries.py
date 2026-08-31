@@ -209,17 +209,11 @@ SELECT_PROGRESS_FOR_UPDATE = (
     .get_sql()
 )
 
-# Makes the row exist (all-defaults) before ``transform`` takes its lock. Without
-# this, two concurrent first-writes for the same user both read the in-memory
-# defaults, and whichever UPSERT_PROGRESS commits last wins outright — the other's
-# columns are silently lost. INSERT ... ON CONFLICT DO NOTHING makes the second
-# caller block on the unique index and then take the lock for real, instead of
-# racing on a row that isn't there yet.
-#
-# The ``cast`` below (and in UPSERT_PROGRESS) is only to satisfy mypy: PyPika types
-# ``into().columns().insert()`` on the base ``QueryBuilder``, which doesn't declare
-# ``on_conflict``/``do_update``/``do_nothing`` — at runtime the object returned is
-# already the ``PostgreSQLQueryBuilder`` that does.
+# Make the row exist before locking it: SELECT ... FOR UPDATE locks nothing when
+# it is absent, so two concurrent first-writes would race instead of serializing.
+
+# cast: PyPika's insert() types as the base QueryBuilder, but on_conflict/do_update/
+# do_nothing only exist on PostgreSQLQueryBuilder, which is what runs at runtime.
 ENSURE_PROGRESS_ROW = (
     cast(
         PostgreSQLQueryBuilder,
