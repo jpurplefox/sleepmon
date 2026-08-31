@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { expertMarks } from "./expertMarks";
 import { SCENARIOS, scenarioCardProps, scenarioOption } from "./scenarios";
 
 describe("scenarios", () => {
@@ -57,5 +58,24 @@ describe("scenarios", () => {
       "expert_ingredient",
       "expert_skill",
     ]);
+  });
+
+  it("matches the selector's mark to the mark expertMarks puts on the card", () => {
+    // Ties scenarios.ts's own mark strings to expertMarks.ts's, so the two files
+    // can't drift apart silently (each has its own tests, but neither reads the other's).
+    const identity = (key: string) => key;
+    for (const { value, mark } of SCENARIOS) {
+      if (mark === null) continue;
+      const { berryRole, expert, weeklyBonus } = scenarioCardProps(value);
+      const labels = expertMarks({
+        role: berryRole,
+        expert,
+        weeklyBonus,
+        skillLevel: 3,
+        effectiveSkillLevel: 3,
+        t: identity,
+      }).map((m) => m.label);
+      expect(labels).toContain(mark);
+    }
   });
 });

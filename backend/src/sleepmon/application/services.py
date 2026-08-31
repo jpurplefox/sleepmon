@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from enum import StrEnum
-from typing import Final, TypeVar
+from typing import TypeVar, assert_never
 from uuid import UUID
 
 from sleepmon.application.dto import (
@@ -133,13 +133,6 @@ class ComparisonScenario(StrEnum):
     EXPERT_SKILL = "expert_skill"
 
 
-_SCENARIO_WEEKLY: Final[dict[ComparisonScenario, WeeklyBonus]] = {
-    ComparisonScenario.EXPERT_BERRY: WeeklyBonus.BERRY_STRENGTH,
-    ComparisonScenario.EXPERT_INGREDIENT: WeeklyBonus.INGREDIENT,
-    ComparisonScenario.EXPERT_SKILL: WeeklyBonus.SKILL_TRIGGER,
-}
-
-
 def _scenario_bonuses(scenario: str, berry: Berry) -> MapBonuses:
     """Comparison's chosen scenario, as the domain's value object.
 
@@ -148,12 +141,22 @@ def _scenario_bonuses(scenario: str, berry: Berry) -> MapBonuses:
     one berry can be, so its perks aren't reproducible for a whole comparison.
     """
     chosen = _parse_enum(ComparisonScenario, scenario, "Escenario")
-    if chosen is ComparisonScenario.NONE:
-        return MapBonuses()
     subs = frozenset({berry})
-    if chosen is ComparisonScenario.FAVORITE:
-        return MapBonuses(subs=subs)
-    return MapBonuses(subs=subs, expert=True, weekly_bonus=_SCENARIO_WEEKLY[chosen])
+    # match on the enum (no wildcard) so mypy flags a new member missing a branch,
+    # instead of a dict lookup that would only fail at runtime (KeyError -> 500).
+    match chosen:
+        case ComparisonScenario.NONE:
+            return MapBonuses()
+        case ComparisonScenario.FAVORITE:
+            return MapBonuses(subs=subs)
+        case ComparisonScenario.EXPERT_BERRY:
+            return MapBonuses(subs=subs, expert=True, weekly_bonus=WeeklyBonus.BERRY_STRENGTH)
+        case ComparisonScenario.EXPERT_INGREDIENT:
+            return MapBonuses(subs=subs, expert=True, weekly_bonus=WeeklyBonus.INGREDIENT)
+        case ComparisonScenario.EXPERT_SKILL:
+            return MapBonuses(subs=subs, expert=True, weekly_bonus=WeeklyBonus.SKILL_TRIGGER)
+        case _ as unreachable:
+            assert_never(unreachable)
 
 
 def _map_bonuses(data: TeamProductionInput) -> MapBonuses:

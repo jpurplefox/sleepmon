@@ -38,6 +38,16 @@ const WEEKLY: Record<Scenario, WeeklyBonus> = {
   expert_skill: "skill_trigger",
 };
 
+// Explicit like WEEKLY above, not a "expert_" prefix test: a future scenario named
+// without that prefix must still declare its expert-ness here, in step with the backend.
+const IS_EXPERT: Record<Scenario, boolean> = {
+  none: false,
+  favorite: false,
+  expert_berry: true,
+  expert_ingredient: true,
+  expert_skill: true,
+};
+
 /**
  * The scenario in the mark vocabulary the card and `expertMarks` already speak.
  * Always "sub", never "main": a single berry is the main favorite, so its perks
@@ -50,7 +60,7 @@ export function scenarioCardProps(value: Scenario): {
 } {
   return {
     berryRole: value === "none" ? "none" : "sub",
-    expert: value.startsWith("expert_"),
+    expert: IS_EXPERT[value],
     weeklyBonus: WEEKLY[value],
   };
 }
