@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from enum import StrEnum
-from typing import TypeVar
+from typing import TypeVar, assert_never
 from uuid import UUID
 
 from sleepmon.application.dto import (
@@ -121,6 +121,42 @@ def _validate_ingredients(species: Species, ingredients: tuple[Ingredient, ...])
                 f"{ingredient.value} no es válido para {species.name} en el slot "
                 f"{slot + 1}. Válidos: {allowed}."
             )
+
+
+class ComparisonScenario(StrEnum):
+    """The five scenarios Comparison offers (PRD 0002, "Map scenario")."""
+
+    NONE = "none"
+    FAVORITE = "favorite"
+    EXPERT_BERRY = "expert_berry"
+    EXPERT_INGREDIENT = "expert_ingredient"
+    EXPERT_SKILL = "expert_skill"
+
+
+def _scenario_bonuses(scenario: str, berry: Berry) -> MapBonuses:
+    """Comparison's chosen scenario, as the domain's value object.
+
+    The species' own berry enters as a SUB favorite, so the x2 and the weekly bonus
+    reach every card alike without picking a map. Never as the MAIN favorite: only
+    one berry can be, so its perks aren't reproducible for a whole comparison.
+    """
+    chosen = _parse_enum(ComparisonScenario, scenario, "Escenario")
+    subs = frozenset({berry})
+    # match on the enum (no wildcard) so mypy flags a new member missing a branch,
+    # instead of a dict lookup that would only fail at runtime (KeyError -> 500).
+    match chosen:
+        case ComparisonScenario.NONE:
+            return MapBonuses()
+        case ComparisonScenario.FAVORITE:
+            return MapBonuses(subs=subs)
+        case ComparisonScenario.EXPERT_BERRY:
+            return MapBonuses(subs=subs, expert=True, weekly_bonus=WeeklyBonus.BERRY_STRENGTH)
+        case ComparisonScenario.EXPERT_INGREDIENT:
+            return MapBonuses(subs=subs, expert=True, weekly_bonus=WeeklyBonus.INGREDIENT)
+        case ComparisonScenario.EXPERT_SKILL:
+            return MapBonuses(subs=subs, expert=True, weekly_bonus=WeeklyBonus.SKILL_TRIGGER)
+        case _ as unreachable:
+            assert_never(unreachable)
 
 
 def _map_bonuses(data: TeamProductionInput) -> MapBonuses:
@@ -318,7 +354,14 @@ class DefaultTeamService(TeamService):
         _validate_ingredients(species, ingredients)
 
         result = daily_production(
-            species, ingredients, data.level, nature, sub_skills, ribbon, data.skill_level
+            species,
+            ingredients,
+            data.level,
+            nature,
+            sub_skills,
+            ribbon,
+            data.skill_level,
+            map_bonuses=_scenario_bonuses(data.scenario, species.berry),
         )
         return _production_result(result)
 
