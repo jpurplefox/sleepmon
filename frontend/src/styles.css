@@ -3252,6 +3252,19 @@ button.prod-card__base-tag--action:hover {
   z-index: 0; pointer-events: none;
 }
 
+/* Slot dividido: el slider toma el ancho libre y las acciones del Pokémon activo
+   se anclan a la derecha de esa misma fila, así la barra no crece de alto. */
+.team-slot__weights { display: flex; align-items: center; gap: 0.4rem; }
+.team-slot__weights > .bonus-slider { flex: 1; min-width: 0; }
+.team-slot__weights-actions { display: flex; flex: 0 0 auto; }
+
+/* Menú de "dividir": ancla a la derecha (el disparador está pegado al borde de
+   una card que puede medir 200px) y se ajusta al contenido, no a los 16rem de
+   .filter-list, que son para listas de bayas. */
+.team-slot__split-host { position: relative; display: inline-flex; }
+.team-slot__split-pop { left: auto; right: 0; }
+.team-slot__split-pop .filter-list { width: max-content; min-width: 9rem; max-height: none; }
+
 /* Análisis de equipo — barra de período (toggle diario/semanal) a nivel de página */
 /* Análisis de equipo — sección de agregados y cocina */
 .teams-aggregates {

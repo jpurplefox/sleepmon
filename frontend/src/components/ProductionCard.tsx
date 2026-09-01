@@ -80,6 +80,8 @@ interface Props {
   /** Cabecera de slot (página de Equipos): reemplaza la toolbar readOnly por este
    *  nodo (pestañas de split + slider). Sin efecto fuera de readOnly. */
   slotHeader?: ReactNode;
+  /** Inline message shown at the top of the card body (e.g. a failed save). */
+  notice?: ReactNode;
   onEdit: () => void;
   onClone: () => void;
   onRemove: () => void;
@@ -116,6 +118,7 @@ export function ProductionCard({
   comparing,
   readOnly = false,
   slotHeader,
+  notice,
   onEdit,
   onClone,
   onRemove,
@@ -352,6 +355,7 @@ export function ProductionCard({
         onDragOver={!readOnly ? (e) => e.preventDefault() : undefined}
         onDrop={!readOnly ? (e) => { e.preventDefault(); onDrop?.(); } : undefined}
       >
+        {notice}
         <header className="prod-card__head">
           {/* Fila 1: grip de arrastre + reordenar por teclado + nombre / nivel / listón.
               En modo readOnly no se muestran grip ni botones de movimiento. */}

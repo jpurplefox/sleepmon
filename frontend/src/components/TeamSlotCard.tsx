@@ -1,136 +1,260 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import type { Slot, Member, Catalog, TeamProduction, BerryRole, WeeklyBonus } from "../types";
-import { ProductionCard } from "./ProductionCard";
-import { configFromMember } from "../pages/Teams";
+
 import { useI18n } from "../i18n";
-import { IconClose, IconSplit } from "./icons";
+import type { Slot } from "../teamRoster";
+import { weightsOf } from "../teamRoster";
+import type { BerryRole, Catalog, TeamProduction, WeeklyBonus } from "../types";
+import type { SaveStatus } from "../useSaveToBox";
+import { ProductionCard } from "./ProductionCard";
+import { IconClose, IconEdit, IconSaveBox, IconSplit } from "./icons";
 
 interface TeamSlotCardProps {
   slot: Slot;
   slotIndex: number;
-  memberById: Map<string, Member>;
   catalog: Catalog;
-  // members[] del resultado del equipo; cada uno con production ya ponderada.
+  // members[] from the team result; each production is already weighted.
   contributions: TeamProduction["members"] | undefined;
-  // Resolves a berry name to its role ("main" / "sub" / "none") for the current map/favorite.
   berryRoleOf: (berry: string) => BerryRole;
   expert: boolean;
   weeklyBonus: WeeklyBonus;
-  canSplit: boolean;            // false si el equipo está al máximo de slots o sin pokés libres
-  teamHasSplit?: boolean;       // true si algún slot del equipo está dividido (para igualar altura del header)
-  onRequestSplit: (slotIndex: number) => void;    // abre el picker en modo "dividir"
-  onRemoveSlot: (slotIndex: number) => void;      // quita el slot entero
-  onRemoveEntry: (slotIndex: number, entryIndex: number) => void; // colapsa a single
-  onWeightChange: (slotIndex: number, pctA: number) => void;      // pctA en 1..99
+  teamHasSplit?: boolean;
+  saveStatus: (entryId: string) => SaveStatus;
+  onAddNew: (slotIndex: number) => void;
+  onAddFromBox: (slotIndex: number) => void;
+  onEdit: (slotIndex: number, entryIndex: number) => void;
+  onSaveToBox: (slotIndex: number, entryIndex: number) => void;
+  onRemoveSlot: (slotIndex: number) => void;
+  onRemoveEntry: (slotIndex: number, entryIndex: number) => void;
+  onWeightChange: (slotIndex: number, pctA: number) => void;
 }
 
 export function TeamSlotCard({
   slot,
   slotIndex,
-  memberById,
   catalog,
   contributions,
   berryRoleOf,
   expert,
   weeklyBonus,
-  canSplit,
   teamHasSplit,
-  onRequestSplit,
+  saveStatus,
+  onAddNew,
+  onAddFromBox,
+  onEdit,
+  onSaveToBox,
   onRemoveSlot,
   onRemoveEntry,
   onWeightChange,
 }: TeamSlotCardProps) {
   const { t } = useI18n();
   const [activeTab, setActiveTab] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const splitBtnRef = useRef<HTMLButtonElement>(null);
+
   const split = slot.entries.length === 2;
   const safeTab = Math.min(activeTab, slot.entries.length - 1);
   const active = slot.entries[safeTab];
+  const status = saveStatus(active.id);
 
-  const member = memberById.get(active.memberId);
-  const config = member ? configFromMember(catalog, member) : null;
-  if (!member || !config) return null;
+  // Click outside and Escape close the split menu; focus returns to the trigger —
+  // same pattern as ProfileMenu and BoxToolbar.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        splitBtnRef.current?.focus();
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
 
-  const contrib = contributions?.find((mc) => mc.member_id === active.memberId);
+  const speciesEntry = catalog.species.find((s) => s.name === active.config.species);
+  const berryRole: BerryRole = speciesEntry ? berryRoleOf(speciesEntry.berry) : "none";
+  const contrib = contributions?.find((mc) => mc.id === active.id);
   const prod = contrib?.production ?? null;
 
-  const speciesEntry = catalog.species.find((s) => s.name === member.species);
-  const berryRole: BerryRole = speciesEntry ? berryRoleOf(speciesEntry.berry) : "none";
+  const editBtn = (entryIndex: number, species: string) => (
+    <button
+      type="button"
+      className="icon-btn"
+      onClick={() => onEdit(slotIndex, entryIndex)}
+      title={t("teams.editNamed", { species })}
+      aria-label={t("teams.editNamed", { species })}
+    >
+      <IconEdit />
+    </button>
+  );
 
-  const nameOf = (id: string) => memberById.get(id)?.species ?? "?";
-  const pctA = Math.round(slot.entries[0].weight * 100);
+  const saveBtn = (entryIndex: number, species: string, inBox: boolean, saving: boolean) => (
+    <button
+      type="button"
+      className={
+        "icon-btn" + (inBox ? " icon-btn--inbox" : "") + (saving ? " icon-btn--saving" : "")
+      }
+      disabled={saving}
+      onClick={() => onSaveToBox(slotIndex, entryIndex)}
+      title={t(inBox ? "teams.saveNamedUpdate" : "teams.saveNamed", { species })}
+      aria-label={t(inBox ? "teams.saveNamedUpdate" : "teams.saveNamed", { species })}
+    >
+      <IconSaveBox />
+    </button>
+  );
+
+  const removeSlotBtn = (
+    <button
+      type="button"
+      className="icon-btn prod-card__remove"
+      onClick={() => onRemoveSlot(slotIndex)}
+      title={t("card.remove")}
+      aria-label={t("card.remove")}
+    >
+      <IconClose />
+    </button>
+  );
+
+  // "Split" has to ask where the second Pokémon comes from: the same two paths
+  // the add cell offers, in a menu anchored to the button.
+  const splitControl = (
+    <div className="team-slot__split-host" ref={menuRef}>
+      <button
+        type="button"
+        ref={splitBtnRef}
+        className="icon-btn"
+        aria-haspopup="menu"
+        aria-expanded={menuOpen}
+        onClick={() => setMenuOpen((o) => !o)}
+        title={t("teams.split")}
+        aria-label={t("teams.split")}
+      >
+        <IconSplit />
+      </button>
+      {menuOpen && (
+        <div className="filter-pop team-slot__split-pop" role="menu" aria-label={t("teams.addFrom")}>
+          <div className="filter-list">
+            <button
+              type="button"
+              role="menuitem"
+              className="filter-list__item"
+              onClick={() => {
+                setMenuOpen(false);
+                onAddNew(slotIndex);
+              }}
+            >
+              {t("prod.new")}
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              className="filter-list__item"
+              onClick={() => {
+                setMenuOpen(false);
+                onAddFromBox(slotIndex);
+              }}
+            >
+              {t("prod.myPokemon")}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const pctA = Math.round(slot.share * 100);
+  const weights = weightsOf(slot);
 
   const header = split ? (
     <div className="team-slot__split">
       <div className="team-slot__tabs" role="tablist">
         {slot.entries.map((e, i) => (
-          <div key={e.memberId} className={"team-slot__tab-wrap" + (i === safeTab ? " team-slot__tab-wrap--active" : "")}>
-            <button type="button" role="tab" aria-selected={i === safeTab} className="team-slot__tab" onClick={() => setActiveTab(i)}>
-              {nameOf(e.memberId)}{" "}
-              <span className="team-slot__tab-pct">{Math.round(e.weight * 100)}%</span>
+          <div
+            key={e.id}
+            className={
+              "team-slot__tab-wrap" + (i === safeTab ? " team-slot__tab-wrap--active" : "")
+            }
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={i === safeTab}
+              className="team-slot__tab"
+              onClick={() => setActiveTab(i)}
+            >
+              {e.config.species}{" "}
+              <span className="team-slot__tab-pct">{Math.round(weights[i] * 100)}%</span>
             </button>
             <button
               type="button"
               className="team-slot__tab-remove"
               onClick={() => onRemoveEntry(slotIndex, i)}
               title={t("teams.splitRemove")}
-              aria-label={t("teams.splitRemove") + ": " + nameOf(e.memberId)}
+              aria-label={t("teams.splitRemove") + ": " + e.config.species}
             >
               <IconClose />
             </button>
           </div>
         ))}
       </div>
-      <div
-        className="bonus-slider team-slot__slider team-slot__slider--split"
-        style={{ "--ratio": (pctA / 100).toFixed(4) } as CSSProperties}
-      >
-        <div className="bonus-slider__row">
-          <div className="bonus-slider__track">
-            <div className="bonus-slider__fill" />
-            <div className="bonus-slider__thumb" />
-            <input
-              type="range"
-              className="bonus-slider__input"
-              min={1}
-              max={99}
-              step={1}
-              value={pctA}
-              onChange={(e) => onWeightChange(slotIndex, Number(e.target.value))}
-              aria-label={t("teams.splitShare")}
-              aria-valuetext={`${pctA}%`}
-            />
+      {/* The tabs row is the one that wraps, so the per-Pokémon actions ride with
+          the slider instead — see docs/design-system.md, "A split slot's actions
+          ride with the slider". */}
+      <div className="team-slot__weights">
+        <div
+          className="bonus-slider team-slot__slider team-slot__slider--split"
+          style={{ "--ratio": (pctA / 100).toFixed(4) } as CSSProperties}
+        >
+          <div className="bonus-slider__row">
+            <div className="bonus-slider__track">
+              <div className="bonus-slider__fill" />
+              <div className="bonus-slider__thumb" />
+              <input
+                type="range"
+                className="bonus-slider__input"
+                min={1}
+                max={99}
+                step={1}
+                value={pctA}
+                onChange={(e) => onWeightChange(slotIndex, Number(e.target.value))}
+                aria-label={t("teams.splitShare")}
+                aria-valuetext={`${pctA}%`}
+              />
+            </div>
           </div>
+        </div>
+        <div className="team-slot__weights-actions">
+          {editBtn(safeTab, active.config.species)}
+          {saveBtn(
+            safeTab,
+            active.config.species,
+            active.sourceId !== undefined,
+            status.state === "saving",
+          )}
+          {removeSlotBtn}
         </div>
       </div>
     </div>
   ) : (
     <div className={"team-slot__single" + (teamHasSplit ? " team-slot__single--reserve" : "")}>
-      <button
-        type="button"
-        className="icon-btn"
-        onClick={() => onRequestSplit(slotIndex)}
-        disabled={!canSplit}
-        title={t("teams.split")}
-        aria-label={t("teams.split")}
-      >
-        <IconSplit />
-      </button>
-      <button
-        type="button"
-        className="icon-btn prod-card__remove"
-        onClick={() => onRemoveSlot(slotIndex)}
-        title={t("card.remove")}
-        aria-label={t("card.remove")}
-      >
-        <IconClose />
-      </button>
+      {editBtn(0, active.config.species)}
+      {saveBtn(0, active.config.species, active.sourceId !== undefined, status.state === "saving")}
+      {splitControl}
+      {removeSlotBtn}
     </div>
   );
 
   return (
     <ProductionCard
-      config={config}
+      config={active.config}
       catalog={catalog}
       production={prod}
       productionError={null}
@@ -139,6 +263,13 @@ export function TeamSlotCard({
       expert={expert}
       weeklyBonus={weeklyBonus}
       slotHeader={header}
+      notice={
+        status.state === "error" ? (
+          <p className="error" role="alert">
+            {status.error ?? t("card.saveError")}
+          </p>
+        ) : null
+      }
       onEdit={() => {}}
       onClone={() => {}}
       onRemove={() => onRemoveSlot(slotIndex)}

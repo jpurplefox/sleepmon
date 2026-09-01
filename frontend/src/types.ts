@@ -173,17 +173,6 @@ export interface MealInput {
   level: number;
 }
 
-// Estado efímero del equipo en la página de Equipos. Un slot puede compartirse
-// entre 2 Pokémon; los weights de un slot suman 1.
-export interface SlotEntry {
-  memberId: string;
-  weight: number; // (0, 1]
-}
-
-export interface Slot {
-  entries: SlotEntry[]; // 1 o 2 entradas
-}
-
 export interface TeamProductionEntryInput {
   id: string;
   weight: number;
@@ -229,7 +218,7 @@ export interface SkillEffectAgg {
 }
 
 export interface MemberContribution {
-  member_id: string;
+  id: string;
   species: string;
   strength: number;
   // Fuerza base del miembro (sin bonus de isla aplicado).
@@ -242,7 +231,6 @@ export interface MemberContribution {
 
 export interface TeamProduction {
   member_count: number;
-  excluded_count: number;
   total_strength: number;
   total_berry_amount: number;
   total_berry_strength: number;
