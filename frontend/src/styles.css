@@ -3762,26 +3762,13 @@ button.prod-card__base-tag--action:hover {
   font-size: var(--text-sm);
 }
 
-/* Grid of recipe cards */
+/* Grid of recipe cards. No scrolling of its own: it always sits inside
+   .settings-modal-panel, which is the single scroll container — two nested
+   scrollers produced two side-by-side scrollbars. */
 .meal-picker-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 0.75rem;
-  max-height: 60vh;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
-}
-
-.meal-picker-grid::-webkit-scrollbar {
-  width: 6px;
-}
-.meal-picker-grid::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 999px;
-}
-.meal-picker-grid::-webkit-scrollbar-track {
-  background: transparent;
 }
 
 /* Individual recipe card */
