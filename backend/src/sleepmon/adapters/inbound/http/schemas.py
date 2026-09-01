@@ -193,7 +193,8 @@ class MealIn(msgspec.Struct, forbid_unknown_fields=True):
 
 
 class SlotEntryIn(msgspec.Struct, forbid_unknown_fields=True):
-    member_id: str
+    id: str
+    pokemon: ProductionIn
     weight: float = 1.0
 
 
@@ -240,7 +241,7 @@ class SkillEffectAggOut(msgspec.Struct):
 
 
 class MemberContributionOut(msgspec.Struct):
-    member_id: str
+    id: str
     species: str
     strength: float
     strength_base: float
@@ -252,7 +253,6 @@ class MemberContributionOut(msgspec.Struct):
 
 class TeamProductionOut(msgspec.Struct):
     member_count: int
-    excluded_count: int
     total_strength: float
     total_berry_amount: float
     total_berry_strength: float

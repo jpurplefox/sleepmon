@@ -26,6 +26,7 @@ from sleepmon.application.dto import (
     RecipeDTO,
     SkillEffectAggDTO,
     SlotAmount,
+    SlotEntryInput,
     SlotIngredientStatusDTO,
     TeamMemberInput,
     TeamProductionInput,
@@ -244,7 +245,7 @@ class ProductionService(ABC):
 
     @abstractmethod
     def compute_team_production(
-        self, user_id: UUID, data: TeamProductionInput
+        self, data: TeamProductionInput, user_id: UUID | None = None
     ) -> TeamProductionResult: ...
 
     @abstractmethod
@@ -420,17 +421,19 @@ class DefaultProductionService(ProductionService):
             for r in self._recipes.all()
         ]
 
+    _MAX_ENTRY_ID = 64
+
     def compute_team_production(
-        self, user_id: UUID, data: TeamProductionInput
+        self, data: TeamProductionInput, user_id: UUID | None = None
     ) -> TeamProductionResult:
         # Validación de la selección: 1..5 slots; cada slot 1..2 entradas; pesos de
-        # un slot suman 1.0; sin miembros repetidos en todo el equipo.
+        # un slot suman 1.0; sin ids repetidos en todo el equipo.
         if not 1 <= len(data.slots) <= self._MAX_TEAM:
             raise ValidationError(
                 f"Un equipo tiene entre 1 y {self._MAX_TEAM} slots; llegaron "
                 f"{len(data.slots)}."
             )
-        flat: list[tuple[str, float]] = []
+        flat: list[tuple[SlotEntryInput, float]] = []
         seen: set[str] = set()
         for slot in data.slots:
             if not 1 <= len(slot.entries) <= 2:
@@ -439,14 +442,20 @@ class DefaultProductionService(ProductionService):
             for entry in slot.entries:
                 if not 0.0 < entry.weight <= 1.0:
                     raise ValidationError(
-                        f"El peso de un Pokémon debe estar en (0, 1]; llegó "
-                        f"{entry.weight}."
+                        f"El peso de un Pokémon debe estar en (0, 1]; llegó {entry.weight}."
                     )
-                if entry.member_id in seen:
-                    raise ValidationError("Un equipo no puede repetir Pokémon.")
-                seen.add(entry.member_id)
+                if not 0 < len(entry.id) <= self._MAX_ENTRY_ID:
+                    raise ValidationError(
+                        f"El id de un Pokémon debe tener entre 1 y {self._MAX_ENTRY_ID} "
+                        "caracteres."
+                    )
+                if entry.id in seen:
+                    raise ValidationError(
+                        "Los ids de los Pokémon del equipo no pueden repetirse."
+                    )
+                seen.add(entry.id)
                 total_weight += entry.weight
-                flat.append((entry.member_id, entry.weight))
+                flat.append((entry, entry.weight))
             if abs(total_weight - 1.0) > self._WEIGHT_EPS:
                 raise ValidationError("Los pesos de un slot deben sumar 1.")
 
@@ -456,38 +465,27 @@ class DefaultProductionService(ProductionService):
             )
         map_bonuses = _map_bonuses(data)
 
-        # Cargar miembros (404 si falta) y computar su producción escalada por peso.
-        # Los miembros con especie fuera del catálogo curado se excluyen del agregado.
+        # Resolver cada entrada contra el catálogo y computar su producción escalada
+        # por peso. Una especie desconocida se rechaza de una: no hay Box de la que
+        # excluirla en silencio.
         entries: list[tuple[str, str, DailyProduction]] = []
         member_productions: dict[str, ProductionResult] = {}
-        excluded = 0
-        for raw_id, weight in flat:
-            try:
-                member_uuid = UUID(raw_id)
-            except ValueError as exc:
-                raise ValidationError(f"Id de miembro inválido: {raw_id!r}.") from exc
-            member = self._repo.get(member_uuid, user_id)
-            if member is None:
-                raise TeamMemberNotFoundError(str(member_uuid))
-            species = self._catalog.get(member.species)
-            if species is None:
-                excluded += 1
-                continue
+        for entry, weight in flat:
+            cfg = _resolve_config(self._catalog, entry.pokemon)
             daily = daily_production(
-                species,
-                member.ingredients,
-                member.level,
-                member.nature,
-                member.sub_skills,
-                member.ribbon,
-                member.skill_level,
+                cfg.species,
+                cfg.ingredients,
+                cfg.level,
+                cfg.nature,
+                cfg.sub_skills,
+                cfg.ribbon,
+                cfg.skill_level,
                 map_bonuses=map_bonuses,
                 good_camp_ticket=data.good_camp_ticket,
             )
             scaled = scale_daily(daily, weight)
-            member_id_str = str(member.id)
-            member_productions[member_id_str] = _production_result(scaled)
-            entries.append((member_id_str, member.species, scaled))
+            member_productions[entry.id] = _production_result(scaled)
+            entries.append((entry.id, cfg.species.name, scaled))
 
         aggregate = team_production(entries, island_bonus=data.island_bonus)
 
@@ -514,7 +512,6 @@ class DefaultProductionService(ProductionService):
 
         return TeamProductionResult(
             member_count=aggregate.member_count,
-            excluded_count=excluded,
             total_strength=aggregate.total_strength,
             total_berry_amount=aggregate.total_berry_amount,
             total_berry_strength=aggregate.total_berry_strength,
@@ -545,14 +542,14 @@ class DefaultProductionService(ProductionService):
             ],
             members=[
                 MemberContributionDTO(
-                    member_id=m.member_id,
+                    id=m.id,
                     species=m.species,
                     strength=m.strength,
                     strength_base=m.strength_base,
                     berry_amount=m.berry_amount,
                     ingredients_total=m.ingredients_total,
                     skill_triggers=m.skill_triggers,
-                    production=member_productions[m.member_id],
+                    production=member_productions[m.id],
                 )
                 for m in aggregate.members
             ],

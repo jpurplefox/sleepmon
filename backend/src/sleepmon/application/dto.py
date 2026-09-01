@@ -146,9 +146,14 @@ class MealSelectionInput:
 
 @dataclass(frozen=True, slots=True)
 class SlotEntryInput:
-    """Un Pokémon dentro de un slot, con su fracción de tiempo (peso)."""
+    """A Pokémon inside a slot: its config, its time share, and a client id.
 
-    member_id: str
+    ``id`` is opaque to the backend — it only has to be unique within the request,
+    because each contribution echoes it back so the client can match them up.
+    """
+
+    id: str
+    pokemon: ProductionInput
     weight: float = 1.0
 
 
@@ -212,7 +217,7 @@ class SkillEffectAggDTO:
 
 @dataclass(frozen=True, slots=True)
 class MemberContributionDTO:
-    member_id: str
+    id: str
     species: str
     strength: float
     strength_base: float
@@ -227,7 +232,6 @@ class TeamProductionResult:
     """Producción diaria agregada de un equipo: bayas/skills + cocina + gran total."""
 
     member_count: int
-    excluded_count: int
     # Bayas y skills (con bonus de isla)
     total_strength: float
     total_berry_amount: float

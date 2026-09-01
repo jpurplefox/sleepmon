@@ -323,12 +323,23 @@ class TeamProductionController(Controller):
         data: TeamProductionIn,
     ) -> TeamProductionOut:
         result = production_service.compute_team_production(
-            current_user_id,
             TeamProductionInput(
                 slots=[
                     SlotInput(
                         entries=[
-                            SlotEntryInput(member_id=e.member_id, weight=e.weight)
+                            SlotEntryInput(
+                                id=e.id,
+                                pokemon=ProductionInput(
+                                    species=e.pokemon.species,
+                                    level=e.pokemon.level,
+                                    ingredients=e.pokemon.ingredients,
+                                    nature=e.pokemon.nature,
+                                    sub_skills=e.pokemon.sub_skills,
+                                    ribbon=e.pokemon.ribbon,
+                                    skill_level=e.pokemon.skill_level,
+                                ),
+                                weight=e.weight,
+                            )
                             for e in s.entries
                         ]
                     )
@@ -348,7 +359,6 @@ class TeamProductionController(Controller):
         )
         return TeamProductionOut(
             member_count=result.member_count,
-            excluded_count=result.excluded_count,
             total_strength=result.total_strength,
             total_berry_amount=result.total_berry_amount,
             total_berry_strength=result.total_berry_strength,
@@ -379,7 +389,7 @@ class TeamProductionController(Controller):
             ],
             members=[
                 MemberContributionOut(
-                    member_id=m.member_id,
+                    id=m.id,
                     species=m.species,
                     strength=m.strength,
                     strength_base=m.strength_base,

@@ -113,7 +113,7 @@ def test_team_production_member_breakdown() -> None:
     daily = _daily(berry_strength=100.0, skill_strength=20.0)
     result = team_production([("id-a", "Pikachu", daily)])
     member = result.members[0]
-    assert member.member_id == "id-a"
+    assert member.id == "id-a"
     assert member.species == "Pikachu"
     assert member.strength == 120.0
 
