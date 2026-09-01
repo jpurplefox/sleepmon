@@ -206,8 +206,8 @@ def _map_bonuses(data: TeamProductionInput) -> MapBonuses:
 class TeamService(ABC):
     """Puerto primario: lo que el borde HTTP puede pedirle a la caja del usuario.
 
-    Todas las operaciones reciben ``user_id`` como primer argumento y lo
-    delegan al ``TeamRepository`` para aislar los datos entre usuarios.
+    All operations take ``user_id`` as the first argument and delegate it to the
+    ``TeamRepository`` to isolate data between users.
     """
 
     @abstractmethod
