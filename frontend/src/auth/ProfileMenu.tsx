@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-import { IconSignOut } from "../components/icons";
+import { IconProgress, IconSignOut } from "../components/icons";
+import { ProgressModal } from "../components/ProgressModal";
 import { useI18n } from "../i18n";
 import { useAuth } from "./AuthContext";
 
@@ -24,6 +25,7 @@ export function ProfileMenu() {
   const { user, logout } = useAuth();
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
+  const [progressOpen, setProgressOpen] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -86,6 +88,18 @@ export function ProfileMenu() {
             className="filter-list__item"
             onClick={() => {
               setOpen(false);
+              setProgressOpen(true);
+            }}
+          >
+            <IconProgress className="mini-icon" />
+            {t("progress.title")}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className="filter-list__item"
+            onClick={() => {
+              setOpen(false);
               void logout();
             }}
           >
@@ -94,6 +108,7 @@ export function ProfileMenu() {
           </button>
         </div>
       )}
+      {progressOpen && <ProgressModal onClose={() => setProgressOpen(false)} />}
     </div>
   );
 }

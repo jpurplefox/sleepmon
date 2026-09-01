@@ -14,6 +14,8 @@ interface StepperProps {
   primary: React.ReactNode;
   /** Secondary line (description / effect). */
   secondary?: React.ReactNode;
+  /** Extra class on the root (e.g. a width override for a specific caller). */
+  className?: string;
 }
 
 /**
@@ -32,9 +34,10 @@ export function Stepper({
   leading,
   primary,
   secondary,
+  className,
 }: StepperProps) {
   return (
-    <div className="stepper">
+    <div className={className ? `stepper ${className}` : "stepper"}>
       <button
         type="button"
         className="stepper__btn"

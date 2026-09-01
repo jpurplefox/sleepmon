@@ -56,13 +56,19 @@ function renderTab(overrides: Partial<React.ComponentProps<typeof IslandTab>> = 
     mainFavorite: null,
     weeklyBonus: "berry_strength" as const,
     islandBonus: 0,
+    bonusDisabled: false,
     goodCampTicket: false,
+    bonusUnsaved: false,
+    savedBonusPct: 0,
     onSelectIsland: vi.fn(),
     onFavoriteBerries: vi.fn(),
     onMainFavorite: vi.fn(),
     onWeeklyBonus: vi.fn(),
     onIslandBonus: vi.fn(),
     onGoodCampTicket: vi.fn(),
+    onSaveBonus: vi.fn(),
+    dishType: null,
+    onDishTypeChange: vi.fn(),
     ...overrides,
   };
   render(
@@ -97,6 +103,52 @@ describe("IslandTab weekly bonus", () => {
     const props = renderTab({ selectedIsland: "Cyan Beach (Expert)" });
     await userEvent.click(screen.getByRole("button", { name: "+1 ingredient" }));
     expect(props.onWeeklyBonus).toHaveBeenCalledWith("ingredient");
+  });
+});
+
+describe("IslandTab bonus slider", () => {
+  // No hint text is rendered anymore (it read oddly with the slider already
+  // showing disabled) — the disabled state alone communicates "pick a map".
+  it("disables the slider with no island selected and renders no hint text", () => {
+    renderTab({ selectedIsland: null, bonusDisabled: true });
+    expect(screen.getByLabelText("Area bonus")).toBeDisabled();
+    expect(screen.queryByText("pick a map")).not.toBeInTheDocument();
+  });
+
+  it("leaves the slider enabled once a map is picked", () => {
+    renderTab({ selectedIsland: "Cyan Beach", favoriteBerries: ["Oran"], bonusDisabled: false });
+    expect(screen.getByLabelText("Area bonus")).not.toBeDisabled();
+  });
+});
+
+describe("IslandTab dish type", () => {
+  it("reports the chosen type", async () => {
+    const props = renderTab({ dishType: null });
+    await userEvent.click(screen.getByRole("button", { name: "Salad" }));
+    expect(props.onDishTypeChange).toHaveBeenCalledWith("Salad");
+  });
+
+  it("marks the active type button", () => {
+    renderTab({ dishType: "Salad" });
+    expect(screen.getByRole("button", { name: "Salad" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Curry" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+  });
+
+  // There is no "all" option (PRD 0006): the group offers only the 3 real
+  // types, and with nothing chosen yet, none of them is marked active.
+  it("renders no 'all'/'Todo' option, and starts with nothing chosen", () => {
+    renderTab({ dishType: null });
+    expect(screen.queryByRole("button", { name: "All" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Todo" })).not.toBeInTheDocument();
+    for (const name of ["Curry", "Salad", "Dessert"]) {
+      expect(screen.getByRole("button", { name })).toHaveAttribute("aria-pressed", "false");
+    }
   });
 });
 

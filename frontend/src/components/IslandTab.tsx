@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { berryIcon } from "../berries";
 import { useI18n } from "../i18n";
-import type { Catalog, Island, WeeklyBonus } from "../types";
+import { RECIPE_TYPES, dishTypeLabelKey } from "../recipes";
+import type { Catalog, Island, Recipe, WeeklyBonus } from "../types";
 import { IconChevronDown } from "./icons";
+import { UnsavedMark } from "./UnsavedMark";
 
 interface Props {
   catalog: Catalog;
@@ -11,13 +13,26 @@ interface Props {
   mainFavorite: string | null;
   weeklyBonus: WeeklyBonus;
   islandBonus: number; // fracción 0.0–0.85
+  bonusDisabled: boolean;
   goodCampTicket: boolean;
+  /** True when the shown area bonus differs from what is saved in Player progress. */
+  bonusUnsaved: boolean;
+  /** The saved area bonus, in percentage points, shown in the unsaved mark's tooltip. */
+  savedBonusPct: number;
   onSelectIsland: (islandName: string | null) => void;
   onFavoriteBerries: (berries: string[]) => void;
   onMainFavorite: (berry: string | null) => void;
   onWeeklyBonus: (bonus: WeeklyBonus) => void;
   onIslandBonus: (bonus: number) => void;
   onGoodCampTicket: (value: boolean) => void;
+  onSaveBonus: () => void;
+  /** Active dish type for all 3 meal slots. null = unset (nothing chosen
+   * yet); once a type is picked there is no UI path back to null. */
+  dishType: Recipe["type"] | null;
+  /** Called when the user picks a dish type. Replaces the day's three meals
+   * with that type's favorite recipe, or empties the plan if it has none
+   * (PRD 0006 / 0011). */
+  onDishTypeChange: (type: Recipe["type"] | null) => void;
 }
 
 // Derivar todas las bayas disponibles en el catálogo a partir de las especies.
@@ -37,13 +52,19 @@ export function IslandTab({
   mainFavorite,
   weeklyBonus,
   islandBonus,
+  bonusDisabled,
   goodCampTicket,
+  bonusUnsaved,
+  savedBonusPct,
   onSelectIsland,
   onFavoriteBerries,
   onMainFavorite,
   onWeeklyBonus,
   onIslandBonus,
   onGoodCampTicket,
+  onSaveBonus,
+  dishType,
+  onDishTypeChange,
 }: Props) {
   const { t, berry: berryName } = useI18n();
 
@@ -236,6 +257,33 @@ export function IslandTab({
         </div>
       </div>
 
+      {/* Dish type — a setup choice for the day, chosen alongside the map
+          (PRD 0006): picking it fills the day's three meals with that type's
+          favorite, or empties the plan if none is saved. No "all" option —
+          once a type is chosen there is no UI path back to unset. */}
+      <div className="island-tab__row">
+        <span className="island-tab__label">{t("teams.dishType")}</span>
+        <div
+          className="specialty-toggle"
+          role="group"
+          aria-label={t("teams.dishType")}
+        >
+          {RECIPE_TYPES.map((type) => (
+            <button
+              key={type}
+              type="button"
+              className={
+                "specialty-toggle__btn" + (dishType === type ? " is-on" : "")
+              }
+              aria-pressed={dishType === type}
+              onClick={() => onDishTypeChange(type)}
+            >
+              {t(dishTypeLabelKey(type))}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Bayas favoritas — Item 4: grilla unificada (editable o read-only) */}
       {selectedIsland !== null && (
         <div className="island-tab__row">
@@ -340,6 +388,7 @@ export function IslandTab({
                 className="bonus-slider__input"
                 min={0} max={85} step={1}
                 value={bonusPct}
+                disabled={bonusDisabled}
                 onChange={(e) => handleBonusChange(Number(e.target.value))}
                 aria-label={t("teams.islandBonus")}
                 aria-valuetext={`${bonusPct}%`}
@@ -353,6 +402,11 @@ export function IslandTab({
             <span>0%</span><span>85%</span>
           </div>
         </div>
+        <UnsavedMark
+          unsaved={bonusUnsaved}
+          savedLabel={`${savedBonusPct}%`}
+          onSave={onSaveBonus}
+        />
       </div>
 
       {/* Good Camp Ticket */}

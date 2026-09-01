@@ -8,9 +8,10 @@ from sleepmon.adapters.outbound.auth.jwt_access_token import JwtAccessTokenServi
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.auth_service import AuthResult, AuthService, UserDTO
+from sleepmon.application.progress_service import DefaultPlayerProgressService
 from sleepmon.application.services import DefaultTeamService
 from sleepmon.domain.auth import InvalidRefreshError
-from tests.fakes import InMemoryTeamRepository
+from tests.fakes import InMemoryPlayerProgressRepository, InMemoryTeamRepository
 
 REFRESH_COOKIE = "refresh_token"
 
@@ -43,6 +44,9 @@ def client_and_auth() -> tuple[TestClient, FakeAuth]:
         recipe_catalog=StaticRecipeCatalog(),
         access=JwtAccessTokenService("test-secret", timedelta(minutes=15)),
         auth_service=auth,
+        progress_service=DefaultPlayerProgressService(
+            InMemoryPlayerProgressRepository(), StaticRecipeCatalog()
+        ),
     )
     with TestClient(app=app) as client:
         yield client, auth

@@ -2,25 +2,63 @@ import { useState } from "react";
 
 import { useI18n } from "../i18n";
 import { perMealPot } from "../pot";
-import { ingredientIcon } from "../ingredients";
-import { recipeImage, recipeStrengthAtLevel } from "../recipes";
-import { CHARGE_STRENGTH_ICON } from "../skillIcons";
+import { potBounds, stepPot } from "../progress";
+import { RECIPE_TYPES, dishTypeLabelKey } from "../recipes";
 import type { Catalog, MealInput, Recipe, WeeklyBonus } from "../types";
 import { IslandTab } from "./IslandTab";
-import { LevelStepperInput } from "./LevelStepperInput";
 import { Modal } from "./Modal";
+import { RecipeCard, normalizeSearch } from "./RecipeCard";
+import { UnsavedMark } from "./UnsavedMark";
 
-const RECIPE_TYPES: Recipe["type"][] = ["Curry", "Salad", "Dessert"];
+interface PotLadderStepperProps {
+  value: number;
+  ladder: number[];
+  onChange: (n: number) => void;
+  ariaLabels: { down: string; input: string; up: string };
+}
+
+// Same markup/classes as LevelStepperInput (so it inherits its CSS), but steps
+// through the game's actual pot ladder instead of accepting any typed value.
+function PotLadderStepper({
+  value,
+  ladder,
+  onChange,
+  ariaLabels,
+}: PotLadderStepperProps) {
+  const { atMin, atMax } = potBounds(ladder, value);
+  return (
+    <>
+      <button
+        type="button"
+        className="level-stepper__btn"
+        disabled={atMin}
+        aria-label={ariaLabels.down}
+        onClick={() => onChange(stepPot(ladder, value, -1))}
+      >
+        −
+      </button>
+      <input
+        type="text"
+        className="level-stepper__input"
+        inputMode="numeric"
+        readOnly
+        value={value}
+        aria-label={ariaLabels.input}
+      />
+      <button
+        type="button"
+        className="level-stepper__btn"
+        disabled={atMax}
+        aria-label={ariaLabels.up}
+        onClick={() => onChange(stepPot(ladder, value, 1))}
+      >
+        +
+      </button>
+    </>
+  );
+}
 
 type TabId = "island" | "meals";
-
-// Normaliza para búsqueda: sin mayúsculas ni acentos.
-function normalize(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "");
-}
 
 interface Props {
   recipes: Recipe[];
@@ -37,6 +75,7 @@ interface Props {
   selectedIsland: string | null;
   favoriteBerries: string[];
   islandBonus: number;
+  bonusDisabled: boolean;
   goodCampTicket: boolean;
   mainFavorite: string | null;
   weeklyBonus: WeeklyBonus;
@@ -46,10 +85,34 @@ interface Props {
   onGoodCampTicket: (value: boolean) => void;
   onMainFavorite: (berry: string | null) => void;
   onWeeklyBonus: (bonus: WeeklyBonus) => void;
-  /** Active dish type for all 3 meal slots. null = no restriction yet. */
+  /** Active dish type for all 3 meal slots. null = unset (nothing chosen
+   * yet); once a type is picked there is no UI path back to null. */
   dishType: Recipe["type"] | null;
-  /** Called when the user selects a dish type or clears it (null). */
+  /** Raw setter for the dish type (see pickDishType below for the
+   * favorite-replace behavior wrapped around it before it reaches IslandTab). */
   onDishTypeChange: (type: Recipe["type"] | null) => void;
+  /** Effective level of a recipe: session override, else saved progress, else 1. */
+  levelFor: (recipe: string) => number;
+  onRecipeLevelChange: (recipe: string, level: number) => void;
+  /** True when the shown pot size differs from what is saved in Player progress. */
+  potUnsaved: boolean;
+  /** The saved pot size, shown in the unsaved mark's tooltip. */
+  savedPotSize: number;
+  onSavePot: () => void;
+  /** True when the shown area bonus differs from what is saved. */
+  bonusUnsaved: boolean;
+  /** The saved area bonus, in percentage points. */
+  savedBonusPct: number;
+  onSaveBonus: () => void;
+  /** True when the shown level for one recipe differs from what is saved. */
+  levelUnsaved: (recipe: string) => boolean;
+  /** The saved level for one recipe, shown in the unsaved mark's tooltip. */
+  savedLevelFor: (recipe: string) => number;
+  onSaveLevel: (recipe: string) => void;
+  /** The saved favorite recipe for a dish type, or null if none is set. */
+  favoriteFor: (type: Recipe["type"]) => string | null;
+  /** True when the last save attempt (any of the three) failed. */
+  saveError?: boolean;
 }
 
 export function SettingsModal({
@@ -65,6 +128,7 @@ export function SettingsModal({
   selectedIsland,
   favoriteBerries,
   islandBonus,
+  bonusDisabled,
   goodCampTicket,
   mainFavorite,
   weeklyBonus,
@@ -76,6 +140,19 @@ export function SettingsModal({
   onWeeklyBonus,
   dishType,
   onDishTypeChange,
+  levelFor,
+  onRecipeLevelChange,
+  potUnsaved,
+  savedPotSize,
+  onSavePot,
+  bonusUnsaved,
+  savedBonusPct,
+  onSaveBonus,
+  levelUnsaved,
+  savedLevelFor,
+  onSaveLevel,
+  favoriteFor,
+  saveError = false,
 }: Props) {
   const { t } = useI18n();
 
@@ -85,32 +162,25 @@ export function SettingsModal({
   // Text search.
   const [search, setSearch] = useState("");
 
-  // Per-recipe levels: initialized from meals so existing selections show their level.
-  const [recipeLevels, setRecipeLevels] = useState<Map<string, number>>(() => {
-    const m = new Map<string, number>();
-    for (const meal of meals) {
-      if (meal) m.set(meal.recipe, meal.level);
-    }
-    return m;
-  });
+  // PRD 0011: unlike Player progress's draft, these are session values the
+  // user is analysing with — closing keeps every one, no question asked.
 
   // Effective pot = base pot + floor(cookingExtra / 3) (3 meals/day); with GCT: ceil(×1.5).
   const effectivePot = perMealPot(potSize, cookingExtra, goodCampTicket);
 
-  const getLevelFor = (name: string) => recipeLevels.get(name) ?? 1;
-
   const setLevelFor = (name: string, level: number) => {
     const clamped = Math.max(1, Math.min(70, level));
-    setRecipeLevels((prev) => new Map(prev).set(name, clamped));
-    // Update every meal slot that holds this recipe.
-    const next = meals.map((m) =>
-      m?.recipe === name ? { recipe: name, level: clamped } : m,
+    onRecipeLevelChange(name, clamped);
+    // Keep every meal slot holding this recipe in step with its new level.
+    onChangeMeals(
+      meals.map((m) =>
+        m?.recipe === name ? { recipe: name, level: clamped } : m,
+      ),
     );
-    onChangeMeals(next);
   };
 
   const toggleMoment = (recipe: Recipe, momentIdx: number) => {
-    const level = getLevelFor(recipe.name);
+    const level = levelFor(recipe.name);
     const isRemoving = meals[momentIdx]?.recipe === recipe.name;
     const next = meals.map((m, i) => {
       if (i !== momentIdx) return m;
@@ -126,11 +196,31 @@ export function SettingsModal({
     }
   };
 
+  // Picking a dish type gives you that type's day: it replaces all 3 meals
+  // with its favorite recipe at the effective level, or empties the plan when
+  // it has none saved (PRD 0006 / 0011) — a type change never leaves a plan
+  // of the wrong type behind, and never leaves nothing to show for it.
+  const pickDishType = (type: Recipe["type"] | null) => {
+    onDishTypeChange(type);
+    if (type === null) return;
+    const favorite = favoriteFor(type);
+    if (favorite === null) {
+      onChangeMeals([null, null, null]);
+      return;
+    }
+    const level = levelFor(favorite);
+    onChangeMeals([
+      { recipe: favorite, level },
+      { recipe: favorite, level },
+      { recipe: favorite, level },
+    ]);
+  };
+
   // Filter recipes. When dishType is set, only show recipes of that type.
-  const q = normalize(search.trim());
+  const q = normalizeSearch(search.trim());
   const filtered = recipes.filter((r) => {
     if (dishType && r.type !== dishType) return false;
-    if (q && !normalize(r.name).includes(q)) return false;
+    if (q && !normalizeSearch(r.name).includes(q)) return false;
     return true;
   });
 
@@ -158,7 +248,9 @@ export function SettingsModal({
           id="settings-tab-island"
           aria-controls="settings-panel-island"
           aria-selected={activeTab === "island"}
-          className={"specialty-toggle__btn" + (activeTab === "island" ? " is-on" : "")}
+          className={
+            "specialty-toggle__btn" + (activeTab === "island" ? " is-on" : "")
+          }
           onClick={() => setActiveTab("island")}
         >
           {t("teams.tabIsland")}
@@ -169,7 +261,9 @@ export function SettingsModal({
           id="settings-tab-meals"
           aria-controls="settings-panel-meals"
           aria-selected={activeTab === "meals"}
-          className={"specialty-toggle__btn" + (activeTab === "meals" ? " is-on" : "")}
+          className={
+            "specialty-toggle__btn" + (activeTab === "meals" ? " is-on" : "")
+          }
           onClick={() => setActiveTab("meals")}
         >
           {t("teams.tabMeals")}
@@ -184,20 +278,31 @@ export function SettingsModal({
         hidden={activeTab !== "island"}
         className="settings-modal-panel"
       >
+        {saveError && (
+          <p className="error" role="alert">
+            {t("progress.saveError")}
+          </p>
+        )}
         <IslandTab
           catalog={catalog}
           selectedIsland={selectedIsland}
           favoriteBerries={favoriteBerries}
           islandBonus={islandBonus}
+          bonusDisabled={bonusDisabled}
           goodCampTicket={goodCampTicket}
           mainFavorite={mainFavorite}
           weeklyBonus={weeklyBonus}
+          bonusUnsaved={bonusUnsaved}
+          savedBonusPct={savedBonusPct}
           onSelectIsland={onSelectIsland}
           onFavoriteBerries={onFavoriteBerries}
           onIslandBonus={onIslandBonus}
           onGoodCampTicket={onGoodCampTicket}
           onMainFavorite={onMainFavorite}
           onWeeklyBonus={onWeeklyBonus}
+          onSaveBonus={onSaveBonus}
+          dishType={dishType}
+          onDishTypeChange={pickDishType}
         />
       </div>
 
@@ -209,40 +314,21 @@ export function SettingsModal({
         hidden={activeTab !== "meals"}
         className="settings-modal-panel"
       >
-        {/* Top bar: dish type selector + search */}
+        {saveError && (
+          <p className="error" role="alert">
+            {t("progress.saveError")}
+          </p>
+        )}
+        {/* Top bar: current dish type (chosen on the Map tab) + search.
+            The type is no longer picked here, but the grid still filters
+            by it, so its name stays visible while browsing recipes. */}
         <div className="meal-picker-topbar">
-          <div className="meal-picker-dish-type">
-            <span className="meal-picker-dish-type__label muted">{t("teams.dishType")}:</span>
-            <div className="specialty-toggle" role="group" aria-label={t("teams.dishType")}>
-              <button
-                type="button"
-                className={"specialty-toggle__btn" + (dishType === null ? " is-on" : "")}
-                aria-pressed={dishType === null}
-                onClick={() => onDishTypeChange(null)}
-              >
-                {t("teams.allTypes")}
-              </button>
-              {RECIPE_TYPES.map((type) => {
-                const labelKey =
-                  type === "Curry"
-                    ? "teams.dishTypeCurry"
-                    : type === "Salad"
-                      ? "teams.dishTypeSalad"
-                      : "teams.dishTypeDessert";
-                return (
-                  <button
-                    key={type}
-                    type="button"
-                    className={"specialty-toggle__btn" + (dishType === type ? " is-on" : "")}
-                    aria-pressed={dishType === type}
-                    onClick={() => onDishTypeChange(type)}
-                  >
-                    {t(labelKey)}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <span className="meal-picker-dish-type__label muted">
+            {t("teams.dishType")}:{" "}
+            {dishType === null
+              ? t("teams.dishTypeUnset")
+              : t(dishTypeLabelKey(dishType))}
+          </span>
 
           <input
             data-autofocus
@@ -257,13 +343,14 @@ export function SettingsModal({
           {/* Pot size control */}
           <div className="meal-picker-pot">
             <img src="/pot.webp" alt="" className="meal-picker-pot__icon" />
-            <span className="meal-picker-pot__label muted">{t("teams.potSize")}</span>
+            <span className="meal-picker-pot__label muted">
+              {t("teams.potSize")}
+            </span>
             <div className="level-stepper meal-picker-pot__stepper">
-              <LevelStepperInput
+              <PotLadderStepper
                 value={potSize}
+                ladder={catalog.pot_ladder}
                 onChange={onPotSizeChange}
-                min={1}
-                max={150}
                 ariaLabels={{
                   down: "−",
                   input: t("teams.potSize"),
@@ -272,23 +359,30 @@ export function SettingsModal({
               />
             </div>
             {goodCampTicket ? (
-              <span className="meal-picker-pot__effective muted">= {effectivePot}</span>
+              <span className="meal-picker-pot__effective muted">
+                = {effectivePot}
+              </span>
             ) : cookingExtra > 0 ? (
               <span className="meal-picker-pot__effective muted">
-                +{Math.floor(cookingExtra / 3)} = <strong>{effectivePot}</strong>
+                +{Math.floor(cookingExtra / 3)} ={" "}
+                <strong>{effectivePot}</strong>
               </span>
             ) : (
-              <span className="meal-picker-pot__effective muted">= {effectivePot}</span>
+              <span className="meal-picker-pot__effective muted">
+                = {effectivePot}
+              </span>
             )}
+            <UnsavedMark
+              unsaved={potUnsaved}
+              savedLabel={String(savedPotSize)}
+              onSave={onSavePot}
+            />
           </div>
 
           <button
             type="button"
             className="btn btn--ghost meal-picker-clear"
-            onClick={() => {
-              onChangeMeals([null, null, null]);
-              onDishTypeChange(null);
-            }}
+            onClick={() => onChangeMeals([null, null, null])}
           >
             {t("teams.clearMeals")}
           </button>
@@ -297,110 +391,81 @@ export function SettingsModal({
         {/* Recipe card grid */}
         <div className="meal-picker-grid">
           {sorted.length === 0 ? (
-            <p className="muted" style={{ gridColumn: "1/-1", textAlign: "center" }}>
+            <p
+              className="muted"
+              style={{ gridColumn: "1/-1", textAlign: "center" }}
+            >
               {t("teams.noResults")}
             </p>
           ) : (
             sorted.map((r) => {
-              const level = getLevelFor(r.name);
-              const strength = recipeStrengthAtLevel(r.base_strength, level, levelBonus);
+              const level = levelFor(r.name);
 
-              const totalIngs = r.ingredients.reduce((s, ic) => s + ic.count, 0);
+              const totalIngs = r.ingredients.reduce(
+                (s, ic) => s + ic.count,
+                0,
+              );
               const fits = totalIngs <= effectivePot;
               const fillers = effectivePot - totalIngs;
 
               return (
-                <div key={r.name} className="meal-picker-card">
-                  {/* Dish image */}
-                  <div className="meal-picker-card__img-wrap">
-                    <img
-                      className="meal-picker-card__img"
-                      src={recipeImage(r.name)}
-                      alt={r.name}
-                      loading="lazy"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.display = "none";
-                      }}
+                <RecipeCard
+                  key={r.name}
+                  recipe={r}
+                  level={level}
+                  levelBonus={levelBonus}
+                  onLevelChange={(n) => setLevelFor(r.name, n)}
+                  mark={
+                    <UnsavedMark
+                      unsaved={levelUnsaved(r.name)}
+                      savedLabel={String(savedLevelFor(r.name))}
+                      onSave={() => onSaveLevel(r.name)}
                     />
-                  </div>
-
-                  {/* Name + type badge */}
-                  <div className="meal-picker-card__header">
-                    <span className="meal-picker-card__name">{r.name}</span>
-                    <span className="meal-picker-card__type-badge">{r.type}</span>
-                  </div>
-
-                  {/* Strength at current level */}
-                  <div className="meal-picker-card__strength">
-                    <img
-                      className="mini-icon"
-                      src={CHARGE_STRENGTH_ICON}
-                      alt=""
-                      style={{ width: 14, height: 14 }}
-                    />{" "}
-                    {strength.toLocaleString()}
-                  </div>
-
-                  {/* Ingredient icons row */}
-                  <div className="meal-picker-card__ings">
-                    {r.ingredients.map((ic) => (
-                      <span key={ic.ingredient} className="meal-picker-card__ing">
-                        <img
-                          src={ingredientIcon(ic.ingredient)}
-                          alt={ic.ingredient}
-                          title={ic.ingredient}
-                          style={{ width: 16, height: 16 }}
-                        />
-                        <span className="meal-picker-card__ing-count">×{ic.count}</span>
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Pot fit indicator */}
-                  <div className={`meal-picker-card__pot-fit ${fits ? "meal-picker-card__pot-fit--ok" : "meal-picker-card__pot-fit--no"}`}>
-                    <img src="/pot.webp" alt="" className="meal-picker-pot__icon" />
-                    {fits
-                      ? <span>{t("teams.potFits")} · {t("teams.fillers", { n: String(fillers) })}</span>
-                      : <span>{t("teams.potNoFit")} ({totalIngs}/{effectivePot})</span>
-                    }
-                  </div>
-
-                  {/* Level stepper */}
-                  <div className="level-stepper meal-picker-card__stepper">
-                    <LevelStepperInput
-                      value={level}
-                      onChange={(n) => setLevelFor(r.name, n)}
-                      min={1}
-                      max={70}
-                      ariaLabels={{
-                        down: t("teams.levelDown"),
-                        input: t("teams.recipeLevel"),
-                        up: t("teams.levelUp"),
-                      }}
-                    />
-                  </div>
-
-                  {/* 3 moment toggles */}
-                  <div className="meal-picker-card__moments">
-                    {MOMENT_LABELS.map((label, idx) => {
-                      const isActive = meals[idx]?.recipe === r.name;
-                      return (
-                        <button
-                          key={idx}
-                          type="button"
-                          className={
-                            "meal-picker-card__moment-btn" + (isActive ? " is-active" : "")
-                          }
-                          aria-pressed={isActive}
-                          onClick={() => toggleMoment(r, idx)}
-                          title={label}
-                        >
-                          {label.slice(0, 2)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                  }
+                  beforeStepper={
+                    <div
+                      className={`meal-picker-card__pot-fit ${fits ? "meal-picker-card__pot-fit--ok" : "meal-picker-card__pot-fit--no"}`}
+                    >
+                      <img
+                        src="/pot.webp"
+                        alt=""
+                        className="meal-picker-pot__icon"
+                      />
+                      {fits ? (
+                        <span>
+                          {t("teams.potFits")} ·{" "}
+                          {t("teams.fillers", { n: String(fillers) })}
+                        </span>
+                      ) : (
+                        <span>
+                          {t("teams.potNoFit")} ({totalIngs}/{effectivePot})
+                        </span>
+                      )}
+                    </div>
+                  }
+                  afterStepper={
+                    <div className="meal-picker-card__moments">
+                      {MOMENT_LABELS.map((label, idx) => {
+                        const isActive = meals[idx]?.recipe === r.name;
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            className={
+                              "meal-picker-card__moment-btn" +
+                              (isActive ? " is-active" : "")
+                            }
+                            aria-pressed={isActive}
+                            onClick={() => toggleMoment(r, idx)}
+                            title={label}
+                          >
+                            {label.slice(0, 2)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  }
+                />
               );
             })
           )}

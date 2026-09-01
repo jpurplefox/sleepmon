@@ -10,7 +10,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "common.edit": "Editar",
     "common.reload": "Recargar",
     "common.loadingCatalog": "Cargando catálogo…",
-    "common.catalogError": "No se pudo cargar el catálogo. ¿Está el backend en :8000?",
+    "common.catalogError":
+      "No se pudo cargar el catálogo. ¿Está el backend en :8000?",
     "common.level": "Nv. {level}",
     "common.dash": "—",
     // Navegación
@@ -54,13 +55,15 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.strengthAria": "{value} de fuerza por día",
     "box.strengthBreakdownAria":
       "{value} de fuerza por día (bayas {berries} + skill {skill})",
-    "box.ingredientsTitle": "Ingrediente principal por día (total: {total} ingredientes/día)",
+    "box.ingredientsTitle":
+      "Ingrediente principal por día (total: {total} ingredientes/día)",
     "box.ingredientsTitlePlain": "Ingredientes por día",
     "box.ingredientsBreakdownAria":
       "{value} de {ingredient} por día (normal {normal} + skill {skill})",
     "box.ingredientsPlainAria": "{value} de {ingredient} por día",
     "box.randomIngredients": "{value}",
-    "box.randomIngredientsTitle": "{value} ingredientes al azar por día (main skill)",
+    "box.randomIngredientsTitle":
+      "{value} ingredientes al azar por día (main skill)",
     "box.skillAria": "Habilidad",
     // Detalle desplegado de la card en mobile (en pantalla ancha lo dicen las columnas).
     "box.sectionBuild": "Build",
@@ -104,11 +107,13 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.coverageTitle": "Cobertura del equipo",
     "box.coverageSpecialties": "Especialidades",
     "box.coverageBerries": "Cobertura de bayas (especialistas en Bayas)",
-    "box.coverageIngredients": "Cobertura de ingredientes (especialistas en Ingredientes)",
+    "box.coverageIngredients":
+      "Cobertura de ingredientes (especialistas en Ingredientes)",
     "box.coverageCount": "{covered} de {total}",
     "box.coverageMissing": "{name} (sin cobertura)",
     "box.noBerrySpecialists": "Sin especialistas en Bayas en la caja.",
-    "box.noIngredientSpecialists": "Sin especialistas en Ingredientes en la caja.",
+    "box.noIngredientSpecialists":
+      "Sin especialistas en Ingredientes en la caja.",
     // Página Comparación
     "prod.title": "Comparación",
     "prod.subtitle":
@@ -145,7 +150,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.alreadyIn": "Ya en comparación",
     "prod.speciesNotInCatalog":
       "No se pudo agregar {species}: la especie no está en el catálogo cargado.",
-    "prod.boxEmptyTab": "La caja está vacía. Agregá Pokémon en la pestaña Equipo.",
+    "prod.boxEmptyTab":
+      "La caja está vacía. Agregá Pokémon en la pestaña Equipo.",
     // Formulario
     "form.addToTeam": "Agregar al equipo",
     "form.species": "Especie",
@@ -176,8 +182,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "member.deleteModalBody": "Esta acción no se puede deshacer.",
     "member.confirm": "Confirmar",
     "member.deleteAria": "Eliminar {species}",
-    "member.deleteConfirmAria": "Confirmar eliminación de {species} — pulsá de nuevo para confirmar",
-    "member.deleteConfirmStatus": "Pulsá de nuevo para confirmar la eliminación de {species}",
+    "member.deleteConfirmAria":
+      "Confirmar eliminación de {species} — pulsá de nuevo para confirmar",
+    "member.deleteConfirmStatus":
+      "Pulsá de nuevo para confirmar la eliminación de {species}",
     // Production card
     "card.clone": "Clonar",
     "card.cloneMax": "Máximo 5 en la comparación",
@@ -215,12 +223,14 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.skill": "Skill",
     "card.triggersTitle": "Activaciones de skill por día",
     "card.energyEach": "a cada compañero",
-    "card.energyEachTitle": "Energía que la skill recupera por día a cada compañero del equipo",
+    "card.energyEachTitle":
+      "Energía que la skill recupera por día a cada compañero del equipo",
     "card.randomIngredients": "ingredientes al azar",
     "card.randomIngredientsTitle":
       "Ingredientes por día que consigue la skill (de cualquier tipo, al azar)",
     "card.cookingExtra": "ingredientes extra al pote",
-    "card.cookingTitle": "Ingredientes extra de pote por día para cocinar (Cooking Power-Up S)",
+    "card.cookingTitle":
+      "Ingredientes extra de pote por día para cocinar (Cooking Power-Up S)",
     "card.strength": "de fuerza",
     "card.strengthTitle":
       "Fuerza por día: directa por las bayas (según nivel y tipo de baya) más la de la main skill (Charge Strength)",
@@ -233,16 +243,20 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.extraTastyTitle":
       "Aumento acumulado de Extra Tasty por día (disparos × % del nivel) — Tasty Chance S",
     "card.helpMult": "de ayuda",
-    "card.helpMultTitle": "Multiplicador de ayuda total del día (disparos × ×N del nivel)",
+    "card.helpMultTitle":
+      "Multiplicador de ayuda total del día (disparos × ×N del nivel)",
     "card.selfEnergy": "de energía a sí mismo",
-    "card.selfEnergyTitle": "Energía que la skill recupera por día al propio Pokémon",
+    "card.selfEnergyTitle":
+      "Energía que la skill recupera por día al propio Pokémon",
     "card.randomEnergy": "de energía a un compañero al azar",
     "card.randomEnergyTitle":
       "Energía por día que la skill reparte al equipo, a un compañero al azar cada activación",
     "card.nightOnce": "1 vez",
-    "card.nightOnceTitle": "Probabilidad de activar la skill exactamente 1 vez mientras dormís",
+    "card.nightOnceTitle":
+      "Probabilidad de activar la skill exactamente 1 vez mientras dormís",
     "card.nightTwice": "2 veces",
-    "card.nightTwiceTitle": "Probabilidad de activar la skill 2 veces mientras dormís (el tope)",
+    "card.nightTwiceTitle":
+      "Probabilidad de activar la skill 2 veces mientras dormís (el tope)",
     "card.nightSleep": "al dormir",
     "card.nightSleepTitle": "Probabilidad de activar la skill mientras dormís",
     // Nature select
@@ -293,14 +307,16 @@ export const UI: Record<Lang, Record<string, string>> = {
     // Página Análisis de equipo
     "nav.teams": "Análisis de equipo",
     "teams.title": "Análisis de equipo",
-    "teams.subtitle": "Elegí hasta 5 Pokémon de tu Caja y analizá su producción diaria y el total del equipo.",
+    "teams.subtitle":
+      "Elegí hasta 5 Pokémon de tu Caja y analizá su producción diaria y el total del equipo.",
     "teams.empty": "Elegí un Pokémon de tu Caja para comenzar el análisis.",
     "teams.aggregates": "Totales del equipo",
     "teams.berriesSkills": "Bayas y skills",
     "teams.cooking": "Cocina",
     "teams.totalStrength": "Fuerza total",
     "teams.grandTotal": "Gran total de fuerza",
-    "teams.rating.aria": "Rating de Snorlax en {island}: {tier} {level} de {cap}",
+    "teams.rating.aria":
+      "Rating de Snorlax en {island}: {tier} {level} de {cap}",
     "teams.rating.toNext": "faltan {remaining}",
     "teams.rating.max": "¡Máximo!",
     "teams.berries": "Bayas",
@@ -314,7 +330,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.editRecipes": "Elegir recetas",
     "teams.configure": "Configuración",
     "teams.randomIngredients": "Ingredientes al azar",
-    "teams.randomIngredientsTip": "Promedio de la fuerza base de todos los ingredientes",
+    "teams.randomIngredientsTip":
+      "Promedio de la fuerza base de todos los ingredientes",
     "teams.potTooSmall": "No entra en el pote",
     "teams.mealPickerTitle": "Recetas del día",
     "teams.clearMeals": "Limpiar",
@@ -374,6 +391,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.dishTypeCurry": "Curry",
     "teams.dishTypeSalad": "Ensalada",
     "teams.dishTypeDessert": "Postre",
+    "teams.dishTypeUnset": "Sin elegir",
     // Tab de Mapa
     "teams.selectIsland": "Mapa",
     "teams.noIsland": "Sin mapa",
@@ -399,11 +417,39 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.expertBerryStrength": "Baya favorita: fuerza ×2,4",
     "card.expertFavorite": "Baya favorita: fuerza ×2",
     "card.expertIngredient": "Baya favorita: +1 ingrediente por recolección",
-    "card.expertSkillTrigger": "Baya favorita: probabilidad de Main Skill ×1,25",
+    "card.expertSkillTrigger":
+      "Baya favorita: probabilidad de Main Skill ×1,25",
     "card.expertPenalty": "Sin baya favorita: ayuda 15% más lenta",
     // Error boundary
     "error.title": "Algo salió mal",
-    "error.body": "Ocurrió un error inesperado al mostrar esta vista. Probá recargar la página.",
+    "error.body":
+      "Ocurrió un error inesperado al mostrar esta vista. Probá recargar la página.",
+    // Player progress
+    "progress.title": "Mi progreso",
+    "progress.loading": "Cargando tu progreso…",
+    "progress.tabKitchen": "Cocina",
+    "progress.tabRecipes": "Recetas",
+    "progress.tabAreas": "Áreas",
+    "progress.potSize": "Tamaño de olla",
+    "progress.potUnit": "{n} ingredientes",
+    "progress.potDown": "Olla más chica",
+    "progress.potUp": "Olla más grande",
+    "progress.favorites": "Receta favorita por tipo",
+    "progress.favoritesHint": "Se carga sola en las 3 comidas",
+    "progress.noFavorite": "Ninguna",
+    "progress.recipeLevels": "Niveles de receta",
+    "progress.areas": "Bonus por área",
+    "progress.expert": "Experto",
+    "progress.noBonusYet": "sin bonus todavía",
+    "progress.unsaved": "sin guardar",
+    "progress.save": "Guardar",
+    "progress.savedValue": "En mi progreso",
+    "progress.saveError": "No se pudo guardar el cambio.",
+    "progress.loadError": "No se pudo cargar tu progreso.",
+    // Leaving with changes (PRD 0011): here, leaving without saving discards the draft.
+    "progress.leaveWithoutSaving": "Salir sin guardar",
+    "progress.exitConfirmMessage":
+      "Tenés cambios sin guardar en tu progreso. Si salís sin guardar, se descartan.",
   },
   en: {
     // Common
@@ -413,7 +459,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "common.edit": "Edit",
     "common.reload": "Reload",
     "common.loadingCatalog": "Loading catalog…",
-    "common.catalogError": "Couldn't load the catalog. Is the backend on :8000?",
+    "common.catalogError":
+      "Couldn't load the catalog. Is the backend on :8000?",
     "common.level": "Lv. {level}",
     "common.dash": "—",
     // Navigation
@@ -428,7 +475,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "auth.signOut": "Sign out",
     "auth.accountAria": "{name} — account",
     "auth.dialogTitle": "Sign in to continue",
-    "auth.dialogBody": "Your Box keeps your Pokémon across visits. Sign in with Google to continue.",
+    "auth.dialogBody":
+      "Your Box keeps your Pokémon across visits. Sign in with Google to continue.",
     "auth.gateTitle": "Your Box is where your Pokémon live",
     "auth.gateBody":
       "Sign in with Google to start your Box, register your team, and find it again on every visit.",
@@ -456,13 +504,15 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.strengthAria": "{value} Strength per day",
     "box.strengthBreakdownAria":
       "{value} Strength per day (berries {berries} + skill {skill})",
-    "box.ingredientsTitle": "Main ingredient per day (total: {total} ingredients/day)",
+    "box.ingredientsTitle":
+      "Main ingredient per day (total: {total} ingredients/day)",
     "box.ingredientsTitlePlain": "Ingredients per day",
     "box.ingredientsBreakdownAria":
       "{value} {ingredient} per day (normal {normal} + skill {skill})",
     "box.ingredientsPlainAria": "{value} {ingredient} per day",
     "box.randomIngredients": "{value}",
-    "box.randomIngredientsTitle": "{value} random ingredients per day (main skill)",
+    "box.randomIngredientsTitle":
+      "{value} random ingredients per day (main skill)",
     "box.skillAria": "Skill",
     // Expanded card detail on mobile (on wide screens the columns say it).
     "box.sectionBuild": "Build",
@@ -578,15 +628,18 @@ export const UI: Record<Lang, Record<string, string>> = {
     "member.deleteModalBody": "This can't be undone.",
     "member.confirm": "Confirm",
     "member.deleteAria": "Delete {species}",
-    "member.deleteConfirmAria": "Confirm deletion of {species} — press again to confirm",
-    "member.deleteConfirmStatus": "Press again to confirm deletion of {species}",
+    "member.deleteConfirmAria":
+      "Confirm deletion of {species} — press again to confirm",
+    "member.deleteConfirmStatus":
+      "Press again to confirm deletion of {species}",
     // Production card
     "card.clone": "Clone",
     "card.cloneMax": "Max 5 in the comparison",
     "card.saveUpdate": "Update this Pokémon in your box",
     "card.saveNew": "Save as new to your box",
     "card.remove": "Remove",
-    "card.gripTitle": "Drag (or use ← / → when focused) to reorder; the first card is the base",
+    "card.gripTitle":
+      "Drag (or use ← / → when focused) to reorder; the first card is the base",
     "card.gripAria": "Reorder: drag, or left and right arrows",
     "card.moveLeft": "Move left",
     "card.moveRight": "Move right",
@@ -610,21 +663,26 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.berries": "Berries",
     "card.ingredientsBlock": "Ingredients",
     "card.plusSkill": "+ skill",
-    "card.breakdownTitle": "Contribution from the normal mechanic and the main skill",
+    "card.breakdownTitle":
+      "Contribution from the normal mechanic and the main skill",
     "card.normalTitle": "From the normal ingredient mechanic",
     "card.skillTitle": "From the main skill",
     "card.skill": "Skill",
     "card.triggersTitle": "Skill activations per day",
     "card.energyEach": "to each teammate",
-    "card.energyEachTitle": "Energy the skill restores per day to each teammate",
+    "card.energyEachTitle":
+      "Energy the skill restores per day to each teammate",
     "card.randomIngredients": "random ingredients",
-    "card.randomIngredientsTitle": "Ingredients per day the skill gets (any type, at random)",
+    "card.randomIngredientsTitle":
+      "Ingredients per day the skill gets (any type, at random)",
     "card.cookingExtra": "extra pot ingredients",
-    "card.cookingTitle": "Extra pot ingredients per day for cooking (Cooking Power-Up S)",
+    "card.cookingTitle":
+      "Extra pot ingredients per day for cooking (Cooking Power-Up S)",
     "card.strength": "Strength",
     "card.strengthTitle":
       "Strength per day: direct from berries (by level and berry type) plus the main skill's (Charge Strength)",
-    "card.strengthBreakdownTitle": "Contribution from berries and the main skill",
+    "card.strengthBreakdownTitle":
+      "Contribution from berries and the main skill",
     "card.fromBerriesTitle": "From berries",
     "card.dreamShards": "Dream Shards",
     "card.dreamShardsTitle":
@@ -633,16 +691,20 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.extraTastyTitle":
       "Accumulated Extra Tasty boost per day (triggers × level %) — Tasty Chance S",
     "card.helpMult": "help",
-    "card.helpMultTitle": "Total daily help multiplier (triggers × ×N of the level)",
+    "card.helpMultTitle":
+      "Total daily help multiplier (triggers × ×N of the level)",
     "card.selfEnergy": "Energy to itself",
-    "card.selfEnergyTitle": "Energy the skill restores per day to the Pokémon itself",
+    "card.selfEnergyTitle":
+      "Energy the skill restores per day to the Pokémon itself",
     "card.randomEnergy": "Energy to a random teammate",
     "card.randomEnergyTitle":
       "Energy per day the skill spreads to the team, to a random teammate each activation",
     "card.nightOnce": "once",
-    "card.nightOnceTitle": "Chance of triggering the skill exactly once while you sleep",
+    "card.nightOnceTitle":
+      "Chance of triggering the skill exactly once while you sleep",
     "card.nightTwice": "twice",
-    "card.nightTwiceTitle": "Chance of triggering the skill twice while you sleep (the cap)",
+    "card.nightTwiceTitle":
+      "Chance of triggering the skill twice while you sleep (the cap)",
     "card.nightSleep": "while asleep",
     "card.nightSleepTitle": "Chance of triggering the skill while you sleep",
     // Nature select
@@ -693,7 +755,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     // Team analysis page
     "nav.teams": "Team analysis",
     "teams.title": "Team analysis",
-    "teams.subtitle": "Pick up to 5 Pokémon from your Box to analyse their daily production and team totals.",
+    "teams.subtitle":
+      "Pick up to 5 Pokémon from your Box to analyse their daily production and team totals.",
     "teams.empty": "Pick a Pokémon from your Box to start the analysis.",
     "teams.aggregates": "Team totals",
     "teams.berriesSkills": "Berries & skills",
@@ -774,6 +837,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.dishTypeCurry": "Curry",
     "teams.dishTypeSalad": "Salad",
     "teams.dishTypeDessert": "Dessert",
+    "teams.dishTypeUnset": "Not chosen",
     // Map tab
     "teams.selectIsland": "Map",
     "teams.noIsland": "No map",
@@ -799,10 +863,38 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.expertBerryStrength": "Favorite berry: strength ×2.4",
     "card.expertFavorite": "Favorite berry: strength ×2",
     "card.expertIngredient": "Favorite berry: +1 ingredient per find",
-    "card.expertSkillTrigger": "Favorite berry: Main Skill trigger chance ×1.25",
+    "card.expertSkillTrigger":
+      "Favorite berry: Main Skill trigger chance ×1.25",
     "card.expertPenalty": "No favorite berry: helps 15% slower",
     // Error boundary
     "error.title": "Something went wrong",
-    "error.body": "An unexpected error occurred while showing this view. Try reloading the page.",
+    "error.body":
+      "An unexpected error occurred while showing this view. Try reloading the page.",
+    // Player progress
+    "progress.title": "My progress",
+    "progress.loading": "Loading your progress…",
+    "progress.tabKitchen": "Kitchen",
+    "progress.tabRecipes": "Recipes",
+    "progress.tabAreas": "Areas",
+    "progress.potSize": "Pot size",
+    "progress.potUnit": "{n} ingredients",
+    "progress.potDown": "Smaller pot",
+    "progress.potUp": "Bigger pot",
+    "progress.favorites": "Favorite recipe per dish type",
+    "progress.favoritesHint": "Fills the three meals on its own",
+    "progress.noFavorite": "None",
+    "progress.recipeLevels": "Recipe levels",
+    "progress.areas": "Area bonus",
+    "progress.expert": "Expert",
+    "progress.noBonusYet": "no bonus yet",
+    "progress.unsaved": "unsaved",
+    "progress.save": "Save",
+    "progress.savedValue": "In my progress",
+    "progress.saveError": "Couldn't save the change.",
+    "progress.loadError": "Couldn't load your progress.",
+    // Leaving with changes (PRD 0011): here, leaving without saving discards the draft.
+    "progress.leaveWithoutSaving": "Leave without saving",
+    "progress.exitConfirmMessage":
+      "You have unsaved changes to your progress. Leaving without saving discards them.",
   },
 };
