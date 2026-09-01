@@ -1,5 +1,7 @@
 // Tipos espejo de los schemas del backend (sleepmon.adapters.inbound.http.schemas).
 
+import type { Scenario } from "./scenarios";
+
 export interface Nature {
   name: string;
   neutral: boolean;
@@ -150,6 +152,8 @@ export interface ProductionInput {
   sub_skills: string[];
   ribbon: string;
   skill_level: number;
+  // Comparison's map scenario; omitted means "none" server-side.
+  scenario?: Scenario;
 }
 
 export interface SlotProduction {

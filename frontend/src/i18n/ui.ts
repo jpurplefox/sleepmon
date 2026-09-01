@@ -120,6 +120,12 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Agregá Pokémon —de tu caja o nuevos— y compará su producción lado a lado. La primera card es la base: el resto muestra la diferencia contra ella.",
     "prod.assumptions":
       "Los cálculos asumen un día de 15.5 h despierto + 8.5 h de sueño con energía máxima.",
+    "prod.scenario": "Escenario",
+    "prod.scenarioNone": "Sin bonus de baya",
+    "prod.scenarioFavorite": "Baya favorita",
+    "prod.scenarioExpertBerry": "Experto · fuerza",
+    "prod.scenarioExpertIngredient": "Experto · ingrediente",
+    "prod.scenarioExpertSkill": "Experto · skill",
     "prod.atMax":
       "Ya hay 5 Pokémon: es el máximo del equipo en el juego. Quitá uno para agregar otro.",
     "prod.addHintEmpty":
@@ -561,6 +567,12 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Add Pokémon —from your box or new— and compare their production side by side. The first card is the base: the rest show the difference against it.",
     "prod.assumptions":
       "Calculations assume a day of 15.5 h awake + 8.5 h asleep at max energy.",
+    "prod.scenario": "Scenario",
+    "prod.scenarioNone": "No berry bonus",
+    "prod.scenarioFavorite": "Favorite berry",
+    "prod.scenarioExpertBerry": "Expert · strength",
+    "prod.scenarioExpertIngredient": "Expert · ingredient",
+    "prod.scenarioExpertSkill": "Expert · skill",
     "prod.atMax":
       "There are already 5 Pokémon: that's the in-game team maximum. Remove one to add another.",
     "prod.addHintEmpty":

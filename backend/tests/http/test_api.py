@@ -935,3 +935,39 @@ def test_the_catalog_marks_the_expert_areas(client: TestClient) -> None:
     catalog = client.get("/catalog").json()
     expert = {i["name"] for i in catalog["islands"] if i["expert"]}
     assert expert == {"Greengrass Isle (Expert)", "Cyan Beach (Expert)"}
+
+
+def test_production_scenario_applies_the_bonus(client: TestClient) -> None:
+    body = {
+        "species": "Pikachu",
+        "level": 60,
+        "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+    }
+    plain = client.post("/production", json=body).json()
+    favorite = client.post("/production", json={**body, "scenario": "favorite"}).json()
+    assert favorite["berry_strength"] == pytest.approx(plain["berry_strength"] * 2)
+
+
+def test_production_without_scenario_is_unchanged(client: TestClient) -> None:
+    # The field is optional: an existing client keeps getting today's numbers.
+    body = {
+        "species": "Pikachu",
+        "level": 60,
+        "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+    }
+    assert client.post("/production", json=body).json() == client.post(
+        "/production", json={**body, "scenario": "none"}
+    ).json()
+
+
+def test_production_unknown_scenario_returns_400(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Pikachu",
+            "level": 60,
+            "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+            "scenario": "double_xp",
+        },
+    )
+    assert res.status_code == 400
