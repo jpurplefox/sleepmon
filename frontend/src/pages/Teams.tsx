@@ -192,10 +192,15 @@ export function Teams() {
     return "none";
   };
 
+  // What actually goes on the wire, not the slot objects themselves: linking a
+  // newly saved entry to its Box id rewrites the slot objects (a new identity)
+  // without changing this, so keying on it avoids an identical, wasted refetch.
+  const teamRequestSlots = useMemo(() => toRequest(slots), [slots]);
+
   const teamQuery = useQuery({
     queryKey: [
       "team-production",
-      slots,
+      teamRequestSlots,
       meals,
       activeBerries,
       selectedIsland,
@@ -206,7 +211,7 @@ export function Teams() {
     ],
     queryFn: () =>
       api.computeTeamProduction({
-        slots: toRequest(slots),
+        slots: teamRequestSlots,
         meals,
         favorite_berries: activeBerries,
         island: selectedIsland,

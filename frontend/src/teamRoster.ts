@@ -1,6 +1,6 @@
 // The team roster: an ordered list of slots, each holding one Pokémon or two
 // sharing it over the week. Mutations are pure so the rules are testable without the page.
-import type { RosterEntry } from "./roster";
+import { linkEntryToBox, type RosterEntry } from "./roster";
 import type { MemberInput, TeamProductionInput } from "./types";
 
 export const MAX_TEAM = 5;
@@ -45,11 +45,10 @@ export function replaceConfig(
   );
 }
 
+// Tagging one entry as belonging to a Box member is the same rule at slot
+// shape: delegate to linkEntryToBox so it lives in one place.
 export function linkToBox(slots: Slot[], entryId: string, memberId: string): Slot[] {
-  return slots.map((s) => ({
-    ...s,
-    entries: s.entries.map((e) => (e.id === entryId ? { ...e, sourceId: memberId } : e)),
-  }));
+  return slots.map((s) => ({ ...s, entries: linkEntryToBox(s.entries, entryId, memberId) }));
 }
 
 export function removeSlot(slots: Slot[], slotIndex: number): Slot[] {

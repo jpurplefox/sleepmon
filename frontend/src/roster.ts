@@ -12,8 +12,19 @@ export interface RosterEntry {
   sourceId?: string;
 }
 
+// crypto.randomUUID is undefined outside a secure context (e.g. a LAN IP over
+// plain http, used to check the layout on a real phone), so fall back to a
+// timestamp + counter + random suffix — collision-free within a session and
+// well under the backend's 64-char id bound.
+let idCounter = 0;
+function localId(): string {
+  idCounter += 1;
+  return `local-${Date.now().toString(36)}-${idCounter.toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export function newEntry(config: MemberInput, sourceId?: string): RosterEntry {
-  return { id: crypto.randomUUID(), config, ...(sourceId ? { sourceId } : {}) };
+  const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : localId();
+  return { id, config, ...(sourceId ? { sourceId } : {}) };
 }
 
 // Match is by id, not position: a save resolves after the list may have been

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { configFromMember, linkEntryToBox, newEntry } from "./roster";
 import type { Catalog, Member, MemberInput } from "./types";
@@ -71,6 +71,24 @@ describe("newEntry", () => {
 
   it("remembers the Box member it was copied from", () => {
     expect(newEntry(config, "box-1").sourceId).toBe("box-1");
+  });
+
+  it("falls back to a unique, bounded id when crypto.randomUUID is unavailable, even within the same millisecond", () => {
+    // Simulates a non-secure context (e.g. a LAN IP over http), where
+    // crypto.randomUUID is undefined. Date.now is frozen so any two ids can
+    // only differ via the counter, not the clock.
+    const original = crypto.randomUUID;
+    // @ts-expect-error -- deliberately removing it to exercise the fallback
+    delete crypto.randomUUID;
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(1_700_000_000_000);
+    try {
+      const ids = new Set(Array.from({ length: 50 }, () => newEntry(config).id));
+      expect(ids.size).toBe(50);
+      for (const id of ids) expect(id.length).toBeLessThanOrEqual(64);
+    } finally {
+      crypto.randomUUID = original;
+      nowSpy.mockRestore();
+    }
   });
 });
 
