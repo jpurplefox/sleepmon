@@ -12,8 +12,8 @@ const catalog = {
       specialty: "Berries",
       ingredient_slots: [
         ["Fancy Apple"],
-        ["Fancy Apple", "Warming Ginger"],
-        ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+        ["Warming Ginger"],
+        ["Fancy Egg"],
       ],
     },
   ],
@@ -51,8 +51,8 @@ describe("configFromMember", () => {
     const partial = member({ ingredients: ["Fancy Apple"] });
     expect(configFromMember(catalog, partial)?.ingredients).toEqual([
       "Fancy Apple",
-      "Fancy Apple",
-      "Fancy Apple",
+      "Warming Ginger",
+      "Fancy Egg",
     ]);
   });
 
