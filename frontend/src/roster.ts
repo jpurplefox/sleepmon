@@ -16,6 +16,17 @@ export function newEntry(config: MemberInput, sourceId?: string): RosterEntry {
   return { id: crypto.randomUUID(), config, ...(sourceId ? { sourceId } : {}) };
 }
 
+// Match is by id, not position: a save resolves after the list may have been
+// reordered, so the entry that was actually saved might no longer sit where
+// it was when the save started.
+export function linkEntryToBox(
+  entries: RosterEntry[],
+  entryId: string,
+  memberId: string,
+): RosterEntry[] {
+  return entries.map((e) => (e.id === entryId ? { ...e, sourceId: memberId } : e));
+}
+
 // Copies a Box member into a config. Returns null when the species is outside
 // the curated catalog: its ingredient slots are unknown, so no valid config
 // exists and the caller must refuse the pick.

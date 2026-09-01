@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { configFromMember, newEntry } from "./roster";
+import { configFromMember, linkEntryToBox, newEntry } from "./roster";
 import type { Catalog, Member, MemberInput } from "./types";
 
 const catalog = {
@@ -71,5 +71,37 @@ describe("newEntry", () => {
 
   it("remembers the Box member it was copied from", () => {
     expect(newEntry(config, "box-1").sourceId).toBe("box-1");
+  });
+});
+
+describe("linkEntryToBox", () => {
+  it("tags only the entry matching the given id, leaving the others untouched", () => {
+    const a = newEntry(config);
+    const b = newEntry(config, "box-existing");
+    const c = newEntry(config);
+    const result = linkEntryToBox([a, b, c], a.id, "box-9");
+
+    expect(result.find((e) => e.id === a.id)?.sourceId).toBe("box-9");
+    expect(result.find((e) => e.id === b.id)?.sourceId).toBe("box-existing");
+    expect(result.find((e) => e.id === c.id)?.sourceId).toBeUndefined();
+  });
+
+  it("changes nothing when the id matches no entry", () => {
+    const a = newEntry(config);
+    const b = newEntry(config, "box-existing");
+    const result = linkEntryToBox([a, b], "no-such-id", "box-9");
+
+    expect(result).toEqual([a, b]);
+  });
+
+  it("does not mutate the input array or its entries", () => {
+    const a = newEntry(config);
+    const b = newEntry(config);
+    const entries = [a, b];
+    const result = linkEntryToBox(entries, a.id, "box-9");
+
+    expect(result).not.toBe(entries);
+    expect(entries).toEqual([a, b]);
+    expect(a.sourceId).toBeUndefined();
   });
 });

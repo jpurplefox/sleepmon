@@ -10,7 +10,7 @@ import { Modal } from "../components/Modal";
 import { Placeholder } from "../components/Placeholder";
 import { ProductionCard } from "../components/ProductionCard";
 import { useI18n } from "../i18n";
-import { configFromMember, newEntry, type RosterEntry } from "../roster";
+import { configFromMember, linkEntryToBox, newEntry, type RosterEntry } from "../roster";
 import type { Member, MemberInput } from "../types";
 import { useSaveToBox } from "../useSaveToBox";
 
@@ -169,11 +169,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
     const entry = entries[i];
     // Match by stable id, not index: the list can be reordered/edited while
     // this save is in flight, so `i` may no longer point at this entry.
-    save(entry, (memberId) =>
-      setEntries((prev) =>
-        prev.map((e) => (e.id === entry.id ? { ...e, sourceId: memberId } : e)),
-      ),
-    );
+    save(entry, (memberId) => setEntries((prev) => linkEntryToBox(prev, entry.id, memberId)));
   };
 
   if (catalog.isLoading) return <Placeholder loading>{t("common.loadingCatalog")}</Placeholder>;
