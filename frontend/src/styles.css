@@ -112,7 +112,8 @@ body {
 }
 
 /* Tooltip (componente Tooltip.tsx): burbuja arriba del trigger, en hover/focus.
-   El offset horizontal lo fija JS (clamp al viewport); acá va el look. */
+   Open/close and the horizontal offset are both set by JS (React state +
+   viewport clamp), not CSS :hover/:focus-within — acá va el look. */
 .tooltip {
   position: relative;
   display: inline-flex;
@@ -137,13 +138,9 @@ body {
   z-index: 200;
   /* Hidden with display:none, not visibility/opacity: an absolutely positioned
      bubble still counts toward the page's scroll width, and on mobile the ones
-     near the right edge caused a horizontal scroll. */
+     near the right edge caused a horizontal scroll. Default here for a pre-JS
+     paint; the component then drives display inline (open vs closed). */
   display: none;
-}
-
-.tooltip:hover .tooltip__bubble,
-.tooltip:focus-within .tooltip__bubble {
-  display: flex;
 }
 
 /* Contenido rico: filas label/valor (p. ej. desglose base / con bonus). */
