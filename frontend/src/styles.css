@@ -1355,26 +1355,30 @@ select:focus {
   padding: 0.5rem;
 }
 
-/* Scrollbar estilizado para los paneles desplegables (grilla y lista). */
+/* Scrollbar estilizado para todo panel que scrollea por su cuenta. */
 .filter-grid,
-.filter-list {
+.filter-list,
+.settings-modal-panel {
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
 
 .filter-grid::-webkit-scrollbar,
-.filter-list::-webkit-scrollbar {
+.filter-list::-webkit-scrollbar,
+.settings-modal-panel::-webkit-scrollbar {
   width: 6px;
 }
 
 .filter-grid::-webkit-scrollbar-thumb,
-.filter-list::-webkit-scrollbar-thumb {
+.filter-list::-webkit-scrollbar-thumb,
+.settings-modal-panel::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 999px;
 }
 
 .filter-grid::-webkit-scrollbar-track,
-.filter-list::-webkit-scrollbar-track {
+.filter-list::-webkit-scrollbar-track,
+.settings-modal-panel::-webkit-scrollbar-track {
   background: transparent;
 }
 
@@ -4316,6 +4320,8 @@ button.prod-card__base-tag--action:hover {
 .settings-modal-panel {
   height: 66vh;
   overflow-y: auto;
+  /* Reserve the bar's width so it never overlaps the content's right edge. */
+  scrollbar-gutter: stable;
 }
 
 /* ── Island Tab ──────────────────────────────────────────────────────────────── */
