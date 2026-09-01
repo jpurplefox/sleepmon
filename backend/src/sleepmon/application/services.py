@@ -9,6 +9,7 @@ cada ingrediente sea válido para la especie en su slot.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import TypeVar
 from uuid import UUID
@@ -121,6 +122,50 @@ def _validate_ingredients(species: Species, ingredients: tuple[Ingredient, ...])
                 f"{ingredient.value} no es válido para {species.name} en el slot "
                 f"{slot + 1}. Válidos: {allowed}."
             )
+
+
+@dataclass(frozen=True, slots=True)
+class _ResolvedConfig:
+    """A raw config turned into domain values, already validated."""
+
+    species: Species
+    level: int
+    ingredients: tuple[Ingredient, ...]
+    nature: Nature | None
+    sub_skills: tuple[SubSkill, ...]
+    ribbon: Ribbon
+    skill_level: int
+
+
+def _resolve_config(catalog: SpeciesCatalog, data: ProductionInput) -> _ResolvedConfig:
+    """Catalog lookup, enum parsing and the member invariants, in one place.
+
+    Shared by ``compute_production`` and every team entry so the two cannot drift.
+    """
+    species = catalog.get(data.species)
+    if species is None:
+        raise SpeciesNotFoundError(f"Especie desconocida: {data.species!r}.")
+
+    ingredients = tuple(_parse_enum(Ingredient, i, "ingredient") for i in data.ingredients)
+    nature = _parse_enum(Nature, data.nature, "nature") if data.nature else None
+    sub_skills = tuple(_parse_enum(SubSkill, s, "sub_skill") for s in data.sub_skills)
+    ribbon = _parse_enum(Ribbon, data.ribbon, "ribbon")
+
+    validate_level(data.level)
+    validate_skill_level(data.skill_level)
+    validate_ingredient_count(ingredients)
+    validate_sub_skills(sub_skills)
+    _validate_ingredients(species, ingredients)
+
+    return _ResolvedConfig(
+        species=species,
+        level=data.level,
+        ingredients=ingredients,
+        nature=nature,
+        sub_skills=sub_skills,
+        ribbon=ribbon,
+        skill_level=data.skill_level,
+    )
 
 
 def _map_bonuses(data: TeamProductionInput) -> MapBonuses:
@@ -295,30 +340,16 @@ class DefaultTeamService(TeamService):
         )
 
     def compute_production(self, data: ProductionInput) -> ProductionResult:
-        # Stateless: no toca el repo, así sirve igual para un Pokémon de la caja o
-        # uno armado desde cero.
-        species = self._catalog.get(data.species)
-        if species is None:
-            raise SpeciesNotFoundError(f"Especie desconocida: {data.species!r}.")
-
-        ingredients = tuple(_parse_enum(Ingredient, i, "ingredient") for i in data.ingredients)
-        nature = _parse_enum(Nature, data.nature, "nature") if data.nature else None
-        sub_skills = tuple(_parse_enum(SubSkill, s, "sub_skill") for s in data.sub_skills)
-        ribbon = _parse_enum(Ribbon, data.ribbon, "ribbon")
-
-        # Mismas invariantes de miembro que add_member/update_member (que las aplican
-        # vía el constructor de TeamMember): nivel entero en rango, nivel de skill en
-        # rango, exactamente un ingrediente por slot y sub skills sin repetir dentro del
-        # tope. compute_production no construye un TeamMember, así que las reusa
-        # explícitamente para no divergir.
-        validate_level(data.level)
-        validate_skill_level(data.skill_level)
-        validate_ingredient_count(ingredients)
-        validate_sub_skills(sub_skills)
-        _validate_ingredients(species, ingredients)
-
+        # Stateless: no repo access, so it serves a Box Pokémon and an ad-hoc one alike.
+        cfg = _resolve_config(self._catalog, data)
         result = daily_production(
-            species, ingredients, data.level, nature, sub_skills, ribbon, data.skill_level
+            cfg.species,
+            cfg.ingredients,
+            cfg.level,
+            cfg.nature,
+            cfg.sub_skills,
+            cfg.ribbon,
+            cfg.skill_level,
         )
         return _production_result(result)
 
