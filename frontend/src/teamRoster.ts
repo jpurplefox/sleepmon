@@ -1,6 +1,5 @@
 // The team roster: an ordered list of slots, each holding one Pokémon or two
-// sharing the slot over the week. Every mutation is a pure function so the
-// product rules are testable without the page.
+// sharing it over the week. Mutations are pure so the rules are testable without the page.
 import type { RosterEntry } from "./roster";
 import type { MemberInput, TeamProductionInput } from "./types";
 
@@ -8,9 +7,8 @@ export const MAX_TEAM = 5;
 
 export interface Slot {
   entries: RosterEntry[]; // 1 or 2
-  // The first entry's time share, 0..1. Only meaningful when split; a slot of
-  // one is always 100%. Keeping one number instead of a weight per entry makes
-  // "the weights sum to 1" true by construction.
+  // The first entry's time share, 0..1 (a slot of one is always 100%). One
+  // number instead of a weight per entry makes "weights sum to 1" true by construction.
   share: number;
 }
 

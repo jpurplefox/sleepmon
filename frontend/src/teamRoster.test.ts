@@ -60,7 +60,10 @@ describe("splitSlot", () => {
 
   it("leaves an already split slot alone", () => {
     const split = splitSlot(teamOf(1), 0, newEntry(config()));
-    expect(splitSlot(split, 0, newEntry(config()))[0].entries).toHaveLength(2);
+    const again = splitSlot(split, 0, newEntry(config()));
+    expect(again[0].entries).toHaveLength(2);
+    expect(again[0].entries).toEqual(split[0].entries);
+    expect(again[0].share).toBe(split[0].share);
   });
 });
 
@@ -82,6 +85,22 @@ describe("replaceConfig", () => {
     expect(next[0].entries[0].id).toBe(slots[0].entries[0].id);
     expect(next[0].entries[0].sourceId).toBe("box-1");
   });
+
+  it("only changes the targeted entry, leaving the rest untouched", () => {
+    const withFirst = addSlot([], newEntry(config(10), "box-1"));
+    const withSecond = addSlot(withFirst, newEntry(config(20)));
+    // slots[1] is a split slot: entries[0] level 20, entries[1] level 21.
+    const slots = splitSlot(withSecond, 1, newEntry(config(21)));
+
+    const next = replaceConfig(slots, 1, 1, config(99));
+
+    expect(next[1].entries[1].config.level).toBe(99);
+    expect(next[1].entries[1].id).toBe(slots[1].entries[1].id);
+    // The split slot's other entry is untouched.
+    expect(next[1].entries[0]).toEqual(slots[1].entries[0]);
+    // The other slot is untouched entirely.
+    expect(next[0]).toEqual(slots[0]);
+  });
 });
 
 describe("linkToBox", () => {
@@ -89,6 +108,20 @@ describe("linkToBox", () => {
     const slots = addSlot([], newEntry(config()));
     const id = slots[0].entries[0].id;
     expect(linkToBox(slots, id, "box-9")[0].entries[0].sourceId).toBe("box-9");
+  });
+
+  it("only sets sourceId on the entry whose id matches, leaving the rest alone", () => {
+    const withFirst = addSlot([], newEntry(config(10)));
+    const withSecond = addSlot(withFirst, newEntry(config(20)));
+    // slots[1] is a split slot: entries[0] level 20, entries[1] level 21.
+    const slots = splitSlot(withSecond, 1, newEntry(config(21)));
+    const targetId = slots[1].entries[1].id;
+
+    const next = linkToBox(slots, targetId, "box-9");
+
+    expect(next[1].entries[1].sourceId).toBe("box-9");
+    expect(next[0].entries[0].sourceId).toBeUndefined();
+    expect(next[1].entries[0].sourceId).toBeUndefined();
   });
 });
 
@@ -109,8 +142,18 @@ describe("removeEntry", () => {
 });
 
 describe("removeSlot", () => {
-  it("drops the slot", () => {
-    expect(removeSlot(teamOf(2), 0)).toHaveLength(1);
+  it("drops the targeted slot and keeps the others, in order", () => {
+    const slots = [10, 20, 30].reduce(
+      (acc, level) => addSlot(acc, newEntry(config(level))),
+      [] as Slot[],
+    );
+
+    const next = removeSlot(slots, 1);
+
+    expect(next).toHaveLength(2);
+    expect(next.map((s) => s.entries[0].config.level)).toEqual([10, 30]);
+    expect(next[0].entries[0].id).toBe(slots[0].entries[0].id);
+    expect(next[1].entries[0].id).toBe(slots[2].entries[0].id);
   });
 });
 
