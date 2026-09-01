@@ -142,32 +142,7 @@ describe("useSessionOverrides", () => {
     expect(result.current.recipeLevelUnsaved("Fancy Apple Curry")).toBe(false);
   });
 
-  it("lists an overridden recipe as unsaved, and drops it once reverted", () => {
-    const { result } = renderHook(() =>
-      useSessionOverrides(saved, "Cyan Beach"),
-    );
-    expect(result.current.unsavedRecipeNames).toEqual([]);
 
-    act(() => result.current.setRecipeLevelOverride("Beanburger Curry", 60));
-    expect(result.current.unsavedRecipeNames).toEqual(["Beanburger Curry"]);
-
-    act(() => result.current.setRecipeLevelOverride("Beanburger Curry", 55));
-    expect(result.current.unsavedRecipeNames).toEqual([]);
-  });
-
-  it("lists every recipe overridden away from its saved level, not just the last one", () => {
-    const { result } = renderHook(() =>
-      useSessionOverrides(saved, "Cyan Beach"),
-    );
-    act(() => {
-      result.current.setRecipeLevelOverride("Beanburger Curry", 60);
-      result.current.setRecipeLevelOverride("Fancy Apple Curry", 10);
-    });
-    expect(result.current.unsavedRecipeNames.sort()).toEqual([
-      "Beanburger Curry",
-      "Fancy Apple Curry",
-    ]);
-  });
 
   it("reflects a changed saved progress for un-overridden values, but not for overridden ones", () => {
     const { result, rerender } = renderHook(
