@@ -184,8 +184,14 @@ export interface Slot {
   entries: SlotEntry[]; // 1 o 2 entradas
 }
 
+export interface TeamProductionEntryInput {
+  id: string;
+  weight: number;
+  pokemon: MemberInput;
+}
+
 export interface TeamProductionInput {
-  slots: { entries: { member_id: string; weight: number }[] }[];
+  slots: { entries: TeamProductionEntryInput[] }[];
   meals: (MealInput | null)[];
   favorite_berries?: string[];
   island?: string | null;
