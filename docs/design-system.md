@@ -65,6 +65,7 @@ rest are functional or semantic.
 --accent:        #6366f1;   /* fill / border / focus outline */
 --accent-strong: #4f46e5;   /* fill under white text (primary button) */
 --accent-dim:    rgba(99, 102, 241, 0.15);
+--accent-border: rgba(99, 102, 241, 0.4);
 --accent-text:   #818cf8;   /* indigo as text/icon on dark — AA (≥4.5:1) */
 
 /* Identity accent — moon gold (the only "warm" color allowed) */
@@ -72,10 +73,13 @@ rest are functional or semantic.
 --moon-dim:    rgba(212, 160, 23, 0.15);
 --moon-border: rgba(212, 160, 23, 0.4);
 
-/* Semantic — natures and errors. `--down` carries the same two alpha variants
-   as `--moon`, and at the same alphas, because a cost is marked the way a bonus
-   is: `--down-border` outlines, `--down-dim` fills. `rgba()` needs channels, so
-   a variant cannot be composed from the base token at use time. */
+/* The three accents that tint a surface — `--moon`, `--down` and `--accent` —
+   all carry the same two alpha variants at the same alphas: `-dim` fills,
+   `-border` outlines. A cost is marked the way a bonus is, and a functional
+   state the way both are. `rgba()` needs channels, so a variant cannot be
+   composed from the base token at use time. */
+
+/* Semantic — natures and errors. */
 --up:          #3fb950;   /* stat that rises */
 --down:        #f78166;   /* stat that falls */
 --down-dim:    rgba(247, 129, 102, 0.15);
@@ -130,8 +134,10 @@ Two icon languages that never mix:
 Current catalog: `IconClock`, `IconHelp`, `IconPackage`, `IconHourglass`,
 `IconSparkle`, `IconPot`, `IconMagnifier`, `IconMoon`, `IconGrip`,
 `IconChevronDown`, `IconArrowUp`, `IconArrowDown`, `IconMore`, `IconClose`,
-`IconEdit`, `IconCopy`, `IconCheck`, `IconSaveBox`, `IconSplit`, `IconSignOut`. A new
-UI icon is added here following the same stroke — no ad-hoc icons in components.
+`IconEdit`, `IconCopy`, `IconCheck`, `IconSaveBox`, `IconSplit`, `IconSignOut`,
+`IconProgress` (rising bars — what you have unlocked and levelled; the account menu's
+"Mi progreso"). A new UI icon is added here following the same stroke — no ad-hoc icons
+in components.
 
 **Metric display.** A metric reads as **its own icon + the number** — the icon marks
 the figure a line *reports*. Metrics with a
@@ -230,15 +236,28 @@ states · where it lives. Feature one-offs are intentionally not here.
 ### Chips & badges
 - **`.badge`** — compact pill for short metrics. Variants: `--level` (moon gold),
   `--ok` (`--up` green), `--low` (`--down` red).
-- **`.metric-mark`** — inline annotation pinned to a figure, saying what a rule is
-  doing to *that* metric (`×2` / `×2,4` on berries, `+1` on ingredients, `Skill +1`
-  or `×1,25` on skill, `−10%` / `+15%` on help cadence). Smaller and bolder than
-  `.badge` (`--text-xs`, weight 700) and tinted rather than neutral, so it reads as
-  attached to the number instead of standing on its own. Variants: `--good` (moon
-  gold on `--moon-dim`) and `--bad` (`--down` on `--down-dim`). Always carries `title`
+- **`.metric-mark`** — inline annotation of what a rule is doing (`×2` / `×2,4` on
+  berries, `+1` on ingredients, `Skill +1` or `×1,25` on skill, `−10%` / `+15%` on
+  help cadence). It rides either the **figure** the rule changed, or the **control
+  that turns that rule on** — inside a `.filter-btn__value` or a
+  `.filter-list__item`, where the same mark labels the option that produces it.
+  Smaller and bolder than `.badge` (`--text-xs`, weight 700) and tinted rather than
+  neutral, so it reads as attached to what it annotates instead of standing on its
+  own. Variants: `--good` (moon gold on `--moon-dim`) and `--bad` (`--down` on
+  `--down-dim`). Always carries `title`
   + `aria-label` with the full effect — the sign and the text carry the meaning, so
   color is never the only cue. Generalized from `.prod-card__fav-badge` (the berry
   `×2`), which is its gold variant.
+- **`.progress-diff`** — marks a value the user has changed but **not saved** into the
+  record it came from, and offers to save it (`__label` "sin guardar" + `__save`, an
+  underlined text button). Indigo — `--accent-dim` fill, `--accent-border` outline,
+  `--accent-text` ink — at `--text-xs`, `--r-sm`. Wrapped in `Tooltip`: one
+  `Tooltip.Row` holds the **saved** value, so the number is a hover or a focus away
+  instead of printed beside every control. Renders **nothing** when the value matches
+  what is saved — no placeholder, no reserved space. **Not a `.metric-mark` variant**:
+  that one is a non-interactive pill (`999px`) naming what a *rule* does to a figure,
+  this one is a rounded container holding a button and naming what the *user* has left
+  undone.
 - **`.chip` / `.chips`** — small thematic tag (container wraps). Variants:
   `--ingredient` (gold-dim), `--subskill` (accent-dim).
 - **`.mini-icon`** — small inline icon (nature stat, ingredient, sub-skill) with
@@ -398,3 +417,22 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   by position, and position is exactly what a narrow screen takes away; once the
   columns go, the labels have to come back, and the phone has room for labels only
   if it stops showing everything at once.
+- **A mark may ride the control, not only the figure.** *Question:* a selector that
+  turns a rule on for a whole screen — should its options repeat the `.metric-mark`
+  the affected figures will carry, or say the multiplier in plain text? *Resolution:*
+  they repeat the mark, in the trigger and in the option list, identical to the one
+  that lands on the metric. *Why:* the mark is the name of the effect, not decoration
+  on a number; naming it the same way where it is chosen and where it lands lets the
+  reader connect cause and consequence without a legend. It stays scarce because it
+  is still the *same* effect being named twice, not a new gold accent.
+- **Marking a value that isn't saved yet.** *Question:* a value edited in a tool that
+  differs from the user's saved record — is that a `.metric-mark`, and does the saved
+  value sit beside the control? *Resolution:* neither. It is its own piece,
+  `.progress-diff`, in **indigo**, and it names the **state** ("sin guardar") while the
+  saved value moves into the tooltip. *Why:* `.metric-mark` names what a **rule** does to
+  a figure and is a non-interactive span; this names what the **user** has left undone
+  and has to hold a button, so it cannot be that piece with a new tint. Indigo is already
+  the functional colour of state, which keeps gold identity-only. And the saved number
+  stays out of the layout because the same mark repeats across nine areas and seventy
+  recipes — the tooltip already exists for a value's breakdown and opens on keyboard
+  focus as well as hover, so nothing is lost to the keyboard by moving it there.

@@ -99,6 +99,7 @@ class CatalogOut(msgspec.Struct):
     ingredients: list[str]
     species: list[SpeciesOut]
     recipe_level_bonus: list[float]
+    pot_ladder: list[int]
     ingredient_strengths: dict[str, int]
     islands: list[IslandOut]
 
@@ -120,6 +121,7 @@ class ProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     sub_skills: list[str] = msgspec.field(default_factory=list)
     ribbon: str = ""  # vacío = sin listón
     skill_level: int = 1  # nivel de la main skill
+    scenario: str = "none"  # ComparisonScenario: "none" = no berry bonus
 
 
 class SlotProductionOut(msgspec.Struct):
@@ -169,6 +171,28 @@ class RecipeOut(msgspec.Struct):
 
 class ErrorOut(msgspec.Struct):
     detail: str
+
+
+class ProgressOut(msgspec.Struct):
+    """The user's full progress. GET and PATCH both return this."""
+
+    pot_size: int
+    recipe_levels: dict[str, int]
+    favorite_recipes: dict[str, str]
+    area_bonuses: dict[str, int]
+
+
+class ProgressPatchIn(msgspec.Struct, forbid_unknown_fields=True):
+    """A partial change: an absent (``None``) field is left untouched.
+
+    Inside a mapping, the default value clears the key: level 1, bonus 0,
+    favorite ``null``.
+    """
+
+    pot_size: int | None = None
+    recipe_levels: dict[str, int] | None = None
+    favorite_recipes: dict[str, str | None] | None = None
+    area_bonuses: dict[str, int] | None = None
 
 
 class GoogleLoginIn(msgspec.Struct, forbid_unknown_fields=True):

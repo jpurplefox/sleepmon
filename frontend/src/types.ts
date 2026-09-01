@@ -1,5 +1,7 @@
 // Tipos espejo de los schemas del backend (sleepmon.adapters.inbound.http.schemas).
 
+import type { Scenario } from "./scenarios";
+
 export interface Nature {
   name: string;
   neutral: boolean;
@@ -66,6 +68,7 @@ export interface Catalog {
   ingredient_strengths: Record<string, number>;
   // Las 8 islas del juego con sus bayas favoritas configuradas.
   islands: Island[];
+  pot_ladder: number[];
 }
 
 // Invariantes del contrato del backend (ver MemberInput):
@@ -149,6 +152,8 @@ export interface ProductionInput {
   sub_skills: string[];
   ribbon: string;
   skill_level: number;
+  // Comparison's map scenario; omitted means "none" server-side.
+  scenario?: Scenario;
 }
 
 export interface SlotProduction {
@@ -313,4 +318,22 @@ export interface Production {
   inventory_fill_hours: number;
   /** Skill level actually used (with the main favorite's +1, already capped). */
   effective_skill_level: number;
+}
+
+/** What the user has unlocked in the game (PRD 0011). Mappings hold only non-defaults. */
+export interface PlayerProgress {
+  pot_size: number;
+  recipe_levels: Record<string, number>;
+  /** Keyed by dish type: "Curry" | "Salad" | "Dessert". */
+  favorite_recipes: Record<string, string>;
+  /** Keyed by area name, in percentage points (0–85). */
+  area_bonuses: Record<string, number>;
+}
+
+/** A sparse change. An absent field is untouched; inside a mapping, a default removes. */
+export interface ProgressPatch {
+  pot_size?: number;
+  recipe_levels?: Record<string, number>;
+  favorite_recipes?: Record<string, string | null>;
+  area_bonuses?: Record<string, number>;
 }

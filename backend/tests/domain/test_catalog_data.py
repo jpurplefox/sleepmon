@@ -2,8 +2,11 @@ import pytest
 
 from sleepmon.domain.catalog_data import (
     BERRY_BASE_STRENGTH,
+    DEFAULT_POT_SIZE,
     INGREDIENT_UNLOCK_LEVELS,
+    MAX_AREA_BONUS_PCT,
     NATURE_EFFECTS,
+    POT_LADDER,
     SUB_SKILL_TIERS,
     SUB_SKILL_UNLOCK_LEVELS,
     berry_strength_for_level,
@@ -429,3 +432,29 @@ def test_the_default_multiplier_is_neutral() -> None:
     assert berry_strength_for_level(Berry.ORAN, 30, multiplier=1.0) == berry_strength_for_level(
         Berry.ORAN, 30
     )
+
+
+def test_pot_ladder_has_23_steps_from_21_to_81() -> None:
+    assert len(POT_LADDER) == 23
+    assert POT_LADDER[0] == 21
+    assert POT_LADDER[-1] == 81
+
+
+def test_pot_ladder_low_rungs_match_the_v360_patch_note() -> None:
+    # v3.6.0 remapped the low rungs: 15->21, 18->23, 21->25, 24->27, 27->29, 30->31,
+    # and left everything above 33 unchanged.
+    assert POT_LADDER[:7] == (21, 23, 25, 27, 29, 31, 33)
+
+
+def test_pot_ladder_steps_by_three_above_33() -> None:
+    above = [s for s in POT_LADDER if s >= 33]
+    assert all(b - a == 3 for a, b in zip(above, above[1:], strict=False))
+
+
+def test_pot_ladder_is_strictly_increasing() -> None:
+    assert all(b > a for a, b in zip(POT_LADDER, POT_LADDER[1:], strict=False))
+
+
+def test_progress_defaults() -> None:
+    assert DEFAULT_POT_SIZE == 21
+    assert MAX_AREA_BONUS_PCT == 85

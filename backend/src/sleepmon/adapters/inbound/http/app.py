@@ -22,6 +22,7 @@ from sleepmon.adapters.inbound.http.auth_controller import AuthController
 from sleepmon.adapters.inbound.http.controllers import (
     CatalogController,
     ProductionController,
+    ProgressController,
     RecipeController,
     TeamController,
     TeamProductionController,
@@ -35,11 +36,16 @@ from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatal
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.adapters.outbound.postgres.pool import create_pool
 from sleepmon.adapters.outbound.postgres.repository import (
+    PostgresPlayerProgressRepository,
     PostgresRefreshTokenRepository,
     PostgresTeamRepository,
     PostgresUserRepository,
 )
 from sleepmon.application.auth_service import AuthService, DefaultAuthService
+from sleepmon.application.progress_service import (
+    DefaultPlayerProgressService,
+    PlayerProgressService,
+)
 from sleepmon.application.services import (
     DefaultProductionService,
     DefaultTeamService,
@@ -77,6 +83,7 @@ def create_app(
     settings: Settings | None = None,
     access: AccessTokenService | None = None,
     auth_service: AuthService | None = None,
+    progress_service: PlayerProgressService | None = None,
 ) -> Litestar:
     # ``object`` y no ``Any``: el valor de retorno de los hooks se descarta, pero
     # ``Any`` apagaría el chequeo de tipos sobre el cuerpo de cada callback.
@@ -141,11 +148,25 @@ def create_app(
             refresh_ttl=settings.refresh_ttl,
         )
 
+    if progress_service is None:
+        settings = settings or Settings.from_env()
+        # Reuses the pool the team repository (or auth) already opened; never a third.
+        if pool is None:
+            progress_pool = create_pool(settings.database_url)
+            pool = progress_pool
+            on_shutdown.append(lambda: progress_pool.close())
+        else:
+            progress_pool = pool
+        progress_service = DefaultPlayerProgressService(
+            PostgresPlayerProgressRepository(progress_pool), recipe_catalog
+        )
+
     # Singletons inyectados por DI (sync_to_thread=False: solo devuelven la instancia).
     bound_service = service
     bound_production_service = production_service
     bound_catalog = catalog
     bound_auth_service = auth_service
+    bound_progress_service = progress_service
 
     cookie_secure = settings.cookie_secure if settings is not None else True
     cookie_samesite = settings.cookie_samesite if settings is not None else "strict"
@@ -166,6 +187,7 @@ def create_app(
             RecipeController,
             TeamProductionController,
             AuthController,
+            ProgressController,
         ],
         state=State(
             {
@@ -183,6 +205,7 @@ def create_app(
             "catalog": Provide(lambda: bound_catalog, sync_to_thread=False),
             "current_user_id": Provide(current_user_id, sync_to_thread=False),
             "auth_service": Provide(lambda: bound_auth_service, sync_to_thread=False),
+            "progress": Provide(lambda: bound_progress_service, sync_to_thread=False),
         },
         exception_handlers={
             ValidationError: _validation_handler,

@@ -10,9 +10,11 @@ from sleepmon.adapters.outbound.auth.refresh_token import SecretsRefreshTokenCod
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.auth_service import DefaultAuthService
+from sleepmon.application.progress_service import DefaultPlayerProgressService
 from sleepmon.application.services import DefaultProductionService, DefaultTeamService
 from sleepmon.domain.value_objects import Island
 from tests.fakes import (
+    InMemoryPlayerProgressRepository,
     InMemoryRefreshTokenRepository,
     InMemoryTeamRepository,
     InMemoryUserRepository,
@@ -66,6 +68,9 @@ def client() -> TestClient:
         recipe_catalog=StaticRecipeCatalog(),
         access=ACCESS,
         auth_service=auth_service,
+        progress_service=DefaultPlayerProgressService(
+            InMemoryPlayerProgressRepository(), StaticRecipeCatalog()
+        ),
     )
     with TestClient(app=app) as client:
         yield client
@@ -141,6 +146,13 @@ def test_catalog_islands_expose_ratings(client: TestClient) -> None:
         "level": 20,
         "required_strength": 3245795,
     }
+
+
+def test_catalog_serves_the_pot_ladder(client: TestClient) -> None:
+    body = client.get("/catalog").json()
+    assert body["pot_ladder"][0] == 21
+    assert body["pot_ladder"][-1] == 81
+    assert len(body["pot_ladder"]) == 23
 
 
 def test_create_and_list_member(client: TestClient, auth_header: dict[str, str]) -> None:
@@ -896,3 +908,39 @@ def test_team_production_rejects_a_bad_config(client: TestClient) -> None:
     )
     assert body.status_code == 400
     assert "Missingno" in body.json()["detail"]
+
+
+def test_production_scenario_applies_the_bonus(client: TestClient) -> None:
+    body = {
+        "species": "Pikachu",
+        "level": 60,
+        "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+    }
+    plain = client.post("/production", json=body).json()
+    favorite = client.post("/production", json={**body, "scenario": "favorite"}).json()
+    assert favorite["berry_strength"] == pytest.approx(plain["berry_strength"] * 2)
+
+
+def test_production_without_scenario_is_unchanged(client: TestClient) -> None:
+    # The field is optional: an existing client keeps getting today's numbers.
+    body = {
+        "species": "Pikachu",
+        "level": 60,
+        "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+    }
+    assert client.post("/production", json=body).json() == client.post(
+        "/production", json={**body, "scenario": "none"}
+    ).json()
+
+
+def test_production_unknown_scenario_returns_400(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Pikachu",
+            "level": 60,
+            "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+            "scenario": "double_xp",
+        },
+    )
+    assert res.status_code == 400

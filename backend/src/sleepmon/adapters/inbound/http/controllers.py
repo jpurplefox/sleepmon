@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from litestar import Controller, delete, get, post, put
+from litestar import Controller, delete, get, patch, post, put
 from litestar.di import NamedDependency
 from litestar.params import FromPath
 from litestar.status_codes import HTTP_200_OK, HTTP_201_CREATED
@@ -24,6 +24,8 @@ from sleepmon.adapters.inbound.http.schemas import (
     NatureOut,
     ProductionIn,
     ProductionOut,
+    ProgressOut,
+    ProgressPatchIn,
     RatingOut,
     RecipeOut,
     SkillEffectAggOut,
@@ -39,11 +41,13 @@ from sleepmon.application.dto import (
     MemberProduction,
     ProductionInput,
     ProductionResult,
+    ProgressPatchInput,
     SlotEntryInput,
     SlotInput,
     TeamMemberInput,
     TeamProductionInput,
 )
+from sleepmon.application.progress_service import PlayerProgressService
 from sleepmon.application.services import ProductionService, TeamService
 from sleepmon.domain.catalog_data import (
     INGREDIENT_STRENGTH,
@@ -52,11 +56,13 @@ from sleepmon.domain.catalog_data import (
     ISLAND_RATING_THRESHOLDS,
     ISLAND_USER_PICKS,
     NATURE_EFFECTS,
+    POT_LADDER,
     RECIPE_LEVEL_BONUS,
     SUB_SKILL_TIERS,
 )
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.ports import SpeciesCatalog
+from sleepmon.domain.progress import PlayerProgress
 from sleepmon.domain.value_objects import Ingredient, Island, Nature, SubSkill
 
 
@@ -237,6 +243,7 @@ class ProductionController(Controller):
                 sub_skills=data.sub_skills,
                 ribbon=data.ribbon,
                 skill_level=data.skill_level,
+                scenario=data.scenario,
             )
         )
         return _full_production_out(result)
@@ -252,6 +259,7 @@ class CatalogController(Controller):
             sub_skills=[SubSkillOut(name=s.value, tier=SUB_SKILL_TIERS[s].value) for s in SubSkill],
             ingredients=[i.value for i in Ingredient],
             recipe_level_bonus=list(RECIPE_LEVEL_BONUS),
+            pot_ladder=list(POT_LADDER),
             ingredient_strengths={ing.value: INGREDIENT_STRENGTH[ing] for ing in Ingredient},
             species=[
                 SpeciesOut(
@@ -437,4 +445,45 @@ class TeamProductionController(Controller):
             ],
             grand_total_strength=result.grand_total_strength,
             grand_total_strength_base=result.grand_total_strength_base,
+        )
+
+
+def _to_progress_out(progress: PlayerProgress) -> ProgressOut:
+    return ProgressOut(
+        pot_size=progress.pot_size,
+        recipe_levels=dict(progress.recipe_levels),
+        favorite_recipes={t.value: n for t, n in progress.favorite_recipes.items()},
+        area_bonuses={a.value: p for a, p in progress.area_bonuses.items()},
+    )
+
+
+class ProgressController(Controller):
+    path = "/progress"
+    guards = [require_user]
+
+    @get("/", sync_to_thread=True)
+    def get_progress(
+        self,
+        progress: NamedDependency[PlayerProgressService],
+        current_user_id: NamedDependency[UUID],
+    ) -> ProgressOut:
+        return _to_progress_out(progress.get(current_user_id))
+
+    @patch("/", status_code=HTTP_200_OK, sync_to_thread=True)
+    def patch_progress(
+        self,
+        progress: NamedDependency[PlayerProgressService],
+        current_user_id: NamedDependency[UUID],
+        data: ProgressPatchIn,
+    ) -> ProgressOut:
+        return _to_progress_out(
+            progress.patch(
+                current_user_id,
+                ProgressPatchInput(
+                    pot_size=data.pot_size,
+                    recipe_levels=data.recipe_levels,
+                    favorite_recipes=data.favorite_recipes,
+                    area_bonuses=data.area_bonuses,
+                ),
+            )
         )

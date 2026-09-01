@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import datetime
 from uuid import UUID
@@ -10,10 +11,12 @@ from sleepmon.domain.auth import ExternalIdentity, RefreshToken, User
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.ports import (
     IdentityProvider,
+    PlayerProgressRepository,
     RefreshTokenRepository,
     TeamRepository,
     UserRepository,
 )
+from sleepmon.domain.progress import PlayerProgress
 
 
 class InMemoryTeamRepository(TeamRepository):
@@ -113,3 +116,22 @@ class StubIdentityProvider(IdentityProvider):
 
     def verify(self, credential: str) -> ExternalIdentity:
         return self._identity
+
+
+class InMemoryPlayerProgressRepository(PlayerProgressRepository):
+    """Un dict por usuario. Sin fila = valores por defecto, igual que Postgres."""
+
+    def __init__(self) -> None:
+        self._rows: dict[UUID, PlayerProgress] = {}
+
+    def get(self, user_id: UUID) -> PlayerProgress:
+        return self._rows.get(user_id, PlayerProgress())
+
+    def transform(
+        self, user_id: UUID, change: Callable[[PlayerProgress], PlayerProgress]
+    ) -> PlayerProgress:
+        # Se asigna DESPUÉS de llamar a change: si levanta, la fila no cambia —
+        # el mismo comportamiento que el rollback del adapter real.
+        updated = change(self.get(user_id))
+        self._rows[user_id] = updated
+        return updated

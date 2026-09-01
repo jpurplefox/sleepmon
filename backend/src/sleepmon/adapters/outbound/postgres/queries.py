@@ -3,7 +3,11 @@ psycopg parametrice los valores (nunca interpolamos datos del usuario)."""
 
 from __future__ import annotations
 
-from pypika import Order, Parameter, Query, Table
+from typing import cast
+
+from pypika import Order, Parameter, PostgreSQLQuery, Query, Table
+from pypika.dialects import PostgreSQLQueryBuilder
+from pypika.terms import Function
 
 member = Table("team_member")
 subskill = Table("team_member_subskill")
@@ -180,4 +184,58 @@ DELETE_REFRESH_FAMILY = (
 
 DELETE_REFRESH_EXPIRED = (
     Query.from_(refresh_token).where(refresh_token.expires_at <= _P).delete().get_sql()
+)
+
+progress = Table("player_progress")
+
+_PROGRESS_COLS = (
+    progress.pot_size,
+    progress.recipe_levels,
+    progress.favorite_recipes,
+    progress.area_bonuses,
+)
+
+SELECT_PROGRESS = (
+    Query.from_(progress).select(*_PROGRESS_COLS).where(progress.user_id == _P).get_sql()
+)
+
+# Locks the row for the read-modify-write in ``transform``: two tabs saving at once
+# serialize instead of one clobbering the other's update.
+SELECT_PROGRESS_FOR_UPDATE = (
+    Query.from_(progress)
+    .select(*_PROGRESS_COLS)
+    .where(progress.user_id == _P)
+    .for_update()
+    .get_sql()
+)
+
+# Make the row exist before locking it: SELECT ... FOR UPDATE locks nothing when
+# it is absent, so two concurrent first-writes would race instead of serializing.
+
+# cast: PyPika's insert() types as the base QueryBuilder, but on_conflict/do_update/
+# do_nothing only exist on PostgreSQLQueryBuilder, which is what runs at runtime.
+ENSURE_PROGRESS_ROW = (
+    cast(
+        PostgreSQLQueryBuilder,
+        PostgreSQLQuery.into(progress).columns("user_id").insert(_P),
+    )
+    .on_conflict(progress.user_id)
+    .do_nothing()
+    .get_sql()
+)
+
+UPSERT_PROGRESS = (
+    cast(
+        PostgreSQLQueryBuilder,
+        PostgreSQLQuery.into(progress)
+        .columns("user_id", "pot_size", "recipe_levels", "favorite_recipes", "area_bonuses")
+        .insert(_P, _P, _P, _P, _P),
+    )
+    .on_conflict(progress.user_id)
+    .do_update("pot_size")
+    .do_update("recipe_levels")
+    .do_update("favorite_recipes")
+    .do_update("area_bonuses")
+    .do_update("updated_at", Function("now"))
+    .get_sql()
 )

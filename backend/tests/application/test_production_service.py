@@ -889,3 +889,71 @@ def test_a_weekly_bonus_without_an_expert_map_is_ignored_not_rejected(
         ),
     )
     assert result.total_strength > 0
+
+
+def _pikachu(**extra: object) -> ProductionInput:
+    """The same config, with whatever scenario each test needs."""
+    return ProductionInput(
+        species="Pikachu",
+        level=60,
+        ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+        **extra,  # type: ignore[arg-type]
+    )
+
+
+def test_compute_production_favorite_berry_doubles_strength(
+    production_service: DefaultProductionService,
+) -> None:
+    plain = production_service.compute_production(_pikachu())
+    favorite = production_service.compute_production(_pikachu(scenario="favorite"))
+    assert favorite.berry_strength == pytest.approx(plain.berry_strength * 2)
+    # A favorite berry only multiplies strength: not cadence, not the skill.
+    assert favorite.seconds_per_help == plain.seconds_per_help
+    assert favorite.skill_triggers == pytest.approx(plain.skill_triggers)
+
+
+def test_compute_production_expert_berry_scenario(
+    production_service: DefaultProductionService,
+) -> None:
+    plain = production_service.compute_production(_pikachu())
+    expert = production_service.compute_production(_pikachu(scenario="expert_berry"))
+    # rel: per-berry strength is rounded to an integer AFTER the multiplier.
+    assert expert.berry_strength == pytest.approx(plain.berry_strength * 2.4, rel=0.01)
+
+
+def test_compute_production_expert_ingredient_scenario(
+    production_service: DefaultProductionService,
+) -> None:
+    favorite = production_service.compute_production(_pikachu(scenario="favorite"))
+    expert = production_service.compute_production(_pikachu(scenario="expert_ingredient"))
+    assert sum(s.amount for s in expert.ingredients) > sum(s.amount for s in favorite.ingredients)
+    # More items per help also fills the inventory sooner.
+    assert expert.inventory_fill_hours < favorite.inventory_fill_hours
+
+
+def test_compute_production_expert_skill_scenario(
+    production_service: DefaultProductionService,
+) -> None:
+    favorite = production_service.compute_production(_pikachu(scenario="favorite"))
+    expert = production_service.compute_production(_pikachu(scenario="expert_skill"))
+    assert expert.skill_triggers > favorite.skill_triggers
+    assert expert.night_skill_chances[0] > favorite.night_skill_chances[0]
+
+
+def test_compute_production_scenario_is_never_the_main_berry(
+    production_service: DefaultProductionService,
+) -> None:
+    # Comparison reads every card as a SUB favorite: no x0.9 cadence, no Skill +1,
+    # which belong to the main berry alone.
+    plain = production_service.compute_production(_pikachu(skill_level=3))
+    for scenario in ("expert_berry", "expert_ingredient", "expert_skill"):
+        expert = production_service.compute_production(_pikachu(skill_level=3, scenario=scenario))
+        assert expert.effective_skill_level == plain.effective_skill_level == 3
+        assert expert.seconds_per_help == plain.seconds_per_help
+
+
+def test_compute_production_rejects_unknown_scenario(
+    production_service: DefaultProductionService,
+) -> None:
+    with pytest.raises(ValidationError):
+        production_service.compute_production(_pikachu(scenario="double_xp"))

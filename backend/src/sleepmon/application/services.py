@@ -11,7 +11,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TypeVar
+from typing import assert_never
 from uuid import UUID
 
 from sleepmon.application.dto import (
@@ -32,6 +32,7 @@ from sleepmon.application.dto import (
     TeamProductionInput,
     TeamProductionResult,
 )
+from sleepmon.application.parsing import parse_enum
 from sleepmon.domain import analytics
 from sleepmon.domain.analytics import team_production
 from sleepmon.domain.catalog_data import ISLAND_EXPERT, MAX_FAVORITE_BERRIES, MAX_RECIPE_LEVEL
@@ -57,8 +58,6 @@ from sleepmon.domain.value_objects import (
     SubSkill,
     WeeklyBonus,
 )
-
-E = TypeVar("E", bound=StrEnum)
 
 
 def _production_result(daily: DailyProduction) -> ProductionResult:
@@ -102,15 +101,6 @@ def _production_result(daily: DailyProduction) -> ProductionResult:
     )
 
 
-def _parse_enum(enum_cls: type[E], value: str, field: str) -> E:
-    try:
-        return enum_cls(value)
-    except ValueError as exc:
-        valid = ", ".join(e.value for e in enum_cls)
-        msg = f"Valor inválido para {field}: {value!r}. Opciones: {valid}."
-        raise ValidationError(msg) from exc
-
-
 def _validate_ingredients(species: Species, ingredients: tuple[Ingredient, ...]) -> None:
     """Valida que cada ingrediente sea posible para la especie en su slot."""
     slot_count = len(species.ingredient_slots)
@@ -123,6 +113,42 @@ def _validate_ingredients(species: Species, ingredients: tuple[Ingredient, ...])
                 f"{ingredient.value} no es válido para {species.name} en el slot "
                 f"{slot + 1}. Válidos: {allowed}."
             )
+
+
+class ComparisonScenario(StrEnum):
+    """The five scenarios Comparison offers (PRD 0002, "Map scenario")."""
+
+    NONE = "none"
+    FAVORITE = "favorite"
+    EXPERT_BERRY = "expert_berry"
+    EXPERT_INGREDIENT = "expert_ingredient"
+    EXPERT_SKILL = "expert_skill"
+
+
+def _scenario_bonuses(scenario: str, berry: Berry) -> MapBonuses:
+    """Comparison's chosen scenario, as the domain's value object.
+
+    The species' own berry enters as a SUB favorite, so the x2 and the weekly bonus
+    reach every card alike without picking a map. Never as the MAIN favorite: only
+    one berry can be, so its perks aren't reproducible for a whole comparison.
+    """
+    chosen = parse_enum(ComparisonScenario, scenario, "Escenario")
+    subs = frozenset({berry})
+    # match on the enum (no wildcard) so mypy flags a new member missing a branch,
+    # instead of a dict lookup that would only fail at runtime (KeyError -> 500).
+    match chosen:
+        case ComparisonScenario.NONE:
+            return MapBonuses()
+        case ComparisonScenario.FAVORITE:
+            return MapBonuses(subs=subs)
+        case ComparisonScenario.EXPERT_BERRY:
+            return MapBonuses(subs=subs, expert=True, weekly_bonus=WeeklyBonus.BERRY_STRENGTH)
+        case ComparisonScenario.EXPERT_INGREDIENT:
+            return MapBonuses(subs=subs, expert=True, weekly_bonus=WeeklyBonus.INGREDIENT)
+        case ComparisonScenario.EXPERT_SKILL:
+            return MapBonuses(subs=subs, expert=True, weekly_bonus=WeeklyBonus.SKILL_TRIGGER)
+        case _ as unreachable:
+            assert_never(unreachable)
 
 
 @dataclass(frozen=True, slots=True)
@@ -147,10 +173,10 @@ def _resolve_config(catalog: SpeciesCatalog, data: ProductionInput) -> _Resolved
     if species is None:
         raise SpeciesNotFoundError(f"Especie desconocida: {data.species!r}.")
 
-    ingredients = tuple(_parse_enum(Ingredient, i, "ingredient") for i in data.ingredients)
-    nature = _parse_enum(Nature, data.nature, "nature") if data.nature else None
-    sub_skills = tuple(_parse_enum(SubSkill, s, "sub_skill") for s in data.sub_skills)
-    ribbon = _parse_enum(Ribbon, data.ribbon, "ribbon")
+    ingredients = tuple(parse_enum(Ingredient, i, "ingredient") for i in data.ingredients)
+    nature = parse_enum(Nature, data.nature, "nature") if data.nature else None
+    sub_skills = tuple(parse_enum(SubSkill, s, "sub_skill") for s in data.sub_skills)
+    ribbon = parse_enum(Ribbon, data.ribbon, "ribbon")
 
     validate_level(data.level)
     validate_skill_level(data.skill_level)
@@ -180,20 +206,20 @@ def _map_bonuses(data: TeamProductionInput) -> MapBonuses:
     if len(set(data.favorite_berries)) != len(data.favorite_berries):
         raise ValidationError("Las bayas favoritas no pueden repetirse.")
 
-    favorites = {_parse_enum(Berry, name, "Baya") for name in data.favorite_berries}
+    favorites = {parse_enum(Berry, name, "Baya") for name in data.favorite_berries}
 
-    island = _parse_enum(Island, data.island, "Mapa") if data.island is not None else None
+    island = parse_enum(Island, data.island, "Mapa") if data.island is not None else None
     expert = island is not None and island in ISLAND_EXPERT
 
     main: Berry | None = None
     if data.main_favorite is not None:
-        main = _parse_enum(Berry, data.main_favorite, "Baya principal")
+        main = parse_enum(Berry, data.main_favorite, "Baya principal")
         if main not in favorites:
             raise ValidationError("La baya principal debe estar entre las favoritas.")
 
     weekly = WeeklyBonus.BERRY_STRENGTH
     if data.weekly_bonus is not None:
-        weekly = _parse_enum(WeeklyBonus, data.weekly_bonus, "Bonus semanal")
+        weekly = parse_enum(WeeklyBonus, data.weekly_bonus, "Bonus semanal")
 
     # Outside expert mode the main berry/weekly bonus are ignored rather than
     # rejected (switching maps can leave them behind as stale client state).
@@ -343,10 +369,10 @@ class DefaultTeamService(TeamService):
         if species is None:
             raise SpeciesNotFoundError(f"Especie desconocida: {data.species!r}.")
 
-        nature = _parse_enum(Nature, data.nature, "nature") if data.nature else None
-        sub_skills = tuple(_parse_enum(SubSkill, s, "sub_skill") for s in data.sub_skills)
-        ribbon = _parse_enum(Ribbon, data.ribbon, "ribbon")
-        ingredients = tuple(_parse_enum(Ingredient, i, "ingredient") for i in data.ingredients)
+        ingredients = tuple(parse_enum(Ingredient, i, "ingredient") for i in data.ingredients)
+        nature = parse_enum(Nature, data.nature, "nature") if data.nature else None
+        sub_skills = tuple(parse_enum(SubSkill, s, "sub_skill") for s in data.sub_skills)
+        ribbon = parse_enum(Ribbon, data.ribbon, "ribbon")
 
         _validate_ingredients(species, ingredients)
 
@@ -396,6 +422,7 @@ class DefaultProductionService(ProductionService):
             cfg.sub_skills,
             cfg.ribbon,
             cfg.skill_level,
+            map_bonuses=_scenario_bonuses(data.scenario, cfg.species.berry),
         )
         return _production_result(result)
 

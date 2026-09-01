@@ -33,6 +33,7 @@ import { ingredientIcon } from "../ingredients";
 import { fdown } from "../utils/format";
 import { recipeImage } from "../recipes";
 import { perMealPot, dailyPotCapacity } from "../pot";
+import { areaBonusOf, recipeLevelOf } from "../progress";
 import { statIcon } from "../natures";
 import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
 import { configFromMember, newEntry } from "../roster";
@@ -48,6 +49,8 @@ import {
   splitSlot,
   toRequest,
 } from "../teamRoster";
+import { useProgress } from "../useProgress";
+import { useSessionOverrides } from "../useSessionOverrides";
 import type {
   BerryRole,
   MealInput,
@@ -159,7 +162,6 @@ export function Teams() {
   const [notice, setNotice] = useState<string | null>(null);
   const [meals, setMeals] = useState<(MealInput | null)[]>([null, null, null]);
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
-  const [potSize, setPotSize] = useState(15);
   const [goodCampTicket, setGoodCampTicket] = useState(false);
 
   // Dish type: restricts all 3 meal slots to the same recipe type (ephemeral, frontend-only).
@@ -168,9 +170,42 @@ export function Teams() {
   // Island state (efímero, como meals).
   const [selectedIsland, setSelectedIsland] = useState<string | null>(null);
   const [favoriteBerries, setFavoriteBerries] = useState<string[]>([]);
-  const [islandBonus, setIslandBonus] = useState<number>(0);
   const [mainFavorite, setMainFavorite] = useState<string | null>(null);
   const [weeklyBonus, setWeeklyBonus] = useState<WeeklyBonus>("berry_strength");
+
+  const { progress, save: saveProgress, saveError: progressSaveError } = useProgress();
+
+  // Session-only edits, layered over the saved progress. Everything shown is
+  // derived: override ?? saved ?? default, so there is no window where local
+  // state and the query disagree.
+  const {
+    potSize,
+    areaBonusPct,
+    recipeLevelFor,
+    potUnsaved,
+    areaBonusUnsaved,
+    recipeLevelUnsaved,
+    setPotOverride,
+    setAreaBonusOverride,
+    setRecipeLevelOverride,
+  } = useSessionOverrides(progress, selectedIsland);
+
+  // Percentage points in progress; the payload and the cards want a 0–0.85 fraction.
+  const islandBonus = areaBonusPct / 100;
+
+  // The saved area bonus for the currently selected island, in percentage points.
+  const savedBonusPct = areaBonusOf(progress, selectedIsland);
+
+  const savedLevelFor = (name: string): number => recipeLevelOf(progress, name);
+
+  const savePot = () => saveProgress({ pot_size: potSize });
+  const saveBonus = () => {
+    if (selectedIsland === null) return;
+    saveProgress({ area_bonuses: { [selectedIsland]: areaBonusPct } });
+  };
+  const saveLevel = (name: string) =>
+    saveProgress({ recipe_levels: { [name]: recipeLevelFor(name) } });
+
 
   // Set de bayas favoritas activas para lookup O(1) al renderizar las cards.
   const favBerrySet = useMemo(
@@ -392,23 +427,11 @@ export function Teams() {
     save(entry, (memberId) => setSlots((prev) => linkToBox(prev, entry.id, memberId)));
   };
 
-  // Handler: set dishType and clear meals that are incompatible with the new type.
-  // When newType is null (no restriction), also clear all meals so a mixed state
-  // (e.g. Curry + Salad) can never persist after the type selector is reset.
+  // Dish type is a setup choice about the day, chosen on the Map tab (PRD
+  // 0006). This is just the raw state setter — SettingsModal.pickDishType
+  // wraps it with the favorite-replace/empty behavior before it fires.
   const handleDishTypeChange = (newType: 'Curry' | 'Salad' | 'Dessert' | null) => {
     setDishType(newType);
-    if (newType === null) {
-      setMeals([null, null, null]);
-    } else {
-      setMeals((prev) =>
-        prev.map((m) => {
-          if (m === null) return null;
-          const recipe = recipeByName.get(m.recipe);
-          // If recipe not found in catalog or type mismatch, clear the slot.
-          return recipe && recipe.type === newType ? m : null;
-        }),
-      );
-    }
   };
 
   // Catalog must be loaded for BoxPicker to work.
@@ -1362,23 +1385,37 @@ export function Teams() {
           onChangeMeals={setMeals}
           onClose={() => setMealPickerOpen(false)}
           potSize={potSize}
-          onPotSizeChange={setPotSize}
+          onPotSizeChange={(n) => setPotOverride(n)}
           cookingExtra={cookingExtra}
           catalog={catalog.data}
           selectedIsland={selectedIsland}
           favoriteBerries={favoriteBerries}
           islandBonus={islandBonus}
+          bonusDisabled={selectedIsland === null}
           mainFavorite={mainFavorite}
           weeklyBonus={weeklyBonus}
           onSelectIsland={setSelectedIsland}
           onFavoriteBerries={setFavoriteBerries}
-          onIslandBonus={setIslandBonus}
+          onIslandBonus={(fraction) => setAreaBonusOverride(Math.round(fraction * 100))}
           onMainFavorite={setMainFavorite}
           onWeeklyBonus={setWeeklyBonus}
           goodCampTicket={goodCampTicket}
           onGoodCampTicket={setGoodCampTicket}
           dishType={dishType}
           onDishTypeChange={handleDishTypeChange}
+          levelFor={recipeLevelFor}
+          onRecipeLevelChange={setRecipeLevelOverride}
+          potUnsaved={potUnsaved}
+          savedPotSize={progress.pot_size}
+          onSavePot={savePot}
+          bonusUnsaved={areaBonusUnsaved}
+          savedBonusPct={savedBonusPct}
+          onSaveBonus={saveBonus}
+          levelUnsaved={recipeLevelUnsaved}
+          savedLevelFor={savedLevelFor}
+          onSaveLevel={saveLevel}
+          favoriteFor={(type) => progress.favorite_recipes[type] ?? null}
+          saveError={progressSaveError !== null}
         />
       )}
     </div>

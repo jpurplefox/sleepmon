@@ -423,6 +423,16 @@ RECIPE_LEVEL_BONUS: Final[tuple[float, ...]] = (
 assert len(RECIPE_LEVEL_BONUS) == MAX_RECIPE_LEVEL
 
 
+# Pot capacity ladder. v3.6.0 remapped the low rungs: the base moved 15 -> 21 and the
+# first steps go +2 up to 33, then +3 to the cap.
+POT_LADDER: Final[tuple[int, ...]] = (21, 23, 25, 27, 29, 31, *range(33, 82, 3))
+DEFAULT_POT_SIZE: Final[int] = POT_LADDER[0]
+MAX_AREA_BONUS_PCT: Final[int] = 85
+
+assert len(POT_LADDER) == 23
+assert POT_LADDER[-1] == 81
+
+
 def recipe_level_bonus(level: int) -> float:
     """Multiplicador de fuerza de una receta de nivel ``level`` (1..MAX_RECIPE_LEVEL)."""
     if not 1 <= level <= MAX_RECIPE_LEVEL:
