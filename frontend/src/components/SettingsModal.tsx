@@ -86,9 +86,11 @@ interface Props {
   onGoodCampTicket: (value: boolean) => void;
   onMainFavorite: (berry: string | null) => void;
   onWeeklyBonus: (bonus: WeeklyBonus) => void;
-  /** Active dish type for all 3 meal slots. null = no restriction yet. */
+  /** Active dish type for all 3 meal slots. null = unset (nothing chosen
+   * yet); once a type is picked there is no UI path back to null. */
   dishType: Recipe["type"] | null;
-  /** Called when the user selects a dish type or clears it (null). */
+  /** Raw setter for the dish type (see pickDishType below for the
+   * favorite-replace behavior wrapped around it before it reaches IslandTab). */
   onDishTypeChange: (type: Recipe["type"] | null) => void;
   /** Effective level of a recipe: session override, else saved progress, else 1. */
   levelFor: (recipe: string) => number;
@@ -222,14 +224,18 @@ export function SettingsModal({
     }
   };
 
-  // Picking a dish type on an empty plan prefills all 3 meals from the saved
-  // favorite, at its effective level. A plan with anything already in it is untouched.
+  // Picking a dish type gives you that type's day: it replaces all 3 meals
+  // with its favorite recipe at the effective level, or empties the plan when
+  // it has none saved (PRD 0006 / 0011) — a type change never leaves a plan
+  // of the wrong type behind, and never leaves nothing to show for it.
   const pickDishType = (type: Recipe["type"] | null) => {
     onDishTypeChange(type);
     if (type === null) return;
-    if (!meals.every((m) => m === null)) return;
     const favorite = favoriteFor(type);
-    if (favorite === null) return;
+    if (favorite === null) {
+      onChangeMeals([null, null, null]);
+      return;
+    }
     const level = levelFor(favorite);
     onChangeMeals([
       { recipe: favorite, level },
@@ -362,7 +368,7 @@ export function SettingsModal({
               <span className="meal-picker-dish-type__label muted">
                 {t("teams.dishType")}:{" "}
                 {dishType === null
-                  ? t("teams.allTypes")
+                  ? t("progress.noFavorite")
                   : t(dishTypeLabelKey(dishType))}
               </span>
 

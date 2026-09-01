@@ -61,7 +61,8 @@ with changes*).
   favorite dessert.
 - Its purpose is the meal plan: choosing a dish type in the analysis — which happens
   alongside the map, before the plan — fills the day's three meals with that type's
-  favorite (see below).
+  favorite, replacing whatever was planned. It is what makes choosing a type one
+  decision instead of a decision plus three lookups.
 
 ### Area bonus per area
 
@@ -79,8 +80,8 @@ Player progress is the analysis's **starting point**, never its master copy:
 - The analysis **opens** with your pot size already set.
 - Selecting a **map** loads that area's saved bonus.
 - Selecting a **dish type** fills the three meal slots with that type's favorite
-  recipe, at its saved level — but **only when the plan is empty**. It never
-  overwrites a meal you chose.
+  recipe, at its saved level, replacing whatever was there; with no favorite saved for
+  that type, the plan is **emptied** instead.
 - Every recipe added to the plan enters at its **saved level**.
 
 What you change inside the analysis belongs to **that session**. A value that differs
@@ -121,10 +122,11 @@ The question is asked however you leave: the close button, Escape, or a click ou
 - Given a favorite Curry saved as **Beanburger Curry at level 55** and an **empty**
   meal plan: choosing dish type **Curry** fills breakfast, lunch and dinner with
   Beanburger Curry at level **55**.
-- Choosing a dish type with **at least one meal already planned** changes **nothing**
-  in the plan — neither the prefill nor the dish type itself removes a meal you chose.
+- Choosing a dish type with **at least one meal already planned** replaces all three
+  meals with that type's favorite: switching from Curry to Salad leaves three salads —
+  never three curries under a Salad heading, and never an empty plan.
 - Choosing a dish type with **no favorite saved** for it leaves the three meals
-  **empty** — no error, no fallback pick.
+  **empty** — no error, no fallback pick — whether or not something was planned before.
 - Changing a value in the analysis so it **differs** from what you saved marks it
   **unsaved**, and the saved value is readable **on hover or keyboard focus**;
   **saving** it makes your progress read the new value, and the mark disappears.

@@ -26,10 +26,12 @@ interface Props {
   onIslandBonus: (bonus: number) => void;
   onGoodCampTicket: (value: boolean) => void;
   onSaveBonus: () => void;
-  /** Active dish type for all 3 meal slots. null = no restriction yet. */
+  /** Active dish type for all 3 meal slots. null = unset (nothing chosen
+   * yet); once a type is picked there is no UI path back to null. */
   dishType: Recipe["type"] | null;
-  /** Called when the user selects a dish type or clears it (null). Setup
-   * choice for the day: never clears the plan (PRD 0006). */
+  /** Called when the user picks a dish type. Replaces the day's three meals
+   * with that type's favorite recipe, or empties the plan if it has none
+   * (PRD 0006 / 0011). */
   onDishTypeChange: (type: Recipe["type"] | null) => void;
 }
 
@@ -255,8 +257,10 @@ export function IslandTab({
         </div>
       </div>
 
-      {/* Dish type — a setup choice for the day, not part of the plan itself
-          (PRD 0006): it only narrows the recipe grid, it never clears meals. */}
+      {/* Dish type — a setup choice for the day, chosen alongside the map
+          (PRD 0006): picking it fills the day's three meals with that type's
+          favorite, or empties the plan if none is saved. No "all" option —
+          once a type is chosen there is no UI path back to unset. */}
       <div className="island-tab__row">
         <span className="island-tab__label">{t("teams.dishType")}</span>
         <div
@@ -264,16 +268,6 @@ export function IslandTab({
           role="group"
           aria-label={t("teams.dishType")}
         >
-          <button
-            type="button"
-            className={
-              "specialty-toggle__btn" + (dishType === null ? " is-on" : "")
-            }
-            aria-pressed={dishType === null}
-            onClick={() => onDishTypeChange(null)}
-          >
-            {t("teams.allTypes")}
-          </button>
           {RECIPE_TYPES.map((type) => (
             <button
               key={type}
@@ -383,7 +377,6 @@ export function IslandTab({
         <label className="island-tab__label" htmlFor="area-bonus-range">
           {t("teams.islandBonus")}
         </label>
-        {bonusDisabled && <span className="muted">{t("progress.pickMap")}</span>}
         <div className="bonus-slider" style={{ "--ratio": (bonusPct / 85).toFixed(4) } as React.CSSProperties}>
           <div className="bonus-slider__row">
             <div className="bonus-slider__track">

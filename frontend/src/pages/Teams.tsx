@@ -414,8 +414,9 @@ export function Teams() {
   // Se puede dividir si hay al menos un Pokémon de la caja libre (no usado ya).
   const canSplit = (members.data ?? []).some((m) => !usedIds.has(m.id));
 
-  // Dish type is a setup choice about the day (PRD 0006): it narrows which
-  // recipes the grid offers but never touches an already-planned meal.
+  // Dish type is a setup choice about the day, chosen on the Map tab (PRD
+  // 0006). This is just the raw state setter — SettingsModal.pickDishType
+  // wraps it with the favorite-replace/empty behavior before it fires.
   const handleDishTypeChange = (newType: 'Curry' | 'Salad' | 'Dessert' | null) => {
     setDishType(newType);
   };

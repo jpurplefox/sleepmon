@@ -107,16 +107,17 @@ describe("IslandTab weekly bonus", () => {
 });
 
 describe("IslandTab bonus slider", () => {
-  it("disables the slider and shows the pick-a-map hint with no island selected", () => {
+  // No hint text is rendered anymore (it read oddly with the slider already
+  // showing disabled) — the disabled state alone communicates "pick a map".
+  it("disables the slider with no island selected and renders no hint text", () => {
     renderTab({ selectedIsland: null, bonusDisabled: true });
     expect(screen.getByLabelText("Area bonus")).toBeDisabled();
-    expect(screen.getByText("pick a map")).toBeInTheDocument();
+    expect(screen.queryByText("pick a map")).not.toBeInTheDocument();
   });
 
-  it("leaves the slider enabled and hides the hint once a map is picked", () => {
+  it("leaves the slider enabled once a map is picked", () => {
     renderTab({ selectedIsland: "Cyan Beach", favoriteBerries: ["Oran"], bonusDisabled: false });
     expect(screen.getByLabelText("Area bonus")).not.toBeDisabled();
-    expect(screen.queryByText("pick a map")).not.toBeInTheDocument();
   });
 });
 
@@ -139,10 +140,15 @@ describe("IslandTab dish type", () => {
     );
   });
 
-  it("reports null when cleared back to 'All'", async () => {
-    const props = renderTab({ dishType: "Curry" });
-    await userEvent.click(screen.getByRole("button", { name: "All" }));
-    expect(props.onDishTypeChange).toHaveBeenCalledWith(null);
+  // There is no "all" option (PRD 0006): the group offers only the 3 real
+  // types, and with nothing chosen yet, none of them is marked active.
+  it("renders no 'all'/'Todo' option, and starts with nothing chosen", () => {
+    renderTab({ dishType: null });
+    expect(screen.queryByRole("button", { name: "All" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Todo" })).not.toBeInTheDocument();
+    for (const name of ["Curry", "Salad", "Dessert"]) {
+      expect(screen.getByRole("button", { name })).toHaveAttribute("aria-pressed", "false");
+    }
   });
 });
 

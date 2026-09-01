@@ -192,32 +192,44 @@ describe("SettingsModal — the favorite prefill", () => {
     ]);
   });
 
-  it("changes nothing when a meal is already planned", async () => {
+  // Superseded: a type change used to touch the plan only when it was fully
+  // empty. Now it always replaces it with the new type's favorite (or empties
+  // it) — see "changing dish type" below.
+  it("replaces an already-planned meal with the chosen type's favorite", async () => {
     const onChangeMeals = vi.fn();
     renderModal({
       meals: [{ recipe: "Fancy Apple Curry", level: 1 }, null, null],
       favoriteFor: () => "Beanburger Curry",
+      levelFor: () => 55,
       onChangeMeals,
     });
     await userEvent.click(screen.getByRole("tab", { name: "Map" }));
     await userEvent.click(screen.getByRole("button", { name: "Curry" }));
-    expect(onChangeMeals).not.toHaveBeenCalled();
+    expect(onChangeMeals).toHaveBeenCalledWith([
+      { recipe: "Beanburger Curry", level: 55 },
+      { recipe: "Beanburger Curry", level: 55 },
+      { recipe: "Beanburger Curry", level: 55 },
+    ]);
   });
 
-  it("leaves the meals empty when the type has no favorite", async () => {
+  it("empties the meals when the type has no favorite", async () => {
     const onChangeMeals = vi.fn();
     renderModal({ meals: [null, null, null], favoriteFor: () => null, onChangeMeals });
     await userEvent.click(screen.getByRole("tab", { name: "Map" }));
     await userEvent.click(screen.getByRole("button", { name: "Curry" }));
-    expect(onChangeMeals).not.toHaveBeenCalled();
+    expect(onChangeMeals).toHaveBeenCalledWith([null, null, null]);
   });
 });
 
-describe("SettingsModal — changing dish type never clears the plan", () => {
-  // Regression for the reported bug: picking Curry by mistake and then Salad
-  // used to wipe the whole plan. The type change and the meals are now
-  // independent — this is the case the user actually hit.
-  it("leaves every meal untouched when switching between two different types", async () => {
+describe("SettingsModal — changing dish type gives you that type's day", () => {
+  // This reverses the previous rule ("never clears the plan"): that rule
+  // aimed at not leaving the user with nothing to show for a type change, but
+  // leaving three meals of the wrong type under the new heading was exactly
+  // the bug the user hit (Curry -> Salad left three curries under Salad). The
+  // PRD's own rule now satisfies "never leave nothing" via the favorite
+  // replace, and empties the plan only when there's truly nothing to fill it
+  // with.
+  it("replaces all three meals with the new type's favorite (Curry -> Salad)", async () => {
     const onChangeMeals = vi.fn();
     const onDishTypeChange = vi.fn();
     renderModal({
@@ -227,30 +239,58 @@ describe("SettingsModal — changing dish type never clears the plan", () => {
         { recipe: "Beanburger Curry", level: 10 },
       ],
       dishType: "Curry",
-      // Even with a Salad favorite available, the plan isn't empty, so no prefill fires.
       favoriteFor: () => "Fancy Apple Salad",
+      levelFor: () => 20,
       onChangeMeals,
       onDishTypeChange,
     });
     await userEvent.click(screen.getByRole("tab", { name: "Map" }));
     await userEvent.click(screen.getByRole("button", { name: "Salad" }));
     expect(onDishTypeChange).toHaveBeenCalledWith("Salad");
-    expect(onChangeMeals).not.toHaveBeenCalled();
+    expect(onChangeMeals).toHaveBeenCalledWith([
+      { recipe: "Fancy Apple Salad", level: 20 },
+      { recipe: "Fancy Apple Salad", level: 20 },
+      { recipe: "Fancy Apple Salad", level: 20 },
+    ]);
   });
 
-  it("leaves every meal untouched when the type is cleared", async () => {
+  it("empties the plan when switching to a type with no saved favorite", async () => {
     const onChangeMeals = vi.fn();
     const onDishTypeChange = vi.fn();
     renderModal({
-      meals: [{ recipe: "Beanburger Curry", level: 10 }, null, null],
+      meals: [
+        { recipe: "Beanburger Curry", level: 10 },
+        { recipe: "Beanburger Curry", level: 10 },
+        null,
+      ],
       dishType: "Curry",
+      favoriteFor: () => null,
       onChangeMeals,
       onDishTypeChange,
     });
     await userEvent.click(screen.getByRole("tab", { name: "Map" }));
-    await userEvent.click(screen.getByRole("button", { name: "All" }));
-    expect(onDishTypeChange).toHaveBeenCalledWith(null);
-    expect(onChangeMeals).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole("button", { name: "Salad" }));
+    expect(onDishTypeChange).toHaveBeenCalledWith("Salad");
+    expect(onChangeMeals).toHaveBeenCalledWith([null, null, null]);
+  });
+
+  // Pinned: choosing a type on an empty plan still fills it — unchanged by
+  // this reversal, see "the favorite prefill" above for the full case.
+  it("still fills an empty plan when a type is chosen", async () => {
+    const onChangeMeals = vi.fn();
+    renderModal({
+      meals: [null, null, null],
+      favoriteFor: () => "Beanburger Curry",
+      levelFor: () => 55,
+      onChangeMeals,
+    });
+    await userEvent.click(screen.getByRole("tab", { name: "Map" }));
+    await userEvent.click(screen.getByRole("button", { name: "Curry" }));
+    expect(onChangeMeals).toHaveBeenCalledWith([
+      { recipe: "Beanburger Curry", level: 55 },
+      { recipe: "Beanburger Curry", level: 55 },
+      { recipe: "Beanburger Curry", level: 55 },
+    ]);
   });
 });
 
@@ -262,9 +302,11 @@ describe("SettingsModal — the Comidas tab shows the active dish type", () => {
     expect(screen.getByText(/Dish type:/)).toHaveTextContent("Dish type: Salad");
   });
 
-  it("shows 'All' when no type is chosen", () => {
+  // No "all" state exists anymore (PRD 0006) — unset renders the same
+  // "None" placeholder Player progress uses for an unset favorite.
+  it("shows 'None' when no type is chosen", () => {
     renderModal({ dishType: null });
-    expect(screen.getByText(/Dish type:/)).toHaveTextContent("Dish type: All");
+    expect(screen.getByText(/Dish type:/)).toHaveTextContent("Dish type: None");
   });
 });
 

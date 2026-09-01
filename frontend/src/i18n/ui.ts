@@ -443,7 +443,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "progress.savedValue": "En mi progreso",
     "progress.saveError": "No se pudo guardar el cambio.",
     "progress.loadError": "No se pudo cargar tu progreso.",
-    "progress.pickMap": "elegí un mapa",
     // Leaving with changes (PRD 0011): here, leaving without saving discards the draft.
     "progress.leaveWithoutSaving": "Salir sin guardar",
     "progress.exitConfirmMessage":
@@ -887,7 +886,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "progress.savedValue": "In my progress",
     "progress.saveError": "Couldn't save the change.",
     "progress.loadError": "Couldn't load your progress.",
-    "progress.pickMap": "pick a map",
     // Leaving with changes (PRD 0011): here, leaving without saving discards the draft.
     "progress.leaveWithoutSaving": "Leave without saving",
     "progress.exitConfirmMessage":
