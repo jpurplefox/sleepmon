@@ -385,6 +385,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.dishTypeCurry": "Curry",
     "teams.dishTypeSalad": "Ensalada",
     "teams.dishTypeDessert": "Postre",
+    "teams.dishTypeUnset": "Sin elegir",
     // Tab de Mapa
     "teams.selectIsland": "Mapa",
     "teams.noIsland": "Sin mapa",
@@ -828,6 +829,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.dishTypeCurry": "Curry",
     "teams.dishTypeSalad": "Salad",
     "teams.dishTypeDessert": "Dessert",
+    "teams.dishTypeUnset": "Not chosen",
     // Map tab
     "teams.selectIsland": "Map",
     "teams.noIsland": "No map",

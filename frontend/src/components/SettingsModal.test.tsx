@@ -304,9 +304,9 @@ describe("SettingsModal — the Comidas tab shows the active dish type", () => {
 
   // No "all" state exists anymore (PRD 0006) — unset renders the same
   // "None" placeholder Player progress uses for an unset favorite.
-  it("shows 'None' when no type is chosen", () => {
+  it("shows the type as not chosen while it is unset", () => {
     renderModal({ dishType: null });
-    expect(screen.getByText(/Dish type:/)).toHaveTextContent("Dish type: None");
+    expect(screen.getByText(/Dish type:/)).toHaveTextContent("Dish type: Not chosen");
   });
 });
 

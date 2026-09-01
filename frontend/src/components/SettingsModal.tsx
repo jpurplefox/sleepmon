@@ -368,7 +368,7 @@ export function SettingsModal({
               <span className="meal-picker-dish-type__label muted">
                 {t("teams.dishType")}:{" "}
                 {dishType === null
-                  ? t("progress.noFavorite")
+                  ? t("teams.dishTypeUnset")
                   : t(dishTypeLabelKey(dishType))}
               </span>
 
