@@ -406,10 +406,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.weeklyBerryStrength": "Fuerza ×2,4",
     "teams.weeklyIngredient": "+1 ingrediente",
     "teams.weeklySkillTrigger": "Skill ×1,25",
-    // Leaving with unsaved session values (PRD 0011) — differs from
-    // progress.exitConfirmMessage: these values stay in the session either way.
-    "teams.exitConfirmMessage":
-      "Tenés valores sin guardar en este análisis. Se mantienen en la sesión aunque salgas sin guardar; solo se descarta el guardado en tu progreso.",
     "card.expertMainSpeed": "Baya principal: ayuda 10% más rápida",
     "card.expertSkillLevel": "Baya principal: Main Skill un nivel más arriba",
     "card.expertBerryStrength": "Baya favorita: fuerza ×2,4",
@@ -850,10 +846,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.weeklyBerryStrength": "Strength ×2.4",
     "teams.weeklyIngredient": "+1 ingredient",
     "teams.weeklySkillTrigger": "Skill ×1.25",
-    // Leaving with unsaved session values (PRD 0011) — differs from
-    // progress.exitConfirmMessage: these values stay in the session either way.
-    "teams.exitConfirmMessage":
-      "You have unsaved values in this analysis. They stay in the session even if you leave without saving; only writing them to your progress is skipped.",
     "card.expertMainSpeed": "Main favorite: helps 10% faster",
     "card.expertSkillLevel": "Main favorite: Main Skill acts one level higher",
     "card.expertBerryStrength": "Favorite berry: strength ×2.4",

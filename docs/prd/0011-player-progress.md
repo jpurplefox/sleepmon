@@ -93,18 +93,16 @@ disappears on reload.
 
 ### Leaving with changes
 
-Both screens that hold unsaved values ask before letting them go, and the question is
-the same shape in each — **guardar**, **salir sin guardar**, **cancelar** — but it means
-different things, because the two screens hold different kinds of "unsaved":
+**Player progress** holds a draft, and leaving without saving **discards** it — so it
+asks first: **guardar**, **salir sin guardar**, **cancelar**. However you leave — the
+close button, Escape, or a click outside — the question is the same.
 
-- **Player progress** holds a draft of your progress. Leaving without saving **discards**
-  it; nothing about your account changes.
-- **Team Analysis** holds session values you are analysing with. Leaving without saving
-  **keeps** them for the session — the analysis on screen is unaffected — and only
-  declines to write them into your progress. The question exists so a real change you
-  meant to keep does not quietly disappear on the next reload.
-
-The question is asked however you leave: the close button, Escape, or a click outside.
+**Team Analysis does not ask.** Its unsaved values are session values you are analysing
+with: closing its settings keeps every one of them, and the only thing declined is
+writing them into your progress. Nothing is lost, so there is nothing to confirm.
+Changing a value there without saving it is the normal way to use the tool — a question
+on every close would be friction with no risk behind it. The per-value **unsaved** mark
+is what keeps a real change from going unnoticed.
 
 ## Acceptance criteria
 
@@ -140,9 +138,8 @@ The question is asked however you leave: the close button, Escape, or a click ou
   — asks **guardar / salir sin guardar / cancelar**. *Salir sin guardar* discards the
   draft; *cancelar* returns to the screen with the draft intact.
 - Leaving Player progress with **nothing** changed closes it immediately, with no question.
-- Leaving Team Analysis's settings with values marked unsaved asks the same three
-  ways out, and *salir sin guardar* **keeps** those values in the session — only the
-  write to your progress is declined.
+- Leaving Team Analysis's settings with values marked unsaved closes **immediately**,
+  without a question, and keeps every one of those values in the session.
 
 ## Guidelines
 

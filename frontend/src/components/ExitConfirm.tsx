@@ -13,7 +13,8 @@ interface Props {
  * The "leave with changes?" question (PRD 0011: guardar / salir sin guardar /
  * cancelar), rendered as a small card in place of the modal's own content —
  * never as a second `Modal`, so there is only one focus trap and one Escape
- * handler. Shared by `ProgressModal` and `SettingsModal`; only the copy differs.
+ * handler. Only `ProgressModal` uses this: its draft is truly discarded on
+ * "salir sin guardar", unlike Team Analysis's session values.
  */
 export function ExitConfirm({ message, onSave, onDiscard, onCancel }: Props) {
   const { t } = useI18n();
