@@ -42,13 +42,13 @@ is all it takes.
 
 The app distinguishes two classes of action:
 
-- **Open** — purely ephemeral computation that neither reads nor writes the Box: the
-  **Comparison in its volatile form** (Pokémon assembled on the spot, without pulling
-  from the Box or saving), and the cross-cutting pieces (language, the production
-  model as a calculation).
+- **Open** — purely ephemeral computation that neither reads nor writes the Box:
+  **Comparison** and **[Team Analysis](0005-team-analysis.md)** in their volatile form
+  (Pokémon assembled on the spot, without pulling from the Box or saving) — including
+  Team Analysis's companion read-outs, the cooking plan and map bonuses — and the
+  cross-cutting pieces (language, the production model as a calculation).
 - **Reserved** — anything that reads or writes the Box: the **Box**, **"My Pokémon"**
-  (Box picker), saving/pulling from Comparison, **Team Analysis** and, by dependency,
-  the cooking plan and map bonuses.
+  (Box picker), and **saving to the Box** from Comparison or Team Analysis.
 
 When someone **without a session** attempts a reserved action, a **contextual prompt**
 appears in place ("Sign in with Google to save to your Box") with the login button.
@@ -92,11 +92,12 @@ once and never have to think about the login again*.
 
 **The gate**
 
-- Anonymous uses the **ephemeral Comparison** (without pulling from the Box) → works
-  in full, without asking for login.
-- Anonymous taps a **reserved** action (save to the Box, open "My Pokémon", enter Team
-  Analysis) → the **contextual prompt** appears with "Sign in with Google", not an
-  error nor an abrupt redirect.
+- Anonymous uses the **ephemeral Comparison** or **Team Analysis** (Pokémon created on
+  the spot) → both work in full — including the cooking plan and the map rating —
+  without asking for login.
+- Anonymous taps a **reserved** action (save to the Box, open "My Pokémon") → the
+  **contextual prompt** appears with "Sign in with Google", not an error nor an abrupt
+  redirect.
 - Anonymous completes the login from that prompt → **returns to what they were doing**;
   the triggering action resumes or is one click away, with its context intact.
 - Anonymous tries to reach a reserved page by direct URL → same treatment: contextual
