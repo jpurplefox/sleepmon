@@ -414,23 +414,10 @@ export function Teams() {
   // Se puede dividir si hay al menos un Pokémon de la caja libre (no usado ya).
   const canSplit = (members.data ?? []).some((m) => !usedIds.has(m.id));
 
-  // Handler: set dishType and clear meals that are incompatible with the new type.
-  // When newType is null (no restriction), also clear all meals so a mixed state
-  // (e.g. Curry + Salad) can never persist after the type selector is reset.
+  // Dish type is a setup choice about the day (PRD 0006): it narrows which
+  // recipes the grid offers but never touches an already-planned meal.
   const handleDishTypeChange = (newType: 'Curry' | 'Salad' | 'Dessert' | null) => {
     setDishType(newType);
-    if (newType === null) {
-      setMeals([null, null, null]);
-    } else {
-      setMeals((prev) =>
-        prev.map((m) => {
-          if (m === null) return null;
-          const recipe = recipeByName.get(m.recipe);
-          // If recipe not found in catalog or type mismatch, clear the slot.
-          return recipe && recipe.type === newType ? m : null;
-        }),
-      );
-    }
   };
 
   // Catalog must be loaded for BoxPicker to work.

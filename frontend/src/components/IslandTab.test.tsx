@@ -67,6 +67,8 @@ function renderTab(overrides: Partial<React.ComponentProps<typeof IslandTab>> = 
     onIslandBonus: vi.fn(),
     onGoodCampTicket: vi.fn(),
     onSaveBonus: vi.fn(),
+    dishType: null,
+    onDishTypeChange: vi.fn(),
     ...overrides,
   };
   render(
@@ -115,6 +117,32 @@ describe("IslandTab bonus slider", () => {
     renderTab({ selectedIsland: "Cyan Beach", favoriteBerries: ["Oran"], bonusDisabled: false });
     expect(screen.getByLabelText("Area bonus")).not.toBeDisabled();
     expect(screen.queryByText("pick a map")).not.toBeInTheDocument();
+  });
+});
+
+describe("IslandTab dish type", () => {
+  it("reports the chosen type", async () => {
+    const props = renderTab({ dishType: null });
+    await userEvent.click(screen.getByRole("button", { name: "Salad" }));
+    expect(props.onDishTypeChange).toHaveBeenCalledWith("Salad");
+  });
+
+  it("marks the active type button", () => {
+    renderTab({ dishType: "Salad" });
+    expect(screen.getByRole("button", { name: "Salad" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(screen.getByRole("button", { name: "Curry" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+  });
+
+  it("reports null when cleared back to 'All'", async () => {
+    const props = renderTab({ dishType: "Curry" });
+    await userEvent.click(screen.getByRole("button", { name: "All" }));
+    expect(props.onDishTypeChange).toHaveBeenCalledWith(null);
   });
 });
 

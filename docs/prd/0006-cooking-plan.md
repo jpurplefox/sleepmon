@@ -28,8 +28,11 @@ It answers: *"with what my team produces, how good is this meal plan?"*.
 
 - **Three meal slots** — breakfast, lunch, dinner. Each is a recipe at a chosen
   level, or empty.
-- An optional **dish-type filter** (Curry / Salad / Dessert) narrows the recipe
-  choices; it does **not** restrict by map.
+- An optional **dish type** (Curry / Salad / Dessert) is chosen alongside the map,
+  before the plan itself — it is a decision about the day, not a control on the
+  recipe list. It **narrows the recipe choices** and it does **not** restrict by map.
+- Changing the dish type **never empties the plan**. It changes what the list offers;
+  meals already chosen stay until you replace them. A mistaken click costs nothing.
 - A **pot size** (base capacity) comes from [Player
   progress](0011-player-progress.md): one step of the game's pot ladder, overridable
   for the session.

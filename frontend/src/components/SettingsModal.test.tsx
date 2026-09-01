@@ -172,6 +172,9 @@ describe("SettingsModal — surfacing a failed save", () => {
 });
 
 describe("SettingsModal — the favorite prefill", () => {
+  // The dish-type control moved to the Map tab (it's a setup choice, not a
+  // meal-picker control) — drive it from there instead of the Meals tab.
+
   it("fills the three meals from the favorite of the chosen type", async () => {
     const onChangeMeals = vi.fn();
     renderModal({
@@ -180,6 +183,7 @@ describe("SettingsModal — the favorite prefill", () => {
       levelFor: () => 55,
       onChangeMeals,
     });
+    await userEvent.click(screen.getByRole("tab", { name: "Map" }));
     await userEvent.click(screen.getByRole("button", { name: "Curry" }));
     expect(onChangeMeals).toHaveBeenCalledWith([
       { recipe: "Beanburger Curry", level: 55 },
@@ -195,6 +199,7 @@ describe("SettingsModal — the favorite prefill", () => {
       favoriteFor: () => "Beanburger Curry",
       onChangeMeals,
     });
+    await userEvent.click(screen.getByRole("tab", { name: "Map" }));
     await userEvent.click(screen.getByRole("button", { name: "Curry" }));
     expect(onChangeMeals).not.toHaveBeenCalled();
   });
@@ -202,8 +207,81 @@ describe("SettingsModal — the favorite prefill", () => {
   it("leaves the meals empty when the type has no favorite", async () => {
     const onChangeMeals = vi.fn();
     renderModal({ meals: [null, null, null], favoriteFor: () => null, onChangeMeals });
+    await userEvent.click(screen.getByRole("tab", { name: "Map" }));
     await userEvent.click(screen.getByRole("button", { name: "Curry" }));
     expect(onChangeMeals).not.toHaveBeenCalled();
+  });
+});
+
+describe("SettingsModal — changing dish type never clears the plan", () => {
+  // Regression for the reported bug: picking Curry by mistake and then Salad
+  // used to wipe the whole plan. The type change and the meals are now
+  // independent — this is the case the user actually hit.
+  it("leaves every meal untouched when switching between two different types", async () => {
+    const onChangeMeals = vi.fn();
+    const onDishTypeChange = vi.fn();
+    renderModal({
+      meals: [
+        { recipe: "Beanburger Curry", level: 10 },
+        { recipe: "Beanburger Curry", level: 10 },
+        { recipe: "Beanburger Curry", level: 10 },
+      ],
+      dishType: "Curry",
+      // Even with a Salad favorite available, the plan isn't empty, so no prefill fires.
+      favoriteFor: () => "Fancy Apple Salad",
+      onChangeMeals,
+      onDishTypeChange,
+    });
+    await userEvent.click(screen.getByRole("tab", { name: "Map" }));
+    await userEvent.click(screen.getByRole("button", { name: "Salad" }));
+    expect(onDishTypeChange).toHaveBeenCalledWith("Salad");
+    expect(onChangeMeals).not.toHaveBeenCalled();
+  });
+
+  it("leaves every meal untouched when the type is cleared", async () => {
+    const onChangeMeals = vi.fn();
+    const onDishTypeChange = vi.fn();
+    renderModal({
+      meals: [{ recipe: "Beanburger Curry", level: 10 }, null, null],
+      dishType: "Curry",
+      onChangeMeals,
+      onDishTypeChange,
+    });
+    await userEvent.click(screen.getByRole("tab", { name: "Map" }));
+    await userEvent.click(screen.getByRole("button", { name: "All" }));
+    expect(onDishTypeChange).toHaveBeenCalledWith(null);
+    expect(onChangeMeals).not.toHaveBeenCalled();
+  });
+});
+
+describe("SettingsModal — the Comidas tab shows the active dish type", () => {
+  // The choice moved to the Map tab, but the grid still filters by it — the
+  // Comidas tab must still say which type is active (point 4 of the change).
+  it("shows the chosen type's name", () => {
+    renderModal({ dishType: "Salad" });
+    expect(screen.getByText(/Dish type:/)).toHaveTextContent("Dish type: Salad");
+  });
+
+  it("shows 'All' when no type is chosen", () => {
+    renderModal({ dishType: null });
+    expect(screen.getByText(/Dish type:/)).toHaveTextContent("Dish type: All");
+  });
+});
+
+describe("SettingsModal — Limpiar clears only the meals", () => {
+  it("clears the meals and leaves the dish type set", async () => {
+    const onChangeMeals = vi.fn();
+    const onDishTypeChange = vi.fn();
+    renderModal({
+      meals: [{ recipe: "Beanburger Curry", level: 10 }, null, null],
+      dishType: "Curry",
+      onChangeMeals,
+      onDishTypeChange,
+    });
+    // renderModal already switched to the Meals tab.
+    await userEvent.click(screen.getByRole("button", { name: "Clear" }));
+    expect(onChangeMeals).toHaveBeenCalledWith([null, null, null]);
+    expect(onDishTypeChange).not.toHaveBeenCalled();
   });
 });
 

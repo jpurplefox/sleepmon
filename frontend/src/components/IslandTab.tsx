@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { berryIcon } from "../berries";
 import { useI18n } from "../i18n";
-import type { Catalog, Island, WeeklyBonus } from "../types";
+import { RECIPE_TYPES, dishTypeLabelKey } from "../recipes";
+import type { Catalog, Island, Recipe, WeeklyBonus } from "../types";
 import { IconChevronDown } from "./icons";
 import { UnsavedMark } from "./UnsavedMark";
 
@@ -25,6 +26,11 @@ interface Props {
   onIslandBonus: (bonus: number) => void;
   onGoodCampTicket: (value: boolean) => void;
   onSaveBonus: () => void;
+  /** Active dish type for all 3 meal slots. null = no restriction yet. */
+  dishType: Recipe["type"] | null;
+  /** Called when the user selects a dish type or clears it (null). Setup
+   * choice for the day: never clears the plan (PRD 0006). */
+  onDishTypeChange: (type: Recipe["type"] | null) => void;
 }
 
 // Derivar todas las bayas disponibles en el catálogo a partir de las especies.
@@ -55,6 +61,8 @@ export function IslandTab({
   onIslandBonus,
   onGoodCampTicket,
   onSaveBonus,
+  dishType,
+  onDishTypeChange,
 }: Props) {
   const { t, berry: berryName } = useI18n();
 
@@ -244,6 +252,41 @@ export function IslandTab({
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Dish type — a setup choice for the day, not part of the plan itself
+          (PRD 0006): it only narrows the recipe grid, it never clears meals. */}
+      <div className="island-tab__row">
+        <span className="island-tab__label">{t("teams.dishType")}</span>
+        <div
+          className="specialty-toggle"
+          role="group"
+          aria-label={t("teams.dishType")}
+        >
+          <button
+            type="button"
+            className={
+              "specialty-toggle__btn" + (dishType === null ? " is-on" : "")
+            }
+            aria-pressed={dishType === null}
+            onClick={() => onDishTypeChange(null)}
+          >
+            {t("teams.allTypes")}
+          </button>
+          {RECIPE_TYPES.map((type) => (
+            <button
+              key={type}
+              type="button"
+              className={
+                "specialty-toggle__btn" + (dishType === type ? " is-on" : "")
+              }
+              aria-pressed={dishType === type}
+              onClick={() => onDishTypeChange(type)}
+            >
+              {t(dishTypeLabelKey(type))}
+            </button>
+          ))}
         </div>
       </div>
 

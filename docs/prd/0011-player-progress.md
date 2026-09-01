@@ -59,8 +59,9 @@ with changes*).
 - You may mark **one favorite recipe per type**: one Curry, one Salad, one Dessert.
   Each is optional and independent — having a favorite curry does not require having a
   favorite dessert.
-- Its purpose is the meal plan: choosing a dish type in the analysis fills the day's
-  three meals with that type's favorite (see below).
+- Its purpose is the meal plan: choosing a dish type in the analysis — which happens
+  alongside the map, before the plan — fills the day's three meals with that type's
+  favorite (see below).
 
 ### Area bonus per area
 
@@ -121,7 +122,7 @@ The question is asked however you leave: the close button, Escape, or a click ou
   meal plan: choosing dish type **Curry** fills breakfast, lunch and dinner with
   Beanburger Curry at level **55**.
 - Choosing a dish type with **at least one meal already planned** changes **nothing**
-  in the plan.
+  in the plan — neither the prefill nor the dish type itself removes a meal you chose.
 - Choosing a dish type with **no favorite saved** for it leaves the three meals
   **empty** — no error, no fallback pick.
 - Changing a value in the analysis so it **differs** from what you saved marks it

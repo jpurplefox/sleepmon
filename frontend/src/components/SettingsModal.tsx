@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useI18n } from "../i18n";
 import { perMealPot } from "../pot";
 import { potBounds, stepPot } from "../progress";
-import { RECIPE_TYPES } from "../recipes";
+import { RECIPE_TYPES, dishTypeLabelKey } from "../recipes";
 import type { Catalog, MealInput, Recipe, WeeklyBonus } from "../types";
 import { ExitConfirm } from "./ExitConfirm";
 import { IslandTab } from "./IslandTab";
@@ -337,6 +337,8 @@ export function SettingsModal({
               onMainFavorite={onMainFavorite}
               onWeeklyBonus={onWeeklyBonus}
               onSaveBonus={onSaveBonus}
+              dishType={dishType}
+              onDishTypeChange={pickDishType}
             />
           </div>
 
@@ -353,52 +355,16 @@ export function SettingsModal({
                 {t("progress.saveError")}
               </p>
             )}
-            {/* Top bar: dish type selector + search */}
+            {/* Top bar: current dish type (chosen on the Map tab) + search.
+                The type is no longer picked here, but the grid still filters
+                by it, so its name stays visible while browsing recipes. */}
             <div className="meal-picker-topbar">
-              <div className="meal-picker-dish-type">
-                <span className="meal-picker-dish-type__label muted">
-                  {t("teams.dishType")}:
-                </span>
-                <div
-                  className="specialty-toggle"
-                  role="group"
-                  aria-label={t("teams.dishType")}
-                >
-                  <button
-                    type="button"
-                    className={
-                      "specialty-toggle__btn" +
-                      (dishType === null ? " is-on" : "")
-                    }
-                    aria-pressed={dishType === null}
-                    onClick={() => onDishTypeChange(null)}
-                  >
-                    {t("teams.allTypes")}
-                  </button>
-                  {RECIPE_TYPES.map((type) => {
-                    const labelKey =
-                      type === "Curry"
-                        ? "teams.dishTypeCurry"
-                        : type === "Salad"
-                          ? "teams.dishTypeSalad"
-                          : "teams.dishTypeDessert";
-                    return (
-                      <button
-                        key={type}
-                        type="button"
-                        className={
-                          "specialty-toggle__btn" +
-                          (dishType === type ? " is-on" : "")
-                        }
-                        aria-pressed={dishType === type}
-                        onClick={() => pickDishType(type)}
-                      >
-                        {t(labelKey)}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <span className="meal-picker-dish-type__label muted">
+                {t("teams.dishType")}:{" "}
+                {dishType === null
+                  ? t("teams.allTypes")
+                  : t(dishTypeLabelKey(dishType))}
+              </span>
 
               <input
                 data-autofocus
@@ -452,10 +418,7 @@ export function SettingsModal({
               <button
                 type="button"
                 className="btn btn--ghost meal-picker-clear"
-                onClick={() => {
-                  onChangeMeals([null, null, null]);
-                  onDishTypeChange(null);
-                }}
+                onClick={() => onChangeMeals([null, null, null])}
               >
                 {t("teams.clearMeals")}
               </button>

@@ -6,6 +6,15 @@ import type { Recipe } from "./types";
 /** The three dish types, in the display order used across recipe pickers. */
 export const RECIPE_TYPES: Recipe["type"][] = ["Curry", "Salad", "Dessert"];
 
+/** i18n key for a dish type's label, shared by every dish-type toggle. */
+export function dishTypeLabelKey(type: Recipe["type"]): string {
+  return type === "Curry"
+    ? "teams.dishTypeCurry"
+    : type === "Salad"
+      ? "teams.dishTypeSalad"
+      : "teams.dishTypeDessert";
+}
+
 /**
  * Slug de la imagen de una receta: baja los acentos, quita todo lo que no sea
  * letra o dígito, todo en minúsculas.
