@@ -10,7 +10,7 @@ from sleepmon.adapters.outbound.auth.refresh_token import SecretsRefreshTokenCod
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.auth_service import DefaultAuthService
-from sleepmon.application.services import DefaultTeamService
+from sleepmon.application.services import DefaultProductionService, DefaultTeamService
 from sleepmon.domain.value_objects import Island
 from tests.fakes import (
     InMemoryRefreshTokenRepository,
@@ -29,8 +29,10 @@ def _slots_json(*ids: str) -> list[dict]:
 
 @pytest.fixture
 def client() -> TestClient:
-    service = DefaultTeamService(
-        InMemoryTeamRepository(), StaticSpeciesCatalog(), StaticRecipeCatalog()
+    repository = InMemoryTeamRepository()
+    service = DefaultTeamService(repository, StaticSpeciesCatalog())
+    production_service = DefaultProductionService(
+        StaticSpeciesCatalog(), StaticRecipeCatalog(), repository
     )
     # Un ``AuthService`` real cableado con dobles en memoria: sin esto, ``create_app``
     # abriría un pool Postgres real (no hay DB en este entorno de test).
@@ -45,6 +47,7 @@ def client() -> TestClient:
     )
     app = create_app(
         service=service,
+        production_service=production_service,
         catalog=StaticSpeciesCatalog(),
         recipe_catalog=StaticRecipeCatalog(),
         access=ACCESS,

@@ -8,7 +8,7 @@ from sleepmon.adapters.outbound.auth.jwt_access_token import JwtAccessTokenServi
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.auth_service import AuthResult, AuthService, UserDTO
-from sleepmon.application.services import DefaultTeamService
+from sleepmon.application.services import DefaultProductionService, DefaultTeamService
 from sleepmon.domain.auth import InvalidRefreshError
 from tests.fakes import InMemoryTeamRepository
 
@@ -34,11 +34,14 @@ class FakeAuth(AuthService):
 @pytest.fixture
 def client_and_auth() -> tuple[TestClient, FakeAuth]:
     auth = FakeAuth()
-    service = DefaultTeamService(
-        InMemoryTeamRepository(), StaticSpeciesCatalog(), StaticRecipeCatalog()
+    repository = InMemoryTeamRepository()
+    service = DefaultTeamService(repository, StaticSpeciesCatalog())
+    production_service = DefaultProductionService(
+        StaticSpeciesCatalog(), StaticRecipeCatalog(), repository
     )
     app = create_app(
         service=service,
+        production_service=production_service,
         catalog=StaticSpeciesCatalog(),
         recipe_catalog=StaticRecipeCatalog(),
         access=JwtAccessTokenService("test-secret", timedelta(minutes=15)),

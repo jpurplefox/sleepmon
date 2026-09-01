@@ -204,12 +204,10 @@ def _map_bonuses(data: TeamProductionInput) -> MapBonuses:
 
 
 class TeamService(ABC):
-    """Puerto primario: lo que el borde HTTP puede pedirle a la aplicación.
+    """Puerto primario: lo que el borde HTTP puede pedirle a la caja del usuario.
 
-    Las operaciones sobre la caja de un usuario reciben ``user_id`` como primer
-    argumento y lo delegan al ``TeamRepository`` para aislar los datos entre
-    usuarios. ``compute_production`` y ``list_recipes`` son stateless (no tocan
-    el repo) y no llevan ``user_id``.
+    Todas las operaciones reciben ``user_id`` como primer argumento y lo
+    delegan al ``TeamRepository`` para aislar los datos entre usuarios.
     """
 
     @abstractmethod
@@ -237,16 +235,20 @@ class TeamService(ABC):
     @abstractmethod
     def distributions(self, user_id: UUID) -> Distributions: ...
 
-    @abstractmethod
-    def compute_production(self, data: ProductionInput) -> ProductionResult: ...
+
+class ProductionService(ABC):
+    """Stateless estimation: nothing here reads or writes the Box."""
 
     @abstractmethod
-    def list_recipes(self) -> list[RecipeDTO]: ...
+    def compute_production(self, data: ProductionInput) -> ProductionResult: ...
 
     @abstractmethod
     def compute_team_production(
         self, user_id: UUID, data: TeamProductionInput
     ) -> TeamProductionResult: ...
+
+    @abstractmethod
+    def list_recipes(self) -> list[RecipeDTO]: ...
 
 
 class DefaultTeamService(TeamService):
@@ -254,11 +256,9 @@ class DefaultTeamService(TeamService):
         self,
         repository: TeamRepository,
         catalog: SpeciesCatalog,
-        recipe_catalog: RecipeCatalog,
     ) -> None:
         self._repo = repository
         self._catalog = catalog
-        self._recipes = recipe_catalog
 
     def add_member(self, user_id: UUID, data: TeamMemberInput) -> TeamMember:
         member = self._build_member(data)
@@ -339,6 +339,59 @@ class DefaultTeamService(TeamService):
             nature_stats={k.value: v for k, v in analytics.nature_stat_balance(members).items()},
         )
 
+    def _build_member(self, data: TeamMemberInput, member_id: UUID | None = None) -> TeamMember:
+        species = self._catalog.get(data.species)
+        if species is None:
+            raise SpeciesNotFoundError(f"Especie desconocida: {data.species!r}.")
+
+        nature = _parse_enum(Nature, data.nature, "nature") if data.nature else None
+        sub_skills = tuple(_parse_enum(SubSkill, s, "sub_skill") for s in data.sub_skills)
+        ribbon = _parse_enum(Ribbon, data.ribbon, "ribbon")
+        ingredients = tuple(_parse_enum(Ingredient, i, "ingredient") for i in data.ingredients)
+
+        _validate_ingredients(species, ingredients)
+
+        # El constructor de TeamMember aplica las invariantes absolutas (rango de
+        # nivel, topes MAX_INGREDIENTS/MAX_SUB_SKILLS, sub skills sin repetir). NO
+        # acota por nivel: un miembro lleva todos sus ingredientes/sub skills ya
+        # definidos desde nivel 1 (en el juego quedan inactivos hasta su nivel de
+        # desbloqueo, pero el dato se guarda completo).
+        if member_id is None:
+            return TeamMember(
+                species=species.name,
+                level=data.level,
+                nature=nature,
+                ingredients=ingredients,
+                sub_skills=sub_skills,
+                ribbon=ribbon,
+                skill_level=data.skill_level,
+            )
+        return TeamMember(
+            id=member_id,
+            species=species.name,
+            level=data.level,
+            nature=nature,
+            ingredients=ingredients,
+            sub_skills=sub_skills,
+            ribbon=ribbon,
+            skill_level=data.skill_level,
+        )
+
+
+class DefaultProductionService(ProductionService):
+    _MAX_TEAM = 5
+    _WEIGHT_EPS = 1e-6
+
+    def __init__(
+        self,
+        catalog: SpeciesCatalog,
+        recipe_catalog: RecipeCatalog,
+        repository: TeamRepository,
+    ) -> None:
+        self._catalog = catalog
+        self._recipes = recipe_catalog
+        self._repo = repository
+
     def compute_production(self, data: ProductionInput) -> ProductionResult:
         # Stateless: no repo access, so it serves a Box Pokémon and an ad-hoc one alike.
         cfg = _resolve_config(self._catalog, data)
@@ -366,9 +419,6 @@ class DefaultTeamService(TeamService):
             )
             for r in self._recipes.all()
         ]
-
-    _MAX_TEAM = 5
-    _WEIGHT_EPS = 1e-6
 
     def compute_team_production(
         self, user_id: UUID, data: TeamProductionInput
@@ -416,7 +466,9 @@ class DefaultTeamService(TeamService):
                 member_uuid = UUID(raw_id)
             except ValueError as exc:
                 raise ValidationError(f"Id de miembro inválido: {raw_id!r}.") from exc
-            member = self.get_member(user_id, member_uuid)  # levanta TeamMemberNotFoundError
+            member = self._repo.get(member_uuid, user_id)
+            if member is None:
+                raise TeamMemberNotFoundError(str(member_uuid))
             species = self._catalog.get(member.species)
             if species is None:
                 excluded += 1
@@ -543,42 +595,4 @@ class DefaultTeamService(TeamService):
             ],
             grand_total_strength=aggregate.total_strength + cooking_strength,
             grand_total_strength_base=aggregate.total_strength_base + cooking.cooking_strength,
-        )
-
-    def _build_member(self, data: TeamMemberInput, member_id: UUID | None = None) -> TeamMember:
-        species = self._catalog.get(data.species)
-        if species is None:
-            raise SpeciesNotFoundError(f"Especie desconocida: {data.species!r}.")
-
-        nature = _parse_enum(Nature, data.nature, "nature") if data.nature else None
-        sub_skills = tuple(_parse_enum(SubSkill, s, "sub_skill") for s in data.sub_skills)
-        ribbon = _parse_enum(Ribbon, data.ribbon, "ribbon")
-        ingredients = tuple(_parse_enum(Ingredient, i, "ingredient") for i in data.ingredients)
-
-        _validate_ingredients(species, ingredients)
-
-        # El constructor de TeamMember aplica las invariantes absolutas (rango de
-        # nivel, topes MAX_INGREDIENTS/MAX_SUB_SKILLS, sub skills sin repetir). NO
-        # acota por nivel: un miembro lleva todos sus ingredientes/sub skills ya
-        # definidos desde nivel 1 (en el juego quedan inactivos hasta su nivel de
-        # desbloqueo, pero el dato se guarda completo).
-        if member_id is None:
-            return TeamMember(
-                species=species.name,
-                level=data.level,
-                nature=nature,
-                ingredients=ingredients,
-                sub_skills=sub_skills,
-                ribbon=ribbon,
-                skill_level=data.skill_level,
-            )
-        return TeamMember(
-            id=member_id,
-            species=species.name,
-            level=data.level,
-            nature=nature,
-            ingredients=ingredients,
-            sub_skills=sub_skills,
-            ribbon=ribbon,
-            skill_level=data.skill_level,
         )

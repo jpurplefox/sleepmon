@@ -44,7 +44,7 @@ from sleepmon.application.dto import (
     TeamMemberInput,
     TeamProductionInput,
 )
-from sleepmon.application.services import TeamService
+from sleepmon.application.services import ProductionService, TeamService
 from sleepmon.domain.catalog_data import (
     INGREDIENT_STRENGTH,
     ISLAND_EXPERT,
@@ -225,8 +225,10 @@ class ProductionController(Controller):
     path = "/production"
 
     @post("/", status_code=HTTP_200_OK, sync_to_thread=True)
-    def compute(self, service: NamedDependency[TeamService], data: ProductionIn) -> ProductionOut:
-        result = service.compute_production(
+    def compute(
+        self, production_service: NamedDependency[ProductionService], data: ProductionIn
+    ) -> ProductionOut:
+        result = production_service.compute_production(
             ProductionInput(
                 species=data.species,
                 level=data.level,
@@ -292,7 +294,9 @@ class RecipeController(Controller):
     path = "/recipes"
 
     @get("/", sync_to_thread=False)
-    def list_recipes(self, service: NamedDependency[TeamService]) -> list[RecipeOut]:
+    def list_recipes(
+        self, production_service: NamedDependency[ProductionService]
+    ) -> list[RecipeOut]:
         return [
             RecipeOut(
                 name=r.name,
@@ -303,7 +307,7 @@ class RecipeController(Controller):
                 ],
                 base_strength=r.base_strength,
             )
-            for r in service.list_recipes()
+            for r in production_service.list_recipes()
         ]
 
 
@@ -314,11 +318,11 @@ class TeamProductionController(Controller):
     @post("/", status_code=HTTP_200_OK, sync_to_thread=True)
     def compute(
         self,
-        service: NamedDependency[TeamService],
+        production_service: NamedDependency[ProductionService],
         current_user_id: NamedDependency[UUID],
         data: TeamProductionIn,
     ) -> TeamProductionOut:
-        result = service.compute_team_production(
+        result = production_service.compute_team_production(
             current_user_id,
             TeamProductionInput(
                 slots=[

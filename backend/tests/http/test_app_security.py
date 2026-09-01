@@ -19,7 +19,7 @@ from sleepmon.adapters.outbound.auth.jwt_access_token import JwtAccessTokenServi
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.auth_service import AuthResult, AuthService
-from sleepmon.application.services import DefaultTeamService
+from sleepmon.application.services import DefaultProductionService, DefaultTeamService
 from sleepmon.config import Settings
 from tests.fakes import InMemoryTeamRepository
 
@@ -67,9 +67,11 @@ def test_create_app_does_not_raise_when_secrets_are_injected() -> None:
     # must not trigger the fail-fast guard. Covered already by the fixtures in
     # tests/http/test_api.py and tests/http/test_auth_api.py; this test pins the
     # contract explicitly for the guard added in this change.
+    repository = InMemoryTeamRepository()
     app = create_app(
-        service=DefaultTeamService(
-            InMemoryTeamRepository(), StaticSpeciesCatalog(), StaticRecipeCatalog()
+        service=DefaultTeamService(repository, StaticSpeciesCatalog()),
+        production_service=DefaultProductionService(
+            StaticSpeciesCatalog(), StaticRecipeCatalog(), repository
         ),
         catalog=StaticSpeciesCatalog(),
         recipe_catalog=StaticRecipeCatalog(),
