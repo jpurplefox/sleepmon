@@ -2263,8 +2263,10 @@ select:focus {
 
 /* Producción */
 /* Card de estado vacío / "agregar otro": vive en la grilla como un slot más y
-   contiene los botones para sumar un Pokémon a la comparación. */
-.prod-card--add {
+   contiene los botones para sumar un Pokémon. Doble clase a propósito: .prod-card
+   declara el atajo `border` más abajo y le ganaría al border-style de una sola
+   clase. */
+.prod-card.prod-card--add {
   align-items: center;
   justify-content: center;
   text-align: center;
