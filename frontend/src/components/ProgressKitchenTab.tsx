@@ -1,8 +1,10 @@
 import { useState } from "react";
 
 import { useI18n } from "../i18n";
+import { ingredientIcon } from "../ingredients";
 import { potBounds, recipeLevelOf, stepPot } from "../progress";
-import { recipeImage } from "../recipes";
+import { recipeImage, recipeStrengthAtLevel } from "../recipes";
+import { CHARGE_STRENGTH_ICON } from "../skillIcons";
 import type { PlayerProgress, ProgressPatch, Recipe } from "../types";
 import { FilterPopover, gridKeyDown } from "./FilterPopover";
 import { Stepper } from "./Stepper";
@@ -14,6 +16,7 @@ interface Props {
   draft: PlayerProgress;
   recipes: Recipe[];
   potLadder: number[];
+  levelBonus: number[];
   onChange: (patch: ProgressPatch) => void;
 }
 
@@ -21,6 +24,7 @@ export function ProgressKitchenTab({
   draft,
   recipes,
   potLadder,
+  levelBonus,
   onChange,
 }: Props) {
   const { t } = useI18n();
@@ -109,29 +113,74 @@ export function ProgressKitchenTab({
                       {t("progress.noFavorite")}
                     </span>
                   </button>
-                  {options.map((r) => (
-                    <button
-                      key={r.name}
-                      type="button"
-                      role="option"
-                      aria-selected={r.name === current}
-                      className={
-                        "filter-list__item" +
-                        (r.name === current ? " is-selected" : "")
-                      }
-                      onClick={() => {
-                        onChange({ favorite_recipes: { [type]: r.name } });
-                        setOpenType(null);
-                      }}
-                    >
-                      <img
-                        src={recipeImage(r.name)}
-                        alt=""
-                        className="progress-fav-row__img"
-                      />
-                      <span className="filter-list__label">{r.name}</span>
-                    </button>
-                  ))}
+                  {options.map((r) => {
+                    const level = recipeLevelOf(draft, r.name);
+                    const strength = recipeStrengthAtLevel(
+                      r.base_strength,
+                      level,
+                      levelBonus,
+                    );
+                    return (
+                      <button
+                        key={r.name}
+                        type="button"
+                        role="option"
+                        aria-selected={r.name === current}
+                        className={
+                          "filter-list__item filter-list__item--recipe" +
+                          (r.name === current ? " is-selected" : "")
+                        }
+                        onClick={() => {
+                          onChange({ favorite_recipes: { [type]: r.name } });
+                          setOpenType(null);
+                        }}
+                      >
+                        <img
+                          src={recipeImage(r.name)}
+                          alt=""
+                          className="progress-fav-row__img"
+                        />
+                        <span className="filter-list__recipe-info">
+                          <span className="filter-list__recipe-name-row">
+                            <span className="filter-list__label">
+                              {r.name}
+                            </span>
+                            <span className="badge badge--level">
+                              Lv {level}
+                            </span>
+                          </span>
+                          <span className="filter-list__recipe-meta">
+                            <span className="filter-list__recipe-strength">
+                              <img
+                                className="mini-icon"
+                                src={CHARGE_STRENGTH_ICON}
+                                alt=""
+                              />
+                              {strength.toLocaleString()}
+                            </span>
+                            <span className="filter-list__recipe-ings">
+                              {r.ingredients.map((ic) => (
+                                <span
+                                  key={ic.ingredient}
+                                  className="meal-picker-card__ing"
+                                >
+                                  <img
+                                    className="filter-list__recipe-ing"
+                                    src={ingredientIcon(ic.ingredient)}
+                                    alt={ic.ingredient}
+                                    title={ic.ingredient}
+                                  />
+                                  <span className="meal-picker-card__ing-count">
+                                    ×{ic.count}
+                                  </span>
+                                </span>
+                              ))}
+                            </span>
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </FilterPopover>
             </div>

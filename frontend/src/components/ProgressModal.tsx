@@ -137,6 +137,7 @@ export function ProgressModal({ onClose }: { onClose: () => void }) {
                   draft={draft}
                   recipes={recipes.data ?? []}
                   potLadder={catalog.data?.pot_ladder ?? []}
+                  levelBonus={catalog.data?.recipe_level_bonus ?? []}
                   onChange={onDraftChange}
                 />
               )) ||

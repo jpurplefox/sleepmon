@@ -4955,6 +4955,64 @@ button.prod-card__base-tag--action:hover {
   width: 100%;
 }
 
+/* Favorite-recipe option: name + strength + ingredients, the same signal the
+   recipe cards carry, so ~25 curries stay distinguishable in a compact list. */
+.filter-list__item--recipe {
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.filter-list__recipe-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+/* Name + its own Lv badge — same badge the trigger shows for the selection,
+   so a picked option and its row read alike. */
+.filter-list__recipe-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.filter-list__recipe-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: var(--text-xs);
+}
+
+.filter-list__recipe-strength {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: var(--moon);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.filter-list__recipe-strength .mini-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.filter-list__recipe-ings {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.filter-list__recipe-ing {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
 /* One row per area: name + its own bonus slider. */
 .progress-area-row {
   display: flex;
