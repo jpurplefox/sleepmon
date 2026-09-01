@@ -244,9 +244,7 @@ class ProductionService(ABC):
     def compute_production(self, data: ProductionInput) -> ProductionResult: ...
 
     @abstractmethod
-    def compute_team_production(
-        self, data: TeamProductionInput, user_id: UUID | None = None
-    ) -> TeamProductionResult: ...
+    def compute_team_production(self, data: TeamProductionInput) -> TeamProductionResult: ...
 
     @abstractmethod
     def list_recipes(self) -> list[RecipeDTO]: ...
@@ -383,15 +381,9 @@ class DefaultProductionService(ProductionService):
     _MAX_TEAM = 5
     _WEIGHT_EPS = 1e-6
 
-    def __init__(
-        self,
-        catalog: SpeciesCatalog,
-        recipe_catalog: RecipeCatalog,
-        repository: TeamRepository,
-    ) -> None:
+    def __init__(self, catalog: SpeciesCatalog, recipe_catalog: RecipeCatalog) -> None:
         self._catalog = catalog
         self._recipes = recipe_catalog
-        self._repo = repository
 
     def compute_production(self, data: ProductionInput) -> ProductionResult:
         # Stateless: no repo access, so it serves a Box Pokémon and an ad-hoc one alike.
@@ -423,9 +415,7 @@ class DefaultProductionService(ProductionService):
 
     _MAX_ENTRY_ID = 64
 
-    def compute_team_production(
-        self, data: TeamProductionInput, user_id: UUID | None = None
-    ) -> TeamProductionResult:
+    def compute_team_production(self, data: TeamProductionInput) -> TeamProductionResult:
         # Validación de la selección: 1..5 slots; cada slot 1..2 entradas; pesos de
         # un slot suman 1.0; sin ids repetidos en todo el equipo.
         if not 1 <= len(data.slots) <= self._MAX_TEAM:
@@ -465,9 +455,8 @@ class DefaultProductionService(ProductionService):
             )
         map_bonuses = _map_bonuses(data)
 
-        # Resolver cada entrada contra el catálogo y computar su producción escalada
-        # por peso. Una especie desconocida se rechaza de una: no hay Box de la que
-        # excluirla en silencio.
+        # Resolve each entry against the catalog and scale its production by weight.
+        # An unknown species is rejected outright: there is no Box to silently drop it from.
         entries: list[tuple[str, str, DailyProduction]] = []
         member_productions: dict[str, ProductionResult] = {}
         for entry, weight in flat:

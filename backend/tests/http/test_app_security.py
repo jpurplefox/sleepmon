@@ -70,9 +70,7 @@ def test_create_app_does_not_raise_when_secrets_are_injected() -> None:
     repository = InMemoryTeamRepository()
     app = create_app(
         service=DefaultTeamService(repository, StaticSpeciesCatalog()),
-        production_service=DefaultProductionService(
-            StaticSpeciesCatalog(), StaticRecipeCatalog(), repository
-        ),
+        production_service=DefaultProductionService(StaticSpeciesCatalog(), StaticRecipeCatalog()),
         catalog=StaticSpeciesCatalog(),
         recipe_catalog=StaticRecipeCatalog(),
         access=JwtAccessTokenService("test-secret", timedelta(minutes=15)),

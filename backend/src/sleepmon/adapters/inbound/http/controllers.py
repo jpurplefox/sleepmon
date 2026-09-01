@@ -313,13 +313,11 @@ class RecipeController(Controller):
 
 class TeamProductionController(Controller):
     path = "/teams/production"
-    guards = [require_user]
 
     @post("/", status_code=HTTP_200_OK, sync_to_thread=True)
     def compute(
         self,
         production_service: NamedDependency[ProductionService],
-        current_user_id: NamedDependency[UUID],
         data: TeamProductionIn,
     ) -> TeamProductionOut:
         result = production_service.compute_team_production(

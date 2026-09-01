@@ -12,7 +12,6 @@ from sleepmon.application.dto import (
 from sleepmon.application.services import DefaultProductionService
 from sleepmon.domain.catalog_data import MAX_RECIPE_LEVEL
 from sleepmon.domain.errors import SpeciesNotFoundError, ValidationError
-from tests.fakes import InMemoryTeamRepository
 
 
 def _pokemon(**overrides: object) -> ProductionInput:
@@ -38,9 +37,7 @@ def _slots(*ids: str) -> list[SlotInput]:
 
 @pytest.fixture
 def production_service() -> DefaultProductionService:
-    return DefaultProductionService(
-        StaticSpeciesCatalog(), StaticRecipeCatalog(), InMemoryTeamRepository()
-    )
+    return DefaultProductionService(StaticSpeciesCatalog(), StaticRecipeCatalog())
 
 
 def test_compute_production_returns_estimate(production_service: DefaultProductionService) -> None:

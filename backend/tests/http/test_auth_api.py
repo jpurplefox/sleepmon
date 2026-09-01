@@ -36,9 +36,7 @@ def client_and_auth() -> tuple[TestClient, FakeAuth]:
     auth = FakeAuth()
     repository = InMemoryTeamRepository()
     service = DefaultTeamService(repository, StaticSpeciesCatalog())
-    production_service = DefaultProductionService(
-        StaticSpeciesCatalog(), StaticRecipeCatalog(), repository
-    )
+    production_service = DefaultProductionService(StaticSpeciesCatalog(), StaticRecipeCatalog())
     app = create_app(
         service=service,
         production_service=production_service,

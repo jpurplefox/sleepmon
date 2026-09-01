@@ -49,7 +49,7 @@ from sleepmon.application.services import (
 from sleepmon.config import Settings
 from sleepmon.domain.auth import InvalidCredentialError, InvalidRefreshError, InvalidTokenError
 from sleepmon.domain.errors import TeamMemberNotFoundError, ValidationError
-from sleepmon.domain.ports import AccessTokenService, RecipeCatalog, SpeciesCatalog, TeamRepository
+from sleepmon.domain.ports import AccessTokenService, RecipeCatalog, SpeciesCatalog
 
 
 def _validation_handler(_: Request[Any, Any, Any], exc: ValidationError) -> Response[ErrorOut]:
@@ -102,7 +102,6 @@ def create_app(
         if not settings.google_client_id:
             raise RuntimeError("GOOGLE_CLIENT_ID must be set")
 
-    repository: TeamRepository | None = None
     if service is None:
         settings = settings or Settings.from_env()
         team_pool = create_pool(settings.database_url)
@@ -116,11 +115,7 @@ def create_app(
         on_shutdown.append(lambda: team_pool.close())
 
     if production_service is None:
-        if repository is None:
-            raise RuntimeError(
-                "production_service must be injected when service is injected"
-            )
-        production_service = DefaultProductionService(catalog, recipe_catalog, repository)
+        production_service = DefaultProductionService(catalog, recipe_catalog)
 
     if access is None:
         settings = settings or Settings.from_env()
