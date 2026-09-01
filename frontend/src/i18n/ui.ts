@@ -341,6 +341,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.strengthBreakdown": "Proporción de fuerza",
     "teams.inTriggers": "en {n} disparos",
     "teams.addToTeam": "Agregar al equipo",
+    "teams.noteEditInBox":
+      "Editás la copia de este equipo; tu caja no cambia. Para actualizarla, usá el ícono de guardar en la card.",
+    "teams.noteEditLocal": "Los cambios son solo para este equipo.",
     "teams.addFrom": "¿De dónde?",
     "teams.editNamed": "Editar {species}",
     "teams.saveNamed": "Guardar {species} en tu caja",
@@ -738,6 +741,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.strengthBreakdown": "Strength breakdown",
     "teams.inTriggers": "in {n} triggers",
     "teams.addToTeam": "Add to the team",
+    "teams.noteEditInBox":
+      "You're editing this team's copy; your Box doesn't change. To update it, use the save icon on the card.",
+    "teams.noteEditLocal": "Changes are for this team only.",
     "teams.addFrom": "From where?",
     "teams.editNamed": "Edit {species}",
     "teams.saveNamed": "Save {species} to your Box",

@@ -128,8 +128,7 @@ type Intent =
   | { kind: "split"; slotIndex: number }
   | { kind: "edit"; slotIndex: number; entryIndex: number };
 
-// Duplicates are allowed now, so the picker marks nothing as taken. Module level
-// so the empty set is not re-created on every render.
+// Module level so the empty set is not re-created on every render.
 const NO_MEMBERS_TAKEN: Set<string> = new Set();
 
 const fmtInt = (n: number) => Math.round(n).toLocaleString("en-US");
@@ -331,14 +330,17 @@ export function Teams() {
   const atMax = slots.length >= MAX_TEAM;
 
   const openForm = (next: Intent) => {
+    setNotice(null);
     setIntent(next);
     setModal("form");
   };
   const openBox = (next: Intent) => {
+    setNotice(null);
     setIntent(next);
     setModal("box");
   };
   const closeModal = () => {
+    setNotice(null);
     setModal(null);
     setIntent(null);
   };
@@ -630,7 +632,6 @@ export function Teams() {
                   />
                 </span>
               </div>
-
             </div>
 
             {/* ── Other skills card: skill_effects that don't add to total strength ── */}
@@ -1279,35 +1280,42 @@ export function Teams() {
         </>
       )}
 
-      {/* Form modal — create a config on the spot, or edit one already in the roster. */}
-      {modal === "form" && intent !== null && (
-        <Modal
-          title={intent.kind === "edit" ? t("team.modalEdit") : t("team.modalAdd")}
-          onClose={closeModal}
-        >
-          <MemberForm
-            catalog={catalog.data}
-            pending={false}
-            error={null}
-            submitLabel={intent.kind === "edit" ? t("prod.save") : t("teams.addToTeam")}
-            initial={
-              intent.kind === "edit"
-                ? slots[intent.slotIndex].entries[intent.entryIndex].config
-                : undefined
-            }
-            onSubmit={(config) => applyConfig(config)}
-            footer={
-              intent.kind !== "edit" ? (
-                <p className="muted">{t("prod.noteNew")}</p>
-              ) : slots[intent.slotIndex].entries[intent.entryIndex].sourceId !== undefined ? (
-                <p className="muted">{t("prod.noteEditInBox")}</p>
-              ) : (
-                <p className="muted">{t("prod.noteEditLocal")}</p>
-              )
-            }
-          />
-        </Modal>
-      )}
+      {/* Form modal — create a config on the spot, or edit one already in the roster.
+          The intent's slotIndex/entryIndex are resolved once, up front, with optional
+          chaining: the indices are safe today (the modal traps focus and covers the
+          roster, and the sign-in dialog that could replay a guarded action is modal
+          too, so slots can't shift under an open form) but a broken invariant should
+          be a no-op render, not a crash. Saves deliberately use ids instead, since
+          those stay valid across reorders. */}
+      {modal === "form" && intent !== null && (() => {
+        const editingEntry =
+          intent.kind === "edit" ? slots[intent.slotIndex]?.entries[intent.entryIndex] : undefined;
+        if (intent.kind === "edit" && !editingEntry) return null;
+        return (
+          <Modal
+            title={intent.kind === "edit" ? t("team.modalEdit") : t("team.modalAdd")}
+            onClose={closeModal}
+          >
+            <MemberForm
+              catalog={catalog.data}
+              pending={false}
+              error={null}
+              submitLabel={intent.kind === "edit" ? t("prod.save") : t("teams.addToTeam")}
+              initial={intent.kind === "edit" ? editingEntry?.config : undefined}
+              onSubmit={(config) => applyConfig(config)}
+              footer={
+                intent.kind !== "edit" ? (
+                  <p className="muted">{t("prod.noteNew")}</p>
+                ) : editingEntry?.sourceId !== undefined ? (
+                  <p className="muted">{t("teams.noteEditInBox")}</p>
+                ) : (
+                  <p className="muted">{t("teams.noteEditLocal")}</p>
+                )
+              }
+            />
+          </Modal>
+        );
+      })()}
 
       {/* BoxPicker modal — same pattern as Production.tsx */}
       {modal === "box" && (

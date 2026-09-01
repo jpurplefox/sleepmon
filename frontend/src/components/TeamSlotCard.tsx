@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent } from "react";
 
 import { useI18n } from "../i18n";
 import type { Slot } from "../teamRoster";
@@ -51,6 +51,7 @@ export function TeamSlotCard({
   const [activeTab, setActiveTab] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const menuListRef = useRef<HTMLDivElement>(null);
   const splitBtnRef = useRef<HTMLButtonElement>(null);
 
   const split = slot.entries.length === 2;
@@ -78,6 +79,22 @@ export function TeamSlotCard({
       document.removeEventListener("keydown", onKey);
     };
   }, [menuOpen]);
+
+  // Arrow-key navigation for the split menu (docs/design-system.md, "Dropdown /
+  // combobox pattern"). Enter needs no handling: a focused <button> already
+  // activates on Enter.
+  const onMenuKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+    e.preventDefault();
+    const items = Array.from(
+      menuListRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? [],
+    );
+    if (items.length === 0) return;
+    const current = items.indexOf(document.activeElement as HTMLButtonElement);
+    const delta = e.key === "ArrowDown" ? 1 : -1;
+    const next = (current + delta + items.length) % items.length;
+    items[next]?.focus();
+  };
 
   const speciesEntry = catalog.species.find((s) => s.name === active.config.species);
   const berryRole: BerryRole = speciesEntry ? berryRoleOf(speciesEntry.berry) : "none";
@@ -140,8 +157,14 @@ export function TeamSlotCard({
         <IconSplit />
       </button>
       {menuOpen && (
-        <div className="filter-pop team-slot__split-pop" role="menu" aria-label={t("teams.addFrom")}>
-          <div className="filter-list">
+        <div className="filter-pop team-slot__split-pop">
+          <div
+            ref={menuListRef}
+            className="filter-list"
+            role="menu"
+            aria-label={t("teams.addFrom")}
+            onKeyDown={onMenuKeyDown}
+          >
             <button
               type="button"
               role="menuitem"
@@ -267,6 +290,10 @@ export function TeamSlotCard({
         status.state === "error" ? (
           <p className="error" role="alert">
             {status.error ?? t("card.saveError")}
+          </p>
+        ) : status.state === "saved" ? (
+          <p className="muted" role="status" aria-live="polite">
+            {t("card.saved")}
           </p>
         ) : null
       }
