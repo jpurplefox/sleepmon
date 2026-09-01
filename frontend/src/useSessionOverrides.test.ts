@@ -1,8 +1,17 @@
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// "Unsaved" means "differs from what is saved", which only exists with a session.
+// Signed in by default here; the anonymous case has its own test at the bottom.
+const authState = vi.hoisted(() => ({ status: "authenticated" as "anonymous" | "authenticated" }));
+vi.mock("./auth/AuthContext", () => ({ useAuth: () => authState }));
 
 import { useSessionOverrides } from "./useSessionOverrides";
 import type { PlayerProgress } from "./types";
+
+beforeEach(() => {
+  authState.status = "authenticated";
+});
 
 const saved: PlayerProgress = {
   pot_size: 33,
@@ -158,5 +167,25 @@ describe("useSessionOverrides", () => {
     rerender({ progress: saved });
     expect(result.current.potSize).toBe(50); // overridden — untouched
     expect(result.current.areaBonusPct).toBe(42); // un-overridden — now reflects the saved value
+  });
+  it("marks nothing as unsaved with no session, but still serves the values", () => {
+    // Team Analysis is open to anonymous users, and Player progress is reserved.
+    // Offering "Guardar" there would send a request that can only 401.
+    authState.status = "anonymous";
+    const { result } = renderHook(() => useSessionOverrides(EMPTY, "Cyan Beach"));
+
+    act(() => result.current.setPotOverride(50));
+    act(() => result.current.setAreaBonusOverride(53));
+    act(() => result.current.setRecipeLevelOverride("Beanburger Curry", 30));
+
+    // The values are session inputs and keep working.
+    expect(result.current.potSize).toBe(50);
+    expect(result.current.areaBonusPct).toBe(53);
+    expect(result.current.recipeLevelFor("Beanburger Curry")).toBe(30);
+
+    // But none of them offers to save.
+    expect(result.current.potUnsaved).toBe(false);
+    expect(result.current.areaBonusUnsaved).toBe(false);
+    expect(result.current.recipeLevelUnsaved("Beanburger Curry")).toBe(false);
   });
 });
