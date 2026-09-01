@@ -165,12 +165,16 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   };
   const removeAt = (i: number) => setEntries((prev) => prev.filter((_, j) => j !== i));
 
-  const saveToBox = (i: number) =>
-    save(entries[i], (memberId) =>
+  const saveToBox = (i: number) => {
+    const entry = entries[i];
+    // Match by stable id, not index: the list can be reordered/edited while
+    // this save is in flight, so `i` may no longer point at this entry.
+    save(entry, (memberId) =>
       setEntries((prev) =>
-        prev.map((e, j) => (j === i ? { ...e, sourceId: memberId } : e)),
+        prev.map((e) => (e.id === entry.id ? { ...e, sourceId: memberId } : e)),
       ),
     );
+  };
 
   if (catalog.isLoading) return <Placeholder loading>{t("common.loadingCatalog")}</Placeholder>;
   if (catalog.isError || !catalog.data)
