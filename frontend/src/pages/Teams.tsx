@@ -510,7 +510,7 @@ export function Teams() {
       )}
       {slots.length > 0 && teamQuery.isError && (
         <p className="error" role="alert" style={{ marginTop: "1.5rem" }}>
-          {t("teams.teamError")}{" "}
+          {(teamQuery.error as Error | null)?.message || t("teams.teamError")}{" "}
           <button type="button" className="btn btn--ghost" onClick={() => teamQuery.refetch()}>
             {t("common.retry")}
           </button>
