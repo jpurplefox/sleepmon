@@ -22,6 +22,7 @@ const SAVED_MS = 2500;
 export function useSaveToBox(): {
   save: (entry: RosterEntry, onCreated?: (memberId: string) => void) => void;
   statusOf: (entryId: string) => SaveStatus;
+  reset: (entryId: string) => void;
 } {
   const qc = useQueryClient();
   const [statuses, setStatuses] = useState<Record<string, SaveStatus>>({});
@@ -63,5 +64,12 @@ export function useSaveToBox(): {
 
   const statusOf = useCallback((entryId: string) => statuses[entryId] ?? IDLE, [statuses]);
 
-  return { save, statusOf };
+  // Drops one entry's status back to idle. Callers use this on edit: the old
+  // feedback (saved or errored) describes a config that no longer applies.
+  const reset = useCallback((entryId: string) => {
+    window.clearTimeout(timers.current[entryId]);
+    setStatuses((prev) => (entryId in prev ? { ...prev, [entryId]: IDLE } : prev));
+  }, []);
+
+  return { save, statusOf, reset };
 }

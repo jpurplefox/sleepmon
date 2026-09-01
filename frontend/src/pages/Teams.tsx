@@ -138,7 +138,7 @@ export function Teams() {
 
   const { status } = useAuth();
   const { guard } = useGate();
-  const { save, statusOf } = useSaveToBox();
+  const { save, statusOf, reset } = useSaveToBox();
 
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
   // Reading the Box is reserved: only fetch it once signed in, so an anonymous
@@ -348,6 +348,13 @@ export function Teams() {
   // Applies a config according to the pending intent.
   const applyConfig = (config: MemberInput, sourceId?: string) => {
     if (!intent) return;
+    if (intent.kind === "edit") {
+      // Editing replaces the config but not the id, so a stale save status
+      // (saved or errored) would otherwise survive describing a config that
+      // was never submitted.
+      const editedId = slots[intent.slotIndex]?.entries[intent.entryIndex]?.id;
+      if (editedId) reset(editedId);
+    }
     setSlots((prev) => {
       if (intent.kind === "add") return addSlot(prev, newEntry(config, sourceId));
       if (intent.kind === "split")
@@ -364,9 +371,12 @@ export function Teams() {
     const config = configFromMember(catalog.data, m);
     if (!config) {
       // Its ingredient slots are unknown, so no valid config exists: say so where
-      // the decision is made instead of leaving a hole in the team.
+      // the decision is made instead of leaving a hole in the team. Close the
+      // modal directly (not via closeModal) so the refusal notice survives —
+      // closeModal also clears the notice, which would erase this one.
       setNotice(t("prod.speciesNotInCatalog", { species: m.species }));
-      closeModal();
+      setModal(null);
+      setIntent(null);
       return;
     }
     applyConfig(config, m.id);

@@ -28,7 +28,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   const { t } = useI18n();
   const { status } = useAuth();
   const { guard } = useGate();
-  const { save, statusOf } = useSaveToBox();
+  const { save, statusOf, reset } = useSaveToBox();
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
   // Reading the Box is reserved: only fetch it once signed in, so the open
   // ephemeral comparator makes no /team request (and no 401) while anonymous.
@@ -100,6 +100,10 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   // Inserta una card nueva (sin origen) o reemplaza la config de la que estábamos
   // editando, manteniendo su sourceId. Cierra el modal.
   const upsert = (config: MemberInput) => {
+    // Editing replaces the config but not the id, so a stale save status
+    // (saved or errored) would otherwise survive describing a config that
+    // was never submitted.
+    if (editIndex !== null) reset(entries[editIndex].id);
     setEntries((prev) =>
       editIndex === null
         ? prev.length >= MAX_COMPARE

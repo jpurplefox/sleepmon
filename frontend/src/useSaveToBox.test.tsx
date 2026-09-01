@@ -73,4 +73,21 @@ describe("useSaveToBox", () => {
     const { result } = renderHook(() => useSaveToBox(), { wrapper });
     expect(result.current.statusOf("never-touched").state).toBe("idle");
   });
+
+  it("reset returns a failed entry to idle without disturbing another entry", async () => {
+    createMember.mockRejectedValue(new Error("La caja está llena"));
+    const failed = newEntry(config);
+    const other = newEntry(config);
+    const { result } = renderHook(() => useSaveToBox(), { wrapper });
+
+    act(() => result.current.save(failed));
+    await waitFor(() => expect(result.current.statusOf(failed.id).state).toBe("error"));
+    act(() => result.current.save(other));
+    await waitFor(() => expect(result.current.statusOf(other.id).state).toBe("error"));
+
+    act(() => result.current.reset(failed.id));
+
+    expect(result.current.statusOf(failed.id).state).toBe("idle");
+    expect(result.current.statusOf(other.id).state).toBe("error");
+  });
 });
