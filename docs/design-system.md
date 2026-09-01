@@ -316,12 +316,15 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **Error feedback** — `.error` (red text) + `ErrorBoundary` app fallback
   (`role="alert"`, title + "reload" `.btn--primary`).
 - **`.gate-card`** — the anonymous gate that replaces a **reserved page's** content
-  when there is no session (the Box, Team Analysis). A centered `.card` composition:
-  a **moon roundel** (`IconMoon` in `--moon` on `--moon-dim` / `--moon-border` — the
-  single identity gold, per "one gold accent per card"), a title, a `--muted` line,
-  and a `.btn--google`. Sits alongside the empty/loading `Placeholder` vocabulary but
-  is a distinct pattern (a call to sign in, not an empty list). The empty **Box**
-  state is separate and only shown once signed in.
+  when there is no session — today only the **Box**. Which pages those are follows
+  from the rule, not from a list: a page is reserved when it reads or writes the Box
+  (see PRD 0010), so a tool that only computes stays open and never shows this card.
+  A centered `.card` composition: a **moon roundel** (`IconMoon` in `--moon` on
+  `--moon-dim` / `--moon-border` — the single identity gold, per "one gold accent per
+  card"), a title, a `--muted` line, and a `.btn--google`. Sits alongside the
+  empty/loading `Placeholder` vocabulary but is a distinct pattern (a call to sign in,
+  not an empty list). The empty **Box** state is separate and only shown once signed
+  in.
 - **`Placeholder`** (`components/Placeholder.tsx`) — centered muted status line
   standing in for absent content: an empty list, a search with no matches, or
   content still loading (`loading` adds `aria-busy`). Always `role="status"` +
@@ -390,6 +393,21 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   *Why:* "invisible" is not "absent" — an off-screen hidden element is as real to
   the scroll box as a visible one, so hiding must remove it from layout, not just
   from sight.
+- **A split slot's actions ride with the slider.** *Question:* a team slot can hold
+  two Pokémon, so its toolbar already carries the tabs (which of the two is showing)
+  and the split slider. Once each Pokémon can also be edited and saved to the Box,
+  do those actions join the tabs row? *Resolution:* no — the tabs row stays
+  identity-only, and the actions sit at the right end of the **slider** row, which
+  uses only a fraction of its width. They act on the active tab's Pokémon and say so
+  in their `title` ("Edit Raichu"). The toolbar keeps the two-row height it already
+  had (measured: 64px in both a single and a split slot), so the reserved height that
+  single slots mirror does not grow. *Why:* the tabs row is the one that wraps — a
+  species name plus its percentage, twice, already fills a 265px card at five columns,
+  and four icons would push it to a third line; because single slots reserve the split
+  header's height, that would make **every** card in the team taller. The slider's row
+  has the space already. Keeping the actions in the toolbar rather than moving them
+  into the card body also holds the earlier line that a card's first row belongs to
+  name / level / ribbon.
 - **Under 640px the shape changes, it doesn't shrink.** *Question:* a row of
   columns (top bar, Box entry) has no width left on a phone — squeeze it, or scroll
   it? *Resolution:* neither: it becomes a different shape. The top bar wraps into

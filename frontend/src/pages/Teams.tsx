@@ -11,8 +11,11 @@ import {
 } from "recharts";
 
 import { api } from "../api/client";
+import { useAuth } from "../auth/AuthContext";
+import { useGate } from "../auth/useGate";
 import { berryIcon } from "../berries";
 import { BoxPicker } from "../components/BoxPicker";
+import { MemberForm } from "../components/MemberForm";
 import { SettingsModal } from "../components/SettingsModal";
 import { Modal } from "../components/Modal";
 import { Placeholder } from "../components/Placeholder";
@@ -33,20 +36,30 @@ import { perMealPot, dailyPotCapacity } from "../pot";
 import { areaBonusOf, recipeLevelOf } from "../progress";
 import { statIcon } from "../natures";
 import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
+import { configFromMember, newEntry } from "../roster";
+import {
+  MAX_TEAM,
+  type Slot,
+  addSlot,
+  linkToBox,
+  removeEntry,
+  removeSlot,
+  replaceConfig,
+  setSplitShare,
+  splitSlot,
+  toRequest,
+} from "../teamRoster";
 import { useProgress } from "../useProgress";
 import { useSessionOverrides } from "../useSessionOverrides";
 import type {
   BerryRole,
-  Catalog,
   MealInput,
   Member,
   MemberInput,
   SkillEffectAgg,
-  Slot,
   WeeklyBonus,
 } from "../types";
-
-const MAX_TEAM = 5;
+import { useSaveToBox } from "../useSaveToBox";
 
 // kind → { icon renderer, i18n label key } — mirrors ProductionCard's skill section.
 // Used to render skill_effects rows in the aggregates card.
@@ -110,39 +123,43 @@ function skillEffectMeta(kind: string): SkillEffectMeta {
   }
 }
 
-// Pure module-level helper — same logic as pickMember in Production.tsx.
-export function configFromMember(catalog: Catalog, m: Member): MemberInput | null {
-  const species = catalog.species.find((s) => s.name === m.species);
-  if (!species || species.ingredient_slots.length === 0) return null;
-  return {
-    species: m.species,
-    level: m.level,
-    nature: m.nature,
-    ingredients: species.ingredient_slots.map(
-      (opts, i) => m.ingredients[i] ?? opts[0] ?? "",
-    ),
-    sub_skills: m.sub_skills,
-    ribbon: m.ribbon,
-    skill_level: m.skill_level,
-  };
-}
 const MEAL_SLOTS = ["breakfast", "lunch", "dinner"] as const;
+
+// What the next config coming out of the form or the picker is for.
+type Intent =
+  | { kind: "add" }
+  | { kind: "split"; slotIndex: number }
+  | { kind: "edit"; slotIndex: number; entryIndex: number };
+
+// Module level so the empty set is not re-created on every render.
+const NO_MEMBERS_TAKEN: Set<string> = new Set();
 
 const fmtInt = (n: number) => Math.round(n).toLocaleString("en-US");
 
 export function Teams() {
   const { t, ingredient: ingName, berry: berryName } = useI18n();
 
+  const { status } = useAuth();
+  const { guard } = useGate();
+  const { save, statusOf, reset } = useSaveToBox();
+
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
-  const members = useQuery({ queryKey: ["members"], queryFn: api.listMembers });
+  // Reading the Box is reserved: only fetch it once signed in, so an anonymous
+  // roster makes no /team request (and takes no 401).
+  const members = useQuery({
+    queryKey: ["members"],
+    queryFn: api.listMembers,
+    enabled: status === "authenticated",
+  });
   const recipes = useQuery({ queryKey: ["recipes"], queryFn: api.getRecipes });
 
-  // Equipo como lista ordenada de slots (cada uno con 1–2 Pokémon con peso). Efímero.
+  // The roster: ordered slots of configs the tool owns. Ephemeral.
   const [slots, setSlots] = useState<Slot[]>([]);
-  // Intención del picker: agregar un slot nuevo, o dividir un slot existente.
-  const [pickerTarget, setPickerTarget] = useState<
-    { kind: "new" } | { kind: "split"; slotIndex: number } | null
-  >(null);
+  const [intent, setIntent] = useState<Intent | null>(null);
+  const [modal, setModal] = useState<"form" | "box" | null>(null);
+  // Tells the user an action could not be carried out (e.g. a species outside
+  // the catalog).
+  const [notice, setNotice] = useState<string | null>(null);
   const [meals, setMeals] = useState<(MealInput | null)[]>([null, null, null]);
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
   const [goodCampTicket, setGoodCampTicket] = useState(false);
@@ -189,10 +206,6 @@ export function Teams() {
   const saveLevel = (name: string) =>
     saveProgress({ recipe_levels: { [name]: recipeLevelFor(name) } });
 
-  const usedIds = useMemo(
-    () => new Set(slots.flatMap((s) => s.entries.map((e) => e.memberId))),
-    [slots],
-  );
 
   // Set de bayas favoritas activas para lookup O(1) al renderizar las cards.
   const favBerrySet = useMemo(
@@ -214,10 +227,15 @@ export function Teams() {
     return "none";
   };
 
+  // What actually goes on the wire, not the slot objects themselves: linking a
+  // newly saved entry to its Box id rewrites the slot objects (a new identity)
+  // without changing this, so keying on it avoids an identical, wasted refetch.
+  const teamRequestSlots = useMemo(() => toRequest(slots), [slots]);
+
   const teamQuery = useQuery({
     queryKey: [
       "team-production",
-      slots,
+      teamRequestSlots,
       meals,
       activeBerries,
       selectedIsland,
@@ -228,9 +246,7 @@ export function Teams() {
     ],
     queryFn: () =>
       api.computeTeamProduction({
-        slots: slots.map((s) => ({
-          entries: s.entries.map((e) => ({ member_id: e.memberId, weight: e.weight })),
-        })),
+        slots: teamRequestSlots,
         meals,
         favorite_berries: activeBerries,
         island: selectedIsland,
@@ -241,6 +257,8 @@ export function Teams() {
       }),
     enabled: slots.length > 0,
     placeholderData: keepPreviousData,
+    // A rejected config is a deterministic 400: retrying only delays the message.
+    retry: false,
   });
 
   // Everything renders daily; the totals card shows daily + ×7 on its own.
@@ -259,12 +277,6 @@ export function Teams() {
   const recipeByName = useMemo(
     () => new Map((recipes.data ?? []).map((r) => [r.name, r])),
     [recipes.data],
-  );
-
-  // Lookup map: member id → Member.
-  const memberById = useMemo(
-    () => new Map((members.data ?? []).map((m) => [m.id, m])),
-    [members.data],
   );
 
   // Positional map: slot index (0/1/2) → MealFeasibility entry.
@@ -357,61 +369,63 @@ export function Teams() {
 
   const atMax = slots.length >= MAX_TEAM;
 
-  const pickMember = (m: Member) => {
-    if (usedIds.has(m.id)) return;
-    if (pickerTarget?.kind === "split") {
-      const i = pickerTarget.slotIndex;
-      setSlots((prev) =>
-        prev.map((s, idx) =>
-          idx === i && s.entries.length === 1
-            ? {
-                entries: [
-                  { memberId: s.entries[0].memberId, weight: 0.5 },
-                  { memberId: m.id, weight: 0.5 },
-                ],
-              }
-            : s,
-        ),
-      );
-    } else {
-      setSlots((prev) =>
-        prev.length >= MAX_TEAM ? prev : [...prev, { entries: [{ memberId: m.id, weight: 1 }] }],
-      );
-    }
-    setPickerTarget(null);
+  const openForm = (next: Intent) => {
+    setNotice(null);
+    setIntent(next);
+    setModal("form");
+  };
+  const openBox = (next: Intent) => {
+    setNotice(null);
+    setIntent(next);
+    setModal("box");
+  };
+  const closeModal = () => {
+    setNotice(null);
+    setModal(null);
+    setIntent(null);
   };
 
-  const removeSlot = (slotIndex: number) =>
-    setSlots((prev) => prev.filter((_, i) => i !== slotIndex));
+  // Applies a config according to the pending intent.
+  const applyConfig = (config: MemberInput, sourceId?: string) => {
+    if (!intent) return;
+    if (intent.kind === "edit") {
+      // Editing replaces the config but not the id, so a stale save status
+      // (saved or errored) would otherwise survive describing a config that
+      // was never submitted.
+      const editedId = slots[intent.slotIndex]?.entries[intent.entryIndex]?.id;
+      if (editedId) reset(editedId);
+    }
+    setSlots((prev) => {
+      if (intent.kind === "add") return addSlot(prev, newEntry(config, sourceId));
+      if (intent.kind === "split")
+        return splitSlot(prev, intent.slotIndex, newEntry(config, sourceId));
+      return replaceConfig(prev, intent.slotIndex, intent.entryIndex, config);
+    });
+    setNotice(null);
+    closeModal();
+  };
 
-  // Quita un Pokémon de un slot dividido; el que queda pasa a peso 1 (single).
-  const removeEntry = (slotIndex: number, entryIndex: number) =>
-    setSlots((prev) =>
-      prev.map((s, i) => {
-        if (i !== slotIndex) return s;
-        const kept = s.entries.filter((_, j) => j !== entryIndex);
-        if (kept.length === 0) return s;
-        return { entries: kept.map((e) => ({ ...e, weight: 1 })) };
-      }),
-    );
+  const pickMember = (m: Member) => {
+    // The page early-returns while the catalog loads, so this is only defensive.
+    if (!catalog.data) return;
+    const config = configFromMember(catalog.data, m);
+    if (!config) {
+      // Its ingredient slots are unknown, so no valid config exists: say so where
+      // the decision is made instead of leaving a hole in the team. Close the
+      // modal directly (not via closeModal) so the refusal notice survives —
+      // closeModal also clears the notice, which would erase this one.
+      setNotice(t("prod.speciesNotInCatalog", { species: m.species }));
+      setModal(null);
+      setIntent(null);
+      return;
+    }
+    applyConfig(config, m.id);
+  };
 
-  // pctA en 1..99 → weights [a, 1-a] del slot dividido.
-  const setSplitShare = (slotIndex: number, pctA: number) =>
-    setSlots((prev) =>
-      prev.map((s, i) => {
-        if (i !== slotIndex || s.entries.length !== 2) return s;
-        const a = pctA / 100;
-        return {
-          entries: [
-            { ...s.entries[0], weight: a },
-            { ...s.entries[1], weight: 1 - a },
-          ],
-        };
-      }),
-    );
-
-  // Se puede dividir si hay al menos un Pokémon de la caja libre (no usado ya).
-  const canSplit = (members.data ?? []).some((m) => !usedIds.has(m.id));
+  const saveEntryToBox = (slotIndex: number, entryIndex: number) => {
+    const entry = slots[slotIndex].entries[entryIndex];
+    save(entry, (memberId) => setSlots((prev) => linkToBox(prev, entry.id, memberId)));
+  };
 
   // Dish type is a setup choice about the day, chosen on the Map tab (PRD
   // 0006). This is just the raw state setter — SettingsModal.pickDishType
@@ -437,6 +451,11 @@ export function Teams() {
       <header className="hero">
         <h1>{t("teams.title")}</h1>
         <p className="muted">{t("teams.subtitle")}</p>
+        {notice && (
+          <p className="error" role="alert">
+            {notice}
+          </p>
+        )}
       </header>
 
       {/* ── Config toolbar above the roster (recipes + island + berries + bonuses) ── */}
@@ -462,23 +481,25 @@ export function Teams() {
         {slots.map((slot, i) => {
           const teamHasSplit = slots.some((s) => s.entries.length === 2);
           return (
-          <TeamSlotCard
-            key={slot.entries.map((e) => e.memberId).join("+")}
-            slot={slot}
-            slotIndex={i}
-            memberById={memberById}
-            catalog={catalog.data}
-            contributions={result?.members}
-            berryRoleOf={berryRoleOf}
-            expert={isExpert}
-            weeklyBonus={weeklyBonus}
-            canSplit={canSplit}
-            teamHasSplit={teamHasSplit}
-            onRequestSplit={(idx) => setPickerTarget({ kind: "split", slotIndex: idx })}
-            onRemoveSlot={removeSlot}
-            onRemoveEntry={removeEntry}
-            onWeightChange={setSplitShare}
-          />
+            <TeamSlotCard
+              key={slot.entries.map((e) => e.id).join("+")}
+              slot={slot}
+              slotIndex={i}
+              catalog={catalog.data}
+              contributions={result?.members}
+              berryRoleOf={berryRoleOf}
+              expert={isExpert}
+              weeklyBonus={weeklyBonus}
+              teamHasSplit={teamHasSplit}
+              saveStatus={statusOf}
+              onAddNew={(idx) => openForm({ kind: "split", slotIndex: idx })}
+              onAddFromBox={(idx) => guard(() => openBox({ kind: "split", slotIndex: idx }))}
+              onEdit={(si, ei) => openForm({ kind: "edit", slotIndex: si, entryIndex: ei })}
+              onSaveToBox={(si, ei) => guard(() => saveEntryToBox(si, ei))}
+              onRemoveSlot={(idx) => setSlots((prev) => removeSlot(prev, idx))}
+              onRemoveEntry={(si, ei) => setSlots((prev) => removeEntry(prev, si, ei))}
+              onWeightChange={(idx, pctA) => setSlots((prev) => setSplitShare(prev, idx, pctA))}
+            />
           );
         })}
 
@@ -494,9 +515,16 @@ export function Teams() {
                 <button
                   type="button"
                   className="btn btn--primary"
-                  onClick={() => setPickerTarget({ kind: "new" })}
+                  onClick={() => openForm({ kind: "add" })}
                 >
-                  {t("teams.addPokemon")}
+                  {t("prod.new")}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--ghost"
+                  onClick={() => guard(() => openBox({ kind: "add" }))}
+                >
+                  {t("prod.myPokemon")}
                 </button>
               </div>
             </article>
@@ -510,7 +538,7 @@ export function Teams() {
       )}
       {slots.length > 0 && teamQuery.isError && (
         <p className="error" role="alert" style={{ marginTop: "1.5rem" }}>
-          {t("teams.teamError")}{" "}
+          {(teamQuery.error as Error | null)?.message || t("teams.teamError")}{" "}
           <button type="button" className="btn btn--ghost" onClick={() => teamQuery.refetch()}>
             {t("common.retry")}
           </button>
@@ -642,12 +670,6 @@ export function Teams() {
                   />
                 </span>
               </div>
-
-              {result.excluded_count > 0 && (
-                <p className="muted" style={{ fontSize: "var(--text-sm)", marginTop: "0.5rem" }}>
-                  {t("teams.excluded", { count: String(result.excluded_count) })}
-                </p>
-              )}
             </div>
 
             {/* ── Other skills card: skill_effects that don't add to total strength ── */}
@@ -1296,15 +1318,50 @@ export function Teams() {
         </>
       )}
 
+      {/* Form modal — create a config on the spot, or edit one already in the roster.
+          The intent's slotIndex/entryIndex are resolved once, up front, with optional
+          chaining: the indices are safe today (the modal traps focus and covers the
+          roster, and the sign-in dialog that could replay a guarded action is modal
+          too, so slots can't shift under an open form) but a broken invariant should
+          be a no-op render, not a crash. Saves deliberately use ids instead, since
+          those stay valid across reorders. */}
+      {modal === "form" && intent !== null && (() => {
+        const editingEntry =
+          intent.kind === "edit" ? slots[intent.slotIndex]?.entries[intent.entryIndex] : undefined;
+        if (intent.kind === "edit" && !editingEntry) return null;
+        return (
+          <Modal
+            title={intent.kind === "edit" ? t("team.modalEdit") : t("team.modalAdd")}
+            onClose={closeModal}
+          >
+            <MemberForm
+              catalog={catalog.data}
+              pending={false}
+              error={null}
+              submitLabel={intent.kind === "edit" ? t("prod.save") : t("teams.addToTeam")}
+              initial={intent.kind === "edit" ? editingEntry?.config : undefined}
+              onSubmit={(config) => applyConfig(config)}
+              footer={
+                intent.kind !== "edit" ? (
+                  <p className="muted">{t("prod.noteNew")}</p>
+                ) : editingEntry?.sourceId !== undefined ? (
+                  <p className="muted">{t("teams.noteEditInBox")}</p>
+                ) : (
+                  <p className="muted">{t("teams.noteEditLocal")}</p>
+                )
+              }
+            />
+          </Modal>
+        );
+      })()}
+
       {/* BoxPicker modal — same pattern as Production.tsx */}
-      {pickerTarget !== null && (
+      {modal === "box" && (
         <Modal
           title={
-            pickerTarget.kind === "split"
-              ? t("teams.pickSplitPartner")
-              : t("teams.pickFromBox")
+            intent?.kind === "split" ? t("teams.pickSplitPartner") : t("teams.pickFromBox")
           }
-          onClose={() => setPickerTarget(null)}
+          onClose={closeModal}
         >
           <BoxPicker
             members={members.data}
@@ -1312,7 +1369,8 @@ export function Teams() {
             isError={members.isError}
             onRetry={() => members.refetch()}
             catalog={catalog.data}
-            inComparison={usedIds}
+            // Duplicates are allowed now, so nothing is marked as taken.
+            inComparison={NO_MEMBERS_TAKEN}
             onPick={pickMember}
           />
         </Modal>

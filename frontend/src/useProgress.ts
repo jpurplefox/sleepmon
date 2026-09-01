@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef } from "react";
 
 import { api } from "./api/client";
+import { useAuth } from "./auth/AuthContext";
 import { EMPTY_PROGRESS } from "./progress";
 import type { PlayerProgress, ProgressPatch } from "./types";
 
@@ -14,9 +15,10 @@ interface SendContext {
 }
 
 /**
- * The user's saved progress, and a sparse save. Only mounted behind the auth gate,
- * so there is no anonymous case. Falls back to the defaults while loading or on
- * error, which is exactly what a brand-new account reads anyway.
+ * The user's saved progress, and a sparse save. Falls back to the defaults while
+ * loading, on error, or with no session — which is exactly what a brand-new account
+ * reads anyway. Team Analysis mounts this while anonymous, so the read only fires
+ * once signed in: /progress is reserved and would answer 401.
  */
 export function useProgress(): {
   progress: PlayerProgress;
@@ -29,7 +31,12 @@ export function useProgress(): {
   saveError: Error | null;
 } {
   const client = useQueryClient();
-  const query = useQuery({ queryKey: KEY, queryFn: api.getProgress });
+  const { status } = useAuth();
+  const query = useQuery({
+    queryKey: KEY,
+    queryFn: api.getProgress,
+    enabled: status === "authenticated",
+  });
   const latestSend = useRef(0);
 
   const mutation = useMutation<

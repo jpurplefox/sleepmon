@@ -11,7 +11,7 @@ from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatal
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.auth_service import DefaultAuthService
 from sleepmon.application.progress_service import DefaultPlayerProgressService
-from sleepmon.application.services import DefaultTeamService
+from sleepmon.application.services import DefaultProductionService, DefaultTeamService
 from sleepmon.domain.value_objects import Island
 from tests.fakes import (
     InMemoryPlayerProgressRepository,
@@ -25,15 +25,31 @@ ACCESS = JwtAccessTokenService("test-secret", timedelta(minutes=15))
 USER_ID = uuid4()
 
 
-def _slots_json(*ids: str) -> list[dict]:
-    return [{"entries": [{"member_id": i}]} for i in ids]
+def _pokemon_json(**overrides: object) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "species": "Pikachu",
+        "level": 30,
+        "nature": "Adamant",
+        "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+        "sub_skills": ["Helping Speed S"],
+    }
+    payload.update(overrides)
+    return payload
+
+
+def _slots_json(*pokemon: dict[str, object]) -> list[dict[str, object]]:
+    """One single-Pokémon slot per config, with generated entry ids."""
+    return [
+        {"entries": [{"id": f"e{i}", "pokemon": p}]}
+        for i, p in enumerate(pokemon or (_pokemon_json(),))
+    ]
 
 
 @pytest.fixture
 def client() -> TestClient:
-    service = DefaultTeamService(
-        InMemoryTeamRepository(), StaticSpeciesCatalog(), StaticRecipeCatalog()
-    )
+    repository = InMemoryTeamRepository()
+    service = DefaultTeamService(repository, StaticSpeciesCatalog())
+    production_service = DefaultProductionService(StaticSpeciesCatalog(), StaticRecipeCatalog())
     # Un ``AuthService`` real cableado con dobles en memoria: sin esto, ``create_app``
     # abriría un pool Postgres real (no hay DB en este entorno de test).
     auth_service = DefaultAuthService(
@@ -47,6 +63,7 @@ def client() -> TestClient:
     )
     app = create_app(
         service=service,
+        production_service=production_service,
         catalog=StaticSpeciesCatalog(),
         recipe_catalog=StaticRecipeCatalog(),
         access=ACCESS,
@@ -602,12 +619,19 @@ def test_recipes_endpoint_lists_recipes(client: TestClient) -> None:
     assert all({"ingredient", "count"} <= ing.keys() for ing in first["ingredients"])
 
 
-def test_team_production_endpoint(client: TestClient, auth_header: dict[str, str]) -> None:
-    created = client.post("/team", json=valid_payload(), headers=auth_header).json()
+def test_team_production_needs_no_token(client: TestClient) -> None:
+    """The roster is pure computation: no session, no prompt, no 401."""
     res = client.post(
         "/teams/production",
-        json={"slots": _slots_json(created["id"]), "meals": [None, None, None]},
-        headers=auth_header
+        json={"slots": _slots_json(_pokemon_json()), "meals": [None, None, None]},
+    )
+    assert res.status_code == 200
+
+
+def test_team_production_endpoint(client: TestClient) -> None:
+    res = client.post(
+        "/teams/production",
+        json={"slots": _slots_json(_pokemon_json()), "meals": [None, None, None]},
     )
     assert res.status_code == 200
     body = res.json()
@@ -634,88 +658,62 @@ def test_team_production_endpoint(client: TestClient, auth_header: dict[str, str
         assert key in prod, f"missing key {key!r} in member production"
 
 
-def test_team_production_exposes_effective_skill_level(
-    client: TestClient, auth_header: dict[str, str]
-) -> None:
-    created = client.post("/team", json=valid_payload(), headers=auth_header).json()
+def test_team_production_exposes_effective_skill_level(client: TestClient) -> None:
     body = client.post(
         "/teams/production",
-        json={"slots": _slots_json(created["id"]), "meals": [None, None, None]},
-        headers=auth_header,
+        json={"slots": _slots_json(_pokemon_json()), "meals": [None, None, None]},
     ).json()
     member = body["members"][0]["production"]
     # No expert map selected: the effective level equals the member's own.
-    assert member["effective_skill_level"] == created["skill_level"] == 1
+    assert member["effective_skill_level"] == 1
 
 
-def test_team_production_main_favorite_bumps_effective_skill_level(
-    client: TestClient, auth_header: dict[str, str]
-) -> None:
-    created = client.post("/team", json=valid_payload(), headers=auth_header).json()
+def test_team_production_main_favorite_bumps_effective_skill_level(client: TestClient) -> None:
     body = client.post(
         "/teams/production",
         json={
-            "slots": _slots_json(created["id"]),
+            "slots": _slots_json(_pokemon_json()),
             "meals": [None, None, None],
             "island": "Cyan Beach (Expert)",
             "favorite_berries": ["Grepa"],
             "main_favorite": "Grepa",
         },
-        headers=auth_header,
     ).json()
     member = body["members"][0]["production"]
     # Gathering the map's main favorite (Pikachu's berry is Grepa) grants +1 Main
     # Skill level, capped at the skill's max (Charge Strength S caps at 7).
-    assert member["effective_skill_level"] == created["skill_level"] + 1 == 2
+    assert member["effective_skill_level"] == 2
 
 
-def test_team_production_exposes_extra_tasty(
-    client: TestClient,
-    auth_header: dict[str,
-    str],
-) -> None:
-    created = client.post("/team", json=valid_payload(), headers=auth_header).json()
+def test_team_production_exposes_extra_tasty(client: TestClient) -> None:
     body = client.post(
         "/teams/production",
-        json={"slots": _slots_json(created["id"]), "meals": [None, None, None]},
-        headers=auth_header
+        json={"slots": _slots_json(_pokemon_json()), "meals": [None, None, None]},
     ).json()
     # Sin main skill de Tasty Chance, la chance/multiplicador son la base del juego.
     assert body["extra_tasty_rate"] == pytest.approx(2.7 / 21)
     assert body["extra_tasty_multiplier"] == pytest.approx(24.6 / 21)
 
 
-def test_team_production_endpoint_rejects_too_many(
-    client: TestClient,
-    auth_header: dict[str,
-    str],
-) -> None:
-    ids = [
-        client.post("/team", json=valid_payload(), headers=auth_header).json()["id"]
-        for _ in range(6)
-    ]
+def test_team_production_endpoint_rejects_too_many(client: TestClient) -> None:
     res = client.post(
         "/teams/production",
-        json={"slots": _slots_json(*ids), "meals": [None, None, None]},
-        headers=auth_header,
+        json={
+            "slots": _slots_json(*(_pokemon_json() for _ in range(6))),
+            "meals": [None, None, None],
+        },
     )
     assert res.status_code == 400
 
 
-def test_team_production_endpoint_with_recipe(
-    client: TestClient,
-    auth_header: dict[str,
-    str],
-) -> None:
-    created = client.post("/team", json=valid_payload(), headers=auth_header).json()
+def test_team_production_endpoint_with_recipe(client: TestClient) -> None:
     recipe = client.get("/recipes").json()[0]
     res = client.post(
         "/teams/production",
         json={
-            "slots": _slots_json(created["id"]),
+            "slots": _slots_json(_pokemon_json()),
             "meals": [{"recipe": recipe["name"], "level": 1}, None, None],
         },
-        headers=auth_header
     )
     assert res.status_code == 200
     body = res.json()
@@ -723,21 +721,15 @@ def test_team_production_endpoint_with_recipe(
     assert body["grand_total_strength"] == body["total_strength"] + body["cooking_strength"]
 
 
-def test_team_production_cooking_meals_have_breakdown_fields(
-    client: TestClient,
-    auth_header: dict[str,
-    str],
-) -> None:
+def test_team_production_cooking_meals_have_breakdown_fields(client: TestClient) -> None:
     """cooking_meals incluye level, strength e ingredients (desglose X/Y por ingrediente)."""
-    created = client.post("/team", json=valid_payload(), headers=auth_header).json()
     recipe = client.get("/recipes").json()[0]
     res = client.post(
         "/teams/production",
         json={
-            "slots": _slots_json(created["id"]),
+            "slots": _slots_json(_pokemon_json()),
             "meals": [{"recipe": recipe["name"], "level": 2}, None, None],
         },
-        headers=auth_header
     )
     assert res.status_code == 200
     body = res.json()
@@ -769,17 +761,11 @@ def test_team_production_cooking_meals_have_breakdown_fields(
     assert isinstance(first_ing["available"], (int, float))
 
 
-def test_team_production_returns_skill_effects(
-    client: TestClient,
-    auth_header: dict[str,
-    str],
-) -> None:
+def test_team_production_returns_skill_effects(client: TestClient) -> None:
     """/teams/production incluye skill_effects como lista de {kind, total, triggers}."""
-    created = client.post("/team", json=valid_payload(), headers=auth_header).json()
     res = client.post(
         "/teams/production",
-        json={"slots": _slots_json(created["id"]), "meals": [None, None, None]},
-        headers=auth_header
+        json={"slots": _slots_json(_pokemon_json()), "meals": [None, None, None]},
     )
     assert res.status_code == 200
     body = res.json()
@@ -797,55 +783,40 @@ def test_team_production_returns_skill_effects(
         assert isinstance(effect["triggers"], (int, float))
 
 
-def test_team_production_endpoint_split_slot(
-    client: TestClient,
-    auth_header: dict[str,
-    str],
-) -> None:
-    a = client.post("/team", json=valid_payload(), headers=auth_header).json()["id"]
-    b = client.post("/team", json=valid_payload(), headers=auth_header).json()["id"]
+def test_team_production_endpoint_split_slot(client: TestClient) -> None:
     full = client.post(
         "/teams/production",
-        json={"slots": _slots_json(a), "meals": [None, None, None]},
-        headers=auth_header
+        json={"slots": _slots_json(_pokemon_json()), "meals": [None, None, None]},
     ).json()
     split = client.post(
         "/teams/production",
         json={
             "slots": [
                 {"entries": [
-                    {"member_id": a, "weight": 0.5},
-                    {"member_id": b, "weight": 0.5},
+                    {"id": "a", "pokemon": _pokemon_json(), "weight": 0.5},
+                    {"id": "b", "pokemon": _pokemon_json(), "weight": 0.5},
                 ]}
             ],
             "meals": [None, None, None],
         },
-        headers=auth_header
     ).json()
     # Dos copias al 50% en un slot ≈ un Pokémon completo.
     assert split["total_strength"] == pytest.approx(full["total_strength"])
     assert split["member_count"] == 2
 
 
-def test_team_production_endpoint_rejects_weights_not_one(
-    client: TestClient,
-    auth_header: dict[str,
-    str],
-) -> None:
-    a = client.post("/team", json=valid_payload(), headers=auth_header).json()["id"]
-    b = client.post("/team", json=valid_payload(), headers=auth_header).json()["id"]
+def test_team_production_endpoint_rejects_weights_not_one(client: TestClient) -> None:
     res = client.post(
         "/teams/production",
         json={
             "slots": [
                 {"entries": [
-                    {"member_id": a, "weight": 0.5},
-                    {"member_id": b, "weight": 0.4},
+                    {"id": "a", "pokemon": _pokemon_json(), "weight": 0.5},
+                    {"id": "b", "pokemon": _pokemon_json(), "weight": 0.4},
                 ]}
             ],
             "meals": [None, None, None],
         },
-        headers=auth_header
     )
     assert res.status_code == 400
 
@@ -853,11 +824,6 @@ def test_team_production_endpoint_rejects_weights_not_one(
 # ---------------------------------------------------------------------------
 # Task 5: islands en /catalog y campos base/bonus en /teams/production
 # ---------------------------------------------------------------------------
-
-
-def _create_member(client: TestClient, auth_header: dict[str, str]) -> str:
-    """Crea un miembro vía POST /team y devuelve su id."""
-    return client.post("/team", json=valid_payload(), headers=auth_header).json()["id"]
 
 
 def test_catalog_lists_islands(client: TestClient) -> None:
@@ -872,21 +838,15 @@ def test_catalog_lists_islands(client: TestClient) -> None:
     assert islands["Greengrass Isle"]["user_picks"] is True
 
 
-def test_production_accepts_island_bonus_and_favorites(
-    client: TestClient,
-    auth_header: dict[str,
-    str],
-) -> None:
-    member_id = _create_member(client, auth_header)
+def test_production_accepts_island_bonus_and_favorites(client: TestClient) -> None:
     res = client.post(
         "/teams/production",
         json={
-            "slots": _slots_json(member_id),
+            "slots": _slots_json(_pokemon_json()),
             "meals": [],
             "favorite_berries": ["Oran"],
             "island_bonus": 0.3,
         },
-        headers=auth_header
     )
     assert res.status_code == 200
     body = res.json()
@@ -896,31 +856,22 @@ def test_production_accepts_island_bonus_and_favorites(
     )
 
 
-def test_production_rejects_bonus_over_max(client: TestClient, auth_header: dict[str, str]) -> None:
-    member_id = _create_member(client, auth_header)
+def test_production_rejects_bonus_over_max(client: TestClient) -> None:
     res = client.post(
         "/teams/production",
-        json={"slots": _slots_json(member_id), "meals": [], "island_bonus": 0.9},
-        headers=auth_header
+        json={"slots": _slots_json(_pokemon_json()), "meals": [], "island_bonus": 0.9},
     )
     assert res.status_code in (400, 422)
 
 
-def test_team_production_accepts_good_camp_ticket(
-    client: TestClient,
-    auth_header: dict[str,
-    str],
-) -> None:
-    member_id = _create_member(client, auth_header)
+def test_team_production_accepts_good_camp_ticket(client: TestClient) -> None:
     off = client.post(
         "/teams/production",
-        json={"slots": _slots_json(member_id), "meals": []},
-        headers=auth_header
+        json={"slots": _slots_json(_pokemon_json()), "meals": []},
     )
     on = client.post(
         "/teams/production",
-        json={"slots": _slots_json(member_id), "meals": [], "good_camp_ticket": True},
-        headers=auth_header
+        json={"slots": _slots_json(_pokemon_json()), "meals": [], "good_camp_ticket": True},
     )
     assert off.status_code == 200
     assert on.status_code == 200
@@ -935,6 +886,28 @@ def test_the_catalog_marks_the_expert_areas(client: TestClient) -> None:
     catalog = client.get("/catalog").json()
     expert = {i["name"] for i in catalog["islands"] if i["expert"]}
     assert expert == {"Greengrass Isle (Expert)", "Cyan Beach (Expert)"}
+
+
+def test_team_production_has_no_excluded_count(client: TestClient) -> None:
+    """Configs are refused up front, so there is nothing to exclude afterwards."""
+    body = client.post(
+        "/teams/production",
+        json={"slots": _slots_json(_pokemon_json()), "meals": [None, None, None]},
+    ).json()
+    assert "excluded_count" not in body
+    assert body["members"][0]["id"] == "e0"
+
+
+def test_team_production_rejects_a_bad_config(client: TestClient) -> None:
+    body = client.post(
+        "/teams/production",
+        json={
+            "slots": _slots_json(_pokemon_json(species="Missingno")),
+            "meals": [None, None, None],
+        },
+    )
+    assert body.status_code == 400
+    assert "Missingno" in body.json()["detail"]
 
 
 def test_production_scenario_applies_the_bonus(client: TestClient) -> None:

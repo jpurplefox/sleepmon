@@ -5,6 +5,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { api } from "../api/client";
 import { LanguageProvider } from "../i18n";
+
+// The modal reads progress through useProgress, which now asks useAuth whether to
+// fetch at all (Team Analysis mounts it while anonymous). The modal itself only
+// opens behind the gate, so a signed-in stub is the honest fixture here.
+vi.mock("../auth/AuthContext", () => ({ useAuth: () => ({ status: "authenticated" }) }));
+
 import type { Catalog, Island, PlayerProgress, Recipe } from "../types";
 import { ProgressModal } from "./ProgressModal";
 

@@ -20,7 +20,7 @@ from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatal
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.auth_service import AuthResult, AuthService
 from sleepmon.application.progress_service import DefaultPlayerProgressService
-from sleepmon.application.services import DefaultTeamService
+from sleepmon.application.services import DefaultProductionService, DefaultTeamService
 from sleepmon.config import Settings
 from tests.fakes import InMemoryPlayerProgressRepository, InMemoryTeamRepository
 
@@ -68,10 +68,10 @@ def test_create_app_does_not_raise_when_secrets_are_injected() -> None:
     # object must not trigger the fail-fast guard. Covered already by the fixtures
     # in tests/http/test_api.py and tests/http/test_auth_api.py; this test pins the
     # contract explicitly for the guard added in this change.
+    repository = InMemoryTeamRepository()
     app = create_app(
-        service=DefaultTeamService(
-            InMemoryTeamRepository(), StaticSpeciesCatalog(), StaticRecipeCatalog()
-        ),
+        service=DefaultTeamService(repository, StaticSpeciesCatalog()),
+        production_service=DefaultProductionService(StaticSpeciesCatalog(), StaticRecipeCatalog()),
         catalog=StaticSpeciesCatalog(),
         recipe_catalog=StaticRecipeCatalog(),
         access=JwtAccessTokenService("test-secret", timedelta(minutes=15)),
@@ -99,8 +99,9 @@ def test_create_app_opens_no_pool_when_every_service_is_injected(
     monkeypatch.setattr("sleepmon.adapters.inbound.http.app.create_pool", _fail_if_called)
 
     app = create_app(
-        service=DefaultTeamService(
-            InMemoryTeamRepository(), StaticSpeciesCatalog(), StaticRecipeCatalog()
+        service=DefaultTeamService(InMemoryTeamRepository(), StaticSpeciesCatalog()),
+        production_service=DefaultProductionService(
+            StaticSpeciesCatalog(), StaticRecipeCatalog()
         ),
         catalog=StaticSpeciesCatalog(),
         recipe_catalog=StaticRecipeCatalog(),

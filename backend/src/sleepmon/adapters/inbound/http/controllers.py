@@ -48,7 +48,7 @@ from sleepmon.application.dto import (
     TeamProductionInput,
 )
 from sleepmon.application.progress_service import PlayerProgressService
-from sleepmon.application.services import TeamService
+from sleepmon.application.services import ProductionService, TeamService
 from sleepmon.domain.catalog_data import (
     INGREDIENT_STRENGTH,
     ISLAND_EXPERT,
@@ -231,8 +231,10 @@ class ProductionController(Controller):
     path = "/production"
 
     @post("/", status_code=HTTP_200_OK, sync_to_thread=True)
-    def compute(self, service: NamedDependency[TeamService], data: ProductionIn) -> ProductionOut:
-        result = service.compute_production(
+    def compute(
+        self, production_service: NamedDependency[ProductionService], data: ProductionIn
+    ) -> ProductionOut:
+        result = production_service.compute_production(
             ProductionInput(
                 species=data.species,
                 level=data.level,
@@ -300,7 +302,9 @@ class RecipeController(Controller):
     path = "/recipes"
 
     @get("/", sync_to_thread=False)
-    def list_recipes(self, service: NamedDependency[TeamService]) -> list[RecipeOut]:
+    def list_recipes(
+        self, production_service: NamedDependency[ProductionService]
+    ) -> list[RecipeOut]:
         return [
             RecipeOut(
                 name=r.name,
@@ -311,28 +315,37 @@ class RecipeController(Controller):
                 ],
                 base_strength=r.base_strength,
             )
-            for r in service.list_recipes()
+            for r in production_service.list_recipes()
         ]
 
 
 class TeamProductionController(Controller):
     path = "/teams/production"
-    guards = [require_user]
 
     @post("/", status_code=HTTP_200_OK, sync_to_thread=True)
     def compute(
         self,
-        service: NamedDependency[TeamService],
-        current_user_id: NamedDependency[UUID],
+        production_service: NamedDependency[ProductionService],
         data: TeamProductionIn,
     ) -> TeamProductionOut:
-        result = service.compute_team_production(
-            current_user_id,
+        result = production_service.compute_team_production(
             TeamProductionInput(
                 slots=[
                     SlotInput(
                         entries=[
-                            SlotEntryInput(member_id=e.member_id, weight=e.weight)
+                            SlotEntryInput(
+                                id=e.id,
+                                pokemon=ProductionInput(
+                                    species=e.pokemon.species,
+                                    level=e.pokemon.level,
+                                    ingredients=e.pokemon.ingredients,
+                                    nature=e.pokemon.nature,
+                                    sub_skills=e.pokemon.sub_skills,
+                                    ribbon=e.pokemon.ribbon,
+                                    skill_level=e.pokemon.skill_level,
+                                ),
+                                weight=e.weight,
+                            )
                             for e in s.entries
                         ]
                     )
@@ -352,7 +365,6 @@ class TeamProductionController(Controller):
         )
         return TeamProductionOut(
             member_count=result.member_count,
-            excluded_count=result.excluded_count,
             total_strength=result.total_strength,
             total_berry_amount=result.total_berry_amount,
             total_berry_strength=result.total_berry_strength,
@@ -383,7 +395,7 @@ class TeamProductionController(Controller):
             ],
             members=[
                 MemberContributionOut(
-                    member_id=m.member_id,
+                    id=m.id,
                     species=m.species,
                     strength=m.strength,
                     strength_base=m.strength_base,

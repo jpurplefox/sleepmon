@@ -4,13 +4,14 @@
 
 A single form to **build or fix a Pokémon's configuration**, respecting the game's
 rules (what unlocks at which level). It is the **same component** across its
-uses — today the [Box](0001-box.md) (create/edit a member) and
-[Comparison](0002-comparison.md) (create/edit a config), potentially more — and it
-is a **shared building block**, not a tool of its own.
+uses — today the [Box](0001-box.md) (create/edit a member),
+[Comparison](0002-comparison.md) and [Team Analysis](0005-team-analysis.md)
+(create/edit a config), potentially more — and it is a **shared building block**, not
+a tool of its own.
 
 It owns *what a valid config is and how the form guides you to one*. What happens to
-the resulting config is owned by **whoever opens it**: the Box persists it,
-Comparison keeps it ephemeral, and a future caller could do something else.
+the resulting config is owned by **whoever opens it**: the Box persists it, Comparison
+and Team Analysis keep it ephemeral, and a future caller could do something else.
 
 It answers: *"how do I set up (or correct) this Pokémon's config without breaking
 the game's rules?"*.
@@ -66,9 +67,10 @@ entered values.
 - **Create** opens with blank defaults; **Edit** opens **pre-filled** from the
   existing config.
 - The form hands its result to the caller and **does not persist on its own**: the
-  Box saves it (persistent); Comparison keeps it in the session (ephemeral). In
-  Comparison a **footer note** states whether changes reach the Box — they don't,
-  unless the card came from the Box, in which case saving updates that origin.
+  Box saves it (persistent); Comparison and Team Analysis keep it in the session
+  (ephemeral). In those two a **footer note** states whether changes reach the Box —
+  they don't, unless the config came from the Box, in which case saving updates that
+  origin.
 
 ## Acceptance criteria
 
@@ -91,15 +93,16 @@ entered values.
   inline; the modal **stays open** with the entered values.
 - The modal can be **dismissed** with Escape, a backdrop click, or the close
   control; dismissing makes **no changes**.
-- In **Comparison**, a footer note states whether changes will reach the Box (they
-  don't, unless the card came from the Box and is saved from it).
+- In **Comparison** and **Team Analysis**, a footer note states whether changes will
+  reach the Box (they don't, unless the config came from the Box and is saved from
+  it).
 
 ## Guidelines
 
 - **One form, agnostic of its caller.** The same form serves any tool that needs a
-  Pokémon config (today the Box and Comparison, potentially more); it produces the
-  config and hands it off — **each caller decides what to do with the data** (persist
-  it, keep it ephemeral, feed it somewhere else).
+  Pokémon config (today the Box, Comparison and Team Analysis, potentially more); it
+  produces the config and hands it off — **each caller decides what to do with the
+  data** (persist it, keep it ephemeral, feed it somewhere else).
 - **The catalog rules.** Field options and unlocks come from the domain catalog; the
   form is dependent and never hard-codes per-species data.
 - **Validation lives in the domain.** The form mirrors the rules to guide, but the
@@ -110,6 +113,6 @@ entered values.
 ## Out of scope
 
 - **Deciding persistence.** The form produces a config; whether it is saved (Box) or
-  kept ephemeral (Comparison) is the caller's decision.
+  kept ephemeral (Comparison, Team Analysis) is the caller's decision.
 - **Suggesting a config.** It does not recommend species, natures, or builds — it
   records what you choose.

@@ -83,7 +83,11 @@ function AppShell() {
             {/* Ephemeral comparator: open to anyone, no gate. */}
             <Production baseMemberId={compareBase} onBaseConsumed={() => setCompareBase(null)} />
           </Route>
-          <Route path={ROUTES.teamAnalysis}>{gated(<Teams />)}</Route>
+          <Route path={ROUTES.teamAnalysis}>
+            {/* Open like the comparator: the roster is pure computation. Only
+                "My Pokémon" and saving ask for a session, in place. */}
+            <Teams />
+          </Route>
           {/* Default and unknown paths land on the Box. */}
           <Route path="/">
             <Redirect to={ROUTES.box} />

@@ -16,7 +16,10 @@ from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatal
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.auth_service import DefaultAuthService
 from sleepmon.application.progress_service import DefaultPlayerProgressService
-from sleepmon.application.services import DefaultTeamService
+from sleepmon.application.services import (
+    DefaultProductionService,
+    DefaultTeamService,
+)
 from tests.fakes import (
     InMemoryPlayerProgressRepository,
     InMemoryRefreshTokenRepository,
@@ -41,8 +44,9 @@ def client() -> Iterator[TestClient]:
         refresh_ttl=timedelta(days=30),
     )
     app = create_app(
-        service=DefaultTeamService(
-            InMemoryTeamRepository(), StaticSpeciesCatalog(), StaticRecipeCatalog()
+        service=DefaultTeamService(InMemoryTeamRepository(), StaticSpeciesCatalog()),
+        production_service=DefaultProductionService(
+            StaticSpeciesCatalog(), StaticRecipeCatalog()
         ),
         catalog=StaticSpeciesCatalog(),
         recipe_catalog=StaticRecipeCatalog(),

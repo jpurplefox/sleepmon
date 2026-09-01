@@ -46,7 +46,12 @@ from sleepmon.application.progress_service import (
     DefaultPlayerProgressService,
     PlayerProgressService,
 )
-from sleepmon.application.services import DefaultTeamService, TeamService
+from sleepmon.application.services import (
+    DefaultProductionService,
+    DefaultTeamService,
+    ProductionService,
+    TeamService,
+)
 from sleepmon.config import Settings
 from sleepmon.domain.auth import InvalidCredentialError, InvalidRefreshError, InvalidTokenError
 from sleepmon.domain.errors import TeamMemberNotFoundError, ValidationError
@@ -72,6 +77,7 @@ def _unauthorized_handler(_: Request[Any, Any, Any], exc: Exception) -> Response
 def create_app(
     *,
     service: TeamService | None = None,
+    production_service: ProductionService | None = None,
     catalog: SpeciesCatalog | None = None,
     recipe_catalog: RecipeCatalog | None = None,
     settings: Settings | None = None,
@@ -108,12 +114,15 @@ def create_app(
         team_pool = create_pool(settings.database_url)
         pool = team_pool
         repository = PostgresTeamRepository(team_pool)
-        service = DefaultTeamService(repository, catalog, recipe_catalog)
+        service = DefaultTeamService(repository, catalog)
         # Litestar pasa el app a los hooks que aceptan un argumento; sin el lambda,
         # `pool.close` recibiría el app como su parámetro `timeout` y reventaría.
         # ``team_pool`` (a diferencia de ``pool``) tiene un único sitio de asignación,
         # así que mypy lo tipa como ``ConnectionPool`` (no ``| None``) dentro del closure.
         on_shutdown.append(lambda: team_pool.close())
+
+    if production_service is None:
+        production_service = DefaultProductionService(catalog, recipe_catalog)
 
     if access is None:
         settings = settings or Settings.from_env()
@@ -154,6 +163,7 @@ def create_app(
 
     # Singletons inyectados por DI (sync_to_thread=False: solo devuelven la instancia).
     bound_service = service
+    bound_production_service = production_service
     bound_catalog = catalog
     bound_auth_service = auth_service
     bound_progress_service = progress_service
@@ -189,6 +199,9 @@ def create_app(
         ),
         dependencies={
             "service": Provide(lambda: bound_service, sync_to_thread=False),
+            "production_service": Provide(
+                lambda: bound_production_service, sync_to_thread=False
+            ),
             "catalog": Provide(lambda: bound_catalog, sync_to_thread=False),
             "current_user_id": Provide(current_user_id, sync_to_thread=False),
             "auth_service": Provide(lambda: bound_auth_service, sync_to_thread=False),

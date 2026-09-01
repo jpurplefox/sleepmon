@@ -76,7 +76,7 @@ class SkillEffectAgg:
 class MemberContribution:
     """Aporte de un miembro al agregado del equipo (para el desglose)."""
 
-    member_id: str
+    id: str
     species: str
     strength: float  # berry_strength + skill_strength con bonus de isla
     strength_base: float  # berry_strength + skill_strength sin bonus de isla
@@ -159,7 +159,8 @@ def team_production(
 ) -> TeamProduction:
     """Agrega la producción diaria de los miembros de un equipo.
 
-    Cada entry es ``(member_id, species_name, daily)``. La fuerza total es la suma de
+    Each entry is ``(entry_id, species_name, daily)``: the id is opaque to the
+    aggregate. La fuerza total es la suma de
     la fuerza directa de bayas más la de Charge Strength (los ``None`` cuentan 0). Los
     ingredientes se agregan por tipo (slots normales + main skill).
 
@@ -182,7 +183,7 @@ def team_production(
 
     members = tuple(
         MemberContribution(
-            member_id=member_id,
+            id=entry_id,
             species=species,
             strength=(daily.berry_strength + (daily.skill_strength or 0.0)) * factor,
             strength_base=daily.berry_strength + (daily.skill_strength or 0.0),
@@ -190,7 +191,7 @@ def team_production(
             ingredients_total=sum(slot.amount for slot in daily.ingredients),
             skill_triggers=daily.skill_triggers,
         )
-        for member_id, species, daily in entries_list
+        for entry_id, species, daily in entries_list
     )
 
     optional = {field: _sum_optional(dailies, field) for field in _OPTIONAL_SKILL_FIELDS}

@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { useAuth } from "./auth/AuthContext";
 import {
   DEFAULT_AREA_BONUS,
   DEFAULT_POT_SIZE,
@@ -36,11 +37,18 @@ export interface SessionOverrides {
  * override ?? saved ?? default — never synced into state with an effect, so a
  * fresh `progress` (the query resolving mid-session) is reflected immediately for
  * anything not overridden, while overrides stay untouched.
+ *
+ * With no session nothing is ever "unsaved": there is no saved document to differ
+ * from, and Player progress is reserved. The values still work — they are session
+ * inputs — so Team Analysis stays usable anonymously, it just offers no save.
  */
 export function useSessionOverrides(
   progress: PlayerProgress,
   selectedIsland: string | null,
 ): SessionOverrides {
+  const { status } = useAuth();
+  const canSave = status === "authenticated";
+
   const [potOverride, setPotOverride] = useState<number | undefined>(undefined);
   const [bonusOverrides, setBonusOverrides] = useState<Record<string, number>>(
     {},
@@ -69,12 +77,10 @@ export function useSessionOverrides(
       DEFAULT_RECIPE_LEVEL,
     );
 
-  const potUnsaved = isUnsaved(
-    potOverride,
-    progress.pot_size,
-    DEFAULT_POT_SIZE,
-  );
+  const potUnsaved =
+    canSave && isUnsaved(potOverride, progress.pot_size, DEFAULT_POT_SIZE);
   const areaBonusUnsaved =
+    canSave &&
     selectedIsland !== null &&
     isUnsaved(
       bonusOverrides[selectedIsland],
@@ -82,6 +88,7 @@ export function useSessionOverrides(
       DEFAULT_AREA_BONUS,
     );
   const recipeLevelUnsaved = (name: string): boolean =>
+    canSave &&
     isUnsaved(
       levelOverrides[name],
       progress.recipe_levels[name],

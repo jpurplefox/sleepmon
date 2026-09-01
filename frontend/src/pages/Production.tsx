@@ -1,5 +1,5 @@
-import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useQueries, useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 import { api } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
@@ -11,23 +11,13 @@ import { Placeholder } from "../components/Placeholder";
 import { ProductionCard } from "../components/ProductionCard";
 import { ScenarioSelect } from "../components/ScenarioSelect";
 import { useI18n } from "../i18n";
+import { configFromMember, linkEntryToBox, newEntry, type RosterEntry } from "../roster";
 import { scenarioCardProps, type Scenario } from "../scenarios";
 import type { Member, MemberInput } from "../types";
+import { useSaveToBox } from "../useSaveToBox";
 
 // Tope de la comparación: el máximo del equipo en el juego.
 const MAX_COMPARE = 5;
-
-// Una card de comparación, con el origen opcional en la Caja (sourceId) y el
-// estado efímero del guardado, así el feedback sigue a la card aunque se quiten
-// otras.
-type SaveStatus = { state: "idle" | "saving" | "saved" | "error"; error?: string | null };
-
-type CompareEntry = {
-  uid: number; // id local estable para seguir la card aunque se reordenen otras
-  config: MemberInput;
-  sourceId?: string;
-  save?: SaveStatus;
-};
 
 interface ProductionProps {
   // Si viene seteado (desde "Comparar" en la Caja), se agrega ese Pokémon como
@@ -40,7 +30,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   const { t } = useI18n();
   const { status } = useAuth();
   const { guard } = useGate();
-  const qc = useQueryClient();
+  const { save, statusOf, reset } = useSaveToBox();
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
   // Reading the Box is reserved: only fetch it once signed in, so the open
   // ephemeral comparator makes no /team request (and no 401) while anonymous.
@@ -50,7 +40,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
     enabled: status === "authenticated",
   });
 
-  const [entries, setEntries] = useState<CompareEntry[]>([]);
+  const [entries, setEntries] = useState<RosterEntry[]>([]);
   // The map scenario applies to EVERY card: it's an assumption of the
   // comparison, not a property of any single Pokémon. Not persisted.
   const [scenario, setScenario] = useState<Scenario>("none");
@@ -63,7 +53,6 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   // Aviso al usuario cuando una acción no se pudo concretar (p. ej. agregar una
   // especie que no está en el catálogo cargado).
   const [notice, setNotice] = useState<string | null>(null);
-  const nextUid = useRef(0);
 
   // El cálculo de cada card vive en el padre (una query por entry) para poder
   // comparar contra la base (la primera) y mostrar los deltas. La cache de
@@ -93,8 +82,6 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   });
   const baseProduction = productions[0]?.data ?? null;
 
-  const speciesList = catalog.data?.species ?? [];
-
   const atMax = entries.length >= MAX_COMPARE;
 
   // Miembros de la caja que ya están como card (por su id de origen), para no
@@ -117,23 +104,19 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
     setDragOverIndex(null);
   };
 
-  const makeEntry = (config: MemberInput, sourceId?: string): CompareEntry => ({
-    uid: nextUid.current++,
-    config,
-    sourceId,
-  });
-
   // Inserta una card nueva (sin origen) o reemplaza la config de la que estábamos
   // editando, manteniendo su sourceId. Cierra el modal.
   const upsert = (config: MemberInput) => {
+    // Editing replaces the config but not the id, so a stale save status
+    // (saved or errored) would otherwise survive describing a config that
+    // was never submitted.
+    if (editIndex !== null) reset(entries[editIndex].id);
     setEntries((prev) =>
       editIndex === null
         ? prev.length >= MAX_COMPARE
           ? prev
-          : [...prev, makeEntry(config)]
-        : // Al re-editar limpiamos un error de guardado previo: ese feedback ya
-          // no aplica a la config nueva.
-          prev.map((e, i) => (i === editIndex ? { ...e, config, save: { state: "idle" } } : e)),
+          : [...prev, newEntry(config)]
+        : prev.map((e, i) => (i === editIndex ? { ...e, config } : e)),
     );
     setModal(null);
     setEditIndex(null);
@@ -142,32 +125,20 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   // Duplica una card como una variante nueva: el clon NO hereda el origen.
   const cloneAt = (i: number) =>
     setEntries((prev) =>
-      prev.length >= MAX_COMPARE ? prev : [...prev, makeEntry(prev[i].config)],
+      prev.length >= MAX_COMPARE ? prev : [...prev, newEntry(prev[i].config)],
     );
 
   const pickMember = (m: Member) => {
-    // Si la especie del miembro no está en el catálogo cargado, sus slots de
-    // ingrediente quedarían vacíos y la card se armaría con ingredients: [] →
-    // 400 al calcular/guardar y sprite en dex 0. Mejor no agregarla y avisar.
-    const species = speciesList.find((s) => s.name === m.species);
-    if (!species || species.ingredient_slots.length === 0) {
+    if (!catalog.data) return; // BoxPicker only renders once the catalog is loaded
+    const config = configFromMember(catalog.data, m);
+    if (!config) {
       setNotice(t("prod.speciesNotInCatalog", { species: m.species }));
       setModal(null);
       setEditIndex(null);
       return;
     }
-    const slots = species.ingredient_slots;
-    const config: MemberInput = {
-      species: m.species,
-      level: m.level,
-      nature: m.nature,
-      ingredients: slots.map((opts, i) => m.ingredients[i] ?? opts[0] ?? ""),
-      sub_skills: m.sub_skills,
-      ribbon: m.ribbon,
-      skill_level: m.skill_level,
-    };
     setNotice(null);
-    setEntries((prev) => (prev.length >= MAX_COMPARE ? prev : [...prev, makeEntry(config, m.id)]));
+    setEntries((prev) => (prev.length >= MAX_COMPARE ? prev : [...prev, newEntry(config, m.id)]));
     setModal(null);
     setEditIndex(null);
   };
@@ -180,26 +151,16 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
       onBaseConsumed?.();
       return;
     }
-    const species = catalog.data.species.find((s) => s.name === m.species);
-    if (!species || species.ingredient_slots.length === 0) {
+    const config = configFromMember(catalog.data, m);
+    if (!config) {
       setNotice(t("prod.speciesNotInCatalog", { species: m.species }));
       onBaseConsumed?.();
       return;
     }
-    const slots = species.ingredient_slots;
-    const config: MemberInput = {
-      species: m.species,
-      level: m.level,
-      nature: m.nature,
-      ingredients: slots.map((opts, i) => m.ingredients[i] ?? opts[0] ?? ""),
-      sub_skills: m.sub_skills,
-      ribbon: m.ribbon,
-      skill_level: m.skill_level,
-    };
     setNotice(null);
     setEntries((prev) => {
       if (prev.some((e) => e.sourceId === m.id) || prev.length >= MAX_COMPARE) return prev;
-      return [makeEntry(config, m.id), ...prev]; // como base
+      return [newEntry(config, m.id), ...prev]; // como base
     });
     onBaseConsumed?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -215,45 +176,12 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   };
   const removeAt = (i: number) => setEntries((prev) => prev.filter((_, j) => j !== i));
 
-  // Mutación de guardado a la Caja. Identificamos la card por su uid estable (no
-  // por referencia ni índice), así el feedback sigue a la card correcta aunque el
-  // propio guardado reemplace el objeto del entry o se quiten otras.
-  const setSave = (uid: number, save: SaveStatus, sourceId?: string) =>
-    setEntries((prev) =>
-      prev.map((e) =>
-        e.uid === uid ? { ...e, save, ...(sourceId !== undefined ? { sourceId } : {}) } : e,
-      ),
-    );
-
-  const invalidate = () => {
-    qc.invalidateQueries({ queryKey: ["members"] });
-    qc.invalidateQueries({ queryKey: ["distributions"] });
+  const saveToBox = (i: number) => {
+    const entry = entries[i];
+    // Match by stable id, not index: the list can be reordered/edited while
+    // this save is in flight, so `i` may no longer point at this entry.
+    save(entry, (memberId) => setEntries((prev) => linkEntryToBox(prev, entry.id, memberId)));
   };
-
-  const save = useMutation({
-    mutationFn: (entry: CompareEntry) =>
-      entry.sourceId
-        ? api.updateMember(entry.sourceId, entry.config)
-        : api.createMember(entry.config),
-    onMutate: (entry) => setSave(entry.uid, { state: "saving" }),
-    onSuccess: (member, entry) => {
-      // Una card nueva pasa a estar "en la caja" con el id recién creado.
-      setSave(entry.uid, { state: "saved" }, entry.sourceId ?? member.id);
-      invalidate();
-      // El "Guardado" es feedback de una acción puntual: se desvanece a idle a
-      // los ~2.5s, salvo que la card haya cambiado de estado mientras tanto.
-      window.setTimeout(() => {
-        setEntries((prev) =>
-          prev.map((e) =>
-            e.uid === entry.uid && e.save?.state === "saved" ? { ...e, save: { state: "idle" } } : e,
-          ),
-        );
-      }, 2500);
-    },
-    onError: (err: Error, entry) => setSave(entry.uid, { state: "error", error: err.message }),
-  });
-
-  const saveToBox = (i: number) => save.mutate(entries[i]);
 
   if (catalog.isLoading) return <Placeholder loading>{t("common.loadingCatalog")}</Placeholder>;
   if (catalog.isError || !catalog.data)
@@ -284,7 +212,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
       <div className="prod-cards">
         {entries.map((e, i) => (
           <ProductionCard
-            key={e.uid}
+            key={e.id}
             config={e.config}
             catalog={catalog.data}
             production={productions[i]?.data ?? null}
@@ -304,8 +232,8 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
             onSaveToBox={() => guard(() => saveToBox(i))}
             cloneDisabled={atMax}
             inBox={e.sourceId !== undefined}
-            saveState={e.save?.state ?? "idle"}
-            saveError={e.save?.error ?? null}
+            saveState={statusOf(e.id).state}
+            saveError={statusOf(e.id).error ?? null}
             dragging={dragIndex === i}
             dragOver={dragOverIndex === i && dragIndex !== i}
             onDragStart={() => setDragIndex(i)}
