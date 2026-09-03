@@ -2761,10 +2761,12 @@ select:focus {
    hasta 5 cards. La clase se aplica solo al montar y se quita al terminar (ver
    ProductionCard), así reordenar/intercambiar no la reinicia. */
 .prod-card--enter {
-  animation: prod-card-in 0.15s ease-out;
+  animation: appear-in 0.15s ease-out;
 }
 
-@keyframes prod-card-in {
+/* La entrada de la app: todo lo que aparece en medio de una interacción entra
+   así (design-system §4). Compartida, no una por componente. */
+@keyframes appear-in {
   from {
     opacity: 0;
     transform: scale(0.97);
@@ -3245,12 +3247,14 @@ button.prod-card__base-tag--action:hover {
   .prod-card--enter,
   .modal-panel,
   .modal-overlay,
+  .progress-diff,
   .icon-btn--saving {
     animation: none;
   }
 
   .prod-delta,
   .prod-card--add,
+  .meal-picker-topbar,
   button.prod-card__base-tag--action {
     transition: none;
   }
@@ -3774,6 +3778,34 @@ button.prod-card__base-tag--action:hover {
   margin-bottom: 1rem;
 }
 
+/* The mark hangs under the stepper — under the buttons, not under the label — and
+   out of the flow, which is what keeps it out of the toolbar's line: the search box
+   there is the only item that flexes, anything sharing that line is paid for out of
+   the search, and that slid the stepper ~141px left, mid-click (§4). Out of flow
+   also means it adds nothing to the cluster's intrinsic width, so the cluster does
+   not grow either — no wrapper needed for that. */
+.meal-picker-pot__stepper {
+  position: relative;
+}
+
+.meal-picker-pot__stepper > .tooltip {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.35rem;
+}
+
+/* The room it needs comes from under the toolbar instead, and eases in with it, so
+   the recipe grid slides down rather than jumping. 1.9rem clears the ~23px mark plus
+   its offset. */
+.meal-picker-topbar {
+  transition: padding-bottom 0.15s ease-out;
+}
+
+.meal-picker-topbar:has(.progress-diff) {
+  padding-bottom: 1.9rem;
+}
+
 .meal-picker-search {
   flex: 1 1 160px;
   min-width: 0;
@@ -3970,8 +4002,12 @@ button.prod-card__base-tag--action:hover {
 .meal-picker-pot {
   display: inline-flex;
   align-items: center;
+  /* Wraps rather than overflowing: on a phone the unsaved mark used to push the
+     Guardar button past the viewport edge, unreachable. */
+  flex-wrap: wrap;
   gap: 0.35rem;
-  flex-shrink: 0;
+  flex: 0 1 auto;
+  min-width: 0;
   font-size: var(--text-sm);
 }
 .meal-picker-pot__icon {
@@ -4370,8 +4406,36 @@ button.prod-card__base-tag--action:hover {
 .island-tab__row {
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
+  column-gap: 1rem;
+  /* Tighter between wrapped lines than between the label and its control: a line
+     that only exists once the unsaved mark arrives should cost as little as it can
+     (a wrapped line's gap is the one part of that arrival CSS cannot ease). */
+  row-gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+/* The slider and its unsaved mark share a group of their own. Two things fall out
+   of that: the mark wraps against the *slider's* left edge rather than the row's
+   (which would put it under the label), and the group — not the row — is what
+   decides whether the mark fits beside the slider. */
+.bonus-control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0.75rem;
+  row-gap: 0.5rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* And the slider never trades width for the mark: it is exactly as wide as it can
+   be, and cannot shrink. So flexbox alone decides where the mark goes — beside it
+   while the group has room (desktop: 306px free at a row of 818, against a 134px
+   mark), directly under it when it does not. No breakpoint, and the control never
+   moves out from under the pointer. */
+.island-tab__row .bonus-slider {
+  flex: 0 0 auto;
+  width: min(22rem, 100%);
 }
 
 .island-tab__label {
@@ -4654,6 +4718,7 @@ button.prod-card__base-tag--action:hover {
   user-select: none;
 }
 
+
 /* El número con desglose: pista de que hay tooltip (subrayado punteado). */
 .strength-value__cue {
   cursor: help;
@@ -4893,6 +4958,11 @@ button.prod-card__base-tag--action:hover {
 /* Unsaved-value mark (design-system §5, .progress-diff). Indigo: the functional
    colour of state, so the identity gold stays scarce. */
 .progress-diff {
+  /* Aparece en medio de un arrastre o un tap: entra en vez de aparecer de golpe,
+     y crece en alto, así la línea que la aloja tampoco salta. */
+  animation:
+    appear-in 0.15s ease-out,
+    grow-in 0.15s ease-out;
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -4903,6 +4973,49 @@ button.prod-card__base-tag--action:hover {
   font-size: var(--text-xs);
   color: var(--accent-text);
   white-space: nowrap;
+}
+
+/* Height cannot interpolate from `auto`, so a generous `max-height` grows instead:
+   2rem clears the one-line mark, and both it and the clipping expire with the
+   animation (`fill-mode: none`), so nothing stays capped — a focus ring on the
+   Guardar button is never cut. Separate from `appear-in` on purpose: that one is
+   shared with the comparison cards, which are far taller than 2rem. */
+@keyframes grow-in {
+  from {
+    max-height: 0;
+    /* Its own box grows too, so the mark starts at a true zero instead of
+       leaving a few pixels of border and padding to appear at once. */
+    padding-block: 0;
+    border-block-width: 0;
+    overflow: hidden;
+  }
+  to {
+    max-height: 2rem;
+    overflow: hidden;
+  }
+}
+
+/* La salida: el espejo de la llegada, así guardar tampoco es un corte. `forwards`
+   mantiene el estado colapsado hasta que React la desmonta, para que no haya un
+   parpadeo a tamaño completo entre el final de la animación y el desmontaje. */
+.progress-diff--leaving {
+  animation: leave-out 0.15s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes leave-out {
+  from {
+    max-height: 2rem;
+    overflow: hidden;
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+    max-height: 0;
+    padding-block: 0;
+    border-block-width: 0;
+    overflow: hidden;
+  }
 }
 
 .progress-diff__save {

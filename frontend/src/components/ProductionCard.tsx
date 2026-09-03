@@ -349,7 +349,11 @@ export function ProductionCard({
           (expert && berryRole === "none" ? " prod-card--no-favorite" : "")
         }
         onAnimationEnd={(e) => {
-          if (e.animationName === "prod-card-in") setEntering(false);
+          // `appear-in` is shared, so ignore the same animation bubbling up from
+          // anything nested inside the card.
+          if (e.target === e.currentTarget && e.animationName === "appear-in") {
+            setEntering(false);
+          }
         }}
         onDragEnter={!readOnly ? onDragEnter : undefined}
         onDragOver={!readOnly ? (e) => e.preventDefault() : undefined}

@@ -22,10 +22,12 @@ nighttime production; everything valuable is warm inside the dark.
 **Voice:**
 - **Still, but not frozen** — motion is allowed only when it does a job: state
   feedback (the saving pulse), the entrance of new content (modals, production
-  cards), or a hover/selection transition. It stays short and sober (~80–150ms for
-  micro-interactions and entrances; the only loop is the saving pulse, and it *is*
-  the feedback), and always honors `prefers-reduced-motion`. Nothing moves to
-  decorate.
+  cards), a hover/selection transition, or **a layout that has to change size**
+  because something arrived — that last one is eased rather than designed away only
+  when holding the space open would cost more than the movement does (§6). It stays
+  short and sober (~80–150ms for micro-interactions, entrances and those size
+  changes; the only loop is the saving pulse, and it *is* the feedback), and always
+  honors `prefers-reduced-motion`. Nothing moves to decorate.
 - **Hierarchy by weight, not color** — gold is reserved for very few identity
   accents; indigo only for active/selection. When there is no real KPI, blocks
   share equal hierarchy (don't invent a "main number" where there isn't one).
@@ -196,6 +198,25 @@ Edit steppers show nav arrows, not a metric icon.
   `display: none`, never with `visibility`/`opacity`. A hidden absolute element
   still counts toward the page's **scroll width** — the ones near the right edge
   turn into a phantom horizontal scroll on a phone.
+- **Nothing moves out from under the pointer:** a control the user is working must keep
+  its position while something *else* arrives next to it — an unsaved mark, a count, a
+  warning. Flex layout decides this, and the rule is that the arriving piece must not be
+  able to take width from anything ahead of it. Two ways to guarantee that, and which
+  one applies depends on what else is on the line: **size the control so it cannot
+  shrink** and let the piece fall where it fits (`.island-tab__row .bonus-slider` is
+  pinned at `min(22rem, 100%)`, so the mark lands beside it or on its own line, and the
+  track never narrows); or, on a line whose whole point is a **flexible** item — a
+  toolbar built around a search box — take the arriving piece **out of that line
+  altogether**, absolutely positioned under the control (`.meal-picker-pot__stepper` is
+  its containing block). Out of flow it adds neither width nor height to the line;
+  anything that *shares* such a line is paid for out of the flexible item, which moves
+  everything after it. Either way the piece anchors to the **control**, not to the
+  row —
+  under the stepper's buttons, against the slider's own left edge, never adrift under a
+  label. The room the piece needs comes from the container's own `padding-bottom`, which
+  transitions, so what sits below slides rather than jumps. Get it wrong and the cost is
+  not cosmetic: the pot stepper used to slide ~141px left as the mark arrived, so a
+  second click on `+` landed on **Guardar** and saved by accident.
 - **Nothing scrolls the page sideways:** the page's `scrollWidth` must equal the
   viewport at 375px. When a row genuinely can't fit (a nav strip, a wide table),
   it scrolls **inside itself**, not by dragging the whole page.
@@ -254,10 +275,15 @@ states · where it lives. Feature one-offs are intentionally not here.
   `--accent-text` ink — at `--text-xs`, `--r-sm`. Wrapped in `Tooltip`: one
   `Tooltip.Row` holds the **saved** value, so the number is a hover or a focus away
   instead of printed beside every control. Renders **nothing** when the value matches
-  what is saved — no placeholder, no reserved space. **Not a `.metric-mark` variant**:
-  that one is a non-interactive pill (`999px`) naming what a *rule* does to a figure,
-  this one is a rounded container holding a button and naming what the *user* has left
-  undone.
+  what is saved — no placeholder, no reserved space, ever. It enters with `appear-in`
+  **plus** `grow-in`, so the line that hosts it grows eased instead of snapping open
+  (see *Entrance*). **Where** it lands is left to flexbox rather than a breakpoint:
+  its neighbours are arranged so none of them can give up width to it (§4), so it
+  either fits beside the control — the whole width of a desktop row — or wraps to a
+  line of its own, and in neither case does the control move.
+  **Not a `.metric-mark` variant**: that one is a non-interactive pill (`999px`)
+  naming what a *rule* does to a figure, this one is a rounded container holding a
+  button and naming what the *user* has left undone.
 - **`.chip` / `.chips`** — small thematic tag (container wraps). Variants:
   `--ingredient` (gold-dim), `--subskill` (accent-dim).
 - **`.mini-icon`** — small inline icon (nature stat, ingredient, sub-skill) with
@@ -313,6 +339,32 @@ states · where it lives. Feature one-offs are intentionally not here.
   language) on top, right aligned, and the tabs below at full width, compact
   (`--text-base`, tighter padding) and scrollable inside themselves if a longer
   translation still overflows.
+- **Entrance (`appear-in`)** — the app's single entrance animation: `0.15s ease-out`,
+  `opacity 0→1` + `scale(0.97)→none`, fired by the element being inserted. One
+  keyframe shared by everything that shows up mid-interaction — `.prod-card--enter`
+  (a card added to the comparison) and `.progress-diff` (a value going unsaved) —
+  not one per component. Silenced under `prefers-reduced-motion`. A consumer that keys
+  off `animationend` must check `e.target === e.currentTarget`, since the name now
+  bubbles up from nested pieces.
+- **Growth (`grow-in`)** — the companion for something whose arrival makes its line
+  taller: same 0.15s ease-out, growing the piece's own `max-height`, padding and
+  border from zero under `overflow: hidden`, so the container grows with it instead of
+  snapping. Deliberately **not** part of `appear-in`, which the comparison cards share
+  and which are far taller than its cap. All of it expires with the animation
+  (`fill-mode: none`) — nothing stays capped or clipped, so a focus ring inside is
+  never cut. Two limits worth knowing: `max-height` stands in for `height`, which
+  cannot interpolate from `auto`, so the cap must clear the piece with room to spare;
+  and the `gap` of a flex line that only exists once the piece wraps in still appears
+  at once (~5.6px in the pot toolbar) — gaps are not animatable per line.
+- **Exit (`leave-out`)** — the mirror of the two above, for a piece whose departure
+  would otherwise be a cut: the same 0.15s ease-out, running opacity, scale and the
+  box back to zero, with `forwards` so the collapsed state holds until it unmounts.
+  It costs the component a little life of its own — `UnsavedMark` keeps rendering for
+  one animation after its `unsaved` goes false, inert while it does (not clickable,
+  not focusable, not read out), and drops itself on a timer rather than
+  `animationend`, which never arrives when the animation is suppressed or its clock
+  is frozen in a hidden tab. Under `prefers-reduced-motion` the exit is skipped
+  outright, not silenced — a silenced animation would strand the piece on screen.
 - **Error feedback** — `.error` (red text) + `ErrorBoundary` app fallback
   (`role="alert"`, title + "reload" `.btn--primary`).
 - **`.gate-card`** — the anonymous gate that replaces a **reserved page's** content
@@ -425,6 +477,30 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   on a number; naming it the same way where it is chosen and where it lands lets the
   reader connect cause and consequence without a legend. It stays scarce because it
   is still the *same* effect being named twice, not a new gold accent.
+- **Nothing moves out from under the pointer; ease what's left.** *Question:* the
+  unsaved mark appears the instant a slider moves or a stepper is tapped. It used to
+  take a third of the track's width away, push every row below it down, and — worst —
+  slide the pot stepper 141px left, far enough that a second click on `+` hit Guardar.
+  Reserving a permanent slot removed the movement, but then the control always occupied
+  more room than it needed. Animating the movement instead still left the control
+  moving. *Resolution:* three steps, in order. **One:** nothing next to the mark may
+  give up width to it. Under the slider that means pinning the slider's width, and the
+  mark then either fits beside it or wraps. In the meals toolbar it could not mean that
+  — its whole layout hangs off one flexible search box — so there the mark leaves the
+  line entirely and hangs under the stepper, which also keeps it where it belongs: read
+  as "unsaved" about *the pot*, not about the toolbar. Under the slider the same concern
+  is why the slider and its mark share a group (`.bonus-control`): a mark wrapping
+  against the row's edge landed under the label instead of the control. **Two:** with
+  that settled, flexbox alone decides placement under the slider — beside it where the
+  row has room (306px free against a 134px mark at a row of 818, so on desktop it opens
+  to the right and nothing moves at all), on its own line where it does not. No
+  breakpoint. **Three:** where a line does get added, the mark eases both its arrival
+  and its departure by growing from and collapsing back to zero (`grow-in` /
+  `leave-out`). *Why:* the order is the point. Easing a movement that shouldn't happen
+  just makes a misclick prettier; removing it first leaves only the one change that is
+  honest — the layout genuinely got taller — and that one is worth easing. Reserved
+  space was the wrong trade for the same reason: a permanent cost paid for an occasional
+  event the reader mostly never sees.
 - **Marking a value that isn't saved yet.** *Question:* a value edited in a tool that
   differs from the user's saved record — is that a `.metric-mark`, and does the saved
   value sit beside the control? *Resolution:* neither. It is its own piece,

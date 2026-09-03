@@ -95,6 +95,21 @@ describe("SettingsModal — the unsaved mark", () => {
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
     expect(onSavePot).toHaveBeenCalledOnce();
   });
+
+  // The mark hangs under the pot control instead of sharing the toolbar's line: the
+  // search box there is the only item that flexes, so a mark beside it took its width
+  // out of the search and slid everything after it — the stepper included, ~141px,
+  // mid-click. Far enough that a second click on "+" landed on Guardar and saved by
+  // accident. Structure carries half of that (the block is a column, so the mark
+  // never widens it); styles.css carries the rest (the mark is out of the flow).
+  it("anchors the pot mark to the stepper", () => {
+    renderModal({ potSize: 36, savedPotSize: 33, potUnsaved: true });
+    const mark = screen.getByText("unsaved").closest(".tooltip");
+    // Inside the stepper is what makes it hang under the buttons rather than under
+    // the label — it is positioned against this box. Being *out of flow* is the
+    // other half, and that half lives in styles.css where jsdom cannot see it.
+    expect(mark?.parentElement).toHaveClass("meal-picker-pot__stepper");
+  });
 });
 
 describe("SettingsModal — the area bonus mark", () => {

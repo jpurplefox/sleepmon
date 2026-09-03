@@ -357,6 +357,16 @@ export function SettingsModal({
                   up: "+",
                 }}
               />
+              {/* Anchored to the stepper so it hangs under the buttons rather than
+                  under the label, and out of the flow so it stays out of the toolbar's
+                  line: the search box there is the only item that flexes, and a mark
+                  sharing that line took its width out of the search and slid the
+                  stepper ~141px left, mid-click (styles.css). */}
+              <UnsavedMark
+                unsaved={potUnsaved}
+                savedLabel={String(savedPotSize)}
+                onSave={onSavePot}
+              />
             </div>
             {goodCampTicket ? (
               <span className="meal-picker-pot__effective muted">
@@ -372,11 +382,6 @@ export function SettingsModal({
                 = {effectivePot}
               </span>
             )}
-            <UnsavedMark
-              unsaved={potUnsaved}
-              savedLabel={String(savedPotSize)}
-              onSave={onSavePot}
-            />
           </div>
 
           <button
