@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from "react";
+
 import { useI18n } from "../i18n";
 import { Tooltip } from "./Tooltip";
 
@@ -9,14 +11,42 @@ interface Props {
   onSave: () => void;
 }
 
+/** Long enough to outlast `leave-out` (0.15s), short enough not to linger. */
+const EXIT_MS = 200;
+
 /**
  * Marks a value changed but not saved into Player progress, and offers to save it.
  * The saved value lives in the tooltip rather than beside the control: the same mark
  * repeats across nine areas and seventy recipes.
+ *
+ * It outlives its own `unsaved` by one animation: React dropping it the instant a
+ * save landed made it — and the line it sits on — vanish without a frame of
+ * transition. While leaving it is inert: not clickable, not focusable, not read out.
  */
 export function UnsavedMark({ unsaved, savedLabel, onSave }: Props) {
   const { t } = useI18n();
-  if (!unsaved) return null;
+  const [leaving, setLeaving] = useState(false);
+  const wasUnsaved = useRef(unsaved);
+
+  useEffect(() => {
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (unsaved) {
+      setLeaving(false);
+    } else if (wasUnsaved.current && !reduced) {
+      setLeaving(true);
+    }
+    wasUnsaved.current = unsaved;
+  }, [unsaved]);
+
+  // A timer rather than `animationend`: the event never arrives when the animation
+  // is suppressed or its clock is frozen (a hidden tab), which would strand the mark.
+  useEffect(() => {
+    if (!leaving) return;
+    const id = window.setTimeout(() => setLeaving(false), EXIT_MS);
+    return () => window.clearTimeout(id);
+  }, [leaving]);
+
+  if (!unsaved && !leaving) return null;
 
   return (
     <Tooltip
@@ -29,9 +59,17 @@ export function UnsavedMark({ unsaved, savedLabel, onSave }: Props) {
       // `content` is not a string, so the accessible name has to be given explicitly.
       label={`${t("progress.savedValue")}: ${savedLabel}`}
     >
-      <span className="progress-diff">
+      <span
+        className={"progress-diff" + (leaving ? " progress-diff--leaving" : "")}
+        aria-hidden={leaving || undefined}
+      >
         <span className="progress-diff__label">{t("progress.unsaved")}</span>
-        <button type="button" className="progress-diff__save" onClick={onSave}>
+        <button
+          type="button"
+          className="progress-diff__save"
+          disabled={leaving}
+          onClick={onSave}
+        >
           {t("progress.save")}
         </button>
       </span>
