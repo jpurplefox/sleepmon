@@ -15,6 +15,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useGate } from "../auth/useGate";
 import { berryIcon } from "../berries";
 import { BoxPicker } from "../components/BoxPicker";
+import { EventBonusNotice } from "../components/EventBonusNotice";
 import { MemberForm } from "../components/MemberForm";
 import { SettingsModal } from "../components/SettingsModal";
 import { Modal } from "../components/Modal";
@@ -30,6 +31,7 @@ import {
 } from "../components/icons";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
+import { toRequest as toEventRequest, type EventEffect } from "../eventBonus";
 import { fdown } from "../utils/format";
 import { recipeImage } from "../recipes";
 import { areaBonusOf, recipeLevelOf } from "../progress";
@@ -162,6 +164,7 @@ export function Teams() {
   const [meals, setMeals] = useState<(MealInput | null)[]>([null, null, null]);
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
   const [goodCampTicket, setGoodCampTicket] = useState(false);
+  const [eventEffects, setEventEffects] = useState<EventEffect[]>([]);
 
   // Dish type: restricts all 3 meal slots to the same recipe type (ephemeral, frontend-only).
   const [dishType, setDishType] = useState<'Curry' | 'Salad' | 'Dessert' | null>(null);
@@ -242,6 +245,7 @@ export function Teams() {
       weeklyBonus,
       islandBonus,
       goodCampTicket,
+      eventEffects,
       potSize,
     ],
     queryFn: () =>
@@ -254,6 +258,7 @@ export function Teams() {
         weekly_bonus: weeklyBonus,
         island_bonus: islandBonus,
         good_camp_ticket: goodCampTicket,
+        event_effects: toEventRequest(eventEffects),
         pot_size: potSize,
       }),
     enabled: slots.length > 0,
@@ -420,10 +425,15 @@ export function Teams() {
         </button>
       </div>
 
-      {goodCampTicket && (
-        <div className="teams-gct-notice" role="status">
-          <img src="/good-camp-ticket.png" alt="" className="mini-icon" style={{ width: 20, height: 20 }} />
-          {t("teams.gctActive")}
+      {(goodCampTicket || eventEffects.length > 0) && (
+        <div className="status-notices">
+          {goodCampTicket && (
+            <div className="status-notice" role="status">
+              <img src="/good-camp-ticket.png" alt="" className="mini-icon" style={{ width: 20, height: 20 }} />
+              {t("teams.gctActive")}
+            </div>
+          )}
+          <EventBonusNotice effects={eventEffects} />
         </div>
       )}
 
@@ -929,12 +939,12 @@ export function Teams() {
                             <span className="cook-cap-row__value">+{fdown(k.pot.skill_daily)}</span>
                           </li>
                         )}
-                        {/* GCT (+50%) — solo con Good Camp Ticket activo */}
+                        {/* Ticket and/or event pot bonus */}
                         {k.pot.bonus_daily > 0 && (
                           <li className="cook-cap-row">
                             <span className="cook-cap-row__label">
                               <img src="/pot.webp" alt="" className="mini-icon" style={{ width: 14, height: 14 }} />
-                              {t("teams.potGct")}
+                              {goodCampTicket ? t("teams.potGct") : t("event.potRow")}
                             </span>
                             <span className="cook-cap-row__value">+{fdown(k.pot.bonus_daily)}</span>
                           </li>
@@ -1267,9 +1277,9 @@ export function Teams() {
           onPotSizeChange={(n) => setPotOverride(n)}
           effectivePot={potKnown ? result.kitchen.pot.per_meal : null}
           skillPerMeal={potKnown ? result.kitchen.pot.skill_per_meal : null}
-          eventEffects={[]}
-          onEventEffects={() => {}}
-          eventTypes={[]}
+          eventEffects={eventEffects}
+          onEventEffects={setEventEffects}
+          eventTypes={[...new Set(catalog.data.species.map((s) => s.type))].sort()}
           catalog={catalog.data}
           selectedIsland={selectedIsland}
           favoriteBerries={favoriteBerries}

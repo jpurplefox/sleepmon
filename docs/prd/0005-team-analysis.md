@@ -20,7 +20,8 @@ computation, the tool asks for **no account**; only the two actions that touch t
 
 Two companion read-outs live on the same page and share its inputs: the [Cooking
 plan](0006-cooking-plan.md) and [Map bonuses & Snorlax
-rating](0007-map-bonuses-rating.md). **This document covers the core aggregate, the
+rating](0007-map-bonuses-rating.md). The [Event bonus](0012-event-bonus.md) is a
+further input, set in the Settings modal, that scales the figures while it is on. **This document covers the core aggregate, the
 roster (building and editing the Pokémon in it, including split slots), and the Good
 Camp Ticket.**
 
