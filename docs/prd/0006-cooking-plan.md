@@ -54,6 +54,7 @@ It answers: *"with what my team produces, how good is this meal plan?"*.
 - The remaining room is filled with **fillers**: the surplus ingredients the team
   produced (plus random ingredients from skills), allocated **by strength** until the
   pot is full.
+- The [Event bonus](0012-event-bonus.md) can multiply the pot size.
 
 ### Cooking strength
 
@@ -61,6 +62,7 @@ It answers: *"with what my team produces, how good is this meal plan?"*.
   (below).
 - It is shown **daily and weekly** and rolls into Team Analysis's **grand total**.
   The map's **area bonus** applies to cooking strength like any other.
+- The [Event bonus](0012-event-bonus.md) can multiply dish strength.
 
 ### How Extra Tasty is modeled
 

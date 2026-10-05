@@ -278,10 +278,10 @@ states · where it lives. Feature one-offs are intentionally not here.
   the figure it changes (a summary of active rules), it leads with the effect's icon
   and may close with its scope's (a type icon) — `[icon] ×1,5 [scope]`, icons at
   14px inside the same pill.
-- **Status notice** (`.teams-gct-notice`, to be generalized as `.status-notice`) — a
+- **Status notice** (`.status-notice`, inside a `.status-notices` wrapping row) — a
   page-level pill saying a modifier is active: `--surface-2` fill, `--border`,
   `--text-sm` weight 600, `999px`, leading game icon, `role="status"`. Several sit
-  side by side in a wrapping row above what they affect. Team Analysis shows one for
+  side by side in the `.status-notices` row above what they affect. Team Analysis shows one for
   the **Good Camp Ticket** and one for the **Event bonus**, the latter followed by a
   `.metric-mark` with icons per effect. Renders only while the modifier is active —
   nothing when it isn't.
