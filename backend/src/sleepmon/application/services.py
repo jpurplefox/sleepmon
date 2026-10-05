@@ -16,11 +16,14 @@ from uuid import UUID
 
 from sleepmon.application.dto import (
     Distributions,
+    FillerDTO,
     IngredientBalanceDTO,
     IngredientCountDTO,
+    KitchenDTO,
     MealFeasibilityDTO,
     MemberContributionDTO,
     MemberProduction,
+    PotDTO,
     ProductionInput,
     ProductionResult,
     RecipeDTO,
@@ -35,8 +38,13 @@ from sleepmon.application.dto import (
 from sleepmon.application.parsing import parse_enum
 from sleepmon.domain import analytics
 from sleepmon.domain.analytics import team_production
-from sleepmon.domain.catalog_data import ISLAND_EXPERT, MAX_FAVORITE_BERRIES, MAX_RECIPE_LEVEL
-from sleepmon.domain.cooking import MealSelection, plan_cooking
+from sleepmon.domain.catalog_data import (
+    GOOD_CAMP_TICKET_POT_FACTOR,
+    ISLAND_EXPERT,
+    MAX_FAVORITE_BERRIES,
+    MAX_RECIPE_LEVEL,
+)
+from sleepmon.domain.cooking import MealSelection, cooking_day, plan_cooking
 from sleepmon.domain.entities import (
     TeamMember,
     validate_ingredient_count,
@@ -47,7 +55,9 @@ from sleepmon.domain.entities import (
 from sleepmon.domain.errors import SpeciesNotFoundError, TeamMemberNotFoundError, ValidationError
 from sleepmon.domain.map_bonuses import MapBonuses
 from sleepmon.domain.ports import RecipeCatalog, SpeciesCatalog, TeamRepository
+from sleepmon.domain.pot import pot_capacity
 from sleepmon.domain.production import DailyProduction, daily_production, scale_daily
+from sleepmon.domain.progress import validate_pot_size
 from sleepmon.domain.species import Species
 from sleepmon.domain.value_objects import (
     Berry,
@@ -480,6 +490,7 @@ class DefaultProductionService(ProductionService):
             raise ValidationError(
                 f"El bonus de isla debe estar entre 0 y 0.85; llegó {data.island_bonus}."
             )
+        validate_pot_size(data.pot_size)
         map_bonuses = _map_bonuses(data)
 
         # Resolve each entry against the catalog and scale its production by weight.
@@ -523,8 +534,21 @@ class DefaultProductionService(ProductionService):
 
         cooking = plan_cooking(meals, aggregate.ingredients)
 
-        factor = 1.0 + data.island_bonus
-        cooking_strength = cooking.cooking_strength * factor
+        pot = pot_capacity(
+            data.pot_size,
+            aggregate.skill_cooking_ingredients or 0.0,
+            GOOD_CAMP_TICKET_POT_FACTOR if data.good_camp_ticket else 1.0,
+        )
+        day = cooking_day(
+            cooking,
+            meals,
+            pot=pot,
+            random_ingredients=aggregate.skill_ingredient_total or 0.0,
+            extra_tasty_multiplier=aggregate.extra_tasty_multiplier,
+            area_bonus=data.island_bonus,
+        )
+        area = 1.0 + data.island_bonus
+        dish = 1.0  # the event's dish factor arrives in Task 7
 
         return TeamProductionResult(
             member_count=aggregate.member_count,
@@ -569,8 +593,35 @@ class DefaultProductionService(ProductionService):
                 )
                 for m in aggregate.members
             ],
-            cooking_strength=cooking_strength,
-            cooking_strength_base=cooking.cooking_strength,
+            kitchen=KitchenDTO(
+                pot=PotDTO(
+                    per_meal=pot.per_meal,
+                    skill_per_meal=pot.skill_per_meal,
+                    daily=pot.daily,
+                    base_daily=pot.base_daily,
+                    skill_daily=pot.skill_daily,
+                    bonus_daily=pot.bonus_daily,
+                    used_by_recipes=day.used_by_recipes,
+                    filler_room=day.filler_room,
+                ),
+                fillers=[
+                    FillerDTO(
+                        ingredient=None if f.ingredient is None else f.ingredient.value,
+                        strength=f.strength,
+                        available=f.available,
+                        used=f.used,
+                        contributed=f.contributed,
+                    )
+                    for f in day.fillers
+                ],
+                recipe_strength=day.recipe_strength,
+                recipe_strength_base=day.recipe_strength_base,
+                filler_strength=day.filler_strength,
+                filler_strength_base=day.filler_strength_base,
+                extra_tasty_bonus=day.extra_tasty_bonus,
+                total=day.total,
+                total_base=day.total_base,
+            ),
             cooking_ingredients=[
                 IngredientBalanceDTO(
                     ingredient=b.ingredient.value,
@@ -594,7 +645,9 @@ class DefaultProductionService(ProductionService):
                     recipe_name=s.recipe_name,
                     met=s.met,
                     level=s.level,
-                    strength=s.strength,
+                    strength=s.strength * dish * area,
+                    strength_base=s.strength * dish,
+                    fits_pot=fits,
                     ingredients=[
                         SlotIngredientStatusDTO(
                             ingredient=si.ingredient.value,
@@ -604,8 +657,8 @@ class DefaultProductionService(ProductionService):
                         for si in s.ingredients
                     ],
                 )
-                for s in cooking.slots
+                for s, fits in zip(cooking.slots, day.meal_fits_pot, strict=True)
             ],
-            grand_total_strength=aggregate.total_strength + cooking_strength,
-            grand_total_strength_base=aggregate.total_strength_base + cooking.cooking_strength,
+            grand_total_strength=aggregate.total_strength + day.total,
+            grand_total_strength_base=aggregate.total_strength_base + day.total_base,
         )

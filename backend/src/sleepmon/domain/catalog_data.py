@@ -61,7 +61,7 @@ DAY_HOURS: Final[float] = 24 - NIGHT_HOURS
 FREQUENCY_REDUCTION_PER_LEVEL: Final[float] = 0.002
 
 # Good Camp Ticket: los Pokémon ayudan 20% más rápido (intervalo × 0.8) y cargan
-# 20% más de inventario (carry size × 1.2). El efecto de pote (×1.5) es frontend.
+# 20% más de inventario (carry size × 1.2). The pot factor is applied in domain/pot.py.
 GOOD_CAMP_TICKET_SPEED_FACTOR: Final[float] = 0.8
 GOOD_CAMP_TICKET_INVENTORY_FACTOR: Final[float] = 1.2
 GOOD_CAMP_TICKET_POT_FACTOR: Final[float] = 1.5

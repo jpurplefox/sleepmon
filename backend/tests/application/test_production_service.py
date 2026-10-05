@@ -577,7 +577,8 @@ def test_compute_team_production_aggregates_members(
     )
     assert result.member_count == 1
     assert result.total_strength > 0
-    assert result.grand_total_strength == result.total_strength  # sin cocina
+    # No meals: the empty pot is still topped up with fillers.
+    assert result.grand_total_strength == result.total_strength + result.kitchen.total
 
 
 def test_compute_team_production_member_carries_full_production(
@@ -615,8 +616,8 @@ def test_compute_team_production_adds_cooking_to_grand_total(
             meals=[MealSelectionInput(recipe=recipe.name, level=1), None, None],
         )
     )
-    assert result.cooking_strength == recipe.base_strength  # nivel 1 = base
-    assert result.grand_total_strength == result.total_strength + result.cooking_strength
+    assert result.kitchen.recipe_strength == recipe.base_strength  # nivel 1 = base
+    assert result.grand_total_strength == result.total_strength + result.kitchen.total
 
 
 def test_compute_team_production_rejects_too_many_members(
@@ -957,3 +958,43 @@ def test_compute_production_rejects_unknown_scenario(
 ) -> None:
     with pytest.raises(ValidationError):
         production_service.compute_production(_pikachu(scenario="double_xp"))
+
+
+def _team(**overrides: object) -> TeamProductionInput:
+    defaults: dict[str, object] = {"slots": _slots("a"), "meals": [None, None, None]}
+    defaults.update(overrides)
+    return TeamProductionInput(**defaults)  # type: ignore[arg-type]
+
+
+def test_team_kitchen_uses_pot_size(production_service: DefaultProductionService) -> None:
+    result = production_service.compute_team_production(_team(pot_size=33))
+    assert result.kitchen.pot.base_daily == 99
+    assert result.kitchen.pot.per_meal >= 33
+
+
+def test_team_rejects_pot_size_off_the_ladder(
+    production_service: DefaultProductionService,
+) -> None:
+    with pytest.raises(ValidationError):
+        production_service.compute_team_production(_team(pot_size=22))
+
+
+def test_team_ticket_enlarges_the_pot(production_service: DefaultProductionService) -> None:
+    off = production_service.compute_team_production(_team(pot_size=21))
+    on = production_service.compute_team_production(_team(pot_size=21, good_camp_ticket=True))
+    assert on.kitchen.pot.per_meal > off.kitchen.pot.per_meal
+
+
+def test_team_grand_total_includes_the_kitchen(
+    production_service: DefaultProductionService,
+) -> None:
+    recipe = production_service.list_recipes()[0]
+    result = production_service.compute_team_production(
+        _team(meals=[MealSelectionInput(recipe=recipe.name, level=1), None, None])
+    )
+    assert result.kitchen.total > 0
+    assert result.grand_total_strength == pytest.approx(
+        result.total_strength + result.kitchen.total
+    )
+    assert result.cooking_meals[0].fits_pot in (True, False)
+    assert result.cooking_meals[0].strength_base > 0
