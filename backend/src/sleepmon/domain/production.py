@@ -468,13 +468,13 @@ def daily_production(
         skill_ingredient_total = skill_triggers * ingredient_magnet_amount(effective_skill_level)
 
     # Event: ingredients gathered by main skills are multiplied.
-    factor = boosts.skill_ingredient_factor
-    if factor != 1.0:
+    skill_ing_factor = boosts.skill_ingredient_factor
+    if skill_ing_factor != 1.0:
         skill_ingredients = tuple(
-            SlotProduction(sp.ingredient, sp.amount * factor) for sp in skill_ingredients
+            SlotProduction(sp.ingredient, sp.amount * skill_ing_factor) for sp in skill_ingredients
         )
         if skill_ingredient_total is not None:
-            skill_ingredient_total *= factor
+            skill_ingredient_total *= skill_ing_factor
 
     # Ingredientes extra de pote por la main skill (Cooking Power-Up S): cada disparo
     # agranda el pote en N slots, así que por día es disparos × N. La variante (Minus)

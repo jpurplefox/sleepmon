@@ -1,8 +1,13 @@
+import dataclasses
 import math
 
 import pytest
 
-from sleepmon.domain.catalog_data import FREQUENCY_REDUCTION_PER_LEVEL, max_ingredient_slots
+from sleepmon.domain.catalog_data import (
+    FREQUENCY_REDUCTION_PER_LEVEL,
+    NIGHT_HOURS,
+    max_ingredient_slots,
+)
 from sleepmon.domain.event_bonus import (
     NO_EVENT,
     EventBonus,
@@ -1270,13 +1275,14 @@ def test_extra_ingredient_per_help_in_scope_only() -> None:
     )
 
 
-def test_extra_ingredient_fills_inventory_no_later() -> None:
+def test_extra_ingredient_fills_inventory_sooner() -> None:
     sp = _species(ingredient_percentage=30, base_inventory=20)
     base = daily_production(sp, _INGREDIENTS, level=60)
     boosted = daily_production(
         sp, _INGREDIENTS, level=60, event=_ev(EventEffect(K.EXTRA_INGREDIENTS, 1))
     )
-    assert boosted.inventory_fill_hours <= base.inventory_fill_hours
+    assert base.inventory_fill_hours < NIGHT_HOURS  # it really fills at night
+    assert boosted.inventory_fill_hours < base.inventory_fill_hours
 
 
 def test_extra_berries_per_help() -> None:
@@ -1289,8 +1295,8 @@ def test_extra_berries_per_help() -> None:
     assert boosted.berry_amount == pytest.approx(2 * base.berry_amount)
 
 
-def test_skill_trigger_factor_in_scope_and_night_cap_kept() -> None:
-    sp = _species(skill_percentage=5)  # ORAN -> Water
+def test_skill_trigger_factor_in_scope() -> None:
+    sp = _species(skill_percentage=5)  # ORAN -> Water; non-Skills pity (78)
     base = daily_production(sp, _INGREDIENTS, level=60)
     water = daily_production(
         sp,
@@ -1304,9 +1310,34 @@ def test_skill_trigger_factor_in_scope_and_night_cap_kept() -> None:
         level=60,
         event=_ev(EventEffect(K.SKILL_TRIGGER, 1.5, EventScope(type=Type.PSYCHIC))),
     )
+    assert water.effective_skill_percentage == pytest.approx(100 * _eff(0.05 * 1.5))
     assert water.skill_triggers > base.skill_triggers
     assert psychic == base
-    assert len(water.night_skill_chances) == len(base.night_skill_chances)  # cap 1 for non-Skills
+
+
+def test_skill_trigger_keeps_night_cap() -> None:
+    event = _ev(EventEffect(K.SKILL_TRIGGER, 3.0))
+    plain = daily_production(_species(skill_percentage=5), _INGREDIENTS, level=60, event=event)
+    assert len(plain.night_skill_chances) == 1  # cap 1 for non-Skills
+    skills = _species(specialty=Specialty.SKILLS, skill_percentage=30)
+    prod = daily_production(skills, _INGREDIENTS, level=60, event=event)
+    assert len(prod.night_skill_chances) == 2
+    assert sum(prod.night_skill_chances) <= 2
+
+
+def test_event_skill_trigger_stacks_with_expert_weekly() -> None:
+    sp = _species(skill_percentage=5)
+    expert = MapBonuses(
+        subs=frozenset({Berry.ORAN}), expert=True, weekly_bonus=WeeklyBonus.SKILL_TRIGGER
+    )
+    both = daily_production(
+        sp,
+        _INGREDIENTS,
+        level=60,
+        map_bonuses=expert,
+        event=_ev(EventEffect(K.SKILL_TRIGGER, 1.5)),
+    )
+    assert both.effective_skill_percentage == pytest.approx(100 * _eff(0.05 * 1.25 * 1.5))
 
 
 def test_skill_level_bonus_caps_at_max() -> None:
@@ -1368,3 +1399,41 @@ def test_event_stacks_with_expert_weekly_bonus() -> None:
     assert sum(s.amount for s in both.ingredients) == pytest.approx(
         sum(s.amount for s in plain.ingredients) + 2 * per_extra
     )
+
+
+def test_magnet_total_multiplied_once() -> None:
+    sp = _species(main_skill="Ingredient Magnet S", skill_percentage=20)
+    event = _ev(EventEffect(K.SKILL_INGREDIENTS, 1.5))
+    base = daily_production(sp, _INGREDIENTS, level=60, skill_level=3)
+    boosted = daily_production(sp, _INGREDIENTS, level=60, skill_level=3, event=event)
+    assert base.skill_ingredient_total is not None
+    assert boosted.skill_ingredient_total == pytest.approx(1.5 * base.skill_ingredient_total)
+
+
+def test_magnet_plus_total_and_bonus_ingredient_multiplied_once() -> None:
+    sp = dataclasses.replace(
+        _species(main_skill="Ingredient Magnet S (Plus)", skill_percentage=20), name="Plusle"
+    )
+    event = _ev(EventEffect(K.SKILL_INGREDIENTS, 1.5))
+    base = daily_production(sp, _INGREDIENTS, level=60, skill_level=3)
+    boosted = daily_production(sp, _INGREDIENTS, level=60, skill_level=3, event=event)
+    assert base.skill_ingredient_total is not None
+    assert len(base.skill_ingredients) == 1  # the fixed bonus ingredient
+    assert boosted.skill_ingredient_total == pytest.approx(1.5 * base.skill_ingredient_total)
+    assert boosted.skill_ingredients[0].ingredient == base.skill_ingredients[0].ingredient
+    assert boosted.skill_ingredients[0].amount == pytest.approx(
+        1.5 * base.skill_ingredients[0].amount
+    )
+
+
+def test_extra_berries_apply_to_night_overflow() -> None:
+    # No ingredients: every help is a berry, so the whole day's helps count.
+    sp = _species(ingredient_percentage=0, base_inventory=20)
+    base = daily_production(sp, _INGREDIENTS, level=60)
+    boosted = daily_production(
+        sp, _INGREDIENTS, level=60, event=_ev(EventEffect(K.EXTRA_BERRIES, 1))
+    )
+    assert base.inventory_fill_hours < NIGHT_HOURS  # overflow happens
+    # 2 berries on every help, overflow included; ignoring overflow would fall short.
+    assert boosted.berry_amount == pytest.approx(2 * base.berry_amount)
+    assert boosted.berry_amount > base.berry_amount
