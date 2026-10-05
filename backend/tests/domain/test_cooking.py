@@ -1,4 +1,19 @@
-from sleepmon.domain.cooking import MealSelection, SlotIngredientStatus, plan_cooking
+import math
+from statistics import fmean
+
+import pytest
+
+from sleepmon.domain.catalog_data import INGREDIENT_STRENGTH
+from sleepmon.domain.cooking import (
+    IngredientBalance,
+    MealSelection,
+    SlotIngredientStatus,
+    allocate_fillers,
+    cooking_day,
+    plan_cooking,
+    random_ingredient_strength,
+)
+from sleepmon.domain.pot import pot_capacity
 from sleepmon.domain.recipes import Recipe, recipe_strength
 from sleepmon.domain.value_objects import Ingredient, RecipeType
 
@@ -308,3 +323,86 @@ def test_aggregate_fields_unchanged_by_new_slot_fields() -> None:
     by_ing = {b.ingredient: b for b in result.ingredients}
     assert by_ing[I.HONEY].required == 18.0
     assert by_ing[I.HONEY].balance == -6.0
+
+
+# ── Tests de fillers y cooking day ───────────────────────────────────────────
+
+
+def _bal(ing: Ingredient, balance: float) -> IngredientBalance:
+    return IngredientBalance(ingredient=ing, required=0.0, produced=balance, balance=balance)
+
+
+def test_random_ingredient_strength_is_mean_of_all() -> None:
+    assert random_ingredient_strength() == pytest.approx(fmean(INGREDIENT_STRENGTH.values()))
+
+
+def test_fillers_go_strongest_first_until_room_runs_out() -> None:
+    weak, strong = sorted([I.HONEY, I.FANCY_EGG], key=lambda i: INGREDIENT_STRENGTH[i])
+    fillers = allocate_fillers([_bal(weak, 10), _bal(strong, 4.5)], 0.0, room=8)
+    assert [f.ingredient for f in fillers] == [strong, weak]
+    assert fillers[0].used == 4.5
+    assert fillers[1].used == pytest.approx(3.5)
+    # contributed counts whole units only
+    assert fillers[0].contributed == 4 * INGREDIENT_STRENGTH[strong]
+    assert fillers[1].contributed == 3 * INGREDIENT_STRENGTH[weak]
+
+
+def test_random_ingredients_enter_as_one_entry_at_mean_strength() -> None:
+    fillers = allocate_fillers([], 5.0, room=100)
+    assert len(fillers) == 1
+    assert fillers[0].ingredient is None
+    assert fillers[0].strength == pytest.approx(random_ingredient_strength())
+    assert fillers[0].used == 5.0
+
+
+def test_no_room_no_fillers_used() -> None:
+    fillers = allocate_fillers([_bal(I.HONEY, 10)], 0.0, room=0)
+    assert fillers[0].used == 0
+    assert fillers[0].contributed == 0
+
+
+def test_cooking_day_matches_former_frontend_math() -> None:
+    honey = float(INGREDIENT_STRENGTH[I.HONEY])
+    meals = [MealSelection(_recipe(ings=((I.HONEY, 7),), base=100), 1), None, None]
+    plan = plan_cooking(meals, {I.HONEY: 20.0})
+    pot = pot_capacity(21, 0)  # 63/day
+    day = cooking_day(
+        plan, meals, pot=pot, random_ingredients=0.0,
+        extra_tasty_multiplier=1.2, area_bonus=0.1,
+    )
+    assert day.used_by_recipes == 7
+    assert day.filler_room == 56
+    assert day.meal_fits_pot == (True,)
+    assert day.fillers[0].used == 13  # surplus 20 - 7
+    assert day.recipe_strength_base == 100
+    assert day.recipe_strength == pytest.approx(110)
+    assert day.filler_strength_base == pytest.approx(13 * honey)
+    assert day.filler_strength == pytest.approx(13 * honey * 1.1)
+    assert day.fillers[0].contributed == pytest.approx(13 * honey * 1.1)
+    subtotal = 100 + 13 * honey
+    assert day.total_base == pytest.approx(subtotal * 1.2)
+    assert day.total == pytest.approx(subtotal * 1.2 * 1.1)
+    assert day.extra_tasty_bonus == pytest.approx(subtotal * 0.2 * 1.1)
+
+
+def test_cooking_day_dish_factor_scales_recipes_and_fillers() -> None:
+    meals = [MealSelection(_recipe(ings=((I.HONEY, 7),), base=100), 1), None, None]
+    plan = plan_cooking(meals, {I.HONEY: 20.0})
+    kw = dict(pot=pot_capacity(21, 0), random_ingredients=0.0,
+              extra_tasty_multiplier=1.2, area_bonus=0.0)
+    plain = cooking_day(plan, meals, **kw)  # type: ignore[arg-type]
+    boosted = cooking_day(plan, meals, dish_factor=1.25, **kw)  # type: ignore[arg-type]
+    assert boosted.total == pytest.approx(plain.total * 1.25)
+    assert boosted.recipe_strength == pytest.approx(125)
+
+
+def test_meal_that_exceeds_the_pot_does_not_fit() -> None:
+    meals = [MealSelection(_recipe(ings=((I.HONEY, 30),), base=100), 1), None, None]
+    plan = plan_cooking(meals, {})
+    day = cooking_day(
+        plan, meals, pot=pot_capacity(21, 0), random_ingredients=0.0,
+        extra_tasty_multiplier=1.0, area_bonus=0.0,
+    )
+    assert day.meal_fits_pot == (False,)
+    assert day.filler_room == 33
+    assert math.isclose(day.total, 100)
