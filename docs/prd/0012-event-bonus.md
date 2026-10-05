@@ -1,10 +1,10 @@
-# Weekly bonus
+# Event bonus
 
 Part of [Team Analysis](0005-team-analysis.md).
 
 ## Purpose
 
-The **weekly bonus** answers *"how much does my team produce during this event?"*.
+The **event bonus** answers *"how much does my team produce during this event?"*.
 Pokémon Sleep runs limited-time events (e.g. *Packed Portions Cooking Week*, *Pursue
 Mewtwo*) that change production for a week: an extra ingredient per help, a higher
 skill trigger chance for one type, stronger dishes, a bigger pot. You **build the
@@ -19,16 +19,19 @@ bonus is a set of **effects you compose**, not a pick from a list of named event
 
 1. **Compose the bonus** — add effects, each with a **kind**, a **value**, and (where
    the kind admits it) a **scope**.
-2. **Edit or remove** any effect; **turn the whole bonus off** without losing it.
+2. **Edit or remove** any effect, or **remove them all** at once.
 3. **Apply it to the team** — every team total reflects the active effects.
-4. **Summarize it** — while on, the modifiers panel shows a short read-out of the
-   active effects, the way it shows the Good Camp Ticket is on.
+4. **Summarize it** — while it has effects, the page shows a short read-out of them
+   next to the Good Camp Ticket's, the way it shows the ticket is on.
 
 ## How it works
 
 ### Where it lives
 
-The bonus sits in Team Analysis's modifiers panel, next to the **Good Camp Ticket**.
+The bonus has its own place in Team Analysis's settings, between the map and the
+meals. There is **no on/off switch**: the bonus is active exactly when it holds at
+least one effect, and removing every effect is how you turn it off.
+
 Like the roster, the map, the ticket, and the meals, it is **session state**: it asks
 for no account and does not survive a reload.
 
@@ -73,6 +76,12 @@ Effects of the same kind whose scopes overlap **all apply** to a member in both:
 specialty and +1 for the Psychic type give a Psychic Ingredients specialist +2.) The
 game does not overlap them, but a hand-built bonus can, so the rule is explicit.
 
+The same rule governs the **weekly bonus of an expert map** (see [Map bonuses &
+Snorlax rating](0007-map-bonuses-rating.md)) — a different thing despite the
+similar name: it comes with the map, not with an event. Both apply: the map's +1
+ingredient and an event's +1 ingredient give a member reached by both **+2**; the
+map's ×1.25 skill trigger and an event's ×1.5 give **×1.875**.
+
 The bonus changes **each Pokémon's production before the split**: a split slot then
 weights each half's bonused production, exactly as it weights unbonused production
 today.
@@ -86,7 +95,7 @@ today.
 
 ## Acceptance criteria
 
-- With **no effects**, or with the bonus **off**, every team total is **identical**
+- With **no effects**, every team total is **identical**
   to the tool without this feature (empty, not an error).
 - **+1 extra ingredient, scope Ingredients specialty**: an Ingredients specialist
   yields more ingredients/day; a Berries specialist on the same team is **unchanged**.
@@ -107,6 +116,8 @@ today.
 - **Overlapping scopes**: +1 ingredient for Ingredients specialty and +1 for Psychic
   give a Psychic Ingredients specialist **+2**; ×1.5 and ×1.2 trigger chance on the
   same member give **×1.8**.
+- On an **expert map** with the **+1 ingredient** weekly bonus, an event's **+1
+  ingredient** gives a member reached by both **+2**.
 - A member with the **All** specialty is affected by an effect scoped to **any**
   specialty.
 - A **split slot 60/40** contributes each half's **bonused** production ×**0.60** /
@@ -114,8 +125,8 @@ today.
 - A value **out of range** (e.g. +6 ingredients, ×3.5, ×1.0) is **not accepted**: the
   effect is not added and the reason is shown; nothing is ever computed with it.
 - **Team-wide kinds** (dish strength, pot) offer **no scope**.
-- **Turning the bonus off** keeps the composed effects; turning it back on applies
-  them again.
+- **Removing all** effects at once leaves the bonus empty and the totals back to
+  their unbonused values; there is no separate on/off state.
 - **Reloading** discards the bonus.
 - The **Box and Comparison** show the **same numbers** for a Pokémon whether or not a
   bonus is on in Team Analysis.
