@@ -996,5 +996,34 @@ def test_team_grand_total_includes_the_kitchen(
     assert result.grand_total_strength == pytest.approx(
         result.total_strength + result.kitchen.total
     )
-    assert result.cooking_meals[0].fits_pot in (True, False)
-    assert result.cooking_meals[0].strength_base > 0
+    # Fancy Apple Curry has 7 ingredients: fits pot (base 21).
+    assert result.cooking_meals[0].fits_pot is True
+    assert result.cooking_meals[0].strength_base == pytest.approx(result.cooking_meals[0].strength)
+
+
+def test_team_kitchen_applies_island_bonus_to_cooking_meals(
+    production_service: DefaultProductionService,
+) -> None:
+    recipe = production_service.list_recipes()[0]  # Fancy Apple Curry, 7 ingredients
+    result = production_service.compute_team_production(
+        _team(
+            meals=[MealSelectionInput(recipe=recipe.name, level=1), None, None],
+            island_bonus=0.5,
+        )
+    )
+    # strength = strength_base * 1.5 when island_bonus = 0.5
+    assert result.cooking_meals[0].strength == pytest.approx(
+        result.cooking_meals[0].strength_base * 1.5
+    )
+    assert result.kitchen.total == pytest.approx(result.kitchen.total_base * 1.5)
+
+
+def test_team_kitchen_fits_pot_flag_for_oversized_recipe(
+    production_service: DefaultProductionService,
+) -> None:
+    # Soft Potato Chowder has 10+8+4=22 ingredients, exceeds pot base (21).
+    recipe = next(r for r in production_service.list_recipes() if r.name == "Soft Potato Chowder")
+    result = production_service.compute_team_production(
+        _team(meals=[MealSelectionInput(recipe=recipe.name, level=1), None, None])
+    )
+    assert result.cooking_meals[0].fits_pot is False

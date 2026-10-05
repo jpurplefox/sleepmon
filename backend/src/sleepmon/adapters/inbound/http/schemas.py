@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import msgspec
 
+from sleepmon.domain.catalog_data import DEFAULT_POT_SIZE
+
 
 class MemberIn(msgspec.Struct, forbid_unknown_fields=True):
     """Payload para crear o actualizar un miembro."""
@@ -235,7 +237,7 @@ class TeamProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     weekly_bonus: str | None = None
     island_bonus: float = 0.0
     good_camp_ticket: bool = False
-    pot_size: int = 21
+    pot_size: int = DEFAULT_POT_SIZE
 
 
 class IngredientBalanceOut(msgspec.Struct):

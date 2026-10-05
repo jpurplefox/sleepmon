@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 
-from sleepmon.domain.catalog_data import POT_LADDER
+from sleepmon.domain.catalog_data import DEFAULT_POT_SIZE
 
 
 @dataclass(frozen=True, slots=True)
@@ -187,7 +187,7 @@ class TeamProductionInput:
     island_bonus: float = 0.0
     good_camp_ticket: bool = False
     # The pot step (Player progress, overridable in the session).
-    pot_size: int = POT_LADDER[0]
+    pot_size: int = DEFAULT_POT_SIZE
 
 
 @dataclass(frozen=True, slots=True)
