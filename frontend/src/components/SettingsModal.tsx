@@ -85,6 +85,8 @@ interface Props {
   islandBonus: number;
   bonusDisabled: boolean;
   goodCampTicket: boolean;
+  // True when the shown pot carries a multiplier (ticket and/or event).
+  potMultiplied: boolean;
   mainFavorite: string | null;
   weeklyBonus: WeeklyBonus;
   onSelectIsland: (name: string | null) => void;
@@ -142,6 +144,7 @@ export function SettingsModal({
   islandBonus,
   bonusDisabled,
   goodCampTicket,
+  potMultiplied,
   mainFavorite,
   weeklyBonus,
   onSelectIsland,
@@ -398,7 +401,7 @@ export function SettingsModal({
                 onSave={onSavePot}
               />
             </div>
-            {goodCampTicket || skillPerMeal === null || skillPerMeal <= 0 ? (
+            {potMultiplied || skillPerMeal === null || skillPerMeal <= 0 ? (
               <span className="meal-picker-pot__effective muted">
                 = {effectivePot ?? t("common.dash")}
               </span>

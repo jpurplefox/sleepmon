@@ -97,4 +97,17 @@ describe("EventTab", () => {
     expect(rows).toHaveLength(1);
     expect(within(rows[0]).getByText("Pot size")).toBeInTheDocument();
   });
+
+  it("closes the editor when the effect being edited is removed", async () => {
+    const user = userEvent.setup();
+    render(
+      <Harness
+        initial={[{ id: "a", kind: "dish_strength", value: 1.25, scope: { kind: "team" } }]}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Edit Dish strength" }));
+    expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Remove Dish strength" }));
+    expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
+  });
 });

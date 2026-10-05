@@ -47,6 +47,7 @@ function renderModal(overrides: Partial<React.ComponentProps<typeof SettingsModa
     islandBonus: 0,
     bonusDisabled: true,
     goodCampTicket: false,
+    potMultiplied: false,
     mainFavorite: null,
     weeklyBonus: "berry_strength",
     onSelectIsland: vi.fn(),
@@ -120,6 +121,12 @@ describe("SettingsModal — the effective pot", () => {
   it("shows the ticket-boosted effective pot it is given", async () => {
     renderModal({ potSize: 21, effectivePot: 35, goodCampTicket: true });
     expect(screen.getByText("= 35")).toBeInTheDocument();
+  });
+
+  it("uses the = form when the pot is multiplied, ticket or not", async () => {
+    renderModal({ potSize: 21, effectivePot: 62, skillPerMeal: 1, potMultiplied: true });
+    expect(screen.getByText("= 62")).toBeInTheDocument();
+    expect(screen.queryByText(/\+1/)).not.toBeInTheDocument();
   });
 
   it("shows the skill share next to the effective pot", async () => {

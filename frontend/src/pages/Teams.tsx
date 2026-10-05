@@ -138,7 +138,7 @@ const NO_MEMBERS_TAKEN: Set<string> = new Set();
 const fmtInt = (n: number) => Math.round(n).toLocaleString("en-US");
 
 export function Teams() {
-  const { t, ingredient: ingName, berry: berryName } = useI18n();
+  const { t, ingredient: ingName, berry: berryName, type: typeName } = useI18n();
 
   const { status } = useAuth();
   const { guard } = useGate();
@@ -274,8 +274,9 @@ export function Teams() {
   const result = teamQuery.data;
   // A placeholder result is for the previous config, so its pot would be stale.
   const potKnown = result !== undefined && !teamQuery.isPlaceholderData;
+  const eventPot = eventEffects.some((e) => e.kind === "pot_size");
 
-  // Lookup map: recipe name → Recipe for pot/filler calc in plan rows.
+  // Lookup map: recipe name → Recipe, for the ingredient count in plan row labels.
   const recipeByName = useMemo(
     () => new Map((recipes.data ?? []).map((r) => [r.name, r])),
     [recipes.data],
@@ -944,7 +945,11 @@ export function Teams() {
                           <li className="cook-cap-row">
                             <span className="cook-cap-row__label">
                               <img src="/pot.webp" alt="" className="mini-icon" style={{ width: 14, height: 14 }} />
-                              {goodCampTicket ? t("teams.potGct") : t("event.potRow")}
+                              {eventPot
+                                ? goodCampTicket
+                                  ? t("event.potRowBoth")
+                                  : t("event.potRow")
+                                : t("teams.potGct")}
                             </span>
                             <span className="cook-cap-row__value">+{fdown(k.pot.bonus_daily)}</span>
                           </li>
@@ -1279,7 +1284,9 @@ export function Teams() {
           skillPerMeal={potKnown ? result.kitchen.pot.skill_per_meal : null}
           eventEffects={eventEffects}
           onEventEffects={setEventEffects}
-          eventTypes={[...new Set(catalog.data.species.map((s) => s.type))].sort()}
+          eventTypes={[...new Set(catalog.data.species.map((s) => s.type))].sort((a, b) =>
+            typeName(a).localeCompare(typeName(b)),
+          )}
           catalog={catalog.data}
           selectedIsland={selectedIsland}
           favoriteBerries={favoriteBerries}
@@ -1293,6 +1300,7 @@ export function Teams() {
           onMainFavorite={setMainFavorite}
           onWeeklyBonus={setWeeklyBonus}
           goodCampTicket={goodCampTicket}
+          potMultiplied={potKnown && result.kitchen.pot.bonus_daily > 0}
           onGoodCampTicket={setGoodCampTicket}
           dishType={dishType}
           onDishTypeChange={handleDishTypeChange}

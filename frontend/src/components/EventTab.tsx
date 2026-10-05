@@ -82,7 +82,10 @@ export function EventTab({ effects, onChange, types }: Props) {
                   <IconEdit aria-hidden="true" />
                 </button>
                 <button type="button" className="icon-btn"
-                  onClick={() => onChange(effects.filter((x) => x.id !== e.id))}
+                  onClick={() => {
+                    if (editing === e.id) setEditing(null);
+                    onChange(effects.filter((x) => x.id !== e.id));
+                  }}
                   title={t("event.removeAria", { effect: kindLabel(e.kind) })}
                   aria-label={t("event.removeAria", { effect: kindLabel(e.kind) })}>
                   <IconClose aria-hidden="true" />
@@ -116,7 +119,6 @@ export function EventTab({ effects, onChange, types }: Props) {
       )}
     </div>
   );
-
 }
 
 // Close an open popover on outside mousedown or Escape (as IslandTab does).
