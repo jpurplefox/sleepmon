@@ -36,7 +36,8 @@ function renderModal(overrides: Partial<React.ComponentProps<typeof SettingsModa
     onClose: vi.fn(),
     potSize: 21,
     onPotSizeChange: vi.fn(),
-    cookingExtra: 0,
+    effectivePot: 21,
+    skillPerMeal: 0,
     catalog,
     selectedIsland: null,
     favoriteBerries: [],
@@ -109,6 +110,13 @@ describe("SettingsModal — the unsaved mark", () => {
     // the label — it is positioned against this box. Being *out of flow* is the
     // other half, and that half lives in styles.css where jsdom cannot see it.
     expect(mark?.parentElement).toHaveClass("meal-picker-pot__stepper");
+  });
+});
+
+describe("SettingsModal — the effective pot", () => {
+  it("shows the effective pot it is given", async () => {
+    renderModal({ potSize: 21, effectivePot: 35, goodCampTicket: true });
+    expect(screen.getByText("= 35")).toBeInTheDocument();
   });
 });
 

@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 import { useI18n } from "../i18n";
-import { perMealPot } from "../pot";
 import { potBounds, stepPot } from "../progress";
 import { RECIPE_TYPES, dishTypeLabelKey } from "../recipes";
 import type { Catalog, MealInput, Recipe, WeeklyBonus } from "../types";
@@ -68,8 +67,10 @@ interface Props {
   onClose: () => void;
   potSize: number;
   onPotSizeChange: (n: number) => void;
-  /** Total extra pot ingredients/day from cooking_ingredients skill effect (or 0). */
-  cookingExtra: number;
+  /** The per-meal pot the backend computed (base + skill share, × ticket/event). */
+  effectivePot: number;
+  /** floor(skill expansion / 3), shown as "+N" beside the stepper. */
+  skillPerMeal: number;
   // Island tab props
   catalog: Catalog;
   selectedIsland: string | null;
@@ -123,7 +124,8 @@ export function SettingsModal({
   onClose,
   potSize,
   onPotSizeChange,
-  cookingExtra,
+  effectivePot,
+  skillPerMeal,
   catalog,
   selectedIsland,
   favoriteBerries,
@@ -164,9 +166,6 @@ export function SettingsModal({
 
   // PRD 0011: unlike Player progress's draft, these are session values the
   // user is analysing with — closing keeps every one, no question asked.
-
-  // Effective pot = base pot + floor(cookingExtra / 3) (3 meals/day); with GCT: ceil(×1.5).
-  const effectivePot = perMealPot(potSize, cookingExtra, goodCampTicket);
 
   const setLevelFor = (name: string, level: number) => {
     const clamped = Math.max(1, Math.min(70, level));
@@ -372,9 +371,9 @@ export function SettingsModal({
               <span className="meal-picker-pot__effective muted">
                 = {effectivePot}
               </span>
-            ) : cookingExtra > 0 ? (
+            ) : skillPerMeal > 0 ? (
               <span className="meal-picker-pot__effective muted">
-                +{Math.floor(cookingExtra / 3)} ={" "}
+                +{skillPerMeal} ={" "}
                 <strong>{effectivePot}</strong>
               </span>
             ) : (
