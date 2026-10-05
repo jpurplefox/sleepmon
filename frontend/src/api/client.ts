@@ -86,6 +86,7 @@ export const api = {
         island_bonus: data.island_bonus ?? 0,
         good_camp_ticket: data.good_camp_ticket ?? false,
         pot_size: data.pot_size,
+        event_effects: data.event_effects ?? [],
       }),
     }),
   getProgress: () => request<PlayerProgress>("/progress"),

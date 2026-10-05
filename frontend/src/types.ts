@@ -1,6 +1,7 @@
 // Tipos espejo de los schemas del backend (sleepmon.adapters.inbound.http.schemas).
 
 import type { Scenario } from "./scenarios";
+import type { EventEffectRequest } from "./eventBonus";
 
 export interface Nature {
   name: string;
@@ -194,6 +195,7 @@ export interface TeamProductionInput {
   island_bonus?: number;
   good_camp_ticket?: boolean;
   pot_size: number;
+  event_effects?: EventEffectRequest[];
 }
 
 export interface IngredientBalance {
