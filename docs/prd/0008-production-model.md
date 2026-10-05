@@ -44,7 +44,7 @@ A day is **15.5 h awake + 8.5 h asleep**.
   are then split into the awake and asleep phases.
 
 The [Event bonus](0012-event-bonus.md) can add per-help ingredients and berries, raise
-skill trigger and level, and scale skill ingredients and the carry limit.
+skill trigger and level, scale skill ingredients, and add to the carry limit.
 
 ### Inventory & overflow
 
