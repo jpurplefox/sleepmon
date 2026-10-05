@@ -5219,3 +5219,44 @@ button.prod-card__base-tag--action:hover {
     width: auto;
   }
 }
+
+/* ── Event bonus: effect rows + inline editor (design-system "Editable rule lists") ── */
+.event-tab { gap: 0.75rem; }
+.effect-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.effect-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 0.45rem 0.5rem 0.45rem 0.7rem;
+  font-size: var(--text-base);
+}
+.effect-row__name { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; min-width: 0; }
+.effect-row__name .metric-mark { margin-left: 0; }
+.effect-row__scope { display: inline-flex; align-items: center; gap: 0.35rem; font-size: var(--text-sm); color: var(--muted); white-space: nowrap; }
+.effect-row__scope--none { opacity: 0.5; }
+.effect-row__actions { display: flex; gap: 0.1rem; }
+.effect-row .mini-icon { width: 18px; height: 18px; object-fit: contain; }
+@media (max-width: 640px) {
+  .effect-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .effect-row__scope { grid-column: 1; grid-row: 2; }
+  .effect-row__actions { grid-column: 2; grid-row: 1 / span 2; }
+}
+.effect-list__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.inline-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--r-md);
+}
+.inline-editor__value { width: 4.5rem; }
+.inline-editor__btn-icon { width: 16px; height: 16px; margin-right: 0.35rem; }
+.inline-editor__actions { display: flex; justify-content: flex-end; gap: 0.5rem; }
+/* Pokémon type icons are game art clipped round (design system §3). */
+.type-icon { border-radius: 50%; }

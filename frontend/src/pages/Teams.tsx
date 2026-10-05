@@ -1267,6 +1267,9 @@ export function Teams() {
           onPotSizeChange={(n) => setPotOverride(n)}
           effectivePot={potKnown ? result.kitchen.pot.per_meal : null}
           skillPerMeal={potKnown ? result.kitchen.pot.skill_per_meal : null}
+          eventEffects={[]}
+          onEventEffects={() => {}}
+          eventTypes={[]}
           catalog={catalog.data}
           selectedIsland={selectedIsland}
           favoriteBerries={favoriteBerries}

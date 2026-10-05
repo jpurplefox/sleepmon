@@ -1,9 +1,11 @@
 import { useState } from "react";
 
+import type { EventEffect } from "../eventBonus";
 import { useI18n } from "../i18n";
 import { potBounds, stepPot } from "../progress";
 import { RECIPE_TYPES, dishTypeLabelKey } from "../recipes";
 import type { Catalog, MealInput, Recipe, WeeklyBonus } from "../types";
+import { EventTab } from "./EventTab";
 import { IslandTab } from "./IslandTab";
 import { Modal } from "./Modal";
 import { RecipeCard, normalizeSearch } from "./RecipeCard";
@@ -57,7 +59,7 @@ function PotLadderStepper({
   );
 }
 
-type TabId = "island" | "meals";
+type TabId = "island" | "event" | "meals";
 
 interface Props {
   recipes: Recipe[];
@@ -71,6 +73,11 @@ interface Props {
   effectivePot: number | null;
   /** floor(skill expansion / 3), shown as "+N" beside the stepper; null while unknown. */
   skillPerMeal: number | null;
+  // Event tab props
+  eventEffects: EventEffect[];
+  onEventEffects: (e: EventEffect[]) => void;
+  /** Catalog types offered by the event scope picker. */
+  eventTypes: string[];
   // Island tab props
   catalog: Catalog;
   selectedIsland: string | null;
@@ -126,6 +133,9 @@ export function SettingsModal({
   onPotSizeChange,
   effectivePot,
   skillPerMeal,
+  eventEffects,
+  onEventEffects,
+  eventTypes,
   catalog,
   selectedIsland,
   favoriteBerries,
@@ -257,6 +267,17 @@ export function SettingsModal({
         <button
           type="button"
           role="tab"
+          id="settings-tab-event"
+          aria-controls="settings-panel-event"
+          aria-selected={activeTab === "event"}
+          className={"specialty-toggle__btn" + (activeTab === "event" ? " is-on" : "")}
+          onClick={() => setActiveTab("event")}
+        >
+          {t("teams.tabEvent")}
+        </button>
+        <button
+          type="button"
+          role="tab"
           id="settings-tab-meals"
           aria-controls="settings-panel-meals"
           aria-selected={activeTab === "meals"}
@@ -303,6 +324,16 @@ export function SettingsModal({
           dishType={dishType}
           onDishTypeChange={pickDishType}
         />
+      </div>
+
+      <div
+        id="settings-panel-event"
+        role="tabpanel"
+        aria-labelledby="settings-tab-event"
+        hidden={activeTab !== "event"}
+        className="settings-modal-panel"
+      >
+        <EventTab effects={eventEffects} onChange={onEventEffects} types={eventTypes} />
       </div>
 
       {/* Tab: Meals */}

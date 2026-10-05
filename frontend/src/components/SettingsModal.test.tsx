@@ -38,6 +38,9 @@ function renderModal(overrides: Partial<React.ComponentProps<typeof SettingsModa
     onPotSizeChange: vi.fn(),
     effectivePot: 21,
     skillPerMeal: 0,
+    eventEffects: [],
+    onEventEffects: vi.fn(),
+    eventTypes: [],
     catalog,
     selectedIsland: null,
     favoriteBerries: [],
@@ -411,5 +414,12 @@ describe("SettingsModal — closing keeps session values, no question asked", ()
     expect(onSaveLevel).not.toHaveBeenCalled();
     // The session value itself was never touched (no revert either).
     expect(onPotSizeChange).not.toHaveBeenCalled();
+  });
+});
+
+describe("SettingsModal tabs", () => {
+  it("orders the tabs Map, Event, Meals", () => {
+    renderModal();
+    expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual(["Map", "Event", "Meals"]);
   });
 });
