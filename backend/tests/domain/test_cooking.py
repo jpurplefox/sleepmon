@@ -379,6 +379,7 @@ def test_cooking_day_matches_former_frontend_math() -> None:
     assert day.filler_strength_base == pytest.approx(13 * honey)
     assert day.filler_strength == pytest.approx(13 * honey * 1.1)
     assert day.fillers[0].contributed == pytest.approx(13 * honey * 1.1)
+    assert sum(f.contributed for f in day.fillers) == pytest.approx(day.filler_strength)
     subtotal = 100 + 13 * honey
     assert day.total_base == pytest.approx(subtotal * 1.2)
     assert day.total == pytest.approx(subtotal * 1.2 * 1.1)

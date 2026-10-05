@@ -365,15 +365,19 @@ def daily_production(
         * _nature_factor(nature, NatureStat.INGREDIENT_FINDING, *_NATURE_INGREDIENT),
     )
     berry_rate = max(0.0, 1 - ingredient_rate)
+    # Stacked factors are unbounded; the per-help rate is a probability, so clamp to [0, 1].
     effective_skill_rate = _effective_skill_rate(
-        max(
-            0.0,
-            species.skill_percentage
-            / 100
-            * (1 + skill_ss)
-            * _nature_factor(nature, NatureStat.MAIN_SKILL_CHANCE, *_NATURE_SKILL)
-            * effects.skill_rate_factor
-            * boosts.skill_rate_factor,
+        min(
+            1.0,
+            max(
+                0.0,
+                species.skill_percentage
+                / 100
+                * (1 + skill_ss)
+                * _nature_factor(nature, NatureStat.MAIN_SKILL_CHANCE, *_NATURE_SKILL)
+                * effects.skill_rate_factor
+                * boosts.skill_rate_factor,
+            ),
         ),
         species.pity_helps,
     )

@@ -966,18 +966,21 @@ def test_team_production_rejects_bad_pot_size(client: TestClient) -> None:
 
 
 def test_team_production_accepts_event_effects(client: TestClient) -> None:
+    body = {"slots": _slots_json(_pokemon_json()), "meals": [None, None, None]}
+    plain = client.post("/teams/production", json=body)
     res = client.post(
         "/teams/production",
         json={
-            "slots": _slots_json(_pokemon_json()),
-            "meals": [None, None, None],
+            **body,
             "event_effects": [
                 {"kind": "skill_trigger", "value": 1.5, "scope": "type", "target": "Electric"},
                 {"kind": "dish_strength", "value": 1.25},
+                {"kind": "extra_berries", "value": 1},
             ],
         },
     )
     assert res.status_code == 200
+    assert res.json()["total_berry_amount"] > plain.json()["total_berry_amount"]
 
 
 def test_team_production_rejects_bad_event_effect(client: TestClient) -> None:

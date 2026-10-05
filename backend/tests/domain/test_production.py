@@ -1315,6 +1315,21 @@ def test_skill_trigger_factor_in_scope() -> None:
     assert psychic == base
 
 
+def test_stacked_skill_trigger_factors_keep_the_rate_bounded() -> None:
+    sp = _species(skill_percentage=20)
+    one = daily_production(
+        sp, _INGREDIENTS, level=60, event=_ev(EventEffect(K.SKILL_TRIGGER, 3.0))
+    )
+    stacked = daily_production(
+        sp,
+        _INGREDIENTS,
+        level=60,
+        event=_ev(*(EventEffect(K.SKILL_TRIGGER, 3.0) for _ in range(3))),
+    )
+    assert stacked.skill_triggers >= one.skill_triggers
+    assert 0 <= stacked.skill_triggers <= stacked.helps_per_day
+
+
 def test_skill_trigger_keeps_night_cap() -> None:
     event = _ev(EventEffect(K.SKILL_TRIGGER, 3.0))
     plain = daily_production(_species(skill_percentage=5), _INGREDIENTS, level=60, event=event)
