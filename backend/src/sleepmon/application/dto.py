@@ -171,6 +171,16 @@ class SlotInput:
 
 
 @dataclass(frozen=True, slots=True)
+class EventEffectInput:
+    """One event effect as the client sends it."""
+
+    kind: str
+    value: float
+    scope: str = "team"  # "team" | "type" | "specialty"
+    target: str | None = None  # a Type / Specialty value when scope isn't "team"
+
+
+@dataclass(frozen=True, slots=True)
 class TeamProductionInput:
     """Datos crudos para computar la producción de un equipo (no se persiste)."""
 
@@ -188,6 +198,7 @@ class TeamProductionInput:
     good_camp_ticket: bool = False
     # The pot step (Player progress, overridable in the session).
     pot_size: int = DEFAULT_POT_SIZE
+    event_effects: list[EventEffectInput] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)

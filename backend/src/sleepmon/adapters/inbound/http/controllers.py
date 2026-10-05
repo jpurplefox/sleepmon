@@ -40,6 +40,7 @@ from sleepmon.adapters.inbound.http.schemas import (
     TeamProductionOut,
 )
 from sleepmon.application.dto import (
+    EventEffectInput,
     MealSelectionInput,
     MemberProduction,
     ProductionInput,
@@ -365,6 +366,10 @@ class TeamProductionController(Controller):
                 island_bonus=data.island_bonus,
                 good_camp_ticket=data.good_camp_ticket,
                 pot_size=data.pot_size,
+                event_effects=[
+                    EventEffectInput(kind=e.kind, value=e.value, scope=e.scope, target=e.target)
+                    for e in data.event_effects
+                ],
             )
         )
         return TeamProductionOut(

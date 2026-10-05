@@ -228,6 +228,13 @@ class SlotIn(msgspec.Struct, forbid_unknown_fields=True):
     entries: list[SlotEntryIn]
 
 
+class EventEffectIn(msgspec.Struct, forbid_unknown_fields=True):
+    kind: str
+    value: float
+    scope: str = "team"
+    target: str | None = None
+
+
 class TeamProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     slots: list[SlotIn]
     meals: list[MealIn | None] = msgspec.field(default_factory=list)
@@ -238,6 +245,7 @@ class TeamProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     island_bonus: float = 0.0
     good_camp_ticket: bool = False
     pot_size: int = DEFAULT_POT_SIZE
+    event_effects: list[EventEffectIn] = msgspec.field(default_factory=list)
 
 
 class IngredientBalanceOut(msgspec.Struct):

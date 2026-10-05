@@ -16,6 +16,7 @@ from uuid import UUID
 
 from sleepmon.application.dto import (
     Distributions,
+    EventEffectInput,
     FillerDTO,
     IngredientBalanceDTO,
     IngredientCountDTO,
@@ -53,6 +54,18 @@ from sleepmon.domain.entities import (
     validate_sub_skills,
 )
 from sleepmon.domain.errors import SpeciesNotFoundError, TeamMemberNotFoundError, ValidationError
+from sleepmon.domain.event_bonus import (
+    ADDITIVE_RANGES,
+    FACTOR_MAX,
+    FACTOR_MIN,
+    FACTOR_STEP,
+    TEAM_WIDE_KINDS,
+    EventBonus,
+    EventEffect,
+    EventEffectKind,
+    EventScope,
+    value_allowed,
+)
 from sleepmon.domain.map_bonuses import MapBonuses
 from sleepmon.domain.ports import RecipeCatalog, SpeciesCatalog, TeamRepository
 from sleepmon.domain.pot import pot_capacity
@@ -65,7 +78,9 @@ from sleepmon.domain.value_objects import (
     Island,
     Nature,
     Ribbon,
+    Specialty,
     SubSkill,
+    Type,
     WeeklyBonus,
 )
 
@@ -203,6 +218,50 @@ def _resolve_config(catalog: SpeciesCatalog, data: ProductionInput) -> _Resolved
         ribbon=ribbon,
         skill_level=data.skill_level,
     )
+
+
+_MAX_EVENT_EFFECTS = 16
+_EVENT_SCOPED_SPECIALTIES = (Specialty.BERRIES, Specialty.INGREDIENTS, Specialty.SKILLS)
+
+
+def _event_scope(raw: EventEffectInput) -> EventScope:
+    if raw.scope == "team":
+        return EventScope()
+    if raw.target is None:
+        raise ValidationError("Elegí a qué tipo o especialidad aplica el efecto.")
+    if raw.scope == "type":
+        return EventScope(type=parse_enum(Type, raw.target, "Tipo"))
+    if raw.scope == "specialty":
+        specialty = parse_enum(Specialty, raw.target, "Especialidad")
+        if specialty not in _EVENT_SCOPED_SPECIALTIES:
+            raise ValidationError(f"Especialidad inválida para un efecto: {raw.target!r}.")
+        return EventScope(specialty=specialty)
+    raise ValidationError(f"Alcance inválido: {raw.scope!r}.")
+
+
+def _value_error(kind: EventEffectKind) -> ValidationError:
+    if kind in ADDITIVE_RANGES:
+        low, high = ADDITIVE_RANGES[kind]
+        return ValidationError(f"El valor de {kind.value} debe ser un entero entre {low} y {high}.")
+    return ValidationError(
+        f"El valor de {kind.value} debe estar entre ×{FACTOR_MIN} y ×{FACTOR_MAX}, "
+        f"de a {FACTOR_STEP}."
+    )
+
+
+def _event_bonus(data: TeamProductionInput) -> EventBonus:
+    """Translate the raw effects into the domain's value object. Validates; doesn't compute."""
+    if len(data.event_effects) > _MAX_EVENT_EFFECTS:
+        raise ValidationError(f"Como máximo {_MAX_EVENT_EFFECTS} efectos de evento.")
+    effects: list[EventEffect] = []
+    for raw in data.event_effects:
+        kind = parse_enum(EventEffectKind, raw.kind, "Efecto de evento")
+        if not value_allowed(kind, raw.value):
+            raise _value_error(kind)
+        if kind in TEAM_WIDE_KINDS and raw.scope != "team":
+            raise ValidationError(f"{kind.value} aplica a todo el equipo; no lleva alcance.")
+        effects.append(EventEffect(kind, raw.value, _event_scope(raw)))
+    return EventBonus(tuple(effects))
 
 
 def _map_bonuses(data: TeamProductionInput) -> MapBonuses:
@@ -492,6 +551,7 @@ class DefaultProductionService(ProductionService):
             )
         validate_pot_size(data.pot_size)
         map_bonuses = _map_bonuses(data)
+        event = _event_bonus(data)
 
         # Resolve each entry against the catalog and scale its production by weight.
         # An unknown species is rejected outright: there is no Box to silently drop it from.
@@ -509,6 +569,7 @@ class DefaultProductionService(ProductionService):
                 cfg.skill_level,
                 map_bonuses=map_bonuses,
                 good_camp_ticket=data.good_camp_ticket,
+                event=event,
             )
             scaled = scale_daily(daily, weight)
             member_productions[entry.id] = _production_result(scaled)
@@ -537,7 +598,7 @@ class DefaultProductionService(ProductionService):
         pot = pot_capacity(
             data.pot_size,
             aggregate.skill_cooking_ingredients or 0.0,
-            GOOD_CAMP_TICKET_POT_FACTOR if data.good_camp_ticket else 1.0,
+            (GOOD_CAMP_TICKET_POT_FACTOR if data.good_camp_ticket else 1.0) * event.pot_factor,
         )
         day = cooking_day(
             cooking,
@@ -546,9 +607,10 @@ class DefaultProductionService(ProductionService):
             random_ingredients=aggregate.skill_ingredient_total or 0.0,
             extra_tasty_multiplier=aggregate.extra_tasty_multiplier,
             area_bonus=data.island_bonus,
+            dish_factor=event.dish_strength_factor,
         )
         area = 1.0 + data.island_bonus
-        dish = 1.0  # the event's dish factor arrives in Task 7
+        dish = event.dish_strength_factor
 
         return TeamProductionResult(
             member_count=aggregate.member_count,

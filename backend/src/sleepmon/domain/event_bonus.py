@@ -42,6 +42,18 @@ FACTOR_STEP: Final[float] = 0.05
 _STEP_EPS = 1e-6
 
 
+def value_allowed(kind: EventEffectKind, value: float) -> bool:
+    """Whether `value` is a legal magnitude for `kind` (finite, in range, on step)."""
+    if not math.isfinite(value):
+        return False
+    if kind in ADDITIVE_RANGES:
+        low, high = ADDITIVE_RANGES[kind]
+        return value == int(value) and low <= value <= high
+    steps = (value - FACTOR_MIN) / FACTOR_STEP
+    on_step = abs(steps - round(steps)) < _STEP_EPS
+    return FACTOR_MIN - _STEP_EPS <= value <= FACTOR_MAX + _STEP_EPS and on_step
+
+
 @dataclass(frozen=True, slots=True)
 class EventScope:
     """Whole team when both are None; at most one is set."""
@@ -74,17 +86,8 @@ class EventEffect:
 
     def __post_init__(self) -> None:
         # Invariant safeguard: input validation lives in the application layer.
-        if self.kind in ADDITIVE_RANGES:
-            low, high = ADDITIVE_RANGES[self.kind]
-            if self.value != int(self.value) or not low <= self.value <= high:
-                raise ValueError(f"{self.kind} must be a whole number in {low}..{high}.")
-        else:
-            steps = (self.value - FACTOR_MIN) / FACTOR_STEP
-            on_step = abs(steps - round(steps)) < _STEP_EPS
-            if not (FACTOR_MIN - _STEP_EPS <= self.value <= FACTOR_MAX + _STEP_EPS and on_step):
-                raise ValueError(
-                    f"{self.kind} must be in {FACTOR_MIN}..{FACTOR_MAX} by {FACTOR_STEP}."
-                )
+        if not value_allowed(self.kind, self.value):
+            raise ValueError(f"{self.kind} does not allow the value {self.value}.")
         if self.kind in TEAM_WIDE_KINDS and not self.scope.is_team:
             raise ValueError(f"{self.kind} applies to the whole team; it takes no scope.")
 
