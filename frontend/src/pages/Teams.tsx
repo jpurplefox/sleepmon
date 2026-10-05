@@ -267,6 +267,8 @@ export function Teams() {
   // Multiplicador de fuerza del bonus de isla (1 cuando no hay bonus).
   const bonusFactor = 1 + islandBonus;
   const result = teamQuery.data;
+  // A placeholder result is for the previous config, so its pot would be stale.
+  const potKnown = result !== undefined && !teamQuery.isPlaceholderData;
 
   // Lookup map: recipe name → Recipe for pot/filler calc in plan rows.
   const recipeByName = useMemo(
@@ -965,12 +967,10 @@ export function Teams() {
                           {k.fillers.map((f) => {
                             const key = f.ingredient ?? "__random__";
                             const isRandom = f.ingredient === null;
-                            const label = isRandom ? t("teams.randomIngredients") : ingName(f.ingredient!);
-                            const strength = f.strength;
+                            const label = f.ingredient === null ? t("teams.randomIngredients") : ingName(f.ingredient);
                             const isUsed = f.used > 0;
                             const usedFloor = Math.floor(f.used);
                             const availFloor = Math.floor(f.available);
-                            const contributed = f.contributed;
                             const tip = isRandom ? t("teams.randomIngredientsTip") : undefined;
                             return (
                               <li
@@ -979,7 +979,7 @@ export function Teams() {
                                 title={tip}
                               >
                                 <span className="cook-filler-item__info">
-                                  {isRandom ? (
+                                  {f.ingredient === null ? (
                                     <IconPackage
                                       width={18}
                                       height={18}
@@ -988,7 +988,7 @@ export function Teams() {
                                   ) : (
                                     <img
                                       className="mini-icon"
-                                      src={ingredientIcon(f.ingredient!)}
+                                      src={ingredientIcon(f.ingredient)}
                                       alt={label}
                                       title={label}
                                       style={{ width: 18, height: 18 }}
@@ -1005,7 +1005,7 @@ export function Teams() {
                                     </span>
                                   )}
                                   <span className="cook-filler-item__base-strength muted">
-                                    {Math.round(strength)}
+                                    {Math.round(f.strength)}
                                   </span>
                                 </span>
                                 <span className="cook-filler-item__right">
@@ -1022,7 +1022,7 @@ export function Teams() {
                                         alt=""
                                         style={{ width: 13, height: 13 }}
                                       />
-                                      {fdown(contributed)}
+                                      {fdown(f.contributed)}
                                     </span>
                                   )}
                                 </span>
@@ -1265,8 +1265,8 @@ export function Teams() {
           onClose={() => setMealPickerOpen(false)}
           potSize={potSize}
           onPotSizeChange={(n) => setPotOverride(n)}
-          effectivePot={result?.kitchen.pot.per_meal ?? potSize}
-          skillPerMeal={result?.kitchen.pot.skill_per_meal ?? 0}
+          effectivePot={potKnown ? result.kitchen.pot.per_meal : null}
+          skillPerMeal={potKnown ? result.kitchen.pot.skill_per_meal : null}
           catalog={catalog.data}
           selectedIsland={selectedIsland}
           favoriteBerries={favoriteBerries}

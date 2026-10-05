@@ -193,7 +193,7 @@ export interface TeamProductionInput {
   weekly_bonus?: WeeklyBonus;
   island_bonus?: number;
   good_camp_ticket?: boolean;
-  pot_size?: number;
+  pot_size: number;
 }
 
 export interface IngredientBalance {

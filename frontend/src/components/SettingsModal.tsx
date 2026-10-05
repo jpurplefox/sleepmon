@@ -67,10 +67,10 @@ interface Props {
   onClose: () => void;
   potSize: number;
   onPotSizeChange: (n: number) => void;
-  /** The per-meal pot the backend computed (base + skill share, × ticket/event). */
-  effectivePot: number;
-  /** floor(skill expansion / 3), shown as "+N" beside the stepper. */
-  skillPerMeal: number;
+  /** Per-meal pot from the backend (base + skill share, × ticket/event); null while unknown. */
+  effectivePot: number | null;
+  /** floor(skill expansion / 3), shown as "+N" beside the stepper; null while unknown. */
+  skillPerMeal: number | null;
   // Island tab props
   catalog: Catalog;
   selectedIsland: string | null;
@@ -367,18 +367,14 @@ export function SettingsModal({
                 onSave={onSavePot}
               />
             </div>
-            {goodCampTicket ? (
+            {goodCampTicket || skillPerMeal === null || skillPerMeal <= 0 ? (
               <span className="meal-picker-pot__effective muted">
-                = {effectivePot}
-              </span>
-            ) : skillPerMeal > 0 ? (
-              <span className="meal-picker-pot__effective muted">
-                +{skillPerMeal} ={" "}
-                <strong>{effectivePot}</strong>
+                = {effectivePot ?? t("common.dash")}
               </span>
             ) : (
               <span className="meal-picker-pot__effective muted">
-                = {effectivePot}
+                +{skillPerMeal} ={" "}
+                <strong>{effectivePot ?? t("common.dash")}</strong>
               </span>
             )}
           </div>
@@ -409,8 +405,8 @@ export function SettingsModal({
                 (s, ic) => s + ic.count,
                 0,
               );
-              const fits = totalIngs <= effectivePot;
-              const fillers = effectivePot - totalIngs;
+              const fits = effectivePot !== null && totalIngs <= effectivePot;
+              const fillers = effectivePot === null ? 0 : effectivePot - totalIngs;
 
               return (
                 <RecipeCard
@@ -427,6 +423,7 @@ export function SettingsModal({
                     />
                   }
                   beforeStepper={
+                    effectivePot === null ? undefined : (
                     <div
                       className={`meal-picker-card__pot-fit ${fits ? "meal-picker-card__pot-fit--ok" : "meal-picker-card__pot-fit--no"}`}
                     >
@@ -446,6 +443,7 @@ export function SettingsModal({
                         </span>
                       )}
                     </div>
+                    )
                   }
                   afterStepper={
                     <div className="meal-picker-card__moments">

@@ -114,9 +114,33 @@ describe("SettingsModal — the unsaved mark", () => {
 });
 
 describe("SettingsModal — the effective pot", () => {
-  it("shows the effective pot it is given", async () => {
+  it("shows the ticket-boosted effective pot it is given", async () => {
     renderModal({ potSize: 21, effectivePot: 35, goodCampTicket: true });
     expect(screen.getByText("= 35")).toBeInTheDocument();
+  });
+
+  it("shows the skill share next to the effective pot", async () => {
+    renderModal({ potSize: 21, effectivePot: 28, skillPerMeal: 7 });
+    expect(screen.getByText(/\+7/)).toBeInTheDocument();
+    expect(screen.getByText("28")).toBeInTheDocument();
+  });
+
+  it("shows a dash and no fit marks while the pot is unknown", async () => {
+    const recipe: Recipe = {
+      name: "Beanburger Curry",
+      type: "Curry",
+      ingredients: [{ ingredient: "Bean Sausage", count: 5 }],
+      base_strength: 100,
+    };
+    renderModal({
+      effectivePot: null,
+      skillPerMeal: null,
+      recipes: [recipe],
+      levelBonus: [1],
+    });
+    expect(screen.getByText("= —")).toBeInTheDocument();
+    expect(screen.queryByText(/Fits/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Doesn't fit/)).not.toBeInTheDocument();
   });
 });
 
