@@ -427,3 +427,15 @@ export function skillDescription(
   }
   return null;
 }
+
+// Skills whose production isn't (fully) calculated: the i18n key of the card's warning,
+// or null when everything the skill does is modeled.
+export function unmodeledSkillKey(mainSkill: string | undefined): string | null {
+  if (!mainSkill) return null;
+  if (mainSkill.startsWith("Metronome") || mainSkill.startsWith("Skill Copy")) {
+    return "card.unmodeledSkill";
+  }
+  if (mainSkill.startsWith("Berry Zone (Psystrike)")) return "card.unmodeledBerryZone";
+  if (mainSkill.startsWith("Energizing Cheer S (Nuzzle)")) return "card.unmodeledNuzzle";
+  return null;
+}

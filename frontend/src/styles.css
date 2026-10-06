@@ -131,6 +131,10 @@ body {
   border: 1px solid var(--border);
   color: var(--text);
   font-size: var(--text-xs);
+  /* Its own typography: a trigger inside an uppercase heading mustn't restyle it. */
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
   padding: 0.25rem 0.5rem;
   border-radius: var(--r-sm);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
@@ -5301,4 +5305,12 @@ button.prod-card__base-tag--action:hover {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+}
+
+/* Warning on a card's Skill block: part of what the skill does isn't calculated. */
+.skill-alert {
+  display: inline-flex;
+  margin-left: 0.35rem;
+  color: var(--down);
+  cursor: help;
 }

@@ -258,6 +258,11 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Energía que la skill recupera por día al propio Pokémon",
     "card.randomEnergy": "de energía a un compañero al azar",
     "card.candy": "caramelos",
+    "card.unmodeledSkill": "La producción de esta skill no se está calculando.",
+    "card.unmodeledBerryZone":
+      "El Berry Zone (el aumento a la fuerza de las bayas Ango) no se está calculando; solo el Vigor.",
+    "card.unmodeledNuzzle":
+      "El bonus de activación de skill que puede dar no se está calculando; solo la energía.",
     "card.candyTitle": "Caramelos por día que consigue la skill, de cualquier Pokémon (promedio)",
     "card.berryJuice": "Zumo de baya",
     "card.berryJuiceTitle": "Zumos de baya por día que consigue la skill (promedio)",
@@ -750,6 +755,11 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Energy the skill restores per day to the Pokémon itself",
     "card.randomEnergy": "Energy to a random teammate",
     "card.candy": "candies",
+    "card.unmodeledSkill": "This skill's production isn't being calculated.",
+    "card.unmodeledBerryZone":
+      "Its Berry Zone (the Mago Berry strength boost) isn't being calculated, only the Strength.",
+    "card.unmodeledNuzzle":
+      "The skill activation bonus it may give isn't being calculated, only the Energy.",
     "card.candyTitle": "Candies per day the skill gets, for any Pokémon (average)",
     "card.berryJuice": "Berry Juice",
     "card.berryJuiceTitle": "Berry Juices per day the skill gets (average)",

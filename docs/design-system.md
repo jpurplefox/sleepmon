@@ -281,6 +281,10 @@ states · where it lives. Feature one-offs are intentionally not here.
   the figure it changes (a summary of active rules), it leads with the effect's icon
   and may close with its scope's (a type icon) — `[icon] ×1,5 [scope]`, icons at
   14px inside the same pill.
+- **`.skill-alert`** — a `--down` warning triangle (`IconAlert`, 14px) beside a card's
+  Skill block heading, saying part of what the skill does isn't calculated (Metronome,
+  Skill Copy, Psystrike's Berry Zone, Nuzzle's bonus). Wrapped in `Tooltip` with the
+  specific gap; focusable, `role="img"` + `aria-label` with the same text.
 - **Status notice** (`.status-notice`, inside a `.status-notices` wrapping row) — a
   page-level pill saying a modifier is active: `--surface-2` fill, `--border`,
   `--text-sm` weight 600, `999px`, leading game icon, `role="status"`. Several sit
@@ -335,6 +339,8 @@ states · where it lives. Feature one-offs are intentionally not here.
   trigger and clamps to the viewport (any width, either edge). Plain string or rich
   content via `Tooltip.Row / Tooltip.Label / Tooltip.Value` (e.g. a strength
   base/bonus breakdown). Wraps the trigger element (`.tooltip` + `.tooltip__bubble`).
+  The bubble sets its own typography (weight 400, no uppercase, normal tracking), so a
+  trigger inside an uppercase block heading doesn't restyle it.
 
 ### Form controls
 - **`Stepper`** (`components/Stepper.tsx`) — the `‹ value ›` shell: two nav buttons
