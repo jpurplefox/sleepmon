@@ -163,9 +163,8 @@ def test_species_names_are_unique() -> None:
 
 def test_catalog_covers_the_full_helper_roster() -> None:
     # Dataset completo del juego (nitoyon cruzado con nerolis-lab), salvo Mew/Darkrai
-    # (especialistas "All" con cantidades de ingrediente no publicadas) y Mewtwo
-    # (todavía sin datos publicados).
-    assert len(SEED_SPECIES) == 244
+    # (especialistas "All" con cantidades de ingrediente no publicadas).
+    assert len(SEED_SPECIES) == 247
     assert {sp.specialty for sp in SEED_SPECIES} == {
         Specialty.BERRIES,
         Specialty.INGREDIENTS,
