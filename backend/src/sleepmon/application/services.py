@@ -296,7 +296,9 @@ def _map_bonuses(data: TeamProductionInput) -> MapBonuses:
         return MapBonuses(subs=frozenset(favorites))
 
     subs = frozenset(favorites - {main}) if main is not None else frozenset(favorites)
-    return MapBonuses(main=main, subs=subs, expert=True, weekly_bonus=weekly)
+    return MapBonuses(
+        main=main, subs=subs, expert=True, weekly_bonus=weekly, island=island
+    )
 
 
 class TeamService(ABC):

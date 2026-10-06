@@ -264,13 +264,28 @@ ISLAND_EXPERT: Final[frozenset[Island]] = frozenset(
 # and pokemonsleep.net. The x2.4 REPLACES the x2 favorite bonus, it does not stack.
 FAVORITE_BERRY_MULTIPLIER: Final[float] = 2.0
 EXPERT_BERRY_MULTIPLIER: Final[float] = 2.4
-EXPERT_MAIN_SPEED_FACTOR: Final[float] = 0.9  # the main berry helps 10% faster
-EXPERT_PENALTY_SPEED_FACTOR: Final[float] = 1.15  # no favorite: 15% slower
 EXPERT_MAIN_SKILL_LEVEL_BONUS: Final[int] = 1
 EXPERT_SKILL_RATE_FACTOR: Final[float] = 1.25
 # +1 per gather, regardless of specialty: the game gives ingredient specialists a
 # *chance* at +2, but doesn't publish the probability (out of scope per the PRD).
 EXPERT_EXTRA_INGREDIENTS: Final[float] = 1.0
+
+
+@dataclass(frozen=True, slots=True)
+class ExpertSpeedFactors:
+    """Help-interval factors on an expert map: main berry, and no favorite berry."""
+
+    main: float
+    penalty: float
+
+
+# Each expert map sets its own speed effects; the rest are shared.
+EXPERT_SPEED_FACTORS: Final[Mapping[Island, ExpertSpeedFactors]] = {
+    # Main berry 10% faster, no favorite 15% slower.
+    Island.GREENGRASS_EXPERT: ExpertSpeedFactors(main=0.9, penalty=1.15),
+    # Main berry 20% faster, no favorite 35% slower.
+    Island.CYAN_BEACH_EXPERT: ExpertSpeedFactors(main=0.8, penalty=1.35),
+}
 
 # Estructura fija de los 35 ratings (Basic1-5, Great1-5, Ultra1-5, Master1-20).
 _RATING_STRUCTURE: Final[tuple[tuple[RatingTier, int], ...]] = tuple(
