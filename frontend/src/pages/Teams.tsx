@@ -37,7 +37,12 @@ import { fdown, fup } from "../utils/format";
 import { recipeImage } from "../recipes";
 import { areaBonusOf, recipeLevelOf } from "../progress";
 import { statIcon } from "../natures";
-import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
+import {
+  BERRY_JUICE_ICON,
+  CHARGE_STRENGTH_ICON,
+  GENERIC_CANDY_ICON,
+  POT_EXPANSION_ICON,
+} from "../skillIcons";
 import { configFromMember, newEntry, newId } from "../roster";
 import {
   MAX_TEAM,
@@ -68,6 +73,7 @@ import { useSaveToBox } from "../useSaveToBox";
 type SkillEffectMeta = {
   iconNode: () => React.ReactNode;
   labelKey: string;
+  decimals?: boolean; // small per-day amounts (items) would floor to 0
 };
 
 function skillEffectMeta(kind: string): SkillEffectMeta {
@@ -111,6 +117,18 @@ function skillEffectMeta(kind: string): SkillEffectMeta {
       return {
         iconNode: () => <img className="mini-icon" src={POT_EXPANSION_ICON} alt="" />,
         labelKey: "card.cookingExtra",
+      };
+    case "candy":
+      return {
+        iconNode: () => <img className="mini-icon" src={GENERIC_CANDY_ICON} alt="" />,
+        labelKey: "card.candy",
+        decimals: true,
+      };
+    case "berry_juice":
+      return {
+        iconNode: () => <img className="mini-icon" src={BERRY_JUICE_ICON} alt="" />,
+        labelKey: "card.berryJuice",
+        decimals: true,
       };
     default:
       return {
@@ -637,7 +655,7 @@ export function Teams() {
                         <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
                           {meta.iconNode()}
                           <span>
-                            {`${fdown(total)} ${label}`}
+                            {`${meta.decimals ? total.toFixed(2) : fdown(total)} ${label}`}
                           </span>
                           <span style={{ display: "inline-flex", alignItems: "center", gap: "0.15rem", fontSize: "var(--text-xs)" }}>
                             (<IconSparkle width={11} height={11} style={{ opacity: 0.75 }} />

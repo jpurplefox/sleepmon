@@ -363,6 +363,9 @@ export interface Production {
   skill_berries_per_teammate: number | null;
   // Members each help grant reaches: 1, 2, or 5 (the whole team); null without grants.
   skill_help_targets?: number | null;
+  // Items per day: candies of any Pokémon (Present) and Berry Juice; null otherwise.
+  skill_candy?: number | null;
+  skill_berry_juice?: number | null;
   // Berry Burst: per-berry yield from teammates (null without a team).
   teammate_berries: BerryYield[] | null;
   // Extra Helpful: ingredients obtained from teammates (null without a team).

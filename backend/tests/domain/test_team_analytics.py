@@ -225,6 +225,15 @@ def test_granted_helps_are_not_repeated_as_a_skill_effect() -> None:
     assert not hasattr(result, "skill_extra_helpful")
 
 
+def test_skill_effects_include_candy_and_berry_juice() -> None:
+    delibird = dataclasses.replace(_fake_daily(skill_triggers=3.0), skill_candy=4.0)
+    shuckle = dataclasses.replace(_fake_daily(skill_triggers=2.0), skill_berry_juice=0.37)
+    result = team_production([("d", "Delibird", delibird), ("s", "Shuckle", shuckle)])
+    kinds = {e.kind: e for e in result.skill_effects}
+    assert kinds["candy"] == SkillEffectAgg(kind="candy", total=4.0, triggers=3.0)
+    assert kinds["berry_juice"] == SkillEffectAgg(kind="berry_juice", total=0.37, triggers=2.0)
+
+
 def test_skill_effects_strength_entry() -> None:
     """Un miembro con skill_strength → entry 'strength' con su total y triggers."""
     a = _fake_daily(skill_strength=200.0, skill_triggers=2.0)

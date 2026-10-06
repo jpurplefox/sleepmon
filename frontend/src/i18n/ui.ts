@@ -257,6 +257,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.selfEnergyTitle":
       "Energía que la skill recupera por día al propio Pokémon",
     "card.randomEnergy": "de energía a un compañero al azar",
+    "card.candy": "caramelos",
+    "card.candyTitle": "Caramelos por día que consigue la skill, de cualquier Pokémon (promedio)",
+    "card.berryJuice": "Zumo de baya",
+    "card.berryJuiceTitle": "Zumos de baya por día que consigue la skill (promedio)",
     "card.randomEnergyTitle":
       "Energía por día que la skill reparte al equipo, a un compañero al azar cada activación",
     "card.nightOnce": "1 vez",
@@ -745,6 +749,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.selfEnergyTitle":
       "Energy the skill restores per day to the Pokémon itself",
     "card.randomEnergy": "Energy to a random teammate",
+    "card.candy": "candies",
+    "card.candyTitle": "Candies per day the skill gets, for any Pokémon (average)",
+    "card.berryJuice": "Berry Juice",
+    "card.berryJuiceTitle": "Berry Juices per day the skill gets (average)",
     "card.randomEnergyTitle":
       "Energy per day the skill spreads to the team, to a random teammate each activation",
     "card.nightOnce": "once",

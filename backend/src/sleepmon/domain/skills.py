@@ -40,6 +40,7 @@ Modela, por ahora, tres main skills:
 - **Extra Helpful S**, **Helper Boost** and **Heal Pulse**: helps granted to one, every,
   or two team members (see ``help_grant``); the team pass turns them into production.
 - **Charge Energy S (Moonlight)**: also shares energy with a teammate half the time.
+- **Present** and **Berry Juice**: items on top of the main effect (candy, Berry Juice).
 - **Berry Burst** (+ Disguise, Draco Meteor): own berries plus berries of each
   teammate per trigger; see ``domain/berry_burst.py`` for the team half.
 
@@ -652,6 +653,28 @@ def moonlight_shared_energy(main_skill: str, skill_level: int) -> float | None:
         return None
     level = min(max(skill_level, 1), len(MOONLIGHT_SHARED_ENERGY))
     return MOONLIGHT_SHARE_CHANCE * MOONLIGHT_SHARED_ENERGY[level - 1]
+
+
+# --- Items a skill also gets ---------------------------------------------------------
+# Present (Delibird): a third of the triggers also bring 4 candies for a random member.
+PRESENT_CANDY_CHANCE: Final[float] = 1 / 3
+PRESENT_CANDY_AMOUNT: Final = 4
+# Berry Juice (Shuckle): some triggers also bring one Berry Juice.
+BERRY_JUICE_CHANCE: Final[float] = 0.185
+
+
+def skill_candy(main_skill: str) -> float | None:
+    """Expected candies per trigger (any Pokémon's); None for skills without candy."""
+    if main_skill.startswith("Ingredient Magnet S (Present)"):
+        return PRESENT_CANDY_CHANCE * PRESENT_CANDY_AMOUNT
+    return None
+
+
+def skill_berry_juice(main_skill: str) -> float | None:
+    """Expected Berry Juices per trigger; None for skills without it."""
+    if main_skill.startswith("Energy for Everyone S (Berry Juice)"):
+        return BERRY_JUICE_CHANCE
+    return None
 
 
 def max_skill_level(main_skill: str) -> int:

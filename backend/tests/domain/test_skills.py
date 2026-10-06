@@ -62,6 +62,8 @@ from sleepmon.domain.skills import (
     moonlight_shared_energy,
     powers_up_cooking,
     restores_team_energy,
+    skill_berry_juice,
+    skill_candy,
     skill_strength_amount,
     tasty_chance_amount,
 )
@@ -675,3 +677,17 @@ def test_moonlight_shares_energy_half_the_time() -> None:
     assert moonlight_shared_energy("Charge Energy S (Moonlight)", 1) == pytest.approx(0.5 * 6.3)
     assert moonlight_shared_energy("Charge Energy S (Moonlight)", 7) == pytest.approx(0.5 * 22.8)
     assert moonlight_shared_energy("Charge Energy S", 6) is None
+
+
+# --- Items a skill also gets: candy (Present) and Berry Juice ------------------
+
+
+def test_present_sometimes_gets_candy() -> None:
+    # A third of the triggers bring 4 candies.
+    assert skill_candy("Ingredient Magnet S (Present)") == pytest.approx(4 / 3)
+    assert skill_candy("Ingredient Magnet S") is None
+
+
+def test_berry_juice_sometimes_gets_a_juice() -> None:
+    assert skill_berry_juice("Energy for Everyone S (Berry Juice)") == pytest.approx(0.185)
+    assert skill_berry_juice("Energy for Everyone S") is None

@@ -1685,3 +1685,21 @@ def test_moonlight_also_shares_energy_with_a_teammate() -> None:
     prod = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
     assert prod.skill_self_energy == pytest.approx(prod.skill_triggers * 43)
     assert prod.skill_random_energy == pytest.approx(prod.skill_triggers * 0.5 * 22.8)
+
+
+# --- Items: candy (Present) and Berry Juice -------------------------------------
+
+
+def test_present_candy_is_triggers_times_expected_candy() -> None:
+    species = _species(main_skill="Ingredient Magnet S (Present)")
+    prod = daily_production(species, _INGREDIENTS, level=60)
+    assert prod.skill_candy == pytest.approx(prod.skill_triggers * 4 / 3)
+    assert prod.skill_berry_juice is None
+
+
+def test_berry_juice_is_triggers_times_its_chance() -> None:
+    species = _species(main_skill="Energy for Everyone S (Berry Juice)")
+    prod = daily_production(species, _INGREDIENTS, level=60)
+    assert prod.skill_berry_juice == pytest.approx(prod.skill_triggers * 0.185)
+    assert prod.skill_candy is None
+    assert scale_daily(prod, 0.5).skill_berry_juice == pytest.approx(prod.skill_berry_juice * 0.5)

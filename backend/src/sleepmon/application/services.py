@@ -160,6 +160,8 @@ def _production_result(daily: DailyProduction, *, in_team: bool = False) -> Prod
         skill_berry_strength=daily.skill_berry_strength,
         skill_berries_per_teammate=daily.skill_berries_per_teammate,
         skill_help_targets=None if daily.help_grant is None else daily.help_grant.targets,
+        skill_candy=daily.skill_candy,
+        skill_berry_juice=daily.skill_berry_juice,
         teammate_berries=(
             [BerryYieldDTO(y.berry.value, y.amount, y.strength) for y in daily.teammate_berries]
             if in_team

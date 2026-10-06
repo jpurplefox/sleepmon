@@ -188,6 +188,14 @@ describe("skills with a second effect", () => {
   });
 });
 
+describe("Berry Juice", () => {
+  it("mentions the juice on top of the team energy", () => {
+    expect(skillDescription("Energy for Everyone S (Berry Juice)", 1, "en")).toBe(
+      "Restores 5 Energy to each Pokémon on your team. Sometimes also gets a Berry Juice.",
+    );
+  });
+});
+
 describe("team help and energy skills", () => {
   it("describes Helper Boost and caps it at 6", () => {
     expect(skillDescription("Helper Boost", 6, "en")).toBe(

@@ -113,6 +113,8 @@ def _full_production_out(result: ProductionResult) -> ProductionOut:
         skill_berry_strength=result.skill_berry_strength,
         skill_berries_per_teammate=result.skill_berries_per_teammate,
         skill_help_targets=result.skill_help_targets,
+        skill_candy=result.skill_candy,
+        skill_berry_juice=result.skill_berry_juice,
         teammate_berries=(
             None
             if result.teammate_berries is None
