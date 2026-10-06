@@ -227,7 +227,7 @@ def _berry_rows(
         rows.append(
             TeamBerryRow(berry, amount, strength_base * factor, strength_base, tuple(sources))
         )
-    return tuple(sorted(rows, key=lambda r: r.strength, reverse=True))
+    return tuple(sorted(rows, key=lambda r: (-r.strength, r.berry.value)))
 
 
 def team_production(
@@ -265,18 +265,13 @@ def team_production(
             id=entry_id,
             species=species,
             strength=(
-                (
+                strength_base := (
                     daily.berry_strength
                     + _teammate_strength(daily)
                     + (daily.skill_strength or 0.0)
                 )
-                * factor
-            ),
-            strength_base=(
-                daily.berry_strength
-                + _teammate_strength(daily)
-                + (daily.skill_strength or 0.0)
-            ),
+            ) * factor,
+            strength_base=strength_base,
             berry_amount=daily.berry_amount + _teammate_amount(daily),
             ingredients_total=sum(slot.amount for slot in daily.ingredients),
             skill_triggers=daily.skill_triggers,

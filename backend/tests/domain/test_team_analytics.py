@@ -330,7 +330,7 @@ _SPECIES = {s.name: s for s in SEED_SPECIES}
 def _daily(name: str, level: int = 30) -> DailyProduction:
     species = _SPECIES[name]
     first = species.ingredients[0]
-    return daily_production(species, (first, first, first), level=level, skill_level=0)
+    return daily_production(species, (first, first, first), level=level, skill_level=1)
 
 
 def _with_teammates(daily: DailyProduction, *yields: BerryYield) -> DailyProduction:
@@ -391,3 +391,15 @@ def test_berry_rows_sort_by_strength() -> None:
     )
     strengths = [r.strength for r in team.berries]
     assert strengths == sorted(strengths, reverse=True)
+
+
+def test_berry_rows_with_equal_strength_sort_by_berry_name() -> None:
+    """Rows with equal strength sort deterministically by berry name."""
+    base = _daily("Pikachu")
+    # Create two daily productions with same strength but different berries
+    daily_a = dataclasses.replace(base, berry=Berry.ORAN)
+    daily_b = dataclasses.replace(base, berry=Berry.ASPEAR)
+    team = team_production([("a", "A", daily_a), ("b", "B", daily_b)])
+    # Both have same strength, so should sort by berry name
+    assert team.berries[0].berry == Berry.ASPEAR  # "aspear" < "oran" lexically
+    assert team.berries[1].berry == Berry.ORAN
