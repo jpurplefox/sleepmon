@@ -33,7 +33,7 @@ import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { CURRENT_EVENT, presetEffects } from "../currentEvent";
 import { toRequest as toEventRequest, type EventEffect } from "../eventBonus";
-import { fdown } from "../utils/format";
+import { fdown, fup } from "../utils/format";
 import { recipeImage } from "../recipes";
 import { areaBonusOf, recipeLevelOf } from "../progress";
 import { statIcon } from "../natures";
@@ -904,7 +904,7 @@ export function Teams() {
                                   <span>{ingName(b.ingredient)}</span>
                                 </span>
                                 <span style={{ color: "var(--down)", fontWeight: 700, fontSize: "var(--text-sm)" }}>
-                                  {t("teams.missingAmt", { n: fdown(Math.abs(b.balance) * factor) })}
+                                  {t("teams.missingAmt", { n: fup(Math.abs(b.balance) * factor) })}
                                 </span>
                               </li>
                             ))}
