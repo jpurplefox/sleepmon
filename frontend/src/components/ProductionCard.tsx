@@ -20,6 +20,7 @@ import {
   POT_EXPANSION_ICON,
 } from "../skillIcons";
 import { spriteUrl } from "../sprites";
+import { unmodeledSkillKey } from "../skills";
 import { subSkillIcon } from "../subskills";
 import type {
   BerryRole,
@@ -33,6 +34,7 @@ import type {
 import { RibbonIcon } from "./RibbonIcon";
 import { Tooltip } from "./Tooltip";
 import {
+  IconAlert,
   IconClock,
   IconClose,
   IconCopy,
@@ -194,6 +196,8 @@ export function ProductionCard({
   const teammateStrength = sumYields(teammates, "strength");
   const teammateIngs = d?.teammate_ingredients ?? [];
   const teammateIngAmount = teammateIngs.reduce((acc, s) => acc + s.amount, 0);
+
+  const unmodeledKey = unmodeledSkillKey(species?.main_skill);
 
   const marks = d
     ? expertMarks({
@@ -713,6 +717,13 @@ export function ProductionCard({
             <div className="prod-card__block-head">
               {t("card.skill")} <span className="muted">{pct(d.effective_skill_percentage)}</span>
               {markFor("skill")}
+              {unmodeledKey && (
+                <Tooltip className="skill-alert" content={t(unmodeledKey)}>
+                  <span tabIndex={0} role="img" aria-label={t(unmodeledKey)}>
+                    <IconAlert />
+                  </span>
+                </Tooltip>
+              )}
             </div>
             <div className="prod-card__line">
               <span title={t("card.triggersTitle")}>

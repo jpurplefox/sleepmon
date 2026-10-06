@@ -16,6 +16,7 @@ import {
   producesIngredients,
   skillDescription,
   tastyChanceAmount,
+  unmodeledSkillKey,
 } from "./skills";
 
 describe("main-skill predicates", () => {
@@ -233,5 +234,24 @@ describe("Berry Burst", () => {
     expect(skillDescription("Berry Burst (Draco Meteor)", 1, "en")).toBe(
       "Gets 12 Berries plus 1 of each of the Berries other Pokémon on your team collect. More with more Dragon species and with Latias on the team.",
     );
+  });
+});
+
+describe("unmodeledSkillKey", () => {
+  it("flags skills whose production isn't calculated", () => {
+    expect(unmodeledSkillKey("Metronome")).toBe("card.unmodeledSkill");
+    expect(unmodeledSkillKey("Skill Copy (Mimic)")).toBe("card.unmodeledSkill");
+    expect(unmodeledSkillKey("Skill Copy (Transform)")).toBe("card.unmodeledSkill");
+  });
+
+  it("flags the part that isn't calculated of partly modeled skills", () => {
+    expect(unmodeledSkillKey("Berry Zone (Psystrike)")).toBe("card.unmodeledBerryZone");
+    expect(unmodeledSkillKey("Energizing Cheer S (Nuzzle)")).toBe("card.unmodeledNuzzle");
+  });
+
+  it("leaves modeled skills alone", () => {
+    expect(unmodeledSkillKey("Charge Strength S (Stockpile)")).toBeNull();
+    expect(unmodeledSkillKey("Energizing Cheer S")).toBeNull();
+    expect(unmodeledSkillKey(undefined)).toBeNull();
   });
 });
