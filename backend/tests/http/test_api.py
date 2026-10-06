@@ -1000,3 +1000,33 @@ def test_team_production_rejects_bad_event_effect(client: TestClient) -> None:
         },
     )
     assert res.status_code == 400
+
+
+def test_berry_burst_fields_are_serialized(client: TestClient) -> None:
+    sceptile = {
+        "species": "Sceptile",
+        "level": 30,
+        "ingredients": ["Fancy Egg", "Fancy Egg", "Fancy Egg"],
+    }
+    # /production (Comparison): per-teammate count, no teammate list.
+    response = client.post("/production", json=sceptile)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["skill_berries_per_teammate"] > 0
+    assert body["skill_berry_amount"] > 0
+    assert body["teammate_berries"] is None
+
+    # Team endpoint with Sceptile + Pikachu: rows and the burster's list.
+    team_response = client.post(
+        "/teams/production",
+        json={
+            "slots": _slots_json(_pokemon_json(**sceptile), _pokemon_json()),
+            "meals": [None, None, None],
+        },
+    )
+    assert team_response.status_code == 200
+    team = team_response.json()
+    member = next(m for m in team["members"] if m["species"] == "Sceptile")
+    assert member["production"]["teammate_berries"][0]["berry"] == "Grepa"
+    grepa = next(r for r in team["berries"] if r["berry"] == "Grepa")
+    assert [s["kind"] for s in grepa["sources"]] == ["helps", "berry_burst"]
