@@ -75,9 +75,16 @@ chosen so far:
 
 | Who it reaches | Effect |
 | --- | --- |
-| Gathers the **main favorite** | Helps **10% faster** (help interval ×0.9), and its **Main Skill acts one level higher** |
+| Gathers the **main favorite** | Helps **faster** (see the per-map table below), and its **Main Skill acts one level higher** |
 | Gathers **any** of the three favorites | The **active weekly bonus** |
-| Gathers **none** of them | Helps **15% slower** (help interval ×1.15) |
+| Gathers **none** of them | Helps **slower** (see the per-map table below) |
+
+**The speed effects depend on the map:**
+
+| Map | Main favorite | None of the favorites |
+| --- | --- | --- |
+| Greengrass Isle (Expert) | **10% faster** (help interval ×0.9) | **15% slower** (help interval ×1.15) |
+| Cyan Beach (Expert) | **20% faster** (help interval ×0.8) | **35% slower** (help interval ×1.35) |
 
 **The weekly bonus.** Exactly one of three is always active, and you pick which:
 
@@ -94,11 +101,11 @@ Berry strength ×2.4 is the default.
 - The help-interval changes **cascade** the way the Good Camp Ticket's do — more helps
   a day means more berries, more ingredients and more skill triggers — and they
   **multiply** with it: with the ticket on, a main-favorite member helps at
-  **×0.8 × 0.9** of its base interval.
+  **×0.8 × 0.9** of its base interval on Greengrass Isle (Expert).
 - The **+1 Main Skill level** stops at each skill's own maximum; a member already
   there gains nothing from it.
 - With **no favorites chosen**, every member gathers none of them: the whole team
-  takes the **−15%** penalty and nobody receives the weekly bonus.
+  takes the map's penalty and nobody receives the weekly bonus.
 
 ## Acceptance criteria
 
@@ -120,9 +127,10 @@ Berry strength ×2.4 is the default.
 - On an expert map the **first** favorite chosen is shown as the **main favorite** and
   the other two as sub-favorites; removing the main keeps the sub-favorites and the
   next berry chosen becomes the new main.
-- A member gathering the **main favorite** helps **10% faster** than the same member
-  on a normal map with the same favorites (help interval ×0.9), and its Main Skill
-  acts **one level higher**.
+- A member gathering the **main favorite** helps faster than the same member on a
+  normal map with the same favorites — **10%** (help interval ×0.9) on Greengrass
+  Isle (Expert), **20%** (×0.8) on Cyan Beach (Expert) — and its Main Skill acts
+  **one level higher**.
 - A member already at its skill's **maximum level** gains no level from the main
   favorite: its skill output is unchanged.
 - With the **×2.4** weekly bonus, a favorite berry yields **2.4×** its base strength —
@@ -131,12 +139,15 @@ Berry strength ×2.4 is the default.
   favorites brings one extra ingredient per find, **whatever its specialty**.
 - With the **×1.25** weekly bonus, those same members trigger their Main Skill **25%
   more often**.
-- A member gathering **none** of the three favorites helps **15% slower** (help
-  interval ×1.15) and receives **no** weekly bonus.
-- With **no favorites chosen** on an expert map, **every** member takes the −15%
+- A member gathering **none** of the three favorites helps slower — **15%** (help
+  interval ×1.15) on Greengrass Isle (Expert), **35%** (×1.35) on Cyan Beach
+  (Expert) — and receives **no** weekly bonus.
+- With **no favorites chosen** on an expert map, **every** member takes that map's
   penalty and none receives a weekly bonus.
+- The card's cadence marks show the selected map's own figures (`−10%` / `+15%` on
+  Greengrass Isle (Expert), `−20%` / `+35%` on Cyan Beach (Expert)).
 - With the **Good Camp Ticket** on, the interval effects combine: a main-favorite
-  member helps at **×0.8 × 0.9** of its base interval.
+  member on Greengrass Isle (Expert) helps at **×0.8 × 0.9** of its base interval.
 - Switching from an expert map to a **normal** one drops all four expert effects;
   favorites and the area bonus behave as documented for normal maps.
 
