@@ -43,6 +43,10 @@ from sleepmon.domain.catalog_data import (
 from sleepmon.domain.event_bonus import NO_EVENT, EventBonus
 from sleepmon.domain.map_bonuses import MapBonuses, berry_effects
 from sleepmon.domain.skills import (
+    NO_BERRY_BURST_TEAM,
+    BerryBurstTeam,
+    berry_burst_amounts,
+    berry_burst_triggers,
     boosts_tasty_chance,
     charge_energy_amount,
     charge_strength_amount,
@@ -168,6 +172,15 @@ class SlotProduction:
 
 
 @dataclass(frozen=True, slots=True)
+class BerryYield:
+    """Berries of one type per day and their strength (map multiplier in, area bonus out)."""
+
+    berry: Berry
+    amount: float
+    strength: float
+
+
+@dataclass(frozen=True, slots=True)
 class DailyProduction:
     """Producción estimada de un Pokémon en un día."""
 
@@ -224,6 +237,13 @@ class DailyProduction:
     night_skill_chances: tuple[float, ...]
     inventory: int  # inventario efectivo (base + Inventory Up)
     inventory_fill_hours: float
+    # Berry Burst: own berries from the skill (a subset of berry_amount/berry_strength).
+    skill_berry_amount: float | None = None
+    skill_berry_strength: float | None = None
+    # Berry Burst: berries of EACH teammate per day (a count; no team, no strength).
+    skill_berries_per_teammate: float | None = None
+    # Berry Burst: berries obtained from teammates, filled by the team pass only.
+    teammate_berries: tuple[BerryYield, ...] = ()
 
 
 def scale_daily(daily: DailyProduction, weight: float) -> DailyProduction:
@@ -264,6 +284,13 @@ def scale_daily(daily: DailyProduction, weight: float) -> DailyProduction:
         skill_tasty_chance=_s(daily.skill_tasty_chance),
         skill_extra_helpful=_s(daily.skill_extra_helpful),
         skill_random_energy=_s(daily.skill_random_energy),
+        skill_berry_amount=_s(daily.skill_berry_amount),
+        skill_berry_strength=_s(daily.skill_berry_strength),
+        skill_berries_per_teammate=_s(daily.skill_berries_per_teammate),
+        teammate_berries=tuple(
+            BerryYield(y.berry, y.amount * weight, y.strength * weight)
+            for y in daily.teammate_berries
+        ),
     )
 
 
@@ -282,6 +309,7 @@ def daily_production(
     map_bonuses: MapBonuses = _NO_MAP,
     good_camp_ticket: bool = False,
     event: EventBonus = NO_EVENT,
+    berry_burst_team: BerryBurstTeam = NO_BERRY_BURST_TEAM,
 ) -> DailyProduction:
     """Estimates daily production from ingredients, level, nature and sub skills.
 
@@ -291,7 +319,8 @@ def daily_production(
     how many ingredients each trigger of Ingredient Draw S-type skills delivers.
     ``map_bonuses`` (neutral by default) brings the expert-mode effects; the skill
     level actually used is reported in ``effective_skill_level``. ``event`` (neutral by
-    default) brings a hand-built event's per-member boosts.
+    default) brings a hand-built event's per-member boosts. ``berry_burst_team`` is the
+    team context Draco Meteor reads (the floor by default).
     """
     if len(ingredients) != MAX_INGREDIENTS:
         raise ValueError(
@@ -537,13 +566,27 @@ def daily_production(
         skill_random_energy = skill_triggers * cooking_minus_energy_amount(effective_skill_level)
 
     # En el overflow nocturno TODAS las ayudas producen bayas.
-    berry_amount = (normal_helps * berry_rate + overflow_helps) * berry_per_help
+    helps_berry_amount = (normal_helps * berry_rate + overflow_helps) * berry_per_help
 
     # Fuerza directa de las bayas: cantidad de bayas × fuerza por baya del nivel.
     # El multiplicador (favorita normal x2, principal experta x2.4, o x1) viene del mapa.
-    berry_strength = berry_amount * berry_strength_for_level(
+    per_berry_strength = berry_strength_for_level(
         species.berry, level, multiplier=effects.berry_multiplier
     )
+
+    # Berry Burst: own berries join the berry totals; teammates' are a per-teammate count.
+    skill_berry_amount: float | None = None
+    skill_berry_strength: float | None = None
+    skill_berries_per_teammate: float | None = None
+    burst = berry_burst_amounts(species.main_skill, effective_skill_level, berry_burst_team)
+    if burst is not None:
+        burst_triggers = berry_burst_triggers(species.main_skill, skill_triggers)
+        skill_berry_amount = burst_triggers * burst.own
+        skill_berry_strength = skill_berry_amount * per_berry_strength
+        skill_berries_per_teammate = burst_triggers * burst.per_teammate
+
+    berry_amount = helps_berry_amount + (skill_berry_amount or 0.0)
+    berry_strength = berry_amount * per_berry_strength
 
     helps_per_slot = normal_helps * ingredient_rate / unlocked
     slots = tuple(
@@ -580,4 +623,7 @@ def daily_production(
         night_skill_chances=night_skill_chances,
         inventory=inventory,
         inventory_fill_hours=fill_seconds / _SECONDS_PER_HOUR,
+        skill_berry_amount=skill_berry_amount,
+        skill_berry_strength=skill_berry_strength,
+        skill_berries_per_teammate=skill_berries_per_teammate,
     )
