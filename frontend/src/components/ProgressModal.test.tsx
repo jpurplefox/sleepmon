@@ -16,15 +16,23 @@ import { ProgressModal } from "./ProgressModal";
 
 const LADDER = [21, 23, 25, 27, 29, 31, 33, 36];
 
-// `Island` is { name, favorite_berries, user_picks, ratings, expert }.
+// `Island` is { name, favorite_berries, user_picks, ratings, expert, expert_speed }.
 const islands: Island[] = [
-  { name: "Cyan Beach", favorite_berries: [], user_picks: false, expert: false, ratings: [] },
+  {
+    name: "Cyan Beach",
+    favorite_berries: [],
+    user_picks: false,
+    expert: false,
+    ratings: [],
+    expert_speed: null,
+  },
   {
     name: "Cyan Beach (Expert)",
     favorite_berries: [],
     user_picks: true,
     expert: true,
     ratings: [],
+    expert_speed: { main: 0.8, penalty: 1.35 },
   },
 ];
 

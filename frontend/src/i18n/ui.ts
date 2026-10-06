@@ -442,14 +442,14 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.weeklyBerryStrength": "Fuerza ×2,4",
     "teams.weeklyIngredient": "+1 ingrediente",
     "teams.weeklySkillTrigger": "Skill ×1,25",
-    "card.expertMainSpeed": "Baya principal: ayuda 10% más rápida",
+    "card.expertMainSpeed": "Baya principal: ayuda {pct}% más rápida",
     "card.expertSkillLevel": "Baya principal: Main Skill un nivel más arriba",
     "card.expertBerryStrength": "Baya favorita: fuerza ×2,4",
     "card.expertFavorite": "Baya favorita: fuerza ×2",
     "card.expertIngredient": "Baya favorita: +1 ingrediente por recolección",
     "card.expertSkillTrigger":
       "Baya favorita: probabilidad de Main Skill ×1,25",
-    "card.expertPenalty": "Sin baya favorita: ayuda 15% más lenta",
+    "card.expertPenalty": "Sin baya favorita: ayuda {pct}% más lenta",
     // Error boundary
     "error.title": "Algo salió mal",
     "error.body":
@@ -918,14 +918,14 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.weeklyBerryStrength": "Strength ×2.4",
     "teams.weeklyIngredient": "+1 ingredient",
     "teams.weeklySkillTrigger": "Skill ×1.25",
-    "card.expertMainSpeed": "Main favorite: helps 10% faster",
+    "card.expertMainSpeed": "Main favorite: helps {pct}% faster",
     "card.expertSkillLevel": "Main favorite: Main Skill acts one level higher",
     "card.expertBerryStrength": "Favorite berry: strength ×2.4",
     "card.expertFavorite": "Favorite berry: strength ×2",
     "card.expertIngredient": "Favorite berry: +1 ingredient per find",
     "card.expertSkillTrigger":
       "Favorite berry: Main Skill trigger chance ×1.25",
-    "card.expertPenalty": "No favorite berry: helps 15% slower",
+    "card.expertPenalty": "No favorite berry: helps {pct}% slower",
     // Error boundary
     "error.title": "Something went wrong",
     "error.body":

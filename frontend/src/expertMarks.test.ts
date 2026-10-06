@@ -50,6 +50,16 @@ describe("expertMarks", () => {
     ]);
   });
 
+  it("reads the speed marks from the map's own factors", () => {
+    const speed = { main: 0.8, penalty: 1.35 };
+    const main = expertMarks({ ...args, speed });
+    expect(main.find((m) => m.metric === "cadence")?.label).toBe("−20%");
+    const none = expertMarks({ ...args, speed, role: "none", effectiveSkillLevel: 3 });
+    expect(none).toEqual([
+      expect.objectContaining({ metric: "cadence", label: "+35%", tone: "bad" }),
+    ]);
+  });
+
   it("puts the ingredient bonus on the ingredients block, alongside the plain ×2", () => {
     const marks = expertMarks({
       ...args,

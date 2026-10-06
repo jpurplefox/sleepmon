@@ -451,6 +451,7 @@ export function Teams() {
               contributions={result?.members}
               berryRoleOf={berryRoleOf}
               expert={isExpert}
+              expertSpeed={island?.expert_speed ?? null}
               weeklyBonus={weeklyBonus}
               teamHasSplit={teamHasSplit}
               saveStatus={statusOf}
