@@ -1518,6 +1518,7 @@ def test_non_burster_has_no_berry_burst_fields() -> None:
     assert prod.skill_berry_amount is None
     assert prod.skill_berry_strength is None
     assert prod.skill_berries_per_teammate is None
+    assert prod.teammate_berries == ()
 
 
 def test_scale_daily_scales_berry_burst_fields() -> None:

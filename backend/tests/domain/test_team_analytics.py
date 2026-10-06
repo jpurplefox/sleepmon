@@ -17,7 +17,7 @@ from sleepmon.domain.value_objects import Berry, Ingredient
 I = Ingredient  # noqa: E741
 
 
-def _daily_kwargs(
+def _fake_daily(
     *,
     berry_amount: float = 10.0,
     berry_strength: float = 100.0,
@@ -64,8 +64,8 @@ def test_team_production_empty() -> None:
 
 
 def test_team_production_sums_strength_and_berries() -> None:
-    a = _daily_kwargs(berry_strength=100.0, skill_strength=50.0)
-    b = _daily_kwargs(berry_strength=200.0, skill_strength=None)
+    a = _fake_daily(berry_strength=100.0, skill_strength=50.0)
+    b = _fake_daily(berry_strength=200.0, skill_strength=None)
     result = team_production([("id-a", "Pikachu", a), ("id-b", "Bulbasaur", b)])
     assert result.member_count == 2
     assert result.total_berry_strength == 300.0
@@ -74,8 +74,8 @@ def test_team_production_sums_strength_and_berries() -> None:
 
 
 def test_team_production_aggregates_ingredients_by_type() -> None:
-    a = _daily_kwargs(ingredients=(SlotProduction(I.HONEY, 3.0), SlotProduction(I.FANCY_EGG, 2.0)))
-    b = _daily_kwargs(ingredients=(SlotProduction(I.HONEY, 5.0),))
+    a = _fake_daily(ingredients=(SlotProduction(I.HONEY, 3.0), SlotProduction(I.FANCY_EGG, 2.0)))
+    b = _fake_daily(ingredients=(SlotProduction(I.HONEY, 5.0),))
     result = team_production([("a", "X", a), ("b", "Y", b)])
     assert result.ingredients[I.HONEY] == 8.0
     assert result.ingredients[I.FANCY_EGG] == 2.0
@@ -83,27 +83,27 @@ def test_team_production_aggregates_ingredients_by_type() -> None:
 
 
 def test_team_production_optional_metric_none_when_nobody_contributes() -> None:
-    result = team_production([("a", "X", _daily_kwargs(skill_energy=None))])
+    result = team_production([("a", "X", _fake_daily(skill_energy=None))])
     assert result.skill_energy is None
 
 
 def test_team_production_optional_metric_sums_present() -> None:
     result = team_production(
-        [("a", "X", _daily_kwargs(skill_energy=10.0)), ("b", "Y", _daily_kwargs(skill_energy=5.0))]
+        [("a", "X", _fake_daily(skill_energy=10.0)), ("b", "Y", _fake_daily(skill_energy=5.0))]
     )
     assert result.skill_energy == 15.0
 
 
 def test_team_extra_tasty_baseline_without_tasty_chance() -> None:
     baseline = expected_extra_tasty([])
-    result = team_production([("a", "X", _daily_kwargs(skill_tasty_chance=None))])
+    result = team_production([("a", "X", _fake_daily(skill_tasty_chance=None))])
     assert result.extra_tasty_rate == pytest.approx(baseline.rate)
     assert result.extra_tasty_multiplier == pytest.approx(baseline.multiplier)
 
 
 def test_team_extra_tasty_uses_triggers_and_recovered_proc_size() -> None:
     # skill_tasty_chance = disparos × tamaño_pp → tamaño = 56.6 / 5.66 = 10 pp.
-    daily = _daily_kwargs(skill_triggers=5.66, skill_tasty_chance=56.6)
+    daily = _fake_daily(skill_triggers=5.66, skill_tasty_chance=56.6)
     result = team_production([("a", "X", daily)])
     expected = expected_extra_tasty([(5.66, 10.0)])
     assert result.extra_tasty_rate == pytest.approx(expected.rate)
@@ -111,15 +111,15 @@ def test_team_extra_tasty_uses_triggers_and_recovered_proc_size() -> None:
 
 
 def test_team_extra_tasty_combines_contributors_into_shared_stack() -> None:
-    a = _daily_kwargs(skill_triggers=2.83, skill_tasty_chance=28.3)  # tamaño 10 pp
-    b = _daily_kwargs(skill_triggers=2.83, skill_tasty_chance=28.3)
+    a = _fake_daily(skill_triggers=2.83, skill_tasty_chance=28.3)  # tamaño 10 pp
+    b = _fake_daily(skill_triggers=2.83, skill_tasty_chance=28.3)
     result = team_production([("a", "X", a), ("b", "Y", b)])
     expected = expected_extra_tasty([(2.83, 10.0), (2.83, 10.0)])
     assert result.extra_tasty_rate == pytest.approx(expected.rate)
 
 
 def test_team_production_member_breakdown() -> None:
-    daily = _daily_kwargs(berry_strength=100.0, skill_strength=20.0)
+    daily = _fake_daily(berry_strength=100.0, skill_strength=20.0)
     result = team_production([("id-a", "Pikachu", daily)])
     member = result.members[0]
     assert member.id == "id-a"
@@ -200,14 +200,14 @@ def test_team_production_skill_ingredients_folded_into_aggregation() -> None:
 
 def test_skill_effects_empty_when_no_contributors() -> None:
     """Ningún miembro aporta ningún efecto → skill_effects vacío."""
-    result = team_production([("a", "X", _daily_kwargs(skill_energy=None, skill_strength=None))])
+    result = team_production([("a", "X", _fake_daily(skill_energy=None, skill_strength=None))])
     assert result.skill_effects == ()
 
 
 def test_skill_effects_energy_only_contributing_member() -> None:
     """Un miembro con skill_energy y otro sin ella → entry 'energy' solo del primero."""
-    a = _daily_kwargs(skill_energy=10.0, skill_triggers=3.0)
-    b = _daily_kwargs(skill_energy=None, skill_triggers=1.5)
+    a = _fake_daily(skill_energy=10.0, skill_triggers=3.0)
+    b = _fake_daily(skill_energy=None, skill_triggers=1.5)
     result = team_production([("a", "X", a), ("b", "Y", b)])
 
     kinds = {e.kind: e for e in result.skill_effects}
@@ -219,7 +219,7 @@ def test_skill_effects_energy_only_contributing_member() -> None:
 
 def test_skill_effects_strength_entry() -> None:
     """Un miembro con skill_strength → entry 'strength' con su total y triggers."""
-    a = _daily_kwargs(skill_strength=200.0, skill_triggers=2.0)
+    a = _fake_daily(skill_strength=200.0, skill_triggers=2.0)
     result = team_production([("a", "X", a)])
 
     kinds = {e.kind: e for e in result.skill_effects}
@@ -230,8 +230,8 @@ def test_skill_effects_strength_entry() -> None:
 
 def test_skill_effects_two_energy_contributors_summed() -> None:
     """Dos miembros con skill_energy → total y triggers sumados."""
-    a = _daily_kwargs(skill_energy=10.0, skill_triggers=3.0)
-    b = _daily_kwargs(skill_energy=5.0, skill_triggers=1.5)
+    a = _fake_daily(skill_energy=10.0, skill_triggers=3.0)
+    b = _fake_daily(skill_energy=5.0, skill_triggers=1.5)
     result = team_production([("a", "X", a), ("b", "Y", b)])
 
     kinds = {e.kind: e for e in result.skill_effects}
@@ -242,7 +242,7 @@ def test_skill_effects_two_energy_contributors_summed() -> None:
 
 def test_skill_effects_absent_kind_not_emitted() -> None:
     """Un kind sin ningún contribuidor no aparece en skill_effects."""
-    a = _daily_kwargs(skill_energy=10.0)
+    a = _fake_daily(skill_energy=10.0)
     result = team_production([("a", "X", a)])
     kinds = {e.kind for e in result.skill_effects}
     assert "strength" not in kinds
@@ -251,7 +251,7 @@ def test_skill_effects_absent_kind_not_emitted() -> None:
 
 def test_skill_effects_stable_order() -> None:
     """skill_effects sigue el orden canónico de kinds (strength antes que energy)."""
-    a = _daily_kwargs(skill_strength=100.0, skill_energy=50.0, skill_triggers=2.0)
+    a = _fake_daily(skill_strength=100.0, skill_energy=50.0, skill_triggers=2.0)
     result = team_production([("a", "X", a)])
     kinds_order = [e.kind for e in result.skill_effects]
     assert kinds_order.index("strength") < kinds_order.index("energy")
@@ -259,7 +259,7 @@ def test_skill_effects_stable_order() -> None:
 
 def test_skill_effects_is_tuple_of_skill_effect_agg() -> None:
     """skill_effects es una tupla de SkillEffectAgg."""
-    a = _daily_kwargs(skill_energy=10.0)
+    a = _fake_daily(skill_energy=10.0)
     result = team_production([("a", "X", a)])
     assert isinstance(result.skill_effects, tuple)
     assert all(isinstance(e, SkillEffectAgg) for e in result.skill_effects)
@@ -270,8 +270,8 @@ def test_skill_effects_is_tuple_of_skill_effect_agg() -> None:
 
 def _sample_entries() -> list[tuple[str, str, DailyProduction]]:
     """Entries de muestra para tests de bonus de isla."""
-    a = _daily_kwargs(berry_strength=100.0, skill_strength=50.0)
-    b = _daily_kwargs(berry_strength=200.0, skill_strength=None)
+    a = _fake_daily(berry_strength=100.0, skill_strength=50.0)
+    b = _fake_daily(berry_strength=200.0, skill_strength=None)
     return [("id-a", "Pikachu", a), ("id-b", "Bulbasaur", b)]
 
 
@@ -304,7 +304,7 @@ def test_zero_bonus_is_identity() -> None:
 
 
 def test_two_half_weight_copies_equal_one_full_member() -> None:
-    d = _daily_kwargs(
+    d = _fake_daily(
         berry_amount=10.0,
         berry_strength=100.0,
         ingredients=(SlotProduction(I.HONEY, 8.0),),
@@ -358,6 +358,18 @@ def test_berry_rows_split_helps_and_berry_burst() -> None:
     assert grepa_row.amount == pytest.approx(pikachu.berry_amount + 3.0)
     assert grepa_row.strength_base == pytest.approx(pikachu.berry_strength + 162.0)
     assert grepa_row.sources[1] == BerrySource("berry_burst", "s", "Sceptile", 3.0, 162.0)
+
+
+def test_berry_rows_merge_own_skill_berries_and_teammate_yield_of_the_same_berry() -> None:
+    sceptile = _daily("Sceptile")
+    merged = _with_teammates(sceptile, BerryYield(Berry.DURIN, 3.0, 300.0))
+    team = team_production([("s", "Sceptile", merged)])
+    durin = next(r for r in team.berries if r.berry == Berry.DURIN)
+    bursts = [s for s in durin.sources if s.kind == "berry_burst"]
+    assert len(bursts) == 1
+    assert bursts[0].member_id == "s"
+    assert bursts[0].amount == pytest.approx(sceptile.skill_berry_amount + 3.0)
+    assert bursts[0].strength_base == pytest.approx(sceptile.skill_berry_strength + 300.0)
 
 
 def test_row_without_berry_burst_has_only_helps() -> None:

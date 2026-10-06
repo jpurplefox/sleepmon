@@ -235,6 +235,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.strengthTitle":
       "Fuerza por día: directa por las bayas (según nivel y tipo de baya) más la de la main skill (Charge Strength)",
     "card.strengthBreakdownTitle": "Aporte de las bayas y de la main skill",
+    "card.berryBreakdownTitle": "Bayas por las ayudas y por la main skill",
     "card.fromBerriesTitle": "Por las bayas",
     "card.perTeammate": "bayas de cada compañero",
     "card.perTeammateTitle": "Bayas por compañero y por día; sin equipo no se calcula su fuerza",
@@ -719,6 +720,7 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Strength per day: direct from berries (by level and berry type) plus the main skill's (Charge Strength)",
     "card.strengthBreakdownTitle":
       "Contribution from berries and the main skill",
+    "card.berryBreakdownTitle": "Berries from helps and from the main skill",
     "card.fromBerriesTitle": "From berries",
     "card.perTeammate": "berries from each teammate",
     "card.perTeammateTitle": "Berries per teammate per day; without a team their strength isn't computed",

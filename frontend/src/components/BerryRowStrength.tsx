@@ -27,11 +27,11 @@ export function BerryRowStrength({ row, bonus }: BerryRowStrengthProps) {
   const bonusLabel = t("teams.strengthBonusDelta", { bonus: String(Math.round(bonus * 100)) });
   const lines = [
     ...(helps && helps.amount > 0
-      ? [{ key: "helps", label: t("teams.fromHelps", { amount: fdown(helps.amount) }), value: helps.strength_base, icon: false }]
+      ? [{ key: "helps", label: t("teams.fromHelps", { amount: helps.amount.toFixed(1) }), value: helps.strength_base, icon: false }]
       : []),
     ...bursts.map((s) => ({
       key: s.member_id ?? "burst",
-      label: t("teams.fromBerryBurst", { species: s.species ?? "", amount: fdown(s.amount) }),
+      label: t("teams.fromBerryBurst", { species: s.species ?? "", amount: s.amount.toFixed(1) }),
       value: s.strength_base,
       icon: true,
     })),

@@ -79,11 +79,6 @@ export interface Catalog {
   pot_ladder: number[];
 }
 
-// Invariantes del contrato del backend (ver MemberInput):
-//  - ingredients: EXACTAMENTE 3, uno por slot (el backend rechaza con 400 != 3).
-//  - sub_skills: hasta 5, sin repetir.
-//  - nature / ribbon: opcionales; "" significa "ninguno".
-//  - level: entero 1..100.
 export interface BerryYield {
   berry: string;
   amount: number;
@@ -106,6 +101,11 @@ export interface TeamBerryRow {
   sources: BerrySource[];
 }
 
+// Invariantes del contrato del backend (ver MemberInput):
+//  - ingredients: EXACTAMENTE 3, uno por slot (el backend rechaza con 400 != 3).
+//  - sub_skills: hasta 5, sin repetir.
+//  - nature / ribbon: opcionales; "" significa "ninguno".
+//  - level: entero 1..100.
 // Producción diaria resumida de un miembro, para el overview de la Caja. Viene en
 // el listado (/team); ausente en respuestas de un solo miembro.
 export interface MemberProduction {
@@ -355,7 +355,7 @@ export interface Production {
   // Ingredientes/día que aporta la main skill (Ingredient Draw S), uno por
   // ingrediente del pool. Vacío si la skill de la especie no produce ingredientes.
   skill_ingredients: SlotProduction[];
-  // Berry Burst: own berries/day and their strength (null without a team).
+  // Berry Burst: own berries/day and their strength (null outside the Berry Burst family).
   skill_berry_amount: number | null;
   skill_berry_strength: number | null;
   // Berry Burst: berries of each teammate per day (count only).

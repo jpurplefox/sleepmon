@@ -583,7 +583,7 @@ export function ProductionCard({
                 <strong>{fmt(d.berry_amount)}</strong>
                 <Delta value={d.berry_amount} base={base?.berry_amount} />
                 {ownSkillBerries > 0 && species && (
-                  <span className="prod-ing__breakdown" title={t("card.strengthBreakdownTitle")}>
+                  <span className="prod-ing__breakdown" title={t("card.berryBreakdownTitle")}>
                     <img src={berryIcon(species.berry)} alt="" title={t("card.fromHelpsTitle")} />{" "}
                     {fmt(d.berry_amount - ownSkillBerries)}
                     <img src={statIcon("Main Skill Chance")} alt="" title={t("card.skillTitle")} />{" "}
