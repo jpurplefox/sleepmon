@@ -78,6 +78,8 @@ describe("maxSkillLevel", () => {
     expect(maxSkillLevel("Tasty Chance S")).toBe(6);
     expect(maxSkillLevel("Energizing Cheer S")).toBe(6);
     expect(maxSkillLevel("Dream Shard Magnet S")).toBe(8);
+    expect(maxSkillLevel("Dream Shard Magnet S (Aura Sphere)")).toBe(8);
+    expect(maxSkillLevel("Berry Zone (Psystrike)")).toBe(6);
     expect(maxSkillLevel("Charge Strength S")).toBe(7);
     expect(maxSkillLevel(undefined)).toBe(7);
   });
@@ -127,11 +129,8 @@ describe("skillDescription", () => {
     );
   });
 
-  it("returns null for skills we do not estimate yet", () => {
-    expect(skillDescription("Charge Strength S (Stockpile)", 3, "en")).toBeNull();
-    // Lucario's variant shares the prefix with the base skill, so it must be
-    // discarded before the generic Dream Shard branch.
-    expect(skillDescription("Dream Shard Magnet S (Aura Sphere)", 3, "en")).toBeNull();
+  it("returns null for skills we do not describe yet", () => {
+    expect(skillDescription("Metronome", 3, "en")).toBeNull();
     expect(skillDescription("Some Unknown Skill", 3, "en")).toBeNull();
     expect(skillDescription(undefined, 3, "en")).toBeNull();
   });
@@ -159,6 +158,32 @@ describe("variants with their own tables", () => {
     );
     expect(skillDescription("Ingredient Draw S (Hyper Cutter)", 1, "es")).toBe(
       "Consigue 5 de un tipo de ingrediente elegido al azar de una selección concreta. A veces consigue 5 ingredientes más.",
+    );
+  });
+});
+
+describe("skills with a second effect", () => {
+  it("describes Aura Sphere's shards and strength", () => {
+    expect(skillDescription("Dream Shard Magnet S (Aura Sphere)", 1, "en")).toBe(
+      "Obtain 240 Dream Shards. Also increases Snorlax's Strength by 200.",
+    );
+  });
+
+  it("describes Bulk Up's ingredients and Extra Tasty boost", () => {
+    expect(skillDescription("Cooking Assist S (Bulk Up)", 7, "es")).toBe(
+      "Te consigue 24 ingredientes al azar. Además aumenta la probabilidad de Plato riquísimo un 5% hasta que cocines un Plato riquísimo o cambies de zona.",
+    );
+  });
+
+  it("describes Psystrike's strength and Berry Zone", () => {
+    expect(skillDescription("Berry Zone (Psystrike)", 1, "en")).toBe(
+      "Increases Snorlax's Strength by 1,408 and Mago Berry strength by 0.6%, up to 24%, until you change sites.",
+    );
+  });
+
+  it("describes Stockpile with its average strength per trigger", () => {
+    expect(skillDescription("Charge Strength S (Stockpile)", 1, "en")).toBe(
+      "Chooses Stockpile or Spit Up. Spit Up gives Snorlax Strength based on what was stockpiled: about 600 per trigger on average.",
     );
   });
 });

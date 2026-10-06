@@ -99,6 +99,12 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
   gets **dream shards** instead of ingredients, Hyper Cutter sometimes gets **twice**
   the ingredients. Second effects that need more modeling (Lunar Blessing's berries,
   Heal Pulse's extra helps, Nuzzle's skill bonus, Present's candy) aren't counted yet.
+- **Skills with two effects count both** when both are modeled: **Aura Sphere**
+  (Lucario) gets dream shards *and* strength; **Cooking Assist S (Bulk Up)**
+  (Heracross) gets random ingredients *and* raises the Extra Tasty rate, accumulated
+  like Tasty Chance. **Stockpile** (Drifloon, Drifblim) stores triggers and spits them
+  out later; it counts its **average strength per trigger**. **Psystrike** (Mewtwo)
+  counts only its strength — its Berry Zone boost isn't modeled yet.
 
 ### Total strength
 

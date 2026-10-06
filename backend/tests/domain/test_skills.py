@@ -2,10 +2,15 @@ import pytest
 
 from sleepmon.domain.catalog_data import MAX_SKILL_LEVEL
 from sleepmon.domain.skills import (
+    AURA_SPHERE_STRENGTH_AMOUNTS,
     BERRY_BURST_DISGUISE_OWN,
     BERRY_BURST_OWN,
     BERRY_BURST_PER_TEAMMATE,
+    BERRY_ZONE_PSYSTRIKE_STRENGTH_AMOUNTS,
+    BULK_UP_TASTY_CHANCE_AMOUNTS,
     CHARGE_ENERGY_S_AMOUNTS,
+    CHARGE_STRENGTH_S_STOCKPILE_AVERAGE,
+    COOKING_ASSIST_S_INGREDIENTS,
     COOKING_POWER_UP_AMOUNTS,
     DISGUISE_GREAT_SUCCESS_RATE,
     DREAM_SHARD_MAGNET_S_AMOUNTS,
@@ -24,13 +29,15 @@ from sleepmon.domain.skills import (
     TASTY_CHANCE_S_AMOUNTS,
     BerryBurstAmounts,
     BerryBurstTeam,
+    assists_cooking,
     berry_burst_amounts,
     berry_burst_triggers,
     boosts_tasty_chance,
     charge_energy_amount,
-    charge_strength_amount,
     charges_self_energy,
     cheers_random_energy,
+    cooking_assist_ingredients,
+    cooking_assist_tasty_chance,
     cooking_minus_energy_amount,
     cooking_minus_pot_amount,
     cooking_power_up_amount,
@@ -52,6 +59,7 @@ from sleepmon.domain.skills import (
     max_skill_level,
     powers_up_cooking,
     restores_team_energy,
+    skill_strength_amount,
     tasty_chance_amount,
 )
 from sleepmon.domain.species import Species
@@ -244,26 +252,48 @@ def test_cooking_power_up_amount_matches_table_and_clamps() -> None:
 
 
 def test_charge_strength_fixed_s_and_m_match_tables() -> None:
-    assert charge_strength_amount("Charge Strength S", 1) == 400
-    assert charge_strength_amount("Charge Strength S", 7) == 3212
-    assert charge_strength_amount("Charge Strength M", 1) == 880
-    assert charge_strength_amount("Charge Strength M", 7) == 6858
+    assert skill_strength_amount("Charge Strength S", 1) == 400
+    assert skill_strength_amount("Charge Strength S", 7) == 3212
+    assert skill_strength_amount("Charge Strength M", 1) == 880
+    assert skill_strength_amount("Charge Strength M", 7) == 6858
 
 
 def test_charge_strength_random_uses_midpoint() -> None:
     # nivel 1: 200..800 -> 500 ; nivel 7: 1606..6424 -> 4015
-    assert charge_strength_amount("Charge Strength S (Random)", 1) == 500
-    assert charge_strength_amount("Charge Strength S (Random)", 7) == 4015
+    assert skill_strength_amount("Charge Strength S (Random)", 1) == 500
+    assert skill_strength_amount("Charge Strength S (Random)", 7) == 4015
 
 
-def test_charge_strength_stockpile_and_other_skills_are_none() -> None:
-    assert charge_strength_amount("Charge Strength S (Stockpile)", 7) is None
-    assert charge_strength_amount("Ingredient Draw S", 7) is None
+def test_skill_strength_none_for_skills_without_strength() -> None:
+    assert skill_strength_amount("Ingredient Draw S", 7) is None
+    assert skill_strength_amount("Dream Shard Magnet S", 7) is None
 
 
-def test_charge_strength_amount_clamps_level() -> None:
-    assert charge_strength_amount("Charge Strength S", 0) == 400
-    assert charge_strength_amount("Charge Strength M", 99) == 6858
+def test_stockpile_uses_its_average_strength_per_trigger() -> None:
+    assert CHARGE_STRENGTH_S_STOCKPILE_AVERAGE == (600, 853, 1177, 1625, 2243, 3099, 4497)
+    for level in range(1, MAX_SKILL_LEVEL + 1):
+        assert skill_strength_amount("Charge Strength S (Stockpile)", level) == (
+            CHARGE_STRENGTH_S_STOCKPILE_AVERAGE[level - 1]
+        )
+
+
+def test_aura_sphere_also_adds_strength() -> None:
+    assert AURA_SPHERE_STRENGTH_AMOUNTS == (200, 285, 393, 542, 748, 1033, 1501, 2042)
+    for level in range(1, 9):
+        assert skill_strength_amount("Dream Shard Magnet S (Aura Sphere)", level) == (
+            AURA_SPHERE_STRENGTH_AMOUNTS[level - 1]
+        )
+
+
+def test_psystrike_adds_strength_and_caps_at_six() -> None:
+    assert BERRY_ZONE_PSYSTRIKE_STRENGTH_AMOUNTS == (1408, 2002, 2762, 3813, 5264, 7274)
+    assert skill_strength_amount("Berry Zone (Psystrike)", 1) == 1408
+    assert skill_strength_amount("Berry Zone (Psystrike)", 7) == 7274
+
+
+def test_skill_strength_amount_clamps_level() -> None:
+    assert skill_strength_amount("Charge Strength S", 0) == 400
+    assert skill_strength_amount("Charge Strength M", 99) == 6858
 
 
 # --- Charge Energy S (energía al propio Pokémon) ------------------------------
@@ -331,11 +361,37 @@ def test_super_luck_sometimes_gets_dream_shards_instead() -> None:
     )
 
 
-def test_dream_shard_aura_sphere_not_estimated() -> None:
-    # Lucario's variant also charges Snorlax's Strength: not modelled yet, so it must
-    # not fall through to the base table via the shared prefix.
-    assert dream_shard_amount("Dream Shard Magnet S (Aura Sphere)", 1) is None
-    assert dream_shard_amount("Dream Shard Magnet S (Aura Sphere)", 8) is None
+def test_dream_shard_aura_sphere_gets_the_base_shards() -> None:
+    for level in range(1, 9):
+        assert dream_shard_amount("Dream Shard Magnet S (Aura Sphere)", level) == (
+            DREAM_SHARD_MAGNET_S_AMOUNTS[level - 1]
+        )
+
+
+# --- Cooking Assist S (Bulk Up) -------------------------------------------------
+
+
+def test_assists_cooking_recognizes_family_and_variants() -> None:
+    pool = (I.BEAN_SAUSAGE, I.FANCY_APPLE, I.HONEY)
+    assert assists_cooking(_species(main_skill="Cooking Assist S", ingredients=pool))
+    assert assists_cooking(_species(main_skill="Cooking Assist S (Bulk Up)", ingredients=pool))
+    assert not assists_cooking(_species(main_skill="Cooking Power-Up S", ingredients=pool))
+
+
+def test_cooking_assist_gets_random_ingredients() -> None:
+    assert COOKING_ASSIST_S_INGREDIENTS == (6, 8, 11, 14, 17, 21, 24)
+    for level in range(1, MAX_SKILL_LEVEL + 1):
+        assert cooking_assist_ingredients(level) == COOKING_ASSIST_S_INGREDIENTS[level - 1]
+    assert cooking_assist_ingredients(99) == 24
+
+
+def test_bulk_up_also_raises_extra_tasty() -> None:
+    assert BULK_UP_TASTY_CHANCE_AMOUNTS == (1, 2, 2, 3, 3, 4, 5)
+    for level in range(1, MAX_SKILL_LEVEL + 1):
+        assert cooking_assist_tasty_chance("Cooking Assist S (Bulk Up)", level) == (
+            BULK_UP_TASTY_CHANCE_AMOUNTS[level - 1]
+        )
+    assert cooking_assist_tasty_chance("Cooking Assist S", 7) is None
 
 
 # --- Tasty Chance S (aumento de Extra Tasty, % por activación) -----------------
@@ -491,6 +547,7 @@ def test_cooking_minus_detected_with_own_pot_and_energy_tables() -> None:
 
 def test_skills_that_cap_at_six() -> None:
     for skill in (
+        "Berry Zone (Psystrike)",
         "Energy for Everyone S",
         "Tasty Chance S",
         "Charge Energy S",
