@@ -14,6 +14,7 @@ import { api } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useGate } from "../auth/useGate";
 import { berryIcon } from "../berries";
+import { BerryRowStrength } from "../components/BerryRowStrength";
 import { BoxPicker } from "../components/BoxPicker";
 import { EventBonusNotice } from "../components/EventBonusNotice";
 import { MemberForm } from "../components/MemberForm";
@@ -273,8 +274,6 @@ export function Teams() {
 
   // Everything renders daily; the totals card shows daily + ×7 on its own.
   const factor = 1;
-  // Multiplicador de fuerza del bonus de isla (1 cuando no hay bonus).
-  const bonusFactor = 1 + islandBonus;
   const result = teamQuery.data;
   // A placeholder result is for the previous config, so its pot would be stale.
   const potKnown = result !== undefined && !teamQuery.isPlaceholderData;
@@ -303,30 +302,6 @@ export function Teams() {
     }
     return map;
   }, [result, meals]);
-
-  // Berry breakdown: group members by berry type, sum amounts and strengths.
-  const berryBreakdown = useMemo(() => {
-    if (!result) return [];
-    const map = new Map<string, { berry_amount: number; berry_strength: number; species: string[] }>();
-    for (const mc of result.members) {
-      const berry = mc.production.berry;
-      const existing = map.get(berry);
-      if (existing) {
-        existing.berry_amount += mc.production.berry_amount;
-        existing.berry_strength += mc.production.berry_strength;
-        existing.species.push(mc.species);
-      } else {
-        map.set(berry, {
-          berry_amount: mc.production.berry_amount,
-          berry_strength: mc.production.berry_strength,
-          species: [mc.species],
-        });
-      }
-    }
-    return [...map.entries()]
-      .map(([berry, data]) => ({ berry, ...data }))
-      .sort((a, b) => b.berry_strength - a.berry_strength);
-  }, [result]);
 
   const atMax = slots.length >= MAX_TEAM;
 
@@ -527,21 +502,21 @@ export function Teams() {
               {/* ── Berries block ── */}
               <div className="cook-result-block">
                 <div className="prod-card__block-head">{t("teams.berries")}</div>
-                {berryBreakdown.length > 0 && (
+                {result.berries.length > 0 && (
                   <ul className="teams-berry-list">
-                    {berryBreakdown.map(({ berry, berry_amount, berry_strength }) => (
-                      <li key={berry} className="teams-berry-row">
+                    {result.berries.map((row) => (
+                      <li key={row.berry} className="teams-berry-row">
                         <span className="teams-berry-row__name">
                           <img
                             className="mini-icon"
-                            src={berryIcon(berry)}
-                            alt={berryName(berry)}
-                            title={berryName(berry)}
+                            src={berryIcon(row.berry)}
+                            alt={berryName(row.berry)}
+                            title={berryName(row.berry)}
                           />
-                          <span>{berryName(berry)}</span>
+                          <span>{berryName(row.berry)}</span>
                         </span>
                         <span className="teams-berry-row__amount muted">
-                          ×{fdown(berry_amount * factor)}
+                          ×{fdown(row.amount * factor)}
                         </span>
                         <span className="teams-berry-row__strength">
                           <img
@@ -550,7 +525,7 @@ export function Teams() {
                             alt=""
                             style={{ width: 14, height: 14 }}
                           />{" "}
-                          {fdown(berry_strength * bonusFactor)}
+                          <BerryRowStrength row={row} bonus={islandBonus} />
                         </span>
                       </li>
                     ))}
