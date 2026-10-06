@@ -1613,3 +1613,28 @@ def test_scale_daily_scales_berry_burst_fields() -> None:
         prod.skill_berries_per_teammate * 0.5
     )
     assert half.teammate_berries == (BerryYield(Berry.GREPA, 5.0, 270.0),)
+
+
+# --- Help yield: what one normal help brings (extra helps from teammates' skills) ---
+
+
+def test_help_yield_is_one_normal_help() -> None:
+    # Level 1: only the first slot (2 Honey) is open; 20% ingredients, 80% one berry.
+    prod = daily_production(_species(), _INGREDIENTS, level=1)
+    y = prod.help_yield
+    assert y.berries == pytest.approx(0.8)
+    assert y.berry_strength == pytest.approx(0.8 * prod.berry_strength / prod.berry_amount)
+    assert y.ingredients == (SlotProduction(I.HONEY, pytest.approx(0.2 * 2)),)
+
+
+def test_help_yield_splits_ingredients_across_open_slots() -> None:
+    prod = daily_production(_species(), _INGREDIENTS, level=60)
+    # Three open slots (2 / 4 / 6), each one a third of the 20% ingredient helps.
+    assert [s.amount for s in prod.help_yield.ingredients] == pytest.approx(
+        [0.2 / 3 * 2, 0.2 / 3 * 4, 0.2 / 3 * 6]
+    )
+
+
+def test_help_yield_is_not_scaled_by_weight() -> None:
+    prod = daily_production(_species(), _INGREDIENTS, level=60)
+    assert scale_daily(prod, 0.5).help_yield == prod.help_yield

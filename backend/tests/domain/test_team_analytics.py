@@ -352,12 +352,12 @@ def test_berry_rows_split_helps_and_berry_burst() -> None:
         pytest.approx(sceptile.berry_strength - sceptile.skill_berry_strength),
     )
     assert durin.sources[1] == BerrySource(
-        "berry_burst", "s", "Sceptile",
+        "skill", "s", "Sceptile",
         sceptile.skill_berry_amount, pytest.approx(sceptile.skill_berry_strength),
     )
     assert grepa_row.amount == pytest.approx(pikachu.berry_amount + 3.0)
     assert grepa_row.strength_base == pytest.approx(pikachu.berry_strength + 162.0)
-    assert grepa_row.sources[1] == BerrySource("berry_burst", "s", "Sceptile", 3.0, 162.0)
+    assert grepa_row.sources[1] == BerrySource("skill", "s", "Sceptile", 3.0, 162.0)
 
 
 def test_berry_rows_merge_own_skill_berries_and_teammate_yield_of_the_same_berry() -> None:
@@ -365,7 +365,7 @@ def test_berry_rows_merge_own_skill_berries_and_teammate_yield_of_the_same_berry
     merged = _with_teammates(sceptile, BerryYield(Berry.DURIN, 3.0, 300.0))
     team = team_production([("s", "Sceptile", merged)])
     durin = next(r for r in team.berries if r.berry == Berry.DURIN)
-    bursts = [s for s in durin.sources if s.kind == "berry_burst"]
+    bursts = [s for s in durin.sources if s.kind == "skill"]
     assert len(bursts) == 1
     assert bursts[0].member_id == "s"
     assert bursts[0].amount == pytest.approx(sceptile.skill_berry_amount + 3.0)

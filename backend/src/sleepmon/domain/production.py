@@ -184,6 +184,18 @@ class BerryYield:
 
 
 @dataclass(frozen=True, slots=True)
+class HelpYield:
+    """What one normal help brings on average (for helps granted by a teammate's skill)."""
+
+    berries: float
+    berry_strength: float  # map multiplier in, area bonus out
+    ingredients: tuple[SlotProduction, ...]  # per open slot
+
+
+NO_HELP_YIELD = HelpYield(0.0, 0.0, ())
+
+
+@dataclass(frozen=True, slots=True)
 class DailyProduction:
     """Producción estimada de un Pokémon en un día."""
 
@@ -247,6 +259,8 @@ class DailyProduction:
     skill_berries_per_teammate: float | None = None
     # Berry Burst: berries obtained from teammates, filled by the team pass only.
     teammate_berries: tuple[BerryYield, ...] = ()
+    # One normal help's yield (intensive: not scaled by weight).
+    help_yield: HelpYield = NO_HELP_YIELD
 
 
 def scale_daily(daily: DailyProduction, weight: float) -> DailyProduction:
@@ -603,6 +617,17 @@ def daily_production(
     berry_amount = helps_berry_amount + (skill_berry_amount or 0.0)
     berry_strength = berry_amount * per_berry_strength
 
+    help_yield = HelpYield(
+        berries=berry_rate * berry_per_help,
+        berry_strength=berry_rate * berry_per_help * per_berry_strength,
+        ingredients=tuple(
+            SlotProduction(
+                ingredients[i], ingredient_rate / unlocked * (slot_amounts[i] + extra_ingredients)
+            )
+            for i in range(unlocked)
+        ),
+    )
+
     helps_per_slot = normal_helps * ingredient_rate / unlocked
     slots = tuple(
         SlotProduction(
@@ -641,4 +666,5 @@ def daily_production(
         skill_berry_amount=skill_berry_amount,
         skill_berry_strength=skill_berry_strength,
         skill_berries_per_teammate=skill_berries_per_teammate,
+        help_yield=help_yield,
     )

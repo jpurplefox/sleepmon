@@ -86,7 +86,7 @@ export interface BerryYield {
 }
 
 export interface BerrySource {
-  kind: "helps" | "berry_burst";
+  kind: "helps" | "skill";
   member_id: string | null;
   species: string | null;
   amount: number;

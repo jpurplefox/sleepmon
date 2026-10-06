@@ -302,7 +302,7 @@ class KitchenDTO:
 
 @dataclass(frozen=True, slots=True)
 class BerrySourceDTO:
-    kind: str  # "helps" | "berry_burst"
+    kind: str  # "helps" | "skill"
     member_id: str | None
     species: str | None
     amount: float

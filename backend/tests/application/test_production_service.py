@@ -1168,7 +1168,7 @@ def test_team_gives_the_burster_its_teammates_berries(
     assert [y.berry for y in sceptile.teammate_berries] == ["Grepa"]
     assert pikachu.teammate_berries is None
     grepa = next(r for r in result.berries if r.berry == "Grepa")
-    assert [s.kind for s in grepa.sources] == ["helps", "berry_burst"]
+    assert [s.kind for s in grepa.sources] == ["helps", "skill"]
     assert grepa.sources[1].member_id == "s"
 
 
@@ -1229,7 +1229,7 @@ def test_berry_burst_burster_weight_is_applied_exactly_once(
     def grepa_burst(result: TeamProductionResult, member_id: str) -> BerrySourceDTO:
         row = next(r for r in result.berries if r.berry == "Grepa")
         return next(
-            s for s in row.sources if s.kind == "berry_burst" and s.member_id == member_id
+            s for s in row.sources if s.kind == "skill" and s.member_id == member_id
         )
 
     solo = team([_entry("s", 1.0, **_SCEPTILE)])
@@ -1241,3 +1241,30 @@ def test_berry_burst_burster_weight_is_applied_exactly_once(
     assert split_s[0].amount == pytest.approx(solo_s[0].amount * 0.5)
     assert split_s[0].strength == pytest.approx(solo_s[0].strength * 0.5)
     assert grepa_burst(split, "s").amount == pytest.approx(grepa_burst(solo, "s").amount * 0.5)
+
+
+def test_team_extra_helpful_helps_turn_into_berries_and_ingredients(
+    production_service: DefaultProductionService,
+) -> None:
+    arcanine = {"species": "Arcanine", "ingredients": ["Fiery Herb"] * 3}
+    team = production_service.compute_team_production(
+        TeamProductionInput(
+            slots=[
+                SlotInput(entries=[_entry("a", **arcanine)]),
+                SlotInput(entries=[_entry("p")]),
+            ],
+            meals=[],
+        )
+    )
+    prod = next(m for m in team.members if m.id == "a").production
+    pikachu = next(m for m in team.members if m.id == "p").production
+    # Pikachu's share of the helps lands as Grepa credited to Arcanine.
+    assert prod.teammate_berries is not None
+    assert [y.berry for y in prod.teammate_berries] == ["Grepa"]
+    grepa = next(r for r in team.berries if r.berry == "Grepa")
+    assert [(s.kind, s.member_id) for s in grepa.sources] == [("helps", None), ("skill", "a")]
+    # Its own share adds Leppa from the skill to its own berries.
+    assert prod.skill_berry_amount is not None and prod.skill_berry_amount > 0
+    # Both shares add ingredients: the team has more than the members' own helps.
+    own_helps = sum(s.amount for p in (prod, pikachu) for s in p.ingredients)
+    assert team.total_ingredients > own_helps
