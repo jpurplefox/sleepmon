@@ -21,7 +21,9 @@ bonus is a set of **effects you compose**, not a pick from a list of named event
    the kind admits it) a **scope**.
 2. **Edit or remove** any effect, or **remove them all** at once.
 3. **Apply it to the team** — every team total reflects the active effects.
-4. **Summarize it** — while it has effects, the page shows a short read-out of them
+4. **Preload the running event** — when the repo defines the event running now, its
+   effects are already there when Team Analysis opens.
+5. **Summarize it** — while it has effects, the page shows a short read-out of them
    next to the Good Camp Ticket's, the way it shows the ticket is on.
 
 ## How it works
@@ -34,6 +36,15 @@ least one effect, and removing every effect is how you turn it off.
 
 Like the roster, the map, the ticket, and the meals, it is **session state**: it asks
 for no account and does not survive a reload.
+
+### The preloaded event
+
+The repo keeps **one current event** (`frontend/src/currentEvent.ts`): its name, its
+start and end (local time, as the game announces them), and its effects, maintained
+by hand each week. When Team Analysis opens **inside that window**, the bonus starts
+with those effects; they are ordinary effects from then on — edit or remove them like
+any other. Outside the window, or when no event is defined, the bonus starts empty as
+before. Effects that don't change production (see *Out of scope*) are left out.
 
 The bonus holds **the same value all 7 days** of the week: the weekly figure is the
 daily one ×7, as everywhere else in the tool.
@@ -127,7 +138,10 @@ today.
 - **Team-wide kinds** (dish strength, pot) offer **no scope**.
 - **Removing all** effects at once leaves the bonus empty and the totals back to
   their unbonused values; there is no separate on/off state.
-- **Reloading** discards the bonus.
+- **Reloading** discards the bonus: it comes back as the preloaded event (or empty).
+- **While the defined event runs**, opening Team Analysis shows its effects already
+  in the bonus; **before its start or from its end on**, or with **no event
+  defined**, the bonus starts **empty**.
 - The **Box and Comparison** show the **same numbers** for a Pokémon whether or not a
   bonus is on in Team Analysis.
 
@@ -144,8 +158,8 @@ today.
 
 ## Out of scope
 
-- **A catalog of named events, or saved bonus templates** — the bonus is built by
-  hand each session.
+- **A catalog of named events, or saved bonus templates** — beyond the single
+  preloaded current event, the bonus is built by hand each session.
 - **Persisting the bonus** — not on the account, not in [Player
   progress](0011-player-progress.md), not in the browser.
 - **Variation within the week** — Sunday step-ups (e.g. an event's ×4 pot on Sunday is
