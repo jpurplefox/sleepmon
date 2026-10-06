@@ -1004,16 +1004,32 @@ def test_charge_strength_random_total_uses_midpoint() -> None:
     assert prod.skill_strength == pytest.approx(prod.skill_triggers * 4015)  # mid de 1606..6424
 
 
-def test_charge_strength_stockpile_not_estimated() -> None:
+def test_charge_strength_stockpile_uses_average_strength() -> None:
     species = _species(main_skill="Charge Strength S (Stockpile)")
     prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
-    assert prod.skill_strength is None
+    assert prod.skill_strength == pytest.approx(prod.skill_triggers * 4497)
 
 
-def test_dream_shard_aura_sphere_not_estimated() -> None:
+def test_dream_shard_aura_sphere_yields_shards_and_strength() -> None:
     species = _species(main_skill="Dream Shard Magnet S (Aura Sphere)")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=8)
+    assert prod.skill_dream_shards == pytest.approx(prod.skill_triggers * 2500)
+    assert prod.skill_strength == pytest.approx(prod.skill_triggers * 2042)
+
+
+def test_psystrike_yields_strength_only() -> None:
+    species = _species(main_skill="Berry Zone (Psystrike)")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
+    assert prod.skill_strength == pytest.approx(prod.skill_triggers * 7274)
+    assert prod.skill_berry_amount is None
+
+
+def test_bulk_up_yields_random_ingredients_and_extra_tasty() -> None:
+    species = _species(main_skill="Cooking Assist S (Bulk Up)")
     prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
-    assert prod.skill_dream_shards is None
+    assert prod.skill_ingredient_total == pytest.approx(prod.skill_triggers * 24)
+    assert prod.skill_tasty_chance == pytest.approx(prod.skill_triggers * 5)
+    assert prod.skill_cooking_ingredients is None
 
 
 # --- Charge Energy S: energía al propio Pokémon --------------------------------
@@ -1467,6 +1483,16 @@ def test_magnet_total_multiplied_once() -> None:
     boosted = daily_production(sp, _INGREDIENTS, level=60, skill_level=3, event=event)
     assert base.skill_ingredient_total is not None
     assert boosted.skill_ingredient_total == pytest.approx(1.5 * base.skill_ingredient_total)
+
+
+def test_cooking_assist_ingredients_multiplied_but_not_its_tasty_chance() -> None:
+    sp = _species(main_skill="Cooking Assist S (Bulk Up)", skill_percentage=20)
+    event = _ev(EventEffect(K.SKILL_INGREDIENTS, 1.5))
+    base = daily_production(sp, _INGREDIENTS, level=60, skill_level=3)
+    boosted = daily_production(sp, _INGREDIENTS, level=60, skill_level=3, event=event)
+    assert base.skill_ingredient_total is not None
+    assert boosted.skill_ingredient_total == pytest.approx(1.5 * base.skill_ingredient_total)
+    assert boosted.skill_tasty_chance == pytest.approx(base.skill_tasty_chance)
 
 
 def test_magnet_plus_total_and_bonus_ingredient_multiplied_once() -> None:

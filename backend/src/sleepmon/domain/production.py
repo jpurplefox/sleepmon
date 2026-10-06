@@ -45,13 +45,15 @@ from sleepmon.domain.map_bonuses import MapBonuses, berry_effects
 from sleepmon.domain.skills import (
     NO_BERRY_BURST_TEAM,
     BerryBurstTeam,
+    assists_cooking,
     berry_burst_amounts,
     berry_burst_triggers,
     boosts_tasty_chance,
     charge_energy_amount,
-    charge_strength_amount,
     charges_self_energy,
     cheers_random_energy,
+    cooking_assist_ingredients,
+    cooking_assist_tasty_chance,
     cooking_minus_energy_amount,
     cooking_minus_pot_amount,
     cooking_power_up_amount,
@@ -73,6 +75,7 @@ from sleepmon.domain.skills import (
     max_skill_level,
     powers_up_cooking,
     restores_team_energy,
+    skill_strength_amount,
     tasty_chance_amount,
 )
 from sleepmon.domain.species import Species
@@ -505,6 +508,8 @@ def daily_production(
         skill_ingredient_total = skill_triggers * ingredient_magnet_amount(
             species.main_skill, effective_skill_level
         )
+    elif assists_cooking(species):
+        skill_ingredient_total = skill_triggers * cooking_assist_ingredients(effective_skill_level)
 
     # Event: ingredients gathered by main skills are multiplied.
     skill_ing_factor = boosts.skill_ingredient_factor
@@ -524,10 +529,10 @@ def daily_production(
     elif powers_up_cooking(species):
         skill_cooking_ingredients = skill_triggers * cooking_power_up_amount(effective_skill_level)
 
-    # Fuerza por la main skill (Charge Strength S / M): cada disparo suma la fuerza
-    # esperada del nivel (punto medio si el monto es aleatorio), así que por día es
-    # disparos × esa fuerza. ``None`` si la skill no es una Charge Strength modelada.
-    per_strength = charge_strength_amount(species.main_skill, effective_skill_level)
+    # Fuerza por la main skill (Charge Strength, Aura Sphere, Psystrike): cada disparo
+    # suma la fuerza esperada del nivel, así que por día es disparos × esa fuerza.
+    # ``None`` si la skill no suma fuerza.
+    per_strength = skill_strength_amount(species.main_skill, effective_skill_level)
     skill_strength: float | None = (
         skill_triggers * per_strength if per_strength is not None else None
     )
@@ -547,12 +552,14 @@ def daily_production(
 
     # Aumento de Extra Tasty por la main skill (Tasty Chance S): el boost se ACUMULA
     # con cada disparo (disparos × %_del_nivel). No lo acotamos al tope de stack del
-    # juego (70%): a ese nivel un crítico lo consume y se sigue sumando.
-    skill_tasty_chance: float | None = (
-        skill_triggers * tasty_chance_amount(effective_skill_level)
-        if boosts_tasty_chance(species)
-        else None
-    )
+    # juego (70%): a ese nivel un crítico lo consume y se sigue sumando. Bulk Up's
+    # boost accumulates the same way.
+    skill_tasty_chance: float | None = None
+    per_bulk_up = cooking_assist_tasty_chance(species.main_skill, effective_skill_level)
+    if boosts_tasty_chance(species):
+        skill_tasty_chance = skill_triggers * tasty_chance_amount(effective_skill_level)
+    elif per_bulk_up is not None:
+        skill_tasty_chance = skill_triggers * per_bulk_up
 
     # Multiplicador de ayuda por la main skill (Extra Helpful S): cada disparo da ×N la
     # ayuda normal, así que el total del día es disparos × N.

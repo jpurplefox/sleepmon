@@ -70,7 +70,7 @@ whose specialty is **All** is in scope of **any** specialty.
 |---|---|---|---|
 | **Extra ingredients per help** | +N | yes | Every help that yields ingredients yields **N more of that slot's ingredient**. |
 | **Extra berries per help** | +N | yes | Every help that yields berries yields **N more**, like Berry Finding S — including the berries-only helps after the night inventory fills. |
-| **Skill ingredients** | ×X | yes | The ingredients delivered by **Ingredient Draw S** and **Ingredient Magnet S** (and their variants) are multiplied. Other skills are unaffected. |
+| **Skill ingredients** | ×X | yes | The ingredients delivered by **Ingredient Draw S**, **Ingredient Magnet S**, and **Cooking Assist S** (and their variants) are multiplied. Other skills are unaffected. |
 | **Skill trigger chance** | ×X | yes | The member's trigger chance — after sub skills and nature — is multiplied: more daytime triggers. The **night cap** is unchanged (1, or 2 for Skills specialists). |
 | **Skill level** | +N | yes | Each trigger yields as if the skill were N levels higher, **capped at that skill's max level**. |
 | **Carry limit** | +N | yes | N more inventory slots, added **before** the Good Camp Ticket's ×1.2. |
