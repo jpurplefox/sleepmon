@@ -14,7 +14,7 @@ from sleepmon.domain.catalog_data import NATURE_EFFECTS
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.extra_tasty import expected_extra_tasty
 from sleepmon.domain.production import DailyProduction
-from sleepmon.domain.value_objects import Ingredient, Nature, NatureStat, SubSkill
+from sleepmon.domain.value_objects import Berry, Ingredient, Nature, NatureStat, SubSkill
 
 
 def nature_distribution(members: Iterable[TeamMember]) -> dict[Nature, int]:
@@ -73,6 +73,28 @@ class SkillEffectAgg:
 
 
 @dataclass(frozen=True, slots=True)
+class BerrySource:
+    """Where a team berry row's berries come from: helps, or one member's Berry Burst."""
+
+    kind: str  # "helps" | "berry_burst"
+    member_id: str | None  # the burster; None for helps
+    species: str | None
+    amount: float
+    strength_base: float  # area bonus not applied
+
+
+@dataclass(frozen=True, slots=True)
+class TeamBerryRow:
+    """One berry type across the team, with its sources."""
+
+    berry: Berry
+    amount: float
+    strength: float  # with area bonus
+    strength_base: float
+    sources: tuple[BerrySource, ...]  # helps first, then bursters by strength
+
+
+@dataclass(frozen=True, slots=True)
 class MemberContribution:
     """Aporte de un miembro al agregado del equipo (para el desglose)."""
 
@@ -116,6 +138,7 @@ class TeamProduction:
     extra_tasty_multiplier: float
     skill_effects: tuple[SkillEffectAgg, ...]
     members: tuple[MemberContribution, ...]
+    berries: tuple[TeamBerryRow, ...]  # sorted by strength, area bonus applied
 
 
 # Métricas opcionales de la main skill que se agregan sumando los presentes (None si
@@ -152,6 +175,61 @@ def _sum_optional(dailies: list[DailyProduction], field: str) -> float | None:
     return sum(present) if present else None
 
 
+def _teammate_strength(daily: DailyProduction) -> float:
+    return sum(y.strength for y in daily.teammate_berries)
+
+
+def _teammate_amount(daily: DailyProduction) -> float:
+    return sum(y.amount for y in daily.teammate_berries)
+
+
+def _berry_rows(
+    entries: list[tuple[str, str, DailyProduction]], factor: float
+) -> tuple[TeamBerryRow, ...]:
+    """Group the team's berries by type: helps plus each burster's share."""
+    helps: dict[Berry, tuple[float, float]] = {}
+    bursts: dict[tuple[Berry, str], BerrySource] = {}
+
+    def add_burst(
+        berry: Berry, member_id: str, species: str, amount: float, strength: float
+    ) -> None:
+        prev = bursts.get((berry, member_id))
+        if prev is not None:
+            amount, strength = amount + prev.amount, strength + prev.strength_base
+        bursts[(berry, member_id)] = BerrySource(
+            "berry_burst", member_id, species, amount, strength
+        )
+
+    for member_id, species, daily in entries:
+        skill_amount = daily.skill_berry_amount or 0.0
+        skill_strength = daily.skill_berry_strength or 0.0
+        prev_amount, prev_strength = helps.get(daily.berry, (0.0, 0.0))
+        helps[daily.berry] = (
+            prev_amount + daily.berry_amount - skill_amount,
+            prev_strength + daily.berry_strength - skill_strength,
+        )
+        if daily.skill_berry_amount is not None:
+            add_burst(daily.berry, member_id, species, skill_amount, skill_strength)
+        for y in daily.teammate_berries:
+            add_burst(y.berry, member_id, species, y.amount, y.strength)
+
+    rows: list[TeamBerryRow] = []
+    for berry in {*helps, *(b for b, _ in bursts)}:
+        help_amount, help_strength = helps.get(berry, (0.0, 0.0))
+        sources = [BerrySource("helps", None, None, help_amount, help_strength)]
+        sources += sorted(
+            (s for (b, _), s in bursts.items() if b is berry),
+            key=lambda s: s.strength_base,
+            reverse=True,
+        )
+        amount = sum(s.amount for s in sources)
+        strength_base = sum(s.strength_base for s in sources)
+        rows.append(
+            TeamBerryRow(berry, amount, strength_base * factor, strength_base, tuple(sources))
+        )
+    return tuple(sorted(rows, key=lambda r: r.strength, reverse=True))
+
+
 def team_production(
     entries: Iterable[tuple[str, str, DailyProduction]],
     *,
@@ -163,6 +241,7 @@ def team_production(
     aggregate. La fuerza total es la suma de
     la fuerza directa de bayas más la de Charge Strength (los ``None`` cuentan 0). Los
     ingredientes se agregan por tipo (slots normales + main skill).
+    Berry Burst's teammate berries count as berry strength of the burster.
 
     ``island_bonus`` escala la fuerza (bayas + skill) por el factor ``(1 + bonus)``.
     Los ingredientes y skill_effects NO se escalan: son cantidades, no fuerza.
@@ -177,7 +256,7 @@ def team_production(
         for slot in (*daily.ingredients, *daily.skill_ingredients):
             ingredients[slot.ingredient] = ingredients.get(slot.ingredient, 0.0) + slot.amount
 
-    total_berry_strength_base = sum(d.berry_strength for d in dailies)
+    total_berry_strength_base = sum(d.berry_strength + _teammate_strength(d) for d in dailies)
     total_skill_strength_base = sum(d.skill_strength or 0.0 for d in dailies)
     total_strength_base = total_berry_strength_base + total_skill_strength_base
 
@@ -185,9 +264,20 @@ def team_production(
         MemberContribution(
             id=entry_id,
             species=species,
-            strength=(daily.berry_strength + (daily.skill_strength or 0.0)) * factor,
-            strength_base=daily.berry_strength + (daily.skill_strength or 0.0),
-            berry_amount=daily.berry_amount,
+            strength=(
+                (
+                    daily.berry_strength
+                    + _teammate_strength(daily)
+                    + (daily.skill_strength or 0.0)
+                )
+                * factor
+            ),
+            strength_base=(
+                daily.berry_strength
+                + _teammate_strength(daily)
+                + (daily.skill_strength or 0.0)
+            ),
+            berry_amount=daily.berry_amount + _teammate_amount(daily),
             ingredients_total=sum(slot.amount for slot in daily.ingredients),
             skill_triggers=daily.skill_triggers,
         )
@@ -228,7 +318,7 @@ def team_production(
     return TeamProduction(
         member_count=len(entries_list),
         total_strength=total_strength_base * factor,
-        total_berry_amount=sum(d.berry_amount for d in dailies),
+        total_berry_amount=sum(d.berry_amount + _teammate_amount(d) for d in dailies),
         total_berry_strength=total_berry_strength_base * factor,
         total_skill_strength=total_skill_strength_base * factor,
         total_strength_base=total_strength_base,
@@ -242,5 +332,6 @@ def team_production(
         extra_tasty_multiplier=extra_tasty.multiplier,
         skill_effects=tuple(skill_effects_list),
         members=members,
+        berries=_berry_rows(entries_list, factor),
         **optional,
     )
