@@ -323,7 +323,6 @@ export interface TeamProduction {
   skill_self_energy: number | null;
   skill_dream_shards: number | null;
   skill_tasty_chance: number | null;
-  skill_extra_helpful: number | null;
   skill_random_energy: number | null;
   skill_cooking_ingredients: number | null;
   skill_ingredient_total: number | null;

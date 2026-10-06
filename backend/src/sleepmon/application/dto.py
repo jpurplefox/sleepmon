@@ -344,7 +344,6 @@ class TeamProductionResult:
     skill_self_energy: float | None
     skill_dream_shards: float | None
     skill_tasty_chance: float | None
-    skill_extra_helpful: float | None
     skill_random_energy: float | None
     skill_cooking_ingredients: float | None
     skill_ingredient_total: float | None

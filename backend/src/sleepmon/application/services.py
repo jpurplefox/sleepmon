@@ -704,7 +704,6 @@ class DefaultProductionService(ProductionService):
             skill_self_energy=aggregate.skill_self_energy,
             skill_dream_shards=aggregate.skill_dream_shards,
             skill_tasty_chance=aggregate.skill_tasty_chance,
-            skill_extra_helpful=aggregate.skill_extra_helpful,
             skill_random_energy=aggregate.skill_random_energy,
             skill_cooking_ingredients=aggregate.skill_cooking_ingredients,
             skill_ingredient_total=aggregate.skill_ingredient_total,

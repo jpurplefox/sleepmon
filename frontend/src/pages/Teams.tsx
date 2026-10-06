@@ -25,7 +25,6 @@ import { TeamSlotCard } from "../components/TeamSlotCard";
 import { StrengthValue } from "../components/StrengthValue";
 import { SnorlaxRatingBadge } from "../components/SnorlaxRatingBadge";
 import {
-  IconMagnifier,
   IconPackage,
   IconPot,
   IconSparkle,
@@ -97,11 +96,6 @@ function skillEffectMeta(kind: string): SkillEffectMeta {
       return {
         iconNode: () => <img className="mini-icon" src="/extra-tasty.png" alt="" />,
         labelKey: "card.extraTasty",
-      };
-    case "extra_helpful":
-      return {
-        iconNode: () => <IconMagnifier />,
-        labelKey: "card.helpMult",
       };
     case "random_energy":
       return {
@@ -643,9 +637,7 @@ export function Teams() {
                         <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
                           {meta.iconNode()}
                           <span>
-                            {e.kind === "extra_helpful"
-                              ? `×${fdown(total)} ${label}`
-                              : `${fdown(total)} ${label}`}
+                            {`${fdown(total)} ${label}`}
                           </span>
                           <span style={{ display: "inline-flex", alignItems: "center", gap: "0.15rem", fontSize: "var(--text-xs)" }}>
                             (<IconSparkle width={11} height={11} style={{ opacity: 0.75 }} />

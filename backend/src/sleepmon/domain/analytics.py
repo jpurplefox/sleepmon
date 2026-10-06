@@ -127,7 +127,6 @@ class TeamProduction:
     skill_self_energy: float | None
     skill_dream_shards: float | None
     skill_tasty_chance: float | None
-    skill_extra_helpful: float | None
     skill_random_energy: float | None
     skill_cooking_ingredients: float | None
     skill_ingredient_total: float | None
@@ -148,7 +147,6 @@ _OPTIONAL_SKILL_FIELDS: tuple[str, ...] = (
     "skill_self_energy",
     "skill_dream_shards",
     "skill_tasty_chance",
-    "skill_extra_helpful",
     "skill_random_energy",
     "skill_cooking_ingredients",
     "skill_ingredient_total",
@@ -162,7 +160,6 @@ _EFFECT_KIND_TO_FIELD: tuple[tuple[str, str], ...] = (
     ("self_energy", "skill_self_energy"),
     ("dream_shards", "skill_dream_shards"),
     ("tasty_chance", "skill_tasty_chance"),
-    ("extra_helpful", "skill_extra_helpful"),
     ("random_energy", "skill_random_energy"),
     ("cooking_ingredients", "skill_cooking_ingredients"),
     ("ingredient_total", "skill_ingredient_total"),
