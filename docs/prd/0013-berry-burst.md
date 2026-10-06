@@ -15,6 +15,9 @@ Pokémon read as far weaker than they are.
 It answers: *"how much does a Berry Burst Pokémon really yield, and how much of it
 depends on its team?"*.
 
+**Cresselia**'s *Energy for Everyone S (Lunar Blessing)* gets berries the same way on
+top of its team energy, so everything here applies to it too (see below).
+
 Its peculiarity is that half the effect **depends on the teammates**. Team Analysis
 has the real team and values it fully; Comparison and the Box don't, so they show that
 half as a **count**, not as strength.
@@ -28,7 +31,9 @@ half as a **count**, not as strength.
 3. **Disguise** (Mimikyu) — a once-a-day **Great Success** that triples a trigger.
 4. **Draco Meteor** (Latios) — amounts that grow with the number of **Dragon species**
    on the team, plus a bonus when **Latias** is on it.
-5. **Presentation** — in Team Analysis every berry lands in the **Berries** section, on
+5. **Lunar Blessing** (Cresselia) — Berry-Burst-like berries, growing with the number
+   of species on the team that share **its berry**.
+6. **Presentation** — in Team Analysis every berry lands in the **Berries** section, on
    its own berry type; in Comparison and the Box the own part lands in Berries and the
    teammates' part in Skill, as a count.
 
@@ -43,6 +48,7 @@ The skill caps at **level 6**. Per trigger, by skill level (1…6):
 | **Berry Burst** | 11 / 14 / 21 / 24 / 27 / 30 | 1 / 2 / 2 / 3 / 4 / 5 |
 | **Berry Burst (Disguise)** | 8 / 10 / 15 / 17 / 19 / 21 | 1 / 2 / 2 / 3 / 4 / 5 |
 | **Berry Burst (Draco Meteor)** | depends on Dragon species (below) | depends on Dragon species (below) |
+| **Energy for Everyone S (Lunar Blessing)** | depends on same-berry species (below) | depends on same-berry species (below) |
 
 Per day, each amount is multiplied by the **skill triggers/day** the production model
 already estimates.
@@ -77,6 +83,24 @@ Dragonite count as two.
 
 (*own + each teammate's*.) With **Latias** on the team, the own berries add **+2 ×
 skill level** up to level 4, **+9** at level 5, **+10** at level 6.
+
+### Lunar Blessing — species sharing its berry
+
+Cresselia's skill also restores **3 / 4 / 5 / 7 / 9 / 11** energy to each teammate. Its
+berries depend on the number of **distinct species on the team with Cresselia's berry**
+(Mago), Cresselia included (1…5), counted like Draco Meteor's Dragon species.
+
+| Skill level | 1 species | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| 1 | 5 + 1 | 7 + 1 | 9 + 1 | 12 + 1 | 14 + 2 |
+| 2 | 9 + 1 | 12 + 1 | 15 + 1 | 16 + 2 | 19 + 3 |
+| 3 | 13 + 1 | 17 + 1 | 18 + 2 | 20 + 3 | 24 + 4 |
+| 4 | 17 + 1 | 19 + 2 | 25 + 2 | 28 + 3 | 29 + 5 |
+| 5 | 21 + 1 | 24 + 2 | 27 + 3 | 28 + 5 | 30 + 7 |
+| 6 | 25 + 1 | 29 + 2 | 30 + 4 | 31 + 6 | 32 + 9 |
+
+(*own + each teammate's*.) Everything below about presentation and composition applies
+to Lunar Blessing as well; its energy keeps showing in the Skill block as before.
 
 ### Team Analysis (with the real team)
 
@@ -116,7 +140,8 @@ line with "whatever yields strength directly is shown in Berries".
   same time. The Berry Burst Pokémon's whole yield is scaled by its own weight, as
   usual.
 - **Draco Meteor** counts the Dragon species and Latias across the whole roster,
-  split halves included (excluding the other half of Latios's own slot).
+  split halves included (excluding the other half of Latios's own slot). **Lunar
+  Blessing** counts the species sharing Cresselia's berry the same way.
 
 ### Comparison and the Box (no team)
 
@@ -129,7 +154,8 @@ There's no team, so the teammates' part has no berry to value.
   converted to strength. In Comparison it carries
   its delta like any other metric.
 - **Draco Meteor** assumes the floor: **Latios is the only Dragon species and Latias
-  isn't on the team**.
+  isn't on the team**. **Lunar Blessing** likewise assumes Cresselia is the only species
+  with its berry.
 - **Disguise** adds the Great Success to both parts (own berries in Berries, the
   teammate count in Skill).
 
@@ -158,6 +184,9 @@ There's no team, so the teammates' part has no berry to value.
   daily yield is 3 triggers + 0.459 × 2 triggers' worth.
 - **Draco Meteor** level 1: alone → **12** own + **1** per teammate; with **Latias** on
   the team (2 Dragon species) → **14 + 2 = 16** own + **1** per teammate.
+- **Lunar Blessing** level 6: alone → **25** own + **1** per teammate and **11** energy
+  to each teammate; with **Ralts** and **Gardevoir** on the team (3 Mago species) →
+  **30** own + **4** per teammate.
 - In **Comparison** and the **Box**, a Berry Burst card shows its own berries inside
   Berries and *"+N berries from each teammate / day"* inside Skill, with **no
   strength** attached to the teammate part; Draco Meteor shows the 1-species,
@@ -182,6 +211,4 @@ There's no team, so the teammates' part has no berry to value.
   berry count).
 - **Metronome** and **Skill Copy** landing on Berry Burst — they come with modeling
   those skills.
-- **Energy for Everyone S (Lunar Blessing)** (Cresselia), whose second effect is
-  Berry-Burst-like — it comes with the variants' second effects.
 - **Per-teammate breakdown in Comparison/Box** — there's no team there.

@@ -21,8 +21,10 @@ export function ingredientDrawAmount(level: number): number {
 // Energía que Energy for Everyone S restaura a CADA compañero por nivel (1..6).
 // E4E topa en nivel 6 (no tiene nivel 7).
 export const ENERGY_FOR_EVERYONE_AMOUNTS = [5, 7, 9, 11, 15, 18];
-// Lunar Blessing (Cresselia) has its own, smaller energy table.
+// Lunar Blessing (Cresselia) has its own, smaller energy table, plus berries: own and
+// per teammate when it's the team's only species with its berry (the floor).
 export const ENERGY_FOR_EVERYONE_LUNAR_BLESSING_AMOUNTS = [3, 4, 5, 7, 9, 11];
+const LUNAR_BLESSING_ALONE_OWN = [5, 9, 13, 17, 21, 25];
 
 export function restoresTeamEnergy(mainSkill: string | undefined): boolean {
   return !!mainSkill && mainSkill.startsWith("Energy for Everyone S");
@@ -239,10 +241,11 @@ export function skillDescription(
   }
   if (mainSkill?.startsWith("Energy for Everyone S (Lunar Blessing)")) {
     const table = ENERGY_FOR_EVERYONE_LUNAR_BLESSING_AMOUNTS;
-    const n = table[Math.min(Math.max(level, 1), table.length) - 1];
+    const i = Math.min(Math.max(level, 1), table.length) - 1;
+    const own = LUNAR_BLESSING_ALONE_OWN[i];
     return es
-      ? `Restaura ${n} de Energía a cada Pokémon del equipo. Además consigue algunas de cada baya que recolectan tus compañeros.`
-      : `Restores ${n} Energy to each Pokémon on your team. Also gets some of each Berry your teammates collect.`;
+      ? `Restaura ${table[i]} de Energía a cada Pokémon del equipo, y consigue ${own} bayas más 1 de cada una de las bayas que recolectan los demás. Más con más especies de su misma baya en el equipo.`
+      : `Restores ${table[i]} Energy to each Pokémon on your team, and gets ${own} Berries plus 1 of each of the Berries other Pokémon on your team collect. More with more species sharing its Berry on the team.`;
   }
   if (restoresTeamEnergy(mainSkill)) {
     const n = energyForEveryoneAmount(level);

@@ -1189,6 +1189,30 @@ def test_team_draco_meteor_reads_latias_from_the_roster(
     assert latios_own(_LATIAS) == pytest.approx(16)  # 2 Dragon species + Latias
 
 
+def test_team_lunar_blessing_counts_species_sharing_its_berry(
+    production_service: DefaultProductionService,
+) -> None:
+    cresselia = {"species": "Cresselia", "ingredients": ["Warming Ginger"] * 3, "skill_level": 6}
+    ralts = {"species": "Ralts", "ingredients": ["Fancy Apple"] * 3}
+    gardevoir = {"species": "Gardevoir", "ingredients": ["Fancy Apple"] * 3}
+
+    def cresselia_per_trigger(*others: dict[str, object]) -> tuple[float, float]:
+        slots = [SlotInput(entries=[_entry("c", **cresselia)])]
+        slots += [SlotInput(entries=[_entry(f"o{i}", **o)]) for i, o in enumerate(others)]
+        team = production_service.compute_team_production(
+            TeamProductionInput(slots=slots, meals=[])
+        )
+        prod = next(m for m in team.members if m.id == "c").production
+        assert prod.skill_berry_amount is not None
+        assert prod.skill_berries_per_teammate is not None
+        t = prod.skill_triggers
+        return prod.skill_berry_amount / t, prod.skill_berries_per_teammate / t
+
+    assert cresselia_per_trigger() == pytest.approx((25, 1))
+    # Ralts and Gardevoir also have Mago: 3 species sharing the berry.
+    assert cresselia_per_trigger(ralts, gardevoir, _SCEPTILE) == pytest.approx((30, 4))
+
+
 def test_berry_burst_burster_weight_is_applied_exactly_once(
     production_service: DefaultProductionService,
 ) -> None:

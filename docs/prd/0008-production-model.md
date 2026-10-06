@@ -97,8 +97,9 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
   **Super Luck** and **Hyper Cutter** draw from a fixed selection of ingredients, not
   the species'; random outcomes count at their expected value — Super Luck sometimes
   gets **dream shards** instead of ingredients, Hyper Cutter sometimes gets **twice**
-  the ingredients. Second effects that need more modeling (Lunar Blessing's berries,
-  Heal Pulse's extra helps, Nuzzle's skill bonus, Present's candy) aren't counted yet.
+  the ingredients. Lunar Blessing also gets berries, like Berry Burst (see
+  [Berry Burst](0013-berry-burst.md)). Second effects that need more modeling (Heal
+  Pulse's extra helps, Nuzzle's skill bonus, Present's candy) aren't counted yet.
 - **Skills with two effects count both** when both are modeled: **Aura Sphere**
   (Lucario) gets dream shards *and* strength; **Cooking Assist S (Bulk Up)**
   (Heracross) gets random ingredients *and* raises the Extra Tasty rate, accumulated

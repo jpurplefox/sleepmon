@@ -35,6 +35,8 @@ Modela, por ahora, tres main skills:
 - **Cooking Assist S** (+ Bulk Up): random ingredients like Ingredient Magnet; Bulk Up
   also raises the Extra Tasty rate (accumulated like Tasty Chance).
 - **Berry Zone (Psystrike)**: only its Strength; the Berry Zone boost isn't modeled.
+- **Energy for Everyone S (Lunar Blessing)**: smaller team energy, plus Berry-Burst-like
+  berries that grow with the species sharing Cresselia's berry.
 - **Berry Burst** (+ Disguise, Draco Meteor): own berries plus berries of each
   teammate per trigger; see ``domain/berry_burst.py`` for the team half.
 
@@ -508,7 +510,7 @@ BERRY_BURST_DISGUISE_OWN: tuple[int, ...] = (8, 10, 15, 17, 19, 21)
 BERRY_BURST_PER_TEAMMATE: tuple[int, ...] = (1, 2, 2, 3, 4, 5)
 # Disguise: chance per trigger of a Great Success (triples it), at most once a day.
 DISGUISE_GREAT_SUCCESS_RATE: Final[float] = 0.185
-# Draco Meteor: [skill_level - 1][dragon_species - 1] -> (own, per_teammate).
+# Draco Meteor: [skill_level - 1][same_berry_species - 1] -> (own, per_teammate).
 DRACO_METEOR_AMOUNTS: tuple[tuple[tuple[int, int], ...], ...] = (
     ((12, 1), (14, 1), (18, 1), (18, 2), (20, 2)),
     ((21, 1), (24, 1), (29, 1), (30, 2), (33, 2)),
@@ -520,15 +522,28 @@ DRACO_METEOR_AMOUNTS: tuple[tuple[tuple[int, int], ...], ...] = (
 # Extra own berries for Draco Meteor when Latias is on the team.
 DRACO_METEOR_LATIAS_BONUS: tuple[int, ...] = (2, 4, 6, 8, 9, 10)
 
+# Lunar Blessing (Cresselia) gets berries on top of its team energy, the same way:
+# [skill_level - 1][same_berry_species - 1] -> (own, per_teammate).
+_LUNAR_BLESSING = "Energy for Everyone S (Lunar Blessing)"
+LUNAR_BLESSING_BERRIES: tuple[tuple[tuple[int, int], ...], ...] = (
+    ((5, 1), (7, 1), (9, 1), (12, 1), (14, 2)),
+    ((9, 1), (12, 1), (15, 1), (16, 2), (19, 3)),
+    ((13, 1), (17, 1), (18, 2), (20, 3), (24, 4)),
+    ((17, 1), (19, 2), (25, 2), (28, 3), (29, 5)),
+    ((21, 1), (24, 2), (27, 3), (28, 5), (30, 7)),
+    ((25, 1), (29, 2), (30, 4), (31, 6), (32, 9)),
+)
+
 assert len(BERRY_BURST_DISGUISE_OWN) == len(BERRY_BURST_OWN) == len(BERRY_BURST_PER_TEAMMATE)
 assert len(DRACO_METEOR_AMOUNTS) == len(DRACO_METEOR_LATIAS_BONUS) == len(BERRY_BURST_OWN)
+assert len(LUNAR_BLESSING_BERRIES) == len(BERRY_BURST_OWN)
 
 
 @dataclass(frozen=True, slots=True)
 class BerryBurstTeam:
-    """Team context Draco Meteor reads; the default is the floor (alone, no Latias)."""
+    """Team context Draco Meteor and Lunar Blessing read; the default is the floor."""
 
-    dragon_species: int = 1  # distinct Dragon species on the team, self included
+    same_berry_species: int = 1  # distinct species sharing the member's berry, self included
     latias: bool = False
 
 
@@ -549,13 +564,18 @@ def bursts_berries(species: Species) -> bool:
 def berry_burst_amounts(
     main_skill: str, skill_level: int, team: BerryBurstTeam = NO_BERRY_BURST_TEAM
 ) -> BerryBurstAmounts | None:
-    """Berries per trigger at ``skill_level`` (clamped 1..6); None outside the family."""
+    """Berries per trigger at ``skill_level`` (clamped 1..6) for Berry Burst and Lunar
+    Blessing; None for skills that don't get berries."""
+    level = min(max(skill_level, 1), len(BERRY_BURST_OWN))
+    if main_skill.startswith(_LUNAR_BLESSING):
+        by_species = LUNAR_BLESSING_BERRIES[level - 1]
+        species = min(max(team.same_berry_species, 1), len(by_species))
+        return BerryBurstAmounts(*by_species[species - 1])
     if not main_skill.startswith(_BERRY_BURST_PREFIX):
         return None
-    level = min(max(skill_level, 1), len(BERRY_BURST_OWN))
     if main_skill.startswith(_DRACO_METEOR):
         by_species = DRACO_METEOR_AMOUNTS[level - 1]
-        species = min(max(team.dragon_species, 1), len(by_species))
+        species = min(max(team.same_berry_species, 1), len(by_species))
         own, per_teammate = by_species[species - 1]
         if team.latias:
             own += DRACO_METEOR_LATIAS_BONUS[level - 1]

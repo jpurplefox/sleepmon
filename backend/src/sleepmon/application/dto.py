@@ -80,7 +80,7 @@ class SlotAmount:
 
 @dataclass(frozen=True, slots=True)
 class BerryYieldDTO:
-    """Berries of one type obtained from teammates by Berry Burst."""
+    """Berries of one type obtained from teammates by Berry Burst or Lunar Blessing."""
 
     berry: str
     amount: float
@@ -118,8 +118,8 @@ class MemberProduction:
     skill_tasty_chance: float | None  # Tasty Chance S (+% de plato riquísimo)
     skill_extra_helpful: float | None  # Extra Helpful S (×multiplicador de ayuda)
     skill_random_energy: float | None  # Energizing Cheer S (energía a un compañero al azar)
-    skill_berry_amount: float | None = None  # Berry Burst: own berries (inside ``berries``)
-    skill_berries_per_teammate: float | None = None  # Berry Burst: per teammate per day
+    skill_berry_amount: float | None = None  # Berry Burst / Lunar Blessing: own (in ``berries``)
+    skill_berries_per_teammate: float | None = None  # same skills: per teammate per day
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,7 +151,8 @@ class ProductionResult:
     night_skill_chances: list[float]
     inventory: int
     inventory_fill_hours: float
-    # Berry Burst: own berries (inside berry_amount/berry_strength) and per-teammate count.
+    # Berry Burst / Lunar Blessing: own berries (inside berry_amount/berry_strength) and
+    # per-teammate count.
     skill_berry_amount: float | None = None
     skill_berry_strength: float | None = None
     skill_berries_per_teammate: float | None = None

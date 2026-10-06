@@ -139,7 +139,7 @@ describe("skillDescription", () => {
 describe("variants with their own tables", () => {
   it("uses each variant's own amount, not the base skill's", () => {
     expect(skillDescription("Energy for Everyone S (Lunar Blessing)", 1, "en")).toBe(
-      "Restores 3 Energy to each Pokémon on your team. Also gets some of each Berry your teammates collect.",
+      "Restores 3 Energy to each Pokémon on your team, and gets 5 Berries plus 1 of each of the Berries other Pokémon on your team collect. More with more species sharing its Berry on the team.",
     );
     expect(skillDescription("Energizing Cheer S (Heal Pulse)", 6, "en")).toBe(
       "Restores 22 Energy to two random Pokémon on your team and instantly gets you ×4 the usual help from those Pokémon.",

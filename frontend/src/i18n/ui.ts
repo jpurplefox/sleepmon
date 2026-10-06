@@ -239,7 +239,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.fromBerriesTitle": "Por las bayas",
     "card.perTeammate": "bayas de cada compañero",
     "card.perTeammateTitle": "Bayas por compañero y por día; sin equipo no se calcula su fuerza",
-    "card.teammateBerriesTitle": "Bayas que Berry Burst obtiene de los compañeros",
+    "card.teammateBerriesTitle": "Bayas que la main skill obtiene de los compañeros",
     "card.fromHelpsTitle": "Por las ayudas",
     "card.dreamShards": "fragmentos de sueño",
     "card.dreamShardsTitle":
@@ -436,7 +436,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.berrySecondary": "Baya secundaria",
     // Tooltip de fuerza base / monto del Area bonus
     "teams.fromHelps": "Ayudas · ×{amount}",
-    "teams.fromBerryBurst": "Berry Burst ({species}) · ×{amount}",
+    "teams.fromSkillBerries": "Main skill ({species}) · ×{amount}",
     "teams.strengthBase": "Base",
     "teams.strengthBonusDelta": "Area bonus (+{bonus}%)",
     // Slots compartidos (split)
@@ -724,7 +724,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.fromBerriesTitle": "From berries",
     "card.perTeammate": "berries from each teammate",
     "card.perTeammateTitle": "Berries per teammate per day; without a team their strength isn't computed",
-    "card.teammateBerriesTitle": "Berries Berry Burst gets from teammates",
+    "card.teammateBerriesTitle": "Berries the main skill gets from teammates",
     "card.fromHelpsTitle": "From helps",
     "card.dreamShards": "Dream Shards",
     "card.dreamShardsTitle":
@@ -919,7 +919,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.berrySecondary": "Secondary berry",
     // Strength base / Area bonus delta tooltip
     "teams.fromHelps": "Helps · ×{amount}",
-    "teams.fromBerryBurst": "Berry Burst ({species}) · ×{amount}",
+    "teams.fromSkillBerries": "Main skill ({species}) · ×{amount}",
     "teams.strengthBase": "Base",
     "teams.strengthBonusDelta": "Area bonus (+{bonus}%)",
     // Slots compartidos (split)
