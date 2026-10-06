@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  burstsBerries,
   chargeEnergyAmount,
   contributesBerryRole,
   cookingPowerUpAmount,
@@ -133,5 +134,30 @@ describe("skillDescription", () => {
     expect(skillDescription("Dream Shard Magnet S (Aura Sphere)", 3, "en")).toBeNull();
     expect(skillDescription("Some Unknown Skill", 3, "en")).toBeNull();
     expect(skillDescription(undefined, 3, "en")).toBeNull();
+  });
+});
+
+describe("Berry Burst", () => {
+  it("recognizes the family and caps it at level 6", () => {
+    expect(burstsBerries("Berry Burst")).toBe(true);
+    expect(burstsBerries("Berry Burst (Disguise)")).toBe(true);
+    expect(burstsBerries("Charge Strength S")).toBe(false);
+    expect(maxSkillLevel("Berry Burst")).toBe(6);
+    expect(maxSkillLevel("Berry Burst (Draco Meteor)")).toBe(6);
+  });
+
+  it("describes each variant with the level's amounts", () => {
+    expect(skillDescription("Berry Burst", 1, "es")).toBe(
+      "Consigue 11 bayas, más 1 de cada una de las bayas que recolectan los demás Pokémon del equipo.",
+    );
+    expect(skillDescription("Berry Burst", 6, "en")).toBe(
+      "Gets 30 Berries plus 5 of each of the Berries other Pokémon on your team collect.",
+    );
+    expect(skillDescription("Berry Burst (Disguise)", 1, "en")).toBe(
+      "Gets 8 Berries plus 1 of each of the Berries other Pokémon on your team collect. Once a day, a Great Success triples it.",
+    );
+    expect(skillDescription("Berry Burst (Draco Meteor)", 1, "en")).toBe(
+      "Gets 12 Berries plus 1 of each of the Berries other Pokémon on your team collect. More with more Dragon species and with Latias on the team.",
+    );
   });
 });

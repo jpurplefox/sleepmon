@@ -164,6 +164,21 @@ export function chargeEnergyAmount(level: number): number {
   return CHARGE_ENERGY_S_AMOUNTS[i];
 }
 
+// Berry Burst: own berries + N of each teammate's berry per trigger (1..6). Caps at 6.
+export const BERRY_BURST_OWN = [11, 14, 21, 24, 27, 30];
+export const BERRY_BURST_DISGUISE_OWN = [8, 10, 15, 17, 19, 21];
+export const BERRY_BURST_PER_TEAMMATE = [1, 2, 2, 3, 4, 5];
+// Draco Meteor alone (1 Dragon species, no Latias): the floor Comparison shows.
+const DRACO_METEOR_ALONE: [number, number][] = [
+  [12, 1], [21, 1], [29, 1], [38, 1], [43, 2], [48, 3],
+];
+
+export function burstsBerries(mainSkill: string | undefined): boolean {
+  return !!mainSkill && mainSkill.startsWith("Berry Burst");
+}
+
+const bbIdx = (level: number) => Math.min(Math.max(level, 1), BERRY_BURST_OWN.length) - 1;
+
 // Nivel máximo de la main skill (algunas topan en 6, otras en 7). Default 7.
 export function maxSkillLevel(mainSkill: string | undefined): number {
   if (restoresTeamEnergy(mainSkill)) return ENERGY_FOR_EVERYONE_AMOUNTS.length; // E4E: 6
@@ -171,6 +186,7 @@ export function maxSkillLevel(mainSkill: string | undefined): number {
   if (magnetsDreamShards(mainSkill)) return DREAM_SHARD_MAGNET_S_AMOUNTS.length; // Dream Shard: 8
   if (boostsTastyChance(mainSkill)) return TASTY_CHANCE_S_AMOUNTS.length; // Tasty Chance: 6
   if (cheersRandomEnergy(mainSkill)) return ENERGIZING_CHEER_S_AMOUNTS.length; // Energizing Cheer: 6
+  if (burstsBerries(mainSkill)) return BERRY_BURST_OWN.length; // Berry Burst: 6
   return MAX_SKILL_LEVEL;
 }
 
@@ -280,6 +296,26 @@ export function skillDescription(
     return es
       ? `Restaura ${n} de Energía a otro Pokémon elegido al azar.`
       : `Restores ${n} Energy to another Pokémon chosen at random.`;
+  }
+  if (burstsBerries(mainSkill)) {
+    const i = bbIdx(level);
+    const draco = mainSkill!.startsWith("Berry Burst (Draco Meteor)");
+    const disguise = mainSkill!.startsWith("Berry Burst (Disguise)");
+    const [own, each] = draco
+      ? DRACO_METEOR_ALONE[i]
+      : [(disguise ? BERRY_BURST_DISGUISE_OWN : BERRY_BURST_OWN)[i], BERRY_BURST_PER_TEAMMATE[i]];
+    const base = es
+      ? `Consigue ${own} bayas, más ${each} de cada una de las bayas que recolectan los demás Pokémon del equipo.`
+      : `Gets ${own} Berries plus ${each} of each of the Berries other Pokémon on your team collect.`;
+    if (disguise)
+      return es
+        ? `${base} Una vez por día, un Gran Éxito lo triplica.`
+        : `${base} Once a day, a Great Success triples it.`;
+    if (draco)
+      return es
+        ? `${base} Más con más especies Dragón y con Latias en el equipo.`
+        : `${base} More with more Dragon species and with Latias on the team.`;
+    return base;
   }
   return null;
 }
