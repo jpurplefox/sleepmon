@@ -31,13 +31,14 @@ import {
 } from "../components/icons";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
+import { CURRENT_EVENT, presetEffects } from "../currentEvent";
 import { toRequest as toEventRequest, type EventEffect } from "../eventBonus";
 import { fdown } from "../utils/format";
 import { recipeImage } from "../recipes";
 import { areaBonusOf, recipeLevelOf } from "../progress";
 import { statIcon } from "../natures";
 import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
-import { configFromMember, newEntry } from "../roster";
+import { configFromMember, newEntry, newId } from "../roster";
 import {
   MAX_TEAM,
   type Slot,
@@ -164,7 +165,10 @@ export function Teams() {
   const [meals, setMeals] = useState<(MealInput | null)[]>([null, null, null]);
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
   const [goodCampTicket, setGoodCampTicket] = useState(false);
-  const [eventEffects, setEventEffects] = useState<EventEffect[]>([]);
+  // Preloaded with the event running now, if any (see currentEvent.ts).
+  const [eventEffects, setEventEffects] = useState<EventEffect[]>(() =>
+    presetEffects(CURRENT_EVENT, new Date(), newId),
+  );
 
   // Dish type: restricts all 3 meal slots to the same recipe type (ephemeral, frontend-only).
   const [dishType, setDishType] = useState<'Curry' | 'Salad' | 'Dessert' | null>(null);
