@@ -19,11 +19,12 @@ from sleepmon.domain.map_bonuses import MapBonuses
 from sleepmon.domain.production import (
     BerryYield,
     DailyProduction,
+    HelpGrant,
     SlotProduction,
     daily_production,
     scale_daily,
 )
-from sleepmon.domain.skills import BerryBurstTeam
+from sleepmon.domain.skills import TeamContext
 from sleepmon.domain.species import Species
 from sleepmon.domain.value_objects import (
     Berry,
@@ -1004,16 +1005,32 @@ def test_charge_strength_random_total_uses_midpoint() -> None:
     assert prod.skill_strength == pytest.approx(prod.skill_triggers * 4015)  # mid de 1606..6424
 
 
-def test_charge_strength_stockpile_not_estimated() -> None:
+def test_charge_strength_stockpile_uses_average_strength() -> None:
     species = _species(main_skill="Charge Strength S (Stockpile)")
     prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
-    assert prod.skill_strength is None
+    assert prod.skill_strength == pytest.approx(prod.skill_triggers * 4497)
 
 
-def test_dream_shard_aura_sphere_not_estimated() -> None:
+def test_dream_shard_aura_sphere_yields_shards_and_strength() -> None:
     species = _species(main_skill="Dream Shard Magnet S (Aura Sphere)")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=8)
+    assert prod.skill_dream_shards == pytest.approx(prod.skill_triggers * 2500)
+    assert prod.skill_strength == pytest.approx(prod.skill_triggers * 2042)
+
+
+def test_psystrike_yields_strength_only() -> None:
+    species = _species(main_skill="Berry Zone (Psystrike)")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
+    assert prod.skill_strength == pytest.approx(prod.skill_triggers * 7274)
+    assert prod.skill_berry_amount is None
+
+
+def test_bulk_up_yields_random_ingredients_and_extra_tasty() -> None:
+    species = _species(main_skill="Cooking Assist S (Bulk Up)")
     prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
-    assert prod.skill_dream_shards is None
+    assert prod.skill_ingredient_total == pytest.approx(prod.skill_triggers * 24)
+    assert prod.skill_tasty_chance == pytest.approx(prod.skill_triggers * 5)
+    assert prod.skill_cooking_ingredients is None
 
 
 # --- Charge Energy S: energía al propio Pokémon --------------------------------
@@ -1469,6 +1486,16 @@ def test_magnet_total_multiplied_once() -> None:
     assert boosted.skill_ingredient_total == pytest.approx(1.5 * base.skill_ingredient_total)
 
 
+def test_cooking_assist_ingredients_multiplied_but_not_its_tasty_chance() -> None:
+    sp = _species(main_skill="Cooking Assist S (Bulk Up)", skill_percentage=20)
+    event = _ev(EventEffect(K.SKILL_INGREDIENTS, 1.5))
+    base = daily_production(sp, _INGREDIENTS, level=60, skill_level=3)
+    boosted = daily_production(sp, _INGREDIENTS, level=60, skill_level=3, event=event)
+    assert base.skill_ingredient_total is not None
+    assert boosted.skill_ingredient_total == pytest.approx(1.5 * base.skill_ingredient_total)
+    assert boosted.skill_tasty_chance == pytest.approx(base.skill_tasty_chance)
+
+
 def test_magnet_plus_total_and_bonus_ingredient_multiplied_once() -> None:
     sp = dataclasses.replace(
         _species(main_skill="Ingredient Magnet S (Plus)", skill_percentage=20), name="Plusle"
@@ -1540,10 +1567,22 @@ def test_draco_meteor_reads_the_team_context() -> None:
     alone = daily_production(latios, _INGREDIENTS, level=30, skill_level=1)
     paired = daily_production(
         latios, _INGREDIENTS, level=30, skill_level=1,
-        berry_burst_team=BerryBurstTeam(dragon_species=2, latias=True),
+        team_context=TeamContext(same_berry_species=2, latias=True),
     )
     assert alone.skill_berry_amount == pytest.approx(alone.skill_triggers * 12)
     assert paired.skill_berry_amount == pytest.approx(paired.skill_triggers * 16)
+
+
+def test_lunar_blessing_yields_energy_and_berries() -> None:
+    cresselia = _burster("Energy for Everyone S (Lunar Blessing)", Berry.MAGO)
+    prod = daily_production(
+        cresselia, _INGREDIENTS, level=30, skill_level=6,
+        team_context=TeamContext(same_berry_species=2),
+    )
+    t = prod.skill_triggers
+    assert prod.skill_energy == pytest.approx(t * 11)
+    assert prod.skill_berry_amount == pytest.approx(t * 29)
+    assert prod.skill_berries_per_teammate == pytest.approx(t * 2)
 
 
 def test_event_skill_level_caps_berry_burst_at_6() -> None:
@@ -1575,3 +1614,74 @@ def test_scale_daily_scales_berry_burst_fields() -> None:
         prod.skill_berries_per_teammate * 0.5
     )
     assert half.teammate_berries == (BerryYield(Berry.GREPA, 5.0, 270.0),)
+
+
+# --- Help yield: what one normal help brings (extra helps from teammates' skills) ---
+
+
+def test_help_yield_is_one_normal_help() -> None:
+    # Level 1: only the first slot (2 Honey) is open; 20% ingredients, 80% one berry.
+    prod = daily_production(_species(), _INGREDIENTS, level=1)
+    y = prod.help_yield
+    assert y.berries == pytest.approx(0.8)
+    assert y.berry_strength == pytest.approx(0.8 * prod.berry_strength / prod.berry_amount)
+    assert y.ingredients == (SlotProduction(I.HONEY, pytest.approx(0.2 * 2)),)
+
+
+def test_help_yield_splits_ingredients_across_open_slots() -> None:
+    prod = daily_production(_species(), _INGREDIENTS, level=60)
+    # Three open slots (2 / 4 / 6), each one a third of the 20% ingredient helps.
+    assert [s.amount for s in prod.help_yield.ingredients] == pytest.approx(
+        [0.2 / 3 * 2, 0.2 / 3 * 4, 0.2 / 3 * 6]
+    )
+
+
+def test_help_yield_is_not_scaled_by_weight() -> None:
+    prod = daily_production(_species(), _INGREDIENTS, level=60)
+    assert scale_daily(prod, 0.5).help_yield == prod.help_yield
+
+
+# --- Help grants: helps a skill gives team members, per target ------------------
+
+
+def test_no_help_grant_for_skills_that_dont_grant_helps() -> None:
+    assert daily_production(_species(), _INGREDIENTS, level=60).help_grant is None
+
+
+def test_extra_helpful_grant_is_its_daily_helps_to_one_member() -> None:
+    species = _species(main_skill="Extra Helpful S")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
+    assert prod.help_grant == HelpGrant(pytest.approx(prod.skill_triggers * 12), 1)
+
+
+def test_helper_boost_grant_reads_the_team_context() -> None:
+    species = _species(main_skill="Helper Boost", specialty=Specialty.SKILLS)
+    alone = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
+    paired = daily_production(
+        species, _INGREDIENTS, level=60, skill_level=6,
+        team_context=TeamContext(same_berry_species=3),
+    )
+    assert alone.help_grant == HelpGrant(pytest.approx(alone.skill_triggers * 5), 5)
+    assert paired.help_grant == HelpGrant(pytest.approx(paired.skill_triggers * 8), 5)
+
+
+def test_heal_pulse_grant_goes_to_two_members() -> None:
+    species = _species(main_skill="Energizing Cheer S (Heal Pulse)", specialty=Specialty.SKILLS)
+    prod = daily_production(
+        species, _INGREDIENTS, level=60, skill_level=6, team_context=TeamContext(latios=True)
+    )
+    assert prod.help_grant == HelpGrant(pytest.approx(prod.skill_triggers * 7), 2)
+
+
+def test_help_grant_is_scaled_by_weight() -> None:
+    prod = daily_production(_species(main_skill="Extra Helpful S"), _INGREDIENTS, level=60)
+    assert prod.help_grant is not None
+    half = scale_daily(prod, 0.5).help_grant
+    assert half == HelpGrant(pytest.approx(prod.help_grant.per_target * 0.5), 1)
+
+
+def test_moonlight_also_shares_energy_with_a_teammate() -> None:
+    species = _species(main_skill="Charge Energy S (Moonlight)", specialty=Specialty.SKILLS)
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
+    assert prod.skill_self_energy == pytest.approx(prod.skill_triggers * 43)
+    assert prod.skill_random_energy == pytest.approx(prod.skill_triggers * 0.5 * 22.8)

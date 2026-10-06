@@ -78,6 +78,8 @@ describe("maxSkillLevel", () => {
     expect(maxSkillLevel("Tasty Chance S")).toBe(6);
     expect(maxSkillLevel("Energizing Cheer S")).toBe(6);
     expect(maxSkillLevel("Dream Shard Magnet S")).toBe(8);
+    expect(maxSkillLevel("Dream Shard Magnet S (Aura Sphere)")).toBe(8);
+    expect(maxSkillLevel("Berry Zone (Psystrike)")).toBe(6);
     expect(maxSkillLevel("Charge Strength S")).toBe(7);
     expect(maxSkillLevel(undefined)).toBe(7);
   });
@@ -127,11 +129,8 @@ describe("skillDescription", () => {
     );
   });
 
-  it("returns null for skills we do not estimate yet", () => {
-    expect(skillDescription("Charge Strength S (Stockpile)", 3, "en")).toBeNull();
-    // Lucario's variant shares the prefix with the base skill, so it must be
-    // discarded before the generic Dream Shard branch.
-    expect(skillDescription("Dream Shard Magnet S (Aura Sphere)", 3, "en")).toBeNull();
+  it("returns null for skills we do not describe yet", () => {
+    expect(skillDescription("Metronome", 3, "en")).toBeNull();
     expect(skillDescription("Some Unknown Skill", 3, "en")).toBeNull();
     expect(skillDescription(undefined, 3, "en")).toBeNull();
   });
@@ -140,10 +139,10 @@ describe("skillDescription", () => {
 describe("variants with their own tables", () => {
   it("uses each variant's own amount, not the base skill's", () => {
     expect(skillDescription("Energy for Everyone S (Lunar Blessing)", 1, "en")).toBe(
-      "Restores 3 Energy to each Pokémon on your team. Also gets some of each Berry your teammates collect.",
+      "Restores 3 Energy to each Pokémon on your team, and gets 5 Berries plus 1 of each of the Berries other Pokémon on your team collect. More with more species sharing its Berry on the team.",
     );
     expect(skillDescription("Energizing Cheer S (Heal Pulse)", 6, "en")).toBe(
-      "Restores 22 Energy to two random Pokémon on your team and instantly gets you ×4 the usual help from those Pokémon.",
+      "Restores 22 Energy to two random Pokémon on your team and instantly gets you ×4 the usual help from those Pokémon. More with Latios on the team.",
     );
     expect(skillDescription("Energizing Cheer S (Nuzzle)", 1, "en")).toBe(
       "Restores 9 Energy to one random Pokémon on your team. If you're lucky, that Pokémon also gets a main skill activation bonus.",
@@ -159,6 +158,47 @@ describe("variants with their own tables", () => {
     );
     expect(skillDescription("Ingredient Draw S (Hyper Cutter)", 1, "es")).toBe(
       "Consigue 5 de un tipo de ingrediente elegido al azar de una selección concreta. A veces consigue 5 ingredientes más.",
+    );
+  });
+});
+
+describe("skills with a second effect", () => {
+  it("describes Aura Sphere's shards and strength", () => {
+    expect(skillDescription("Dream Shard Magnet S (Aura Sphere)", 1, "en")).toBe(
+      "Obtain 240 Dream Shards. Also increases Snorlax's Strength by 200.",
+    );
+  });
+
+  it("describes Bulk Up's ingredients and Extra Tasty boost", () => {
+    expect(skillDescription("Cooking Assist S (Bulk Up)", 7, "es")).toBe(
+      "Te consigue 24 ingredientes al azar. Además aumenta la probabilidad de Plato riquísimo un 5% hasta que cocines un Plato riquísimo o cambies de zona.",
+    );
+  });
+
+  it("describes Psystrike's strength and Berry Zone", () => {
+    expect(skillDescription("Berry Zone (Psystrike)", 1, "en")).toBe(
+      "Increases Snorlax's Strength by 1,408 and Mago Berry strength by 0.6%, up to 24%, until you change sites.",
+    );
+  });
+
+  it("describes Stockpile with its average strength per trigger", () => {
+    expect(skillDescription("Charge Strength S (Stockpile)", 1, "en")).toBe(
+      "Chooses Stockpile or Spit Up. Spit Up gives Snorlax Strength based on what was stockpiled: about 600 per trigger on average.",
+    );
+  });
+});
+
+describe("team help and energy skills", () => {
+  it("describes Helper Boost and caps it at 6", () => {
+    expect(skillDescription("Helper Boost", 6, "en")).toBe(
+      "Instantly gets you ×5 the usual help from all Pokémon on your team. More with more species sharing its Berry on the team.",
+    );
+    expect(maxSkillLevel("Helper Boost")).toBe(6);
+  });
+
+  it("describes Moonlight's shared energy", () => {
+    expect(skillDescription("Charge Energy S (Moonlight)", 1, "es")).toBe(
+      "Restaura 12 de Energía al usuario. A veces restaura además 6,3 de Energía a otro Pokémon.",
     );
   });
 });

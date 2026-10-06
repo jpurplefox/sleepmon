@@ -97,8 +97,33 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
   **Super Luck** and **Hyper Cutter** draw from a fixed selection of ingredients, not
   the species'; random outcomes count at their expected value — Super Luck sometimes
   gets **dream shards** instead of ingredients, Hyper Cutter sometimes gets **twice**
-  the ingredients. Second effects that need more modeling (Lunar Blessing's berries,
-  Heal Pulse's extra helps, Nuzzle's skill bonus, Present's candy) aren't counted yet.
+  the ingredients. Lunar Blessing also gets berries, like Berry Burst (see
+  [Berry Burst](0013-berry-burst.md)). Second effects that need more modeling
+  (Nuzzle's skill bonus, Present's candy) aren't counted yet.
+- **Skills that grant helps** give team members ×N their usual help per trigger:
+  **Extra Helpful S** to one random member, **Heal Pulse** (Latias) to two (more with
+  **Latios** on the team), **Helper Boost** (Raikou, Entei, Suicune) to **every** member
+  (more with more species sharing its berry, counted like Lunar Blessing). Targets are
+  random and include the user. Without a team (Comparison, the Box) the helps show as a
+  **count** — ×N helps per day *to each Pokémon reached*, not converted; Helper Boost
+  and Heal Pulse assume the floor (alone, no Latios). In **Team Analysis** each occupied
+  slot gets its expected share — all of it for Helper Boost, 2 ÷ slots for Heal Pulse,
+  1 ÷ slots for Extra Helpful (a split slot shares its part by weight) — each help worth
+  **one normal help of that member**: its berry/ingredient split, at its level, with its
+  map bonus. What they bring is **credited to the skill's owner**, like Berry Burst's
+  teammate berries. Its own share joins its skill berries and skill ingredients (broken down
+  helps / skill). Teammates' berries land on their berry rows (tooltip: *Main skill
+  (Pokémon)*) and, on its card, in the **generic berry** row; teammates' ingredients go
+  in a **generic ingredient** row whose tooltip lists each ingredient. Both count toward
+  the team's berries and ingredients.
+- **Moonlight** (Umbreon) restores energy to itself and, half the time, also to a
+  teammate; that expected energy shows with the other "to a random teammate" energy.
+- **Skills with two effects count both** when both are modeled: **Aura Sphere**
+  (Lucario) gets dream shards *and* strength; **Cooking Assist S (Bulk Up)**
+  (Heracross) gets random ingredients *and* raises the Extra Tasty rate, accumulated
+  like Tasty Chance. **Stockpile** (Drifloon, Drifblim) stores triggers and spits them
+  out later; it counts its **average strength per trigger**. **Psystrike** (Mewtwo)
+  counts only its strength — its Berry Zone boost isn't modeled yet.
 
 ### Total strength
 

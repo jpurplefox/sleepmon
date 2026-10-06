@@ -1168,7 +1168,7 @@ def test_team_gives_the_burster_its_teammates_berries(
     assert [y.berry for y in sceptile.teammate_berries] == ["Grepa"]
     assert pikachu.teammate_berries is None
     grepa = next(r for r in result.berries if r.berry == "Grepa")
-    assert [s.kind for s in grepa.sources] == ["helps", "berry_burst"]
+    assert [s.kind for s in grepa.sources] == ["helps", "skill"]
     assert grepa.sources[1].member_id == "s"
 
 
@@ -1189,6 +1189,30 @@ def test_team_draco_meteor_reads_latias_from_the_roster(
     assert latios_own(_LATIAS) == pytest.approx(16)  # 2 Dragon species + Latias
 
 
+def test_team_lunar_blessing_counts_species_sharing_its_berry(
+    production_service: DefaultProductionService,
+) -> None:
+    cresselia = {"species": "Cresselia", "ingredients": ["Warming Ginger"] * 3, "skill_level": 6}
+    ralts = {"species": "Ralts", "ingredients": ["Fancy Apple"] * 3}
+    gardevoir = {"species": "Gardevoir", "ingredients": ["Fancy Apple"] * 3}
+
+    def cresselia_per_trigger(*others: dict[str, object]) -> tuple[float, float]:
+        slots = [SlotInput(entries=[_entry("c", **cresselia)])]
+        slots += [SlotInput(entries=[_entry(f"o{i}", **o)]) for i, o in enumerate(others)]
+        team = production_service.compute_team_production(
+            TeamProductionInput(slots=slots, meals=[])
+        )
+        prod = next(m for m in team.members if m.id == "c").production
+        assert prod.skill_berry_amount is not None
+        assert prod.skill_berries_per_teammate is not None
+        t = prod.skill_triggers
+        return prod.skill_berry_amount / t, prod.skill_berries_per_teammate / t
+
+    assert cresselia_per_trigger() == pytest.approx((25, 1))
+    # Ralts and Gardevoir also have Mago: 3 species sharing the berry.
+    assert cresselia_per_trigger(ralts, gardevoir, _SCEPTILE) == pytest.approx((30, 4))
+
+
 def test_berry_burst_burster_weight_is_applied_exactly_once(
     production_service: DefaultProductionService,
 ) -> None:
@@ -1205,7 +1229,7 @@ def test_berry_burst_burster_weight_is_applied_exactly_once(
     def grepa_burst(result: TeamProductionResult, member_id: str) -> BerrySourceDTO:
         row = next(r for r in result.berries if r.berry == "Grepa")
         return next(
-            s for s in row.sources if s.kind == "berry_burst" and s.member_id == member_id
+            s for s in row.sources if s.kind == "skill" and s.member_id == member_id
         )
 
     solo = team([_entry("s", 1.0, **_SCEPTILE)])
@@ -1217,3 +1241,86 @@ def test_berry_burst_burster_weight_is_applied_exactly_once(
     assert split_s[0].amount == pytest.approx(solo_s[0].amount * 0.5)
     assert split_s[0].strength == pytest.approx(solo_s[0].strength * 0.5)
     assert grepa_burst(split, "s").amount == pytest.approx(grepa_burst(solo, "s").amount * 0.5)
+
+
+def test_team_extra_helpful_helps_turn_into_berries_and_ingredients(
+    production_service: DefaultProductionService,
+) -> None:
+    arcanine = {"species": "Arcanine", "ingredients": ["Fiery Herb"] * 3}
+    team = production_service.compute_team_production(
+        TeamProductionInput(
+            slots=[
+                SlotInput(entries=[_entry("a", **arcanine)]),
+                SlotInput(entries=[_entry("p")]),
+            ],
+            meals=[],
+        )
+    )
+    prod = next(m for m in team.members if m.id == "a").production
+    pikachu = next(m for m in team.members if m.id == "p").production
+    # Pikachu's share of the helps lands as Grepa credited to Arcanine.
+    assert prod.teammate_berries is not None
+    assert [y.berry for y in prod.teammate_berries] == ["Grepa"]
+    grepa = next(r for r in team.berries if r.berry == "Grepa")
+    assert [(s.kind, s.member_id) for s in grepa.sources] == [("helps", None), ("skill", "a")]
+    # Its own share adds Leppa from the skill to its own berries.
+    assert prod.skill_berry_amount is not None and prod.skill_berry_amount > 0
+    # Ingredients follow the berries: its own share joins its skill ingredients,
+    # Pikachu's lands apart as teammate ingredients; the team counts both.
+    assert [s.ingredient for s in prod.skill_ingredients] == ["Fiery Herb"]
+    assert prod.teammate_ingredients is not None
+    assert [s.ingredient for s in prod.teammate_ingredients] == ["Fancy Apple", "Warming Ginger"]
+    assert pikachu.teammate_ingredients is None
+    produced = sum(
+        s.amount
+        for p in (prod, pikachu)
+        for s in (*p.ingredients, *p.skill_ingredients, *(p.teammate_ingredients or []))
+    )
+    assert team.total_ingredients == pytest.approx(produced)
+
+
+def test_team_helper_boost_helps_every_member_more_with_same_berry_species(
+    production_service: DefaultProductionService,
+) -> None:
+    raikou = {"species": "Raikou", "ingredients": ["Bean Sausage"] * 3, "skill_level": 6}
+
+    def helps_per_trigger(*others: dict[str, object]) -> float:
+        slots = [SlotInput(entries=[_entry("r", **raikou)])]
+        slots += [SlotInput(entries=[_entry(f"o{i}", **o)]) for i, o in enumerate(others)]
+        team = production_service.compute_team_production(
+            TeamProductionInput(slots=slots, meals=[])
+        )
+        prod = next(m for m in team.members if m.id == "r").production
+        assert prod.skill_extra_helpful is not None
+        assert prod.skill_help_targets == 5
+        return prod.skill_extra_helpful / prod.skill_triggers
+
+    assert helps_per_trigger(_SCEPTILE) == pytest.approx(5)
+    # Pikachu also has Grepa: 2 species sharing Raikou's berry → +1 at level 6.
+    assert helps_per_trigger({"species": "Pikachu", "ingredients": ["Fancy Apple"] * 3}) == (
+        pytest.approx(6)
+    )
+
+
+def test_team_heal_pulse_helps_two_members_more_with_latios(
+    production_service: DefaultProductionService,
+) -> None:
+    latias = {"species": "Latias", "ingredients": ["Snoozy Tomato"] * 3, "skill_level": 6}
+
+    def team_with(*others: dict[str, object]) -> tuple[float, int | None, int]:
+        slots = [SlotInput(entries=[_entry("l", **latias)])]
+        slots += [SlotInput(entries=[_entry(f"o{i}", **o)]) for i, o in enumerate(others)]
+        team = production_service.compute_team_production(
+            TeamProductionInput(slots=slots, meals=[])
+        )
+        prod = next(m for m in team.members if m.id == "l").production
+        assert prod.skill_extra_helpful is not None
+        assert prod.teammate_berries is not None
+        return (
+            prod.skill_extra_helpful / prod.skill_triggers,
+            prod.skill_help_targets,
+            len(prod.teammate_berries),
+        )
+
+    assert team_with(_SCEPTILE) == (pytest.approx(4), 2, 1)
+    assert team_with(_SCEPTILE, _LATIOS) == (pytest.approx(7), 2, 2)

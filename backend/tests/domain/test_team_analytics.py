@@ -217,6 +217,14 @@ def test_skill_effects_energy_only_contributing_member() -> None:
     assert energy.triggers == 3.0  # solo los disparos de 'a'
 
 
+def test_granted_helps_are_not_repeated_as_a_skill_effect() -> None:
+    # Already turned into production by the team pass; no "other skills" line.
+    helper = dataclasses.replace(_fake_daily(), skill_extra_helpful=12.0)
+    result = team_production([("id-a", "Arcanine", helper)])
+    assert "extra_helpful" not in {e.kind for e in result.skill_effects}
+    assert not hasattr(result, "skill_extra_helpful")
+
+
 def test_skill_effects_strength_entry() -> None:
     """Un miembro con skill_strength → entry 'strength' con su total y triggers."""
     a = _fake_daily(skill_strength=200.0, skill_triggers=2.0)
@@ -352,12 +360,12 @@ def test_berry_rows_split_helps_and_berry_burst() -> None:
         pytest.approx(sceptile.berry_strength - sceptile.skill_berry_strength),
     )
     assert durin.sources[1] == BerrySource(
-        "berry_burst", "s", "Sceptile",
+        "skill", "s", "Sceptile",
         sceptile.skill_berry_amount, pytest.approx(sceptile.skill_berry_strength),
     )
     assert grepa_row.amount == pytest.approx(pikachu.berry_amount + 3.0)
     assert grepa_row.strength_base == pytest.approx(pikachu.berry_strength + 162.0)
-    assert grepa_row.sources[1] == BerrySource("berry_burst", "s", "Sceptile", 3.0, 162.0)
+    assert grepa_row.sources[1] == BerrySource("skill", "s", "Sceptile", 3.0, 162.0)
 
 
 def test_berry_rows_merge_own_skill_berries_and_teammate_yield_of_the_same_berry() -> None:
@@ -365,7 +373,7 @@ def test_berry_rows_merge_own_skill_berries_and_teammate_yield_of_the_same_berry
     merged = _with_teammates(sceptile, BerryYield(Berry.DURIN, 3.0, 300.0))
     team = team_production([("s", "Sceptile", merged)])
     durin = next(r for r in team.berries if r.berry == Berry.DURIN)
-    bursts = [s for s in durin.sources if s.kind == "berry_burst"]
+    bursts = [s for s in durin.sources if s.kind == "skill"]
     assert len(bursts) == 1
     assert bursts[0].member_id == "s"
     assert bursts[0].amount == pytest.approx(sceptile.skill_berry_amount + 3.0)

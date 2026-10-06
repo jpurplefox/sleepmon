@@ -239,7 +239,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.fromBerriesTitle": "Por las bayas",
     "card.perTeammate": "bayas de cada compañero",
     "card.perTeammateTitle": "Bayas por compañero y por día; sin equipo no se calcula su fuerza",
-    "card.teammateBerriesTitle": "Bayas que Berry Burst obtiene de los compañeros",
+    "card.teammateBerriesTitle": "Bayas que la main skill obtiene de los compañeros",
+    "card.teammateIngredientsTitle": "Ingredientes que la main skill obtiene de los compañeros",
     "card.fromHelpsTitle": "Por las ayudas",
     "card.dreamShards": "fragmentos de sueño",
     "card.dreamShardsTitle":
@@ -248,8 +249,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.extraTastyTitle":
       "Aumento acumulado de Extra Tasty por día (disparos × % del nivel) — Tasty Chance S",
     "card.helpMult": "de ayuda",
+    "card.helpMultTwo": "de ayuda · a 2 Pokémon",
+    "card.helpMultTeam": "de ayuda · a cada Pokémon",
     "card.helpMultTitle":
-      "Multiplicador de ayuda total del día (disparos × ×N del nivel)",
+      "Ayudas por día que la skill le da a cada Pokémon que alcanza (disparos × ×N del nivel)",
     "card.selfEnergy": "de energía a sí mismo",
     "card.selfEnergyTitle":
       "Energía que la skill recupera por día al propio Pokémon",
@@ -436,7 +439,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.berrySecondary": "Baya secundaria",
     // Tooltip de fuerza base / monto del Area bonus
     "teams.fromHelps": "Ayudas · ×{amount}",
-    "teams.fromBerryBurst": "Berry Burst ({species}) · ×{amount}",
+    "teams.fromSkillBerries": "Main skill ({species}) · ×{amount}",
     "teams.strengthBase": "Base",
     "teams.strengthBonusDelta": "Area bonus (+{bonus}%)",
     // Slots compartidos (split)
@@ -724,7 +727,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.fromBerriesTitle": "From berries",
     "card.perTeammate": "berries from each teammate",
     "card.perTeammateTitle": "Berries per teammate per day; without a team their strength isn't computed",
-    "card.teammateBerriesTitle": "Berries Berry Burst gets from teammates",
+    "card.teammateBerriesTitle": "Berries the main skill gets from teammates",
+    "card.teammateIngredientsTitle": "Ingredients the main skill gets from teammates",
     "card.fromHelpsTitle": "From helps",
     "card.dreamShards": "Dream Shards",
     "card.dreamShardsTitle":
@@ -733,8 +737,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.extraTastyTitle":
       "Accumulated Extra Tasty boost per day (triggers × level %) — Tasty Chance S",
     "card.helpMult": "help",
+    "card.helpMultTwo": "help · to 2 Pokémon",
+    "card.helpMultTeam": "help · to each Pokémon",
     "card.helpMultTitle":
-      "Total daily help multiplier (triggers × ×N of the level)",
+      "Helps per day the skill gives each Pokémon it reaches (triggers × ×N of the level)",
     "card.selfEnergy": "Energy to itself",
     "card.selfEnergyTitle":
       "Energy the skill restores per day to the Pokémon itself",
@@ -919,7 +925,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.berrySecondary": "Secondary berry",
     // Strength base / Area bonus delta tooltip
     "teams.fromHelps": "Helps · ×{amount}",
-    "teams.fromBerryBurst": "Berry Burst ({species}) · ×{amount}",
+    "teams.fromSkillBerries": "Main skill ({species}) · ×{amount}",
     "teams.strengthBase": "Base",
     "teams.strengthBonusDelta": "Area bonus (+{bonus}%)",
     // Slots compartidos (split)

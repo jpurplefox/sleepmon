@@ -21,8 +21,10 @@ export function ingredientDrawAmount(level: number): number {
 // Energía que Energy for Everyone S restaura a CADA compañero por nivel (1..6).
 // E4E topa en nivel 6 (no tiene nivel 7).
 export const ENERGY_FOR_EVERYONE_AMOUNTS = [5, 7, 9, 11, 15, 18];
-// Lunar Blessing (Cresselia) has its own, smaller energy table.
+// Lunar Blessing (Cresselia) has its own, smaller energy table, plus berries: own and
+// per teammate when it's the team's only species with its berry (the floor).
 export const ENERGY_FOR_EVERYONE_LUNAR_BLESSING_AMOUNTS = [3, 4, 5, 7, 9, 11];
+const LUNAR_BLESSING_ALONE_OWN = [5, 9, 13, 17, 21, 25];
 
 export function restoresTeamEnergy(mainSkill: string | undefined): boolean {
   return !!mainSkill && mainSkill.startsWith("Energy for Everyone S");
@@ -77,7 +79,7 @@ export function cookingPowerUpAmount(level: number): number {
 }
 
 // Charge Strength S / M: fuerza por nivel (1..7). S y M dan un monto fijo; S
-// (Random) da un rango (min, max) uniforme; la variante Stockpile no se modela.
+// (Random) da un rango (min, max) uniforme; Stockpile uses its average per trigger.
 export const CHARGE_STRENGTH_S_AMOUNTS = [400, 569, 785, 1083, 1496, 2066, 3212];
 export const CHARGE_STRENGTH_M_AMOUNTS = [880, 1251, 1726, 2383, 3290, 4546, 6858];
 export const CHARGE_STRENGTH_S_RANDOM_RANGES: [number, number][] = [
@@ -89,6 +91,7 @@ export const CHARGE_STRENGTH_S_RANDOM_RANGES: [number, number][] = [
   [1033, 4132],
   [1606, 6424],
 ];
+export const CHARGE_STRENGTH_S_STOCKPILE_AVERAGE = [600, 853, 1177, 1625, 2243, 3099, 4497];
 
 const idx = (level: number) => Math.min(Math.max(level, 1), MAX_SKILL_LEVEL) - 1;
 
@@ -100,8 +103,8 @@ export const COOKING_POWER_UP_MINUS_POT = [5, 7, 9, 12, 16, 20, 24];
 export const COOKING_POWER_UP_MINUS_ENERGY = [8, 10, 13, 17, 23, 30, 35];
 
 // Dream Shard Magnet S: fragmentos de sueño por nivel (1..8). Variante fija y otra
-// S (Random) con rango (min, max). Llega a nivel 8. La variante S (Aura Sphere) suma
-// Vigor además de fragmentos y no se modela todavía.
+// S (Random) con rango (min, max). Llega a nivel 8. La variante S (Aura Sphere) gets the
+// base shards plus Strength.
 export const DREAM_SHARD_MAGNET_S_AMOUNTS = [240, 340, 480, 670, 920, 1260, 1800, 2500];
 export const DREAM_SHARD_MAGNET_S_RANDOM_RANGES: [number, number][] = [
   [120, 480],
@@ -113,6 +116,16 @@ export const DREAM_SHARD_MAGNET_S_RANDOM_RANGES: [number, number][] = [
   [900, 3600],
   [1150, 4600],
 ];
+
+export const AURA_SPHERE_STRENGTH_AMOUNTS = [200, 285, 393, 542, 748, 1033, 1501, 2042];
+
+// Cooking Assist S: random ingredients; Bulk Up also raises Extra Tasty (%) per trigger.
+export const COOKING_ASSIST_S_INGREDIENTS = [6, 8, 11, 14, 17, 21, 24];
+export const BULK_UP_TASTY_CHANCE_AMOUNTS = [1, 2, 2, 3, 3, 4, 5];
+
+// Berry Zone (Psystrike), Mewtwo: Strength plus a Mago Berry boost (%). Caps at 6.
+export const BERRY_ZONE_PSYSTRIKE_STRENGTH = [1408, 2002, 2762, 3813, 5264, 7274];
+export const BERRY_ZONE_PSYSTRIKE_BOOST = [0.6, 0.8, 1, 1.2, 1.6, 2];
 
 const dsIdx = (level: number) =>
   Math.min(Math.max(level, 1), DREAM_SHARD_MAGNET_S_AMOUNTS.length) - 1;
@@ -188,8 +201,15 @@ export function burstsBerries(mainSkill: string | undefined): boolean {
 
 const bbIdx = (level: number) => Math.min(Math.max(level, 1), BERRY_BURST_OWN.length) - 1;
 
+// Helper Boost (Raikou, Entei, Suicune): ×N helps from every member, alone (1..6).
+export const HELPER_BOOST_HELPS = [2, 3, 3, 4, 4, 5];
+// Moonlight (Umbreon): energy it may also give a teammate (half the time).
+export const MOONLIGHT_SHARED_ENERGY = [6.3, 7.7, 10.1, 13.0, 17.2, 22.8];
+
 // Nivel máximo de la main skill (algunas topan en 6, otras en 7). Default 7.
 export function maxSkillLevel(mainSkill: string | undefined): number {
+  if (mainSkill?.startsWith("Helper Boost")) return HELPER_BOOST_HELPS.length; // 6
+  if (mainSkill?.startsWith("Berry Zone (Psystrike)")) return BERRY_ZONE_PSYSTRIKE_STRENGTH.length; // 6
   if (restoresTeamEnergy(mainSkill)) return ENERGY_FOR_EVERYONE_AMOUNTS.length; // E4E: 6
   if (chargesSelfEnergy(mainSkill)) return CHARGE_ENERGY_S_AMOUNTS.length; // Charge Energy: 6
   if (magnetsDreamShards(mainSkill)) return DREAM_SHARD_MAGNET_S_AMOUNTS.length; // Dream Shard: 8
@@ -227,10 +247,11 @@ export function skillDescription(
   }
   if (mainSkill?.startsWith("Energy for Everyone S (Lunar Blessing)")) {
     const table = ENERGY_FOR_EVERYONE_LUNAR_BLESSING_AMOUNTS;
-    const n = table[Math.min(Math.max(level, 1), table.length) - 1];
+    const i = Math.min(Math.max(level, 1), table.length) - 1;
+    const own = LUNAR_BLESSING_ALONE_OWN[i];
     return es
-      ? `Restaura ${n} de Energía a cada Pokémon del equipo. Además consigue algunas de cada baya que recolectan tus compañeros.`
-      : `Restores ${n} Energy to each Pokémon on your team. Also gets some of each Berry your teammates collect.`;
+      ? `Restaura ${table[i]} de Energía a cada Pokémon del equipo, y consigue ${own} bayas más 1 de cada una de las bayas que recolectan los demás. Más con más especies de su misma baya en el equipo.`
+      : `Restores ${table[i]} Energy to each Pokémon on your team, and gets ${own} Berries plus 1 of each of the Berries other Pokémon on your team collect. More with more species sharing its Berry on the team.`;
   }
   if (restoresTeamEnergy(mainSkill)) {
     const n = energyForEveryoneAmount(level);
@@ -283,11 +304,28 @@ export function skillDescription(
       : `Increases Snorlax's Strength by ${num(lo)} to ${num(hi)} at random.`;
   }
   if (mainSkill?.startsWith("Charge Strength S (Stockpile)")) {
-    return null; // acumula; no la estimamos todavía
+    const n = num(CHARGE_STRENGTH_S_STOCKPILE_AVERAGE[idx(level)]);
+    return es
+      ? `Elige Reserva o Escupir. Escupir le da Vigor a Snorlax según lo acumulado: unos ${n} por disparo en promedio.`
+      : `Chooses Stockpile or Spit Up. Spit Up gives Snorlax Strength based on what was stockpiled: about ${n} per trigger on average.`;
   }
   if (mainSkill?.startsWith("Charge Strength S")) {
     const n = num(CHARGE_STRENGTH_S_AMOUNTS[idx(level)]);
     return es ? `Aumenta el Vigor de Snorlax en ${n}.` : `Increases Snorlax's Strength by ${n}.`;
+  }
+  if (mainSkill?.startsWith("Helper Boost")) {
+    const n = HELPER_BOOST_HELPS[Math.min(Math.max(level, 1), HELPER_BOOST_HELPS.length) - 1];
+    return es
+      ? `Consigue al instante ×${n} la ayuda habitual de todos los Pokémon del equipo. Más con más especies de su misma baya en el equipo.`
+      : `Instantly gets you ×${n} the usual help from all Pokémon on your team. More with more species sharing its Berry on the team.`;
+  }
+  if (mainSkill?.startsWith("Charge Energy S (Moonlight)")) {
+    const n = chargeEnergyAmount(level);
+    const table = MOONLIGHT_SHARED_ENERGY;
+    const shared = num(table[Math.min(Math.max(level, 1), table.length) - 1]);
+    return es
+      ? `Restaura ${n} de Energía al usuario. A veces restaura además ${shared} de Energía a otro Pokémon.`
+      : `Restores ${n} Energy to the user. Sometimes also restores ${shared} Energy to another Pokémon.`;
   }
   if (chargesSelfEnergy(mainSkill)) {
     const n = chargeEnergyAmount(level);
@@ -298,7 +336,11 @@ export function skillDescription(
   // Dream Shard Magnet: el orden importa porque las variantes empiezan con el mismo
   // prefijo que la base.
   if (mainSkill?.startsWith("Dream Shard Magnet S (Aura Sphere)")) {
-    return null; // suma Vigor además de fragmentos; no la estimamos todavía
+    const n = num(DREAM_SHARD_MAGNET_S_AMOUNTS[dsIdx(level)]);
+    const strength = num(AURA_SPHERE_STRENGTH_AMOUNTS[dsIdx(level)]);
+    return es
+      ? `Obtén ${n} Fragmentos de sueño. Además aumenta el Vigor de Snorlax en ${strength}.`
+      : `Obtain ${n} Dream Shards. Also increases Snorlax's Strength by ${strength}.`;
   }
   if (mainSkill?.startsWith("Dream Shard Magnet S (Random)")) {
     const [lo, hi] = DREAM_SHARD_MAGNET_S_RANDOM_RANGES[dsIdx(level)];
@@ -309,6 +351,23 @@ export function skillDescription(
   if (mainSkill?.startsWith("Dream Shard Magnet S")) {
     const n = num(DREAM_SHARD_MAGNET_S_AMOUNTS[dsIdx(level)]);
     return es ? `Obtén ${n} Fragmentos de sueño.` : `Obtain ${n} Dream Shards.`;
+  }
+  if (mainSkill?.startsWith("Cooking Assist S")) {
+    const n = COOKING_ASSIST_S_INGREDIENTS[idx(level)];
+    if (!mainSkill.startsWith("Cooking Assist S (Bulk Up)"))
+      return es ? `Te consigue ${n} ingredientes al azar.` : `Gets you ${n} ingredients chosen at random.`;
+    const p = BULK_UP_TASTY_CHANCE_AMOUNTS[idx(level)];
+    return es
+      ? `Te consigue ${n} ingredientes al azar. Además aumenta la probabilidad de Plato riquísimo un ${p}% hasta que cocines un Plato riquísimo o cambies de zona.`
+      : `Gets you ${n} ingredients chosen at random. Also raises your Extra Tasty rate by ${p}% until you cook an Extra Tasty dish or change sites.`;
+  }
+  if (mainSkill?.startsWith("Berry Zone (Psystrike)")) {
+    const i = Math.min(Math.max(level, 1), BERRY_ZONE_PSYSTRIKE_STRENGTH.length) - 1;
+    const n = num(BERRY_ZONE_PSYSTRIKE_STRENGTH[i]);
+    const boost = num(BERRY_ZONE_PSYSTRIKE_BOOST[i]);
+    return es
+      ? `Aumenta el Vigor de Snorlax en ${n} y la fuerza de las bayas Ango un ${boost}%, hasta un 24%, hasta que cambies de zona.`
+      : `Increases Snorlax's Strength by ${n} and Mago Berry strength by ${boost}%, up to 24%, until you change sites.`;
   }
   if (boostsTastyChance(mainSkill)) {
     const n = tastyChanceAmount(level);
@@ -327,8 +386,8 @@ export function skillDescription(
     const n = ENERGIZING_CHEER_HEAL_PULSE_AMOUNTS[i];
     const helps = ENERGIZING_CHEER_HEAL_PULSE_HELPS[i];
     return es
-      ? `Restaura ${n} de Energía a dos Pokémon del equipo elegidos al azar y consigue al instante ×${helps} la ayuda habitual de esos Pokémon.`
-      : `Restores ${n} Energy to two random Pokémon on your team and instantly gets you ×${helps} the usual help from those Pokémon.`;
+      ? `Restaura ${n} de Energía a dos Pokémon del equipo elegidos al azar y consigue al instante ×${helps} la ayuda habitual de esos Pokémon. Más con Latios en el equipo.`
+      : `Restores ${n} Energy to two random Pokémon on your team and instantly gets you ×${helps} the usual help from those Pokémon. More with Latios on the team.`;
   }
   if (mainSkill?.startsWith("Energizing Cheer S (Nuzzle)")) {
     const table = ENERGIZING_CHEER_NUZZLE_AMOUNTS;

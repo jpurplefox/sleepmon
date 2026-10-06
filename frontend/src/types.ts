@@ -86,7 +86,7 @@ export interface BerryYield {
 }
 
 export interface BerrySource {
-  kind: "helps" | "berry_burst";
+  kind: "helps" | "skill";
   member_id: string | null;
   species: string | null;
   amount: number;
@@ -119,9 +119,11 @@ export interface MemberProduction {
   // Crustle) y/o total al azar (Ingredient Magnet, p. ej. Plusle).
   skill_ingredients: SlotProduction[];
   skill_ingredient_total: number | null;
-  // Berry Burst: own berries per day and berries of each teammate per day (counts only).
+  // Berry Burst / Lunar Blessing: own berries per day and berries of each teammate per day.
   skill_berry_amount: number | null;
   skill_berries_per_teammate: number | null;
+  // Members each help grant reaches: 1, 2, or 5 (the whole team); null without grants.
+  skill_help_targets?: number | null;
   // Otras salidas de la main skill (una por especie según su tipo; el resto null).
   skill_energy: number | null;
   skill_cooking_ingredients: number | null;
@@ -321,7 +323,6 @@ export interface TeamProduction {
   skill_self_energy: number | null;
   skill_dream_shards: number | null;
   skill_tasty_chance: number | null;
-  skill_extra_helpful: number | null;
   skill_random_energy: number | null;
   skill_cooking_ingredients: number | null;
   skill_ingredient_total: number | null;
@@ -355,13 +356,17 @@ export interface Production {
   // Ingredientes/día que aporta la main skill (Ingredient Draw S), uno por
   // ingrediente del pool. Vacío si la skill de la especie no produce ingredientes.
   skill_ingredients: SlotProduction[];
-  // Berry Burst: own berries/day and their strength (null outside the Berry Burst family).
+  // Berry Burst / Lunar Blessing: own berries/day and their strength (null for other skills).
   skill_berry_amount: number | null;
   skill_berry_strength: number | null;
   // Berry Burst: berries of each teammate per day (count only).
   skill_berries_per_teammate: number | null;
+  // Members each help grant reaches: 1, 2, or 5 (the whole team); null without grants.
+  skill_help_targets?: number | null;
   // Berry Burst: per-berry yield from teammates (null without a team).
   teammate_berries: BerryYield[] | null;
+  // Extra Helpful: ingredients obtained from teammates (null without a team).
+  teammate_ingredients: SlotProduction[] | null;
   // Energía/día que la main skill restaura a CADA compañero (Energy for Everyone S).
   // null si la skill de la especie no restaura energía al equipo.
   skill_energy: number | null;

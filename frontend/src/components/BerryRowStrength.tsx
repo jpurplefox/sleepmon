@@ -11,13 +11,13 @@ interface BerryRowStrengthProps {
 }
 
 /**
- * A team berry row's strength. Rows fed by Berry Burst break it down by source
- * (helps / each burster) plus the area bonus in one tooltip; other rows keep
+ * A team berry row's strength. Rows fed by a main skill break it down by source
+ * (helps / each skill owner) plus the area bonus in one tooltip; other rows keep
  * {@link StrengthValue}'s bonus-only tooltip.
  */
 export function BerryRowStrength({ row, bonus }: BerryRowStrengthProps) {
   const { t } = useI18n();
-  const bursts = row.sources.filter((s) => s.kind === "berry_burst");
+  const bursts = row.sources.filter((s) => s.kind === "skill");
   if (bursts.length === 0) {
     return <StrengthValue value={row.strength} base={row.strength_base} bonus={bonus} />;
   }
@@ -31,7 +31,7 @@ export function BerryRowStrength({ row, bonus }: BerryRowStrengthProps) {
       : []),
     ...bursts.map((s) => ({
       key: s.member_id ?? "burst",
-      label: t("teams.fromBerryBurst", { species: s.species ?? "", amount: s.amount.toFixed(1) }),
+      label: t("teams.fromSkillBerries", { species: s.species ?? "", amount: s.amount.toFixed(1) }),
       value: s.strength_base,
       icon: true,
     })),

@@ -80,7 +80,7 @@ class SlotAmount:
 
 @dataclass(frozen=True, slots=True)
 class BerryYieldDTO:
-    """Berries of one type obtained from teammates by Berry Burst."""
+    """Berries of one type obtained from teammates by Berry Burst or Lunar Blessing."""
 
     berry: str
     amount: float
@@ -116,10 +116,11 @@ class MemberProduction:
     skill_self_energy: float | None  # Charge Energy S (energía al propio)
     skill_dream_shards: float | None  # Dream Shard Magnet S (fragmentos de sueño)
     skill_tasty_chance: float | None  # Tasty Chance S (+% de plato riquísimo)
-    skill_extra_helpful: float | None  # Extra Helpful S (×multiplicador de ayuda)
+    skill_extra_helpful: float | None  # helps granted to each target per day
     skill_random_energy: float | None  # Energizing Cheer S (energía a un compañero al azar)
-    skill_berry_amount: float | None = None  # Berry Burst: own berries (inside ``berries``)
-    skill_berries_per_teammate: float | None = None  # Berry Burst: per teammate per day
+    skill_berry_amount: float | None = None  # Berry Burst / Lunar Blessing: own (in ``berries``)
+    skill_berries_per_teammate: float | None = None  # same skills: per teammate per day
+    skill_help_targets: int | None = None  # members each grant reaches (5: whole team)
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,12 +152,16 @@ class ProductionResult:
     night_skill_chances: list[float]
     inventory: int
     inventory_fill_hours: float
-    # Berry Burst: own berries (inside berry_amount/berry_strength) and per-teammate count.
+    # Berry Burst / Lunar Blessing: own berries (inside berry_amount/berry_strength) and
+    # per-teammate count.
     skill_berry_amount: float | None = None
     skill_berry_strength: float | None = None
     skill_berries_per_teammate: float | None = None
+    skill_help_targets: int | None = None  # members each grant reaches (5: whole team)
     # Berries obtained from teammates: only for a burster inside a team, else None.
     teammate_berries: list[BerryYieldDTO] | None = None
+    # Ingredients obtained from teammates (Extra Helpful): only inside a team, else None.
+    teammate_ingredients: list[SlotAmount] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -301,7 +306,7 @@ class KitchenDTO:
 
 @dataclass(frozen=True, slots=True)
 class BerrySourceDTO:
-    kind: str  # "helps" | "berry_burst"
+    kind: str  # "helps" | "skill"
     member_id: str | None
     species: str | None
     amount: float
@@ -339,7 +344,6 @@ class TeamProductionResult:
     skill_self_energy: float | None
     skill_dream_shards: float | None
     skill_tasty_chance: float | None
-    skill_extra_helpful: float | None
     skill_random_energy: float | None
     skill_cooking_ingredients: float | None
     skill_ingredient_total: float | None

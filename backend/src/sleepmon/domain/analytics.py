@@ -74,10 +74,10 @@ class SkillEffectAgg:
 
 @dataclass(frozen=True, slots=True)
 class BerrySource:
-    """Where a team berry row's berries come from: helps, or one member's Berry Burst."""
+    """Where a team berry row's berries come from: helps, or one member's main skill."""
 
-    kind: str  # "helps" | "berry_burst"
-    member_id: str | None  # the burster; None for helps
+    kind: str  # "helps" | "skill"
+    member_id: str | None  # the skill's owner; None for helps
     species: str | None
     amount: float
     strength_base: float  # area bonus not applied
@@ -127,7 +127,6 @@ class TeamProduction:
     skill_self_energy: float | None
     skill_dream_shards: float | None
     skill_tasty_chance: float | None
-    skill_extra_helpful: float | None
     skill_random_energy: float | None
     skill_cooking_ingredients: float | None
     skill_ingredient_total: float | None
@@ -148,7 +147,6 @@ _OPTIONAL_SKILL_FIELDS: tuple[str, ...] = (
     "skill_self_energy",
     "skill_dream_shards",
     "skill_tasty_chance",
-    "skill_extra_helpful",
     "skill_random_energy",
     "skill_cooking_ingredients",
     "skill_ingredient_total",
@@ -162,7 +160,6 @@ _EFFECT_KIND_TO_FIELD: tuple[tuple[str, str], ...] = (
     ("self_energy", "skill_self_energy"),
     ("dream_shards", "skill_dream_shards"),
     ("tasty_chance", "skill_tasty_chance"),
-    ("extra_helpful", "skill_extra_helpful"),
     ("random_energy", "skill_random_energy"),
     ("cooking_ingredients", "skill_cooking_ingredients"),
     ("ingredient_total", "skill_ingredient_total"),
@@ -197,7 +194,7 @@ def _berry_rows(
         if prev is not None:
             amount, strength = amount + prev.amount, strength + prev.strength_base
         bursts[(berry, member_id)] = BerrySource(
-            "berry_burst", member_id, species, amount, strength
+            "skill", member_id, species, amount, strength
         )
 
     for member_id, species, daily in entries:
@@ -253,7 +250,7 @@ def team_production(
 
     ingredients: dict[Ingredient, float] = {}
     for daily in dailies:
-        for slot in (*daily.ingredients, *daily.skill_ingredients):
+        for slot in (*daily.ingredients, *daily.skill_ingredients, *daily.teammate_ingredients):
             ingredients[slot.ingredient] = ingredients.get(slot.ingredient, 0.0) + slot.amount
 
     total_berry_strength_base = sum(d.berry_strength + _teammate_strength(d) for d in dailies)

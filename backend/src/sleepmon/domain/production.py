@@ -43,15 +43,17 @@ from sleepmon.domain.catalog_data import (
 from sleepmon.domain.event_bonus import NO_EVENT, EventBonus
 from sleepmon.domain.map_bonuses import MapBonuses, berry_effects
 from sleepmon.domain.skills import (
-    NO_BERRY_BURST_TEAM,
-    BerryBurstTeam,
+    NO_TEAM_CONTEXT,
+    TeamContext,
+    assists_cooking,
     berry_burst_amounts,
     berry_burst_triggers,
     boosts_tasty_chance,
     charge_energy_amount,
-    charge_strength_amount,
     charges_self_energy,
     cheers_random_energy,
+    cooking_assist_ingredients,
+    cooking_assist_tasty_chance,
     cooking_minus_energy_amount,
     cooking_minus_pot_amount,
     cooking_power_up_amount,
@@ -59,20 +61,21 @@ from sleepmon.domain.skills import (
     dream_shard_amount,
     energizing_cheer_amount,
     energy_for_everyone_amount,
-    extra_helpful_amount,
+    help_grant,
     ingredient_draw_amount,
     ingredient_draw_pool,
     ingredient_magnet_amount,
     is_cooking_minus,
-    is_extra_helpful,
     is_magnet_plus,
     magnet_plus_base_amount,
     magnet_plus_bonus_amount,
     magnet_plus_bonus_ingredient,
     magnets_ingredients,
     max_skill_level,
+    moonlight_shared_energy,
     powers_up_cooking,
     restores_team_energy,
+    skill_strength_amount,
     tasty_chance_amount,
 )
 from sleepmon.domain.species import Species
@@ -181,6 +184,26 @@ class BerryYield:
 
 
 @dataclass(frozen=True, slots=True)
+class HelpYield:
+    """What one normal help brings on average (for helps granted by a teammate's skill)."""
+
+    berries: float
+    berry_strength: float  # map multiplier in, area bonus out
+    ingredients: tuple[SlotProduction, ...]  # per open slot
+
+
+NO_HELP_YIELD = HelpYield(0.0, 0.0, ())
+
+
+@dataclass(frozen=True, slots=True)
+class HelpGrant:
+    """Helps per day a skill grants each target, and how many members each trigger hits."""
+
+    per_target: float
+    targets: int  # 1, 2, or WHOLE_TEAM
+
+
+@dataclass(frozen=True, slots=True)
 class DailyProduction:
     """Producción estimada de un Pokémon en un día."""
 
@@ -227,8 +250,8 @@ class DailyProduction:
     # Aumento de Extra Tasty (en %) acumulado por la main skill (Tasty Chance S):
     # disparos × %_del_nivel, sin acotar al tope de stack del juego. ``None`` si no aplica.
     skill_tasty_chance: float | None
-    # Multiplicador de ayuda total del día por la main skill (Extra Helpful S):
-    # disparos × ×N_del_nivel. ``None`` si la skill no da ayuda instantánea.
+    # Helps per day the skill grants EACH target (Extra Helpful S, Helper Boost, Heal
+    # Pulse): disparos × ×N_del_nivel. ``None`` si la skill no da ayudas.
     skill_extra_helpful: float | None
     # Energía/día que la main skill reparte al equipo, a un compañero al azar cada
     # disparo (Energizing Cheer S): disparos × cantidad_del_nivel. ``None`` si no aplica.
@@ -244,6 +267,12 @@ class DailyProduction:
     skill_berries_per_teammate: float | None = None
     # Berry Burst: berries obtained from teammates, filled by the team pass only.
     teammate_berries: tuple[BerryYield, ...] = ()
+    # Ingredients a skill got from teammates (Extra Helpful), filled by the team pass.
+    teammate_ingredients: tuple[SlotProduction, ...] = ()
+    # One normal help's yield (intensive: not scaled by weight).
+    help_yield: HelpYield = NO_HELP_YIELD
+    # Helps the skill grants team members (Extra Helpful, Helper Boost, Heal Pulse).
+    help_grant: HelpGrant | None = None
 
 
 def scale_daily(daily: DailyProduction, weight: float) -> DailyProduction:
@@ -291,6 +320,14 @@ def scale_daily(daily: DailyProduction, weight: float) -> DailyProduction:
             BerryYield(y.berry, y.amount * weight, y.strength * weight)
             for y in daily.teammate_berries
         ),
+        teammate_ingredients=tuple(
+            SlotProduction(sp.ingredient, sp.amount * weight) for sp in daily.teammate_ingredients
+        ),
+        help_grant=(
+            None
+            if daily.help_grant is None
+            else HelpGrant(daily.help_grant.per_target * weight, daily.help_grant.targets)
+        ),
     )
 
 
@@ -309,7 +346,7 @@ def daily_production(
     map_bonuses: MapBonuses = _NO_MAP,
     good_camp_ticket: bool = False,
     event: EventBonus = NO_EVENT,
-    berry_burst_team: BerryBurstTeam = NO_BERRY_BURST_TEAM,
+    team_context: TeamContext = NO_TEAM_CONTEXT,
 ) -> DailyProduction:
     """Estimates daily production from ingredients, level, nature and sub skills.
 
@@ -319,7 +356,7 @@ def daily_production(
     how many ingredients each trigger of Ingredient Draw S-type skills delivers.
     ``map_bonuses`` (neutral by default) brings the expert-mode effects; the skill
     level actually used is reported in ``effective_skill_level``. ``event`` (neutral by
-    default) brings a hand-built event's per-member boosts. ``berry_burst_team`` is the
+    default) brings a hand-built event's per-member boosts. ``team_context`` is the
     team context Draco Meteor reads (the floor by default).
     """
     if len(ingredients) != MAX_INGREDIENTS:
@@ -505,6 +542,8 @@ def daily_production(
         skill_ingredient_total = skill_triggers * ingredient_magnet_amount(
             species.main_skill, effective_skill_level
         )
+    elif assists_cooking(species):
+        skill_ingredient_total = skill_triggers * cooking_assist_ingredients(effective_skill_level)
 
     # Event: ingredients gathered by main skills are multiplied.
     skill_ing_factor = boosts.skill_ingredient_factor
@@ -524,10 +563,10 @@ def daily_production(
     elif powers_up_cooking(species):
         skill_cooking_ingredients = skill_triggers * cooking_power_up_amount(effective_skill_level)
 
-    # Fuerza por la main skill (Charge Strength S / M): cada disparo suma la fuerza
-    # esperada del nivel (punto medio si el monto es aleatorio), así que por día es
-    # disparos × esa fuerza. ``None`` si la skill no es una Charge Strength modelada.
-    per_strength = charge_strength_amount(species.main_skill, effective_skill_level)
+    # Fuerza por la main skill (Charge Strength, Aura Sphere, Psystrike): cada disparo
+    # suma la fuerza esperada del nivel, así que por día es disparos × esa fuerza.
+    # ``None`` si la skill no suma fuerza.
+    per_strength = skill_strength_amount(species.main_skill, effective_skill_level)
     skill_strength: float | None = (
         skill_triggers * per_strength if per_strength is not None else None
     )
@@ -547,26 +586,29 @@ def daily_production(
 
     # Aumento de Extra Tasty por la main skill (Tasty Chance S): el boost se ACUMULA
     # con cada disparo (disparos × %_del_nivel). No lo acotamos al tope de stack del
-    # juego (70%): a ese nivel un crítico lo consume y se sigue sumando.
-    skill_tasty_chance: float | None = (
-        skill_triggers * tasty_chance_amount(effective_skill_level)
-        if boosts_tasty_chance(species)
-        else None
-    )
+    # juego (70%): a ese nivel un crítico lo consume y se sigue sumando. Bulk Up's
+    # boost accumulates the same way.
+    skill_tasty_chance: float | None = None
+    per_bulk_up = cooking_assist_tasty_chance(species.main_skill, effective_skill_level)
+    if boosts_tasty_chance(species):
+        skill_tasty_chance = skill_triggers * tasty_chance_amount(effective_skill_level)
+    elif per_bulk_up is not None:
+        skill_tasty_chance = skill_triggers * per_bulk_up
 
-    # Multiplicador de ayuda por la main skill (Extra Helpful S): cada disparo da ×N la
-    # ayuda normal, así que el total del día es disparos × N.
-    skill_extra_helpful: float | None = (
-        skill_triggers * extra_helpful_amount(effective_skill_level)
-        if is_extra_helpful(species)
-        else None
-    )
+    # Helps granted to team members (Extra Helpful, Helper Boost, Heal Pulse): per target
+    # per day, disparos × ayudas por objetivo. The team pass turns them into production.
+    grant = help_grant(species.main_skill, effective_skill_level, team_context)
+    granted = None if grant is None else HelpGrant(skill_triggers * grant.helps, grant.targets)
+    skill_extra_helpful = None if granted is None else granted.per_target
 
-    # Energía a un compañero al azar: la da Energizing Cheer S y también el BONUS de
-    # Cooking Power-Up S (Minus) de Minun (asumiendo compañero Plus/Minus presente).
-    # El total repartido en el día es disparos × cantidad_del_nivel.
+    # Energía a un compañero al azar: la da Energizing Cheer S, el BONUS de Cooking
+    # Power-Up S (Minus) de Minun (asumiendo compañero Plus/Minus presente) y Moonlight
+    # half the time. El total repartido en el día es disparos × cantidad esperada.
     skill_random_energy: float | None = None
-    if cheers_random_energy(species):
+    per_shared = moonlight_shared_energy(species.main_skill, effective_skill_level)
+    if per_shared is not None:
+        skill_random_energy = skill_triggers * per_shared
+    elif cheers_random_energy(species):
         skill_random_energy = skill_triggers * energizing_cheer_amount(
             species.main_skill, effective_skill_level
         )
@@ -586,7 +628,7 @@ def daily_production(
     skill_berry_amount: float | None = None
     skill_berry_strength: float | None = None
     skill_berries_per_teammate: float | None = None
-    burst = berry_burst_amounts(species.main_skill, effective_skill_level, berry_burst_team)
+    burst = berry_burst_amounts(species.main_skill, effective_skill_level, team_context)
     if burst is not None:
         burst_triggers = berry_burst_triggers(species.main_skill, skill_triggers)
         skill_berry_amount = burst_triggers * burst.own
@@ -595,6 +637,17 @@ def daily_production(
 
     berry_amount = helps_berry_amount + (skill_berry_amount or 0.0)
     berry_strength = berry_amount * per_berry_strength
+
+    help_yield = HelpYield(
+        berries=berry_rate * berry_per_help,
+        berry_strength=berry_rate * berry_per_help * per_berry_strength,
+        ingredients=tuple(
+            SlotProduction(
+                ingredients[i], ingredient_rate / unlocked * (slot_amounts[i] + extra_ingredients)
+            )
+            for i in range(unlocked)
+        ),
+    )
 
     helps_per_slot = normal_helps * ingredient_rate / unlocked
     slots = tuple(
@@ -634,4 +687,6 @@ def daily_production(
         skill_berry_amount=skill_berry_amount,
         skill_berry_strength=skill_berry_strength,
         skill_berries_per_teammate=skill_berries_per_teammate,
+        help_yield=help_yield,
+        help_grant=granted,
     )
