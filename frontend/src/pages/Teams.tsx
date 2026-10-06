@@ -1122,8 +1122,7 @@ export function Teams() {
           subtotal, cooking grand total, totals-card cooking col, totals-card
           grand total. NEVER on per-berry/per-recipe/per-filler rows, the
           "Recetas"/"Fillers" repeat lines in Block 5, or the +10% extra tasty line.
-          When bonus=0 → bonusFactor=1 → base=value → floor(base)===floor(value)
-          → no tooltip rendered (identity, no visual change). ── */}
+          When bonus=0 or floor(base)===floor(value) → no tooltip rendered (identity, no visual change). ── */}
           <div className="card teams-totals">
             {/* Col 1 — Berries & skills */}
             <div className="teams-totals__col">
