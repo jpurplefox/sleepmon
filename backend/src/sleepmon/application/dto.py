@@ -158,6 +158,8 @@ class ProductionResult:
     skill_berries_per_teammate: float | None = None
     # Berries obtained from teammates: only for a burster inside a team, else None.
     teammate_berries: list[BerryYieldDTO] | None = None
+    # Ingredients obtained from teammates (Extra Helpful): only inside a team, else None.
+    teammate_ingredients: list[SlotAmount] | None = None
 
 
 @dataclass(frozen=True, slots=True)

@@ -253,7 +253,7 @@ def team_production(
 
     ingredients: dict[Ingredient, float] = {}
     for daily in dailies:
-        for slot in (*daily.ingredients, *daily.skill_ingredients):
+        for slot in (*daily.ingredients, *daily.skill_ingredients, *daily.teammate_ingredients):
             ingredients[slot.ingredient] = ingredients.get(slot.ingredient, 0.0) + slot.amount
 
     total_berry_strength_base = sum(d.berry_strength + _teammate_strength(d) for d in dailies)

@@ -1265,6 +1265,15 @@ def test_team_extra_helpful_helps_turn_into_berries_and_ingredients(
     assert [(s.kind, s.member_id) for s in grepa.sources] == [("helps", None), ("skill", "a")]
     # Its own share adds Leppa from the skill to its own berries.
     assert prod.skill_berry_amount is not None and prod.skill_berry_amount > 0
-    # Both shares add ingredients: the team has more than the members' own helps.
-    own_helps = sum(s.amount for p in (prod, pikachu) for s in p.ingredients)
-    assert team.total_ingredients > own_helps
+    # Ingredients follow the berries: its own share joins its skill ingredients,
+    # Pikachu's lands apart as teammate ingredients; the team counts both.
+    assert [s.ingredient for s in prod.skill_ingredients] == ["Fiery Herb"]
+    assert prod.teammate_ingredients is not None
+    assert [s.ingredient for s in prod.teammate_ingredients] == ["Fancy Apple", "Warming Ginger"]
+    assert pikachu.teammate_ingredients is None
+    produced = sum(
+        s.amount
+        for p in (prod, pikachu)
+        for s in (*p.ingredients, *p.skill_ingredients, *(p.teammate_ingredients or []))
+    )
+    assert team.total_ingredients == pytest.approx(produced)

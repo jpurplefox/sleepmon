@@ -103,7 +103,7 @@ def _with_granted_helps(daily: DailyProduction, helped: HelpedYields) -> DailyPr
         prev_amount, prev_strength = berries.get(y.berry, (0.0, 0.0))
         berries[y.berry] = (prev_amount + y.amount, prev_strength + y.strength)
     ingredients: dict[Ingredient, float] = {}
-    for slot in (*daily.skill_ingredients, *helped.ingredients):
+    for slot in (*daily.skill_ingredients, *helped.own_ingredients):
         ingredients[slot.ingredient] = ingredients.get(slot.ingredient, 0.0) + slot.amount
     yields = (BerryYield(b, a, st) for b, (a, st) in berries.items())
     return replace(
@@ -114,6 +114,7 @@ def _with_granted_helps(daily: DailyProduction, helped: HelpedYields) -> DailyPr
         skill_berry_strength=(daily.skill_berry_strength or 0.0) + helped.own_berry_strength,
         teammate_berries=tuple(sorted(yields, key=lambda y: y.strength, reverse=True)),
         skill_ingredients=tuple(SlotProduction(i, a) for i, a in ingredients.items()),
+        teammate_ingredients=helped.teammate_ingredients,
     )
 
 
@@ -165,6 +166,11 @@ def _production_result(daily: DailyProduction, *, in_team: bool = False) -> Prod
                 daily.skill_berries_per_teammate is not None
                 or daily.skill_extra_helpful is not None
             )
+            else None
+        ),
+        teammate_ingredients=(
+            [SlotAmount(s.ingredient.value, s.amount) for s in daily.teammate_ingredients]
+            if in_team and daily.skill_extra_helpful is not None
             else None
         ),
     )

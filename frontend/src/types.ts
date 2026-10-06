@@ -362,6 +362,8 @@ export interface Production {
   skill_berries_per_teammate: number | null;
   // Berry Burst: per-berry yield from teammates (null without a team).
   teammate_berries: BerryYield[] | null;
+  // Extra Helpful: ingredients obtained from teammates (null without a team).
+  teammate_ingredients: SlotProduction[] | null;
   // Energía/día que la main skill restaura a CADA compañero (Energy for Everyone S).
   // null si la skill de la especie no restaura energía al equipo.
   skill_energy: number | null;

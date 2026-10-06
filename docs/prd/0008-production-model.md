@@ -106,8 +106,11 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
   those helps (a split slot shares its part by weight), each worth **one normal help of
   that member** — its berry/ingredient split, at its level, with its map bonus. What they
   bring is **credited to the Extra Helpful Pokémon**, like Berry Burst's teammate
-  berries: its own share joins its skill berries, teammates' berries land on their berry
-  rows (tooltip: *Main skill (Pokémon)*), and the ingredients join its skill ingredients.
+  berries. Its own share joins its skill berries and skill ingredients (broken down
+  helps / skill). Teammates' berries land on their berry rows (tooltip: *Main skill
+  (Pokémon)*) and, on its card, in the **generic berry** row; teammates' ingredients go
+  in a **generic ingredient** row whose tooltip lists each ingredient. Both count toward
+  the team's berries and ingredients.
 - **Skills with two effects count both** when both are modeled: **Aura Sphere**
   (Lucario) gets dream shards *and* strength; **Cooking Assist S (Bulk Up)**
   (Heracross) gets random ingredients *and* raises the Extra Tasty rate, accumulated

@@ -259,6 +259,8 @@ class DailyProduction:
     skill_berries_per_teammate: float | None = None
     # Berry Burst: berries obtained from teammates, filled by the team pass only.
     teammate_berries: tuple[BerryYield, ...] = ()
+    # Ingredients a skill got from teammates (Extra Helpful), filled by the team pass.
+    teammate_ingredients: tuple[SlotProduction, ...] = ()
     # One normal help's yield (intensive: not scaled by weight).
     help_yield: HelpYield = NO_HELP_YIELD
 
@@ -307,6 +309,9 @@ def scale_daily(daily: DailyProduction, weight: float) -> DailyProduction:
         teammate_berries=tuple(
             BerryYield(y.berry, y.amount * weight, y.strength * weight)
             for y in daily.teammate_berries
+        ),
+        teammate_ingredients=tuple(
+            SlotProduction(sp.ingredient, sp.amount * weight) for sp in daily.teammate_ingredients
         ),
     )
 

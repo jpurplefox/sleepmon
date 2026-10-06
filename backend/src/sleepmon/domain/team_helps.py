@@ -22,8 +22,9 @@ class HelpedYields:
 
     own_berries: float  # from the helps it granted itself
     own_berry_strength: float
+    own_ingredients: tuple[SlotProduction, ...]
     teammate_berries: tuple[BerryYield, ...]  # merged by berry, strongest first
-    ingredients: tuple[SlotProduction, ...]  # merged by ingredient, self included
+    teammate_ingredients: tuple[SlotProduction, ...]  # merged by ingredient
 
 
 def _add_ingredients(
@@ -46,7 +47,6 @@ def extra_help_yields(members: Sequence[BurstMember]) -> dict[str, HelpedYields]
         berries: dict[Berry, tuple[float, float]] = {}
         ingredients: dict[Ingredient, float] = {}
         # Its own slot is always itself: a split partner is never on the team with it.
-        _add_ingredients(ingredients, own.ingredients, per_slot)
         for mate in members:
             if mate.slot == helper.slot:
                 continue
@@ -63,7 +63,10 @@ def extra_help_yields(members: Sequence[BurstMember]) -> dict[str, HelpedYields]
         result[helper.id] = HelpedYields(
             own_berries=per_slot * own.berries,
             own_berry_strength=per_slot * own.berry_strength,
+            own_ingredients=tuple(
+                SlotProduction(s.ingredient, per_slot * s.amount) for s in own.ingredients
+            ),
             teammate_berries=tuple(sorted(yields, key=lambda y: y.strength, reverse=True)),
-            ingredients=tuple(SlotProduction(i, a) for i, a in ingredients.items()),
+            teammate_ingredients=tuple(SlotProduction(i, a) for i, a in ingredients.items()),
         )
     return result
