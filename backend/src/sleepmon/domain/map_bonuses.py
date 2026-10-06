@@ -13,13 +13,12 @@ from sleepmon.domain.catalog_data import (
     EXPERT_BERRY_MULTIPLIER,
     EXPERT_EXTRA_INGREDIENTS,
     EXPERT_MAIN_SKILL_LEVEL_BONUS,
-    EXPERT_MAIN_SPEED_FACTOR,
-    EXPERT_PENALTY_SPEED_FACTOR,
     EXPERT_SKILL_RATE_FACTOR,
+    EXPERT_SPEED_FACTORS,
     FAVORITE_BERRY_MULTIPLIER,
     MAX_FAVORITE_BERRIES,
 )
-from sleepmon.domain.value_objects import Berry, BerryRole, WeeklyBonus
+from sleepmon.domain.value_objects import Berry, BerryRole, Island, WeeklyBonus
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,13 +29,15 @@ class MapBonuses:
     is False. On an expert map, ``main`` separates the main berry from the
     sub-favorites, and ``weekly_bonus`` says which of the three is active.
     ``main=None`` with ``expert=True`` is valid: the user hasn't picked a main
-    berry yet.
+    berry yet. ``island`` picks the map's own speed effects; without one
+    (Comparison's generic scenarios) the Greengrass Isle (Expert) ones apply.
     """
 
     main: Berry | None = None
     subs: frozenset[Berry] = frozenset()
     expert: bool = False
     weekly_bonus: WeeklyBonus = WeeklyBonus.BERRY_STRENGTH
+    island: Island | None = None
 
     def __post_init__(self) -> None:
         # Invariant safeguard: input validation lives in the application layer.
@@ -70,7 +71,7 @@ class MapBonuses:
 class BerryEffects:
     """The five numbers with which the map touches ONE member. Neutral by default."""
 
-    speed_factor: float = 1.0  # x0.9 main berry - x1.15 no favorite
+    speed_factor: float = 1.0  # main berry faster, no favorite slower (per map)
     berry_multiplier: float = 1.0  # 1.0 - 2.0 - 2.4
     skill_level_bonus: int = 0  # +1 with the main berry
     skill_rate_factor: float = 1.0  # x1.25
@@ -81,9 +82,9 @@ def berry_effects(bonuses: MapBonuses, berry: Berry) -> BerryEffects:
     """Resolve the four PRD 0007 effects for a species' berry.
 
     Normal map  -> only ``berry_multiplier`` (2.0 if favorite, 1.0 otherwise).
-    Expert map -> MAIN: speed x0.9, skill level +1, plus the weekly bonus.
+    Expert map -> MAIN: the map's faster speed, skill level +1, plus the weekly bonus.
                   SUB:  only the weekly bonus.
-                  NONE: speed x1.15 and nothing else.
+                  NONE: the map's slower speed and nothing else.
     """
     role = bonuses.role_of(berry)
 
@@ -91,13 +92,18 @@ def berry_effects(bonuses: MapBonuses, berry: Berry) -> BerryEffects:
         multiplier = 1.0 if role is BerryRole.NONE else FAVORITE_BERRY_MULTIPLIER
         return BerryEffects(berry_multiplier=multiplier)
 
+    speed = EXPERT_SPEED_FACTORS.get(
+        bonuses.island or Island.GREENGRASS_EXPERT,
+        EXPERT_SPEED_FACTORS[Island.GREENGRASS_EXPERT],
+    )
+
     if role is BerryRole.NONE:
-        return BerryEffects(speed_factor=EXPERT_PENALTY_SPEED_FACTOR)
+        return BerryEffects(speed_factor=speed.penalty)
 
     weekly = bonuses.weekly_bonus
     is_main = role is BerryRole.MAIN
     return BerryEffects(
-        speed_factor=EXPERT_MAIN_SPEED_FACTOR if is_main else 1.0,
+        speed_factor=speed.main if is_main else 1.0,
         # The berry-strength bonus REPLACES the x2 favorite bonus; it doesn't stack.
         berry_multiplier=(
             EXPERT_BERRY_MULTIPLIER

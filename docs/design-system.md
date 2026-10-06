@@ -265,7 +265,7 @@ states · where it lives. Feature one-offs are intentionally not here.
   `--ok` (`--up` green), `--low` (`--down` red).
 - **`.metric-mark`** — inline annotation of what a rule is doing (`×2` / `×2,4` on
   berries, `+1` on ingredients, `Skill +1` or `×1,25` on skill, `−10%` / `+15%` on
-  help cadence). It rides either the **figure** the rule changed, or the **control
+  help cadence, with each expert map's own figures). It rides either the **figure** the rule changed, or the **control
   that turns that rule on** — inside a `.filter-btn__value` or a
   `.filter-list__item`, where the same mark labels the option that produces it.
   Smaller and bolder than `.badge` (`--text-xs`, weight 700) and tinted rather than

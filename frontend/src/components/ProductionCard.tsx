@@ -15,7 +15,14 @@ import { statIcon } from "../natures";
 import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
 import { spriteUrl } from "../sprites";
 import { subSkillIcon } from "../subskills";
-import type { BerryRole, Catalog, MemberInput, Production, WeeklyBonus } from "../types";
+import type {
+  BerryRole,
+  Catalog,
+  ExpertSpeed,
+  MemberInput,
+  Production,
+  WeeklyBonus,
+} from "../types";
 import { RibbonIcon } from "./RibbonIcon";
 import {
   IconClock,
@@ -105,6 +112,7 @@ interface Props {
   /** Role of this species' berry relative to the active map. */
   berryRole?: BerryRole;
   expert?: boolean;
+  expertSpeed?: ExpertSpeed | null;
   weeklyBonus?: WeeklyBonus;
 }
 
@@ -138,6 +146,7 @@ export function ProductionCard({
   onDragEnd,
   berryRole = "none",
   expert = false,
+  expertSpeed = null,
   weeklyBonus = "berry_strength",
 }: Props) {
   const { t, ingredient, berry, subSkill, natureStat, nature: natureName } = useI18n();
@@ -169,6 +178,7 @@ export function ProductionCard({
         role: berryRole,
         expert,
         weeklyBonus,
+        speed: expertSpeed,
         skillLevel: config.skill_level,
         effectiveSkillLevel: d.effective_skill_level,
         t,

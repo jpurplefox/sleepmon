@@ -5,7 +5,7 @@ from sleepmon.domain.map_bonuses import (
     MapBonuses,
     berry_effects,
 )
-from sleepmon.domain.value_objects import Berry, BerryRole, WeeklyBonus
+from sleepmon.domain.value_objects import Berry, BerryRole, Island, WeeklyBonus
 
 MAIN = Berry.ORAN
 SUB_A = Berry.PAMTRE
@@ -94,6 +94,24 @@ def test_with_no_favorites_chosen_every_berry_is_penalized() -> None:
     """PRD: the penalty applies as soon as the area is selected."""
     bare = MapBonuses(expert=True)
     assert berry_effects(bare, MAIN) == BerryEffects(speed_factor=1.15)
+
+
+def test_greengrass_expert_uses_the_base_speed_effects() -> None:
+    bonuses = MapBonuses(
+        main=MAIN, subs=frozenset({SUB_A}), expert=True, island=Island.GREENGRASS_EXPERT
+    )
+    assert berry_effects(bonuses, MAIN).speed_factor == 0.9
+    assert berry_effects(bonuses, OTHER).speed_factor == 1.15
+
+
+def test_cyan_beach_expert_has_stronger_speed_effects() -> None:
+    """Cyan Beach (Expert): main berry 20% faster, no favorite 35% slower."""
+    bonuses = MapBonuses(
+        main=MAIN, subs=frozenset({SUB_A}), expert=True, island=Island.CYAN_BEACH_EXPERT
+    )
+    assert berry_effects(bonuses, MAIN).speed_factor == 0.8
+    assert berry_effects(bonuses, SUB_A).speed_factor == 1.0
+    assert berry_effects(bonuses, OTHER) == BerryEffects(speed_factor=1.35)
 
 
 # ── berry_effects: the weekly bonus ────────────────────────────────────────────

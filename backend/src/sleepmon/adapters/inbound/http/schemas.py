@@ -87,12 +87,20 @@ class RatingOut(msgspec.Struct):
     required_strength: int
 
 
+class ExpertSpeedOut(msgspec.Struct):
+    """An expert map's help-interval factors: main berry, and no favorite berry."""
+
+    main: float
+    penalty: float
+
+
 class IslandOut(msgspec.Struct):
     name: str
     favorite_berries: list[str]
     user_picks: bool
     expert: bool
     ratings: list[RatingOut]
+    expert_speed: ExpertSpeedOut | None
 
 
 class CatalogOut(msgspec.Struct):

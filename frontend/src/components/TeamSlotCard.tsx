@@ -4,7 +4,7 @@ import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useI18n } from "../i18n";
 import type { Slot } from "../teamRoster";
 import { weightsOf } from "../teamRoster";
-import type { BerryRole, Catalog, TeamProduction, WeeklyBonus } from "../types";
+import type { BerryRole, Catalog, ExpertSpeed, TeamProduction, WeeklyBonus } from "../types";
 import type { SaveStatus } from "../useSaveToBox";
 import { ProductionCard } from "./ProductionCard";
 import { IconClose, IconEdit, IconSaveBox, IconSplit } from "./icons";
@@ -17,6 +17,7 @@ interface TeamSlotCardProps {
   contributions: TeamProduction["members"] | undefined;
   berryRoleOf: (berry: string) => BerryRole;
   expert: boolean;
+  expertSpeed: ExpertSpeed | null;
   weeklyBonus: WeeklyBonus;
   teamHasSplit?: boolean;
   saveStatus: (entryId: string) => SaveStatus;
@@ -36,6 +37,7 @@ export function TeamSlotCard({
   contributions,
   berryRoleOf,
   expert,
+  expertSpeed,
   weeklyBonus,
   teamHasSplit,
   saveStatus,
@@ -284,6 +286,7 @@ export function TeamSlotCard({
       readOnly
       berryRole={berryRole}
       expert={expert}
+      expertSpeed={expertSpeed}
       weeklyBonus={weeklyBonus}
       slotHeader={header}
       notice={

@@ -51,6 +51,13 @@ export interface Island {
   // true = expert-mode area: splits favorites into main and sub-favorites and
   // applies the four PRD 0007 effects.
   expert: boolean;
+  // Expert map's help-interval factors (main berry, no favorite); null elsewhere.
+  expert_speed: ExpertSpeed | null;
+}
+
+export interface ExpertSpeed {
+  main: number;
+  penalty: number;
 }
 
 export type WeeklyBonus = "berry_strength" | "ingredient" | "skill_trigger";

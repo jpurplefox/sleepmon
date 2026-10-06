@@ -891,6 +891,13 @@ def test_the_catalog_marks_the_expert_areas(client: TestClient) -> None:
     assert expert == {"Greengrass Isle (Expert)", "Cyan Beach (Expert)"}
 
 
+def test_the_catalog_gives_each_expert_area_its_speed_effects(client: TestClient) -> None:
+    islands = {i["name"]: i for i in client.get("/catalog").json()["islands"]}
+    assert islands["Greengrass Isle (Expert)"]["expert_speed"] == {"main": 0.9, "penalty": 1.15}
+    assert islands["Cyan Beach (Expert)"]["expert_speed"] == {"main": 0.8, "penalty": 1.35}
+    assert islands["Cyan Beach"]["expert_speed"] is None
+
+
 def test_team_production_has_no_excluded_count(client: TestClient) -> None:
     """Configs are refused up front, so there is nothing to exclude afterwards."""
     body = client.post(

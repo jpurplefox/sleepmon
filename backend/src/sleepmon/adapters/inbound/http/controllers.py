@@ -13,6 +13,7 @@ from sleepmon.adapters.inbound.http.guards import require_user
 from sleepmon.adapters.inbound.http.schemas import (
     CatalogOut,
     DistributionsOut,
+    ExpertSpeedOut,
     FillerOut,
     IngredientBalanceOut,
     IngredientCountOut,
@@ -54,6 +55,7 @@ from sleepmon.application.dto import (
 from sleepmon.application.progress_service import PlayerProgressService
 from sleepmon.application.services import ProductionService, TeamService
 from sleepmon.domain.catalog_data import (
+    EXPERT_SPEED_FACTORS,
     INGREDIENT_STRENGTH,
     ISLAND_EXPERT,
     ISLAND_FAVORITE_BERRIES,
@@ -296,6 +298,11 @@ class CatalogController(Controller):
                         )
                         for r in ISLAND_RATING_THRESHOLDS[island]
                     ],
+                    expert_speed=(
+                        ExpertSpeedOut(main=speed.main, penalty=speed.penalty)
+                        if (speed := EXPERT_SPEED_FACTORS.get(island)) is not None
+                        else None
+                    ),
                 )
                 for island in Island
             ],

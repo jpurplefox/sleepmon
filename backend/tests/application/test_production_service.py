@@ -812,6 +812,20 @@ def test_the_main_favorite_speeds_up_the_member_that_gathers_it(
     assert as_main.total_strength > sub_only.total_strength
 
 
+def test_cyan_beach_expert_penalizes_harder_than_greengrass_expert(
+    service_with_members: tuple[DefaultProductionService, list[str]],
+) -> None:
+    """Each expert map has its own penalty: 35% slower on Cyan, 15% on Greengrass."""
+    service, member_ids = service_with_members
+    greengrass, cyan = (
+        service.compute_team_production(
+            TeamProductionInput(slots=_slots(*member_ids), meals=[], island=island)
+        )
+        for island in ("Greengrass Isle (Expert)", "Cyan Beach (Expert)")
+    )
+    assert cyan.total_strength < greengrass.total_strength
+
+
 def test_the_client_cannot_ask_for_expert_effects_on_a_normal_map(
     service_with_members: tuple[DefaultProductionService, list[str]],
 ) -> None:

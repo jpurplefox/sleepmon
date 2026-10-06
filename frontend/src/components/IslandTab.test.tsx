@@ -28,6 +28,7 @@ const cyanBeach: Island = {
   user_picks: false,
   expert: false,
   ratings: [],
+  expert_speed: null,
 };
 
 const cyanBeachExpert: Island = {
@@ -36,6 +37,7 @@ const cyanBeachExpert: Island = {
   user_picks: true,
   expert: true,
   ratings: [],
+  expert_speed: { main: 0.8, penalty: 1.35 },
 };
 
 const catalog = {

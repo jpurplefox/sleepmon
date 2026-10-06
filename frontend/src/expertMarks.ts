@@ -1,4 +1,4 @@
-import type { BerryRole, WeeklyBonus } from "./types";
+import type { BerryRole, ExpertSpeed, WeeklyBonus } from "./types";
 
 /** An annotation attached to a card metric: what the map does to that number. */
 export interface MetricMark {
@@ -13,12 +13,19 @@ interface Args {
   role: BerryRole;
   expert: boolean;
   weeklyBonus: WeeklyBonus;
+  /** The expert map's speed factors; defaults to Greengrass Isle (Expert)'s. */
+  speed?: ExpertSpeed | null;
   /** The member's own skill level. */
   skillLevel: number;
   /** Level the domain actually used (already capped at the skill's max). */
   effectiveSkillLevel: number;
-  t: (key: string) => string;
+  t: (key: string, vars?: Record<string, string | number>) => string;
 }
+
+const BASE_EXPERT_SPEED: ExpertSpeed = { main: 0.9, penalty: 1.15 };
+
+/** A help-interval factor as a whole percentage, e.g. 0.8 -> 20, 1.35 -> 35. */
+const pct = (factor: number) => Math.round(Math.abs(1 - factor) * 100);
 
 /**
  * Marks for a member based on its berry and the current map (max four).
@@ -29,6 +36,7 @@ export function expertMarks({
   role,
   expert,
   weeklyBonus,
+  speed,
   skillLevel,
   effectiveSkillLevel,
   t,
@@ -46,13 +54,15 @@ export function expertMarks({
         ];
   }
 
+  const { main, penalty } = speed ?? BASE_EXPERT_SPEED;
+
   if (role === "none") {
     return [
       {
         metric: "cadence",
-        label: "+15%",
+        label: `+${pct(penalty)}%`,
         tone: "bad",
-        effect: t("card.expertPenalty"),
+        effect: t("card.expertPenalty", { pct: pct(penalty) }),
       },
     ];
   }
@@ -62,9 +72,9 @@ export function expertMarks({
   if (role === "main") {
     marks.push({
       metric: "cadence",
-      label: "−10%",
+      label: `−${pct(main)}%`,
       tone: "good",
-      effect: t("card.expertMainSpeed"),
+      effect: t("card.expertMainSpeed", { pct: pct(main) }),
     });
     // Only if the +1 actually applied: a Pokemon already at its skill cap gains nothing.
     if (effectiveSkillLevel > skillLevel) {
