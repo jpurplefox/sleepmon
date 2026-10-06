@@ -170,6 +170,17 @@ body {
 .tooltip__row:last-child .tooltip__val {
   color: var(--moon);
 }
+/* Source lists (Berry Burst): rows stay neutral; only the area-bonus row is gold. */
+.tooltip--sources .tooltip__row:last-child .tooltip__val {
+  color: var(--text);
+}
+.tooltip--sources .tooltip__row--bonus .tooltip__val {
+  color: var(--moon);
+}
+.tooltip__label img {
+  width: 14px;
+  height: 14px;
+}
 
 .grid {
   display: grid;

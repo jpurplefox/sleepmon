@@ -7,7 +7,7 @@ import { ingredientIcon } from "../ingredients";
 import { statIcon } from "../natures";
 import { spriteUrl } from "../sprites";
 import type { Member, Nature, Species } from "../types";
-import { CHARGE_STRENGTH_ICON, mainSkillIcon } from "../skillIcons";
+import { CHARGE_STRENGTH_ICON, GENERIC_BERRY_ICON, mainSkillIcon } from "../skillIcons";
 import { IconChevronDown, IconMore } from "./icons";
 import { IngredientLineup } from "./IngredientLineup";
 import { MemberConfig } from "./MemberConfig";
@@ -173,8 +173,14 @@ export function BoxEntry({
   // siempre el mismo que el de la skill (que ya se muestra en la línea de nivel), así
   // que se omite y el número se alinea con un sangrado. Los ingredientes específicos
   // (Ingredient Draw) NO van acá: ya se ven en la columna de ingredientes.
-  const skillYield = useMemo<{ text: string; title: string } | null>(() => {
+  const skillYield = useMemo<{ text: string; title: string; icon?: string } | null>(() => {
     if (!prod) return null;
+    if (prod.skill_berries_per_teammate != null)
+      return {
+        text: `+${fmt(prod.skill_berries_per_teammate)}`,
+        title: t("card.perTeammateTitle"),
+        icon: GENERIC_BERRY_ICON,
+      };
     if (prod.skill_ingredient_total != null && prod.skill_ingredient_total > 0) {
       const v = fmt(prod.skill_ingredient_total);
       return {
@@ -244,6 +250,9 @@ export function BoxEntry({
           </span>
           {skillYield && (
             <span className="box-entry__metric" title={skillYield.title}>
+              {skillYield.icon && (
+                <img className="mini-icon" src={skillYield.icon} alt="" aria-hidden="true" />
+              )}
               <span className="box-entry__metric-value">{skillYield.text}</span>
               <span className="sr-only">{skillYield.title}</span>
             </span>
@@ -547,6 +556,9 @@ export function BoxEntry({
                 <img className="box-entry__skill-yield-icon" src={skillIcon.src} alt="" aria-hidden="true" />
               ) : (
                 <skillIcon.Component className="box-entry__skill-yield-icon" aria-hidden="true" />
+              )}
+              {skillYield.icon && (
+                <img className="mini-icon" src={skillYield.icon} alt="" aria-hidden="true" />
               )}
               <span className="box-entry__metric-value">{skillYield.text}</span>
               <span className="sr-only">{skillYield.title}</span>
