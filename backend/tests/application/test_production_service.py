@@ -5,12 +5,14 @@ import pytest
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.dto import (
+    BerrySourceDTO,
     EventEffectInput,
     MealSelectionInput,
     ProductionInput,
     SlotEntryInput,
     SlotInput,
     TeamProductionInput,
+    TeamProductionResult,
 )
 from sleepmon.application.services import DefaultProductionService
 from sleepmon.domain.catalog_data import MAX_RECIPE_LEVEL
@@ -1192,7 +1194,7 @@ def test_berry_burst_burster_weight_is_applied_exactly_once(
 ) -> None:
     """Splitting the burster's slot 50/50 halves its teammate berries, not quarters them."""
 
-    def team(slot0: list[SlotEntryInput]):  # type: ignore[no-untyped-def]
+    def team(slot0: list[SlotEntryInput]) -> TeamProductionResult:
         return production_service.compute_team_production(
             TeamProductionInput(
                 slots=[SlotInput(entries=slot0), SlotInput(entries=[_entry("p")])],
@@ -1200,7 +1202,7 @@ def test_berry_burst_burster_weight_is_applied_exactly_once(
             )
         )
 
-    def grepa_burst(result, member_id: str):  # type: ignore[no-untyped-def]
+    def grepa_burst(result: TeamProductionResult, member_id: str) -> BerrySourceDTO:
         row = next(r for r in result.berries if r.berry == "Grepa")
         return next(
             s for s in row.sources if s.kind == "berry_burst" and s.member_id == member_id
