@@ -14,7 +14,7 @@ from sleepmon.domain.map_bonuses import MapBonuses, berry_effects
 from sleepmon.domain.production import BerryYield, DailyProduction
 from sleepmon.domain.skills import BerryBurstTeam
 from sleepmon.domain.species import Species
-from sleepmon.domain.value_objects import BERRY_TYPE, Berry, Type
+from sleepmon.domain.value_objects import Berry
 
 _LATIAS = "Latias"
 
@@ -31,20 +31,18 @@ class BurstMember:
     daily: DailyProduction  # already scaled by ``weight``
 
 
-def _is_dragon(species: Species) -> bool:
-    return BERRY_TYPE.get(species.berry) is Type.DRAGON
-
-
 def berry_burst_team_for(
     slot: int, species: Species, roster: Sequence[tuple[int, Species]]
 ) -> BerryBurstTeam:
-    """Draco Meteor's context for the entry in ``slot``: other slots plus itself."""
+    """Team context for the entry in ``slot``: other slots plus itself.
+
+    Species sharing a berry share a type, so for Latios these are the Dragon species.
+    """
     others = [other for other_slot, other in roster if other_slot != slot]
-    dragons = {other.name for other in others if _is_dragon(other)}
-    if _is_dragon(species):
-        dragons.add(species.name)
+    same_berry = {other.name for other in others if other.berry is species.berry}
+    same_berry.add(species.name)
     return BerryBurstTeam(
-        dragon_species=max(1, len(dragons)),
+        same_berry_species=len(same_berry),
         latias=any(other.name == _LATIAS for other in others),
     )
 

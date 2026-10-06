@@ -119,7 +119,7 @@ export interface MemberProduction {
   // Crustle) y/o total al azar (Ingredient Magnet, p. ej. Plusle).
   skill_ingredients: SlotProduction[];
   skill_ingredient_total: number | null;
-  // Berry Burst: own berries per day and berries of each teammate per day (counts only).
+  // Berry Burst / Lunar Blessing: own berries per day and berries of each teammate per day.
   skill_berry_amount: number | null;
   skill_berries_per_teammate: number | null;
   // Otras salidas de la main skill (una por especie según su tipo; el resto null).
@@ -355,7 +355,7 @@ export interface Production {
   // Ingredientes/día que aporta la main skill (Ingredient Draw S), uno por
   // ingrediente del pool. Vacío si la skill de la especie no produce ingredientes.
   skill_ingredients: SlotProduction[];
-  // Berry Burst: own berries/day and their strength (null outside the Berry Burst family).
+  // Berry Burst / Lunar Blessing: own berries/day and their strength (null for other skills).
   skill_berry_amount: number | null;
   skill_berry_strength: number | null;
   // Berry Burst: berries of each teammate per day (count only).

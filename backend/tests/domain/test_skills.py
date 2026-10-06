@@ -595,20 +595,37 @@ def test_draco_meteor_depends_on_dragon_species_and_latias() -> None:
     alone = berry_burst_amounts("Berry Burst (Draco Meteor)", 1)
     assert alone == BerryBurstAmounts(12, 1)
     with_latias = berry_burst_amounts(
-        "Berry Burst (Draco Meteor)", 1, BerryBurstTeam(dragon_species=2, latias=True)
+        "Berry Burst (Draco Meteor)", 1, BerryBurstTeam(same_berry_species=2, latias=True)
     )
     assert with_latias == BerryBurstAmounts(16, 1)  # 14 + 2
     assert berry_burst_amounts(
-        "Berry Burst (Draco Meteor)", 6, BerryBurstTeam(dragon_species=5, latias=True)
+        "Berry Burst (Draco Meteor)", 6, BerryBurstTeam(same_berry_species=5, latias=True)
     ) == BerryBurstAmounts(68, 5)  # 58 + 10
     # Out-of-range species count clamps to the table.
     assert berry_burst_amounts(
-        "Berry Burst (Draco Meteor)", 4, BerryBurstTeam(dragon_species=9)
+        "Berry Burst (Draco Meteor)", 4, BerryBurstTeam(same_berry_species=9)
     ) == BerryBurstAmounts(49, 4)
 
 
 def test_berry_burst_amounts_is_none_for_other_skills() -> None:
     assert berry_burst_amounts("Charge Strength S", 3) is None
+    assert berry_burst_amounts("Energy for Everyone S", 3) is None
+
+
+def test_lunar_blessing_berries_grow_with_same_berry_species() -> None:
+    skill = "Energy for Everyone S (Lunar Blessing)"
+    assert berry_burst_amounts(skill, 1) == BerryBurstAmounts(5, 1)
+    assert berry_burst_amounts(skill, 6) == BerryBurstAmounts(25, 1)
+    assert berry_burst_amounts(
+        skill, 4, BerryBurstTeam(same_berry_species=3)
+    ) == BerryBurstAmounts(25, 2)
+    assert berry_burst_amounts(
+        skill, 6, BerryBurstTeam(same_berry_species=5)
+    ) == BerryBurstAmounts(32, 9)
+    # Latias only matters to Draco Meteor; out-of-range counts clamp to the table.
+    assert berry_burst_amounts(
+        skill, 6, BerryBurstTeam(same_berry_species=9, latias=True)
+    ) == BerryBurstAmounts(32, 9)
 
 
 def test_disguise_adds_the_expected_great_success() -> None:

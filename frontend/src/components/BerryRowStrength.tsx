@@ -31,7 +31,7 @@ export function BerryRowStrength({ row, bonus }: BerryRowStrengthProps) {
       : []),
     ...bursts.map((s) => ({
       key: s.member_id ?? "burst",
-      label: t("teams.fromBerryBurst", { species: s.species ?? "", amount: s.amount.toFixed(1) }),
+      label: t("teams.fromSkillBerries", { species: s.species ?? "", amount: s.amount.toFixed(1) }),
       value: s.strength_base,
       icon: true,
     })),

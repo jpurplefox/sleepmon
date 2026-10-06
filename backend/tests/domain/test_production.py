@@ -1566,10 +1566,22 @@ def test_draco_meteor_reads_the_team_context() -> None:
     alone = daily_production(latios, _INGREDIENTS, level=30, skill_level=1)
     paired = daily_production(
         latios, _INGREDIENTS, level=30, skill_level=1,
-        berry_burst_team=BerryBurstTeam(dragon_species=2, latias=True),
+        berry_burst_team=BerryBurstTeam(same_berry_species=2, latias=True),
     )
     assert alone.skill_berry_amount == pytest.approx(alone.skill_triggers * 12)
     assert paired.skill_berry_amount == pytest.approx(paired.skill_triggers * 16)
+
+
+def test_lunar_blessing_yields_energy_and_berries() -> None:
+    cresselia = _burster("Energy for Everyone S (Lunar Blessing)", Berry.MAGO)
+    prod = daily_production(
+        cresselia, _INGREDIENTS, level=30, skill_level=6,
+        berry_burst_team=BerryBurstTeam(same_berry_species=2),
+    )
+    t = prod.skill_triggers
+    assert prod.skill_energy == pytest.approx(t * 11)
+    assert prod.skill_berry_amount == pytest.approx(t * 29)
+    assert prod.skill_berries_per_teammate == pytest.approx(t * 2)
 
 
 def test_event_skill_level_caps_berry_burst_at_6() -> None:

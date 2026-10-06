@@ -82,11 +82,25 @@ def test_berry_burst_team_counts_distinct_dragons_and_latias_in_other_slots() ->
         (4, _BY_NAME["Pikachu"]),
     ]
     assert berry_burst_team_for(0, latios, roster) == BerryBurstTeam(
-        dragon_species=3, latias=False
+        same_berry_species=3, latias=False
     )
     with_latias = [*roster, (4, _BY_NAME["Latias"])]
     assert berry_burst_team_for(0, latios, with_latias) == BerryBurstTeam(
-        dragon_species=4, latias=True
+        same_berry_species=4, latias=True
+    )
+
+
+def test_berry_burst_team_counts_species_sharing_the_members_berry() -> None:
+    cresselia = _BY_NAME["Cresselia"]
+    roster = [
+        (0, cresselia),
+        (1, _BY_NAME["Ralts"]),  # Mago
+        (2, _BY_NAME["Gardevoir"]),  # Mago, a different species
+        (3, _BY_NAME["Gardevoir"]),  # same species counts once
+        (4, _BY_NAME["Latios"]),  # Yache: doesn't count for Cresselia
+    ]
+    assert berry_burst_team_for(0, cresselia, roster) == BerryBurstTeam(
+        same_berry_species=3, latias=False
     )
 
 
