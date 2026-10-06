@@ -98,8 +98,7 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
   the species'; random outcomes count at their expected value — Super Luck sometimes
   gets **dream shards** instead of ingredients, Hyper Cutter sometimes gets **twice**
   the ingredients. Lunar Blessing also gets berries, like Berry Burst (see
-  [Berry Burst](0013-berry-burst.md)). Second effects that need more modeling
-  (Nuzzle's skill bonus, Present's candy) aren't counted yet.
+  [Berry Burst](0013-berry-burst.md)). Nuzzle's skill bonus isn't counted yet.
 - **Skills that grant helps** give team members ×N their usual help per trigger:
   **Extra Helpful S** to one random member, **Heal Pulse** (Latias) to two (more with
   **Latios** on the team), **Helper Boost** (Raikou, Entei, Suicune) to **every** member
@@ -118,6 +117,10 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
   the team's berries and ingredients.
 - **Moonlight** (Umbreon) restores energy to itself and, half the time, also to a
   teammate; that expected energy shows with the other "to a random teammate" energy.
+- **Items a skill also gets** show as a daily count, on the card's Skill block and in
+  the team's *Other skills*: **Present** (Delibird) brings 4 candies a third of the
+  time, shown as a total with a generic candy icon (which Pokémon they're for isn't
+  worked out); **Berry Juice** (Shuckle) brings a Berry Juice 18.5% of the time.
 - **Skills with two effects count both** when both are modeled: **Aura Sphere**
   (Lucario) gets dream shards *and* strength; **Cooking Assist S (Bulk Up)**
   (Heracross) gets random ingredients *and* raises the Extra Tasty rate, accumulated

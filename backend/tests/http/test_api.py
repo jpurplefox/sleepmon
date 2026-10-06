@@ -554,6 +554,21 @@ def test_production_exposes_extra_helpful_multiplier(client: TestClient) -> None
     assert body["skill_extra_helpful"] == pytest.approx(body["skill_triggers"] * 12)
 
 
+def test_production_exposes_candy_and_berry_juice(client: TestClient) -> None:
+    delibird = client.post(
+        "/production",
+        json={"species": "Delibird", "level": 30, "ingredients": ["Fancy Egg"] * 3},
+    ).json()
+    assert delibird["skill_candy"] == pytest.approx(delibird["skill_triggers"] * 4 / 3)
+    assert delibird["skill_berry_juice"] is None
+    shuckle = client.post(
+        "/production",
+        json={"species": "Shuckle", "level": 30, "ingredients": ["Pure Oil"] * 3},
+    ).json()
+    assert shuckle["skill_berry_juice"] == pytest.approx(shuckle["skill_triggers"] * 0.185)
+    assert shuckle["skill_candy"] is None
+
+
 def test_production_exposes_random_energy_for_energizing_cheer(client: TestClient) -> None:
     res = client.post(
         "/production",

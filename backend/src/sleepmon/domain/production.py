@@ -75,6 +75,8 @@ from sleepmon.domain.skills import (
     moonlight_shared_energy,
     powers_up_cooking,
     restores_team_energy,
+    skill_berry_juice,
+    skill_candy,
     skill_strength_amount,
     tasty_chance_amount,
 )
@@ -273,6 +275,9 @@ class DailyProduction:
     help_yield: HelpYield = NO_HELP_YIELD
     # Helps the skill grants team members (Extra Helpful, Helper Boost, Heal Pulse).
     help_grant: HelpGrant | None = None
+    # Items per day a skill also gets: candies of any Pokémon (Present), Berry Juice.
+    skill_candy: float | None = None
+    skill_berry_juice: float | None = None
 
 
 def scale_daily(daily: DailyProduction, weight: float) -> DailyProduction:
@@ -328,6 +333,8 @@ def scale_daily(daily: DailyProduction, weight: float) -> DailyProduction:
             if daily.help_grant is None
             else HelpGrant(daily.help_grant.per_target * weight, daily.help_grant.targets)
         ),
+        skill_candy=_s(daily.skill_candy),
+        skill_berry_juice=_s(daily.skill_berry_juice),
     )
 
 
@@ -615,6 +622,10 @@ def daily_production(
     elif is_cooking_minus(species):
         skill_random_energy = skill_triggers * cooking_minus_energy_amount(effective_skill_level)
 
+    # Items on top of the main effect: candy (Present) and Berry Juice, per day.
+    per_candy = skill_candy(species.main_skill)
+    per_juice = skill_berry_juice(species.main_skill)
+
     # En el overflow nocturno TODAS las ayudas producen bayas.
     helps_berry_amount = (normal_helps * berry_rate + overflow_helps) * berry_per_help
 
@@ -689,4 +700,6 @@ def daily_production(
         skill_berries_per_teammate=skill_berries_per_teammate,
         help_yield=help_yield,
         help_grant=granted,
+        skill_candy=None if per_candy is None else skill_triggers * per_candy,
+        skill_berry_juice=None if per_juice is None else skill_triggers * per_juice,
     )

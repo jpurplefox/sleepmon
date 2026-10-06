@@ -255,9 +255,12 @@ export function skillDescription(
   }
   if (restoresTeamEnergy(mainSkill)) {
     const n = energyForEveryoneAmount(level);
-    return es
+    const base = es
       ? `Restaura ${n} de Energía a cada Pokémon del equipo.`
       : `Restores ${n} Energy to each Pokémon on your team.`;
+    if (mainSkill!.startsWith("Energy for Everyone S (Berry Juice)"))
+      return es ? `${base} A veces consigue además un Zumo de baya.` : `${base} Sometimes also gets a Berry Juice.`;
+    return base;
   }
   // Plusle / Minun: chequear las variantes Plus/Minus antes que las genéricas.
   if (mainSkill?.startsWith("Ingredient Magnet S (Plus)")) {

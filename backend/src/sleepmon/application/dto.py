@@ -158,6 +158,8 @@ class ProductionResult:
     skill_berry_strength: float | None = None
     skill_berries_per_teammate: float | None = None
     skill_help_targets: int | None = None  # members each grant reaches (5: whole team)
+    skill_candy: float | None = None  # Present: candies per day (any Pokémon's)
+    skill_berry_juice: float | None = None  # Berry Juice: juices per day
     # Berries obtained from teammates: only for a burster inside a team, else None.
     teammate_berries: list[BerryYieldDTO] | None = None
     # Ingredients obtained from teammates (Extra Helpful): only inside a team, else None.

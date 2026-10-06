@@ -18,6 +18,8 @@ import {
 export const POT_EXPANSION_ICON = "/skill/pot-expansion.webp";
 export const CHARGE_STRENGTH_ICON = "/skill/charge-strength.webp";
 export const GENERIC_BERRY_ICON = "/skill/generic-berry.webp";
+export const GENERIC_CANDY_ICON = "/skill/generic-candy.webp";
+export const BERRY_JUICE_ICON = "/skill/berry-juice.webp";
 export const BERRY_BURST_ICON = "/skill/berry-burst.webp";
 
 // Ícono representativo de cada familia de main skill. Reusa exactamente los mismos

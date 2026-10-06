@@ -12,7 +12,13 @@ import { expertMarks, type MetricMark } from "../expertMarks";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { statIcon } from "../natures";
-import { CHARGE_STRENGTH_ICON, GENERIC_BERRY_ICON, POT_EXPANSION_ICON } from "../skillIcons";
+import {
+  BERRY_JUICE_ICON,
+  CHARGE_STRENGTH_ICON,
+  GENERIC_BERRY_ICON,
+  GENERIC_CANDY_ICON,
+  POT_EXPANSION_ICON,
+} from "../skillIcons";
 import { spriteUrl } from "../sprites";
 import { subSkillIcon } from "../subskills";
 import type {
@@ -807,6 +813,24 @@ export function ProductionCard({
                   <img className="mini-icon" src={statIcon("Energy Recovery")} alt="" />{" "}
                   {fmt(d.skill_random_energy)} <Delta value={d.skill_random_energy} base={base?.skill_random_energy ?? null} />
                   <span className="muted"> {t("card.randomEnergy")}</span>
+                </span>
+              </div>
+            )}
+            {d.skill_candy != null && (
+              <div className="prod-card__line">
+                <span title={t("card.candyTitle")}>
+                  <img className="mini-icon mini-icon--candy" src={GENERIC_CANDY_ICON} alt="" />{" "}
+                  {fmt(d.skill_candy)} <Delta value={d.skill_candy} base={base?.skill_candy ?? null} />
+                  <span className="muted"> {t("card.candy")}</span>
+                </span>
+              </div>
+            )}
+            {d.skill_berry_juice != null && (
+              <div className="prod-card__line">
+                <span title={t("card.berryJuiceTitle")}>
+                  <img className="mini-icon" src={BERRY_JUICE_ICON} alt="" />{" "}
+                  {fmt(d.skill_berry_juice)} <Delta value={d.skill_berry_juice} base={base?.skill_berry_juice ?? null} />
+                  <span className="muted"> {t("card.berryJuice")}</span>
                 </span>
               </div>
             )}

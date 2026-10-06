@@ -163,6 +163,8 @@ _EFFECT_KIND_TO_FIELD: tuple[tuple[str, str], ...] = (
     ("random_energy", "skill_random_energy"),
     ("cooking_ingredients", "skill_cooking_ingredients"),
     ("ingredient_total", "skill_ingredient_total"),
+    ("candy", "skill_candy"),
+    ("berry_juice", "skill_berry_juice"),
 )
 
 
