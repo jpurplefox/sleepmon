@@ -3,7 +3,7 @@
 Cada especie fija su número de Pokédex, qué baya carga, su tipo de sueño, su main
 skill y —lo que usa la validación— qué ingredientes son posibles en cada slot.
 
-Dataset completo del juego: 244 especies/formas. Generado desde nitoyon
+Dataset completo del juego: 247 especies/formas. Generado desde nitoyon
 (``pokesleep-tool``, ``src/data/pokemon.json``: sleep type, especialidad, skill,
 frecuencia, %ingrediente/%skill, ingredientes con cantidades por slot, inventario
 base y ``evolutionCount`` -> ``evolution_stage``)
@@ -15,8 +15,7 @@ fija del juego). Ampliarlo o corregirlo es solo agregar/editar entradas de
 Se omiten Mew y Darkrai (los dos especialistas "All"): usan un mecanismo
 "Versatile"/comodín y el juego no publica sus cantidades de ingrediente por slot,
 así que no se pueden cargar con datos reales en el modelo de 3 ingredientes
-ordenados. También se omite Mewtwo: todavía no tiene datos publicados (la fuente
-trae ingredientes ``unknown`` y frecuencia/inventario en 0).
+ordenados.
 """
 
 from __future__ import annotations
@@ -620,6 +619,12 @@ SEED_SPECIES: tuple[Species, ...] = (
         "Charge Energy S",
         (I.FIERY_HERB, I.GREENGRASS_CORN, I.PURE_OIL),
         2600, 26.4, 2.6, ((2,), (5, 4), (7, 7, 8)), 20, 2, 2,
+    ),
+    Species(
+        "Mewtwo", 150, Specialty.SKILLS, Berry.MAGO, SleepType.SNOOZING,
+        "Berry Zone (Psystrike)",
+        (I.GREENGRASS_SOYBEANS, I.GREENGRASS_CORN, I.SOFT_POTATO),
+        2300, 16.0, 2.9, ((1,), (2, 2), (4, 3, 3)), 24, 0, 0,
     ),
     Species(
         "Chikorita", 152, Specialty.BERRIES, Berry.DURIN, SleepType.DOZING,
@@ -1640,5 +1645,17 @@ SEED_SPECIES: tuple[Species, ...] = (
         "Charge Energy S",
         (I.SOOTHING_CACAO, I.ROUSING_COFFEE, I.SOFT_POTATO),
         3500, 20.8, 5.5, ((2,), (5, 4), (7, 7, 9)), 20, 1, 1,
+    ),
+    Species(
+        "Foongus", 590, Specialty.INGREDIENTS, Berry.CHESTO, SleepType.DOZING,
+        "Charge Strength S",
+        (I.TASTY_MUSHROOM, I.FANCY_EGG, I.SNOOZY_TOMATO),
+        5700, 17.4, 3.5, ((2,), (5, 7), (7, 10, 11)), 12, 0, 1,
+    ),
+    Species(
+        "Amoonguss", 591, Specialty.INGREDIENTS, Berry.CHESTO, SleepType.DOZING,
+        "Charge Strength S",
+        (I.TASTY_MUSHROOM, I.FANCY_EGG, I.SNOOZY_TOMATO),
+        3500, 20.4, 4.7, ((2,), (5, 7), (7, 10, 11)), 14, 1, 1,
     ),
 )

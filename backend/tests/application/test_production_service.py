@@ -76,7 +76,7 @@ def test_compute_production_unknown_species_rejected(
     with pytest.raises(SpeciesNotFoundError):
         production_service.compute_production(
             ProductionInput(
-                species="Mewtwo",
+                species="Mew",
                 level=60,
                 ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"],
             )

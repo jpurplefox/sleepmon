@@ -77,7 +77,7 @@ def test_species_lookup_is_case_insensitive(service: DefaultTeamService) -> None
 
 def test_unknown_species_rejected(service: DefaultTeamService) -> None:
     with pytest.raises(SpeciesNotFoundError):
-        service.add_member(UID, valid_input(species="Mewtwo"))
+        service.add_member(UID, valid_input(species="Mew"))
 
 
 def test_invalid_nature_rejected(service: DefaultTeamService) -> None:
