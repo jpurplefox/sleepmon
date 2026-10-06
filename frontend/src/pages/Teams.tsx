@@ -120,7 +120,7 @@ function skillEffectMeta(kind: string): SkillEffectMeta {
       };
     case "candy":
       return {
-        iconNode: () => <img className="mini-icon" src={GENERIC_CANDY_ICON} alt="" />,
+        iconNode: () => <img className="mini-icon mini-icon--candy" src={GENERIC_CANDY_ICON} alt="" />,
         labelKey: "card.candy",
         decimals: true,
       };
@@ -645,26 +645,28 @@ export function Teams() {
                   >
                     {t("teams.otherSkills")}
                   </div>
-                  {otherSkills.map((e: SkillEffectAgg) => {
-                    const meta = skillEffectMeta(e.kind);
-                    const total = e.total * factor;
-                    const triggers = e.triggers * factor;
-                    const label = t(meta.labelKey);
-                    return (
-                      <div key={e.kind} className="prod-card__line">
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
-                          {meta.iconNode()}
-                          <span>
-                            {`${meta.decimals ? total.toFixed(2) : fdown(total)} ${label}`}
+                  <div className="teams-other-skills">
+                    {otherSkills.map((e: SkillEffectAgg) => {
+                      const meta = skillEffectMeta(e.kind);
+                      const total = e.total * factor;
+                      const triggers = e.triggers * factor;
+                      const label = t(meta.labelKey);
+                      return (
+                        <div key={e.kind} className="prod-card__line">
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                            {meta.iconNode()}
+                            <span>
+                              {`${meta.decimals ? total.toFixed(2) : fdown(total)} ${label}`}
+                            </span>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.15rem", fontSize: "var(--text-xs)" }}>
+                              (<IconSparkle width={11} height={11} style={{ opacity: 0.75 }} />
+                              {triggers.toFixed(2)})
+                            </span>
                           </span>
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: "0.15rem", fontSize: "var(--text-xs)" }}>
-                            (<IconSparkle width={11} height={11} style={{ opacity: 0.75 }} />
-                            {triggers.toFixed(2)})
-                          </span>
-                        </span>
-                      </div>
-                    );
-                  })}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               );
             })()}

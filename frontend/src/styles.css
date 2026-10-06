@@ -3097,6 +3097,13 @@ button.prod-card__base-tag--action:hover {
   width: auto;
 }
 
+/* The generic candy fills its image edge to edge; shrink it inside the same 22px slot
+   so it reads at the size of the other skill icons. */
+.mini-icon--candy {
+  height: 16px;
+  margin: 3px;
+}
+
 /* Placeholder de stat de naturaleza (neutra / sin naturaleza): cuadradito tenue
    que ocupa el lugar del ícono de stat, para alinear con una naturaleza con ↑/↓. */
 .mini-icon--empty {
@@ -5288,3 +5295,10 @@ button.prod-card__base-tag--action:hover {
 .inline-editor__actions { display: flex; justify-content: flex-end; gap: 0.5rem; }
 /* Pokémon type icons are game art clipped round (design system §3). */
 .type-icon { border-radius: 50%; }
+
+/* Team "Other skills" rows: same rhythm as a card's Skill block. */
+.teams-other-skills {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}

@@ -819,7 +819,7 @@ export function ProductionCard({
             {d.skill_candy != null && (
               <div className="prod-card__line">
                 <span title={t("card.candyTitle")}>
-                  <img className="mini-icon" src={GENERIC_CANDY_ICON} alt="" />{" "}
+                  <img className="mini-icon mini-icon--candy" src={GENERIC_CANDY_ICON} alt="" />{" "}
                   {fmt(d.skill_candy)} <Delta value={d.skill_candy} base={base?.skill_candy ?? null} />
                   <span className="muted"> {t("card.candy")}</span>
                 </span>
