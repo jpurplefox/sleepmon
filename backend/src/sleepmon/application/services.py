@@ -9,12 +9,14 @@ cada ingrediente sea válido para la especie en su slot.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from typing import assert_never
 from uuid import UUID
 
 from sleepmon.application.dto import (
+    BerrySourceDTO,
+    BerryYieldDTO,
     Distributions,
     EventEffectInput,
     FillerDTO,
@@ -32,6 +34,7 @@ from sleepmon.application.dto import (
     SlotAmount,
     SlotEntryInput,
     SlotIngredientStatusDTO,
+    TeamBerryRowDTO,
     TeamMemberInput,
     TeamProductionInput,
     TeamProductionResult,
@@ -39,6 +42,7 @@ from sleepmon.application.dto import (
 from sleepmon.application.parsing import parse_enum
 from sleepmon.domain import analytics
 from sleepmon.domain.analytics import team_production
+from sleepmon.domain.berry_burst import BurstMember, berry_burst_team_for, teammate_berries
 from sleepmon.domain.catalog_data import (
     GOOD_CAMP_TICKET_POT_FACTOR,
     ISLAND_EXPERT,
@@ -85,7 +89,7 @@ from sleepmon.domain.value_objects import (
 )
 
 
-def _production_result(daily: DailyProduction) -> ProductionResult:
+def _production_result(daily: DailyProduction, *, in_team: bool = False) -> ProductionResult:
     """Convierte un ``DailyProduction`` del dominio a ``ProductionResult`` (DTO).
 
     Función compartida entre ``compute_production`` y ``compute_team_production``
@@ -123,6 +127,14 @@ def _production_result(daily: DailyProduction) -> ProductionResult:
         night_skill_chances=list(daily.night_skill_chances),
         inventory=daily.inventory,
         inventory_fill_hours=daily.inventory_fill_hours,
+        skill_berry_amount=daily.skill_berry_amount,
+        skill_berry_strength=daily.skill_berry_strength,
+        skill_berries_per_teammate=daily.skill_berries_per_teammate,
+        teammate_berries=(
+            [BerryYieldDTO(y.berry.value, y.amount, y.strength) for y in daily.teammate_berries]
+            if in_team and daily.skill_berries_per_teammate is not None
+            else None
+        ),
     )
 
 
@@ -413,6 +425,8 @@ class DefaultTeamService(TeamService):
             skill_tasty_chance=result.skill_tasty_chance,
             skill_extra_helpful=result.skill_extra_helpful,
             skill_random_energy=result.skill_random_energy,
+            skill_berry_amount=result.skill_berry_amount,
+            skill_berries_per_teammate=result.skill_berries_per_teammate,
         )
 
     def update_member(self, user_id: UUID, member_id: UUID, data: TeamMemberInput) -> TeamMember:
@@ -521,9 +535,9 @@ class DefaultProductionService(ProductionService):
                 f"Un equipo tiene entre 1 y {self._MAX_TEAM} slots; llegaron "
                 f"{len(data.slots)}."
             )
-        flat: list[tuple[SlotEntryInput, float]] = []
+        flat: list[tuple[SlotEntryInput, float, int]] = []
         seen: set[str] = set()
-        for slot in data.slots:
+        for slot_index, slot in enumerate(data.slots):
             if not 1 <= len(slot.entries) <= 2:
                 raise ValidationError("Un slot tiene 1 o 2 Pokémon.")
             total_weight = 0.0
@@ -543,7 +557,7 @@ class DefaultProductionService(ProductionService):
                     )
                 seen.add(entry.id)
                 total_weight += entry.weight
-                flat.append((entry, entry.weight))
+                flat.append((entry, entry.weight, slot_index))
             if abs(total_weight - 1.0) > self._WEIGHT_EPS:
                 raise ValidationError("Los pesos de un slot deben sumar 1.")
 
@@ -555,12 +569,14 @@ class DefaultProductionService(ProductionService):
         map_bonuses = _map_bonuses(data)
         event = _event_bonus(data)
 
-        # Resolve each entry against the catalog and scale its production by weight.
-        # An unknown species is rejected outright: there is no Box to silently drop it from.
-        entries: list[tuple[str, str, DailyProduction]] = []
-        member_productions: dict[str, ProductionResult] = {}
-        for entry, weight in flat:
-            cfg = _resolve_config(self._catalog, entry.pokemon)
+        # Resolve every entry first: Draco Meteor reads the whole roster.
+        configs = [
+            (entry, weight, slot_index, _resolve_config(self._catalog, entry.pokemon))
+            for entry, weight, slot_index in flat
+        ]
+        roster = [(slot_index, cfg.species) for _, _, slot_index, cfg in configs]
+        members: list[BurstMember] = []
+        for entry, weight, slot_index, cfg in configs:
             daily = daily_production(
                 cfg.species,
                 cfg.ingredients,
@@ -572,10 +588,23 @@ class DefaultProductionService(ProductionService):
                 map_bonuses=map_bonuses,
                 good_camp_ticket=data.good_camp_ticket,
                 event=event,
+                berry_burst_team=berry_burst_team_for(slot_index, cfg.species, roster),
             )
             scaled = scale_daily(daily, weight)
-            member_productions[entry.id] = _production_result(scaled)
-            entries.append((entry.id, cfg.species.name, scaled))
+            members.append(
+                BurstMember(entry.id, slot_index, cfg.species, cfg.level, weight, scaled)
+            )
+
+        # Berry Burst's team half: what each burster gets from its teammates.
+        from_teammates = teammate_berries(members, map_bonuses)
+        entries: list[tuple[str, str, DailyProduction]] = []
+        member_productions: dict[str, ProductionResult] = {}
+        for m in members:
+            daily = m.daily
+            if m.id in from_teammates:
+                daily = replace(daily, teammate_berries=from_teammates[m.id])
+            member_productions[m.id] = _production_result(daily, in_team=True)
+            entries.append((m.id, m.species.name, daily))
 
         aggregate = team_production(entries, island_bonus=data.island_bonus)
 
@@ -725,4 +754,23 @@ class DefaultProductionService(ProductionService):
             ],
             grand_total_strength=aggregate.total_strength + day.total,
             grand_total_strength_base=aggregate.total_strength_base + day.total_base,
+            berries=[
+                TeamBerryRowDTO(
+                    berry=r.berry.value,
+                    amount=r.amount,
+                    strength=r.strength,
+                    strength_base=r.strength_base,
+                    sources=[
+                        BerrySourceDTO(
+                            kind=s.kind,
+                            member_id=s.member_id,
+                            species=s.species,
+                            amount=s.amount,
+                            strength_base=s.strength_base,
+                        )
+                        for s in r.sources
+                    ],
+                )
+                for r in aggregate.berries
+            ],
         )
