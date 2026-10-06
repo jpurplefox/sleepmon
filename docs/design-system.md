@@ -165,6 +165,12 @@ Two kinds of figure stay **bare** (no metric icon):
 
 Edit steppers show nav arrows, not a metric icon.
 
+**Pokémon types** are game content: a type is shown by its **type icon** (the
+Scarlet/Violet small set, via PokeAPI like the berry sprites), in its real color and
+**clipped round** (`border-radius: 50%`) so it reads as a token, not a tile. Not by
+its berry — the berry is what the type *yields*, not what it *is*. (The Box's type
+filter still uses berry icons; it predates this rule and should follow it.)
+
 ---
 
 ## 4. States & rules (cross-cutting)
@@ -268,7 +274,17 @@ states · where it lives. Feature one-offs are intentionally not here.
   `--down-dim`). Always carries `title`
   + `aria-label` with the full effect — the sign and the text carry the meaning, so
   color is never the only cue. Generalized from `.prod-card__fav-badge` (the berry
-  `×2`), which is its gold variant.
+  `×2`), which is its gold variant. **With icons**: where the mark stands apart from
+  the figure it changes (a summary of active rules), it leads with the effect's icon
+  and may close with its scope's (a type icon) — `[icon] ×1,5 [scope]`, icons at
+  14px inside the same pill.
+- **Status notice** (`.status-notice`, inside a `.status-notices` wrapping row) — a
+  page-level pill saying a modifier is active: `--surface-2` fill, `--border`,
+  `--text-sm` weight 600, `999px`, leading game icon, `role="status"`. Several sit
+  side by side in the `.status-notices` row above what they affect. Team Analysis shows one for
+  the **Good Camp Ticket** and one for the **Event bonus**, the latter followed by a
+  `.metric-mark` with icons per effect. Renders only while the modifier is active —
+  nothing when it isn't.
 - **`.progress-diff`** — marks a value the user has changed but **not saved** into the
   record it came from, and offers to save it (`__label` "sin guardar" + `__save`, an
   underlined text button). Indigo — `--accent-dim` fill, `--accent-border` outline,
@@ -332,6 +348,23 @@ states · where it lives. Feature one-offs are intentionally not here.
   **`SubSkillSelect`** — uses `.ss-icon`.
 - **`RibbonIcon`** — ribbon sprite with `--empty` variant.
 - **Base inputs** — global `input, select` styles with the unified focus outline.
+
+### Editable rule lists
+- **Effect row** — one rule in a user-composed list (first use: the event bonus's
+  effects). A grid row on `--surface-2` with `--border` and `--r-md`: **game icon +
+  name + `.metric-mark`** (the value, `+1` / `×1,5`) · the **scope** in `--muted`
+  `--text-sm` (its icon + a short label — "Ingredientes", "Psíquico", "Todo el
+  equipo" — or a dimmed `—` when the rule has none) · **edit / remove** `.icon-btn`s.
+  Under **640px** it stacks: name on the first line, scope on the second, actions
+  spanning both on the right. Rows sit in a column with a small gap; the list's
+  actions (`+ Agregar…` / `Quitar todos`, `.btn--ghost`) follow it.
+- **Inline editor** — the controls for one row while it is being added or edited,
+  in place below the list rather than in a nested modal: a `--surface` box with an
+  `--accent-border` outline and `--r-md`, the controls stacked as label/control rows
+  (the `.island-tab__row` rhythm), closing with `.btn--ghost` Cancel +
+  `.btn--primary` confirm. Indigo because it marks a **state** (editing), not a
+  bonus. Composes existing controls only (`.filter-btn` dropdowns, a stepper,
+  `.specialty-toggle`).
 
 ### Shared patterns
 - **Tabs** — `.tabs / .tab / --active` (main nav and inner modal tabs). In the top
@@ -512,3 +545,14 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   stays out of the layout because the same mark repeats across nine areas and seventy
   recipes — the tooltip already exists for a value's breakdown and opens on keyboard
   focus as well as hover, so nothing is lost to the keyboard by moving it there.
+- **A modifier without a switch is on when it has content.** *Question:* the event
+  bonus had a No/Sí toggle beside its list of effects, meant to suspend the bonus
+  without losing it — but reading the screen, nobody could tell what it switched.
+  Keep it and label it better, or drop it? *Resolution:* drop it. A modifier built
+  from a list is active exactly when the list has entries; emptying it (one by one,
+  or `Quitar todos`) is how it turns off, and the page's status notice appears and
+  disappears with it. *Why:* a switch over a list creates a second state — effects
+  present but inert — that the reader has to track and the screen has to explain;
+  for an ephemeral bonus rebuilt by hand, the comparison it bought was not worth the
+  ambiguity. A binary modifier with no content of its own (the Good Camp Ticket)
+  keeps its toggle.

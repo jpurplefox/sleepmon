@@ -1,6 +1,7 @@
 // Tipos espejo de los schemas del backend (sleepmon.adapters.inbound.http.schemas).
 
 import type { Scenario } from "./scenarios";
+import type { EventEffectRequest } from "./eventBonus";
 
 export interface Nature {
   name: string;
@@ -193,6 +194,8 @@ export interface TeamProductionInput {
   weekly_bonus?: WeeklyBonus;
   island_bonus?: number;
   good_camp_ticket?: boolean;
+  pot_size: number;
+  event_effects?: EventEffectRequest[];
 }
 
 export interface IngredientBalance {
@@ -213,7 +216,40 @@ export interface MealFeasibility {
   met: boolean;
   level: number;
   strength: number;
+  strength_base: number;
+  fits_pot: boolean;
   ingredients: SlotIngredientStatus[];
+}
+
+export interface PotInfo {
+  per_meal: number;
+  skill_per_meal: number;
+  daily: number;
+  base_daily: number;
+  skill_daily: number;
+  bonus_daily: number;
+  used_by_recipes: number;
+  filler_room: number;
+}
+
+export interface Filler {
+  ingredient: string | null;
+  strength: number;
+  available: number;
+  used: number;
+  contributed: number;
+}
+
+export interface Kitchen {
+  pot: PotInfo;
+  fillers: Filler[];
+  recipe_strength: number;
+  recipe_strength_base: number;
+  filler_strength: number;
+  filler_strength_base: number;
+  extra_tasty_bonus: number;
+  total: number;
+  total_base: number;
 }
 
 export interface SkillEffectAgg {
@@ -245,7 +281,6 @@ export interface TeamProduction {
   total_strength_base: number;
   total_berry_strength_base: number;
   total_skill_strength_base: number;
-  cooking_strength_base: number;
   grand_total_strength_base: number;
   ingredients: SlotProduction[];
   total_ingredients: number;
@@ -263,7 +298,7 @@ export interface TeamProduction {
   extra_tasty_multiplier: number;
   skill_effects: SkillEffectAgg[];
   members: MemberContribution[];
-  cooking_strength: number;
+  kitchen: Kitchen;
   cooking_ingredients: IngredientBalance[];
   cooking_surplus: IngredientBalance[];
   cooking_meals: MealFeasibility[];

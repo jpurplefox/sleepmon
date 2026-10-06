@@ -1,10 +1,11 @@
 import { useState } from "react";
 
+import type { EventEffect } from "../eventBonus";
 import { useI18n } from "../i18n";
-import { perMealPot } from "../pot";
 import { potBounds, stepPot } from "../progress";
 import { RECIPE_TYPES, dishTypeLabelKey } from "../recipes";
 import type { Catalog, MealInput, Recipe, WeeklyBonus } from "../types";
+import { EventTab } from "./EventTab";
 import { IslandTab } from "./IslandTab";
 import { Modal } from "./Modal";
 import { RecipeCard, normalizeSearch } from "./RecipeCard";
@@ -58,7 +59,7 @@ function PotLadderStepper({
   );
 }
 
-type TabId = "island" | "meals";
+type TabId = "island" | "event" | "meals";
 
 interface Props {
   recipes: Recipe[];
@@ -68,8 +69,15 @@ interface Props {
   onClose: () => void;
   potSize: number;
   onPotSizeChange: (n: number) => void;
-  /** Total extra pot ingredients/day from cooking_ingredients skill effect (or 0). */
-  cookingExtra: number;
+  /** Per-meal pot from the backend (base + skill share, × ticket/event); null while unknown. */
+  effectivePot: number | null;
+  /** floor(skill expansion / 3), shown as "+N" beside the stepper; null while unknown. */
+  skillPerMeal: number | null;
+  // Event tab props
+  eventEffects: EventEffect[];
+  onEventEffects: (e: EventEffect[]) => void;
+  /** Catalog types offered by the event scope picker. */
+  eventTypes: string[];
   // Island tab props
   catalog: Catalog;
   selectedIsland: string | null;
@@ -77,6 +85,8 @@ interface Props {
   islandBonus: number;
   bonusDisabled: boolean;
   goodCampTicket: boolean;
+  // True when the shown pot carries a multiplier (ticket and/or event).
+  potMultiplied: boolean;
   mainFavorite: string | null;
   weeklyBonus: WeeklyBonus;
   onSelectIsland: (name: string | null) => void;
@@ -123,13 +133,18 @@ export function SettingsModal({
   onClose,
   potSize,
   onPotSizeChange,
-  cookingExtra,
+  effectivePot,
+  skillPerMeal,
+  eventEffects,
+  onEventEffects,
+  eventTypes,
   catalog,
   selectedIsland,
   favoriteBerries,
   islandBonus,
   bonusDisabled,
   goodCampTicket,
+  potMultiplied,
   mainFavorite,
   weeklyBonus,
   onSelectIsland,
@@ -164,9 +179,6 @@ export function SettingsModal({
 
   // PRD 0011: unlike Player progress's draft, these are session values the
   // user is analysing with — closing keeps every one, no question asked.
-
-  // Effective pot = base pot + floor(cookingExtra / 3) (3 meals/day); with GCT: ceil(×1.5).
-  const effectivePot = perMealPot(potSize, cookingExtra, goodCampTicket);
 
   const setLevelFor = (name: string, level: number) => {
     const clamped = Math.max(1, Math.min(70, level));
@@ -258,6 +270,17 @@ export function SettingsModal({
         <button
           type="button"
           role="tab"
+          id="settings-tab-event"
+          aria-controls="settings-panel-event"
+          aria-selected={activeTab === "event"}
+          className={"specialty-toggle__btn" + (activeTab === "event" ? " is-on" : "")}
+          onClick={() => setActiveTab("event")}
+        >
+          {t("teams.tabEvent")}
+        </button>
+        <button
+          type="button"
+          role="tab"
           id="settings-tab-meals"
           aria-controls="settings-panel-meals"
           aria-selected={activeTab === "meals"}
@@ -304,6 +327,16 @@ export function SettingsModal({
           dishType={dishType}
           onDishTypeChange={pickDishType}
         />
+      </div>
+
+      <div
+        id="settings-panel-event"
+        role="tabpanel"
+        aria-labelledby="settings-tab-event"
+        hidden={activeTab !== "event"}
+        className="settings-modal-panel"
+      >
+        <EventTab effects={eventEffects} onChange={onEventEffects} types={eventTypes} />
       </div>
 
       {/* Tab: Meals */}
@@ -368,18 +401,14 @@ export function SettingsModal({
                 onSave={onSavePot}
               />
             </div>
-            {goodCampTicket ? (
+            {potMultiplied || skillPerMeal === null || skillPerMeal <= 0 ? (
               <span className="meal-picker-pot__effective muted">
-                = {effectivePot}
-              </span>
-            ) : cookingExtra > 0 ? (
-              <span className="meal-picker-pot__effective muted">
-                +{Math.floor(cookingExtra / 3)} ={" "}
-                <strong>{effectivePot}</strong>
+                = {effectivePot ?? t("common.dash")}
               </span>
             ) : (
               <span className="meal-picker-pot__effective muted">
-                = {effectivePot}
+                +{skillPerMeal} ={" "}
+                <strong>{effectivePot ?? t("common.dash")}</strong>
               </span>
             )}
           </div>
@@ -410,8 +439,8 @@ export function SettingsModal({
                 (s, ic) => s + ic.count,
                 0,
               );
-              const fits = totalIngs <= effectivePot;
-              const fillers = effectivePot - totalIngs;
+              const fits = effectivePot !== null && totalIngs <= effectivePot;
+              const fillers = effectivePot === null ? 0 : effectivePot - totalIngs;
 
               return (
                 <RecipeCard
@@ -428,6 +457,7 @@ export function SettingsModal({
                     />
                   }
                   beforeStepper={
+                    effectivePot === null ? undefined : (
                     <div
                       className={`meal-picker-card__pot-fit ${fits ? "meal-picker-card__pot-fit--ok" : "meal-picker-card__pot-fit--no"}`}
                     >
@@ -447,6 +477,7 @@ export function SettingsModal({
                         </span>
                       )}
                     </div>
+                    )
                   }
                   afterStepper={
                     <div className="meal-picker-card__moments">

@@ -13,15 +13,18 @@ from sleepmon.adapters.inbound.http.guards import require_user
 from sleepmon.adapters.inbound.http.schemas import (
     CatalogOut,
     DistributionsOut,
+    FillerOut,
     IngredientBalanceOut,
     IngredientCountOut,
     IslandOut,
+    KitchenOut,
     MealFeasibilityOut,
     MemberContributionOut,
     MemberIn,
     MemberOut,
     MemberProductionOut,
     NatureOut,
+    PotOut,
     ProductionIn,
     ProductionOut,
     ProgressOut,
@@ -37,6 +40,7 @@ from sleepmon.adapters.inbound.http.schemas import (
     TeamProductionOut,
 )
 from sleepmon.application.dto import (
+    EventEffectInput,
     MealSelectionInput,
     MemberProduction,
     ProductionInput,
@@ -361,6 +365,11 @@ class TeamProductionController(Controller):
                 weekly_bonus=data.weekly_bonus,
                 island_bonus=data.island_bonus,
                 good_camp_ticket=data.good_camp_ticket,
+                pot_size=data.pot_size,
+                event_effects=[
+                    EventEffectInput(kind=e.kind, value=e.value, scope=e.scope, target=e.target)
+                    for e in data.event_effects
+                ],
             )
         )
         return TeamProductionOut(
@@ -406,8 +415,35 @@ class TeamProductionController(Controller):
                 )
                 for m in result.members
             ],
-            cooking_strength=result.cooking_strength,
-            cooking_strength_base=result.cooking_strength_base,
+            kitchen=KitchenOut(
+                pot=PotOut(
+                    per_meal=result.kitchen.pot.per_meal,
+                    skill_per_meal=result.kitchen.pot.skill_per_meal,
+                    daily=result.kitchen.pot.daily,
+                    base_daily=result.kitchen.pot.base_daily,
+                    skill_daily=result.kitchen.pot.skill_daily,
+                    bonus_daily=result.kitchen.pot.bonus_daily,
+                    used_by_recipes=result.kitchen.pot.used_by_recipes,
+                    filler_room=result.kitchen.pot.filler_room,
+                ),
+                fillers=[
+                    FillerOut(
+                        ingredient=f.ingredient,
+                        strength=f.strength,
+                        available=f.available,
+                        used=f.used,
+                        contributed=f.contributed,
+                    )
+                    for f in result.kitchen.fillers
+                ],
+                recipe_strength=result.kitchen.recipe_strength,
+                recipe_strength_base=result.kitchen.recipe_strength_base,
+                filler_strength=result.kitchen.filler_strength,
+                filler_strength_base=result.kitchen.filler_strength_base,
+                extra_tasty_bonus=result.kitchen.extra_tasty_bonus,
+                total=result.kitchen.total,
+                total_base=result.kitchen.total_base,
+            ),
             cooking_ingredients=[
                 IngredientBalanceOut(
                     ingredient=b.ingredient,
@@ -432,6 +468,8 @@ class TeamProductionController(Controller):
                     met=m.met,
                     level=m.level,
                     strength=m.strength,
+                    strength_base=m.strength_base,
+                    fits_pot=m.fits_pot,
                     ingredients=[
                         SlotIngredientStatusOut(
                             ingredient=si.ingredient,

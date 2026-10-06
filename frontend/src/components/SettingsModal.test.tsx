@@ -36,13 +36,18 @@ function renderModal(overrides: Partial<React.ComponentProps<typeof SettingsModa
     onClose: vi.fn(),
     potSize: 21,
     onPotSizeChange: vi.fn(),
-    cookingExtra: 0,
+    effectivePot: 21,
+    skillPerMeal: 0,
+    eventEffects: [],
+    onEventEffects: vi.fn(),
+    eventTypes: [],
     catalog,
     selectedIsland: null,
     favoriteBerries: [],
     islandBonus: 0,
     bonusDisabled: true,
     goodCampTicket: false,
+    potMultiplied: false,
     mainFavorite: null,
     weeklyBonus: "berry_strength",
     onSelectIsland: vi.fn(),
@@ -109,6 +114,43 @@ describe("SettingsModal — the unsaved mark", () => {
     // the label — it is positioned against this box. Being *out of flow* is the
     // other half, and that half lives in styles.css where jsdom cannot see it.
     expect(mark?.parentElement).toHaveClass("meal-picker-pot__stepper");
+  });
+});
+
+describe("SettingsModal — the effective pot", () => {
+  it("shows the ticket-boosted effective pot it is given", async () => {
+    renderModal({ potSize: 21, effectivePot: 35, goodCampTicket: true });
+    expect(screen.getByText("= 35")).toBeInTheDocument();
+  });
+
+  it("uses the = form when the pot is multiplied, ticket or not", async () => {
+    renderModal({ potSize: 21, effectivePot: 62, skillPerMeal: 1, potMultiplied: true });
+    expect(screen.getByText("= 62")).toBeInTheDocument();
+    expect(screen.queryByText(/\+1/)).not.toBeInTheDocument();
+  });
+
+  it("shows the skill share next to the effective pot", async () => {
+    renderModal({ potSize: 21, effectivePot: 28, skillPerMeal: 7 });
+    expect(screen.getByText(/\+7/)).toBeInTheDocument();
+    expect(screen.getByText("28")).toBeInTheDocument();
+  });
+
+  it("shows a dash and no fit marks while the pot is unknown", async () => {
+    const recipe: Recipe = {
+      name: "Beanburger Curry",
+      type: "Curry",
+      ingredients: [{ ingredient: "Bean Sausage", count: 5 }],
+      base_strength: 100,
+    };
+    renderModal({
+      effectivePot: null,
+      skillPerMeal: null,
+      recipes: [recipe],
+      levelBonus: [1],
+    });
+    expect(screen.getByText("= —")).toBeInTheDocument();
+    expect(screen.queryByText(/Fits/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Doesn't fit/)).not.toBeInTheDocument();
   });
 });
 
@@ -379,5 +421,12 @@ describe("SettingsModal — closing keeps session values, no question asked", ()
     expect(onSaveLevel).not.toHaveBeenCalled();
     // The session value itself was never touched (no revert either).
     expect(onPotSizeChange).not.toHaveBeenCalled();
+  });
+});
+
+describe("SettingsModal tabs", () => {
+  it("orders the tabs Map, Event, Meals", () => {
+    renderModal();
+    expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual(["Map", "Event", "Meals"]);
   });
 });

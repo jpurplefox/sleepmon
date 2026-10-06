@@ -1,8 +1,11 @@
+import math
+
 import pytest
 
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.dto import (
+    EventEffectInput,
     MealSelectionInput,
     ProductionInput,
     SlotEntryInput,
@@ -577,7 +580,8 @@ def test_compute_team_production_aggregates_members(
     )
     assert result.member_count == 1
     assert result.total_strength > 0
-    assert result.grand_total_strength == result.total_strength  # sin cocina
+    # No meals: the empty pot is still topped up with fillers.
+    assert result.grand_total_strength == result.total_strength + result.kitchen.total
 
 
 def test_compute_team_production_member_carries_full_production(
@@ -615,8 +619,8 @@ def test_compute_team_production_adds_cooking_to_grand_total(
             meals=[MealSelectionInput(recipe=recipe.name, level=1), None, None],
         )
     )
-    assert result.cooking_strength == recipe.base_strength  # nivel 1 = base
-    assert result.grand_total_strength == result.total_strength + result.cooking_strength
+    assert result.kitchen.recipe_strength == recipe.base_strength  # nivel 1 = base
+    assert result.grand_total_strength == result.total_strength + result.kitchen.total
 
 
 def test_compute_team_production_rejects_too_many_members(
@@ -957,3 +961,160 @@ def test_compute_production_rejects_unknown_scenario(
 ) -> None:
     with pytest.raises(ValidationError):
         production_service.compute_production(_pikachu(scenario="double_xp"))
+
+
+def _team(**overrides: object) -> TeamProductionInput:
+    defaults: dict[str, object] = {"slots": _slots("a"), "meals": [None, None, None]}
+    defaults.update(overrides)
+    return TeamProductionInput(**defaults)  # type: ignore[arg-type]
+
+
+def test_team_kitchen_uses_pot_size(production_service: DefaultProductionService) -> None:
+    result = production_service.compute_team_production(_team(pot_size=33))
+    assert result.kitchen.pot.base_daily == 99
+    assert result.kitchen.pot.per_meal >= 33
+
+
+def test_team_rejects_pot_size_off_the_ladder(
+    production_service: DefaultProductionService,
+) -> None:
+    with pytest.raises(ValidationError):
+        production_service.compute_team_production(_team(pot_size=22))
+
+
+def test_team_ticket_enlarges_the_pot(production_service: DefaultProductionService) -> None:
+    off = production_service.compute_team_production(_team(pot_size=21))
+    on = production_service.compute_team_production(_team(pot_size=21, good_camp_ticket=True))
+    assert on.kitchen.pot.per_meal > off.kitchen.pot.per_meal
+
+
+def test_team_grand_total_includes_the_kitchen(
+    production_service: DefaultProductionService,
+) -> None:
+    recipe = production_service.list_recipes()[0]
+    result = production_service.compute_team_production(
+        _team(meals=[MealSelectionInput(recipe=recipe.name, level=1), None, None])
+    )
+    assert result.kitchen.total > 0
+    assert result.grand_total_strength == pytest.approx(
+        result.total_strength + result.kitchen.total
+    )
+    # Fancy Apple Curry has 7 ingredients: fits pot (base 21).
+    assert result.cooking_meals[0].fits_pot is True
+    assert result.cooking_meals[0].strength_base == pytest.approx(result.cooking_meals[0].strength)
+
+
+def test_team_kitchen_applies_island_bonus_to_cooking_meals(
+    production_service: DefaultProductionService,
+) -> None:
+    recipe = production_service.list_recipes()[0]  # Fancy Apple Curry, 7 ingredients
+    result = production_service.compute_team_production(
+        _team(
+            meals=[MealSelectionInput(recipe=recipe.name, level=1), None, None],
+            island_bonus=0.5,
+        )
+    )
+    # strength = strength_base * 1.5 when island_bonus = 0.5
+    assert result.cooking_meals[0].strength == pytest.approx(
+        result.cooking_meals[0].strength_base * 1.5
+    )
+    assert result.kitchen.total == pytest.approx(result.kitchen.total_base * 1.5)
+
+
+def test_team_kitchen_fits_pot_flag_for_oversized_recipe(
+    production_service: DefaultProductionService,
+) -> None:
+    # Soft Potato Chowder has 10+8+4=22 ingredients, exceeds pot base (21).
+    recipe = next(r for r in production_service.list_recipes() if r.name == "Soft Potato Chowder")
+    result = production_service.compute_team_production(
+        _team(meals=[MealSelectionInput(recipe=recipe.name, level=1), None, None])
+    )
+    assert result.cooking_meals[0].fits_pot is False
+
+
+def _fx(
+    kind: str, value: float, scope: str = "team", target: str | None = None
+) -> EventEffectInput:
+    return EventEffectInput(kind=kind, value=value, scope=scope, target=target)
+
+
+def test_team_without_effects_is_unchanged(production_service: DefaultProductionService) -> None:
+    assert production_service.compute_team_production(
+        _team(event_effects=[])
+    ) == production_service.compute_team_production(_team())
+
+
+def test_team_event_raises_production(production_service: DefaultProductionService) -> None:
+    base = production_service.compute_team_production(_team())
+    boosted = production_service.compute_team_production(
+        _team(event_effects=[_fx("extra_berries", 1)])
+    )
+    assert boosted.total_berry_amount > base.total_berry_amount
+
+
+def test_team_event_pot_multiplies_with_ticket(
+    production_service: DefaultProductionService,
+) -> None:
+    result = production_service.compute_team_production(
+        _team(pot_size=21, good_camp_ticket=True, event_effects=[_fx("pot_size", 2)])
+    )
+    skill_share = result.kitchen.pot.skill_daily / 3
+    assert result.kitchen.pot.per_meal == math.ceil((21 + skill_share) * 1.5 * 2)
+
+
+def test_team_event_dish_strength(production_service: DefaultProductionService) -> None:
+    recipe = production_service.list_recipes()[0]
+    meals = [MealSelectionInput(recipe=recipe.name, level=1), None, None]
+    plain = production_service.compute_team_production(_team(meals=meals))
+    boosted = production_service.compute_team_production(
+        _team(meals=meals, event_effects=[_fx("dish_strength", 1.25)])
+    )
+    assert boosted.kitchen.total == pytest.approx(plain.kitchen.total * 1.25)
+    assert boosted.cooking_meals[0].strength == pytest.approx(
+        plain.cooking_meals[0].strength * 1.25
+    )
+
+
+def test_team_split_weights_bonused_production(
+    production_service: DefaultProductionService,
+) -> None:
+    fx = [_fx("extra_berries", 1)]
+    single = production_service.compute_team_production(_team(event_effects=fx))
+    split = production_service.compute_team_production(
+        _team(
+            slots=[SlotInput(entries=[_entry("a", 0.6), _entry("b", 0.4)])],
+            event_effects=fx,
+        )
+    )
+    assert split.total_berry_amount == pytest.approx(single.total_berry_amount)
+
+
+@pytest.mark.parametrize(
+    "effect",
+    [
+        _fx("nope", 1),
+        _fx("extra_ingredients", 6),
+        _fx("extra_ingredients", 1.5),
+        _fx("skill_trigger", 1.33),
+        _fx("skill_trigger", 3.5),
+        _fx("skill_trigger", float("inf")),
+        _fx("skill_trigger", float("nan")),
+        _fx("pot_size", 2, "type", "Fire"),
+        _fx("skill_trigger", 1.5, "type", None),
+        _fx("skill_trigger", 1.5, "type", "Plasma"),
+        _fx("skill_trigger", 1.5, "specialty", "Cooking"),
+        _fx("skill_trigger", 1.5, "galaxy", "Fire"),
+    ],
+)
+def test_team_rejects_invalid_effects(
+    production_service: DefaultProductionService, effect: EventEffectInput
+) -> None:
+    with pytest.raises(ValidationError):
+        production_service.compute_team_production(_team(event_effects=[effect]))
+
+
+def test_team_rejects_too_many_effects(production_service: DefaultProductionService) -> None:
+    with pytest.raises(ValidationError):
+        production_service.compute_team_production(
+            _team(event_effects=[_fx("extra_berries", 1)] * 17)
+        )

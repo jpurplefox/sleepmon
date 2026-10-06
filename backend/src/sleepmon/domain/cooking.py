@@ -29,9 +29,14 @@ agregada es positivo, incluyendo los producidos que ninguna receta usa.
 
 from __future__ import annotations
 
+import dataclasses
+import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from statistics import fmean
 
+from sleepmon.domain.catalog_data import INGREDIENT_STRENGTH
+from sleepmon.domain.pot import PotCapacity
 from sleepmon.domain.recipes import Recipe, recipe_strength
 from sleepmon.domain.value_objects import Ingredient
 
@@ -192,4 +197,104 @@ def plan_cooking(
         ingredients=ingredients,
         surplus=surplus,
         slots=slots,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class FillerAllocation:
+    """One filler candidate and how much of it fits in the day's pot."""
+
+    ingredient: Ingredient | None  # None = random ingredients from skills
+    strength: float
+    available: float
+    used: float
+    contributed: float  # floor(used) × strength (× dish × area once in a CookingDay)
+
+
+def random_ingredient_strength() -> float:
+    """A random ingredient's type is unknown, so it counts at the mean strength."""
+    return fmean(INGREDIENT_STRENGTH.values())
+
+
+def allocate_fillers(
+    surplus: Sequence[IngredientBalance],
+    random_ingredients: float,
+    room: float,
+) -> tuple[FillerAllocation, ...]:
+    """Fill the leftover pot room with surplus + random ingredients, strongest first."""
+    pool: list[tuple[Ingredient | None, float, float]] = [
+        (b.ingredient, float(INGREDIENT_STRENGTH[b.ingredient]), b.balance)
+        for b in surplus
+        if b.balance > 0
+    ]
+    if random_ingredients > 0:
+        pool.append((None, random_ingredient_strength(), random_ingredients))
+    pool.sort(key=lambda entry: entry[1], reverse=True)  # stable, like the former JS sort
+
+    remaining = max(0.0, room)
+    allocations: list[FillerAllocation] = []
+    for ingredient, strength, available in pool:
+        used = min(available, remaining)
+        remaining -= used
+        allocations.append(
+            FillerAllocation(ingredient, strength, available, used, math.floor(used) * strength)
+        )
+    return tuple(allocations)
+
+
+@dataclass(frozen=True, slots=True)
+class CookingDay:
+    """The day's cooking: pot, fillers, and strength ("base" = before the area bonus)."""
+
+    pot: PotCapacity
+    used_by_recipes: int
+    filler_room: float
+    fillers: tuple[FillerAllocation, ...]
+    meal_fits_pot: tuple[bool, ...]  # one per chosen meal, in slot order
+    recipe_strength: float
+    recipe_strength_base: float
+    filler_strength: float
+    filler_strength_base: float
+    extra_tasty_bonus: float
+    total: float
+    total_base: float
+
+
+def cooking_day(
+    plan: CookingResult,
+    meals: Sequence[MealSelection | None],
+    *,
+    pot: PotCapacity,
+    random_ingredients: float,
+    extra_tasty_multiplier: float,
+    area_bonus: float,
+    dish_factor: float = 1.0,
+) -> CookingDay:
+    """Factors apply in one order: dish strength, then Extra Tasty, then area bonus."""
+    chosen = [m for m in meals if m is not None]
+    counts = [sum(count for _, count in m.recipe.ingredients) for m in chosen]
+    used_by_recipes = sum(counts)
+    room = max(0.0, pot.daily - used_by_recipes)
+    raw = allocate_fillers(plan.surplus, random_ingredients, room)
+
+    area = 1.0 + area_bonus
+    recipe_base = plan.cooking_strength * dish_factor
+    filler_base = sum((f.contributed for f in raw), 0.0) * dish_factor
+    subtotal_base = recipe_base + filler_base
+    total_base = subtotal_base * extra_tasty_multiplier
+    return CookingDay(
+        pot=pot,
+        used_by_recipes=used_by_recipes,
+        filler_room=room,
+        fillers=tuple(
+            dataclasses.replace(f, contributed=f.contributed * dish_factor * area) for f in raw
+        ),
+        meal_fits_pot=tuple(count <= pot.per_meal for count in counts),
+        recipe_strength=recipe_base * area,
+        recipe_strength_base=recipe_base,
+        filler_strength=filler_base * area,
+        filler_strength_base=filler_base,
+        extra_tasty_bonus=subtotal_base * (extra_tasty_multiplier - 1) * area,
+        total=total_base * area,
+        total_base=total_base,
     )

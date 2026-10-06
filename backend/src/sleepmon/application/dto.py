@@ -10,6 +10,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 
+from sleepmon.domain.catalog_data import DEFAULT_POT_SIZE
+
 
 @dataclass(frozen=True, slots=True)
 class IngredientCountDTO:
@@ -169,6 +171,16 @@ class SlotInput:
 
 
 @dataclass(frozen=True, slots=True)
+class EventEffectInput:
+    """One event effect as the client sends it."""
+
+    kind: str
+    value: float
+    scope: str = "team"  # "team" | "type" | "specialty"
+    target: str | None = None  # a Type / Specialty value when scope isn't "team"
+
+
+@dataclass(frozen=True, slots=True)
 class TeamProductionInput:
     """Datos crudos para computar la producción de un equipo (no se persiste)."""
 
@@ -184,6 +196,9 @@ class TeamProductionInput:
     weekly_bonus: str | None = None
     island_bonus: float = 0.0
     good_camp_ticket: bool = False
+    # The pot step (Player progress, overridable in the session).
+    pot_size: int = DEFAULT_POT_SIZE
+    event_effects: list[EventEffectInput] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)
@@ -206,7 +221,9 @@ class MealFeasibilityDTO:
     recipe_name: str
     met: bool
     level: int
-    strength: int
+    strength: float  # with dish factor and area bonus
+    strength_base: float  # with dish factor, before the area bonus
+    fits_pot: bool
     ingredients: list[SlotIngredientStatusDTO]
 
 
@@ -229,6 +246,40 @@ class MemberContributionDTO:
     ingredients_total: float
     skill_triggers: float
     production: ProductionResult
+
+
+@dataclass(frozen=True, slots=True)
+class PotDTO:
+    per_meal: int
+    skill_per_meal: int
+    daily: float
+    base_daily: int
+    skill_daily: float
+    bonus_daily: float
+    used_by_recipes: int
+    filler_room: float
+
+
+@dataclass(frozen=True, slots=True)
+class FillerDTO:
+    ingredient: str | None  # None = random ingredients from skills
+    strength: float
+    available: float
+    used: float
+    contributed: float
+
+
+@dataclass(frozen=True, slots=True)
+class KitchenDTO:
+    pot: PotDTO
+    fillers: list[FillerDTO]
+    recipe_strength: float
+    recipe_strength_base: float
+    filler_strength: float
+    filler_strength_base: float
+    extra_tasty_bonus: float
+    total: float
+    total_base: float
 
 
 @dataclass(frozen=True, slots=True)
@@ -263,8 +314,7 @@ class TeamProductionResult:
     skill_effects: list[SkillEffectAggDTO]
     members: list[MemberContributionDTO]
     # Cocina
-    cooking_strength: float
-    cooking_strength_base: float
+    kitchen: KitchenDTO
     cooking_ingredients: list[IngredientBalanceDTO]
     cooking_surplus: list[IngredientBalanceDTO]
     cooking_meals: list[MealFeasibilityDTO]

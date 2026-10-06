@@ -15,6 +15,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useGate } from "../auth/useGate";
 import { berryIcon } from "../berries";
 import { BoxPicker } from "../components/BoxPicker";
+import { EventBonusNotice } from "../components/EventBonusNotice";
 import { MemberForm } from "../components/MemberForm";
 import { SettingsModal } from "../components/SettingsModal";
 import { Modal } from "../components/Modal";
@@ -30,9 +31,9 @@ import {
 } from "../components/icons";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
+import { toRequest as toEventRequest, type EventEffect } from "../eventBonus";
 import { fdown } from "../utils/format";
 import { recipeImage } from "../recipes";
-import { perMealPot, dailyPotCapacity } from "../pot";
 import { areaBonusOf, recipeLevelOf } from "../progress";
 import { statIcon } from "../natures";
 import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
@@ -137,7 +138,7 @@ const NO_MEMBERS_TAKEN: Set<string> = new Set();
 const fmtInt = (n: number) => Math.round(n).toLocaleString("en-US");
 
 export function Teams() {
-  const { t, ingredient: ingName, berry: berryName } = useI18n();
+  const { t, ingredient: ingName, berry: berryName, type: typeName } = useI18n();
 
   const { status } = useAuth();
   const { guard } = useGate();
@@ -163,6 +164,7 @@ export function Teams() {
   const [meals, setMeals] = useState<(MealInput | null)[]>([null, null, null]);
   const [mealPickerOpen, setMealPickerOpen] = useState(false);
   const [goodCampTicket, setGoodCampTicket] = useState(false);
+  const [eventEffects, setEventEffects] = useState<EventEffect[]>([]);
 
   // Dish type: restricts all 3 meal slots to the same recipe type (ephemeral, frontend-only).
   const [dishType, setDishType] = useState<'Curry' | 'Salad' | 'Dessert' | null>(null);
@@ -243,6 +245,8 @@ export function Teams() {
       weeklyBonus,
       islandBonus,
       goodCampTicket,
+      eventEffects,
+      potSize,
     ],
     queryFn: () =>
       api.computeTeamProduction({
@@ -254,6 +258,8 @@ export function Teams() {
         weekly_bonus: weeklyBonus,
         island_bonus: islandBonus,
         good_camp_ticket: goodCampTicket,
+        event_effects: toEventRequest(eventEffects),
+        pot_size: potSize,
       }),
     enabled: slots.length > 0,
     placeholderData: keepPreviousData,
@@ -266,14 +272,11 @@ export function Teams() {
   // Multiplicador de fuerza del bonus de isla (1 cuando no hay bonus).
   const bonusFactor = 1 + islandBonus;
   const result = teamQuery.data;
+  // A placeholder result is for the previous config, so its pot would be stale.
+  const potKnown = result !== undefined && !teamQuery.isPlaceholderData;
+  const eventPot = eventEffects.some((e) => e.kind === "pot_size");
 
-  // Total extra pot ingredients/day from cooking_ingredients skill effect (or 0).
-  const cookingExtra = useMemo(() => {
-    if (!result) return 0;
-    return result.skill_effects.find((e) => e.kind === "cooking_ingredients")?.total ?? 0;
-  }, [result]);
-
-  // Lookup map: recipe name → Recipe for pot/filler calc in plan rows.
+  // Lookup map: recipe name → Recipe, for the ingredient count in plan row labels.
   const recipeByName = useMemo(
     () => new Map((recipes.data ?? []).map((r) => [r.name, r])),
     [recipes.data],
@@ -320,52 +323,6 @@ export function Teams() {
       .map(([berry, data]) => ({ berry, ...data }))
       .sort((a, b) => b.berry_strength - a.berry_strength);
   }, [result]);
-
-  // Filler strength total (daily) — same allocation logic the cooking card's
-  // IIFE uses, lifted to component scope so the totals card can reuse it.
-  // Surplus ingredients + the random pseudo-ingredient fill the leftover pot
-  // slots, sorted by strength desc; each unit contributes its base strength.
-  const fillerStrengthTotal = useMemo(() => {
-    if (!result || catalog.isLoading || !catalog.data) return 0;
-    const ingredientStrengths = catalog.data.ingredient_strengths;
-    const totalCapacity = dailyPotCapacity(potSize, cookingExtra, goodCampTicket);
-    const usedByRecipes = MEAL_SLOTS.reduce((sum, _slot, idx) => {
-      const meal = meals[idx];
-      if (!meal) return sum;
-      const recipeData = recipeByName.get(meal.recipe);
-      if (!recipeData) return sum;
-      return sum + recipeData.ingredients.reduce((s, ic) => s + ic.count, 0);
-    }, 0);
-    const totalFillers = Math.max(0, totalCapacity - usedByRecipes);
-
-    const strengthValues = Object.values(ingredientStrengths);
-    const avgStrength =
-      strengthValues.length > 0
-        ? strengthValues.reduce((s, v) => s + v, 0) / strengthValues.length
-        : 0;
-    const randomTotal = result.skill_ingredient_total ?? 0;
-
-    const pool = result.cooking_surplus
-      .filter((b) => b.balance > 0)
-      .map((b) => ({ strength: ingredientStrengths[b.ingredient] ?? 0, balance: b.balance }));
-    if (randomTotal > 0) pool.push({ strength: avgStrength, balance: randomTotal });
-    pool.sort((a, b) => b.strength - a.strength);
-
-    let remainingSlots = totalFillers;
-    let total = 0;
-    for (const item of pool) {
-      const usedUnits = Math.min(item.balance, remainingSlots);
-      remainingSlots -= usedUnits;
-      total += Math.floor(usedUnits) * item.strength;
-    }
-    return total * bonusFactor;
-  }, [result, catalog.isLoading, catalog.data, potSize, cookingExtra, meals, recipeByName, islandBonus, goodCampTicket]);
-
-  // Cooking grand total (daily): recipes + fillers × el multiplicador esperado de
-  // Extra Tasty del equipo (base del juego ≈1.17; sube con Tasty Chance S).
-  const grandTotalCooking = result
-    ? (result.cooking_strength + fillerStrengthTotal) * result.extra_tasty_multiplier
-    : 0;
 
   const atMax = slots.length >= MAX_TEAM;
 
@@ -469,10 +426,15 @@ export function Teams() {
         </button>
       </div>
 
-      {goodCampTicket && (
-        <div className="teams-gct-notice" role="status">
-          <img src="/good-camp-ticket.png" alt="" className="mini-icon" style={{ width: 20, height: 20 }} />
-          {t("teams.gctActive")}
+      {(goodCampTicket || eventEffects.length > 0) && (
+        <div className="status-notices">
+          {goodCampTicket && (
+            <div className="status-notice" role="status">
+              <img src="/good-camp-ticket.png" alt="" className="mini-icon" style={{ width: 20, height: 20 }} />
+              {t("teams.gctActive")}
+            </div>
+          )}
+          <EventBonusNotice effects={eventEffects} />
         </div>
       )}
 
@@ -722,10 +684,9 @@ export function Teams() {
               const pieData = [
                 { key: "berries", name: t("teams.berries"), value: result.total_berry_strength * factor, color: "#6366f1" },
                 { key: "skills", name: t("card.skill"), value: result.total_skill_strength * factor, color: "#3fb950" },
-                { key: "recipes", name: t("teams.recipes"), value: result.cooking_strength * factor, color: "#a371f7" },
-                { key: "fillers", name: t("teams.fillersLabel"), value: fillerStrengthTotal * factor, color: "#f78166" },
-                // Fuerza extra que aporta el multiplicador de Extra Tasty sobre recetas + fillers.
-                { key: "extraTasty", name: t("teams.extraTasty"), value: (result.cooking_strength + fillerStrengthTotal) * (result.extra_tasty_multiplier - 1) * factor, color: "#e3b341" },
+                { key: "recipes", name: t("teams.recipes"), value: result.kitchen.recipe_strength, color: "#a371f7" },
+                { key: "fillers", name: t("teams.fillersLabel"), value: result.kitchen.filler_strength, color: "#f78166" },
+                { key: "extraTasty", name: t("teams.extraTasty"), value: result.kitchen.extra_tasty_bonus, color: "#e3b341" },
               ].filter((d) => d.value > 0);
               const totalValue = pieData.reduce((s, d) => s + d.value, 0);
               if (totalValue <= 0) return null;
@@ -792,15 +753,11 @@ export function Teams() {
                   const meal = meals[idx];
                   const feasibility = meal ? feasibilityBySlot.get(idx) : undefined;
 
-                  // Per-meal pot capacity: base pot + its share of the skill
-                  // expansion. Warn only when the recipe's ingredient count
-                  // exceeds it (if it fits, the spare goes to fillers).
-                  const perMealPotValue = perMealPot(potSize, cookingExtra, goodCampTicket);
                   const recipeData = meal ? recipeByName.get(meal.recipe) : undefined;
                   const recipeIngs = recipeData
                     ? recipeData.ingredients.reduce((s, ic) => s + ic.count, 0)
                     : 0;
-                  const exceedsPot = recipeData != null && recipeIngs > perMealPotValue;
+                  const exceedsPot = feasibility != null && !feasibility.fits_pot;
 
                   return (
                     <div key={slot} className="teams-plan-row">
@@ -828,7 +785,7 @@ export function Teams() {
                                   alt=""
                                   style={{ width: 14, height: 14 }}
                                 />
-                                {fmtInt(feasibility.strength * bonusFactor)}
+                                {fmtInt(feasibility.strength)}
                               </span>
                             )}
                           </div>
@@ -843,7 +800,7 @@ export function Teams() {
                                 className="mini-icon"
                                 style={{ width: 14, height: 14 }}
                               />
-                              {t("teams.potTooSmall")} ({recipeIngs}/{perMealPotValue})
+                              {t("teams.potTooSmall")} ({recipeIngs}/{result.kitchen.pot.per_meal})
                             </span>
                           )}
                           {feasibility != null && feasibility.ingredients.length > 0 && (
@@ -881,70 +838,7 @@ export function Teams() {
 
               {/* ── RESULTS AREA (4 blocks) ─────────────────────────────── */}
               {(() => {
-                // ── Daily capacity accounting ──────────────────────────────
-                const baseCapacity = potSize * 3 + cookingExtra;
-                const totalCapacity = dailyPotCapacity(potSize, cookingExtra, goodCampTicket);
-                const gctGain = totalCapacity - baseCapacity;
-                const usedByRecipes = MEAL_SLOTS.reduce((sum, _slot, idx) => {
-                  const meal = meals[idx];
-                  if (!meal) return sum;
-                  const recipeData = recipeByName.get(meal.recipe);
-                  if (!recipeData) return sum;
-                  return sum + recipeData.ingredients.reduce((s, ic) => s + ic.count, 0);
-                }, 0);
-                const totalFillers = Math.max(0, totalCapacity - usedByRecipes);
-
-                // ── Filler allocation (slot-based, sorted by strength desc) ─
-                const ingredientStrengths = catalog.data.ingredient_strengths;
-
-                // Random ingredients (Ingredient Magnet): units/day of unknown type.
-                // Modeled as a single pseudo-ingredient whose strength is the mean
-                // of all ingredient base strengths (type unknown → average ≈145).
-                const randomTotal = result.skill_ingredient_total ?? 0;
-                const strengthValues = Object.values(ingredientStrengths);
-                const avgStrength =
-                  strengthValues.length > 0
-                    ? strengthValues.reduce((s, v) => s + v, 0) / strengthValues.length
-                    : 0;
-
-                // Unified filler pool: real surplus ingredients + (optionally) the
-                // random pseudo-ingredient. Each entry carries its own strength so
-                // the allocation/render code stays uniform.
-                type FillerEntry = {
-                  key: string;
-                  ingredient: string | null; // null → random pseudo-ingredient
-                  label: string;
-                  strength: number;
-                  balance: number;
-                  isRandom: boolean;
-                };
-                const fillerPool: FillerEntry[] = result.cooking_surplus
-                  .filter((b) => b.balance > 0)
-                  .map((b) => ({
-                    key: b.ingredient,
-                    ingredient: b.ingredient,
-                    label: ingName(b.ingredient),
-                    strength: ingredientStrengths[b.ingredient] ?? 0,
-                    balance: b.balance,
-                    isRandom: false,
-                  }));
-                if (randomTotal > 0) {
-                  fillerPool.push({
-                    key: "__random__",
-                    ingredient: null,
-                    label: t("teams.randomIngredients"),
-                    strength: avgStrength,
-                    balance: randomTotal,
-                    isRandom: true,
-                  });
-                }
-                const sortedPool = [...fillerPool].sort((a, b) => b.strength - a.strength);
-                let remainingSlots = totalFillers;
-                const fillerAllocation = sortedPool.map((item) => {
-                  const usedUnits = Math.min(item.balance, remainingSlots);
-                  remainingSlots -= usedUnits;
-                  return { ...item, usedUnits };
-                });
+                const k = result.kitchen;
 
                 // ── Cooking skill effect entry ─────────────────────────────
                 const cookingSkillEffect = result.skill_effects.find(
@@ -955,9 +849,6 @@ export function Teams() {
                 const randomSkillEffect = result.skill_effects.find(
                   (e: SkillEffectAgg) => e.kind === "ingredient_total",
                 );
-
-                // fillerStrengthTotal is lifted to component scope (reused by the
-                // totals card); the allocation above only drives the per-filler rows.
 
                 return (
                   <>
@@ -975,8 +866,8 @@ export function Teams() {
                             style={{ width: 16, height: 16 }}
                           />
                           <StrengthValue
-                            value={result.cooking_strength * factor}
-                            base={result.cooking_strength_base * factor}
+                            value={k.recipe_strength}
+                            base={k.recipe_strength_base}
                             bonus={islandBonus}
                           />
                         </span>
@@ -1029,10 +920,10 @@ export function Teams() {
                               &thinsp;×3
                             </span>
                           </span>
-                          <span className="cook-cap-row__value">{potSize * 3}</span>
+                          <span className="cook-cap-row__value">{k.pot.base_daily}</span>
                         </li>
                         {/* Skill expansion — only if >0 */}
-                        {cookingExtra > 0 && cookingSkillEffect && (
+                        {k.pot.skill_daily > 0 && cookingSkillEffect && (
                           <li className="cook-cap-row">
                             <span className="cook-cap-row__label">
                               <img
@@ -1046,17 +937,21 @@ export function Teams() {
                                 &ensp;(<IconSparkle width={11} height={11} />{(cookingSkillEffect.triggers * factor).toFixed(2)})
                               </span>
                             </span>
-                            <span className="cook-cap-row__value">+{fdown(cookingExtra)}</span>
+                            <span className="cook-cap-row__value">+{fdown(k.pot.skill_daily)}</span>
                           </li>
                         )}
-                        {/* GCT (+50%) — solo con Good Camp Ticket activo */}
-                        {goodCampTicket && gctGain > 0 && (
+                        {/* Ticket and/or event pot bonus */}
+                        {k.pot.bonus_daily > 0 && (
                           <li className="cook-cap-row">
                             <span className="cook-cap-row__label">
                               <img src="/pot.webp" alt="" className="mini-icon" style={{ width: 14, height: 14 }} />
-                              {t("teams.potGct")}
+                              {eventPot
+                                ? goodCampTicket
+                                  ? t("event.potRowBoth")
+                                  : t("event.potRow")
+                                : t("teams.potGct")}
                             </span>
-                            <span className="cook-cap-row__value">+{fdown(gctGain)}</span>
+                            <span className="cook-cap-row__value">+{fdown(k.pot.bonus_daily)}</span>
                           </li>
                         )}
                         {/* Used by recipes */}
@@ -1065,30 +960,32 @@ export function Teams() {
                             <img src="/pot.webp" alt="" className="mini-icon" style={{ width: 14, height: 14 }} />
                             {t("teams.usedByRecipes")}
                           </span>
-                          <span className="cook-cap-row__value">−{fdown(usedByRecipes)}</span>
+                          <span className="cook-cap-row__value">−{fdown(k.pot.used_by_recipes)}</span>
                         </li>
                         {/* Fillers total row */}
                         <li className="cook-cap-row cook-cap-row--total">
                           <span className="cook-cap-row__label">
                             {t("teams.fillersLabel")}
                           </span>
-                          <span className="cook-cap-row__value">{fdown(totalFillers)}</span>
+                          <span className="cook-cap-row__value">{fdown(k.pot.filler_room)}</span>
                         </li>
                       </ul>
                     </div>
 
                     {/* Block 4 — Fillers (slot-based allocation: base strength + X/Y chip + contributed strength) */}
-                    {fillerAllocation.length > 0 && (
+                    {k.fillers.length > 0 && (
                       <div className="cook-result-block">
                         <div className="prod-card__block-head">
                           {t("teams.fillersLabel")}
                         </div>
                         <ul className="cook-filler-list">
-                          {fillerAllocation.map(({ key, ingredient, label, strength, balance, usedUnits, isRandom }) => {
-                            const isUsed = usedUnits > 0;
-                            const usedFloor = Math.floor(usedUnits);
-                            const availFloor = Math.floor(balance);
-                            const contributed = Math.floor(usedUnits * strength * bonusFactor);
+                          {k.fillers.map((f) => {
+                            const key = f.ingredient ?? "__random__";
+                            const isRandom = f.ingredient === null;
+                            const label = f.ingredient === null ? t("teams.randomIngredients") : ingName(f.ingredient);
+                            const isUsed = f.used > 0;
+                            const usedFloor = Math.floor(f.used);
+                            const availFloor = Math.floor(f.available);
                             const tip = isRandom ? t("teams.randomIngredientsTip") : undefined;
                             return (
                               <li
@@ -1097,7 +994,7 @@ export function Teams() {
                                 title={tip}
                               >
                                 <span className="cook-filler-item__info">
-                                  {isRandom ? (
+                                  {f.ingredient === null ? (
                                     <IconPackage
                                       width={18}
                                       height={18}
@@ -1106,7 +1003,7 @@ export function Teams() {
                                   ) : (
                                     <img
                                       className="mini-icon"
-                                      src={ingredientIcon(ingredient as string)}
+                                      src={ingredientIcon(f.ingredient)}
                                       alt={label}
                                       title={label}
                                       style={{ width: 18, height: 18 }}
@@ -1123,7 +1020,7 @@ export function Teams() {
                                     </span>
                                   )}
                                   <span className="cook-filler-item__base-strength muted">
-                                    {Math.round(strength)}
+                                    {Math.round(f.strength)}
                                   </span>
                                 </span>
                                 <span className="cook-filler-item__right">
@@ -1140,7 +1037,7 @@ export function Teams() {
                                         alt=""
                                         style={{ width: 13, height: 13 }}
                                       />
-                                      {fdown(contributed)}
+                                      {fdown(f.contributed)}
                                     </span>
                                   )}
                                 </span>
@@ -1162,8 +1059,8 @@ export function Teams() {
                               style={{ width: 16, height: 16 }}
                             />
                             <StrengthValue
-                              value={fillerStrengthTotal * factor}
-                              base={fillerStrengthTotal / bonusFactor * factor}
+                              value={k.filler_strength}
+                              base={k.filler_strength_base}
                               bonus={islandBonus}
                             />
                           </span>
@@ -1173,11 +1070,8 @@ export function Teams() {
 
                     {/* Block 5 — Grand total con el Extra Tasty esperado del equipo */}
                     {(() => {
-                      const subtotal = (result.cooking_strength + fillerStrengthTotal) * factor;
-                      const extraTastyBonus = subtotal * (result.extra_tasty_multiplier - 1);
                       const extraTastyPct = (result.extra_tasty_rate * 100).toFixed(1);
                       const extraTastyMult = result.extra_tasty_multiplier.toFixed(2);
-                      const grandTotal = grandTotalCooking * factor;
                       return (
                         <div className="cook-result-block">
                           <div className="cook-total-row">
@@ -1185,7 +1079,7 @@ export function Teams() {
                               {t("teams.recipes")}
                             </span>
                             <span className="cook-total-row__value">
-                              {fdown(result.cooking_strength * factor)}
+                              {fdown(k.recipe_strength)}
                             </span>
                           </div>
                           <div className="cook-total-row">
@@ -1193,7 +1087,7 @@ export function Teams() {
                               {t("teams.fillersLabel")}
                             </span>
                             <span className="cook-total-row__value">
-                              {fdown(fillerStrengthTotal * factor)}
+                              {fdown(k.filler_strength)}
                             </span>
                           </div>
                           <div className="cook-total-row">
@@ -1211,7 +1105,7 @@ export function Teams() {
                               {t("teams.extraTasty")} {extraTastyPct}% · ×{extraTastyMult}
                             </span>
                             <span className="cook-total-row__value">
-                              +{fdown(extraTastyBonus)}
+                              +{fdown(k.extra_tasty_bonus)}
                             </span>
                           </div>
                           <div className="cook-total-row cook-total-row--grand">
@@ -1226,8 +1120,8 @@ export function Teams() {
                                 style={{ width: 16, height: 16 }}
                               />
                               <StrengthValue
-                                value={grandTotal}
-                                base={grandTotal / bonusFactor}
+                                value={k.total}
+                                base={k.total_base}
                                 bonus={islandBonus}
                               />
                             </span>
@@ -1244,7 +1138,7 @@ export function Teams() {
           {/* ── TEAM TOTALS card — the page's headline KPI (daily + weekly, always) ──
           Tooltip rule: StrengthValue (base/Area bonus breakdown) appears on ALL
           subtotals and totals that receive Area bonus — berries subtotal, skills
-          subtotal, total berries+skills card, cooking_strength subtotal, fillers
+          subtotal, total berries+skills card, recipes subtotal, fillers
           subtotal, cooking grand total, totals-card cooking col, totals-card
           grand total. NEVER on per-berry/per-recipe/per-filler rows, the
           "Recetas"/"Fillers" repeat lines in Block 5, or the +10% extra tasty line.
@@ -1275,13 +1169,13 @@ export function Teams() {
               <span className="teams-totals__kpi">
                 <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" style={{ width: 18, height: 18 }} />
                 <StrengthValue
-                  value={grandTotalCooking}
-                  base={grandTotalCooking / bonusFactor}
+                  value={result.kitchen.total}
+                  base={result.kitchen.total_base}
                   bonus={islandBonus}
                 />
               </span>
               <span className="teams-totals__aside">
-                ×7 {fdown(grandTotalCooking * 7)}
+                ×7 {fdown(result.kitchen.total * 7)}
               </span>
             </div>
 
@@ -1293,13 +1187,13 @@ export function Teams() {
               <span className="teams-totals__kpi teams-totals__kpi--grand">
                 <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" style={{ width: 22, height: 22 }} />
                 <StrengthValue
-                  value={result.total_strength + grandTotalCooking}
-                  base={result.total_strength_base + grandTotalCooking / bonusFactor}
+                  value={result.grand_total_strength}
+                  base={result.grand_total_strength_base}
                   bonus={islandBonus}
                 />
               </span>
               <span className="teams-totals__aside">
-                ×7 {fdown((result.total_strength + grandTotalCooking) * 7)}
+                ×7 {fdown(result.grand_total_strength * 7)}
               </span>
               {selectedIsland &&
                 (() => {
@@ -1307,7 +1201,7 @@ export function Teams() {
                   if (!isl) return null;
                   return (
                     <SnorlaxRatingBadge
-                      weeklyStrength={(result.total_strength + grandTotalCooking) * 7}
+                      weeklyStrength={result.grand_total_strength * 7}
                       ratings={isl.ratings}
                       islandName={selectedIsland}
                     />
@@ -1386,7 +1280,13 @@ export function Teams() {
           onClose={() => setMealPickerOpen(false)}
           potSize={potSize}
           onPotSizeChange={(n) => setPotOverride(n)}
-          cookingExtra={cookingExtra}
+          effectivePot={potKnown ? result.kitchen.pot.per_meal : null}
+          skillPerMeal={potKnown ? result.kitchen.pot.skill_per_meal : null}
+          eventEffects={eventEffects}
+          onEventEffects={setEventEffects}
+          eventTypes={[...new Set(catalog.data.species.map((s) => s.type))].sort((a, b) =>
+            typeName(a).localeCompare(typeName(b)),
+          )}
           catalog={catalog.data}
           selectedIsland={selectedIsland}
           favoriteBerries={favoriteBerries}
@@ -1400,6 +1300,7 @@ export function Teams() {
           onMainFavorite={setMainFavorite}
           onWeeklyBonus={setWeeklyBonus}
           goodCampTicket={goodCampTicket}
+          potMultiplied={potKnown && result.kitchen.pot.bonus_daily > 0}
           onGoodCampTicket={setGoodCampTicket}
           dishType={dishType}
           onDishTypeChange={handleDishTypeChange}

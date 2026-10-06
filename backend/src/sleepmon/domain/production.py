@@ -40,6 +40,7 @@ from sleepmon.domain.catalog_data import (
     ribbon_inventory_bonus,
     ribbon_speed_bonus,
 )
+from sleepmon.domain.event_bonus import NO_EVENT, EventBonus
 from sleepmon.domain.map_bonuses import MapBonuses, berry_effects
 from sleepmon.domain.skills import (
     boosts_tasty_chance,
@@ -280,6 +281,7 @@ def daily_production(
     skill_level: int = 1,
     map_bonuses: MapBonuses = _NO_MAP,
     good_camp_ticket: bool = False,
+    event: EventBonus = NO_EVENT,
 ) -> DailyProduction:
     """Estimates daily production from ingredients, level, nature and sub skills.
 
@@ -288,7 +290,8 @@ def daily_production(
     and no sub skills (no modifiers). ``skill_level`` (1..MAX_SKILL_LEVEL) defines
     how many ingredients each trigger of Ingredient Draw S-type skills delivers.
     ``map_bonuses`` (neutral by default) brings the expert-mode effects; the skill
-    level actually used is reported in ``effective_skill_level``.
+    level actually used is reported in ``effective_skill_level``. ``event`` (neutral by
+    default) brings a hand-built event's per-member boosts.
     """
     if len(ingredients) != MAX_INGREDIENTS:
         raise ValueError(
@@ -304,8 +307,10 @@ def daily_production(
     # Expert-mode effects for this member's berry, and the skill level they actually
     # use (capped at the skill's real max — a maxed-out member gains nothing).
     effects = berry_effects(map_bonuses, species.berry)
+    boosts = event.boosts_for(species)
     effective_skill_level = min(
-        skill_level + effects.skill_level_bonus, max_skill_level(species.main_skill)
+        skill_level + effects.skill_level_bonus + boosts.skill_level_bonus,
+        max_skill_level(species.main_skill),
     )
 
     # Solo cuentan las sub skills DESBLOQUEADAS al nivel (cada slot abre a 10/25/50/
@@ -348,7 +353,7 @@ def daily_production(
         / MAX_ENERGY_BONUS
     )
     helps_per_second = 1 / seconds_per_help
-    berry_per_help = _berry_per_help(species.specialty) + berry_finding
+    berry_per_help = _berry_per_help(species.specialty) + berry_finding + boosts.extra_berries
 
     # % de ingrediente y skill efectivos: base × (1 + Σ sub skills) × factor naturaleza.
     # La baya es el resto; el skill efectivo además pasa por el pity proc (independiente).
@@ -360,21 +365,31 @@ def daily_production(
         * _nature_factor(nature, NatureStat.INGREDIENT_FINDING, *_NATURE_INGREDIENT),
     )
     berry_rate = max(0.0, 1 - ingredient_rate)
+    # Stacked factors are unbounded; the per-help rate is a probability, so clamp to [0, 1].
     effective_skill_rate = _effective_skill_rate(
-        max(
-            0.0,
-            species.skill_percentage
-            / 100
-            * (1 + skill_ss)
-            * _nature_factor(nature, NatureStat.MAIN_SKILL_CHANCE, *_NATURE_SKILL)
-            * effects.skill_rate_factor,
+        min(
+            1.0,
+            max(
+                0.0,
+                species.skill_percentage
+                / 100
+                * (1 + skill_ss)
+                * _nature_factor(nature, NatureStat.MAIN_SKILL_CHANCE, *_NATURE_SKILL)
+                * effects.skill_rate_factor
+                * boosts.skill_rate_factor,
+            ),
         ),
         species.pity_helps,
     )
 
     camp_inventory = GOOD_CAMP_TICKET_INVENTORY_FACTOR if good_camp_ticket else 1.0
     inventory = round(
-        (species.carry_limit + inventory_bonus + ribbon_inventory_bonus(ribbon))
+        (
+            species.carry_limit
+            + inventory_bonus
+            + ribbon_inventory_bonus(ribbon)
+            + boosts.carry_limit_bonus
+        )
         * camp_inventory
     )
 
@@ -382,7 +397,8 @@ def daily_production(
     # primer slot abre a nivel 1, así que con el rango de nivel ya validado unlocked >= 1.
     unlocked = max_ingredient_slots(level)
     slot_amounts = [species.ingredient_amount(i, ingredients[i]) for i in range(unlocked)]
-    avg_amount = sum(slot_amounts) / unlocked + effects.extra_ingredients
+    extra_ingredients = effects.extra_ingredients + boosts.extra_ingredients
+    avg_amount = sum(slot_amounts) / unlocked + extra_ingredients
 
     # Ítems que ocupan inventario por ayuda (bayas + ingredientes; skills no).
     items_per_help = berry_rate * berry_per_help + ingredient_rate * avg_amount
@@ -455,6 +471,15 @@ def daily_production(
     elif magnets_ingredients(species):
         skill_ingredient_total = skill_triggers * ingredient_magnet_amount(effective_skill_level)
 
+    # Event: ingredients gathered by main skills are multiplied.
+    skill_ing_factor = boosts.skill_ingredient_factor
+    if skill_ing_factor != 1.0:
+        skill_ingredients = tuple(
+            SlotProduction(sp.ingredient, sp.amount * skill_ing_factor) for sp in skill_ingredients
+        )
+        if skill_ingredient_total is not None:
+            skill_ingredient_total *= skill_ing_factor
+
     # Ingredientes extra de pote por la main skill (Cooking Power-Up S): cada disparo
     # agranda el pote en N slots, así que por día es disparos × N. La variante (Minus)
     # de Minun usa su propia tabla base de pote (más chica que la regular).
@@ -524,7 +549,7 @@ def daily_production(
     slots = tuple(
         SlotProduction(
             ingredient=ingredients[i],
-            amount=helps_per_slot * (slot_amounts[i] + effects.extra_ingredients),
+            amount=helps_per_slot * (slot_amounts[i] + extra_ingredients),
         )
         for i in range(unlocked)
     )

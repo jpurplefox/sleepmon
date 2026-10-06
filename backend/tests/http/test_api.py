@@ -717,8 +717,11 @@ def test_team_production_endpoint_with_recipe(client: TestClient) -> None:
     )
     assert res.status_code == 200
     body = res.json()
-    assert body["cooking_strength"] == recipe["base_strength"]
-    assert body["grand_total_strength"] == body["total_strength"] + body["cooking_strength"]
+    assert body["kitchen"]["recipe_strength"] == recipe["base_strength"]
+    assert body["grand_total_strength"] == pytest.approx(
+        body["total_strength"] + body["kitchen"]["total"]
+    )
+    assert "cooking_strength" not in body
 
 
 def test_team_production_cooking_meals_have_breakdown_fields(client: TestClient) -> None:
@@ -744,7 +747,7 @@ def test_team_production_cooking_meals_have_breakdown_fields(client: TestClient)
 
     # Tipos correctos
     assert isinstance(meal["level"], int)
-    assert isinstance(meal["strength"], int)
+    assert isinstance(meal["strength"], float)
     assert isinstance(meal["ingredients"], list)
 
     # Level coincide con lo enviado
@@ -941,6 +944,52 @@ def test_production_unknown_scenario_returns_400(client: TestClient) -> None:
             "level": 60,
             "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
             "scenario": "double_xp",
+        },
+    )
+    assert res.status_code == 400
+
+
+def test_team_production_accepts_pot_size(client: TestClient) -> None:
+    body = client.post(
+        "/teams/production",
+        json={"slots": _slots_json(_pokemon_json()), "meals": [None, None, None], "pot_size": 33},
+    ).json()
+    assert body["kitchen"]["pot"]["base_daily"] == 99
+
+
+def test_team_production_rejects_bad_pot_size(client: TestClient) -> None:
+    res = client.post(
+        "/teams/production",
+        json={"slots": _slots_json(_pokemon_json()), "meals": [None, None, None], "pot_size": 22},
+    )
+    assert res.status_code == 400
+
+
+def test_team_production_accepts_event_effects(client: TestClient) -> None:
+    body = {"slots": _slots_json(_pokemon_json()), "meals": [None, None, None]}
+    plain = client.post("/teams/production", json=body)
+    res = client.post(
+        "/teams/production",
+        json={
+            **body,
+            "event_effects": [
+                {"kind": "skill_trigger", "value": 1.5, "scope": "type", "target": "Electric"},
+                {"kind": "dish_strength", "value": 1.25},
+                {"kind": "extra_berries", "value": 1},
+            ],
+        },
+    )
+    assert res.status_code == 200
+    assert res.json()["total_berry_amount"] > plain.json()["total_berry_amount"]
+
+
+def test_team_production_rejects_bad_event_effect(client: TestClient) -> None:
+    res = client.post(
+        "/teams/production",
+        json={
+            "slots": _slots_json(_pokemon_json()),
+            "meals": [None, None, None],
+            "event_effects": [{"kind": "extra_berries", "value": 9}],
         },
     )
     assert res.status_code == 400

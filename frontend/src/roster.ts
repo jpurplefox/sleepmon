@@ -22,8 +22,12 @@ function localId(): string {
   return `local-${Date.now().toString(36)}-${idCounter.toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+export function newId(): string {
+  return typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : localId();
+}
+
 export function newEntry(config: MemberInput, sourceId?: string): RosterEntry {
-  const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : localId();
+  const id = newId();
   return { id, config, ...(sourceId ? { sourceId } : {}) };
 }
 

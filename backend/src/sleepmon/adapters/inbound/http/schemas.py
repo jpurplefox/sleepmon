@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import msgspec
 
+from sleepmon.domain.catalog_data import DEFAULT_POT_SIZE
+
 
 class MemberIn(msgspec.Struct, forbid_unknown_fields=True):
     """Payload para crear o actualizar un miembro."""
@@ -226,6 +228,13 @@ class SlotIn(msgspec.Struct, forbid_unknown_fields=True):
     entries: list[SlotEntryIn]
 
 
+class EventEffectIn(msgspec.Struct, forbid_unknown_fields=True):
+    kind: str
+    value: float
+    scope: str = "team"
+    target: str | None = None
+
+
 class TeamProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     slots: list[SlotIn]
     meals: list[MealIn | None] = msgspec.field(default_factory=list)
@@ -235,6 +244,8 @@ class TeamProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     weekly_bonus: str | None = None
     island_bonus: float = 0.0
     good_camp_ticket: bool = False
+    pot_size: int = DEFAULT_POT_SIZE
+    event_effects: list[EventEffectIn] = msgspec.field(default_factory=list)
 
 
 class IngredientBalanceOut(msgspec.Struct):
@@ -254,8 +265,41 @@ class MealFeasibilityOut(msgspec.Struct):
     recipe_name: str
     met: bool
     level: int
-    strength: int
+    strength: float
+    strength_base: float
+    fits_pot: bool
     ingredients: list[SlotIngredientStatusOut]
+
+
+class PotOut(msgspec.Struct):
+    per_meal: int
+    skill_per_meal: int
+    daily: float
+    base_daily: int
+    skill_daily: float
+    bonus_daily: float
+    used_by_recipes: int
+    filler_room: float
+
+
+class FillerOut(msgspec.Struct):
+    ingredient: str | None
+    strength: float
+    available: float
+    used: float
+    contributed: float
+
+
+class KitchenOut(msgspec.Struct):
+    pot: PotOut
+    fillers: list[FillerOut]
+    recipe_strength: float
+    recipe_strength_base: float
+    filler_strength: float
+    filler_strength_base: float
+    extra_tasty_bonus: float
+    total: float
+    total_base: float
 
 
 class SkillEffectAggOut(msgspec.Struct):
@@ -300,8 +344,7 @@ class TeamProductionOut(msgspec.Struct):
     extra_tasty_multiplier: float
     skill_effects: list[SkillEffectAggOut]
     members: list[MemberContributionOut]
-    cooking_strength: float
-    cooking_strength_base: float
+    kitchen: KitchenOut
     cooking_ingredients: list[IngredientBalanceOut]
     cooking_surplus: list[IngredientBalanceOut]
     cooking_meals: list[MealFeasibilityOut]
