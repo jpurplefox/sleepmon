@@ -395,11 +395,17 @@ def test_berry_rows_sort_by_strength() -> None:
 
 def test_berry_rows_with_equal_strength_sort_by_berry_name() -> None:
     """Rows with equal strength sort deterministically by berry name."""
-    base = _daily("Pikachu")
-    # Create two daily productions with same strength but different berries
-    daily_a = dataclasses.replace(base, berry=Berry.ORAN)
-    daily_b = dataclasses.replace(base, berry=Berry.ASPEAR)
-    team = team_production([("a", "A", daily_a), ("b", "B", daily_b)])
-    # Both have same strength, so should sort by berry name
-    assert team.berries[0].berry == Berry.ASPEAR  # "aspear" < "oran" lexically
-    assert team.berries[1].berry == Berry.ORAN
+    base = dataclasses.replace(
+        _daily("Pikachu"),
+        berry_amount=10.0,
+        berry_strength=100.0,
+        skill_berry_amount=None,
+        skill_berry_strength=None,
+        teammate_berries=(),
+    )
+    # The later name goes first, so only the tie-break puts CHERI before ORAN.
+    daily_oran = dataclasses.replace(base, berry=Berry.ORAN)
+    daily_cheri = dataclasses.replace(base, berry=Berry.CHERI)
+    team = team_production([("o", "O", daily_oran), ("c", "C", daily_cheri)])
+    assert team.berries[0].strength == team.berries[1].strength
+    assert [r.berry for r in team.berries] == [Berry.CHERI, Berry.ORAN]
