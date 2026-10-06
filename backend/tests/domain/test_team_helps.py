@@ -28,12 +28,12 @@ def _by_ingredient(
 
 
 def _helps(member: BurstMember) -> float:
-    total = member.daily.skill_extra_helpful
-    assert total is not None
-    return total
+    grant = member.daily.help_grant
+    assert grant is not None
+    return grant.per_target
 
 
-def test_only_extra_helpful_members_get_an_entry() -> None:
+def test_only_members_that_grant_helps_get_an_entry() -> None:
     result = extra_help_yields([_member("p", "Pikachu", slot=0), _member("s", "Sceptile", slot=1)])
     assert result == {}
 
@@ -88,3 +88,33 @@ def test_split_slots_share_by_weight_and_own_slot_is_all_self() -> None:
             Berry.DURIN: share * 0.4 * b.daily.help_yield.berries,
         }
     )
+
+
+def test_helper_boost_gives_every_slot_the_full_amount() -> None:
+    raikou = _member("r", "Raikou", slot=0)
+    pikachu = _member("p", "Pikachu", slot=1)
+    sceptile = _member("s", "Sceptile", slot=2)
+    result = extra_help_yields([raikou, pikachu, sceptile])["r"]
+    helps = _helps(raikou)
+    assert result.own_berries == pytest.approx(helps * raikou.daily.help_yield.berries)
+    by_berry = {y.berry: y.amount for y in result.teammate_berries}
+    assert by_berry[Berry.DURIN] == pytest.approx(helps * sceptile.daily.help_yield.berries)
+    # Raikou and Pikachu share Grepa: Pikachu's part is still a teammate's berry.
+    assert by_berry[Berry.GREPA] == pytest.approx(helps * pikachu.daily.help_yield.berries)
+
+
+def test_heal_pulse_reaches_two_of_the_occupied_slots() -> None:
+    latias = _member("l", "Latias", slot=0)
+    pikachu = _member("p", "Pikachu", slot=1)
+    sceptile = _member("s", "Sceptile", slot=2)
+    result = extra_help_yields([latias, pikachu, sceptile])["l"]
+    share = _helps(latias) * 2 / 3
+    assert result.own_berries == pytest.approx(share * latias.daily.help_yield.berries)
+    by_berry = {y.berry: y.amount for y in result.teammate_berries}
+    assert by_berry[Berry.GREPA] == pytest.approx(share * pikachu.daily.help_yield.berries)
+
+
+def test_heal_pulse_alone_targets_only_itself() -> None:
+    latias = _member("l", "Latias", slot=0)
+    result = extra_help_yields([latias])["l"]
+    assert result.own_berries == pytest.approx(_helps(latias) * latias.daily.help_yield.berries)

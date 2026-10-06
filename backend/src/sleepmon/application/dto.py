@@ -116,10 +116,11 @@ class MemberProduction:
     skill_self_energy: float | None  # Charge Energy S (energía al propio)
     skill_dream_shards: float | None  # Dream Shard Magnet S (fragmentos de sueño)
     skill_tasty_chance: float | None  # Tasty Chance S (+% de plato riquísimo)
-    skill_extra_helpful: float | None  # Extra Helpful S (×multiplicador de ayuda)
+    skill_extra_helpful: float | None  # helps granted to each target per day
     skill_random_energy: float | None  # Energizing Cheer S (energía a un compañero al azar)
     skill_berry_amount: float | None = None  # Berry Burst / Lunar Blessing: own (in ``berries``)
     skill_berries_per_teammate: float | None = None  # same skills: per teammate per day
+    skill_help_targets: int | None = None  # members each grant reaches (5: whole team)
 
 
 @dataclass(frozen=True, slots=True)
@@ -156,6 +157,7 @@ class ProductionResult:
     skill_berry_amount: float | None = None
     skill_berry_strength: float | None = None
     skill_berries_per_teammate: float | None = None
+    skill_help_targets: int | None = None  # members each grant reaches (5: whole team)
     # Berries obtained from teammates: only for a burster inside a team, else None.
     teammate_berries: list[BerryYieldDTO] | None = None
     # Ingredients obtained from teammates (Extra Helpful): only inside a team, else None.

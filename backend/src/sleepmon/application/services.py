@@ -42,7 +42,7 @@ from sleepmon.application.dto import (
 from sleepmon.application.parsing import parse_enum
 from sleepmon.domain import analytics
 from sleepmon.domain.analytics import team_production
-from sleepmon.domain.berry_burst import BurstMember, berry_burst_team_for, teammate_berries
+from sleepmon.domain.berry_burst import BurstMember, team_context_for, teammate_berries
 from sleepmon.domain.catalog_data import (
     GOOD_CAMP_TICKET_POT_FACTOR,
     ISLAND_EXPERT,
@@ -159,18 +159,16 @@ def _production_result(daily: DailyProduction, *, in_team: bool = False) -> Prod
         skill_berry_amount=daily.skill_berry_amount,
         skill_berry_strength=daily.skill_berry_strength,
         skill_berries_per_teammate=daily.skill_berries_per_teammate,
+        skill_help_targets=None if daily.help_grant is None else daily.help_grant.targets,
         teammate_berries=(
             [BerryYieldDTO(y.berry.value, y.amount, y.strength) for y in daily.teammate_berries]
             if in_team
-            and (
-                daily.skill_berries_per_teammate is not None
-                or daily.skill_extra_helpful is not None
-            )
+            and (daily.skill_berries_per_teammate is not None or daily.help_grant is not None)
             else None
         ),
         teammate_ingredients=(
             [SlotAmount(s.ingredient.value, s.amount) for s in daily.teammate_ingredients]
-            if in_team and daily.skill_extra_helpful is not None
+            if in_team and daily.help_grant is not None
             else None
         ),
     )
@@ -465,6 +463,7 @@ class DefaultTeamService(TeamService):
             skill_random_energy=result.skill_random_energy,
             skill_berry_amount=result.skill_berry_amount,
             skill_berries_per_teammate=result.skill_berries_per_teammate,
+            skill_help_targets=None if result.help_grant is None else result.help_grant.targets,
         )
 
     def update_member(self, user_id: UUID, member_id: UUID, data: TeamMemberInput) -> TeamMember:
@@ -626,15 +625,15 @@ class DefaultProductionService(ProductionService):
                 map_bonuses=map_bonuses,
                 good_camp_ticket=data.good_camp_ticket,
                 event=event,
-                berry_burst_team=berry_burst_team_for(slot_index, cfg.species, roster),
+                team_context=team_context_for(slot_index, cfg.species, roster),
             )
             scaled = scale_daily(daily, weight)
             members.append(
                 BurstMember(entry.id, slot_index, cfg.species, cfg.level, weight, scaled)
             )
 
-        # Team halves of the skills: Berry Burst's teammate berries and what Extra
-        # Helpful's granted helps bring, both credited to the skill's owner.
+        # Team halves of the skills: Berry Burst's teammate berries and what granted
+        # helps bring, both credited to the skill's owner.
         from_teammates = teammate_berries(members, map_bonuses)
         from_helps = extra_help_yields(members)
         entries: list[tuple[str, str, DailyProduction]] = []

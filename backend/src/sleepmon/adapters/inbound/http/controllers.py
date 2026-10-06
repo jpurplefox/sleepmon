@@ -112,6 +112,7 @@ def _full_production_out(result: ProductionResult) -> ProductionOut:
         skill_berry_amount=result.skill_berry_amount,
         skill_berry_strength=result.skill_berry_strength,
         skill_berries_per_teammate=result.skill_berries_per_teammate,
+        skill_help_targets=result.skill_help_targets,
         teammate_berries=(
             None
             if result.teammate_berries is None
@@ -158,6 +159,7 @@ def _production_out(production: MemberProduction | None) -> MemberProductionOut 
         skill_random_energy=production.skill_random_energy,
         skill_berry_amount=production.skill_berry_amount,
         skill_berries_per_teammate=production.skill_berries_per_teammate,
+        skill_help_targets=production.skill_help_targets,
     )
 
 

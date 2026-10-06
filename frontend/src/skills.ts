@@ -201,8 +201,14 @@ export function burstsBerries(mainSkill: string | undefined): boolean {
 
 const bbIdx = (level: number) => Math.min(Math.max(level, 1), BERRY_BURST_OWN.length) - 1;
 
+// Helper Boost (Raikou, Entei, Suicune): ×N helps from every member, alone (1..6).
+export const HELPER_BOOST_HELPS = [2, 3, 3, 4, 4, 5];
+// Moonlight (Umbreon): energy it may also give a teammate (half the time).
+export const MOONLIGHT_SHARED_ENERGY = [6.3, 7.7, 10.1, 13.0, 17.2, 22.8];
+
 // Nivel máximo de la main skill (algunas topan en 6, otras en 7). Default 7.
 export function maxSkillLevel(mainSkill: string | undefined): number {
+  if (mainSkill?.startsWith("Helper Boost")) return HELPER_BOOST_HELPS.length; // 6
   if (mainSkill?.startsWith("Berry Zone (Psystrike)")) return BERRY_ZONE_PSYSTRIKE_STRENGTH.length; // 6
   if (restoresTeamEnergy(mainSkill)) return ENERGY_FOR_EVERYONE_AMOUNTS.length; // E4E: 6
   if (chargesSelfEnergy(mainSkill)) return CHARGE_ENERGY_S_AMOUNTS.length; // Charge Energy: 6
@@ -307,6 +313,20 @@ export function skillDescription(
     const n = num(CHARGE_STRENGTH_S_AMOUNTS[idx(level)]);
     return es ? `Aumenta el Vigor de Snorlax en ${n}.` : `Increases Snorlax's Strength by ${n}.`;
   }
+  if (mainSkill?.startsWith("Helper Boost")) {
+    const n = HELPER_BOOST_HELPS[Math.min(Math.max(level, 1), HELPER_BOOST_HELPS.length) - 1];
+    return es
+      ? `Consigue al instante ×${n} la ayuda habitual de todos los Pokémon del equipo. Más con más especies de su misma baya en el equipo.`
+      : `Instantly gets you ×${n} the usual help from all Pokémon on your team. More with more species sharing its Berry on the team.`;
+  }
+  if (mainSkill?.startsWith("Charge Energy S (Moonlight)")) {
+    const n = chargeEnergyAmount(level);
+    const table = MOONLIGHT_SHARED_ENERGY;
+    const shared = num(table[Math.min(Math.max(level, 1), table.length) - 1]);
+    return es
+      ? `Restaura ${n} de Energía al usuario. A veces restaura además ${shared} de Energía a otro Pokémon.`
+      : `Restores ${n} Energy to the user. Sometimes also restores ${shared} Energy to another Pokémon.`;
+  }
   if (chargesSelfEnergy(mainSkill)) {
     const n = chargeEnergyAmount(level);
     return es
@@ -366,8 +386,8 @@ export function skillDescription(
     const n = ENERGIZING_CHEER_HEAL_PULSE_AMOUNTS[i];
     const helps = ENERGIZING_CHEER_HEAL_PULSE_HELPS[i];
     return es
-      ? `Restaura ${n} de Energía a dos Pokémon del equipo elegidos al azar y consigue al instante ×${helps} la ayuda habitual de esos Pokémon.`
-      : `Restores ${n} Energy to two random Pokémon on your team and instantly gets you ×${helps} the usual help from those Pokémon.`;
+      ? `Restaura ${n} de Energía a dos Pokémon del equipo elegidos al azar y consigue al instante ×${helps} la ayuda habitual de esos Pokémon. Más con Latios en el equipo.`
+      : `Restores ${n} Energy to two random Pokémon on your team and instantly gets you ×${helps} the usual help from those Pokémon. More with Latios on the team.`;
   }
   if (mainSkill?.startsWith("Energizing Cheer S (Nuzzle)")) {
     const table = ENERGIZING_CHEER_NUZZLE_AMOUNTS;

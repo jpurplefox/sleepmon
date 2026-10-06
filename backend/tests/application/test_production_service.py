@@ -1277,3 +1277,50 @@ def test_team_extra_helpful_helps_turn_into_berries_and_ingredients(
         for s in (*p.ingredients, *p.skill_ingredients, *(p.teammate_ingredients or []))
     )
     assert team.total_ingredients == pytest.approx(produced)
+
+
+def test_team_helper_boost_helps_every_member_more_with_same_berry_species(
+    production_service: DefaultProductionService,
+) -> None:
+    raikou = {"species": "Raikou", "ingredients": ["Bean Sausage"] * 3, "skill_level": 6}
+
+    def helps_per_trigger(*others: dict[str, object]) -> float:
+        slots = [SlotInput(entries=[_entry("r", **raikou)])]
+        slots += [SlotInput(entries=[_entry(f"o{i}", **o)]) for i, o in enumerate(others)]
+        team = production_service.compute_team_production(
+            TeamProductionInput(slots=slots, meals=[])
+        )
+        prod = next(m for m in team.members if m.id == "r").production
+        assert prod.skill_extra_helpful is not None
+        assert prod.skill_help_targets == 5
+        return prod.skill_extra_helpful / prod.skill_triggers
+
+    assert helps_per_trigger(_SCEPTILE) == pytest.approx(5)
+    # Pikachu also has Grepa: 2 species sharing Raikou's berry → +1 at level 6.
+    assert helps_per_trigger({"species": "Pikachu", "ingredients": ["Fancy Apple"] * 3}) == (
+        pytest.approx(6)
+    )
+
+
+def test_team_heal_pulse_helps_two_members_more_with_latios(
+    production_service: DefaultProductionService,
+) -> None:
+    latias = {"species": "Latias", "ingredients": ["Snoozy Tomato"] * 3, "skill_level": 6}
+
+    def team_with(*others: dict[str, object]) -> tuple[float, int | None, int]:
+        slots = [SlotInput(entries=[_entry("l", **latias)])]
+        slots += [SlotInput(entries=[_entry(f"o{i}", **o)]) for i, o in enumerate(others)]
+        team = production_service.compute_team_production(
+            TeamProductionInput(slots=slots, meals=[])
+        )
+        prod = next(m for m in team.members if m.id == "l").production
+        assert prod.skill_extra_helpful is not None
+        assert prod.teammate_berries is not None
+        return (
+            prod.skill_extra_helpful / prod.skill_triggers,
+            prod.skill_help_targets,
+            len(prod.teammate_berries),
+        )
+
+    assert team_with(_SCEPTILE) == (pytest.approx(4), 2, 1)
+    assert team_with(_SCEPTILE, _LATIOS) == (pytest.approx(7), 2, 2)

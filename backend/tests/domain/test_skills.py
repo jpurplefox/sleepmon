@@ -28,7 +28,8 @@ from sleepmon.domain.skills import (
     SUPER_LUCK_DREAM_SHARD_AMOUNTS,
     TASTY_CHANCE_S_AMOUNTS,
     BerryBurstAmounts,
-    BerryBurstTeam,
+    HelpGrantPerTrigger,
+    TeamContext,
     assists_cooking,
     berry_burst_amounts,
     berry_burst_triggers,
@@ -46,6 +47,7 @@ from sleepmon.domain.skills import (
     energizing_cheer_amount,
     energy_for_everyone_amount,
     extra_helpful_amount,
+    help_grant,
     ingredient_draw_amount,
     ingredient_draw_pool,
     ingredient_magnet_amount,
@@ -57,6 +59,7 @@ from sleepmon.domain.skills import (
     magnet_plus_bonus_ingredient,
     magnets_ingredients,
     max_skill_level,
+    moonlight_shared_energy,
     powers_up_cooking,
     restores_team_energy,
     skill_strength_amount,
@@ -595,15 +598,15 @@ def test_draco_meteor_depends_on_dragon_species_and_latias() -> None:
     alone = berry_burst_amounts("Berry Burst (Draco Meteor)", 1)
     assert alone == BerryBurstAmounts(12, 1)
     with_latias = berry_burst_amounts(
-        "Berry Burst (Draco Meteor)", 1, BerryBurstTeam(same_berry_species=2, latias=True)
+        "Berry Burst (Draco Meteor)", 1, TeamContext(same_berry_species=2, latias=True)
     )
     assert with_latias == BerryBurstAmounts(16, 1)  # 14 + 2
     assert berry_burst_amounts(
-        "Berry Burst (Draco Meteor)", 6, BerryBurstTeam(same_berry_species=5, latias=True)
+        "Berry Burst (Draco Meteor)", 6, TeamContext(same_berry_species=5, latias=True)
     ) == BerryBurstAmounts(68, 5)  # 58 + 10
     # Out-of-range species count clamps to the table.
     assert berry_burst_amounts(
-        "Berry Burst (Draco Meteor)", 4, BerryBurstTeam(same_berry_species=9)
+        "Berry Burst (Draco Meteor)", 4, TeamContext(same_berry_species=9)
     ) == BerryBurstAmounts(49, 4)
 
 
@@ -617,14 +620,14 @@ def test_lunar_blessing_berries_grow_with_same_berry_species() -> None:
     assert berry_burst_amounts(skill, 1) == BerryBurstAmounts(5, 1)
     assert berry_burst_amounts(skill, 6) == BerryBurstAmounts(25, 1)
     assert berry_burst_amounts(
-        skill, 4, BerryBurstTeam(same_berry_species=3)
+        skill, 4, TeamContext(same_berry_species=3)
     ) == BerryBurstAmounts(25, 2)
     assert berry_burst_amounts(
-        skill, 6, BerryBurstTeam(same_berry_species=5)
+        skill, 6, TeamContext(same_berry_species=5)
     ) == BerryBurstAmounts(32, 9)
     # Latias only matters to Draco Meteor; out-of-range counts clamp to the table.
     assert berry_burst_amounts(
-        skill, 6, BerryBurstTeam(same_berry_species=9, latias=True)
+        skill, 6, TeamContext(same_berry_species=9, latias=True)
     ) == BerryBurstAmounts(32, 9)
 
 
@@ -635,3 +638,40 @@ def test_disguise_adds_the_expected_great_success() -> None:
     assert berry_burst_triggers("Berry Burst (Disguise)", 3.0) == pytest.approx(3 + 2 * p)
     assert berry_burst_triggers("Berry Burst", 3.0) == 3.0
     assert berry_burst_triggers("Berry Burst (Disguise)", 0.0) == 0.0
+
+
+# --- Skills that grant helps to team members ----------------------------------
+
+
+def test_extra_helpful_grants_its_helps_to_one_member() -> None:
+    assert help_grant("Extra Helpful S", 7) == HelpGrantPerTrigger(12, 1)
+
+
+def test_helper_boost_grants_every_member_more_with_same_berry_species() -> None:
+    assert help_grant("Helper Boost", 1) == HelpGrantPerTrigger(2, 5)
+    assert help_grant("Helper Boost", 6) == HelpGrantPerTrigger(5, 5)
+    assert help_grant("Helper Boost", 6, TeamContext(same_berry_species=3)) == (
+        HelpGrantPerTrigger(8, 5)
+    )
+    assert help_grant("Helper Boost", 1, TeamContext(same_berry_species=5)) == (
+        HelpGrantPerTrigger(6, 5)
+    )
+    assert max_skill_level("Helper Boost") == 6
+
+
+def test_heal_pulse_grants_two_members_more_with_latios() -> None:
+    skill = "Energizing Cheer S (Heal Pulse)"
+    assert help_grant(skill, 1) == HelpGrantPerTrigger(1, 2)
+    assert help_grant(skill, 6) == HelpGrantPerTrigger(4, 2)
+    assert help_grant(skill, 6, TeamContext(latios=True)) == HelpGrantPerTrigger(7, 2)
+
+
+def test_other_skills_grant_no_helps() -> None:
+    assert help_grant("Energizing Cheer S", 6) is None
+    assert help_grant("Charge Strength S", 6) is None
+
+
+def test_moonlight_shares_energy_half_the_time() -> None:
+    assert moonlight_shared_energy("Charge Energy S (Moonlight)", 1) == pytest.approx(0.5 * 6.3)
+    assert moonlight_shared_energy("Charge Energy S (Moonlight)", 7) == pytest.approx(0.5 * 22.8)
+    assert moonlight_shared_energy("Charge Energy S", 6) is None

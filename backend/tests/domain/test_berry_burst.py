@@ -1,9 +1,9 @@
 import pytest
 
-from sleepmon.domain.berry_burst import BurstMember, berry_burst_team_for, teammate_berries
+from sleepmon.domain.berry_burst import BurstMember, team_context_for, teammate_berries
 from sleepmon.domain.map_bonuses import MapBonuses
 from sleepmon.domain.production import BerryYield, daily_production
-from sleepmon.domain.skills import BerryBurstTeam
+from sleepmon.domain.skills import TeamContext
 from sleepmon.domain.species import SEED_SPECIES
 from sleepmon.domain.value_objects import Berry, WeeklyBonus
 
@@ -71,7 +71,7 @@ def test_yields_merge_by_berry_and_sort_by_strength() -> None:
     assert [y.berry for y in result] == [Berry.YACHE, Berry.GREPA]
 
 
-def test_berry_burst_team_counts_distinct_dragons_and_latias_in_other_slots() -> None:
+def test_team_context_counts_distinct_dragons_and_latias_in_other_slots() -> None:
     latios = _BY_NAME["Latios"]
     roster = [
         (0, latios),
@@ -81,16 +81,16 @@ def test_berry_burst_team_counts_distinct_dragons_and_latias_in_other_slots() ->
         (3, _BY_NAME["Dragonite"]),  # same species counts once
         (4, _BY_NAME["Pikachu"]),
     ]
-    assert berry_burst_team_for(0, latios, roster) == BerryBurstTeam(
+    assert team_context_for(0, latios, roster) == TeamContext(
         same_berry_species=3, latias=False
     )
     with_latias = [*roster, (4, _BY_NAME["Latias"])]
-    assert berry_burst_team_for(0, latios, with_latias) == BerryBurstTeam(
+    assert team_context_for(0, latios, with_latias) == TeamContext(
         same_berry_species=4, latias=True
     )
 
 
-def test_berry_burst_team_counts_species_sharing_the_members_berry() -> None:
+def test_team_context_counts_species_sharing_the_members_berry() -> None:
     cresselia = _BY_NAME["Cresselia"]
     roster = [
         (0, cresselia),
@@ -99,11 +99,18 @@ def test_berry_burst_team_counts_species_sharing_the_members_berry() -> None:
         (3, _BY_NAME["Gardevoir"]),  # same species counts once
         (4, _BY_NAME["Latios"]),  # Yache: doesn't count for Cresselia
     ]
-    assert berry_burst_team_for(0, cresselia, roster) == BerryBurstTeam(
-        same_berry_species=3, latias=False
+    assert team_context_for(0, cresselia, roster) == TeamContext(
+        same_berry_species=3, latias=False, latios=True
     )
 
 
-def test_berry_burst_team_floor_when_alone() -> None:
+def test_team_context_notes_latios_in_other_slots() -> None:
+    latias = _BY_NAME["Latias"]
+    roster = [(0, latias), (1, _BY_NAME["Latios"])]
+    assert team_context_for(0, latias, roster).latios is True
+    assert team_context_for(0, latias, [(0, latias), (0, _BY_NAME["Latios"])]).latios is False
+
+
+def test_team_context_floor_when_alone() -> None:
     latios = _BY_NAME["Latios"]
-    assert berry_burst_team_for(0, latios, [(0, latios)]) == BerryBurstTeam()
+    assert team_context_for(0, latios, [(0, latios)]) == TeamContext()

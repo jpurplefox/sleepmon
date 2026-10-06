@@ -122,6 +122,8 @@ export interface MemberProduction {
   // Berry Burst / Lunar Blessing: own berries per day and berries of each teammate per day.
   skill_berry_amount: number | null;
   skill_berries_per_teammate: number | null;
+  // Members each help grant reaches: 1, 2, or 5 (the whole team); null without grants.
+  skill_help_targets?: number | null;
   // Otras salidas de la main skill (una por especie según su tipo; el resto null).
   skill_energy: number | null;
   skill_cooking_ingredients: number | null;
@@ -360,6 +362,8 @@ export interface Production {
   skill_berry_strength: number | null;
   // Berry Burst: berries of each teammate per day (count only).
   skill_berries_per_teammate: number | null;
+  // Members each help grant reaches: 1, 2, or 5 (the whole team); null without grants.
+  skill_help_targets?: number | null;
   // Berry Burst: per-berry yield from teammates (null without a team).
   teammate_berries: BerryYield[] | null;
   // Extra Helpful: ingredients obtained from teammates (null without a team).
