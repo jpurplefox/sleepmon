@@ -37,6 +37,9 @@ Modela, por ahora, tres main skills:
 - **Berry Zone (Psystrike)**: only its Strength; the Berry Zone boost isn't modeled.
 - **Energy for Everyone S (Lunar Blessing)**: smaller team energy, plus Berry-Burst-like
   berries that grow with the species sharing Cresselia's berry.
+- **Extra Helpful S**, **Helper Boost** and **Heal Pulse**: helps granted to one, every,
+  or two team members (see ``help_grant``); the team pass turns them into production.
+- **Charge Energy S (Moonlight)**: also shares energy with a teammate half the time.
 - **Berry Burst** (+ Disguise, Draco Meteor): own berries plus berries of each
   teammate per trigger; see ``domain/berry_burst.py`` for the team half.
 
@@ -540,14 +543,15 @@ assert len(LUNAR_BLESSING_BERRIES) == len(BERRY_BURST_OWN)
 
 
 @dataclass(frozen=True, slots=True)
-class BerryBurstTeam:
-    """Team context Draco Meteor and Lunar Blessing read; the default is the floor."""
+class TeamContext:
+    """Team context some skills read; the default is the floor (alone)."""
 
     same_berry_species: int = 1  # distinct species sharing the member's berry, self included
-    latias: bool = False
+    latias: bool = False  # Draco Meteor's bonus
+    latios: bool = False  # Heal Pulse's bonus
 
 
-NO_BERRY_BURST_TEAM = BerryBurstTeam()
+NO_TEAM_CONTEXT = TeamContext()
 
 
 @dataclass(frozen=True, slots=True)
@@ -562,7 +566,7 @@ def bursts_berries(species: Species) -> bool:
 
 
 def berry_burst_amounts(
-    main_skill: str, skill_level: int, team: BerryBurstTeam = NO_BERRY_BURST_TEAM
+    main_skill: str, skill_level: int, team: TeamContext = NO_TEAM_CONTEXT
 ) -> BerryBurstAmounts | None:
     """Berries per trigger at ``skill_level`` (clamped 1..6) for Berry Burst and Lunar
     Blessing; None for skills that don't get berries."""
@@ -592,15 +596,75 @@ def berry_burst_triggers(main_skill: str, triggers: float) -> float:
     return triggers
 
 
+# --- Skills that grant helps to team members ---------------------------------------
+# Helper Boost: helps for every member, plus a bonus by same-berry species (1..5).
+HELPER_BOOST_HELPS: tuple[int, ...] = (2, 3, 3, 4, 4, 5)
+HELPER_BOOST_SAME_BERRY_BONUS: tuple[tuple[int, ...], ...] = (
+    (0, 0, 0, 0, 0, 0),
+    (0, 0, 0, 0, 1, 1),
+    (1, 1, 2, 2, 3, 3),
+    (2, 2, 3, 3, 4, 4),
+    (4, 4, 5, 5, 6, 6),
+)
+# Heal Pulse (Latias): helps for each of its two targets; more with Latios on the team.
+HEAL_PULSE_HELPS: tuple[int, ...] = (1, 2, 2, 3, 4, 4)
+HEAL_PULSE_LATIOS_HELPS: tuple[int, ...] = (1, 1, 2, 2, 2, 3)
+WHOLE_TEAM: Final = 5  # targets count that reaches every member
+
+assert all(len(row) == len(HELPER_BOOST_HELPS) for row in HELPER_BOOST_SAME_BERRY_BONUS)
+assert len(HEAL_PULSE_HELPS) == len(HEAL_PULSE_LATIOS_HELPS)
+
+
+@dataclass(frozen=True, slots=True)
+class HelpGrantPerTrigger:
+    helps: int  # helps each target gets per trigger
+    targets: int  # random members reached per trigger (WHOLE_TEAM: everyone)
+
+
+def help_grant(
+    main_skill: str, skill_level: int, team: TeamContext = NO_TEAM_CONTEXT
+) -> HelpGrantPerTrigger | None:
+    """Helps a trigger grants team members; None for skills that grant none."""
+    if main_skill.startswith(_EXTRA_HELPFUL_PREFIX):
+        return HelpGrantPerTrigger(extra_helpful_amount(skill_level), 1)
+    if main_skill.startswith("Helper Boost"):
+        level = min(max(skill_level, 1), len(HELPER_BOOST_HELPS))
+        species = min(max(team.same_berry_species, 1), len(HELPER_BOOST_SAME_BERRY_BONUS))
+        bonus = HELPER_BOOST_SAME_BERRY_BONUS[species - 1][level - 1]
+        return HelpGrantPerTrigger(HELPER_BOOST_HELPS[level - 1] + bonus, WHOLE_TEAM)
+    if main_skill.startswith("Energizing Cheer S (Heal Pulse)"):
+        level = min(max(skill_level, 1), len(HEAL_PULSE_HELPS))
+        helps = HEAL_PULSE_HELPS[level - 1]
+        if team.latios:
+            helps += HEAL_PULSE_LATIOS_HELPS[level - 1]
+        return HelpGrantPerTrigger(helps, 2)
+    return None
+
+
+# Moonlight (Umbreon): half the time a trigger also restores energy to a teammate.
+MOONLIGHT_SHARE_CHANCE: Final[float] = 0.5
+MOONLIGHT_SHARED_ENERGY: tuple[float, ...] = (6.3, 7.7, 10.1, 13.0, 17.2, 22.8)
+
+
+def moonlight_shared_energy(main_skill: str, skill_level: int) -> float | None:
+    """Expected energy per trigger Moonlight gives a teammate; None for other skills."""
+    if not main_skill.startswith("Charge Energy S (Moonlight)"):
+        return None
+    level = min(max(skill_level, 1), len(MOONLIGHT_SHARED_ENERGY))
+    return MOONLIGHT_SHARE_CHANCE * MOONLIGHT_SHARED_ENERGY[level - 1]
+
+
 def max_skill_level(main_skill: str) -> int:
     """The real cap of a given main skill: the length of its own amounts table.
 
     Most skills cap at MAX_SKILL_LEVEL (7); Energy for Everyone S, Tasty Chance S,
-    Charge Energy S, Energizing Cheer S, Berry Burst, and Berry Zone (Psystrike) cap at
-    6; Dream Shard Magnet S reaches 8. Matched by prefix like the amount functions.
+    Charge Energy S, Energizing Cheer S, Berry Burst, Berry Zone (Psystrike), and Helper
+    Boost cap at 6; Dream Shard Magnet S reaches 8. Matched by prefix like the amount functions.
     """
     if main_skill.startswith("Berry Zone (Psystrike)"):
         return len(BERRY_ZONE_PSYSTRIKE_STRENGTH_AMOUNTS)
+    if main_skill.startswith("Helper Boost"):
+        return len(HELPER_BOOST_HELPS)
     if main_skill.startswith("Dream Shard Magnet S"):
         return len(DREAM_SHARD_MAGNET_S_AMOUNTS)
     if main_skill.startswith(_BERRY_BURST_PREFIX):

@@ -249,8 +249,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.extraTastyTitle":
       "Aumento acumulado de Extra Tasty por día (disparos × % del nivel) — Tasty Chance S",
     "card.helpMult": "de ayuda",
+    "card.helpMultTwo": "de ayuda · a 2 Pokémon",
+    "card.helpMultTeam": "de ayuda · a cada Pokémon",
     "card.helpMultTitle":
-      "Multiplicador de ayuda total del día (disparos × ×N del nivel)",
+      "Ayudas por día que la skill le da a cada Pokémon que alcanza (disparos × ×N del nivel)",
     "card.selfEnergy": "de energía a sí mismo",
     "card.selfEnergyTitle":
       "Energía que la skill recupera por día al propio Pokémon",
@@ -735,8 +737,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.extraTastyTitle":
       "Accumulated Extra Tasty boost per day (triggers × level %) — Tasty Chance S",
     "card.helpMult": "help",
+    "card.helpMultTwo": "help · to 2 Pokémon",
+    "card.helpMultTeam": "help · to each Pokémon",
     "card.helpMultTitle":
-      "Total daily help multiplier (triggers × ×N of the level)",
+      "Helps per day the skill gives each Pokémon it reaches (triggers × ×N of the level)",
     "card.selfEnergy": "Energy to itself",
     "card.selfEnergyTitle":
       "Energy the skill restores per day to the Pokémon itself",

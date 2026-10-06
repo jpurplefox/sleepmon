@@ -64,6 +64,7 @@ class MemberProductionOut(msgspec.Struct):
     skill_random_energy: float | None
     skill_berry_amount: float | None = None
     skill_berries_per_teammate: float | None = None
+    skill_help_targets: int | None = None
 
 
 class MemberOut(msgspec.Struct):
@@ -192,6 +193,7 @@ class ProductionOut(msgspec.Struct):
     skill_berry_amount: float | None = None
     skill_berry_strength: float | None = None
     skill_berries_per_teammate: float | None = None
+    skill_help_targets: int | None = None
     teammate_berries: list[BerryYieldOut] | None = None
     teammate_ingredients: list[SlotProductionOut] | None = None
 
@@ -373,7 +375,6 @@ class TeamProductionOut(msgspec.Struct):
     skill_self_energy: float | None
     skill_dream_shards: float | None
     skill_tasty_chance: float | None
-    skill_extra_helpful: float | None
     skill_random_energy: float | None
     skill_cooking_ingredients: float | None
     skill_ingredient_total: float | None

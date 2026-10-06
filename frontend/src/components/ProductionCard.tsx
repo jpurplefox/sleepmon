@@ -779,7 +779,16 @@ export function ProductionCard({
                 <span title={t("card.helpMultTitle")}>
                   <IconMagnifier /> ×{fmt(d.skill_extra_helpful)}{" "}
                   <Delta value={d.skill_extra_helpful} base={base?.skill_extra_helpful ?? null} />
-                  <span className="muted"> {t("card.helpMult")}</span>
+                  <span className="muted">
+                    {" "}
+                    {t(
+                      d.skill_help_targets === 2
+                        ? "card.helpMultTwo"
+                        : (d.skill_help_targets ?? 1) > 2
+                          ? "card.helpMultTeam"
+                          : "card.helpMult",
+                    )}
+                  </span>
                 </span>
               </div>
             )}

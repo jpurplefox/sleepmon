@@ -217,6 +217,14 @@ def test_skill_effects_energy_only_contributing_member() -> None:
     assert energy.triggers == 3.0  # solo los disparos de 'a'
 
 
+def test_granted_helps_are_not_repeated_as_a_skill_effect() -> None:
+    # Already turned into production by the team pass; no "other skills" line.
+    helper = dataclasses.replace(_fake_daily(), skill_extra_helpful=12.0)
+    result = team_production([("id-a", "Arcanine", helper)])
+    assert "extra_helpful" not in {e.kind for e in result.skill_effects}
+    assert not hasattr(result, "skill_extra_helpful")
+
+
 def test_skill_effects_strength_entry() -> None:
     """Un miembro con skill_strength → entry 'strength' con su total y triggers."""
     a = _fake_daily(skill_strength=200.0, skill_triggers=2.0)

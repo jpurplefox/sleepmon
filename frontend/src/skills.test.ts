@@ -142,7 +142,7 @@ describe("variants with their own tables", () => {
       "Restores 3 Energy to each Pokémon on your team, and gets 5 Berries plus 1 of each of the Berries other Pokémon on your team collect. More with more species sharing its Berry on the team.",
     );
     expect(skillDescription("Energizing Cheer S (Heal Pulse)", 6, "en")).toBe(
-      "Restores 22 Energy to two random Pokémon on your team and instantly gets you ×4 the usual help from those Pokémon.",
+      "Restores 22 Energy to two random Pokémon on your team and instantly gets you ×4 the usual help from those Pokémon. More with Latios on the team.",
     );
     expect(skillDescription("Energizing Cheer S (Nuzzle)", 1, "en")).toBe(
       "Restores 9 Energy to one random Pokémon on your team. If you're lucky, that Pokémon also gets a main skill activation bonus.",
@@ -184,6 +184,21 @@ describe("skills with a second effect", () => {
   it("describes Stockpile with its average strength per trigger", () => {
     expect(skillDescription("Charge Strength S (Stockpile)", 1, "en")).toBe(
       "Chooses Stockpile or Spit Up. Spit Up gives Snorlax Strength based on what was stockpiled: about 600 per trigger on average.",
+    );
+  });
+});
+
+describe("team help and energy skills", () => {
+  it("describes Helper Boost and caps it at 6", () => {
+    expect(skillDescription("Helper Boost", 6, "en")).toBe(
+      "Instantly gets you ×5 the usual help from all Pokémon on your team. More with more species sharing its Berry on the team.",
+    );
+    expect(maxSkillLevel("Helper Boost")).toBe(6);
+  });
+
+  it("describes Moonlight's shared energy", () => {
+    expect(skillDescription("Charge Energy S (Moonlight)", 1, "es")).toBe(
+      "Restaura 12 de Energía al usuario. A veces restaura además 6,3 de Energía a otro Pokémon.",
     );
   });
 });

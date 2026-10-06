@@ -1,9 +1,10 @@
-"""Extra Helpful S's team half (pure): what the helps it grants bring.
+"""The team half of skills that grant helps (pure): what those helps bring.
 
-Each trigger grants a random team member, the user included, xN its usual help. On
-average every occupied slot gets the same share; inside a split slot each entry gets
-its weight of it. What those helps bring is credited to the skill's owner, like
-Berry Burst's teammate berries.
+Each trigger grants ``targets`` random team members, the user included, xN their usual
+help (Extra Helpful: one; Heal Pulse: two; Helper Boost: everyone). On average every
+occupied slot gets ``min(targets, slots) / slots`` of it; inside a split slot each
+entry gets its weight of that. What those helps bring is credited to the skill's
+owner, like Berry Burst's teammate berries.
 """
 
 from __future__ import annotations
@@ -35,14 +36,14 @@ def _add_ingredients(
 
 
 def extra_help_yields(members: Sequence[BurstMember]) -> dict[str, HelpedYields]:
-    """Yields of the helps each Extra Helpful member grants, keyed by its id."""
+    """Yields of the helps each member's skill grants, keyed by its id."""
     occupied = len({m.slot for m in members})
     result: dict[str, HelpedYields] = {}
     for helper in members:
-        granted = helper.daily.skill_extra_helpful
-        if granted is None:
+        grant = helper.daily.help_grant
+        if grant is None:
             continue
-        per_slot = granted / occupied
+        per_slot = grant.per_target * min(grant.targets, occupied) / occupied
         own = helper.daily.help_yield
         berries: dict[Berry, tuple[float, float]] = {}
         ingredients: dict[Ingredient, float] = {}
