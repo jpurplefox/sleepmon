@@ -1029,4 +1029,4 @@ def test_berry_burst_fields_are_serialized(client: TestClient) -> None:
     member = next(m for m in team["members"] if m["species"] == "Sceptile")
     assert member["production"]["teammate_berries"][0]["berry"] == "Grepa"
     grepa = next(r for r in team["berries"] if r["berry"] == "Grepa")
-    assert [s["kind"] for s in grepa["sources"]] == ["helps", "berry_burst"]
+    assert [s["kind"] for s in grepa["sources"]] == ["helps", "skill"]

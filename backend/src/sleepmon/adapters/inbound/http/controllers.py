@@ -120,6 +120,14 @@ def _full_production_out(result: ProductionResult) -> ProductionOut:
                 for y in result.teammate_berries
             ]
         ),
+        teammate_ingredients=(
+            None
+            if result.teammate_ingredients is None
+            else [
+                SlotProductionOut(ingredient=s.ingredient, amount=s.amount)
+                for s in result.teammate_ingredients
+            ]
+        ),
     )
 
 

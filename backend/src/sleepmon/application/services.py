@@ -73,9 +73,16 @@ from sleepmon.domain.event_bonus import (
 from sleepmon.domain.map_bonuses import MapBonuses
 from sleepmon.domain.ports import RecipeCatalog, SpeciesCatalog, TeamRepository
 from sleepmon.domain.pot import pot_capacity
-from sleepmon.domain.production import DailyProduction, daily_production, scale_daily
+from sleepmon.domain.production import (
+    BerryYield,
+    DailyProduction,
+    SlotProduction,
+    daily_production,
+    scale_daily,
+)
 from sleepmon.domain.progress import validate_pot_size
 from sleepmon.domain.species import Species
+from sleepmon.domain.team_helps import HelpedYields, extra_help_yields
 from sleepmon.domain.value_objects import (
     Berry,
     Ingredient,
@@ -87,6 +94,28 @@ from sleepmon.domain.value_objects import (
     Type,
     WeeklyBonus,
 )
+
+
+def _with_granted_helps(daily: DailyProduction, helped: HelpedYields) -> DailyProduction:
+    """Adds what a member's granted helps bring to its own production."""
+    berries: dict[Berry, tuple[float, float]] = {}
+    for y in (*daily.teammate_berries, *helped.teammate_berries):
+        prev_amount, prev_strength = berries.get(y.berry, (0.0, 0.0))
+        berries[y.berry] = (prev_amount + y.amount, prev_strength + y.strength)
+    ingredients: dict[Ingredient, float] = {}
+    for slot in (*daily.skill_ingredients, *helped.own_ingredients):
+        ingredients[slot.ingredient] = ingredients.get(slot.ingredient, 0.0) + slot.amount
+    yields = (BerryYield(b, a, st) for b, (a, st) in berries.items())
+    return replace(
+        daily,
+        berry_amount=daily.berry_amount + helped.own_berries,
+        berry_strength=daily.berry_strength + helped.own_berry_strength,
+        skill_berry_amount=(daily.skill_berry_amount or 0.0) + helped.own_berries,
+        skill_berry_strength=(daily.skill_berry_strength or 0.0) + helped.own_berry_strength,
+        teammate_berries=tuple(sorted(yields, key=lambda y: y.strength, reverse=True)),
+        skill_ingredients=tuple(SlotProduction(i, a) for i, a in ingredients.items()),
+        teammate_ingredients=helped.teammate_ingredients,
+    )
 
 
 def _production_result(daily: DailyProduction, *, in_team: bool = False) -> ProductionResult:
@@ -132,7 +161,16 @@ def _production_result(daily: DailyProduction, *, in_team: bool = False) -> Prod
         skill_berries_per_teammate=daily.skill_berries_per_teammate,
         teammate_berries=(
             [BerryYieldDTO(y.berry.value, y.amount, y.strength) for y in daily.teammate_berries]
-            if in_team and daily.skill_berries_per_teammate is not None
+            if in_team
+            and (
+                daily.skill_berries_per_teammate is not None
+                or daily.skill_extra_helpful is not None
+            )
+            else None
+        ),
+        teammate_ingredients=(
+            [SlotAmount(s.ingredient.value, s.amount) for s in daily.teammate_ingredients]
+            if in_team and daily.skill_extra_helpful is not None
             else None
         ),
     )
@@ -595,14 +633,18 @@ class DefaultProductionService(ProductionService):
                 BurstMember(entry.id, slot_index, cfg.species, cfg.level, weight, scaled)
             )
 
-        # Berry Burst's team half: what each burster gets from its teammates.
+        # Team halves of the skills: Berry Burst's teammate berries and what Extra
+        # Helpful's granted helps bring, both credited to the skill's owner.
         from_teammates = teammate_berries(members, map_bonuses)
+        from_helps = extra_help_yields(members)
         entries: list[tuple[str, str, DailyProduction]] = []
         member_productions: dict[str, ProductionResult] = {}
         for m in members:
             daily = m.daily
             if m.id in from_teammates:
                 daily = replace(daily, teammate_berries=from_teammates[m.id])
+            if m.id in from_helps:
+                daily = _with_granted_helps(daily, from_helps[m.id])
             member_productions[m.id] = _production_result(daily, in_team=True)
             entries.append((m.id, m.species.name, daily))
 

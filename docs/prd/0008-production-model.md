@@ -100,6 +100,17 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
   the ingredients. Lunar Blessing also gets berries, like Berry Burst (see
   [Berry Burst](0013-berry-burst.md)). Second effects that need more modeling (Heal
   Pulse's extra helps, Nuzzle's skill bonus, Present's candy) aren't counted yet.
+- **Extra Helpful S** grants ×N the usual help of a random team member, itself
+  included. Without a team (Comparison, the Box) it shows as a **count** — ×N helps per
+  day, not converted. In **Team Analysis** every occupied slot gets an even share of
+  those helps (a split slot shares its part by weight), each worth **one normal help of
+  that member** — its berry/ingredient split, at its level, with its map bonus. What they
+  bring is **credited to the Extra Helpful Pokémon**, like Berry Burst's teammate
+  berries. Its own share joins its skill berries and skill ingredients (broken down
+  helps / skill). Teammates' berries land on their berry rows (tooltip: *Main skill
+  (Pokémon)*) and, on its card, in the **generic berry** row; teammates' ingredients go
+  in a **generic ingredient** row whose tooltip lists each ingredient. Both count toward
+  the team's berries and ingredients.
 - **Skills with two effects count both** when both are modeled: **Aura Sphere**
   (Lucario) gets dream shards *and* strength; **Cooking Assist S (Bulk Up)**
   (Heracross) gets random ingredients *and* raises the Extra Tasty rate, accumulated

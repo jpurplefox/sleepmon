@@ -74,10 +74,10 @@ class SkillEffectAgg:
 
 @dataclass(frozen=True, slots=True)
 class BerrySource:
-    """Where a team berry row's berries come from: helps, or one member's Berry Burst."""
+    """Where a team berry row's berries come from: helps, or one member's main skill."""
 
-    kind: str  # "helps" | "berry_burst"
-    member_id: str | None  # the burster; None for helps
+    kind: str  # "helps" | "skill"
+    member_id: str | None  # the skill's owner; None for helps
     species: str | None
     amount: float
     strength_base: float  # area bonus not applied
@@ -197,7 +197,7 @@ def _berry_rows(
         if prev is not None:
             amount, strength = amount + prev.amount, strength + prev.strength_base
         bursts[(berry, member_id)] = BerrySource(
-            "berry_burst", member_id, species, amount, strength
+            "skill", member_id, species, amount, strength
         )
 
     for member_id, species, daily in entries:
@@ -253,7 +253,7 @@ def team_production(
 
     ingredients: dict[Ingredient, float] = {}
     for daily in dailies:
-        for slot in (*daily.ingredients, *daily.skill_ingredients):
+        for slot in (*daily.ingredients, *daily.skill_ingredients, *daily.teammate_ingredients):
             ingredients[slot.ingredient] = ingredients.get(slot.ingredient, 0.0) + slot.amount
 
     total_berry_strength_base = sum(d.berry_strength + _teammate_strength(d) for d in dailies)

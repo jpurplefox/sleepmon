@@ -186,6 +186,8 @@ export function ProductionCard({
   const teammates = d?.teammate_berries ?? null; // null outside a team
   const teammateAmount = sumYields(teammates, "amount");
   const teammateStrength = sumYields(teammates, "strength");
+  const teammateIngs = d?.teammate_ingredients ?? [];
+  const teammateIngAmount = teammateIngs.reduce((acc, s) => acc + s.amount, 0);
 
   const marks = d
     ? expertMarks({
@@ -674,6 +676,30 @@ export function ProductionCard({
                   )}
                 </li>
               ))}
+              {teammateIngAmount > 0 && (
+                <li>
+                  <img
+                    className="mini-icon"
+                    src={statIcon("Ingredient Finding")}
+                    alt={t("card.teammateIngredientsTitle")}
+                    title={t("card.teammateIngredientsTitle")}
+                  />
+                  <Tooltip
+                    className="tooltip--sources"
+                    label={teammateIngs.map((s) => `${ingredient(s.ingredient)} ×${fmt(s.amount)}`).join(" · ")}
+                    content={teammateIngs.map((s) => (
+                      <Tooltip.Row key={s.ingredient}>
+                        <Tooltip.Label>
+                          <img src={ingredientIcon(s.ingredient)} alt="" /> {ingredient(s.ingredient)}
+                        </Tooltip.Label>
+                        <Tooltip.Value>×{fmt(s.amount)}</Tooltip.Value>
+                      </Tooltip.Row>
+                    ))}
+                  >
+                    <strong className="strength-value__cue">{fmt(teammateIngAmount)}</strong>
+                  </Tooltip>
+                </li>
+              )}
             </ul>
           </div>
 

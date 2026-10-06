@@ -240,6 +240,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.perTeammate": "bayas de cada compañero",
     "card.perTeammateTitle": "Bayas por compañero y por día; sin equipo no se calcula su fuerza",
     "card.teammateBerriesTitle": "Bayas que la main skill obtiene de los compañeros",
+    "card.teammateIngredientsTitle": "Ingredientes que la main skill obtiene de los compañeros",
     "card.fromHelpsTitle": "Por las ayudas",
     "card.dreamShards": "fragmentos de sueño",
     "card.dreamShardsTitle":
@@ -725,6 +726,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.perTeammate": "berries from each teammate",
     "card.perTeammateTitle": "Berries per teammate per day; without a team their strength isn't computed",
     "card.teammateBerriesTitle": "Berries the main skill gets from teammates",
+    "card.teammateIngredientsTitle": "Ingredients the main skill gets from teammates",
     "card.fromHelpsTitle": "From helps",
     "card.dreamShards": "Dream Shards",
     "card.dreamShardsTitle":
