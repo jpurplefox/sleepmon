@@ -19,6 +19,28 @@ class MemberIn(msgspec.Struct, forbid_unknown_fields=True):
     skill_level: int = 1  # nivel de la main skill
 
 
+class BerryYieldOut(msgspec.Struct):
+    berry: str
+    amount: float
+    strength: float
+
+
+class BerrySourceOut(msgspec.Struct):
+    kind: str
+    member_id: str | None
+    species: str | None
+    amount: float
+    strength_base: float
+
+
+class TeamBerryRowOut(msgspec.Struct):
+    berry: str
+    amount: float
+    strength: float
+    strength_base: float
+    sources: list[BerrySourceOut]
+
+
 class MemberProductionOut(msgspec.Struct):
     """Producción diaria resumida de un miembro (overview de la Caja)."""
 
@@ -40,6 +62,8 @@ class MemberProductionOut(msgspec.Struct):
     skill_tasty_chance: float | None
     skill_extra_helpful: float | None
     skill_random_energy: float | None
+    skill_berry_amount: float | None = None
+    skill_berries_per_teammate: float | None = None
 
 
 class MemberOut(msgspec.Struct):
@@ -165,6 +189,10 @@ class ProductionOut(msgspec.Struct):
     night_skill_chances: list[float]
     inventory: int
     inventory_fill_hours: float
+    skill_berry_amount: float | None = None
+    skill_berry_strength: float | None = None
+    skill_berries_per_teammate: float | None = None
+    teammate_berries: list[BerryYieldOut] | None = None
 
 
 class IngredientCountOut(msgspec.Struct):
@@ -358,3 +386,4 @@ class TeamProductionOut(msgspec.Struct):
     cooking_meals: list[MealFeasibilityOut]
     grand_total_strength: float
     grand_total_strength_base: float
+    berries: list[TeamBerryRowOut] = []

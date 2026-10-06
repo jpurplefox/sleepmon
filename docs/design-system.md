@@ -145,7 +145,10 @@ in components.
 the figure a line *reports*. Metrics with a
 game icon use it (berry → its berry, ingredient → its ingredient, dream shards →
 shard, strength → `CHARGE_STRENGTH_ICON`, cooking / pot expansion → `pot` /
-`POT_EXPANSION_ICON`, extra tasty → its icon, energy → its stat icon). Metrics with
+`POT_EXPANSION_ICON`, extra tasty → its icon, energy → its stat icon, berries obtained
+from teammates → the game's **generic berry**, `GENERIC_BERRY_ICON`, for a berry whose
+type the view can't name). A main skill is shown by its game skill icon where one
+exists (`mainSkillIcon` — Berry Burst has its own). Metrics with
 no game icon get one **designated** UI icon that stands for them, used the same way
 everywhere: procs / triggers → `IconSparkle`, help cadence → `IconClock`, helps →
 `IconHelp` (a helping hand), inventory fill time → `IconHourglass`, inventory
@@ -556,3 +559,16 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   for an ephemeral bonus rebuilt by hand, the comparison it bought was not worth the
   ambiguity. A binary modifier with no content of its own (the Good Camp Ticket)
   keeps its toggle.
+- **A breakdown names its sources by icon; a list goes in the tooltip.** *Question:*
+  Berry Burst brings berries from every teammate into one Pokémon's card — label that
+  line ("from teammates"), list each berry inline, or neither? *Resolution:* neither.
+  The line is the game's **generic berry** plus the total, no label, and its tooltip
+  lists one row per berry type. The strength breakdown names each source by its icon —
+  own berry, a strength skill's icon, the generic berry for teammates' berries — the
+  same `.prod-ing__breakdown` shape the card already uses. In the team's berry rows,
+  where the type *is* known, those berries simply add to their own row and the skill's
+  share lives in that row's strength tooltip. *Why:* the icon already says what the
+  figure is, so a label would only repeat it in a narrow card; a per-type list is detail
+  you reach for, which is what the tooltip is for (§ Tooltip), and keeping berries on
+  their own row keeps "everything that yields strength is in Berries" true without a
+  second, parallel row.

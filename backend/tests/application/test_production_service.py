@@ -5,12 +5,14 @@ import pytest
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.dto import (
+    BerrySourceDTO,
     EventEffectInput,
     MealSelectionInput,
     ProductionInput,
     SlotEntryInput,
     SlotInput,
     TeamProductionInput,
+    TeamProductionResult,
 )
 from sleepmon.application.services import DefaultProductionService
 from sleepmon.domain.catalog_data import MAX_RECIPE_LEVEL
@@ -1132,3 +1134,86 @@ def test_team_rejects_too_many_effects(production_service: DefaultProductionServ
         production_service.compute_team_production(
             _team(event_effects=[_fx("extra_berries", 1)] * 17)
         )
+
+
+_SCEPTILE = {"species": "Sceptile", "ingredients": ["Fancy Egg", "Fancy Egg", "Fancy Egg"]}
+_LATIOS = {"species": "Latios", "ingredients": ["Snoozy Tomato"] * 3}
+_LATIAS = {"species": "Latias", "ingredients": ["Snoozy Tomato"] * 3}
+
+
+def test_comparison_exposes_berry_burst_count_without_teammates(
+    production_service: DefaultProductionService,
+) -> None:
+    result = production_service.compute_production(_pokemon(**_SCEPTILE, nature="", sub_skills=[]))
+    assert result.skill_berry_amount == pytest.approx(result.skill_triggers * 11)
+    assert result.skill_berries_per_teammate == pytest.approx(result.skill_triggers * 1)
+    assert result.teammate_berries is None
+
+
+def test_team_gives_the_burster_its_teammates_berries(
+    production_service: DefaultProductionService,
+) -> None:
+    result = production_service.compute_team_production(
+        TeamProductionInput(
+            slots=[
+                SlotInput(entries=[_entry("s", **_SCEPTILE)]),
+                SlotInput(entries=[_entry("p")]),
+            ],
+            meals=[],
+        )
+    )
+    sceptile = next(m for m in result.members if m.id == "s").production
+    pikachu = next(m for m in result.members if m.id == "p").production
+    assert sceptile.teammate_berries is not None
+    assert [y.berry for y in sceptile.teammate_berries] == ["Grepa"]
+    assert pikachu.teammate_berries is None
+    grepa = next(r for r in result.berries if r.berry == "Grepa")
+    assert [s.kind for s in grepa.sources] == ["helps", "berry_burst"]
+    assert grepa.sources[1].member_id == "s"
+
+
+def test_team_draco_meteor_reads_latias_from_the_roster(
+    production_service: DefaultProductionService,
+) -> None:
+    def latios_own(*others: dict[str, object]) -> float:
+        slots = [SlotInput(entries=[_entry("l", **_LATIOS)])]
+        slots += [SlotInput(entries=[_entry(f"o{i}", **o)]) for i, o in enumerate(others)]
+        team = production_service.compute_team_production(
+            TeamProductionInput(slots=slots, meals=[])
+        )
+        prod = next(m for m in team.members if m.id == "l").production
+        assert prod.skill_berry_amount is not None
+        return prod.skill_berry_amount / prod.skill_triggers
+
+    assert latios_own() == pytest.approx(12)
+    assert latios_own(_LATIAS) == pytest.approx(16)  # 2 Dragon species + Latias
+
+
+def test_berry_burst_burster_weight_is_applied_exactly_once(
+    production_service: DefaultProductionService,
+) -> None:
+    """Splitting the burster's slot 50/50 halves its teammate berries, not quarters them."""
+
+    def team(slot0: list[SlotEntryInput]) -> TeamProductionResult:
+        return production_service.compute_team_production(
+            TeamProductionInput(
+                slots=[SlotInput(entries=slot0), SlotInput(entries=[_entry("p")])],
+                meals=[None, None, None],
+            )
+        )
+
+    def grepa_burst(result: TeamProductionResult, member_id: str) -> BerrySourceDTO:
+        row = next(r for r in result.berries if r.berry == "Grepa")
+        return next(
+            s for s in row.sources if s.kind == "berry_burst" and s.member_id == member_id
+        )
+
+    solo = team([_entry("s", 1.0, **_SCEPTILE)])
+    split = team([_entry("s", 0.5, **_SCEPTILE), _entry("x", 0.5)])
+
+    solo_s = next(m for m in solo.members if m.id == "s").production.teammate_berries
+    split_s = next(m for m in split.members if m.id == "s").production.teammate_berries
+    assert solo_s and split_s
+    assert split_s[0].amount == pytest.approx(solo_s[0].amount * 0.5)
+    assert split_s[0].strength == pytest.approx(solo_s[0].strength * 0.5)
+    assert grepa_burst(split, "s").amount == pytest.approx(grepa_burst(solo, "s").amount * 0.5)

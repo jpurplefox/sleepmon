@@ -11,6 +11,8 @@ from litestar.status_codes import HTTP_200_OK, HTTP_201_CREATED
 
 from sleepmon.adapters.inbound.http.guards import require_user
 from sleepmon.adapters.inbound.http.schemas import (
+    BerrySourceOut,
+    BerryYieldOut,
     CatalogOut,
     DistributionsOut,
     ExpertSpeedOut,
@@ -37,6 +39,7 @@ from sleepmon.adapters.inbound.http.schemas import (
     SlotProductionOut,
     SpeciesOut,
     SubSkillOut,
+    TeamBerryRowOut,
     TeamProductionIn,
     TeamProductionOut,
 )
@@ -106,6 +109,17 @@ def _full_production_out(result: ProductionResult) -> ProductionOut:
         night_skill_chances=result.night_skill_chances,
         inventory=result.inventory,
         inventory_fill_hours=result.inventory_fill_hours,
+        skill_berry_amount=result.skill_berry_amount,
+        skill_berry_strength=result.skill_berry_strength,
+        skill_berries_per_teammate=result.skill_berries_per_teammate,
+        teammate_berries=(
+            None
+            if result.teammate_berries is None
+            else [
+                BerryYieldOut(berry=y.berry, amount=y.amount, strength=y.strength)
+                for y in result.teammate_berries
+            ]
+        ),
     )
 
 
@@ -134,6 +148,8 @@ def _production_out(production: MemberProduction | None) -> MemberProductionOut 
         skill_tasty_chance=production.skill_tasty_chance,
         skill_extra_helpful=production.skill_extra_helpful,
         skill_random_energy=production.skill_random_energy,
+        skill_berry_amount=production.skill_berry_amount,
+        skill_berries_per_teammate=production.skill_berries_per_teammate,
     )
 
 
@@ -490,6 +506,25 @@ class TeamProductionController(Controller):
             ],
             grand_total_strength=result.grand_total_strength,
             grand_total_strength_base=result.grand_total_strength_base,
+            berries=[
+                TeamBerryRowOut(
+                    berry=r.berry,
+                    amount=r.amount,
+                    strength=r.strength,
+                    strength_base=r.strength_base,
+                    sources=[
+                        BerrySourceOut(
+                            kind=s.kind,
+                            member_id=s.member_id,
+                            species=s.species,
+                            amount=s.amount,
+                            strength_base=s.strength_base,
+                        )
+                        for s in r.sources
+                    ],
+                )
+                for r in result.berries
+            ],
         )
 
 

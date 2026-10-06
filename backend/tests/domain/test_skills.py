@@ -1,7 +1,13 @@
+import pytest
+
 from sleepmon.domain.catalog_data import MAX_SKILL_LEVEL
 from sleepmon.domain.skills import (
+    BERRY_BURST_DISGUISE_OWN,
+    BERRY_BURST_OWN,
+    BERRY_BURST_PER_TEAMMATE,
     CHARGE_ENERGY_S_AMOUNTS,
     COOKING_POWER_UP_AMOUNTS,
+    DISGUISE_GREAT_SUCCESS_RATE,
     DREAM_SHARD_MAGNET_S_AMOUNTS,
     DREAM_SHARD_MAGNET_S_RANDOM_RANGES,
     ENERGIZING_CHEER_S_AMOUNTS,
@@ -10,6 +16,10 @@ from sleepmon.domain.skills import (
     INGREDIENT_DRAW_AMOUNTS,
     INGREDIENT_MAGNET_AMOUNTS,
     TASTY_CHANCE_S_AMOUNTS,
+    BerryBurstAmounts,
+    BerryBurstTeam,
+    berry_burst_amounts,
+    berry_burst_triggers,
     boosts_tasty_chance,
     charge_energy_amount,
     charge_strength_amount,
@@ -399,3 +409,57 @@ def test_dream_shard_magnet_reaches_eight() -> None:
 def test_every_other_skill_uses_the_general_cap() -> None:
     for skill in ("Ingredient Draw S", "Charge Strength M", "Cooking Power-Up S"):
         assert max_skill_level(skill) == MAX_SKILL_LEVEL
+
+
+# --- Berry Burst (+ Disguise, Draco Meteor) ------------------------------------
+
+
+def test_berry_burst_amounts_follow_the_table_up_to_level_6() -> None:
+    for level in range(1, 7):
+        assert berry_burst_amounts("Berry Burst", level) == BerryBurstAmounts(
+            BERRY_BURST_OWN[level - 1], BERRY_BURST_PER_TEAMMATE[level - 1]
+        )
+    assert berry_burst_amounts("Berry Burst", 1) == BerryBurstAmounts(11, 1)
+    assert berry_burst_amounts("Berry Burst", 6) == BerryBurstAmounts(30, 5)
+
+
+def test_berry_burst_level_above_6_yields_as_6() -> None:
+    assert berry_burst_amounts("Berry Burst", 7) == BerryBurstAmounts(30, 5)
+    assert max_skill_level("Berry Burst") == 6
+    assert max_skill_level("Berry Burst (Disguise)") == 6
+    assert max_skill_level("Berry Burst (Draco Meteor)") == 6
+
+
+def test_disguise_has_fewer_own_berries_and_the_same_per_teammate() -> None:
+    assert berry_burst_amounts("Berry Burst (Disguise)", 1) == BerryBurstAmounts(8, 1)
+    assert berry_burst_amounts("Berry Burst (Disguise)", 6) == BerryBurstAmounts(21, 5)
+    assert BERRY_BURST_DISGUISE_OWN == (8, 10, 15, 17, 19, 21)
+
+
+def test_draco_meteor_depends_on_dragon_species_and_latias() -> None:
+    alone = berry_burst_amounts("Berry Burst (Draco Meteor)", 1)
+    assert alone == BerryBurstAmounts(12, 1)
+    with_latias = berry_burst_amounts(
+        "Berry Burst (Draco Meteor)", 1, BerryBurstTeam(dragon_species=2, latias=True)
+    )
+    assert with_latias == BerryBurstAmounts(16, 1)  # 14 + 2
+    assert berry_burst_amounts(
+        "Berry Burst (Draco Meteor)", 6, BerryBurstTeam(dragon_species=5, latias=True)
+    ) == BerryBurstAmounts(68, 5)  # 58 + 10
+    # Out-of-range species count clamps to the table.
+    assert berry_burst_amounts(
+        "Berry Burst (Draco Meteor)", 4, BerryBurstTeam(dragon_species=9)
+    ) == BerryBurstAmounts(49, 4)
+
+
+def test_berry_burst_amounts_is_none_for_other_skills() -> None:
+    assert berry_burst_amounts("Charge Strength S", 3) is None
+
+
+def test_disguise_adds_the_expected_great_success() -> None:
+    assert DISGUISE_GREAT_SUCCESS_RATE == 0.185
+    p = 1 - (1 - 0.185) ** 3  # ≈ 0.4587
+    assert p == pytest.approx(0.4587, abs=1e-4)
+    assert berry_burst_triggers("Berry Burst (Disguise)", 3.0) == pytest.approx(3 + 2 * p)
+    assert berry_burst_triggers("Berry Burst", 3.0) == 3.0
+    assert berry_burst_triggers("Berry Burst (Disguise)", 0.0) == 0.0

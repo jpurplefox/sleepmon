@@ -280,3 +280,14 @@ def test_skill_level_defaults_to_one(service: DefaultTeamService) -> None:
 def test_skill_level_out_of_range_rejected_on_add(service: DefaultTeamService) -> None:
     with pytest.raises(ValidationError):
         service.add_member(UID, valid_input(skill_level=9))
+
+
+def test_box_overview_exposes_berry_burst_counts(service: DefaultTeamService) -> None:
+    service.add_member(
+        UID, valid_input(species="Sceptile", ingredients=["Fancy Egg"] * 3, sub_skills=[])
+    )
+    (_, production), = service.list_members_with_production(UID)
+    assert production is not None
+    # A Sceptile in the Box exposes its own skill berries and per-teammate count.
+    assert production.skill_berry_amount == pytest.approx(production.skill_triggers * 11)
+    assert production.skill_berries_per_teammate == pytest.approx(production.skill_triggers)

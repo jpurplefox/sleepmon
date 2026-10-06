@@ -17,11 +17,13 @@ from sleepmon.domain.event_bonus import (
 from sleepmon.domain.event_bonus import EventEffectKind as K
 from sleepmon.domain.map_bonuses import MapBonuses
 from sleepmon.domain.production import (
+    BerryYield,
     DailyProduction,
     SlotProduction,
     daily_production,
     scale_daily,
 )
+from sleepmon.domain.skills import BerryBurstTeam
 from sleepmon.domain.species import Species
 from sleepmon.domain.value_objects import (
     Berry,
@@ -1452,3 +1454,82 @@ def test_extra_berries_apply_to_night_overflow() -> None:
     # 2 berries on every help, overflow included; ignoring overflow would fall short.
     assert boosted.berry_amount == pytest.approx(2 * base.berry_amount)
     assert boosted.berry_amount > base.berry_amount
+
+
+def _burster(main_skill: str = "Berry Burst", berry: Berry = Berry.DURIN) -> Species:
+    return dataclasses.replace(
+        _species(main_skill=main_skill, specialty=Specialty.SKILLS), berry=berry
+    )
+
+
+def test_berry_burst_adds_own_berries_to_berry_amount_and_strength() -> None:
+    plain = daily_production(_burster("Test Skill"), _INGREDIENTS, level=30, skill_level=1)
+    prod = daily_production(_burster(), _INGREDIENTS, level=30, skill_level=1)
+    # Lv30 Durin is worth 61 per berry; level 1 gets 11 own berries per trigger.
+    assert prod.skill_berry_amount == pytest.approx(prod.skill_triggers * 11)
+    assert prod.skill_berry_strength == pytest.approx(prod.skill_berry_amount * 61)
+    assert prod.berry_amount == pytest.approx(plain.berry_amount + prod.skill_berry_amount)
+    assert prod.berry_strength == pytest.approx(prod.berry_amount * 61)
+    assert prod.skill_berries_per_teammate == pytest.approx(prod.skill_triggers * 1)
+    assert prod.teammate_berries == ()
+    assert prod.skill_strength is None  # not a strength skill
+
+
+def test_berry_burst_own_berries_get_the_favorite_multiplier() -> None:
+    prod = daily_production(
+        _burster(), _INGREDIENTS, level=30, skill_level=1,
+        map_bonuses=MapBonuses(subs=frozenset({Berry.DURIN})),
+    )
+    assert prod.skill_berry_strength == pytest.approx(prod.skill_berry_amount * 122)
+
+
+def test_disguise_adds_great_success_to_both_halves() -> None:
+    prod = daily_production(
+        _burster("Berry Burst (Disguise)"), _INGREDIENTS, level=30, skill_level=1
+    )
+    t = prod.skill_triggers
+    effective = t + 2 * (1 - 0.815**t)
+    assert prod.skill_berry_amount == pytest.approx(effective * 8)
+    assert prod.skill_berries_per_teammate == pytest.approx(effective * 1)
+
+
+def test_draco_meteor_reads_the_team_context() -> None:
+    latios = _burster("Berry Burst (Draco Meteor)", Berry.YACHE)
+    alone = daily_production(latios, _INGREDIENTS, level=30, skill_level=1)
+    paired = daily_production(
+        latios, _INGREDIENTS, level=30, skill_level=1,
+        berry_burst_team=BerryBurstTeam(dragon_species=2, latias=True),
+    )
+    assert alone.skill_berry_amount == pytest.approx(alone.skill_triggers * 12)
+    assert paired.skill_berry_amount == pytest.approx(paired.skill_triggers * 16)
+
+
+def test_event_skill_level_caps_berry_burst_at_6() -> None:
+    boosted = daily_production(
+        _burster(), _INGREDIENTS, level=30, skill_level=6,
+        event=EventBonus((EventEffect(K.SKILL_LEVEL, 5, EventScope()),)),
+    )
+    assert boosted.effective_skill_level == 6
+    assert boosted.skill_berry_amount == pytest.approx(boosted.skill_triggers * 30)
+
+
+def test_non_burster_has_no_berry_burst_fields() -> None:
+    prod = daily_production(_species(), _INGREDIENTS, level=30)
+    assert prod.skill_berry_amount is None
+    assert prod.skill_berry_strength is None
+    assert prod.skill_berries_per_teammate is None
+    assert prod.teammate_berries == ()
+
+
+def test_scale_daily_scales_berry_burst_fields() -> None:
+    prod = dataclasses.replace(
+        daily_production(_burster(), _INGREDIENTS, level=30, skill_level=1),
+        teammate_berries=(BerryYield(Berry.GREPA, 10.0, 540.0),),
+    )
+    half = scale_daily(prod, 0.5)
+    assert half.skill_berry_amount == pytest.approx(prod.skill_berry_amount * 0.5)
+    assert half.skill_berry_strength == pytest.approx(prod.skill_berry_strength * 0.5)
+    assert half.skill_berries_per_teammate == pytest.approx(
+        prod.skill_berries_per_teammate * 0.5
+    )
+    assert half.teammate_berries == (BerryYield(Berry.GREPA, 5.0, 270.0),)

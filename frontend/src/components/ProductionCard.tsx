@@ -12,11 +12,12 @@ import { expertMarks, type MetricMark } from "../expertMarks";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { statIcon } from "../natures";
-import { CHARGE_STRENGTH_ICON, POT_EXPANSION_ICON } from "../skillIcons";
+import { CHARGE_STRENGTH_ICON, GENERIC_BERRY_ICON, POT_EXPANSION_ICON } from "../skillIcons";
 import { spriteUrl } from "../sprites";
 import { subSkillIcon } from "../subskills";
 import type {
   BerryRole,
+  BerryYield,
   Catalog,
   ExpertSpeed,
   MemberInput,
@@ -24,6 +25,7 @@ import type {
   WeeklyBonus,
 } from "../types";
 import { RibbonIcon } from "./RibbonIcon";
+import { Tooltip } from "./Tooltip";
 import {
   IconClock,
   IconClose,
@@ -42,6 +44,14 @@ import {
 const fmt = (n: number) => n.toFixed(2);
 // Magnitudes grandes (fuerza, fragmentos de sueño): enteros con separador de miles.
 const fmtInt = (n: number) => Math.round(n).toLocaleString("en-US");
+
+const sumYields = (ys: BerryYield[] | null, key: "amount" | "strength") =>
+  (ys ?? []).reduce((s, y) => s + y[key], 0);
+
+// Strength the card reports: berries (own skill berries included) + strength skills
+// + berries obtained from teammates (team only).
+const cardStrength = (p: Production) =>
+  p.berry_strength + (p.skill_strength ?? 0) + sumYields(p.teammate_berries, "strength");
 const pct = (n: number) => `${n.toFixed(1)}%`;
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 const TIER_CLASS: Record<string, string> = { Gold: "gold", Blue: "blue", Regular: "regular" };
@@ -172,6 +182,10 @@ export function ProductionCard({
     TIER_CLASS[catalog.sub_skills.find((s) => s.name === name)?.tier ?? "Regular"];
 
   const d = production;
+  const ownSkillBerries = d?.skill_berry_amount ?? 0;
+  const teammates = d?.teammate_berries ?? null; // null outside a team
+  const teammateAmount = sumYields(teammates, "amount");
+  const teammateStrength = sumYields(teammates, "strength");
 
   const marks = d
     ? expertMarks({
@@ -568,23 +582,68 @@ export function ProductionCard({
                 )}
                 <strong>{fmt(d.berry_amount)}</strong>
                 <Delta value={d.berry_amount} base={base?.berry_amount} />
+                {ownSkillBerries > 0 && species && (
+                  <span className="prod-ing__breakdown" title={t("card.berryBreakdownTitle")}>
+                    <img src={berryIcon(species.berry)} alt="" title={t("card.fromHelpsTitle")} />{" "}
+                    {fmt(d.berry_amount - ownSkillBerries)}
+                    <img src={statIcon("Main Skill Chance")} alt="" title={t("card.skillTitle")} />{" "}
+                    {fmt(ownSkillBerries)}
+                  </span>
+                )}
               </li>
+              {teammates && teammateAmount > 0 && (
+                <li>
+                  <img
+                    className="mini-icon"
+                    src={GENERIC_BERRY_ICON}
+                    alt={t("card.teammateBerriesTitle")}
+                    title={t("card.teammateBerriesTitle")}
+                  />
+                  <Tooltip
+                    className="tooltip--sources"
+                    label={teammates
+                      .map((y) => `${berry(y.berry)} ×${fmt(y.amount)}: ${fmtInt(y.strength)}`)
+                      .join(" · ")}
+                    content={teammates.map((y) => (
+                      <Tooltip.Row key={y.berry}>
+                        <Tooltip.Label>
+                          <img src={berryIcon(y.berry)} alt="" /> {berry(y.berry)} · ×{fmt(y.amount)}
+                        </Tooltip.Label>
+                        <Tooltip.Value>{fmtInt(y.strength)}</Tooltip.Value>
+                      </Tooltip.Row>
+                    ))}
+                  >
+                    <strong className="strength-value__cue">{fmt(teammateAmount)}</strong>
+                  </Tooltip>
+                </li>
+              )}
               {/* Fuerza a Snorlax: DIRECTA por bayas + INDIRECTA por la main skill
                   (Charge Strength). Se muestra acá, no en el bloque skill. */}
               <li>
                 <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt={t("card.strength")} title={t("card.strengthTitle")} />
-                <strong>{fmtInt(d.berry_strength + (d.skill_strength ?? 0))}</strong>
-                <Delta
-                  value={d.berry_strength + (d.skill_strength ?? 0)}
-                  base={base ? base.berry_strength + (base.skill_strength ?? 0) : undefined}
-                />
-                {d.skill_strength != null && (
+                <strong>{fmtInt(cardStrength(d))}</strong>
+                <Delta value={cardStrength(d)} base={base ? cardStrength(base) : undefined} />
+                {species && d.skill_strength != null && (
                   <span className="prod-ing__breakdown" title={t("card.strengthBreakdownTitle")}>
-                    {species && (
-                      <img src={berryIcon(species.berry)} alt="" title={t("card.fromBerriesTitle")} />
-                    )}{" "}
+                    <img src={berryIcon(species.berry)} alt="" title={t("card.fromBerriesTitle")} />{" "}
                     {fmtInt(d.berry_strength)}
                     <img src={statIcon("Main Skill Chance")} alt="" title={t("card.skillTitle")} /> {fmtInt(d.skill_strength)}
+                  </span>
+                )}
+                {species && d.skill_strength == null && teammateStrength > 0 && (
+                  <span className="prod-ing__breakdown" title={t("card.strengthBreakdownTitle")}>
+                    <img src={berryIcon(species.berry)} alt="" title={t("card.fromBerriesTitle")} />{" "}
+                    {fmtInt(d.berry_strength)}
+                    <img src={GENERIC_BERRY_ICON} alt="" title={t("card.teammateBerriesTitle")} />{" "}
+                    {fmtInt(teammateStrength)}
+                  </span>
+                )}
+                {species && d.skill_strength == null && teammateStrength === 0 && ownSkillBerries > 0 && (
+                  <span className="prod-ing__breakdown" title={t("card.strengthBreakdownTitle")}>
+                    <img src={berryIcon(species.berry)} alt="" title={t("card.fromHelpsTitle")} />{" "}
+                    {fmtInt(d.berry_strength - (d.skill_berry_strength ?? 0))}
+                    <img src={statIcon("Main Skill Chance")} alt="" title={t("card.skillTitle")} />{" "}
+                    {fmtInt(d.skill_berry_strength ?? 0)}
                   </span>
                 )}
               </li>
@@ -628,6 +687,16 @@ export function ProductionCard({
                 <IconSparkle /> {fmt(d.skill_triggers)} <Delta value={d.skill_triggers} base={base?.skill_triggers} />
               </span>
             </div>
+            {teammates === null && d.skill_berries_per_teammate != null && (
+              <div className="prod-card__line">
+                <span title={t("card.perTeammateTitle")}>
+                  <img className="mini-icon" src={GENERIC_BERRY_ICON} alt="" />{" "}
+                  +{fmt(d.skill_berries_per_teammate)}{" "}
+                  <Delta value={d.skill_berries_per_teammate} base={base?.skill_berries_per_teammate ?? null} />
+                  <span className="muted"> {t("card.perTeammate")}</span>
+                </span>
+              </div>
+            )}
             {d.skill_energy != null && (
               <div className="prod-card__line">
                 <span title={t("card.energyEachTitle")}>

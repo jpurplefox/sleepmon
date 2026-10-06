@@ -24,6 +24,8 @@ function makeProd(overrides: Partial<MemberProduction> = {}): MemberProduction {
     skill_tasty_chance: null,
     skill_extra_helpful: null,
     skill_random_energy: null,
+    skill_berry_amount: null,
+    skill_berries_per_teammate: null,
     ...overrides,
   };
 }

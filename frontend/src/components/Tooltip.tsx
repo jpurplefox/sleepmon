@@ -84,8 +84,14 @@ export function Tooltip({ content, label, children, className }: TooltipProps) {
 }
 
 /** A label/value row for a rich tooltip (e.g. a base/with-bonus breakdown). */
-Tooltip.Row = function TooltipRow({ children }: { children: React.ReactNode }) {
-  return <span className="tooltip__row">{children}</span>;
+Tooltip.Row = function TooltipRow({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <span className={className ? `tooltip__row ${className}` : "tooltip__row"}>{children}</span>;
 };
 
 Tooltip.Label = function TooltipLabel({ children }: { children: React.ReactNode }) {

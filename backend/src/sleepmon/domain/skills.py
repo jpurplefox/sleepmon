@@ -32,6 +32,8 @@ Modela, por ahora, tres main skills:
 - **Energizing Cheer S**: al dispararse restaura energía a OTRO Pokémon del equipo
   elegido al azar (cantidad según el nivel). Se reporta el total del día que reparte
   al equipo: ``disparos × cantidad_del_nivel``.
+- **Berry Burst** (+ Disguise, Draco Meteor): own berries plus berries of each
+  teammate per trigger; see ``domain/berry_burst.py`` for the team half.
 
 La main skill se identifica por su nombre (``Species.main_skill`` es un string del
 catálogo). Las variantes con pasivo extra —``Ingredient Draw S (Super Luck)``,
@@ -43,6 +45,9 @@ strength…), cada una suma su propia tabla/función acá sin tocar el resto.
 """
 
 from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Final
 
 from sleepmon.domain.catalog_data import MAX_SKILL_LEVEL
 from sleepmon.domain.species import Species
@@ -382,15 +387,92 @@ def energizing_cheer_amount(skill_level: int) -> int:
     return ENERGIZING_CHEER_S_AMOUNTS[level - 1]
 
 
+# --- Berry Burst ----------------------------------------------------------------
+# Each trigger gets own berries plus N of each teammate's berry. Caps at level 6.
+_BERRY_BURST_PREFIX = "Berry Burst"
+_DISGUISE = "Berry Burst (Disguise)"
+_DRACO_METEOR = "Berry Burst (Draco Meteor)"
+
+BERRY_BURST_OWN: tuple[int, ...] = (11, 14, 21, 24, 27, 30)
+BERRY_BURST_DISGUISE_OWN: tuple[int, ...] = (8, 10, 15, 17, 19, 21)
+BERRY_BURST_PER_TEAMMATE: tuple[int, ...] = (1, 2, 2, 3, 4, 5)
+# Disguise: chance per trigger of a Great Success (triples it), at most once a day.
+DISGUISE_GREAT_SUCCESS_RATE: Final[float] = 0.185
+# Draco Meteor: [skill_level - 1][dragon_species - 1] -> (own, per_teammate).
+DRACO_METEOR_AMOUNTS: tuple[tuple[tuple[int, int], ...], ...] = (
+    ((12, 1), (14, 1), (18, 1), (18, 2), (20, 2)),
+    ((21, 1), (24, 1), (29, 1), (30, 2), (33, 2)),
+    ((29, 1), (29, 2), (35, 2), (37, 3), (41, 3)),
+    ((38, 1), (39, 2), (42, 3), (45, 4), (49, 4)),
+    ((43, 2), (44, 3), (48, 4), (49, 5), (53, 5)),
+    ((48, 3), (50, 4), (55, 4), (55, 5), (58, 5)),
+)
+# Extra own berries for Draco Meteor when Latias is on the team.
+DRACO_METEOR_LATIAS_BONUS: tuple[int, ...] = (2, 4, 6, 8, 9, 10)
+
+assert len(BERRY_BURST_DISGUISE_OWN) == len(BERRY_BURST_OWN) == len(BERRY_BURST_PER_TEAMMATE)
+assert len(DRACO_METEOR_AMOUNTS) == len(DRACO_METEOR_LATIAS_BONUS) == len(BERRY_BURST_OWN)
+
+
+@dataclass(frozen=True, slots=True)
+class BerryBurstTeam:
+    """Team context Draco Meteor reads; the default is the floor (alone, no Latias)."""
+
+    dragon_species: int = 1  # distinct Dragon species on the team, self included
+    latias: bool = False
+
+
+NO_BERRY_BURST_TEAM = BerryBurstTeam()
+
+
+@dataclass(frozen=True, slots=True)
+class BerryBurstAmounts:
+    own: int  # own berries per trigger
+    per_teammate: int  # berries of each teammate per trigger
+
+
+def bursts_berries(species: Species) -> bool:
+    """Is the species' main skill in the Berry Burst family?"""
+    return species.main_skill.startswith(_BERRY_BURST_PREFIX)
+
+
+def berry_burst_amounts(
+    main_skill: str, skill_level: int, team: BerryBurstTeam = NO_BERRY_BURST_TEAM
+) -> BerryBurstAmounts | None:
+    """Berries per trigger at ``skill_level`` (clamped 1..6); None outside the family."""
+    if not main_skill.startswith(_BERRY_BURST_PREFIX):
+        return None
+    level = min(max(skill_level, 1), len(BERRY_BURST_OWN))
+    if main_skill.startswith(_DRACO_METEOR):
+        by_species = DRACO_METEOR_AMOUNTS[level - 1]
+        species = min(max(team.dragon_species, 1), len(by_species))
+        own, per_teammate = by_species[species - 1]
+        if team.latias:
+            own += DRACO_METEOR_LATIAS_BONUS[level - 1]
+        return BerryBurstAmounts(own, per_teammate)
+    own_table = BERRY_BURST_DISGUISE_OWN if main_skill.startswith(_DISGUISE) else BERRY_BURST_OWN
+    return BerryBurstAmounts(own_table[level - 1], BERRY_BURST_PER_TEAMMATE[level - 1])
+
+
+def berry_burst_triggers(main_skill: str, triggers: float) -> float:
+    """Effective triggers/day: Disguise adds 2 x P(at least one Great Success)."""
+    if main_skill.startswith(_DISGUISE):
+        prob_at_least_one: float = 1 - (1 - DISGUISE_GREAT_SUCCESS_RATE) ** triggers
+        return triggers + 2 * prob_at_least_one
+    return triggers
+
+
 def max_skill_level(main_skill: str) -> int:
     """The real cap of a given main skill: the length of its own amounts table.
 
     Most skills cap at MAX_SKILL_LEVEL (7); Energy for Everyone S, Tasty Chance S,
-    Charge Energy S, and Energizing Cheer S cap at 6; Dream Shard Magnet S reaches 8.
-    Matched by prefix like the amount functions in this module.
+    Charge Energy S, Energizing Cheer S, and Berry Burst cap at 6; Dream Shard Magnet S
+    reaches 8. Matched by prefix like the amount functions in this module.
     """
     if main_skill.startswith("Dream Shard Magnet S"):
         return len(DREAM_SHARD_MAGNET_S_AMOUNTS)
+    if main_skill.startswith(_BERRY_BURST_PREFIX):
+        return len(BERRY_BURST_OWN)
     if main_skill.startswith(_ENERGY_FOR_EVERYONE_PREFIX):
         return len(ENERGY_FOR_EVERYONE_AMOUNTS)
     if main_skill.startswith(_TASTY_CHANCE_PREFIX):
