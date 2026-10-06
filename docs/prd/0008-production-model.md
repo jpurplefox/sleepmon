@@ -91,6 +91,14 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
   or a **help multiplier**. **Berry Burst** yields **berries** — its own and its
   teammates' — and counts as berry strength (see [Berry Burst](0013-berry-burst.md)).
   The exact per-level amounts live in the domain catalog.
+- **Variants use their own numbers.** A variant shares its base skill's mechanic but
+  not necessarily its amounts: **Lunar Blessing**, **Nuzzle**, and **Present** have
+  smaller tables, and **Heal Pulse** gives its own amount to **two** teammates.
+  **Super Luck** and **Hyper Cutter** draw from a fixed selection of ingredients, not
+  the species'; random outcomes count at their expected value — Super Luck sometimes
+  gets **dream shards** instead of ingredients, Hyper Cutter sometimes gets **twice**
+  the ingredients. Second effects that need more modeling (Lunar Blessing's berries,
+  Heal Pulse's extra helps, Nuzzle's skill bonus, Present's candy) aren't counted yet.
 
 ### Total strength
 

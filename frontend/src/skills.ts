@@ -21,6 +21,8 @@ export function ingredientDrawAmount(level: number): number {
 // Energía que Energy for Everyone S restaura a CADA compañero por nivel (1..6).
 // E4E topa en nivel 6 (no tiene nivel 7).
 export const ENERGY_FOR_EVERYONE_AMOUNTS = [5, 7, 9, 11, 15, 18];
+// Lunar Blessing (Cresselia) has its own, smaller energy table.
+export const ENERGY_FOR_EVERYONE_LUNAR_BLESSING_AMOUNTS = [3, 4, 5, 7, 9, 11];
 
 export function restoresTeamEnergy(mainSkill: string | undefined): boolean {
   return !!mainSkill && mainSkill.startsWith("Energy for Everyone S");
@@ -34,6 +36,8 @@ export function energyForEveryoneAmount(level: number): number {
 // Ingredientes (de cualquier tipo, al azar) que consigue Ingredient Magnet S por
 // nivel (1..7).
 export const INGREDIENT_MAGNET_AMOUNTS = [6, 8, 11, 14, 17, 21, 24];
+// Present (Delibird) has its own, smaller table.
+export const INGREDIENT_MAGNET_PRESENT_AMOUNTS = [4, 6, 8, 10, 12, 15, 17];
 
 export function magnetsIngredients(mainSkill: string | undefined): boolean {
   return !!mainSkill && mainSkill.startsWith("Ingredient Magnet S");
@@ -142,6 +146,11 @@ export function extraHelpfulAmount(level: number): number {
 
 // Energizing Cheer S: energía a un compañero al azar por nivel (1..6). Topa en 6.
 export const ENERGIZING_CHEER_S_AMOUNTS = [14, 17, 22, 28, 38, 50];
+// Heal Pulse (Latias): energy to each of two teammates, plus ×N their help.
+export const ENERGIZING_CHEER_HEAL_PULSE_AMOUNTS = [6, 8, 10, 13, 17, 22];
+export const ENERGIZING_CHEER_HEAL_PULSE_HELPS = [1, 2, 2, 3, 4, 4];
+// Nuzzle (Togedemaru) has its own, smaller energy table.
+export const ENERGIZING_CHEER_NUZZLE_AMOUNTS = [9, 12, 16, 20, 27, 35];
 
 export function cheersRandomEnergy(mainSkill: string | undefined): boolean {
   return !!mainSkill && mainSkill.startsWith("Energizing Cheer S");
@@ -203,9 +212,25 @@ export function skillDescription(
 
   if (drawsIngredients(mainSkill)) {
     const x = ingredientDrawAmount(level);
-    return es
+    const base = es
       ? `Consigue ${x} de un tipo de ingrediente elegido al azar de una selección concreta.`
       : `Gets ${x} of one type of ingredient chosen randomly from a specific selection of ingredients.`;
+    if (mainSkill!.startsWith("Ingredient Draw S (Super Luck)"))
+      return es
+        ? `${base} En raras ocasiones, consigue muchos Fragmentos de sueño en su lugar.`
+        : `${base} On rare occasions, gets a great number of Dream Shards instead.`;
+    if (mainSkill!.startsWith("Ingredient Draw S (Hyper Cutter)"))
+      return es
+        ? `${base} A veces consigue ${x} ingredientes más.`
+        : `${base} Sometimes gets an additional ${x} ingredients.`;
+    return base;
+  }
+  if (mainSkill?.startsWith("Energy for Everyone S (Lunar Blessing)")) {
+    const table = ENERGY_FOR_EVERYONE_LUNAR_BLESSING_AMOUNTS;
+    const n = table[Math.min(Math.max(level, 1), table.length) - 1];
+    return es
+      ? `Restaura ${n} de Energía a cada Pokémon del equipo. Además consigue algunas de cada baya que recolectan tus compañeros.`
+      : `Restores ${n} Energy to each Pokémon on your team. Also gets some of each Berry your teammates collect.`;
   }
   if (restoresTeamEnergy(mainSkill)) {
     const n = energyForEveryoneAmount(level);
@@ -220,6 +245,12 @@ export function skillDescription(
     return es
       ? `Te consigue ${base} ingredientes al azar, y ${bonus} más con un compañero Más/Menos.`
       : `Gets you ${base} ingredients at random, plus ${bonus} more with a Plus/Minus partner.`;
+  }
+  if (mainSkill?.startsWith("Ingredient Magnet S (Present)")) {
+    const n = INGREDIENT_MAGNET_PRESENT_AMOUNTS[idx(level)];
+    return es
+      ? `Te consigue ${n} ingredientes al azar. A veces consigue además 4 caramelos para un Pokémon del equipo.`
+      : `Gets you ${n} ingredients chosen at random. Sometimes also gets 4 candy for one Pokémon on your team.`;
   }
   if (magnetsIngredients(mainSkill)) {
     const n = ingredientMagnetAmount(level);
@@ -290,6 +321,21 @@ export function skillDescription(
     return es
       ? `Consigue al instante ×${n} la ayuda habitual de un Pokémon ayudante.`
       : `Instantly gets you ×${n} the usual help from a helper Pokémon.`;
+  }
+  if (mainSkill?.startsWith("Energizing Cheer S (Heal Pulse)")) {
+    const i = Math.min(Math.max(level, 1), ENERGIZING_CHEER_HEAL_PULSE_AMOUNTS.length) - 1;
+    const n = ENERGIZING_CHEER_HEAL_PULSE_AMOUNTS[i];
+    const helps = ENERGIZING_CHEER_HEAL_PULSE_HELPS[i];
+    return es
+      ? `Restaura ${n} de Energía a dos Pokémon del equipo elegidos al azar y consigue al instante ×${helps} la ayuda habitual de esos Pokémon.`
+      : `Restores ${n} Energy to two random Pokémon on your team and instantly gets you ×${helps} the usual help from those Pokémon.`;
+  }
+  if (mainSkill?.startsWith("Energizing Cheer S (Nuzzle)")) {
+    const table = ENERGIZING_CHEER_NUZZLE_AMOUNTS;
+    const n = table[Math.min(Math.max(level, 1), table.length) - 1];
+    return es
+      ? `Restaura ${n} de Energía a un Pokémon del equipo elegido al azar. Con suerte, ese Pokémon también recibe un bonus de activación de la habilidad principal.`
+      : `Restores ${n} Energy to one random Pokémon on your team. If you're lucky, that Pokémon also gets a main skill activation bonus.`;
   }
   if (cheersRandomEnergy(mainSkill)) {
     const n = energizingCheerAmount(level);

@@ -460,26 +460,30 @@ def daily_production(
     skill_triggers = day_helps * effective_skill_rate + night_skill
 
     # Ingredientes por la main skill (Ingredient Draw S y variantes): cada disparo
-    # entrega ``ingredient_draw_amount(effective_skill_level)`` ingredientes repartidos en
-    # partes iguales entre el pool de la especie. Es independiente de la mecánica
+    # entrega ``ingredient_draw_amount(...)`` ingredientes (esperados) repartidos en
+    # partes iguales entre el pool de la skill. Es independiente de la mecánica
     # normal de ingredientes y no ocupa inventario en este modelo.
     skill_ingredients: tuple[SlotProduction, ...] = ()
     if draws_ingredients(species):
         pool = ingredient_draw_pool(species)
         if pool:
             per_ingredient = (
-                skill_triggers * ingredient_draw_amount(effective_skill_level) / len(pool)
+                skill_triggers
+                * ingredient_draw_amount(species.main_skill, effective_skill_level)
+                / len(pool)
             )
             skill_ingredients = tuple(
                 SlotProduction(ingredient=ing, amount=per_ingredient) for ing in pool
             )
 
     # Energía por la main skill (Energy for Everyone S): cada disparo restaura
-    # ``energy_for_everyone_amount(effective_skill_level)`` de energía a CADA compañero, así que
-    # por día y por compañero es disparos × esa cantidad.
+    # ``energy_for_everyone_amount(...)`` de energía a CADA compañero, así que por día
+    # y por compañero es disparos × esa cantidad.
     skill_energy: float | None = None
     if restores_team_energy(species):
-        skill_energy = skill_triggers * energy_for_everyone_amount(effective_skill_level)
+        skill_energy = skill_triggers * energy_for_everyone_amount(
+            species.main_skill, effective_skill_level
+        )
 
     # Ingredientes al azar por la main skill (Ingredient Magnet S): solo el total,
     # sin desglosar por tipo (el tipo es impredecible). La variante (Plus) de Plusle
@@ -498,7 +502,9 @@ def daily_production(
                 ),
             )
     elif magnets_ingredients(species):
-        skill_ingredient_total = skill_triggers * ingredient_magnet_amount(effective_skill_level)
+        skill_ingredient_total = skill_triggers * ingredient_magnet_amount(
+            species.main_skill, effective_skill_level
+        )
 
     # Event: ingredients gathered by main skills are multiplied.
     skill_ing_factor = boosts.skill_ingredient_factor
@@ -532,8 +538,8 @@ def daily_production(
     if charges_self_energy(species):
         skill_self_energy = skill_triggers * charge_energy_amount(effective_skill_level)
 
-    # Fragmentos de sueño por la main skill (Dream Shard Magnet S): disparos × la
-    # cantidad esperada del nivel (punto medio si es aleatorio).
+    # Fragmentos de sueño por la main skill (Dream Shard Magnet S, and Super Luck's
+    # occasional hauls): disparos × la cantidad esperada del nivel.
     per_shards = dream_shard_amount(species.main_skill, effective_skill_level)
     skill_dream_shards: float | None = (
         skill_triggers * per_shards if per_shards is not None else None
@@ -561,7 +567,9 @@ def daily_production(
     # El total repartido en el día es disparos × cantidad_del_nivel.
     skill_random_energy: float | None = None
     if cheers_random_energy(species):
-        skill_random_energy = skill_triggers * energizing_cheer_amount(effective_skill_level)
+        skill_random_energy = skill_triggers * energizing_cheer_amount(
+            species.main_skill, effective_skill_level
+        )
     elif is_cooking_minus(species):
         skill_random_energy = skill_triggers * cooking_minus_energy_amount(effective_skill_level)
 

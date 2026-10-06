@@ -38,7 +38,8 @@ Modela, por ahora, tres main skills:
 La main skill se identifica por su nombre (``Species.main_skill`` es un string del
 catálogo). Las variantes con pasivo extra —``Ingredient Draw S (Super Luck)``,
 ``Energy for Everyone S (Lunar Blessing)``…— comparten la mecánica base, así que se
-reconocen por prefijo.
+reconocen por prefijo. Variants with their own tables or pool are resolved inside the
+amount functions, which take the skill name.
 
 Pensado para crecer: cuando se modelen otras skills (dream shards, charge
 strength…), cada una suma su propia tabla/función acá sin tocar el resto.
@@ -69,9 +70,44 @@ def draws_ingredients(species: Species) -> bool:
     return species.main_skill.startswith(_INGREDIENT_DRAW_PREFIX)
 
 
+_SUPER_LUCK = "Ingredient Draw S (Super Luck)"
+_HYPER_CUTTER = "Ingredient Draw S (Hyper Cutter)"
+
+# Super Luck and Hyper Cutter draw from a fixed selection, not the species' ingredients.
+_SUPER_LUCK_POOL: Final = (
+    Ingredient.TASTY_MUSHROOM,
+    Ingredient.BEAN_SAUSAGE,
+    Ingredient.GREENGRASS_SOYBEANS,
+    Ingredient.ROUSING_COFFEE,
+)
+_HYPER_CUTTER_POOL: Final = (
+    Ingredient.SOFT_POTATO,
+    Ingredient.PURE_OIL,
+    Ingredient.SNOOZY_TOMATO,
+    Ingredient.GREENGRASS_CORN,
+)
+
+# Super Luck: per trigger, a small or a big Dream Shard haul instead of ingredients.
+SUPER_LUCK_SMALL_SHARDS_RATE: Final[float] = 0.121
+SUPER_LUCK_BIG_SHARDS_RATE: Final[float] = 0.027
+SUPER_LUCK_DREAM_SHARD_AMOUNTS: tuple[int, ...] = (500, 720, 1030, 1440, 2000, 2800, 4000)
+SUPER_LUCK_BIG_DREAM_SHARD_AMOUNTS: tuple[int, ...] = (
+    2500, 3600, 5150, 7200, 10000, 14000, 20000,
+)
+# Hyper Cutter: chance per trigger of getting twice the ingredients.
+HYPER_CUTTER_DOUBLE_RATE: Final[float] = 0.164
+
+assert len(SUPER_LUCK_DREAM_SHARD_AMOUNTS) == MAX_SKILL_LEVEL
+assert len(SUPER_LUCK_BIG_DREAM_SHARD_AMOUNTS) == MAX_SKILL_LEVEL
+
+
 def ingredient_draw_pool(species: Species) -> tuple[Ingredient, ...]:
     """Pool de ingredientes que sortea Ingredient Draw S: los de la especie, sin
-    repetir y conservando el orden del juego."""
+    repetir y conservando el orden del juego (Super Luck / Hyper Cutter: their own)."""
+    if species.main_skill.startswith(_SUPER_LUCK):
+        return _SUPER_LUCK_POOL
+    if species.main_skill.startswith(_HYPER_CUTTER):
+        return _HYPER_CUTTER_POOL
     seen: list[Ingredient] = []
     for ingredient in species.ingredients:
         if ingredient not in seen:
@@ -79,23 +115,30 @@ def ingredient_draw_pool(species: Species) -> tuple[Ingredient, ...]:
     return tuple(seen)
 
 
-def ingredient_draw_amount(skill_level: int) -> int:
-    """Ingredientes por disparo de Ingredient Draw S al ``skill_level`` dado.
+def ingredient_draw_amount(main_skill: str, skill_level: int) -> float:
+    """Ingredientes ESPERADOS por disparo de Ingredient Draw S al ``skill_level`` dado.
 
-    Se acota al rango válido (1..MAX_SKILL_LEVEL) por las dudas; la validación de
-    rango propiamente dicha vive en la entidad y la aplicación.
+    Super Luck only yields them when it doesn't hit Dream Shards; Hyper Cutter
+    sometimes doubles them. Se acota al rango válido (1..MAX_SKILL_LEVEL).
     """
     level = min(max(skill_level, 1), MAX_SKILL_LEVEL)
-    return INGREDIENT_DRAW_AMOUNTS[level - 1]
+    amount = INGREDIENT_DRAW_AMOUNTS[level - 1]
+    if main_skill.startswith(_SUPER_LUCK):
+        return amount * (1 - SUPER_LUCK_SMALL_SHARDS_RATE - SUPER_LUCK_BIG_SHARDS_RATE)
+    if main_skill.startswith(_HYPER_CUTTER):
+        return amount * (1 + HYPER_CUTTER_DOUBLE_RATE)
+    return amount
 
 
 # Prefijo de la familia Energy for Everyone S (E4E). Las variantes con pasivo
-# extra (p. ej. "(Lunar Blessing)") restauran energía al equipo igual que la base.
+# extra (p. ej. "(Lunar Blessing)") restauran energía al equipo como la base.
 _ENERGY_FOR_EVERYONE_PREFIX = "Energy for Everyone S"
 
 # Energía que E4E restaura a CADA compañero por disparo, según el nivel de la skill
 # (1..6). Indexado por ``nivel - 1``. E4E topa en nivel 6 (no tiene nivel 7).
 ENERGY_FOR_EVERYONE_AMOUNTS: tuple[int, ...] = (5, 7, 9, 11, 15, 18)
+# Lunar Blessing (Cresselia) trades energy for its berries: a smaller table.
+ENERGY_FOR_EVERYONE_LUNAR_BLESSING_AMOUNTS: tuple[int, ...] = (3, 4, 5, 7, 9, 11)
 
 
 def restores_team_energy(species: Species) -> bool:
@@ -103,24 +146,32 @@ def restores_team_energy(species: Species) -> bool:
     return species.main_skill.startswith(_ENERGY_FOR_EVERYONE_PREFIX)
 
 
-def energy_for_everyone_amount(skill_level: int) -> int:
+def energy_for_everyone_amount(main_skill: str, skill_level: int) -> int:
     """Energía que E4E restaura a cada compañero por disparo al ``skill_level`` dado.
 
     Se acota al rango de la tabla (E4E topa en nivel 6): un nivel mayor usa el tope.
     """
-    level = min(max(skill_level, 1), len(ENERGY_FOR_EVERYONE_AMOUNTS))
-    return ENERGY_FOR_EVERYONE_AMOUNTS[level - 1]
+    table = (
+        ENERGY_FOR_EVERYONE_LUNAR_BLESSING_AMOUNTS
+        if main_skill.startswith("Energy for Everyone S (Lunar Blessing)")
+        else ENERGY_FOR_EVERYONE_AMOUNTS
+    )
+    level = min(max(skill_level, 1), len(table))
+    return table[level - 1]
 
 
 # Prefijo de la familia Ingredient Magnet S. Las variantes con pasivo extra
-# ("(Plus)", "(Present)") consiguen ingredientes igual que la base.
+# ("(Plus)", "(Present)") consiguen ingredientes al azar como la base.
 _INGREDIENT_MAGNET_PREFIX = "Ingredient Magnet S"
 
 # Ingredientes (de cualquier tipo, al azar) que consigue un disparo de Ingredient
 # Magnet S según el nivel de la skill (1..7). Indexado por ``nivel - 1``.
 INGREDIENT_MAGNET_AMOUNTS: tuple[int, ...] = (6, 8, 11, 14, 17, 21, 24)
+# Present (Delibird) has its own, smaller table.
+INGREDIENT_MAGNET_PRESENT_AMOUNTS: tuple[int, ...] = (4, 6, 8, 10, 12, 15, 17)
 
 assert len(INGREDIENT_MAGNET_AMOUNTS) == MAX_SKILL_LEVEL
+assert len(INGREDIENT_MAGNET_PRESENT_AMOUNTS) == MAX_SKILL_LEVEL
 
 
 def magnets_ingredients(species: Species) -> bool:
@@ -128,9 +179,11 @@ def magnets_ingredients(species: Species) -> bool:
     return species.main_skill.startswith(_INGREDIENT_MAGNET_PREFIX)
 
 
-def ingredient_magnet_amount(skill_level: int) -> int:
+def ingredient_magnet_amount(main_skill: str, skill_level: int) -> int:
     """Ingredientes por disparo de Ingredient Magnet S al ``skill_level`` dado."""
     level = min(max(skill_level, 1), MAX_SKILL_LEVEL)
+    if main_skill.startswith("Ingredient Magnet S (Present)"):
+        return INGREDIENT_MAGNET_PRESENT_AMOUNTS[level - 1]
     return INGREDIENT_MAGNET_AMOUNTS[level - 1]
 
 
@@ -305,11 +358,18 @@ DREAM_SHARD_MAGNET_S_RANDOM_RANGES: tuple[tuple[int, int], ...] = (
 def dream_shard_amount(main_skill: str, skill_level: int) -> float | None:
     """Fragmentos de sueño ESPERADOS por disparo de Dream Shard Magnet S al nivel dado.
 
-    Monto fijo para la variante base; punto medio del rango para S (Random). ``None``
+    Monto fijo para la variante base; punto medio del rango para S (Random); for
+    Ingredient Draw S (Super Luck), its occasional shard hauls. ``None``
     si la skill no es Dream Shard Magnet o es una variante que no estimamos todavía
     (Aura Sphere, que además de fragmentos suma Vigor). El orden importa: las
     variantes empiezan con el mismo prefijo que la base, así que se descartan antes.
     """
+    if main_skill.startswith(_SUPER_LUCK):
+        draw_level = min(max(skill_level, 1), MAX_SKILL_LEVEL)
+        return (
+            SUPER_LUCK_SMALL_SHARDS_RATE * SUPER_LUCK_DREAM_SHARD_AMOUNTS[draw_level - 1]
+            + SUPER_LUCK_BIG_SHARDS_RATE * SUPER_LUCK_BIG_DREAM_SHARD_AMOUNTS[draw_level - 1]
+        )
     level = min(max(skill_level, 1), len(DREAM_SHARD_MAGNET_S_AMOUNTS))
     if main_skill.startswith("Dream Shard Magnet S (Aura Sphere)"):
         return None
@@ -365,12 +425,15 @@ def extra_helpful_amount(skill_level: int) -> int:
 
 
 # Prefijo de la familia Energizing Cheer S. Las variantes con pasivo extra
-# ("(Heal Pulse)", "(Nuzzle)") reparten energía igual que la base.
+# ("(Heal Pulse)", "(Nuzzle)") reparten energía como la base.
 _ENERGIZING_CHEER_PREFIX = "Energizing Cheer S"
 
 # Energía que Energizing Cheer S restaura a un compañero al azar por disparo, según
 # el nivel de la skill (1..6). Topa en nivel 6 (no tiene nivel 7).
 ENERGIZING_CHEER_S_AMOUNTS: tuple[int, ...] = (14, 17, 22, 28, 38, 50)
+# Heal Pulse (Latias) gives this to each of TWO teammates; Nuzzle (Togedemaru) to one.
+ENERGIZING_CHEER_HEAL_PULSE_AMOUNTS: tuple[int, ...] = (6, 8, 10, 13, 17, 22)
+ENERGIZING_CHEER_NUZZLE_AMOUNTS: tuple[int, ...] = (9, 12, 16, 20, 27, 35)
 
 
 def cheers_random_energy(species: Species) -> bool:
@@ -378,12 +441,16 @@ def cheers_random_energy(species: Species) -> bool:
     return species.main_skill.startswith(_ENERGIZING_CHEER_PREFIX)
 
 
-def energizing_cheer_amount(skill_level: int) -> int:
-    """Energía que Energizing Cheer S reparte por disparo al nivel dado.
+def energizing_cheer_amount(main_skill: str, skill_level: int) -> int:
+    """Energía TOTAL que Energizing Cheer S reparte por disparo al nivel dado.
 
-    Se acota al rango de la tabla (topa en nivel 6).
+    Heal Pulse counts both of its targets. Se acota al rango de la tabla (topa en 6).
     """
     level = min(max(skill_level, 1), len(ENERGIZING_CHEER_S_AMOUNTS))
+    if main_skill.startswith("Energizing Cheer S (Heal Pulse)"):
+        return 2 * ENERGIZING_CHEER_HEAL_PULSE_AMOUNTS[level - 1]
+    if main_skill.startswith("Energizing Cheer S (Nuzzle)"):
+        return ENERGIZING_CHEER_NUZZLE_AMOUNTS[level - 1]
     return ENERGIZING_CHEER_S_AMOUNTS[level - 1]
 
 

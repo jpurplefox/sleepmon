@@ -841,12 +841,28 @@ def test_ingredient_draw_default_skill_level_is_one() -> None:
     assert prod.skill_ingredients[0].amount == pytest.approx(prod.skill_triggers * 5 / 3)
 
 
-def test_ingredient_draw_variant_with_passive_also_draws() -> None:
-    # Las variantes con pasivo ("(Super Luck)", "(Hyper Cutter)") sortean igual.
+def test_super_luck_draws_its_own_pool_and_also_yields_dream_shards() -> None:
     species = _species(main_skill="Ingredient Draw S (Super Luck)", ingredients=_DRAW_INGREDIENTS)
     prod = daily_production(species, _DRAW_INGREDIENTS, level=60, skill_level=3)
-    assert len(prod.skill_ingredients) == 3
-    assert prod.skill_ingredients[0].amount == pytest.approx(prod.skill_triggers * 8 / 3)
+    assert [s.ingredient for s in prod.skill_ingredients] == [
+        I.TASTY_MUSHROOM, I.BEAN_SAUSAGE, I.GREENGRASS_SOYBEANS, I.ROUSING_COFFEE,
+    ]
+    assert prod.skill_ingredients[0].amount == pytest.approx(prod.skill_triggers * 8 * 0.852 / 4)
+    assert prod.skill_dream_shards == pytest.approx(
+        prod.skill_triggers * (0.121 * 1030 + 0.027 * 5150)
+    )
+
+
+def test_hyper_cutter_draws_its_own_pool_with_occasional_doubles() -> None:
+    species = _species(
+        main_skill="Ingredient Draw S (Hyper Cutter)", ingredients=_DRAW_INGREDIENTS
+    )
+    prod = daily_production(species, _DRAW_INGREDIENTS, level=60, skill_level=3)
+    assert [s.ingredient for s in prod.skill_ingredients] == [
+        I.SOFT_POTATO, I.PURE_OIL, I.SNOOZY_TOMATO, I.GREENGRASS_CORN,
+    ]
+    assert prod.skill_ingredients[0].amount == pytest.approx(prod.skill_triggers * 8 * 1.164 / 4)
+    assert prod.skill_dream_shards is None
 
 
 def test_ingredient_draw_pool_dedupes_repeated_ingredients() -> None:
@@ -888,6 +904,14 @@ def test_energy_for_everyone_clamps_level_seven_to_six() -> None:
     assert prod.skill_energy == pytest.approx(prod.skill_triggers * 18)  # tope nivel 6
 
 
+def test_lunar_blessing_restores_its_own_smaller_amount() -> None:
+    species = _species(
+        main_skill="Energy for Everyone S (Lunar Blessing)", specialty=Specialty.SKILLS
+    )
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
+    assert prod.skill_energy == pytest.approx(prod.skill_triggers * 11)
+
+
 def test_energy_for_everyone_does_not_produce_skill_ingredients() -> None:
     species = _species(main_skill="Energy for Everyone S", specialty=Specialty.SKILLS)
     prod = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
@@ -917,6 +941,12 @@ def test_ingredient_magnet_total_scales_with_skill_level() -> None:
     lvl7 = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
     assert lvl1.skill_ingredient_total == pytest.approx(lvl1.skill_triggers * 6)
     assert lvl7.skill_ingredient_total == pytest.approx(lvl7.skill_triggers * 24)
+
+
+def test_present_gets_its_own_smaller_amount() -> None:
+    species = _species(main_skill="Ingredient Magnet S (Present)")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
+    assert prod.skill_ingredient_total == pytest.approx(prod.skill_triggers * 17)
 
 
 # --- Cooking Power-Up S: ingredientes extra de pote por la skill ---------------
@@ -1075,6 +1105,18 @@ def test_energizing_cheer_total_is_triggers_times_amount() -> None:
     # No es energía al equipo entero (E4E) ni al usuario (Charge Energy).
     assert prod.skill_energy is None
     assert prod.skill_self_energy is None
+
+
+def test_heal_pulse_total_counts_both_teammates() -> None:
+    species = _species(main_skill="Energizing Cheer S (Heal Pulse)", specialty=Specialty.SKILLS)
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
+    assert prod.skill_random_energy == pytest.approx(prod.skill_triggers * 2 * 22)
+
+
+def test_nuzzle_restores_its_own_smaller_amount() -> None:
+    species = _species(main_skill="Energizing Cheer S (Nuzzle)", specialty=Specialty.SKILLS)
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
+    assert prod.skill_random_energy == pytest.approx(prod.skill_triggers * 35)
 
 
 # --- Plusle / Minun: tablas propias + bonus de sinergia (condición siempre dada) ---

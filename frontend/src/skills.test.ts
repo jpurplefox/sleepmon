@@ -137,6 +137,32 @@ describe("skillDescription", () => {
   });
 });
 
+describe("variants with their own tables", () => {
+  it("uses each variant's own amount, not the base skill's", () => {
+    expect(skillDescription("Energy for Everyone S (Lunar Blessing)", 1, "en")).toBe(
+      "Restores 3 Energy to each Pokémon on your team. Also gets some of each Berry your teammates collect.",
+    );
+    expect(skillDescription("Energizing Cheer S (Heal Pulse)", 6, "en")).toBe(
+      "Restores 22 Energy to two random Pokémon on your team and instantly gets you ×4 the usual help from those Pokémon.",
+    );
+    expect(skillDescription("Energizing Cheer S (Nuzzle)", 1, "en")).toBe(
+      "Restores 9 Energy to one random Pokémon on your team. If you're lucky, that Pokémon also gets a main skill activation bonus.",
+    );
+    expect(skillDescription("Ingredient Magnet S (Present)", 7, "en")).toBe(
+      "Gets you 17 ingredients chosen at random. Sometimes also gets 4 candy for one Pokémon on your team.",
+    );
+  });
+
+  it("describes the Ingredient Draw variants' second effect", () => {
+    expect(skillDescription("Ingredient Draw S (Super Luck)", 1, "en")).toBe(
+      "Gets 5 of one type of ingredient chosen randomly from a specific selection of ingredients. On rare occasions, gets a great number of Dream Shards instead.",
+    );
+    expect(skillDescription("Ingredient Draw S (Hyper Cutter)", 1, "es")).toBe(
+      "Consigue 5 de un tipo de ingrediente elegido al azar de una selección concreta. A veces consigue 5 ingredientes más.",
+    );
+  });
+});
+
 describe("Berry Burst", () => {
   it("recognizes the family and caps it at level 6", () => {
     expect(burstsBerries("Berry Burst")).toBe(true);
