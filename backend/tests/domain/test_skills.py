@@ -10,11 +10,17 @@ from sleepmon.domain.skills import (
     DISGUISE_GREAT_SUCCESS_RATE,
     DREAM_SHARD_MAGNET_S_AMOUNTS,
     DREAM_SHARD_MAGNET_S_RANDOM_RANGES,
+    ENERGIZING_CHEER_HEAL_PULSE_AMOUNTS,
+    ENERGIZING_CHEER_NUZZLE_AMOUNTS,
     ENERGIZING_CHEER_S_AMOUNTS,
     ENERGY_FOR_EVERYONE_AMOUNTS,
+    ENERGY_FOR_EVERYONE_LUNAR_BLESSING_AMOUNTS,
     EXTRA_HELPFUL_S_AMOUNTS,
     INGREDIENT_DRAW_AMOUNTS,
     INGREDIENT_MAGNET_AMOUNTS,
+    INGREDIENT_MAGNET_PRESENT_AMOUNTS,
+    SUPER_LUCK_BIG_DREAM_SHARD_AMOUNTS,
+    SUPER_LUCK_DREAM_SHARD_AMOUNTS,
     TASTY_CHANCE_S_AMOUNTS,
     BerryBurstAmounts,
     BerryBurstTeam,
@@ -91,12 +97,48 @@ def test_ingredient_draw_amount_matches_table() -> None:
     # nivel 1->5, 2->6, 3->8, 4->11, 5->13, 6->16, 7->18
     assert INGREDIENT_DRAW_AMOUNTS == (5, 6, 8, 11, 13, 16, 18)
     for level in range(1, MAX_SKILL_LEVEL + 1):
-        assert ingredient_draw_amount(level) == INGREDIENT_DRAW_AMOUNTS[level - 1]
+        assert ingredient_draw_amount("Ingredient Draw S", level) == (
+            INGREDIENT_DRAW_AMOUNTS[level - 1]
+        )
 
 
 def test_ingredient_draw_amount_clamps_out_of_range() -> None:
-    assert ingredient_draw_amount(0) == INGREDIENT_DRAW_AMOUNTS[0]
-    assert ingredient_draw_amount(99) == INGREDIENT_DRAW_AMOUNTS[-1]
+    assert ingredient_draw_amount("Ingredient Draw S", 0) == INGREDIENT_DRAW_AMOUNTS[0]
+    assert ingredient_draw_amount("Ingredient Draw S", 99) == INGREDIENT_DRAW_AMOUNTS[-1]
+
+
+def test_super_luck_draws_from_its_fixed_pool_not_the_species() -> None:
+    species = _species(
+        main_skill="Ingredient Draw S (Super Luck)",
+        ingredients=(I.ROUSING_COFFEE, I.GREENGRASS_SOYBEANS, I.FIERY_HERB),
+    )
+    assert ingredient_draw_pool(species) == (
+        I.TASTY_MUSHROOM, I.BEAN_SAUSAGE, I.GREENGRASS_SOYBEANS, I.ROUSING_COFFEE,
+    )
+
+
+def test_hyper_cutter_draws_from_its_fixed_pool_not_the_species() -> None:
+    species = _species(
+        main_skill="Ingredient Draw S (Hyper Cutter)",
+        ingredients=(I.PURE_OIL, I.GREENGRASS_CORN, I.SNOOZY_TOMATO),
+    )
+    assert ingredient_draw_pool(species) == (
+        I.SOFT_POTATO, I.PURE_OIL, I.SNOOZY_TOMATO, I.GREENGRASS_CORN,
+    )
+
+
+def test_super_luck_only_yields_ingredients_when_it_does_not_hit_shards() -> None:
+    # 85.2% of triggers give ingredients; the rest give Dream Shards instead.
+    assert ingredient_draw_amount("Ingredient Draw S (Super Luck)", 7) == pytest.approx(
+        18 * 0.852
+    )
+
+
+def test_hyper_cutter_sometimes_doubles_its_ingredients() -> None:
+    # 16.4% of triggers give twice the amount.
+    assert ingredient_draw_amount("Ingredient Draw S (Hyper Cutter)", 7) == pytest.approx(
+        18 * 1.164
+    )
 
 
 # --- Energy for Everyone S (E4E) ----------------------------------------------
@@ -119,9 +161,22 @@ def test_energy_for_everyone_amount_matches_table_and_clamps() -> None:
     # niveles 1..6: 5, 7, 9, 11, 15, 18. E4E topa en 6.
     assert ENERGY_FOR_EVERYONE_AMOUNTS == (5, 7, 9, 11, 15, 18)
     for level in range(1, len(ENERGY_FOR_EVERYONE_AMOUNTS) + 1):
-        assert energy_for_everyone_amount(level) == ENERGY_FOR_EVERYONE_AMOUNTS[level - 1]
-    assert energy_for_everyone_amount(0) == 5
-    assert energy_for_everyone_amount(7) == 18  # más allá del tope usa el nivel 6
+        assert energy_for_everyone_amount("Energy for Everyone S", level) == (
+            ENERGY_FOR_EVERYONE_AMOUNTS[level - 1]
+        )
+    assert energy_for_everyone_amount("Energy for Everyone S", 0) == 5
+    # más allá del tope usa el nivel 6
+    assert energy_for_everyone_amount("Energy for Everyone S", 7) == 18
+
+
+def test_lunar_blessing_restores_less_energy_than_the_base() -> None:
+    assert ENERGY_FOR_EVERYONE_LUNAR_BLESSING_AMOUNTS == (3, 4, 5, 7, 9, 11)
+    skill = "Energy for Everyone S (Lunar Blessing)"
+    for level in range(1, 7):
+        assert energy_for_everyone_amount(skill, level) == (
+            ENERGY_FOR_EVERYONE_LUNAR_BLESSING_AMOUNTS[level - 1]
+        )
+    assert energy_for_everyone_amount(skill, 7) == 11
 
 
 # --- Ingredient Magnet S (ingredientes al azar, solo total) --------------------
@@ -147,9 +202,19 @@ def test_ingredient_magnet_amount_matches_table_and_clamps() -> None:
     # niveles 1..7: 6, 8, 11, 14, 17, 21, 24
     assert INGREDIENT_MAGNET_AMOUNTS == (6, 8, 11, 14, 17, 21, 24)
     for level in range(1, len(INGREDIENT_MAGNET_AMOUNTS) + 1):
-        assert ingredient_magnet_amount(level) == INGREDIENT_MAGNET_AMOUNTS[level - 1]
-    assert ingredient_magnet_amount(0) == 6
-    assert ingredient_magnet_amount(99) == 24
+        assert ingredient_magnet_amount("Ingredient Magnet S", level) == (
+            INGREDIENT_MAGNET_AMOUNTS[level - 1]
+        )
+    assert ingredient_magnet_amount("Ingredient Magnet S", 0) == 6
+    assert ingredient_magnet_amount("Ingredient Magnet S", 99) == 24
+
+
+def test_present_gets_fewer_ingredients_than_the_base() -> None:
+    assert INGREDIENT_MAGNET_PRESENT_AMOUNTS == (4, 6, 8, 10, 12, 15, 17)
+    for level in range(1, MAX_SKILL_LEVEL + 1):
+        assert ingredient_magnet_amount("Ingredient Magnet S (Present)", level) == (
+            INGREDIENT_MAGNET_PRESENT_AMOUNTS[level - 1]
+        )
 
 
 # --- Cooking Power-Up S (ingredientes extra de pote) --------------------------
@@ -251,6 +316,19 @@ def test_dream_shard_amount_clamps_to_level_8() -> None:
 
 def test_dream_shard_amount_none_for_other_skills() -> None:
     assert dream_shard_amount("Ingredient Draw S", 8) is None
+    assert dream_shard_amount("Ingredient Draw S (Hyper Cutter)", 7) is None
+
+
+def test_super_luck_sometimes_gets_dream_shards_instead() -> None:
+    # 12.1% small haul, 2.7% big haul, per trigger.
+    assert SUPER_LUCK_DREAM_SHARD_AMOUNTS == (500, 720, 1030, 1440, 2000, 2800, 4000)
+    assert SUPER_LUCK_BIG_DREAM_SHARD_AMOUNTS == (2500, 3600, 5150, 7200, 10000, 14000, 20000)
+    assert dream_shard_amount("Ingredient Draw S (Super Luck)", 1) == pytest.approx(
+        0.121 * 500 + 0.027 * 2500
+    )
+    assert dream_shard_amount("Ingredient Draw S (Super Luck)", 99) == pytest.approx(
+        0.121 * 4000 + 0.027 * 20000
+    )
 
 
 def test_dream_shard_aura_sphere_not_estimated() -> None:
@@ -329,9 +407,29 @@ def test_energizing_cheer_amount_matches_table_and_clamps() -> None:
     # niveles 1..6: 14, 17, 22, 28, 38, 50. Topa en 6.
     assert ENERGIZING_CHEER_S_AMOUNTS == (14, 17, 22, 28, 38, 50)
     for level in range(1, len(ENERGIZING_CHEER_S_AMOUNTS) + 1):
-        assert energizing_cheer_amount(level) == ENERGIZING_CHEER_S_AMOUNTS[level - 1]
-    assert energizing_cheer_amount(0) == 14
-    assert energizing_cheer_amount(7) == 50  # más allá del tope usa el nivel 6
+        assert energizing_cheer_amount("Energizing Cheer S", level) == (
+            ENERGIZING_CHEER_S_AMOUNTS[level - 1]
+        )
+    assert energizing_cheer_amount("Energizing Cheer S", 0) == 14
+    # más allá del tope usa el nivel 6
+    assert energizing_cheer_amount("Energizing Cheer S", 7) == 50
+
+
+def test_heal_pulse_hands_its_own_amount_to_two_teammates() -> None:
+    assert ENERGIZING_CHEER_HEAL_PULSE_AMOUNTS == (6, 8, 10, 13, 17, 22)
+    skill = "Energizing Cheer S (Heal Pulse)"
+    for level in range(1, 7):
+        assert energizing_cheer_amount(skill, level) == (
+            2 * ENERGIZING_CHEER_HEAL_PULSE_AMOUNTS[level - 1]
+        )
+
+
+def test_nuzzle_restores_less_energy_than_the_base() -> None:
+    assert ENERGIZING_CHEER_NUZZLE_AMOUNTS == (9, 12, 16, 20, 27, 35)
+    for level in range(1, 7):
+        assert energizing_cheer_amount("Energizing Cheer S (Nuzzle)", level) == (
+            ENERGIZING_CHEER_NUZZLE_AMOUNTS[level - 1]
+        )
 
 
 # --- Sinergia Plus/Minun (Plusle y Minun) -------------------------------------
@@ -343,7 +441,7 @@ def test_magnet_plus_detected_with_own_base_and_bonus() -> None:
     assert is_magnet_plus(sp)
     # Base al azar nivel 7 = 18 (no la tabla regular, que daría 24).
     assert magnet_plus_base_amount(7) == 18
-    assert magnet_plus_base_amount(7) != ingredient_magnet_amount(7)
+    assert magnet_plus_base_amount(7) != ingredient_magnet_amount("Ingredient Magnet S", 7)
     # Bonus (ingrediente fijo) nivel 7 = 12 ; nivel 1 = 6.
     assert magnet_plus_bonus_amount(7) == 12
     assert magnet_plus_bonus_amount(1) == 6
