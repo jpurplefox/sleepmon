@@ -88,12 +88,14 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
   per-trigger amount`: extra **strength** (Charge Strength), **energy** (to the team,
   to self, or to a random teammate), **ingredients** (Draw / Magnet), **dream shards**,
   **cooking pot** slots, **Tasty Chance** (feeds [Extra Tasty](0006-cooking-plan.md)),
-  or a **help multiplier**. The exact per-level amounts live in the domain catalog.
+  or a **help multiplier**. **Berry Burst** yields **berries** — its own and its
+  teammates' — and counts as berry strength (see [Berry Burst](0013-berry-burst.md)).
+  The exact per-level amounts live in the domain catalog.
 
 ### Total strength
 
-- **Total strength = berry strength + skill strength.** Only berries and
-  strength-producing skills (e.g. Charge Strength) count; ingredients, energy, and
+- **Total strength = berry strength + skill strength.** Only berries (Berry Burst's
+  included) and strength-producing skills (e.g. Charge Strength) count; ingredients, energy, and
   shards do **not** add strength. In Team Analysis, the map's **area bonus** and
   **favorite ×2** apply on top, and **cooking** adds its own strength.
 
