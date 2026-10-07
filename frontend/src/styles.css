@@ -1,37 +1,35 @@
 :root {
-  /* Fondos */
-  --bg: #0d1117;
-  --surface: #161b22;
-  --surface-2: #21262d;
-  --border: #30363d;
-  /* Texto */
-  --text: #e6edf3;
-  --muted: #8b949e;
-  /* Acento funcional (índigo) — dos roles por contraste opuesto:
-     como RELLENO bajo texto blanco (accent / accent-strong) y como
-     TINTA sobre fondo oscuro (accent-text). Ver design-system §4 (Contrast). */
+  /* Backgrounds — an own night navy; cards separate from the page by tone, not borders */
+  --bg: #0e1220;
+  --surface: #171d30;
+  --surface-2: #20283f;
+  --border: #262e47;
+  /* Text */
+  --text: #e8ecf6;
+  --muted: #98a2bd;
+  /* Functional accent (indigo) — two roles because contrast pulls opposite ways:
+     FILL under white text (accent / accent-strong) and INK on the dark background
+     (accent-text). See design-system §4 (Contrast). */
   --accent: #6366f1;
   --accent-strong: #4f46e5;
   --accent-dim: rgba(99, 102, 241, 0.15);
   --accent-border: rgba(99, 102, 241, 0.4);
-  --accent-text: #818cf8; /* índigo como texto/ícono sobre oscuro (AA ≥4.5) */
-  /* Acento identidad (dorado lunar) */
-  --moon: #d4a017;
-  --moon-dim: rgba(212, 160, 23, 0.15);
-  --moon-border: rgba(212, 160, 23, 0.4);
-  /* Semántico */
-  --up: #3fb950;
-  --down: #f78166;
-  /* --down-dim/--down-border mirror --moon-dim/--moon-border: same two roles, same alphas. */
-  --down-dim: rgba(247, 129, 102, 0.15);
-  --down-border: rgba(247, 129, 102, 0.4);
+  --accent-text: #8f95ff; /* indigo as text/icon on dark (AA >= 4.5) */
+  /* Semantic good / bad — they differ in brightness as well as hue, so they stay
+     apart under color-blindness. Both carry -dim (fill) and -border (outline). */
+  --up: #5ee6c4;
+  --up-dim: rgba(94, 230, 196, 0.13);
+  --up-border: rgba(94, 230, 196, 0.4);
+  --down: #f97066;
+  --down-dim: rgba(249, 112, 102, 0.14);
+  --down-border: rgba(249, 112, 102, 0.4);
   --error: #f85149;
-  /* Tier azul del sub skill; los tiers gold y regular usan --moon / --muted,
-     mapeados en .ss-icon. */
+  /* Sub-skill tiers (game content); the regular tier uses --muted, mapped in .ss-icon */
+  --tier-gold: #d4a017;
   --tier-blue: #58a6ff;
-  /* Superficies elevadas */
-  --overlay: rgba(13, 17, 23, 0.75);
-  --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.5);
+  /* Elevated surfaces */
+  --overlay: rgba(8, 11, 20, 0.75);
+  --shadow-dropdown: 0 12px 32px rgba(0, 0, 0, 0.45);
   /* Escala tipográfica */
   --text-xs: 0.72rem;
   --text-sm: 0.82rem;
@@ -41,7 +39,7 @@
   /* Radios */
   --r-sm: 6px;
   --r-md: 10px;
-  --r-lg: 14px;
+  --r-lg: 16px;
 }
 
 * {
@@ -170,16 +168,16 @@ body {
   margin-top: 0.1rem;
 }
 
-/* Fila activa (con bonus): valor en dorado. */
+/* Active row (with bonus): value in the good color. */
 .tooltip__row:last-child .tooltip__val {
-  color: var(--moon);
+  color: var(--up);
 }
-/* Source lists (Berry Burst): rows neutral except area-bonus row, which is gold. */
+/* Source lists (Berry Burst): rows neutral except the area-bonus row, in the good color. */
 .tooltip--sources .tooltip__row:last-child:not(.tooltip__row--bonus) .tooltip__val {
   color: var(--text);
 }
 .tooltip--sources .tooltip__row--bonus .tooltip__val {
-  color: var(--moon);
+  color: var(--up);
 }
 .tooltip__label img {
   width: 14px;
@@ -206,7 +204,7 @@ body {
 
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: var(--r-lg);
   padding: 1.25rem;
 }
@@ -393,7 +391,7 @@ select:focus {
 }
 
 .ss-icon--gold {
-  --tier: var(--moon);
+  --tier: var(--tier-gold);
 }
 
 .ss-icon--blue {
@@ -560,14 +558,14 @@ select:focus {
   height: 15px;
 }
 
-/* Marca arriba/abajo con un chevron de color, igual que RaenonX (rojo sube, azul baja). */
+/* Up/down chevron in the app's good/bad colors (not the game's red-up/blue-down). */
 .nat-stat::before {
   font-size: var(--text-xs);
   font-weight: 700;
 }
 
 .nat-stat--up {
-  color: var(--down);
+  color: var(--up);
 }
 
 .nat-stat--up::before {
@@ -575,7 +573,7 @@ select:focus {
 }
 
 .nat-stat--down {
-  color: var(--tier-blue);
+  color: var(--down);
 }
 
 .nat-stat--down::before {
@@ -1638,8 +1636,7 @@ select:focus {
   flex-wrap: nowrap;
 }
 
-/* Columna 3 — Bayas + Fuerza, apiladas en dos líneas. Misma jerarquía (números
-   neutros; el único dorado de la entrada es el badge de nivel). */
+/* Column 3 — berries + strength, stacked; same hierarchy, neutral figures. */
 .box-entry__berries {
   display: flex;
   flex-direction: column;
@@ -2113,8 +2110,9 @@ select:focus {
 }
 
 .badge--level {
-  color: var(--moon);
-  border-color: var(--moon-dim);
+  color: var(--text);
+  font-weight: 700;
+  border-color: transparent;
 }
 
 .badge--ok {
@@ -2149,8 +2147,8 @@ select:focus {
 }
 
 .chip--ingredient {
-  background: var(--moon-dim);
-  border-color: var(--moon-border);
+  background: var(--surface-2);
+  border-color: transparent;
 }
 
 .chip--subskill {
@@ -2398,7 +2396,7 @@ select:focus {
 .prod-stat__value {
   font-size: var(--text-xl);
   font-weight: 700;
-  color: var(--moon);
+  color: var(--text);
 }
 
 .prod-stat__meta {
@@ -2623,8 +2621,8 @@ select:focus {
   padding: 0.05rem 0.4rem;
 }
 
-/* Nivel de main skill: el ícono propio de la skill + "Lv. N", sin chip. Color
-   neutro: el dorado se reserva para el nivel del Pokémon (badge del topline). */
+/* Nivel de main skill: el ícono propio de la skill + "Lv. N", sin chip. Neutral
+   color, like every figure in the row. */
 .prod-box-item__skill-lv {
   display: inline-flex;
   align-items: center;
@@ -2763,10 +2761,11 @@ select:focus {
 }
 
 .prod-card {
+  --prod-card-pad: 0.9rem;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: var(--r-lg);
-  padding: 0.9rem;
+  padding: var(--prod-card-pad);
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
@@ -2792,32 +2791,30 @@ select:focus {
   }
 }
 
-/* La card base lleva el borde lunar: marca discreta de cuál es la referencia. */
-.prod-card--base {
-  border-color: var(--moon-border);
+/* Identity zone (name, sprite, ingredients, sub skills, nature): bleeds to the card
+   edges so a berry state can tint it while the figures below stay neutral. */
+.prod-card__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: calc(-1 * var(--prod-card-pad)) calc(-1 * var(--prod-card-pad)) 0;
+  padding: var(--prod-card-pad) var(--prod-card-pad) 0;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
 }
 
-/* Resaltado de baya favorita: borde dorado lunar + sombra interior en dorado
-   tenue. Usa --moon-border/--moon-dim para no colisionar con el lenguaje de
-   selección/drag que usa --accent. */
-.prod-card--favorite-berry {
-  border-color: var(--moon-border);
-  box-shadow: inset 0 0 0 1px var(--moon-dim);
+/* Berry relation: favorite reads as good, the expert map's main favorite one step
+   stronger, and no favorite on an expert map as bad (--down, never --error). */
+.prod-card--favorite-berry .prod-card__identity {
+  background: color-mix(in srgb, var(--up) 18%, var(--surface));
 }
 
-/* Upper step: the MAIN favorite berry of an expert map. Same gold language, one
-   step firmer. The jump is deliberately subtle: the marks carry the hierarchy,
-   not the border (design-system §6, "Gold marks a state"). */
-.prod-card--main-favorite {
-  border-color: var(--moon);
+.prod-card--main-favorite .prod-card__identity {
+  background: color-mix(in srgb, var(--up) 30%, var(--surface));
 }
 
-/* No favorite berry at all, ONLY on expert maps: semantic red (--down, "a stat
-   that falls"), never --error, which is reserved for destructive actions
-   (design-system §4). */
-.prod-card--no-favorite {
-  border-color: var(--down-border);
-  box-shadow: inset 0 0 0 1px var(--down-dim);
+.prod-card--no-favorite .prod-card__identity {
+  background: color-mix(in srgb, var(--down) 20%, var(--surface));
 }
 
 /* Annotation pinned to a metric: what the map does to THAT number
@@ -2837,9 +2834,9 @@ select:focus {
 }
 
 .metric-mark--good {
-  color: var(--moon);
-  background: var(--moon-dim);
-  border-color: var(--moon-border);
+  color: var(--up);
+  background: var(--up-dim);
+  border-color: var(--up-border);
 }
 
 .metric-mark--bad {
@@ -2867,9 +2864,9 @@ select:focus {
 }
 
 span.prod-card__base-tag {
-  color: var(--moon);
-  background: var(--moon-dim);
-  border: 1px solid var(--moon-border);
+  color: var(--accent-text);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border);
 }
 
 button.prod-card__base-tag--action {
@@ -2937,8 +2934,13 @@ button.prod-card__base-tag--action:hover {
 
 /* Diferencia contra la base, junto al valor. Verde = rinde más, rojo = menos. */
 .prod-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   /* Al cambiar la base, los deltas se recalculan en bloque: la transición de
      color hace legible que algo cambió sin ser ostentosa. */
@@ -2947,10 +2949,12 @@ button.prod-card__base-tag--action:hover {
 
 .prod-delta--up {
   color: var(--up);
+  background: var(--up-dim);
 }
 
 .prod-delta--down {
   color: var(--down);
+  background: var(--down-dim);
 }
 
 .prod-delta--same {
@@ -3024,7 +3028,7 @@ button.prod-card__base-tag--action:hover {
   }
 }
 
-/* Éxito = verde semántico (el dorado queda reservado a la identidad "luna"). */
+/* Success = semantic good color. */
 .prod-card__save--ok {
   color: var(--up);
 }
@@ -3168,9 +3172,9 @@ button.prod-card__base-tag--action:hover {
   flex-shrink: 0;
 }
 
-/* La luna del bloque de skill va en dorado: refuerza la identidad "Luz de luna". */
+/* The night line is a mechanic, not a value: indigo ink. */
 .prod-card__night svg {
-  color: var(--moon);
+  color: var(--accent-text);
   flex-shrink: 0;
 }
 
@@ -3336,12 +3340,12 @@ button.prod-card__base-tag--action:hover {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid var(--moon-border);
+  border: 1px solid var(--accent-border);
   background: transparent;
   overflow: hidden;
 }
 .team-slot__tab-wrap--active {
-  background: var(--moon-border);
+  background: var(--accent-dim);
 }
 .team-slot__tab {
   padding: 0.15rem 0.25rem 0.15rem 0.6rem;
@@ -3394,7 +3398,7 @@ button.prod-card__base-tag--action:hover {
 .team-slot__slider--split .bonus-slider__fill {
   left: 0;
   width: calc(var(--ratio) * (100% - 14px) + 7px);
-  background: var(--moon);
+  background: var(--accent);
   border-radius: 999px 0 0 999px;
 }
 .team-slot__slider--split .bonus-slider__track::after {
@@ -3545,7 +3549,6 @@ button.prod-card__base-tag--action:hover {
   align-items: stretch;
   gap: 1.5rem;
   margin-top: 1.5rem;
-  border-color: var(--moon-border);
 }
 
 .teams-totals__col {
@@ -3585,7 +3588,8 @@ button.prod-card__base-tag--action:hover {
 
 .teams-totals__kpi--grand {
   font-size: var(--text-xl);
-  color: var(--moon);
+  font-weight: 800;
+  color: var(--text);
 }
 
 .teams-totals__aside {
@@ -3608,7 +3612,7 @@ button.prod-card__base-tag--action:hover {
 /* ── Snorlax Rating Badge ───────────────────────────────────────────────────
    Dentro del col--grand, alineado abajo a la derecha, en dos filas: la fila
    superior (ball + nivel/tope + faltante) y una barra fina de progreso hacia el
-   siguiente rating. El nivel es el único dato cálido (--moon); el faltante
+   siguiente rating. El nivel va en --text; el faltante
    retrocede a --muted. Sin bordes ni fondos: misma voz que .teams-totals__aside. */
 .snorlax-rating-badge {
   display: inline-flex;
@@ -3634,7 +3638,7 @@ button.prod-card__base-tag--action:hover {
 .snorlax-rating-badge__level {
   font-size: var(--text-xs);
   font-weight: 700;
-  color: var(--moon);
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -3650,19 +3654,18 @@ button.prod-card__base-tag--action:hover {
   color: var(--border);
 }
 
-/* Master 20 alcanzado: el logro máximo va en dorado. */
+/* Master 20 reached: the top achievement reads as good. */
 .snorlax-rating-badge__next--max {
-  color: var(--moon);
+  color: var(--up);
   font-weight: 600;
 }
 
-/* Barra de progreso hacia el siguiente rating: track apenas visible (--moon-dim),
-   relleno en --moon. 3px, sin animación: es dato, no decoración. */
+/* Progress bar toward the next rating: --surface-2 track, indigo fill. 3px, sin animación: es dato, no decoración. */
 .snorlax-rating-badge__bar {
   display: block;
   width: 100%;
   height: 3px;
-  background: var(--moon-dim);
+  background: var(--surface-2);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -3670,7 +3673,7 @@ button.prod-card__base-tag--action:hover {
 .snorlax-rating-badge__bar-fill {
   display: block;
   height: 100%;
-  background: var(--moon);
+  background: var(--accent);
   border-radius: 999px;
 }
 
@@ -3939,7 +3942,7 @@ button.prod-card__base-tag--action:hover {
   gap: 0.3rem;
   font-size: var(--text-sm);
   font-weight: 700;
-  color: var(--moon);
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -4368,7 +4371,7 @@ button.prod-card__base-tag--action:hover {
   text-align: right;
 }
 
-/* Grand total row: bigger, neutral (gold is reserved for the page grand total) */
+/* Grand total row: bigger, neutral (the page grand total leads by size) */
 .cook-total-row--grand {
   border-top: 1px solid var(--border);
   margin-top: 0.4rem;
@@ -4592,20 +4595,20 @@ button.prod-card__base-tag--action:hover {
 }
 
 .island-tab__berry-toggle:hover:not(:disabled) {
-  border-color: var(--moon-border);
+  border-color: var(--accent-border);
   color: var(--text);
 }
 
 .island-tab__berry-toggle.is-selected {
-  background: var(--moon-dim);
-  border-color: var(--moon-border);
+  background: var(--accent-dim);
+  border-color: var(--accent-border);
   color: var(--text);
 }
 
-/* Item 5 — baya principal (índice 0): anillo dorado + estrella */
+/* Item 5 — main berry (index 0): indigo ring + star */
 .island-tab__berry-toggle--primary {
-  border-color: var(--moon);
-  box-shadow: 0 0 0 1px var(--moon);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
   position: relative;
 }
 .island-tab__berry-toggle--primary::before {
@@ -4615,7 +4618,7 @@ button.prod-card__base-tag--action:hover {
   left: -5px;
   font-size: 12px;
   line-height: 1;
-  color: var(--moon);
+  color: var(--accent-text);
   pointer-events: none;
 }
 
@@ -4631,7 +4634,7 @@ button.prod-card__base-tag--action:hover {
 }
 
 .island-tab__berry-count--full {
-  color: var(--moon);
+  color: var(--up);
 }
 
 /* ── Area Bonus Slider (custom: track+fill+thumb; input nativo oculto para a11y) ── */
@@ -4665,7 +4668,7 @@ button.prod-card__base-tag--action:hover {
   border-radius: 999px;
   background: var(--border);
 }
-/* Fill dorado: de left:0 hasta el borde derecho del thumb.
+/* Indigo fill: de left:0 hasta el borde derecho del thumb.
    width = ratio*(100% - 14px) + 14px  → en 0: 14px (tapa el thumb); en 1: 100% (lleno). */
 .bonus-slider__fill {
   position: absolute;
@@ -4674,7 +4677,7 @@ button.prod-card__base-tag--action:hover {
   transform: translateY(-50%);
   height: 4px;
   border-radius: 999px;
-  background: var(--moon);
+  background: var(--accent);
   width: calc(var(--ratio) * (100% - 14px) + 14px);
   pointer-events: none;
   z-index: 0;
@@ -4689,7 +4692,7 @@ button.prod-card__base-tag--action:hover {
   height: 14px;
   border-radius: 999px;
   background: var(--surface-2);
-  border: 2px solid var(--moon);
+  border: 2px solid var(--accent);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
   pointer-events: none;
   transition:
@@ -4701,15 +4704,15 @@ button.prod-card__base-tag--action:hover {
   transform: translateY(-50%) scale(1.2);
 }
 .bonus-slider__track:has(.bonus-slider__input:active) .bonus-slider__thumb {
-  background: var(--moon);
+  background: var(--accent);
   transform: translateY(-50%) scale(1.1);
-  border-color: var(--moon);
+  border-color: var(--accent);
 }
-/* Foco DORADO tanto con mouse como con teclado — glow difuso (sin doble círculo) */
+/* Indigo focus for mouse and keyboard — glow difuso (sin doble círculo) */
 .bonus-slider__track:focus-within .bonus-slider__thumb {
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.55),
-    0 0 8px 2px var(--moon-border);
+    0 0 8px 2px var(--accent-border);
 }
 /* Input nativo: invisible pero funcional (teclado/puntero/a11y). Sin outline propio. */
 .bonus-slider__input {
@@ -4741,7 +4744,7 @@ button.prod-card__base-tag--action:hover {
   font-size: var(--text-base);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--moon);
+  color: var(--accent-text);
 }
 .bonus-slider__unit {
   font-size: var(--text-sm);
@@ -4791,8 +4794,7 @@ button.prod-card__base-tag--action:hover {
   opacity: 0.5;
 }
 
-/* Botón "Sign in with Google": superficie neutra (no un color "con voz" — el
-   dorado queda reservado para el acento de identidad). El único lugar donde se
+/* Botón "Sign in with Google": superficie neutra (no un color "con voz"). El único lugar donde se
    permite el color de marca de Google es el glifo "G", tratado como artwork del
    juego, no como color de la UI. */
 .btn--google {
@@ -4952,8 +4954,7 @@ button.prod-card__base-tag--action:hover {
 }
 
 /* Gate de página reservada (Caja, Análisis de equipo) mientras no hay sesión:
-   una .card centrada con el roundel de luna — el único acento gold de la card,
-   per "one gold accent per card". */
+   una .card centrada con el roundel de luna en índigo. */
 .gate-card {
   max-width: 420px;
   margin: 2.5rem auto;
@@ -4971,9 +4972,9 @@ button.prod-card__base-tag--action:hover {
   border-radius: 999px;
   display: grid;
   place-items: center;
-  background: var(--moon-dim);
-  border: 1px solid var(--moon-border);
-  color: var(--moon);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border);
+  color: var(--accent-text);
 }
 
 .gate-card__title {
@@ -4995,7 +4996,7 @@ button.prod-card__base-tag--action:hover {
    ============================================================ */
 
 /* Unsaved-value mark (design-system §5, .progress-diff). Indigo: the functional
-   colour of state, so the identity gold stays scarce. */
+   colour of state. */
 .progress-diff {
   /* Aparece en medio de un arrastre o un tap: entra en vez de aparecer de golpe,
      y crece en alto, así la línea que la aloja tampoco salta. */
@@ -5180,7 +5181,7 @@ button.prod-card__base-tag--action:hover {
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
-  color: var(--moon);
+  color: var(--text);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }

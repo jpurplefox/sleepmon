@@ -675,9 +675,9 @@ export function Teams() {
             {(() => {
               const pieData = [
                 { key: "berries", name: t("teams.berries"), value: result.total_berry_strength * factor, color: "#6366f1" },
-                { key: "skills", name: t("card.skill"), value: result.total_skill_strength * factor, color: "#3fb950" },
-                { key: "recipes", name: t("teams.recipes"), value: result.kitchen.recipe_strength, color: "#a371f7" },
-                { key: "fillers", name: t("teams.fillersLabel"), value: result.kitchen.filler_strength, color: "#f78166" },
+                { key: "skills", name: t("card.skill"), value: result.total_skill_strength * factor, color: "#38bdf8" },
+                { key: "recipes", name: t("teams.recipes"), value: result.kitchen.recipe_strength, color: "#c084fc" },
+                { key: "fillers", name: t("teams.fillersLabel"), value: result.kitchen.filler_strength, color: "#94a3b8" },
                 { key: "extraTasty", name: t("teams.extraTasty"), value: result.kitchen.extra_tasty_bonus, color: "#e3b341" },
               ].filter((d) => d.value > 0);
               const totalValue = pieData.reduce((s, d) => s + d.value, 0);

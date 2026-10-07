@@ -79,9 +79,11 @@ function Delta({ value, base }: { value: number; base: number | null | undefined
   const diff = value - base;
   if (Math.abs(diff) < 0.005) return <span className="prod-delta prod-delta--same">≈</span>;
   const cls = diff > 0 ? "prod-delta--up" : "prod-delta--down";
+  // Shape (▲/▼) carries the direction too, so it doesn't rest on color alone.
   return (
     <span className={`prod-delta ${cls}`}>
-      {diff > 0 ? "+" : "−"}
+      <span aria-hidden="true">{diff > 0 ? "▲" : "▼"}</span>
+      <span className="sr-only">{diff > 0 ? "+" : "−"}</span>
       {fmt(Math.abs(diff))}
     </span>
   );
@@ -96,7 +98,7 @@ interface Props {
   // esta es la base.
   base?: Production | null;
   // True cuando esta card es la base y hay más de una en comparación: muestra el
-  // chip "Base" y el borde lunar. comparing controla si se ofrece "Hacer base".
+  // chip "Base". comparing controla si se ofrece "Hacer base".
   isBase?: boolean;
   comparing?: boolean;
   // Modo solo lectura: oculta la barra de acciones (editar/clonar/guardar/mover/arrastre)
@@ -376,7 +378,6 @@ export function ProductionCard({
         className={
           "prod-card" +
           (entering ? " prod-card--enter" : "") +
-          (isBase ? " prod-card--base" : "") +
           (dragging ? " prod-card--dragging" : "") +
           (dragOver ? " prod-card--dragover" : "") +
           (readOnly ? " prod-card--readonly" : "") +
@@ -395,163 +396,165 @@ export function ProductionCard({
         onDragOver={!readOnly ? (e) => e.preventDefault() : undefined}
         onDrop={!readOnly ? (e) => { e.preventDefault(); onDrop?.(); } : undefined}
       >
-        {notice}
-        <header className="prod-card__head">
-          {/* Fila 1: grip de arrastre + reordenar por teclado + nombre / nivel / listón.
-              En modo readOnly no se muestran grip ni botones de movimiento. */}
-          <div className="prod-card__topline">
-            {!readOnly && (
-              <>
-                <button
-                  type="button"
-                  className="icon-btn prod-card__grip"
-                  draggable
-                  onDragStart={(e) => {
-                    e.dataTransfer.effectAllowed = "move";
-                    e.dataTransfer.setData("text/plain", config.species);
-                    if (cardRef.current) e.dataTransfer.setDragImage(cardRef.current, 20, 20);
-                    onDragStart?.();
-                  }}
-                  onDragEnd={onDragEnd}
-                  onKeyDown={(e) => {
-                    // Alternativa de teclado al arrastre: flechas mueven la card.
-                    if (e.key === "ArrowLeft" && onMoveLeft) {
-                      e.preventDefault();
-                      onMoveLeft();
-                    } else if (e.key === "ArrowRight" && onMoveRight) {
-                      e.preventDefault();
-                      onMoveRight();
-                    }
-                  }}
-                  title={t("card.gripTitle")}
-                  aria-label={t("card.gripAria")}
-                >
-                  <IconGrip />
-                </button>
-                <button
-                  type="button"
-                  className="icon-btn prod-card__move"
-                  onClick={onMoveLeft}
-                  disabled={!onMoveLeft}
-                  title={t("card.moveLeft")}
-                  aria-label={t("card.moveLeft")}
-                >
-                  ‹
-                </button>
-                <button
-                  type="button"
-                  className="icon-btn prod-card__move"
-                  onClick={onMoveRight}
-                  disabled={!onMoveRight}
-                  title={t("card.moveRight")}
-                  aria-label={t("card.moveRight")}
-                >
-                  ›
-                </button>
-              </>
-            )}
-            <div className="prod-card__title">
-              <strong>{config.species}</strong>{" "}
-              <span className="muted">{t("common.level", { level: config.level })}</span>
-              {(() => {
-                const idx = RIBBONS.findIndex((r) => r.name === config.ribbon);
-                return idx > 0 ? (
-                  <RibbonIcon
-                    index={idx}
-                    size={16}
-                    title={t("member.ribbon", { hours: RIBBONS[idx].hours })}
-                  />
-                ) : null;
-              })()}
-            </div>
-          </div>
-          {/* Fila de altura reservada: evita que las cards salten al pasar de 1 a 2
-              (cuando aparecen el chip "Base" / el botón "Hacer base").
-              En modo readOnly no hay chip ni botón de base. */}
-          {!readOnly && (
-            <div className="prod-card__base-row">
-              {comparing &&
-                (isBase ? (
-                  <span className="prod-card__base-tag" title={t("card.baseTitle")}>
-                    {t("card.base")}
-                  </span>
-                ) : (
+        <div className="prod-card__identity">
+          {notice}
+          <header className="prod-card__head">
+            {/* Fila 1: grip de arrastre + reordenar por teclado + nombre / nivel / listón.
+                En modo readOnly no se muestran grip ni botones de movimiento. */}
+            <div className="prod-card__topline">
+              {!readOnly && (
+                <>
                   <button
                     type="button"
-                    className="prod-card__base-tag prod-card__base-tag--action"
-                    onClick={onMakeBase}
-                    title={t("card.makeBaseTitle")}
+                    className="icon-btn prod-card__grip"
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.effectAllowed = "move";
+                      e.dataTransfer.setData("text/plain", config.species);
+                      if (cardRef.current) e.dataTransfer.setDragImage(cardRef.current, 20, 20);
+                      onDragStart?.();
+                    }}
+                    onDragEnd={onDragEnd}
+                    onKeyDown={(e) => {
+                      // Alternativa de teclado al arrastre: flechas mueven la card.
+                      if (e.key === "ArrowLeft" && onMoveLeft) {
+                        e.preventDefault();
+                        onMoveLeft();
+                      } else if (e.key === "ArrowRight" && onMoveRight) {
+                        e.preventDefault();
+                        onMoveRight();
+                      }
+                    }}
+                    title={t("card.gripTitle")}
+                    aria-label={t("card.gripAria")}
                   >
-                    {t("card.makeBase")}
+                    <IconGrip />
                   </button>
-                ))}
+                  <button
+                    type="button"
+                    className="icon-btn prod-card__move"
+                    onClick={onMoveLeft}
+                    disabled={!onMoveLeft}
+                    title={t("card.moveLeft")}
+                    aria-label={t("card.moveLeft")}
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    className="icon-btn prod-card__move"
+                    onClick={onMoveRight}
+                    disabled={!onMoveRight}
+                    title={t("card.moveRight")}
+                    aria-label={t("card.moveRight")}
+                  >
+                    ›
+                  </button>
+                </>
+              )}
+              <div className="prod-card__title">
+                <strong>{config.species}</strong>{" "}
+                <span className="muted">{t("common.level", { level: config.level })}</span>
+                {(() => {
+                  const idx = RIBBONS.findIndex((r) => r.name === config.ribbon);
+                  return idx > 0 ? (
+                    <RibbonIcon
+                      index={idx}
+                      size={16}
+                      title={t("member.ribbon", { hours: RIBBONS[idx].hours })}
+                    />
+                  ) : null;
+                })()}
+              </div>
             </div>
-          )}
-          {/* Sprite centrado: foco visual de la card. */}
-          {species && (
-            <img className="prod-card__sprite" src={spriteUrl(species.dex)} alt="" loading="lazy" />
-          )}
-        </header>
+            {/* Fila de altura reservada: evita que las cards salten al pasar de 1 a 2
+                (cuando aparecen el chip "Base" / el botón "Hacer base").
+                En modo readOnly no hay chip ni botón de base. */}
+            {!readOnly && (
+              <div className="prod-card__base-row">
+                {comparing &&
+                  (isBase ? (
+                    <span className="prod-card__base-tag" title={t("card.baseTitle")}>
+                      {t("card.base")}
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="prod-card__base-tag prod-card__base-tag--action"
+                      onClick={onMakeBase}
+                      title={t("card.makeBaseTitle")}
+                    >
+                      {t("card.makeBase")}
+                    </button>
+                  ))}
+              </div>
+            )}
+            {/* Sprite centrado: foco visual de la card. */}
+            {species && (
+              <img className="prod-card__sprite" src={spriteUrl(species.dex)} alt="" loading="lazy" />
+            )}
+          </header>
 
-      <div className="prod-card__tags">
-        <div className="icon-row">
-          {config.ingredients.map((ing, i) => {
-            const locked = config.level < (INGREDIENT_UNLOCK_LEVELS[i] ?? 1);
-            return (
-              <img
-                key={i}
-                className={"mini-icon" + (locked ? " mini-icon--locked" : "")}
-                src={ingredientIcon(ing)}
-                alt={ingredient(ing)}
-                title={
-                  locked
-                    ? t("card.ingredientLocked", {
-                        ing: ingredient(ing),
-                        level: INGREDIENT_UNLOCK_LEVELS[i],
-                      })
-                    : ingredient(ing)
-                }
-              />
-            );
-          })}
+          <div className="prod-card__tags">
+            <div className="icon-row">
+              {config.ingredients.map((ing, i) => {
+                const locked = config.level < (INGREDIENT_UNLOCK_LEVELS[i] ?? 1);
+                return (
+                  <img
+                    key={i}
+                    className={"mini-icon" + (locked ? " mini-icon--locked" : "")}
+                    src={ingredientIcon(ing)}
+                    alt={ingredient(ing)}
+                    title={
+                      locked
+                        ? t("card.ingredientLocked", {
+                            ing: ingredient(ing),
+                            level: INGREDIENT_UNLOCK_LEVELS[i],
+                          })
+                        : ingredient(ing)
+                    }
+                  />
+                );
+              })}
+            </div>
+            <div className="icon-row">
+              {config.sub_skills.length === 0 && <span className="muted">{t("card.noSubSkills")}</span>}
+              {config.sub_skills.map((s, i) => {
+                const unlock = SUB_SKILL_UNLOCK_LEVELS[i] ?? SUB_SKILL_NEVER_UNLOCKS;
+                const locked = config.level < unlock;
+                const title = !locked
+                  ? subSkill(s)
+                  : Number.isFinite(unlock)
+                    ? t("card.subSkillLocked", { name: subSkill(s), level: unlock })
+                    : t("card.subSkillSlotUnavailable", { name: subSkill(s) });
+                return (
+                  <span
+                    key={i}
+                    className={`ss-icon ss-icon--${tierClass(s)}` + (locked ? " is-locked" : "")}
+                    title={title}
+                  >
+                    <img src={subSkillIcon(s)} alt={subSkill(s)} />
+                  </span>
+                );
+              })}
+            </div>
+            <div className="icon-row prod-card__nature">
+              {!config.nature ? (
+                <span className="muted">{t("card.noNature")}</span>
+              ) : nature && !nature.neutral && nature.increased && nature.decreased ? (
+                <>
+                  <span className="nat-up">↑</span>
+                  <img className="mini-icon" src={statIcon(nature.increased)} alt={natureStat(nature.increased)} title={natureStat(nature.increased)} />
+                  <span className="nat-down">↓</span>
+                  <img className="mini-icon" src={statIcon(nature.decreased)} alt={natureStat(nature.decreased)} title={natureStat(nature.decreased)} />
+                  <span className="muted">{natureName(config.nature)}</span>
+                </>
+              ) : (
+                <span className="muted">{natureName(config.nature)}</span>
+              )}
+            </div>
+          </div>
         </div>
-        <div className="icon-row">
-          {config.sub_skills.length === 0 && <span className="muted">{t("card.noSubSkills")}</span>}
-          {config.sub_skills.map((s, i) => {
-            const unlock = SUB_SKILL_UNLOCK_LEVELS[i] ?? SUB_SKILL_NEVER_UNLOCKS;
-            const locked = config.level < unlock;
-            const title = !locked
-              ? subSkill(s)
-              : Number.isFinite(unlock)
-                ? t("card.subSkillLocked", { name: subSkill(s), level: unlock })
-                : t("card.subSkillSlotUnavailable", { name: subSkill(s) });
-            return (
-              <span
-                key={i}
-                className={`ss-icon ss-icon--${tierClass(s)}` + (locked ? " is-locked" : "")}
-                title={title}
-              >
-                <img src={subSkillIcon(s)} alt={subSkill(s)} />
-              </span>
-            );
-          })}
-        </div>
-        <div className="icon-row prod-card__nature">
-          {!config.nature ? (
-            <span className="muted">{t("card.noNature")}</span>
-          ) : nature && !nature.neutral && nature.increased && nature.decreased ? (
-            <>
-              <span className="nat-up">↑</span>
-              <img className="mini-icon" src={statIcon(nature.increased)} alt={natureStat(nature.increased)} title={natureStat(nature.increased)} />
-              <span className="nat-down">↓</span>
-              <img className="mini-icon" src={statIcon(nature.decreased)} alt={natureStat(nature.decreased)} title={natureStat(nature.decreased)} />
-              <span className="muted">{natureName(config.nature)}</span>
-            </>
-          ) : (
-            <span className="muted">{natureName(config.nature)}</span>
-          )}
-        </div>
-      </div>
 
       {!d ? (
         productionError ? (

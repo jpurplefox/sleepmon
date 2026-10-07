@@ -1,4 +1,4 @@
-# sleepmon Design System — "Luz de luna"
+# sleepmon Design System — "Noche"
 
 > Living document. It holds both the **visual identity** (the concept) and the
 > **reusable pieces** (tokens + components) that implement it. Every visual change
@@ -10,14 +10,16 @@
 ## 1. Concept (identity)
 
 **In one line:** a team-tracking app that lives at night — dark and still like
-sleep, with a single warm accent (the moon) marking what matters.
+sleep, where every color on the screen has a job to do.
 
-**The twist:** not a generic dark mode. The move is a **deliberate chromatic
-asymmetry** — a cold background (deep navy) plus a single warm accent (moon gold).
-Indigo becomes a **functional** color (selection / focus / active state), never
-decorative. Gold is the only color with "its own voice": what glows in the dark.
-It comes from the game — Pokémon Sleep revolves around the moon, night, and
-nighttime production; everything valuable is warm inside the dark.
+**The twist:** function before identity. The UI has **no color of its own voice**:
+the background is an own night navy (not a stock dark theme), and the only hues
+are functional — **indigo** for state (selection / focus / active / editing) and a
+**good / bad pair** (mint `--up`, coral `--down`) for what the rules push up or
+down. The pair differs in brightness as well as hue, so good and bad stay apart
+without relying on color vision, and a direction always carries a shape too (▲/▼,
+a sign). The color that stands out on screen is the game's own artwork — sprites,
+berries, ingredients, sub-skill tiers.
 
 **Voice:**
 - **Still, but not frozen** — motion is allowed only when it does a job: state
@@ -28,8 +30,9 @@ nighttime production; everything valuable is warm inside the dark.
   short and sober (~80–150ms for micro-interactions, entrances and those size
   changes; the only loop is the saving pulse, and it *is* the feedback), and always
   honors `prefers-reduced-motion`. Nothing moves to decorate.
-- **Hierarchy by weight, not color** — gold is reserved for very few identity
-  accents; indigo only for active/selection. When there is no real KPI, blocks
+- **Hierarchy by size and weight, not color** — the most important figure (e.g. the
+  team's grand total) leads by being larger and heavier; indigo only for
+  active/selection. When there is no real KPI, blocks
   share equal hierarchy (don't invent a "main number" where there isn't one).
 - **The game's sprites and icons are the app's artwork**; type and components are
   the neutral frame that holds them.
@@ -47,19 +50,20 @@ nighttime production; everything valuable is warm inside the dark.
 
 ## 2. Tokens
 
-**Palette** — max **2 "voiced" colors per screen** (`--moon` and `--accent`); the
-rest are functional or semantic.
+**Palette** — no "voiced" color: indigo is functional, `--up`/`--down` are semantic,
+and the game's artwork brings the rest. Surfaces separate by **tone** (`--bg` →
+`--surface` → `--surface-2`), not by outlines.
 
 ```css
-/* Backgrounds — cold, deep */
---bg:        #0d1117;
---surface:   #161b22;
---surface-2: #21262d;
---border:    #30363d;
+/* Backgrounds — an own night navy; each step is visible on its own */
+--bg:        #0e1220;
+--surface:   #171d30;   /* cards */
+--surface-2: #20283f;   /* controls and panels inside a card */
+--border:    #262e47;   /* hairline dividers and control outlines — never a card edge */
 
 /* Text */
---text:      #e6edf3;
---muted:     #8b949e;
+--text:      #e8ecf6;
+--muted:     #98a2bd;   /* 6.5:1 on --surface */
 
 /* Functional accent — indigo. Two roles, because contrast pulls opposite
    ways: as FILL under white text vs as INK on the dark background. One value
@@ -68,33 +72,32 @@ rest are functional or semantic.
 --accent-strong: #4f46e5;   /* fill under white text (primary button) */
 --accent-dim:    rgba(99, 102, 241, 0.15);
 --accent-border: rgba(99, 102, 241, 0.4);
---accent-text:   #818cf8;   /* indigo as text/icon on dark — AA (≥4.5:1) */
+--accent-text:   #8f95ff;   /* indigo as text/icon on dark — AA (6.3:1 on --surface) */
 
-/* Identity accent — moon gold (the only "warm" color allowed) */
---moon:        #d4a017;
---moon-dim:    rgba(212, 160, 23, 0.15);
---moon-border: rgba(212, 160, 23, 0.4);
+/* Semantic good / bad — what the rules push up (a bonus, a stat that rises, a
+   delta in favor) or down (a cost, a stat that falls, a delta against). The pair
+   differs in luminance (1.8x) as well as hue, so it survives deuteranopia. */
+--up:          #5ee6c4;
+--up-dim:      rgba(94, 230, 196, 0.13);
+--up-border:   rgba(94, 230, 196, 0.4);
+--down:        #f97066;
+--down-dim:    rgba(249, 112, 102, 0.14);
+--down-border: rgba(249, 112, 102, 0.4);
+--error:       #f85149;   /* destruction only (§4) */
 
-/* The three accents that tint a surface — `--moon`, `--down` and `--accent` —
-   all carry the same two alpha variants at the same alphas: `-dim` fills,
-   `-border` outlines. A cost is marked the way a bonus is, and a functional
-   state the way both are. `rgba()` needs channels, so a variant cannot be
-   composed from the base token at use time. */
+/* The three accents that tint a surface — `--up`, `--down` and `--accent` —
+   all carry the same two alpha variants: `-dim` fills, `-border` outlines. A
+   cost is marked the way a bonus is, and a functional state the way both are.
+   `rgba()` needs channels, so a variant cannot be composed at use time. */
 
-/* Semantic — natures and errors. */
---up:          #3fb950;   /* stat that rises */
---down:        #f78166;   /* stat that falls */
---down-dim:    rgba(247, 129, 102, 0.15);
---down-border: rgba(247, 129, 102, 0.4);
---error:       #f85149;
-
-/* Sub-skill tiers — blue is the tier-specific color; the gold and regular
-   tiers use --moon / --muted, mapped in .ss-icon */
+/* Sub-skill tiers — game content, so their colors are the game's; the regular
+   tier uses --muted, mapped in .ss-icon. Gold appears nowhere else. */
+--tier-gold: #d4a017;
 --tier-blue: #58a6ff;
 
 /* Elevated surfaces */
---overlay:         rgba(13, 17, 23, 0.75);
---shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.5);
+--overlay:         rgba(8, 11, 20, 0.75);
+--shadow-dropdown: 0 12px 32px rgba(0, 0, 0, 0.45);
 ```
 
 **Type scale** (5 sizes, by role — intermediate sizes snap to the nearest):
@@ -112,7 +115,7 @@ rest are functional or semantic.
 ```
 --r-sm: 6px    /* chips, badges, small elements inside dropdowns */
 --r-md: 10px   /* inputs, buttons, list items, inner cards */
---r-lg: 14px   /* main cards, modals, dropdowns */
+--r-lg: 16px   /* main cards, modals, dropdowns */
 ```
 
 `border-radius: 999px` only for pills (level chip, level badges).
@@ -130,8 +133,8 @@ Two icon languages that never mix:
   stats). They are "the artwork" and keep their real color.
 - **UI metrics & actions** → own line icons in `src/components/icons.tsx`:
   `currentColor`, `stroke-width: 2`, `viewBox 0 0 24 24`, 14px default, rounded
-  caps/joins, `aria-hidden`. They inherit context color (dimmed to `--muted`, gold
-  with `--moon` when they mean "the night"). **Never emojis.**
+  caps/joins, `aria-hidden`. They inherit context color (dimmed to `--muted`,
+  `--accent-text` when they mean "the night"). **Never emojis.**
 
 Current catalog: `IconClock`, `IconHelp`, `IconPackage`, `IconHourglass`,
 `IconSparkle`, `IconPot`, `IconMagnifier`, `IconMoon`, `IconGrip`,
@@ -160,7 +163,7 @@ Two kinds of figure stay **bare** (no metric icon):
 - **Not a single metric.** A percentage, a count or ratio (coverage `X/Y`,
   filter/showing counts, `X/3`, pot `N/M`), or a level (`Lv N`) — no one icon fits.
   Exceptions: a percentage that is a skill mechanic with its own icon (extra tasty)
-  keeps it, and the Pokémon-level badge keeps its gold (its own accent exception).
+  keeps it.
 - **Feeds or derives from a reported metric.** The figures a breakdown decomposes
   into (a berry's count, a filler's base strength), a subtotal's total / closing
   row, a `×7` weekly projection — the icon rides the reported metric; these read as
@@ -180,9 +183,9 @@ filter still uses berry icons; it predates this rule and should follow it.)
 
 - **Contrast (WCAG AA):** all text meets **4.5:1** (normal) / **3:1** (large text,
   icons, UI borders) against its actual background. Indigo is the one color that
-  needed splitting for this: `--accent-text` (#818cf8) whenever indigo is the
+  needed splitting for this: `--accent-text` (#8f95ff) whenever indigo is the
   **ink** (text/icon on a dark surface), `--accent` / `--accent-strong` as
-  **fill/border**. The rest of the palette (`--muted`, `--moon`, semantic, tiers)
+  **fill/border**. The rest of the palette (`--muted`, `--up`/`--down`, tiers)
   already clears AA; a new color must be checked against this before it's added.
 - **Focus:** unified `outline: 2px solid var(--accent)` on everything interactive
   (buttons, custom triggers, chips, stepper buttons, modal close, tabs). One
@@ -196,10 +199,16 @@ filter still uses berry icons; it predates this rule and should follow it.)
 - **Cost vs. destruction (the two reds):** a **cost** — a value the rules push down
   (a gameplay penalty, a stat that falls) — is `--down`, never `--error`. It may
   reach past a badge onto a **whole surface**: a card whose subject is being
-  penalized carries a `--down-border` outline plus a `--down-dim` inset — the same
-  two roles, at the same alphas, that `--moon-border` / `--moon-dim` play for a
-  bonus. That surface-level red is reserved for a real, rule-driven penalty and
+  penalized gets a `--down`-tinted header, the way a favored card gets an
+  `--up`-tinted one. That surface-level red is reserved for a real, rule-driven penalty and
   must vanish where the penalty does not apply — a state, never decoration.
+- **Good / bad never by color alone:** a direction always carries a shape or sign
+  too — `▲`/`▼` on deltas and natures (the sign stays in `sr-only` text for screen
+  readers), `+`/`−`/`×` on marks. Natures follow the app's pair (`▲` `--up`,
+  `▼` `--down`), not the game's red-up / blue-down.
+- **Charts:** categorical series use hues outside the good/bad pair (today's
+  strength breakdown: berries `#6366f1`, skills `#38bdf8`, recipes `#c084fc`, fillers
+  `#94a3b8`, extra tasty `#e3b341`), so no slice reads as "good" or "bad".
 - **Empty placeholders:** a dim same-size square keeps rows aligned when a value is
   missing (`.mini-icon--empty`).
 - **Hidden overlays are hidden from layout too:** anything absolutely positioned
@@ -255,8 +264,16 @@ states · where it lives. Feature one-offs are intentionally not here.
   language), state `--active` (solid accent fill).
 
 ### Containers
-- **`.card`** — generic surface (`--surface`, border, `--r-lg`, ~1.25rem padding).
-  The base surface across pages.
+- **`.card`** — generic surface (`--surface`, transparent 1px border, `--r-lg`,
+  ~1.25rem padding). Separated from the page by tone, not an outline. A **state** the rules impose on
+  a card is told by a tint, never a border (see `.prod-card` below). The base surface across pages.
+- **`.prod-card` berry header** — the card's relation to the map's favorite berries
+  tints its **identity zone** (`.prod-card__identity`: name, sprite, ingredients, sub
+  skills, nature — bleeding to the card edges), while the figures below stay on
+  `--surface`. `color-mix` of the semantic color into `--surface`: `--favorite-berry`
+  `--up` 18%, `--main-favorite` (expert map) `--up` 30%, `--no-favorite` (expert map
+  only) `--down` 20%. Neutral cards keep `--surface`. The
+  comparison's base card has **no** surface treatment — its `Base` tag says it.
 - **`.layout` / `.layout--wide`** — page container (`max-width: 1100px`; `--wide`
   removes it for the production comparator).
 - **`.grid` / `.grid--3`** — 2- or 3-column layout, collapses to 1 under 860px.
@@ -264,8 +281,8 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **`.hero` (`__note`)** — page header (h1 + small secondary note).
 
 ### Chips & badges
-- **`.badge`** — compact pill for short metrics. Variants: `--level` (moon gold),
-  `--ok` (`--up` green), `--low` (`--down` red).
+- **`.badge`** — compact pill for short metrics. Variants: `--level` (neutral
+  `--surface-2`, `--text`, weight 700), `--ok` (`--up`), `--low` (`--down`).
 - **`.metric-mark`** — inline annotation of what a rule is doing (`×2` / `×2,4` on
   berries, `+1` on ingredients, `Skill +1` or `×1,25` on skill, `−10%` / `+15%` on
   help cadence, with each expert map's own figures). It rides either the **figure** the rule changed, or the **control
@@ -273,11 +290,11 @@ states · where it lives. Feature one-offs are intentionally not here.
   `.filter-list__item`, where the same mark labels the option that produces it.
   Smaller and bolder than `.badge` (`--text-xs`, weight 700) and tinted rather than
   neutral, so it reads as attached to what it annotates instead of standing on its
-  own. Variants: `--good` (moon gold on `--moon-dim`) and `--bad` (`--down` on
+  own. Variants: `--good` (`--up` on `--up-dim`) and `--bad` (`--down` on
   `--down-dim`). Always carries `title`
   + `aria-label` with the full effect — the sign and the text carry the meaning, so
   color is never the only cue. Generalized from `.prod-card__fav-badge` (the berry
-  `×2`), which is its gold variant. **With icons**: where the mark stands apart from
+  `×2`), which is its good variant. **With icons**: where the mark stands apart from
   the figure it changes (a summary of active rules), it leads with the effect's icon
   and may close with its scope's (a type icon) — `[icon] ×1,5 [scope]`, icons at
   14px inside the same pill.
@@ -307,8 +324,12 @@ states · where it lives. Feature one-offs are intentionally not here.
   **Not a `.metric-mark` variant**: that one is a non-interactive pill (`999px`)
   naming what a *rule* does to a figure, this one is a rounded container holding a
   button and naming what the *user* has left undone.
+- **`.prod-delta`** — a comparison card's difference against the base: a pill
+  (`999px`, `--text-xs`, weight 700) with `▲`/`▼` + the absolute difference.
+  Variants: `--up` (`--up` on `--up-dim`), `--down` (`--down` on `--down-dim`),
+  `--same` (bare `≈` in `--muted`). The sign lives in `sr-only` text.
 - **`.chip` / `.chips`** — small thematic tag (container wraps). Variants:
-  `--ingredient` (gold-dim), `--subskill` (accent-dim).
+  `--ingredient` (`--surface-2`), `--subskill` (accent-dim).
 - **`.mini-icon`** — small inline icon (nature stat, ingredient, sub-skill) with
   states `--empty` (dim placeholder) and `--locked` (grayscale + opacity).
 - **`.ss-icon`** — sub-skill icon framed by tier color (`--gold/--blue/--regular/
@@ -413,9 +434,8 @@ states · where it lives. Feature one-offs are intentionally not here.
   when there is no session — today only the **Box**. Which pages those are follows
   from the rule, not from a list: a page is reserved when it reads or writes the Box
   (see PRD 0010), so a tool that only computes stays open and never shows this card.
-  A centered `.card` composition: a **moon roundel** (`IconMoon` in `--moon` on
-  `--moon-dim` / `--moon-border` — the single identity gold, per "one gold accent per
-  card"), a title, a `--muted` line, and a `.btn--google`. Sits alongside the
+  A centered `.card` composition: a **moon roundel** (`IconMoon` in `--accent-text`
+  on `--accent-dim` / `--accent-border`), a title, a `--muted` line, and a `.btn--google`. Sits alongside the
   empty/loading `Placeholder` vocabulary but is a distinct pattern (a call to sign in,
   not an empty list). The empty **Box** state is separate and only shown once signed
   in.
@@ -435,7 +455,7 @@ A running log of visual/UX questions that came up and how they were resolved —
 the reasoning, so a future similar case has a precedent. A new entry is added when
 a real doubt gets settled. The screen is the occasion, not the subject.
 
-- **One gold accent per card.** *Question:* how much identity gold on a data card?
+- **One gold accent per card.** *(Superseded by «Function over identity», below.)* *Question:* how much identity gold on a data card?
   *Resolution:* exactly one element — the single key figure (e.g. a level badge) —
   carries `--moon`; nothing else. *Why:* gold only reads as "what matters" if it
   stays scarce.
@@ -467,7 +487,9 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   `--down` already means (`.badge--low`, a nature's `↓`); calling it an error would
   say something went wrong, when nothing did. It also keeps the two-voiced palette
   intact — `--down` is semantic, not a third voice.
-- **Gold marks a state, and then it may repeat.** *Question:* "one gold accent per
+- **Gold marks a state, and then it may repeat.** *(Superseded by «Function over
+  identity», below — favored cards and their marks now use `--up`; the point about
+  stacked states keeping a quiet step still holds.)* *Question:* "one gold accent per
   card" says a single element carries `--moon`, but a card the rules favor now has
   a gold border *and* a gold mark on each metric the favor touches. Which wins?
   *Resolution:* the one-accent rule governs **identity** — the single key figure,
@@ -578,3 +600,30 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   you reach for, which is what the tooltip is for (§ Tooltip), and keeping berries on
   their own row keeps "everything that yields strength is in Berries" true without a
   second, parallel row.
+- **Function over identity.** *Question:* the moon gold was both the app's identity
+  (level badge, grand total, the night) and its "good" (bonus marks, favored cards),
+  while coral meant "bad" — and the two sat at nearly the same brightness (0.39 vs
+  0.36 relative luminance) only ~30° of hue apart, so good and bad were hard to tell
+  apart, worse under color-blindness. The base palette was also a stock dark theme,
+  which made the app read as a dev tool. Keep the identity and fix the contrast, or
+  drop the identity? *Resolution:* drop it. `--moon` is gone: identity uses (level
+  badge, Snorlax level, the night icon, strength figures) turn neutral or indigo, the
+  grand total leads by size and weight, and every "good" use moves to a new `--up`
+  (mint), paired with `--down` (coral) at 1.8x the luminance apart. Comparison deltas
+  became `▲`/`▼` pills, natures follow the same pair, chart series avoid it, and cards
+  separate from an own night navy by tone instead of outlines. Gold survives only as
+  the game's gold sub-skill tier. *Why:* in a tool read for numbers, a color that
+  means "this is us" competes with the colors that mean "this is better / worse" —
+  and loses legibility for both. Giving every hue exactly one job makes the screen
+  scannable at a glance, and the game's artwork already gives the app its character.
+- **A card's state tints it; the base card has none.** *Question:* favored, main
+  favorite, penalized and the comparison's base were all told by the card's border —
+  and on a favored card the base ring was lost. Keep borders, or move the state into
+  the surface? *Resolution:* the berry relation tints the card's **identity header** (`--up`
+  18% / 30%, `--down` 20%), no border at all, and the base card drops its visual
+  treatment — the `Base` tag already names it. A whole-card tint was tried first:
+  subtle enough to keep the numbers readable, it didn't separate from a neutral card,
+  and stronger it muddied the navy into teal/maroon behind every figure. *Why:* a
+  one-pixel border competes with every other edge on a dense screen and two states
+  can't share it; tinting only the header reads at a glance and keeps the data area
+  neutral. "Which one is the base" is a label, not a state worth a color.
