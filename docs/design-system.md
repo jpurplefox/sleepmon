@@ -352,7 +352,9 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **`Modal`** (`components/Modal.tsx`) — shared dialog. Props: `title`, `onClose`,
   `children`, `wide?`. Escape to close, focus trap, body-scroll lock, autofocus to
   `[data-autofocus]`, focus return; `role="dialog"`, `aria-modal`. Footer via
-  `.modal-actions`.
+  `.modal-actions`. The panel never outgrows the viewport: the title stays fixed and
+  only `.modal-body` scrolls (a body holding its own scrolling panel, like Progress,
+  doesn't scroll too). A dropdown opened inside scrolls itself into view.
 - **Dropdown / combobox pattern** — `SpeciesSelect`, `NatureSelect`,
   `SubSkillSelect` share one skeleton: trigger (`aria-haspopup/expanded`) + absolute
   panel (`role="listbox"`), arrow/Enter nav, click-outside + Escape to close. Same

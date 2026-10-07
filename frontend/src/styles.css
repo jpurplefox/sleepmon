@@ -1056,7 +1056,8 @@ select:focus {
   align-items: flex-start;
   justify-content: center;
   padding: 2rem 1rem;
-  overflow-y: auto;
+  /* The panel scrolls its own body; the overlay never scrolls. */
+  overflow: hidden;
   z-index: 50;
   animation: overlay-in 0.12s ease-out;
 }
@@ -1068,6 +1069,11 @@ select:focus {
   width: 100%;
   max-width: 560px;
   margin: auto;
+  /* Fits the viewport: the title stays put and only the body scrolls. */
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 4rem);
+  max-height: calc(100dvh - 4rem);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   animation: modal-in 0.12s ease-out;
 }
@@ -1099,6 +1105,7 @@ select:focus {
 }
 
 .modal-head {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1130,6 +1137,9 @@ select:focus {
 
 .modal-body {
   padding: 1.25rem;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* Footer de acciones de un modal (p. ej. confirmación de borrado). */
@@ -3756,8 +3766,8 @@ button.prod-card__base-tag--action:hover {
   font-size: var(--text-sm);
 }
 
-/* Grid of recipe cards. No scrolling of its own: it always sits inside
-   .settings-modal-panel, which is the single scroll container — two nested
+/* Grid of recipe cards. No scrolling of its own: the modal body (or
+   .settings-modal-panel) is the single scroll container — two nested
    scrollers produced two side-by-side scrollbars. */
 .meal-picker-grid {
   display: grid;
@@ -4313,11 +4323,17 @@ button.prod-card__base-tag--action:hover {
   outline-offset: 2px;
 }
 
-/* Stable height between island/meals tabs: both panels share a fixed height
-   with internal scroll, so switching tabs never resizes the modal and tall
-   content (Greengrass berry grid) scrolls instead of overflowing the viewport. */
+/* Stable height between the Progress tabs: one fixed-height panel with its own
+   scroll. Its body doesn't scroll too — the panel shrinks to fit a short viewport. */
+.modal-body:has(> .settings-modal-panel) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .settings-modal-panel {
   height: 66vh;
+  min-height: 0;
   overflow-y: auto;
   /* Reserve the bar's width so it never overlaps the content's right edge. */
   scrollbar-gutter: stable;
