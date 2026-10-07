@@ -41,16 +41,15 @@ export const UI: Record<Lang, Record<string, string>> = {
     "auth.gateBody":
       "Iniciá sesión con Google para empezar tu Caja, registrar tu equipo y encontrarlo en cada visita.",
     // Página Equipo
-    "team.title": "Mi caja de Pokémon Sleep",
-    "team.subtitle":
-      "Registrá tus Pokémon con su naturaleza, sub skills e ingredientes, y mirá la distribución de toda la caja.",
     "team.box": "Caja",
     "team.updating": "Actualizando…",
     "team.add": "+ Agregar Pokémon",
     "team.loadingBox": "Cargando caja…",
     "team.boxError": "No se pudo cargar la caja.",
     "team.deleteError": "No se pudo eliminar: {error}",
-    "team.boxEmpty": "La caja está vacía. Agregá tu primer Pokémon.",
+    "team.emptyLead": "Tu caja está vacía.",
+    "team.emptyBody":
+      "Registrá tus Pokémon con su naturaleza, sub skills e ingredientes para ver cuánto produce cada uno.",
     "team.distribution": "Distribución de la caja",
     "team.distributionError": "No se pudo cargar la distribución.",
     "team.modalAdd": "Agregar Pokémon",
@@ -544,16 +543,15 @@ export const UI: Record<Lang, Record<string, string>> = {
     "auth.gateBody":
       "Sign in with Google to start your Box, register your team, and find it again on every visit.",
     // Team page
-    "team.title": "My Pokémon Sleep box",
-    "team.subtitle":
-      "Log your Pokémon with their nature, sub skills and ingredients, and see the distribution of your whole box.",
     "team.box": "Box",
     "team.updating": "Updating…",
     "team.add": "+ Add Pokémon",
     "team.loadingBox": "Loading box…",
     "team.boxError": "Couldn't load the box.",
     "team.deleteError": "Couldn't delete: {error}",
-    "team.boxEmpty": "Your box is empty. Add your first Pokémon.",
+    "team.emptyLead": "Your box is empty.",
+    "team.emptyBody":
+      "Log your Pokémon with their nature, sub skills and ingredients to see what each one produces.",
     "team.distribution": "Box distribution",
     "team.distributionError": "Couldn't load the distribution.",
     "team.modalAdd": "Add Pokémon",

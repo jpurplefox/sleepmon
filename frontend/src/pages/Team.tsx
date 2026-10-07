@@ -14,6 +14,7 @@ import { BoxCoverage } from "../components/BoxCoverage";
 import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
 import { Placeholder } from "../components/Placeholder";
+import { ToolHeader } from "../components/ToolHeader";
 import { useI18n } from "../i18n";
 import { totalIngredients } from "../ingredientProduction";
 import type { Catalog, Member, MemberInput, Species } from "../types";
@@ -186,31 +187,45 @@ export function Team({ onCompare }: TeamProps) {
 
   return (
     <div className="layout layout--wide">
-      <header className="hero">
-        <h1>{t("team.title")}</h1>
-        <p className="muted">{t("team.subtitle")}</p>
-      </header>
-
       <section>
-        <div className="section-head">
-          <div className="section-head__title">
-            <h2>{t("team.box")}</h2>
-            {/* Conteo y refetch viven FUERA del <h2> (encabezado estable) y como
-                live-regions siempre montadas: así el cambio de texto se anuncia sin
-                re-leer el título. */}
-            <span className="muted" role="status" aria-live="polite">
-              {hasFilters
-                ? t("box.showing", { shown: visible.length, total: allMembers.length })
-                : `(${allMembers.length})`}
-            </span>
-            <span className="muted" role="status" aria-live="polite">
-              {members.isFetching && !members.isLoading ? t("team.updating") : ""}
-            </span>
-          </div>
-          <button className="btn btn--primary" onClick={openForm}>
-            {t("team.add")}
-          </button>
-        </div>
+        <ToolHeader
+          title={t("team.box")}
+          count={
+            <>
+              {/* Count and refetch state stay outside the h1 and always mounted, so changes are announced. */}
+              <span className="tool-count" role="status" aria-live="polite">
+                {hasFilters
+                  ? t("box.showing", { shown: visible.length, total: allMembers.length })
+                  : `(${allMembers.length})`}
+              </span>
+              <span className="muted" role="status" aria-live="polite">
+                {members.isFetching && !members.isLoading ? t("team.updating") : ""}
+              </span>
+            </>
+          }
+          action={
+            <button className="btn btn--primary" onClick={openForm}>
+              {t("team.add")}
+            </button>
+          }
+        >
+          {/* With a single Pokémon, sorting and filtering add nothing: no bar. */}
+          {allMembers.length > 1 && (
+            <BoxToolbar
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSortKey={setSortKey}
+              onToggleDir={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+              filters={filters}
+              onFilter={setFilter}
+              onToggle={toggleFilter}
+              onRemove={removeFilter}
+              onClear={() => setFilters(EMPTY_FILTERS)}
+              options={options}
+              catalog={catalog.data}
+            />
+          )}
+        </ToolHeader>
 
         {members.isLoading && <Placeholder loading>{t("team.loadingBox")}</Placeholder>}
         {members.isError && (
@@ -233,23 +248,10 @@ export function Team({ onCompare }: TeamProps) {
             </button>
           </p>
         )}
-        {members.data?.length === 0 && <Placeholder>{t("team.boxEmpty")}</Placeholder>}
-
-        {/* Con un solo Pokémon, ordenar y filtrar no aporta: se oculta la barra. */}
-        {allMembers.length > 1 && (
-          <BoxToolbar
-            sortKey={sortKey}
-            sortDir={sortDir}
-            onSortKey={setSortKey}
-            onToggleDir={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
-            filters={filters}
-            onFilter={setFilter}
-            onToggle={toggleFilter}
-            onRemove={removeFilter}
-            onClear={() => setFilters(EMPTY_FILTERS)}
-            options={options}
-            catalog={catalog.data}
-          />
+        {members.data?.length === 0 && (
+          <Placeholder>
+            <strong>{t("team.emptyLead")}</strong> {t("team.emptyBody")}
+          </Placeholder>
         )}
 
         {allMembers.length > 0 && visible.length === 0 && (

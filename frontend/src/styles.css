@@ -5320,6 +5320,10 @@ button.prod-card__base-tag--action:hover {
   margin: 0.75rem 0 0;
 }
 
+.tool-head .box-toolbar {
+  margin: 0.9rem 0 0;
+}
+
 /* ── Context bar: one labelled field per setting that shapes the numbers. ── */
 .ctx-bar {
   display: flex;
