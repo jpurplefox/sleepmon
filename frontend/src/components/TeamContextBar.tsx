@@ -39,7 +39,7 @@ export function TeamContextBar({
   const mapBtnId = useId();
   const eventBtnId = useId();
   const mealsBtnId = useId();
-  const chosenMeals = meals.filter((m): m is MealInput => m !== null);
+  const noMeals = meals.every((m) => m === null);
   const toggle = (on: boolean) => {
     if (on !== goodCampTicket) onGoodCampTicket(on);
   };
@@ -109,23 +109,28 @@ export function TeamContextBar({
               onClick={() => onOpenDialog("meals")}
             >
               <span className="filter-btn__value">
-                {/* Three fixed places: a chosen dish shows its image, an unset one a dim slot. */}
-                <span className="ctx-recipes">
-                  {meals.map((m, i) =>
-                    m ? (
-                      <img
-                        key={i}
-                        className="ctx-recipe"
-                        src={recipeImage(m.recipe)}
-                        alt={m.recipe}
-                        title={m.recipe}
-                      />
-                    ) : (
-                      <span key={i} className="ctx-recipe ctx-recipe--empty" aria-hidden="true" />
-                    ),
-                  )}
+                {/* Text and the three places share one grid cell, so the field is as wide
+                    as the wider of the two and never resizes as dishes are chosen. */}
+                <span className="ctx-meals">
+                  <span className="ctx-recipes" aria-hidden={noMeals || undefined}>
+                    {meals.map((m, i) =>
+                      m ? (
+                        <img
+                          key={i}
+                          className="ctx-recipe"
+                          src={recipeImage(m.recipe)}
+                          alt={m.recipe}
+                          title={m.recipe}
+                        />
+                      ) : (
+                        <span key={i} className="ctx-recipe ctx-recipe--empty" aria-hidden="true" />
+                      ),
+                    )}
+                  </span>
+                  <span className="ctx-meals__none muted" aria-hidden={!noMeals || undefined}>
+                    {t("ctx.noMeals")}
+                  </span>
                 </span>
-                {chosenMeals.length === 0 && <span className="sr-only">{t("ctx.noMeals")}</span>}
               </span>
               <IconChevronDown className="filter-btn__chevron" />
             </button>

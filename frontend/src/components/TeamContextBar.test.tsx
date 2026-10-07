@@ -111,12 +111,14 @@ describe("TeamContextBar", () => {
     const button = screen.getByRole("button", { name: /^Meals/ });
     const alts = within(button).getAllByRole("img").map((img) => img.getAttribute("alt"));
     expect(alts).toEqual(["Bean Burger Curry", "Mild Honey Curry"]);
-    expect(within(button).queryByText("No recipes")).not.toBeInTheDocument();
+    expect(button).not.toHaveAccessibleName(/No recipes/);
   });
 
-  it("always keeps three places, so the field doesn't change width as dishes are chosen", () => {
+  it("says 'No recipes' with nothing chosen, keeping the three places laid out behind it", () => {
     renderBar();
     const empty = screen.getByRole("button", { name: /^Meals No recipes/ });
+    expect(within(empty).getByText("No recipes")).toBeInTheDocument();
+    // The slots stay in the layout (hidden) so the field keeps one width either way.
     expect(empty.querySelectorAll(".ctx-recipe--empty")).toHaveLength(3);
   });
 

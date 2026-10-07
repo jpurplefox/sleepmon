@@ -5304,6 +5304,25 @@ button.prod-card__base-tag--action:hover {
   margin-left: 0;
 }
 
+/* Meals value: the dishes and "No recipes" stacked in one cell; only one shows. */
+.ctx-meals {
+  display: inline-grid;
+}
+
+.ctx-meals > * {
+  grid-area: 1 / 1;
+  align-self: center;
+}
+
+.ctx-meals .ctx-recipes[aria-hidden="true"],
+.ctx-meals .ctx-meals__none[aria-hidden="true"] {
+  visibility: hidden;
+}
+
+.ctx-meals__none {
+  white-space: nowrap;
+}
+
 /* The day's three dishes, side by side and large enough to recognize. */
 .ctx-recipes {
   display: inline-flex;
