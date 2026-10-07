@@ -78,7 +78,7 @@ Per tool:
     bonus is above 0. Opens Settings on the **Map** tab.
   - **Event** — "No event", or the marks of its effects (the same read-out the page
     shows today). Opens Settings on the **Event** tab.
-  - **Good Camp Ticket** — toggles in place; dimmed when off.
+  - **Good Camp Ticket** — a No / Sí toggle, switched in place; **No** when off.
 - The standalone **Settings** button goes away. Meals, the dialog's remaining tab, are
   reached from a **Choose recipes** action on the Cooking card, which opens Settings
   on the **Meals** tab.
@@ -115,16 +115,15 @@ sign-in gate ([Authentication](0010-authentication.md)) in place of all of this.
   switching updates the page immediately and is remembered on the next visit.
 - **Language, signed out:** the small language button next to sign-in opens ES / EN,
   with the same behavior.
-- **Team Analysis, nothing set:** the bar reads **No map · No event ·** a dimmed **Good
-  Camp Ticket**.
+- **Team Analysis, nothing set:** the bar reads **No map · No event · Good Camp Ticket:
+  No**.
 - **Team Analysis, expert map:** with Greengrass Isle (Expert), Leppa as main favorite
   and Grepa as a sub-favorite, the Map chip shows the map name with **Leppa first**,
   then Grepa.
 - **Area bonus:** with an area bonus of 0, the Map chip shows no area figure; with 35%,
   it shows **Area +35%**.
-- **Good Camp Ticket:** touching the chip turns the ticket on — the chip is no longer
-  dimmed and the totals recompute — without opening anything; touching again turns it
-  off.
+- **Good Camp Ticket:** touching **Sí** turns the ticket on and the totals recompute,
+  without opening anything; touching **No** turns it off.
 - **Map / Event chips:** touching the Map chip opens Settings on the Map tab; the Event
   chip, on the Event tab.
 - **Meals:** Choose recipes on the Cooking card opens Settings on the Meals tab.
