@@ -28,6 +28,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "nav.team": "Caja",
     "nav.comparison": "Comparación",
     "nav.language": "Idioma",
+    // Idiomas
+    "lang.es": "Español",
+    "lang.en": "English",
     // Autenticación
     "auth.signInGoogle": "Iniciar sesión con Google",
     "auth.signInFailed": "No se completó el inicio de sesión.",
@@ -530,6 +533,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "nav.team": "Box",
     "nav.comparison": "Comparison",
     "nav.language": "Language",
+    // Languages
+    "lang.es": "Español",
+    "lang.en": "English",
     // Authentication
     "auth.signInGoogle": "Sign in with Google",
     "auth.signInFailed": "Sign-in wasn't completed.",
