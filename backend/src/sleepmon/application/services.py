@@ -72,7 +72,12 @@ from sleepmon.domain.event_bonus import (
     value_allowed,
 )
 from sleepmon.domain.map_bonuses import MapBonuses
-from sleepmon.domain.ports import RecipeCatalog, SpeciesCatalog, TeamRepository
+from sleepmon.domain.ports import (
+    PlayerProgressRepository,
+    RecipeCatalog,
+    SpeciesCatalog,
+    TeamRepository,
+)
 from sleepmon.domain.pot import pot_capacity
 from sleepmon.domain.production import (
     BerryYield,
@@ -82,6 +87,7 @@ from sleepmon.domain.production import (
     scale_daily,
 )
 from sleepmon.domain.progress import validate_pot_size
+from sleepmon.domain.sleep import DEFAULT_SLEEP, SleepSchedule
 from sleepmon.domain.species import Species
 from sleepmon.domain.team_helps import HelpedYields, extra_help_yields
 from sleepmon.domain.value_objects import (
@@ -406,9 +412,12 @@ class DefaultTeamService(TeamService):
         self,
         repository: TeamRepository,
         catalog: SpeciesCatalog,
+        progress: PlayerProgressRepository | None = None,
     ) -> None:
         self._repo = repository
         self._catalog = catalog
+        # The Box computes with the saved sleep schedule; None -> the default night.
+        self._progress = progress
 
     def add_member(self, user_id: UUID, data: TeamMemberInput) -> TeamMember:
         member = self._build_member(data)
@@ -427,12 +436,12 @@ class DefaultTeamService(TeamService):
     def list_members_with_production(
         self, user_id: UUID
     ) -> list[tuple[TeamMember, MemberProduction | None]]:
-        # Overview de la caja: producción por miembro reutilizando el cálculo del
-        # dominio (el mismo que /production). El miembro ya está validado (sus enums
-        # vienen del repo), así que no re-parseamos ni re-validamos.
-        return [(m, self._member_production(m)) for m in self._repo.list(user_id)]
+        sleep = DEFAULT_SLEEP if self._progress is None else self._progress.get(user_id).sleep
+        return [(m, self._member_production(m, sleep)) for m in self._repo.list(user_id)]
 
-    def _member_production(self, member: TeamMember) -> MemberProduction | None:
+    def _member_production(
+        self, member: TeamMember, sleep: SleepSchedule
+    ) -> MemberProduction | None:
         species = self._catalog.get(member.species)
         if species is None:  # especie fuera del catálogo curado: sin producción
             return None
@@ -444,6 +453,7 @@ class DefaultTeamService(TeamService):
             member.sub_skills,
             member.ribbon,
             member.skill_level,
+            sleep=sleep,
         )
         return MemberProduction(
             berries=result.berry_amount,

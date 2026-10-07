@@ -10,7 +10,9 @@ from sleepmon.domain.errors import (
     TeamMemberNotFoundError,
     ValidationError,
 )
-from tests.fakes import InMemoryTeamRepository
+from sleepmon.domain.progress import PlayerProgress
+from sleepmon.domain.sleep import SleepSchedule
+from tests.fakes import InMemoryPlayerProgressRepository, InMemoryTeamRepository
 
 UID = uuid4()
 """Usuario fijo para los tests que no ejercitan el aislamiento entre usuarios
@@ -291,3 +293,17 @@ def test_box_overview_exposes_berry_burst_counts(service: DefaultTeamService) ->
     # A Sceptile in the Box exposes its own skill berries and per-teammate count.
     assert production.skill_berry_amount == pytest.approx(production.skill_triggers * 11)
     assert production.skill_berries_per_teammate == pytest.approx(production.skill_triggers)
+
+
+def test_box_production_uses_the_saved_sleep_schedule() -> None:
+    progress = InMemoryPlayerProgressRepository()
+    team = InMemoryTeamRepository()
+    plain = DefaultTeamService(team, StaticSpeciesCatalog())
+    with_nap = DefaultTeamService(team, StaticSpeciesCatalog(), progress)
+    plain.add_member(UID, valid_input())
+    progress.transform(UID, lambda _: PlayerProgress(sleep=SleepSchedule(390, 120)))
+
+    (_, default_prod), = plain.list_members_with_production(UID)
+    (_, nap_prod), = with_nap.list_members_with_production(UID)
+    assert default_prod is not None and nap_prod is not None
+    assert nap_prod.skill_triggers != default_prod.skill_triggers
