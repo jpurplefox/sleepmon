@@ -179,6 +179,14 @@ export interface Distributions {
   nature_stats: Record<string, number>;
 }
 
+/** One sleep's length, time spent full, and skill chances P(N ≥ k) (PRD 0015). */
+export interface SleepSession {
+  kind: "night" | "nap";
+  hours: number;
+  overflow_hours: number;
+  skill_chances: number[];
+}
+
 /** A night and an optional nap, in minutes on a 15-minute grid (PRD 0015). */
 export interface SleepSchedule {
   night_minutes: number;
@@ -405,7 +413,7 @@ export interface Production {
   // Energía/día que la main skill reparte al equipo, a un compañero al azar cada
   // disparo (Energizing Cheer S). null si la skill no lo da.
   skill_random_energy: number | null;
-  night_skill_chances: number[];
+  sleep_sessions: SleepSession[];
   inventory: number;
   inventory_fill_hours: number;
   /** Skill level actually used (with the main favorite's +1, already capped). */
