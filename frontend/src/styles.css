@@ -5275,6 +5275,17 @@ button.prod-card__base-tag--action:hover {
   color: var(--muted);
 }
 
+/* Every control in the bar shares one height, whatever it holds (marks, dish images). */
+.ctx-field .filter-btn,
+.ctx-field .specialty-toggle {
+  box-sizing: border-box;
+  height: 30px;
+}
+
+.ctx-field .filter-btn {
+  padding-block: 0;
+}
+
 .ctx-sub {
   color: var(--muted);
   font-size: var(--text-xs);
@@ -5298,8 +5309,8 @@ button.prod-card__base-tag--action:hover {
 }
 
 .ctx-recipe {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   object-fit: contain;
 }
 
