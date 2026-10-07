@@ -103,6 +103,16 @@ export function IconMoon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+// The nap: the daytime sleep, beside IconMoon's night.
+export function IconSun(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+    </svg>
+  );
+}
+
 // Agarre para arrastrar y reordenar (dos columnas de puntos).
 export function IconGrip(props: SVGProps<SVGSVGElement>) {
   return (
@@ -228,7 +238,7 @@ export function IconSignOut(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-// Rising bars: what you have unlocked and levelled. The account menu's "Mi progreso".
+// Rising bars: what you have unlocked and levelled. The account menu's "Perfil de jugador".
 export function IconProgress(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base} {...props}>

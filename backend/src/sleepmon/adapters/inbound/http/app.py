@@ -114,7 +114,8 @@ def create_app(
         team_pool = create_pool(settings.database_url)
         pool = team_pool
         repository = PostgresTeamRepository(team_pool)
-        service = DefaultTeamService(repository, catalog)
+        progress = PostgresPlayerProgressRepository(team_pool)
+        service = DefaultTeamService(repository, catalog, progress)
         # Litestar pasa el app a los hooks que aceptan un argumento; sin el lambda,
         # `pool.close` recibiría el app como su parámetro `timeout` y reventaría.
         # ``team_pool`` (a diferencia de ``pool``) tiene un único sitio de asignación,

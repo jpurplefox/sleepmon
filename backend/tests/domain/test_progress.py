@@ -14,6 +14,7 @@ from sleepmon.domain.progress import (
     validate_pot_size,
     validate_recipe_level,
 )
+from sleepmon.domain.sleep import SleepSchedule
 from sleepmon.domain.value_objects import Island, RecipeType
 
 
@@ -129,3 +130,19 @@ def test_apply_patch_does_not_mutate_the_input() -> None:
     current = PlayerProgress(recipe_levels={"Beanburger Curry": 30})
     apply_patch(current, ProgressPatch(recipe_levels={"Beanburger Curry": 55}))
     assert current.recipe_levels == {"Beanburger Curry": 30}
+
+
+def test_a_new_profile_sleeps_the_default_night() -> None:
+    assert PlayerProgress().sleep == SleepSchedule(night_minutes=510, nap_minutes=None)
+
+
+def test_patching_sleep_replaces_it_whole_and_leaves_the_rest() -> None:
+    current = PlayerProgress(pot_size=33, sleep=SleepSchedule(night_minutes=390, nap_minutes=120))
+    updated = apply_patch(current, ProgressPatch(sleep=SleepSchedule(night_minutes=450)))
+    assert updated.sleep == SleepSchedule(night_minutes=450, nap_minutes=None)
+    assert updated.pot_size == 33
+
+
+def test_a_patch_without_sleep_keeps_it() -> None:
+    current = PlayerProgress(sleep=SleepSchedule(night_minutes=390, nap_minutes=120))
+    assert apply_patch(current, ProgressPatch(pot_size=33)).sleep == current.sleep

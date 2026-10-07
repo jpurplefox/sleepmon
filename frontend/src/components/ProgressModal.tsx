@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { api } from "../api/client";
 import { useI18n } from "../i18n";
@@ -12,17 +12,20 @@ import { Placeholder } from "./Placeholder";
 import { ProgressAreasTab } from "./ProgressAreasTab";
 import { ProgressKitchenTab } from "./ProgressKitchenTab";
 import { ProgressRecipesTab } from "./ProgressRecipesTab";
+import { ProgressSleepTab } from "./ProgressSleepTab";
 
-type TabId = "kitchen" | "recipes" | "areas";
+type TabId = "kitchen" | "recipes" | "areas" | "sleep";
 
 const TABS: { id: TabId; labelKey: string }[] = [
   { id: "kitchen", labelKey: "progress.tabKitchen" },
   { id: "recipes", labelKey: "progress.tabRecipes" },
   { id: "areas", labelKey: "progress.tabAreas" },
+  { id: "sleep", labelKey: "progress.tabSleep" },
 ];
 
 export function ProgressModal({ onClose }: { onClose: () => void }) {
   const { t } = useI18n();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabId>("kitchen");
   const {
     progress,
@@ -75,6 +78,8 @@ export function ProgressModal({ onClose }: { onClose: () => void }) {
     if (!hasChanges) return;
     try {
       await saveAsync(patch);
+      // The Box computes server-side with the saved schedule: refetch it.
+      if (patch.sleep) void queryClient.invalidateQueries({ queryKey: ["members"] });
       onClose();
     } catch {
       // The mutation's own error surfaces via `saveError` below; the modal
@@ -155,6 +160,9 @@ export function ProgressModal({ onClose }: { onClose: () => void }) {
                   islands={catalog.data?.islands ?? []}
                   onChange={onDraftChange}
                 />
+              )) ||
+              (activeTab === "sleep" && (
+                <ProgressSleepTab draft={draft} onChange={onDraftChange} />
               ))
             ) : (
               <Placeholder loading>{t("progress.loading")}</Placeholder>

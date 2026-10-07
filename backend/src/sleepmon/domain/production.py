@@ -10,7 +10,7 @@ Modelo:
   bayas por ayuda (Berry Finding) e inventario (Inventory Up). Energy/EXP se ignoran.
 - El nivel define qué slots de ingrediente están desbloqueados (las ayudas de
   ingrediente se reparten entre ellos) y baja la frecuencia (-0.2%/nivel).
-- Inventario: de día (``DAY_HOURS``) nunca se llena. De noche (``NIGHT_HOURS``) no
+- Inventario: despierto nunca se llena. Dormido (cada sesión del ``SleepSchedule``) no
   se vacía: una vez que el inventario base se llena, el resto de la noche TODAS las
   ayudas pasan a producir bayas (no ingredientes ni skills). El inventario cuenta la
   cantidad real producida (bayas + ingredientes; las skills no ocupan inventario).
@@ -25,7 +25,6 @@ from dataclasses import dataclass
 from typing import Final
 
 from sleepmon.domain.catalog_data import (
-    DAY_HOURS,
     FREQUENCY_REDUCTION_PER_LEVEL,
     GOOD_CAMP_TICKET_INVENTORY_FACTOR,
     GOOD_CAMP_TICKET_SPEED_FACTOR,
@@ -33,7 +32,6 @@ from sleepmon.domain.catalog_data import (
     MAX_INGREDIENTS,
     MAX_LEVEL,
     NATURE_EFFECTS,
-    NIGHT_HOURS,
     SUB_SKILL_UNLOCK_LEVELS,
     berry_strength_for_level,
     max_ingredient_slots,
@@ -80,6 +78,7 @@ from sleepmon.domain.skills import (
     skill_strength_amount,
     tasty_chance_amount,
 )
+from sleepmon.domain.sleep import DEFAULT_SLEEP, SleepKind, SleepSchedule
 from sleepmon.domain.species import Species
 from sleepmon.domain.value_objects import (
     Berry,
@@ -94,6 +93,8 @@ from sleepmon.domain.value_objects import (
 _BERRY_PER_HELP_SPECIALTY: Final[int] = 2
 _BERRY_PER_HELP_OTHER: Final[int] = 1
 _SECONDS_PER_HOUR: Final[int] = 3600
+# Float noise from fill_helps / helps_per_second must not read as an overflow.
+_OVERFLOW_EPSILON_SECONDS: Final[float] = 1e-6
 # Neutral map (no favorites, no expert mode): the Box/Comparison default.
 # A singleton sidesteps ruff's B008 (no function calls in default arguments) —
 # safe since it's frozen.
@@ -206,6 +207,17 @@ class HelpGrant:
 
 
 @dataclass(frozen=True, slots=True)
+class SleepSessionProduction:
+    """One sleep: its length, the time spent full (berries only), and its skill chances."""
+
+    kind: SleepKind
+    hours: float
+    overflow_hours: float
+    # P(N >= k), k = 1..cap: cap 1, or 2 for Skill specialists.
+    skill_chances: tuple[float, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class DailyProduction:
     """Producción estimada de un Pokémon en un día."""
 
@@ -258,8 +270,8 @@ class DailyProduction:
     # Energía/día que la main skill reparte al equipo, a un compañero al azar cada
     # disparo (Energizing Cheer S): disparos × cantidad_del_nivel. ``None`` si no aplica.
     skill_random_energy: float | None
-    # Chances de disparar la skill de noche al menos k veces (k=1..tope).
-    night_skill_chances: tuple[float, ...]
+    # One entry per sleep (night first, then the nap): intensive, never scaled.
+    sleep_sessions: tuple[SleepSessionProduction, ...]
     inventory: int  # inventario efectivo (base + Inventory Up)
     inventory_fill_hours: float
     # Berry Burst: own berries from the skill (a subset of berry_amount/berry_strength).
@@ -285,7 +297,7 @@ def scale_daily(daily: DailyProduction, weight: float) -> DailyProduction:
 
     Only scales *extensive* magnitudes (amounts/day, strength/day and
     ``helps_per_day``): berries, ingredients, triggers and main skill outputs.
-    The *intensive* ones (percentages, ``seconds_per_help``, ``night_skill_chances``,
+    The *intensive* ones (percentages, ``seconds_per_help``, ``sleep_sessions``,
     ``inventory``, ``inventory_fill_hours``, ``effective_skill_level``) are left
     unchanged: they describe the Pokémon's pace, not its contribution to the team.
     ``weight == 1.0`` returns something equivalent to the original (identity).
@@ -354,8 +366,11 @@ def daily_production(
     good_camp_ticket: bool = False,
     event: EventBonus = NO_EVENT,
     team_context: TeamContext = NO_TEAM_CONTEXT,
+    sleep: SleepSchedule = DEFAULT_SLEEP,
 ) -> DailyProduction:
     """Estimates daily production from ingredients, level, nature and sub skills.
+
+    ``sleep`` splits the day into awake time and one or two sleep sessions.
 
     ``ingredients`` must have one ingredient per slot (``MAX_INGREDIENTS``);
     validation lives in the application layer. Defaults to no nature (``None``)
@@ -476,32 +491,42 @@ def daily_production(
     # Ítems que ocupan inventario por ayuda (bayas + ingredientes; skills no).
     items_per_help = berry_rate * berry_per_help + ingredient_rate * avg_amount
 
-    night_seconds = NIGHT_HOURS * _SECONDS_PER_HOUR
-    day_seconds = DAY_HOURS * _SECONDS_PER_HOUR
-    # Una ayuda da varios ítems, así que la última puede pasarse del tope: contamos
-    # cuántas ayudas COMPLETAS hacen falta para llenar el inventario (redondeo hacia
-    # arriba) y de ahí derivamos el tiempo.
+    session_seconds = [s.minutes * 60 for s in sleep.sessions]
+    day_seconds = sleep.awake_minutes * 60
+    # One help yields several items, so the last can overshoot: count the WHOLE helps
+    # needed to fill (rounded up) and derive the time from them.
     if items_per_help > 0:
         fill_helps = math.ceil(inventory / items_per_help)
         fill_seconds = fill_helps / helps_per_second
     else:
-        fill_seconds = night_seconds
-    night_normal = min(night_seconds, fill_seconds)
-    night_overflow = max(0.0, night_seconds - fill_seconds)
+        fill_seconds = float(max(session_seconds))
 
+    # Each sleep starts empty: it fills and overflows on its own, with its own skill cap.
+    sleep_skill_cap = 2 if species.specialty is Specialty.SKILLS else 1
     day_helps = day_seconds * helps_per_second
-    night_normal_helps = night_normal * helps_per_second
-    overflow_helps = night_overflow * helps_per_second
-    normal_helps = day_helps + night_normal_helps
-
-    # Skill independiente: una ayuda da baya/ingrediente y, además, puede disparar la
-    # skill. De día sin tope; de noche, tope de activaciones (2 si la especie es de
-    # skill, si no 1). El tope no afecta a las bayas (la ayuda ya produjo la suya).
-    night_skill_cap = 2 if species.specialty is Specialty.SKILLS else 1
-    night_skill_raw = night_normal_helps * effective_skill_rate
-    night_skill_chances = _skill_chances(night_skill_raw, night_skill_cap)
-    night_skill = sum(night_skill_chances)  # E[min(N, cap)]
-    skill_triggers = day_helps * effective_skill_rate + night_skill
+    asleep_normal_helps = 0.0
+    overflow_helps = 0.0
+    sleep_skill = 0.0
+    sleep_sessions: list[SleepSessionProduction] = []
+    for session, seconds in zip(sleep.sessions, session_seconds, strict=True):
+        overflow = seconds - fill_seconds
+        overflow = overflow if overflow > _OVERFLOW_EPSILON_SECONDS else 0.0
+        normal = seconds - overflow
+        session_helps = normal * helps_per_second
+        chances = _skill_chances(session_helps * effective_skill_rate, sleep_skill_cap)
+        asleep_normal_helps += session_helps
+        overflow_helps += overflow * helps_per_second
+        sleep_skill += sum(chances)  # E[min(N, cap)]
+        sleep_sessions.append(
+            SleepSessionProduction(
+                kind=session.kind,
+                hours=seconds / _SECONDS_PER_HOUR,
+                overflow_hours=overflow / _SECONDS_PER_HOUR,
+                skill_chances=chances,
+            )
+        )
+    normal_helps = day_helps + asleep_normal_helps
+    skill_triggers = day_helps * effective_skill_rate + sleep_skill
 
     # Ingredientes por la main skill (Ingredient Draw S y variantes): cada disparo
     # entrega ``ingredient_draw_amount(...)`` ingredientes (esperados) repartidos en
@@ -670,7 +695,7 @@ def daily_production(
     )
 
     return DailyProduction(
-        helps_per_day=(day_seconds + night_seconds) * helps_per_second,
+        helps_per_day=day_helps + sum(session_seconds) * helps_per_second,
         seconds_per_help=seconds_per_help,
         berry=species.berry,
         berry_amount=berry_amount,
@@ -692,7 +717,7 @@ def daily_production(
         skill_tasty_chance=skill_tasty_chance,
         skill_extra_helpful=skill_extra_helpful,
         skill_random_energy=skill_random_energy,
-        night_skill_chances=night_skill_chances,
+        sleep_sessions=tuple(sleep_sessions),
         inventory=inventory,
         inventory_fill_hours=fill_seconds / _SECONDS_PER_HOUR,
         skill_berry_amount=skill_berry_amount,

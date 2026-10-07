@@ -48,7 +48,9 @@ def _slots_json(*pokemon: dict[str, object]) -> list[dict[str, object]]:
 @pytest.fixture
 def client() -> TestClient:
     repository = InMemoryTeamRepository()
-    service = DefaultTeamService(repository, StaticSpeciesCatalog())
+    service = DefaultTeamService(
+        repository, StaticSpeciesCatalog(), InMemoryPlayerProgressRepository()
+    )
     production_service = DefaultProductionService(StaticSpeciesCatalog(), StaticRecipeCatalog())
     # Un ``AuthService`` real cableado con dobles en memoria: sin esto, ``create_app``
     # abriría un pool Postgres real (no hay DB en este entorno de test).
@@ -183,8 +185,7 @@ def test_create_member_without_nature(client: TestClient, auth_header: dict[str,
 
 def test_create_member_nature_omitted_defaults_to_empty(
     client: TestClient,
-    auth_header: dict[str,
-    str],
+    auth_header: dict[str, str],
 ) -> None:
     # El campo nature es opcional en el payload (default vacío).
     payload = valid_payload()
@@ -196,8 +197,7 @@ def test_create_member_nature_omitted_defaults_to_empty(
 
 def test_create_member_with_ribbon_roundtrips(
     client: TestClient,
-    auth_header: dict[str,
-    str],
+    auth_header: dict[str, str],
 ) -> None:
     res = client.post("/team", json=valid_payload(ribbon="500h"), headers=auth_header)
     assert res.status_code == 201
@@ -207,8 +207,7 @@ def test_create_member_with_ribbon_roundtrips(
 
 def test_ribbon_defaults_to_empty_when_omitted(
     client: TestClient,
-    auth_header: dict[str,
-    str],
+    auth_header: dict[str, str],
 ) -> None:
     res = client.post("/team", json=valid_payload(), headers=auth_header)
     assert res.status_code == 201
@@ -250,7 +249,7 @@ def test_too_many_ingredients_returns_400(client: TestClient, auth_header: dict[
             level=60,
             ingredients=["Fancy Apple", "Warming Ginger", "Fancy Apple", "Warming Ginger"],
         ),
-        headers=auth_header
+        headers=auth_header,
     )
     assert res.status_code == 400
 
@@ -320,8 +319,7 @@ def test_update_and_delete_flow(client: TestClient, auth_header: dict[str, str])
 
 def test_member_skill_level_roundtrips_and_defaults(
     client: TestClient,
-    auth_header: dict[str,
-    str],
+    auth_header: dict[str, str],
 ) -> None:
     # Omitido -> default 1.
     created = client.post("/team", json=valid_payload(), headers=auth_header).json()
@@ -667,10 +665,14 @@ def test_team_production_endpoint(client: TestClient) -> None:
         "helps_per_day",
         "berry",
         "berry_strength",
-        "night_skill_chances",
+        "sleep_sessions",
         "inventory_fill_hours",
     ):
         assert key in prod, f"missing key {key!r} in member production"
+    session = prod["sleep_sessions"][0]
+    assert session["kind"] == "night"
+    assert session["hours"] == pytest.approx(8.5)
+    assert set(session) == {"kind", "hours", "overflow_hours", "skill_chances"}
 
 
 def test_team_production_exposes_effective_skill_level(client: TestClient) -> None:
@@ -810,10 +812,12 @@ def test_team_production_endpoint_split_slot(client: TestClient) -> None:
         "/teams/production",
         json={
             "slots": [
-                {"entries": [
-                    {"id": "a", "pokemon": _pokemon_json(), "weight": 0.5},
-                    {"id": "b", "pokemon": _pokemon_json(), "weight": 0.5},
-                ]}
+                {
+                    "entries": [
+                        {"id": "a", "pokemon": _pokemon_json(), "weight": 0.5},
+                        {"id": "b", "pokemon": _pokemon_json(), "weight": 0.5},
+                    ]
+                }
             ],
             "meals": [None, None, None],
         },
@@ -828,10 +832,12 @@ def test_team_production_endpoint_rejects_weights_not_one(client: TestClient) ->
         "/teams/production",
         json={
             "slots": [
-                {"entries": [
-                    {"id": "a", "pokemon": _pokemon_json(), "weight": 0.5},
-                    {"id": "b", "pokemon": _pokemon_json(), "weight": 0.4},
-                ]}
+                {
+                    "entries": [
+                        {"id": "a", "pokemon": _pokemon_json(), "weight": 0.5},
+                        {"id": "b", "pokemon": _pokemon_json(), "weight": 0.4},
+                    ]
+                }
             ],
             "meals": [None, None, None],
         },
@@ -869,9 +875,7 @@ def test_production_accepts_island_bonus_and_favorites(client: TestClient) -> No
     assert res.status_code == 200
     body = res.json()
     assert body["island_bonus"] == 0.3
-    assert body["total_berry_strength"] == pytest.approx(
-        body["total_berry_strength_base"] * 1.3
-    )
+    assert body["total_berry_strength"] == pytest.approx(body["total_berry_strength_base"] * 1.3)
 
 
 def test_production_rejects_bonus_over_max(client: TestClient) -> None:
@@ -953,9 +957,10 @@ def test_production_without_scenario_is_unchanged(client: TestClient) -> None:
         "level": 60,
         "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
     }
-    assert client.post("/production", json=body).json() == client.post(
-        "/production", json={**body, "scenario": "none"}
-    ).json()
+    assert (
+        client.post("/production", json=body).json()
+        == client.post("/production", json={**body, "scenario": "none"}).json()
+    )
 
 
 def test_production_unknown_scenario_returns_400(client: TestClient) -> None:
@@ -1045,3 +1050,28 @@ def test_berry_burst_fields_are_serialized(client: TestClient) -> None:
     assert member["production"]["teammate_berries"][0]["berry"] == "Grepa"
     grepa = next(r for r in team["berries"] if r["berry"] == "Grepa")
     assert [s["kind"] for s in grepa["sources"]] == ["helps", "skill"]
+
+
+def test_production_accepts_a_sleep_schedule(client: TestClient) -> None:
+    body = client.post(
+        "/production", json={**_pokemon_json(), "sleep": {"night_minutes": 390, "nap_minutes": 120}}
+    ).json()
+    assert [s["kind"] for s in body["sleep_sessions"]] == ["night", "nap"]
+
+
+def test_production_rejects_an_invalid_sleep_schedule(client: TestClient) -> None:
+    response = client.post("/production", json={**_pokemon_json(), "sleep": {"night_minutes": 500}})
+    assert response.status_code == 400
+
+
+def test_team_production_accepts_a_sleep_schedule(client: TestClient) -> None:
+    body = client.post(
+        "/teams/production",
+        json={
+            "slots": _slots_json(_pokemon_json()),
+            "meals": [None, None, None],
+            "sleep": {"night_minutes": 390, "nap_minutes": 120},
+        },
+    ).json()
+    prod = body["members"][0]["production"]
+    assert [s["kind"] for s in prod["sleep_sessions"]] == ["night", "nap"]

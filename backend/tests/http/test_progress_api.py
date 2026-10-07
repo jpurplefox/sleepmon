@@ -44,10 +44,10 @@ def client() -> Iterator[TestClient]:
         refresh_ttl=timedelta(days=30),
     )
     app = create_app(
-        service=DefaultTeamService(InMemoryTeamRepository(), StaticSpeciesCatalog()),
-        production_service=DefaultProductionService(
-            StaticSpeciesCatalog(), StaticRecipeCatalog()
+        service=DefaultTeamService(
+            InMemoryTeamRepository(), StaticSpeciesCatalog(), InMemoryPlayerProgressRepository()
         ),
+        production_service=DefaultProductionService(StaticSpeciesCatalog(), StaticRecipeCatalog()),
         catalog=StaticSpeciesCatalog(),
         recipe_catalog=StaticRecipeCatalog(),
         access=ACCESS,
@@ -70,24 +70,19 @@ def test_progress_is_reserved(client: TestClient) -> None:
     assert client.patch("/progress", json={"pot_size": 33}).status_code == 401
 
 
-def test_a_new_account_reads_the_defaults(
-    client: TestClient, auth_header: dict[str, str]
-) -> None:
+def test_a_new_account_reads_the_defaults(client: TestClient, auth_header: dict[str, str]) -> None:
     body = client.get("/progress", headers=auth_header).json()
     assert body == {
         "pot_size": 21,
         "recipe_levels": {},
         "favorite_recipes": {},
         "area_bonuses": {},
+        "sleep": {"night_minutes": 510, "nap_minutes": None},
     }
 
 
-def test_patch_returns_the_whole_document(
-    client: TestClient, auth_header: dict[str, str]
-) -> None:
-    body = client.patch(
-        "/progress", json={"pot_size": 33}, headers=auth_header
-    ).json()
+def test_patch_returns_the_whole_document(client: TestClient, auth_header: dict[str, str]) -> None:
+    body = client.patch("/progress", json={"pot_size": 33}, headers=auth_header).json()
     assert body["pot_size"] == 33
     assert body["recipe_levels"] == {}
 
@@ -132,9 +127,7 @@ def test_an_unknown_area_is_a_400(client: TestClient, auth_header: dict[str, str
     assert response.status_code == 400
 
 
-def test_an_unknown_field_is_rejected(
-    client: TestClient, auth_header: dict[str, str]
-) -> None:
+def test_an_unknown_field_is_rejected(client: TestClient, auth_header: dict[str, str]) -> None:
     response = client.patch("/progress", json={"pot": 33}, headers=auth_header)
     assert response.status_code == 400
 
@@ -143,3 +136,20 @@ def test_progress_is_isolated_per_user(client: TestClient, auth_header: dict[str
     client.patch("/progress", json={"pot_size": 33}, headers=auth_header)
     other = {"Authorization": f"Bearer {ACCESS.issue(uuid4())}"}
     assert client.get("/progress", headers=other).json()["pot_size"] == 21
+
+
+def test_patch_sleep_round_trips(client: TestClient, auth_header: dict[str, str]) -> None:
+    body = client.patch(
+        "/progress",
+        json={"sleep": {"night_minutes": 390, "nap_minutes": 120}},
+        headers=auth_header,
+    ).json()
+    assert body["sleep"] == {"night_minutes": 390, "nap_minutes": 120}
+    assert client.get("/progress", headers=auth_header).json()["sleep"] == body["sleep"]
+
+
+def test_patch_rejects_an_invalid_sleep(client: TestClient, auth_header: dict[str, str]) -> None:
+    response = client.patch(
+        "/progress", json={"sleep": {"night_minutes": 500}}, headers=auth_header
+    )
+    assert response.status_code == 400

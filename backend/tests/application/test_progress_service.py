@@ -7,9 +7,10 @@ from uuid import uuid4
 import pytest
 
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
-from sleepmon.application.dto import ProgressPatchInput
+from sleepmon.application.dto import ProgressPatchInput, SleepInput
 from sleepmon.application.progress_service import DefaultPlayerProgressService
 from sleepmon.domain.errors import ValidationError
+from sleepmon.domain.sleep import SleepSchedule
 from sleepmon.domain.value_objects import Island, RecipeType
 from tests.fakes import InMemoryPlayerProgressRepository
 
@@ -101,3 +102,17 @@ def test_progress_is_isolated_per_user(service: DefaultPlayerProgressService) ->
     other = uuid4()
     service.patch(USER, ProgressPatchInput(pot_size=33))
     assert service.get(other).pot_size == 21
+
+
+def test_sleep_is_saved_and_read_back(service: DefaultPlayerProgressService) -> None:
+    service.patch(USER, ProgressPatchInput(sleep=SleepInput(night_minutes=390, nap_minutes=120)))
+    assert service.get(USER).sleep == SleepSchedule(night_minutes=390, nap_minutes=120)
+
+
+def test_an_invalid_sleep_is_rejected_and_nothing_changes(
+    service: DefaultPlayerProgressService,
+) -> None:
+    with pytest.raises(ValidationError):
+        too_long = SleepInput(night_minutes=720, nap_minutes=240)
+        service.patch(USER, ProgressPatchInput(sleep=too_long))
+    assert service.get(USER).sleep == SleepSchedule()

@@ -6,11 +6,13 @@ Run against the dedicated test database (see ``conftest.py``). Marked ``integrat
 from __future__ import annotations
 
 import contextlib
+import dataclasses
 import threading
 from collections.abc import Callable
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
+import psycopg
 import pytest
 
 from sleepmon.adapters.outbound.postgres.pool import create_pool
@@ -20,6 +22,7 @@ from sleepmon.adapters.outbound.postgres.repository import (
 )
 from sleepmon.domain.auth import User
 from sleepmon.domain.progress import PlayerProgress
+from sleepmon.domain.sleep import SleepSchedule
 from sleepmon.domain.value_objects import Island, RecipeType
 
 pytestmark = pytest.mark.integration
@@ -208,3 +211,20 @@ def test_the_row_dies_with_its_user(
         conn.execute("DELETE FROM app_user WHERE id = %s", (user_id,))
         rows = conn.execute("SELECT count(*) FROM player_progress").fetchone()
     assert rows is not None and rows[0] == 0
+
+
+def test_sleep_round_trips(repo: PostgresPlayerProgressRepository, user_id: UUID) -> None:
+    schedule = SleepSchedule(night_minutes=390, nap_minutes=120)
+    repo.transform(user_id, lambda current: dataclasses.replace(current, sleep=schedule))
+    assert repo.get(user_id).sleep == schedule
+
+
+def test_the_database_rejects_an_invalid_sleep(
+    repo: PostgresPlayerProgressRepository, user_id: UUID, test_dsn: str
+) -> None:
+    repo.transform(user_id, lambda current: current)
+    with pytest.raises(psycopg.errors.CheckViolation), create_pool(test_dsn).connection() as conn:
+        conn.execute(
+            "UPDATE player_progress SET night_minutes = %s, nap_minutes = %s WHERE user_id = %s",
+            (720, 240, user_id),
+        )

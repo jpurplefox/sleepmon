@@ -38,7 +38,7 @@ is data, the page is the data and what shapes it.
   pill, not just brighter text.
 - Right: the **account**.
   - Signed in: the photo (or initials) **with the first name** opens the account menu —
-    name, **language (ES / EN)**, and sign out.
+    name, **Player profile**, **language (ES / EN)**, and sign out.
   - Signed out: **Sign in with Google**, and next to it a small **language** button
     that opens ES / EN.
 - It stays **fixed at the top** while scrolling, over the page background with a
@@ -49,8 +49,8 @@ is data, the page is the data and what shapes it.
 ### Header
 
 - Only the tool's **title**. No subtitle, and no note on the day assumed by the
-  calculation (the 15.5 h awake + 8.5 h asleep rule is about to be redefined; the
-  production model keeps describing it, the screen doesn't).
+  calculation (it follows your [Sleep schedule](0015-sleep-schedule.md); the
+  production model describes it, the screen doesn't).
 - **Box**: the title row reads **Box (6)** with **+ Add Pokémon** at its right. It
   replaces today's "My Pokémon Sleep box" title plus a separate "Box" section heading.
 
@@ -162,7 +162,10 @@ sign-in gate ([Authentication](0010-authentication.md)) in place of all of this.
   it; it doesn't invent its own header.
 - **What changes the numbers is visible.** A setting that changes a tool's results has
   a chip in its context bar, shown even when off — nothing that affects the
-  calculation hides only inside a dialog.
+  calculation hides only inside a dialog. The exception is the account's [Player
+  profile](0011-player-profile.md): it applies to every tool and is edited from the
+  account menu, so it has no chip; where it changes what a number means (the sleep
+  schedule on the fill time and sleep skill chances), the card says so.
 - **Explanations belong to the empty state.** Once a tool has data, it doesn't repeat
   how it works.
 - **The chip changes its setting the shortest way:** toggle in place for on/off, a
@@ -170,7 +173,8 @@ sign-in gate ([Authentication](0010-authentication.md)) in place of all of this.
 
 ## Out of scope
 
-- **Redefining the day assumption** (15.5 h + 8.5 h): only the on-screen note goes.
+- **Redefining the day assumption**: that's the [Sleep schedule](0015-sleep-schedule.md);
+  here only the on-screen note goes.
 - **The contents of the Map, Event and Meals dialogs** beyond what is listed above
   (removing the dish type and the ticket from Map, the disabled berries with no map) —
   the rest only changes how it is reached.

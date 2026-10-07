@@ -9,6 +9,7 @@ from sleepmon.application.dto import (
     EventEffectInput,
     MealSelectionInput,
     ProductionInput,
+    SleepInput,
     SlotEntryInput,
     SlotInput,
     TeamProductionInput,
@@ -608,7 +609,7 @@ def test_compute_team_production_member_carries_full_production(
     assert prod.berry == standalone.berry
     assert prod.inventory == standalone.inventory
     assert prod.inventory_fill_hours == standalone.inventory_fill_hours
-    assert prod.night_skill_chances == standalone.night_skill_chances
+    assert prod.sleep_sessions == standalone.sleep_sessions
 
 
 def test_compute_team_production_adds_cooking_to_grand_total(
@@ -957,7 +958,7 @@ def test_compute_production_expert_skill_scenario(
     favorite = production_service.compute_production(_pikachu(scenario="favorite"))
     expert = production_service.compute_production(_pikachu(scenario="expert_skill"))
     assert expert.skill_triggers > favorite.skill_triggers
-    assert expert.night_skill_chances[0] > favorite.night_skill_chances[0]
+    assert expert.sleep_sessions[0].skill_chances[0] > favorite.sleep_sessions[0].skill_chances[0]
 
 
 def test_compute_production_scenario_is_never_the_main_berry(
@@ -1324,3 +1325,40 @@ def test_team_heal_pulse_helps_two_members_more_with_latios(
 
     assert team_with(_SCEPTILE) == (pytest.approx(4), 2, 1)
     assert team_with(_SCEPTILE, _LATIOS) == (pytest.approx(7), 2, 2)
+
+
+def test_no_sleep_means_the_default_night(production_service: DefaultProductionService) -> None:
+    implicit = production_service.compute_production(_pokemon())
+    explicit = production_service.compute_production(
+        _pokemon(sleep=SleepInput(night_minutes=510))
+    )
+    assert implicit == explicit
+    assert [s.kind for s in implicit.sleep_sessions] == ["night"]
+
+
+def test_a_nap_adds_a_session(production_service: DefaultProductionService) -> None:
+    result = production_service.compute_production(
+        _pokemon(sleep=SleepInput(night_minutes=390, nap_minutes=120))
+    )
+    assert [(s.kind, s.hours) for s in result.sleep_sessions] == [
+        ("night", 6.5),
+        ("nap", 2.0),
+    ]
+
+
+def test_team_members_use_the_requested_sleep(
+    production_service: DefaultProductionService,
+) -> None:
+    result = production_service.compute_team_production(
+        TeamProductionInput(
+            slots=_slots("a"),
+            meals=[None, None, None],
+            sleep=SleepInput(night_minutes=390, nap_minutes=120),
+        )
+    )
+    assert len(result.members[0].production.sleep_sessions) == 2
+
+
+def test_an_invalid_sleep_is_rejected(production_service: DefaultProductionService) -> None:
+    with pytest.raises(ValidationError):
+        production_service.compute_production(_pokemon(sleep=SleepInput(night_minutes=60)))

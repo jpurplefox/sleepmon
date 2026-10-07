@@ -70,7 +70,9 @@ def test_create_app_does_not_raise_when_secrets_are_injected() -> None:
     # contract explicitly for the guard added in this change.
     repository = InMemoryTeamRepository()
     app = create_app(
-        service=DefaultTeamService(repository, StaticSpeciesCatalog()),
+        service=DefaultTeamService(
+            repository, StaticSpeciesCatalog(), InMemoryPlayerProgressRepository()
+        ),
         production_service=DefaultProductionService(StaticSpeciesCatalog(), StaticRecipeCatalog()),
         catalog=StaticSpeciesCatalog(),
         recipe_catalog=StaticRecipeCatalog(),
@@ -99,10 +101,10 @@ def test_create_app_opens_no_pool_when_every_service_is_injected(
     monkeypatch.setattr("sleepmon.adapters.inbound.http.app.create_pool", _fail_if_called)
 
     app = create_app(
-        service=DefaultTeamService(InMemoryTeamRepository(), StaticSpeciesCatalog()),
-        production_service=DefaultProductionService(
-            StaticSpeciesCatalog(), StaticRecipeCatalog()
+        service=DefaultTeamService(
+            InMemoryTeamRepository(), StaticSpeciesCatalog(), InMemoryPlayerProgressRepository()
         ),
+        production_service=DefaultProductionService(StaticSpeciesCatalog(), StaticRecipeCatalog()),
         catalog=StaticSpeciesCatalog(),
         recipe_catalog=StaticRecipeCatalog(),
         access=JwtAccessTokenService("test-secret", timedelta(minutes=15)),

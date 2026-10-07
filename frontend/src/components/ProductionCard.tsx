@@ -32,6 +32,8 @@ import type {
   WeeklyBonus,
 } from "../types";
 import { RibbonIcon } from "./RibbonIcon";
+import { FillTime } from "./FillTime";
+import { SleepSkillGrid } from "./SleepSkillGrid";
 import { Tooltip } from "./Tooltip";
 import {
   IconAlert,
@@ -41,9 +43,7 @@ import {
   IconEdit,
   IconGrip,
   IconHelp,
-  IconHourglass,
   IconMagnifier,
-  IconMoon,
   IconPackage,
   IconSaveBox,
   IconSparkle,
@@ -63,13 +63,6 @@ const cardStrength = (p: Production) =>
 const pct = (n: number) => `${n.toFixed(1)}%`;
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 const TIER_CLASS: Record<string, string> = { Gold: "gold", Blue: "blue", Regular: "regular" };
-const hms = (hours: number) => {
-  const total = Math.round(hours * 3600);
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
-  return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-};
 
 // Diferencia de un valor contra la base (la primera card). Verde si esta config
 // rinde más, rojo si rinde menos. No se muestra en la card base ni cuando no hay
@@ -580,9 +573,7 @@ export function ProductionCard({
             <span title={t("card.inventory")}>
               <IconPackage /> {d.inventory}
             </span>
-            <span title={t("card.fillsIn")}>
-              <IconHourglass /> {hms(d.inventory_fill_hours)}
-            </span>
+            <FillTime fillHours={d.inventory_fill_hours} sessions={d.sleep_sessions} />
           </div>
 
           <div className="prod-card__block prod-card__block--berry">
@@ -849,29 +840,7 @@ export function ProductionCard({
               </div>
             )}
             <div className="prod-card__night">
-              {d.night_skill_chances.length >= 2 ? (
-                <>
-                  <span title={t("card.nightOnceTitle")}>
-                    <IconMoon />
-                    <span className="muted">{t("card.nightOnce")}</span>{" "}
-                    {pct((d.night_skill_chances[0] - d.night_skill_chances[1]) * 100)}
-                  </span>
-                  <span title={t("card.nightTwiceTitle")}>
-                    <IconMoon />
-                    <span className="muted">{t("card.nightTwice")}</span> {pct(d.night_skill_chances[1] * 100)}
-                  </span>
-                </>
-              ) : d.night_skill_chances.length === 1 ? (
-                <span title={t("card.nightSleepTitle")}>
-                  <IconMoon />
-                  <span className="muted">{t("card.nightSleep")}</span> {pct(d.night_skill_chances[0] * 100)}
-                </span>
-              ) : (
-                <span title={t("card.nightSleepTitle")}>
-                  <IconMoon />
-                  <span className="muted">{t("card.nightSleep")}</span> {t("common.dash")}
-                </span>
-              )}
+              <SleepSkillGrid sessions={d.sleep_sessions} />
             </div>
           </div>
         </>

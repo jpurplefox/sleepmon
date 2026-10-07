@@ -1,5 +1,6 @@
-// Player progress helpers (PRD 0011). Values shown in Team Analysis are DERIVED —
+// Player profile helpers (PRD 0011, 0015). Values shown in Team Analysis are DERIVED —
 // `override ?? saved ?? default` — never synced into state with an effect.
+import { DEFAULT_SLEEP, sameSleep } from "./sleep";
 import type { PlayerProgress, ProgressPatch } from "./types";
 
 export const DEFAULT_POT_SIZE = 21;
@@ -12,6 +13,7 @@ export const EMPTY_PROGRESS: PlayerProgress = {
   recipe_levels: {},
   favorite_recipes: {},
   area_bonuses: {},
+  sleep: DEFAULT_SLEEP,
 };
 
 /** The value to show: the session's override, else what is saved, else the default. */
@@ -122,6 +124,8 @@ export function applyProgressPatch(
     next.area_bonuses = bonuses;
   }
 
+  if (patch.sleep !== undefined) next.sleep = patch.sleep;
+
   return next;
 }
 
@@ -171,6 +175,8 @@ export function diffProgress(
     if (before !== after) areaBonuses[area] = after;
   }
   if (Object.keys(areaBonuses).length > 0) patch.area_bonuses = areaBonuses;
+
+  if (!sameSleep(saved.sleep, draft.sleep)) patch.sleep = draft.sleep;
 
   return patch;
 }

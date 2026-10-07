@@ -31,6 +31,7 @@ from sleepmon.application.dto import (
     ProductionResult,
     RecipeDTO,
     SkillEffectAggDTO,
+    SleepSessionDTO,
     SlotAmount,
     SlotEntryInput,
     SlotIngredientStatusDTO,
@@ -39,7 +40,7 @@ from sleepmon.application.dto import (
     TeamProductionInput,
     TeamProductionResult,
 )
-from sleepmon.application.parsing import parse_enum
+from sleepmon.application.parsing import parse_enum, parse_sleep
 from sleepmon.domain import analytics
 from sleepmon.domain.analytics import team_production
 from sleepmon.domain.berry_burst import BurstMember, team_context_for, teammate_berries
@@ -71,7 +72,12 @@ from sleepmon.domain.event_bonus import (
     value_allowed,
 )
 from sleepmon.domain.map_bonuses import MapBonuses
-from sleepmon.domain.ports import RecipeCatalog, SpeciesCatalog, TeamRepository
+from sleepmon.domain.ports import (
+    PlayerProgressRepository,
+    RecipeCatalog,
+    SpeciesCatalog,
+    TeamRepository,
+)
 from sleepmon.domain.pot import pot_capacity
 from sleepmon.domain.production import (
     BerryYield,
@@ -81,6 +87,7 @@ from sleepmon.domain.production import (
     scale_daily,
 )
 from sleepmon.domain.progress import validate_pot_size
+from sleepmon.domain.sleep import SleepSchedule
 from sleepmon.domain.species import Species
 from sleepmon.domain.team_helps import HelpedYields, extra_help_yields
 from sleepmon.domain.value_objects import (
@@ -153,7 +160,10 @@ def _production_result(daily: DailyProduction, *, in_team: bool = False) -> Prod
         skill_tasty_chance=daily.skill_tasty_chance,
         skill_extra_helpful=daily.skill_extra_helpful,
         skill_random_energy=daily.skill_random_energy,
-        night_skill_chances=list(daily.night_skill_chances),
+        sleep_sessions=[
+            SleepSessionDTO(s.kind.value, s.hours, s.overflow_hours, list(s.skill_chances))
+            for s in daily.sleep_sessions
+        ],
         inventory=daily.inventory,
         inventory_fill_hours=daily.inventory_fill_hours,
         skill_berry_amount=daily.skill_berry_amount,
@@ -402,9 +412,12 @@ class DefaultTeamService(TeamService):
         self,
         repository: TeamRepository,
         catalog: SpeciesCatalog,
+        progress: PlayerProgressRepository,
     ) -> None:
         self._repo = repository
         self._catalog = catalog
+        # The Box computes with the saved sleep schedule.
+        self._progress = progress
 
     def add_member(self, user_id: UUID, data: TeamMemberInput) -> TeamMember:
         member = self._build_member(data)
@@ -423,12 +436,12 @@ class DefaultTeamService(TeamService):
     def list_members_with_production(
         self, user_id: UUID
     ) -> list[tuple[TeamMember, MemberProduction | None]]:
-        # Overview de la caja: producción por miembro reutilizando el cálculo del
-        # dominio (el mismo que /production). El miembro ya está validado (sus enums
-        # vienen del repo), así que no re-parseamos ni re-validamos.
-        return [(m, self._member_production(m)) for m in self._repo.list(user_id)]
+        sleep = self._progress.get(user_id).sleep
+        return [(m, self._member_production(m, sleep)) for m in self._repo.list(user_id)]
 
-    def _member_production(self, member: TeamMember) -> MemberProduction | None:
+    def _member_production(
+        self, member: TeamMember, sleep: SleepSchedule
+    ) -> MemberProduction | None:
         species = self._catalog.get(member.species)
         if species is None:  # especie fuera del catálogo curado: sin producción
             return None
@@ -440,6 +453,7 @@ class DefaultTeamService(TeamService):
             member.sub_skills,
             member.ribbon,
             member.skill_level,
+            sleep=sleep,
         )
         return MemberProduction(
             berries=result.berry_amount,
@@ -547,6 +561,7 @@ class DefaultProductionService(ProductionService):
             cfg.ribbon,
             cfg.skill_level,
             map_bonuses=_scenario_bonuses(data.scenario, cfg.species.berry),
+            sleep=parse_sleep(data.sleep),
         )
         return _production_result(result)
 
@@ -607,6 +622,7 @@ class DefaultProductionService(ProductionService):
         validate_pot_size(data.pot_size)
         map_bonuses = _map_bonuses(data)
         event = _event_bonus(data)
+        sleep = parse_sleep(data.sleep)
 
         # Resolve every entry first: Draco Meteor reads the whole roster.
         configs = [
@@ -628,6 +644,7 @@ class DefaultProductionService(ProductionService):
                 good_camp_ticket=data.good_camp_ticket,
                 event=event,
                 team_context=team_context_for(slot_index, cfg.species, roster),
+                sleep=sleep,
             )
             scaled = scale_daily(daily, weight)
             members.append(

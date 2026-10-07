@@ -146,6 +146,11 @@ class DistributionsOut(msgspec.Struct):
     nature_stats: dict[str, int]
 
 
+class SleepIn(msgspec.Struct, forbid_unknown_fields=True):
+    night_minutes: int
+    nap_minutes: int | None = None
+
+
 class ProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     """Payload para estimar producción: especie, nivel, ingredientes, naturaleza y sub skills."""
 
@@ -157,11 +162,19 @@ class ProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     ribbon: str = ""  # vacío = sin listón
     skill_level: int = 1  # nivel de la main skill
     scenario: str = "none"  # ComparisonScenario: "none" = no berry bonus
+    sleep: SleepIn | None = None
 
 
 class SlotProductionOut(msgspec.Struct):
     ingredient: str
     amount: float
+
+
+class SleepSessionOut(msgspec.Struct):
+    kind: str  # "night" | "nap"
+    hours: float
+    overflow_hours: float
+    skill_chances: list[float]
 
 
 class ProductionOut(msgspec.Struct):
@@ -187,7 +200,7 @@ class ProductionOut(msgspec.Struct):
     skill_tasty_chance: float | None
     skill_extra_helpful: float | None
     skill_random_energy: float | None
-    night_skill_chances: list[float]
+    sleep_sessions: list[SleepSessionOut]
     inventory: int
     inventory_fill_hours: float
     skill_berry_amount: float | None = None
@@ -216,6 +229,11 @@ class ErrorOut(msgspec.Struct):
     detail: str
 
 
+class SleepOut(msgspec.Struct):
+    night_minutes: int
+    nap_minutes: int | None
+
+
 class ProgressOut(msgspec.Struct):
     """The user's full progress. GET and PATCH both return this."""
 
@@ -223,6 +241,7 @@ class ProgressOut(msgspec.Struct):
     recipe_levels: dict[str, int]
     favorite_recipes: dict[str, str]
     area_bonuses: dict[str, int]
+    sleep: SleepOut
 
 
 class ProgressPatchIn(msgspec.Struct, forbid_unknown_fields=True):
@@ -236,6 +255,7 @@ class ProgressPatchIn(msgspec.Struct, forbid_unknown_fields=True):
     recipe_levels: dict[str, int] | None = None
     favorite_recipes: dict[str, str | None] | None = None
     area_bonuses: dict[str, int] | None = None
+    sleep: SleepIn | None = None
 
 
 class GoogleLoginIn(msgspec.Struct, forbid_unknown_fields=True):
@@ -287,6 +307,7 @@ class TeamProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     good_camp_ticket: bool = False
     pot_size: int = DEFAULT_POT_SIZE
     event_effects: list[EventEffectIn] = msgspec.field(default_factory=list)
+    sleep: SleepIn | None = None
 
 
 class IngredientBalanceOut(msgspec.Struct):

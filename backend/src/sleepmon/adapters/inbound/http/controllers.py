@@ -35,6 +35,9 @@ from sleepmon.adapters.inbound.http.schemas import (
     RatingOut,
     RecipeOut,
     SkillEffectAggOut,
+    SleepIn,
+    SleepOut,
+    SleepSessionOut,
     SlotIngredientStatusOut,
     SlotProductionOut,
     SpeciesOut,
@@ -50,6 +53,7 @@ from sleepmon.application.dto import (
     ProductionInput,
     ProductionResult,
     ProgressPatchInput,
+    SleepInput,
     SlotEntryInput,
     SlotInput,
     TeamMemberInput,
@@ -106,7 +110,15 @@ def _full_production_out(result: ProductionResult) -> ProductionOut:
         skill_tasty_chance=result.skill_tasty_chance,
         skill_extra_helpful=result.skill_extra_helpful,
         skill_random_energy=result.skill_random_energy,
-        night_skill_chances=result.night_skill_chances,
+        sleep_sessions=[
+            SleepSessionOut(
+                kind=s.kind,
+                hours=s.hours,
+                overflow_hours=s.overflow_hours,
+                skill_chances=s.skill_chances,
+            )
+            for s in result.sleep_sessions
+        ],
         inventory=result.inventory,
         inventory_fill_hours=result.inventory_fill_hours,
         skill_berry_amount=result.skill_berry_amount,
@@ -187,6 +199,10 @@ def _nature_out(nature: Nature) -> NatureOut:
         increased=effect.increased.value if effect.increased is not None else None,
         decreased=effect.decreased.value if effect.decreased is not None else None,
     )
+
+
+def _sleep_input(data: SleepIn | None) -> SleepInput | None:
+    return None if data is None else SleepInput(data.night_minutes, data.nap_minutes)
 
 
 def _to_input(payload: MemberIn) -> TeamMemberInput:
@@ -278,6 +294,7 @@ class ProductionController(Controller):
                 ribbon=data.ribbon,
                 skill_level=data.skill_level,
                 scenario=data.scenario,
+                sleep=_sleep_input(data.sleep),
             )
         )
         return _full_production_out(result)
@@ -405,6 +422,7 @@ class TeamProductionController(Controller):
                     EventEffectInput(kind=e.kind, value=e.value, scope=e.scope, target=e.target)
                     for e in data.event_effects
                 ],
+                sleep=_sleep_input(data.sleep),
             )
         )
         return TeamProductionOut(
@@ -545,6 +563,9 @@ def _to_progress_out(progress: PlayerProgress) -> ProgressOut:
         recipe_levels=dict(progress.recipe_levels),
         favorite_recipes={t.value: n for t, n in progress.favorite_recipes.items()},
         area_bonuses={a.value: p for a, p in progress.area_bonuses.items()},
+        sleep=SleepOut(
+            night_minutes=progress.sleep.night_minutes, nap_minutes=progress.sleep.nap_minutes
+        ),
     )
 
 
@@ -575,6 +596,7 @@ class ProgressController(Controller):
                     recipe_levels=data.recipe_levels,
                     favorite_recipes=data.favorite_recipes,
                     area_bonuses=data.area_bonuses,
+                    sleep=_sleep_input(data.sleep),
                 ),
             )
         )

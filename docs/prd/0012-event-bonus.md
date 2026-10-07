@@ -161,7 +161,7 @@ today.
 - **A catalog of named events, or saved bonus templates** — beyond the single
   preloaded current event, the bonus is built by hand each session.
 - **Persisting the bonus** — not on the account, not in [Player
-  progress](0011-player-progress.md), not in the browser.
+  profile](0011-player-profile.md), not in the browser.
 - **Variation within the week** — Sunday step-ups (e.g. an event's ×4 pot on Sunday is
   the event's ×2 meeting Sunday's own ×2, which the tool doesn't model), event rules
   for Sunday Extra Tasty, and single-day spikes.
