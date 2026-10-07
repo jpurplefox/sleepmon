@@ -63,6 +63,17 @@ export function TeamContextBar({
       {w.n.toLocaleString(numberLocale)}
     </span>
   );
+  // The area bonus as a bare "+X%" chip; its full name stays in the tooltip and label.
+  const areaMark = (pct: number, decorative = false) => (
+    <span
+      className="metric-mark metric-mark--good"
+      role={decorative ? undefined : "img"}
+      aria-label={decorative ? undefined : t("ctx.area", { pct })}
+      title={decorative ? undefined : t("ctx.area", { pct })}
+    >
+      +{pct}%
+    </span>
+  );
   // The widest extras any map can show: three berries, the widest weekly mark, the top area.
   const widestWeekly = WEEKLY_MARK.skill_trigger;
   const MAX_AREA_PCT = 85;
@@ -105,9 +116,7 @@ export function TeamContextBar({
                   </span>
                 )}
                 {weekly && weeklyMark(weekly)}
-                {map.areaPct !== null && (
-                  <span className="ctx-sub">{t("ctx.area", { pct: map.areaPct })}</span>
-                )}
+                {map.areaPct !== null && areaMark(map.areaPct)}
               </span>
               {[t("ctx.noMap"), ...mapNames].map((name) => (
                 <span key={name} className="filter-btn__value ctx-map__sizer" aria-hidden="true">
@@ -118,7 +127,7 @@ export function TeamContextBar({
                     ))}
                   </span>
                   {weeklyMark(widestWeekly, true)}
-                  <span className="ctx-sub">{t("ctx.area", { pct: MAX_AREA_PCT })}</span>
+                  {areaMark(MAX_AREA_PCT, true)}
                 </span>
               ))}
             </span>

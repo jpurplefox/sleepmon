@@ -77,7 +77,7 @@ Per tool:
   - **Map** — "No map", or the map's name followed by its favorite berries as icons
     (on an expert map the **main** favorite first), then — on an expert map — the
     **weekly bonus** as a mark with its effect's icon (berries ×2.4, +1 ingredient or
-    skill ×1.25, numbers in the active language like the event marks), and **Area +X%**
+    skill ×1.25, numbers in the active language like the event marks), and the **area bonus** as a bare **+X%** chip (named "Area +X%" in its tooltip)
     when the area bonus is above 0. Opens the **Map** dialog: map, favorite berries, weekly bonus
     (expert maps) and area bonus — no dish type and no Good Camp Ticket, which live in
     the bar. With **No map** the dialog still shows the berry grid, every berry
@@ -140,7 +140,7 @@ sign-in gate ([Authentication](0010-authentication.md)) in place of all of this.
   named "Bayas ×2,4" / "Berries ×2.4" everywhere it is chosen (Map dialog, Comparison's
   "Experto · bayas" scenario).
 - **Area bonus:** with an area bonus of 0, the Map chip shows no area figure; with 35%,
-  it shows **Area +35%**.
+  it shows a **+35%** chip.
 - **Good Camp Ticket:** touching **Sí** turns the ticket on and the totals recompute,
   without opening anything; touching **No** turns it off.
 - **Map / Event chips:** touching the Map chip opens the Map dialog (titled Map, no

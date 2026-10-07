@@ -289,8 +289,8 @@ states · where it lives. Feature one-offs are intentionally not here.
   `.filter-control`/`.filter-btn` (opening a `.filter-pop`, or the setting's own dialog —
   one `Modal` per setting, titled after it, no tabs — when it has several parts), on/off is a
   `.specialty-toggle` (No / Sí), and a rule's effect inside a trigger is its
-  `.metric-mark`. A secondary figure inside a trigger (an area bonus) is `.ctx-sub`
-  (`--muted`, `--text-xs`, 700). Flex, wraps (`gap: 0.6rem 1.5rem`); a field never splits
+  `.metric-mark` — a bare figure too (the area bonus is a "+35%" mark, named in full in its
+  tooltip and accessible name). Flex, wraps (`gap: 0.6rem 1.5rem`); a field never splits
   across lines. The Box's `.box-toolbar` is its context bar. A field may pair an in-place toggle with
   a trigger (Team Analysis's Meals: dish-type `.specialty-toggle` + a `.filter-btn` with the
   three dishes as 24px recipe images, `.ctx-recipes`). A field is shown **even when

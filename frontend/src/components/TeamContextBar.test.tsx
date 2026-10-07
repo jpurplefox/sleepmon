@@ -67,9 +67,12 @@ describe("TeamContextBar", () => {
   it("shows the map name, its berries in order and the area bonus", () => {
     renderBar({ map: { name: "Greengrass Isle (Expert)", berries: ["Leppa", "Grepa"], areaPct: 35, weeklyBonus: null } });
     const field = screen.getByText("Greengrass Isle (Expert)").closest("button")!;
-    const alts = within(field).getAllByRole("img").map((img) => img.getAttribute("alt"));
+    const alts = within(field)
+      .getAllByRole("img")
+      .filter((el) => el.tagName === "IMG")
+      .map((img) => img.getAttribute("alt"));
     expect(alts).toEqual(["Leppa", "Grepa"]);
-    expect(within(field).getByText("Area +35%")).toBeInTheDocument();
+    expect(within(field).getByRole("img", { name: "Area +35%" })).toHaveTextContent(/^\+35%$/);
   });
 
   it("omits the area figure when there is no area bonus", () => {
