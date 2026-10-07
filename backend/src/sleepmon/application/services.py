@@ -87,7 +87,7 @@ from sleepmon.domain.production import (
     scale_daily,
 )
 from sleepmon.domain.progress import validate_pot_size
-from sleepmon.domain.sleep import DEFAULT_SLEEP, SleepSchedule
+from sleepmon.domain.sleep import SleepSchedule
 from sleepmon.domain.species import Species
 from sleepmon.domain.team_helps import HelpedYields, extra_help_yields
 from sleepmon.domain.value_objects import (
@@ -412,11 +412,11 @@ class DefaultTeamService(TeamService):
         self,
         repository: TeamRepository,
         catalog: SpeciesCatalog,
-        progress: PlayerProgressRepository | None = None,
+        progress: PlayerProgressRepository,
     ) -> None:
         self._repo = repository
         self._catalog = catalog
-        # The Box computes with the saved sleep schedule; None -> the default night.
+        # The Box computes with the saved sleep schedule.
         self._progress = progress
 
     def add_member(self, user_id: UUID, data: TeamMemberInput) -> TeamMember:
@@ -436,7 +436,7 @@ class DefaultTeamService(TeamService):
     def list_members_with_production(
         self, user_id: UUID
     ) -> list[tuple[TeamMember, MemberProduction | None]]:
-        sleep = DEFAULT_SLEEP if self._progress is None else self._progress.get(user_id).sleep
+        sleep = self._progress.get(user_id).sleep
         return [(m, self._member_production(m, sleep)) for m in self._repo.list(user_id)]
 
     def _member_production(

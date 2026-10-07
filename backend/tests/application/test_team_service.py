@@ -21,7 +21,9 @@ UID = uuid4()
 
 @pytest.fixture
 def service() -> DefaultTeamService:
-    return DefaultTeamService(InMemoryTeamRepository(), StaticSpeciesCatalog())
+    return DefaultTeamService(
+        InMemoryTeamRepository(), StaticSpeciesCatalog(), InMemoryPlayerProgressRepository()
+    )
 
 
 def valid_input(**overrides: object) -> TeamMemberInput:
@@ -45,7 +47,7 @@ def test_add_member_persists_and_returns(service: DefaultTeamService) -> None:
 
 def test_service_passes_user_id_to_repo() -> None:
     repo = InMemoryTeamRepository()
-    service = DefaultTeamService(repo, StaticSpeciesCatalog())
+    service = DefaultTeamService(repo, StaticSpeciesCatalog(), InMemoryPlayerProgressRepository())
     uid = uuid4()
     created = service.add_member(uid, valid_input())
     assert service.get_member(uid, created.id).id == created.id
@@ -288,7 +290,7 @@ def test_box_overview_exposes_berry_burst_counts(service: DefaultTeamService) ->
     service.add_member(
         UID, valid_input(species="Sceptile", ingredients=["Fancy Egg"] * 3, sub_skills=[])
     )
-    (_, production), = service.list_members_with_production(UID)
+    ((_, production),) = service.list_members_with_production(UID)
     assert production is not None
     # A Sceptile in the Box exposes its own skill berries and per-teammate count.
     assert production.skill_berry_amount == pytest.approx(production.skill_triggers * 11)
@@ -298,12 +300,12 @@ def test_box_overview_exposes_berry_burst_counts(service: DefaultTeamService) ->
 def test_box_production_uses_the_saved_sleep_schedule() -> None:
     progress = InMemoryPlayerProgressRepository()
     team = InMemoryTeamRepository()
-    plain = DefaultTeamService(team, StaticSpeciesCatalog())
+    plain = DefaultTeamService(team, StaticSpeciesCatalog(), InMemoryPlayerProgressRepository())
     with_nap = DefaultTeamService(team, StaticSpeciesCatalog(), progress)
     plain.add_member(UID, valid_input())
     progress.transform(UID, lambda _: PlayerProgress(sleep=SleepSchedule(390, 120)))
 
-    (_, default_prod), = plain.list_members_with_production(UID)
-    (_, nap_prod), = with_nap.list_members_with_production(UID)
+    ((_, default_prod),) = plain.list_members_with_production(UID)
+    ((_, nap_prod),) = with_nap.list_members_with_production(UID)
     assert default_prod is not None and nap_prod is not None
     assert nap_prod.skill_triggers != default_prod.skill_triggers
