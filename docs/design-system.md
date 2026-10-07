@@ -350,7 +350,8 @@ states · where it lives. Feature one-offs are intentionally not here.
 
 ### Overlays
 - **`Modal`** (`components/Modal.tsx`) — shared dialog. Props: `title`, `onClose`,
-  `children`, `wide?`. Escape to close, focus trap, body-scroll lock, autofocus to
+  `children`, `wide?`, `tall?` (full available height, for a dialog whose content is
+  filtered — Meals — so a search never resizes it). Escape to close, focus trap, body-scroll lock, autofocus to
   `[data-autofocus]`, focus return; `role="dialog"`, `aria-modal`. Footer via
   `.modal-actions`. The panel never outgrows the viewport: the title stays fixed and
   only `.modal-body` scrolls (a body holding its own scrolling panel, like Progress,

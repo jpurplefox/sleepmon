@@ -175,7 +175,7 @@ export function MealsModal({
   ];
 
   return (
-    <Modal title={t("teams.tabMeals")} onClose={onClose} wide>
+    <Modal title={t("teams.tabMeals")} onClose={onClose} wide tall>
       {saveError && (
         <p className="error" role="alert">
           {t("progress.saveError")}

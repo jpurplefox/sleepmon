@@ -10,9 +10,11 @@ interface Props {
   onClose: () => void;
   children: ReactNode;
   wide?: boolean;
+  /** Takes the full available height, so filtering its content never resizes it. */
+  tall?: boolean;
 }
 
-export function Modal({ title, onClose, children, wide }: Props) {
+export function Modal({ title, onClose, children, wide, tall }: Props) {
   const { t } = useI18n();
   const panelRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -68,12 +70,19 @@ export function Modal({ title, onClose, children, wide }: Props) {
   }, []);
 
   // Dropdowns opened inside fit the body, so only one thing scrolls.
-  useEffect(() => (bodyRef.current ? fitDropdownsIn(bodyRef.current) : undefined), []);
+  useEffect(
+    () => (bodyRef.current ? fitDropdownsIn(bodyRef.current) : undefined),
+    [],
+  );
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
-        className={"modal-panel" + (wide ? " modal-panel--wide" : "")}
+        className={
+          "modal-panel" +
+          (wide ? " modal-panel--wide" : "") +
+          (tall ? " modal-panel--tall" : "")
+        }
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -82,7 +91,11 @@ export function Modal({ title, onClose, children, wide }: Props) {
       >
         <header className="modal-head">
           <h2 id={titleId}>{title}</h2>
-          <button className="modal-close" onClick={onClose} aria-label={t("common.close")}>
+          <button
+            className="modal-close"
+            onClick={onClose}
+            aria-label={t("common.close")}
+          >
             <IconClose />
           </button>
         </header>

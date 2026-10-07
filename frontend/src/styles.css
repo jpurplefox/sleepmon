@@ -1082,6 +1082,12 @@ select:focus {
   max-width: min(900px, 96vw);
 }
 
+/* Fixed at the full available height: a search that filters the content never shrinks it. */
+.modal-panel--tall {
+  height: calc(100vh - 4rem);
+  height: calc(100dvh - 4rem);
+}
+
 /* Presencia del modal: aparición corta que hace legible el cambio de estado
    (abrir/cerrar es frecuente en el flujo de comparación) sin ser decorativa. */
 @keyframes overlay-in {
