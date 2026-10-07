@@ -419,6 +419,7 @@ export function Teams() {
           goodCampTicket={goodCampTicket}
           onGoodCampTicket={setGoodCampTicket}
           onOpenDialog={setDialog}
+          mapNames={catalog.data.islands.map((i) => i.name)}
           dishType={dishType}
           meals={meals}
           onDishType={(type) => {

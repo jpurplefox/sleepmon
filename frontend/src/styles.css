@@ -5304,6 +5304,20 @@ button.prod-card__base-tag--action:hover {
   margin-left: 0;
 }
 
+/* Map value plus invisible sizers for every map, stacked in one cell. */
+.ctx-map {
+  display: inline-grid;
+}
+
+.ctx-map > * {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+.ctx-map__sizer {
+  visibility: hidden;
+}
+
 /* Meals value: the dishes and "No recipes" stacked in one cell; only one shows. */
 .ctx-meals {
   display: inline-grid;

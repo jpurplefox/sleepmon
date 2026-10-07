@@ -94,6 +94,10 @@ Per tool:
   keeps a **Choose recipes** action that also opens the **Meals** dialog.
 - When the chips don't fit the width, the bar **wraps** to a new line; it never makes
   the page scroll sideways.
+- A field **never changes size** as its value changes: every control is the same height,
+  and the Map and Meals fields reserve the width of their longest possible value (the
+  longest map name with three berries, the widest weekly mark and the top area bonus;
+  three dishes or "No recipes"), so choosing something never shifts the rest of the bar.
 
 ### Empty state
 

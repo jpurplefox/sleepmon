@@ -28,6 +28,7 @@ function renderBar(overrides: Partial<React.ComponentProps<typeof TeamContextBar
         dishType={null}
         meals={[null, null, null]}
         onDishType={onDishType}
+        mapNames={[]}
         {...overrides}
       />
     </LanguageProvider>,
@@ -38,7 +39,7 @@ function renderBar(overrides: Partial<React.ComponentProps<typeof TeamContextBar
 describe("TeamContextBar", () => {
   it("shows every setting even when nothing is set", () => {
     renderBar();
-    expect(screen.getByText("No map")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Map No map/ })).toBeInTheDocument();
     expect(screen.getByText("No event")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "No" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: "Yes" })).toHaveAttribute("aria-pressed", "false");
@@ -57,7 +58,7 @@ describe("TeamContextBar", () => {
 
   it("opens the settings on the Map tab from the Map field and on the Event tab from the Event field", async () => {
     const { onOpenDialog } = renderBar();
-    await userEvent.click(screen.getByText("No map"));
+    await userEvent.click(screen.getByRole("button", { name: /^Map No map/ }));
     expect(onOpenDialog).toHaveBeenLastCalledWith("map");
     await userEvent.click(screen.getByText("No event"));
     expect(onOpenDialog).toHaveBeenLastCalledWith("event");
@@ -73,7 +74,7 @@ describe("TeamContextBar", () => {
 
   it("omits the area figure when there is no area bonus", () => {
     renderBar({ map: { name: "Cyan Beach", berries: [], areaPct: null, weeklyBonus: null } });
-    expect(screen.queryByText(/Area \+/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Map Cyan Beach/ })).not.toHaveAccessibleName(/Area/);
     expect(screen.getByRole("button", { name: /^Map Cyan Beach/ })).toBeInTheDocument();
   });
 
@@ -142,5 +143,19 @@ describe("TeamContextBar", () => {
   it("names the ingredient and skill weekly bonuses by their effect", () => {
     renderBar({ map: { name: "Cyan Beach (Expert)", berries: [], areaPct: null, weeklyBonus: "skill_trigger" } });
     expect(screen.getByRole("img", { name: "Skill ×1.25" })).toHaveTextContent("×1.25");
+  });
+
+  it("reserves room for the longest map, so the field keeps one width whatever is chosen", () => {
+    renderBar({ mapNames: ["Cyan Beach", "Old Gold Power Plant (Expert)"] });
+    const field = screen.getByRole("button", { name: /^Map No map/ });
+    // One hidden sizer per map (plus "No map"), each with the widest extras; never announced.
+    const sizers = field.querySelectorAll(".ctx-map__sizer");
+    expect([...sizers].map((el) => el.firstChild?.textContent)).toEqual([
+      "No map",
+      "Cyan Beach",
+      "Old Gold Power Plant (Expert)",
+    ]);
+    sizers.forEach((el) => expect(el).toHaveAttribute("aria-hidden", "true"));
+    expect(field).not.toHaveAccessibleName(/Cyan Beach/);
   });
 });

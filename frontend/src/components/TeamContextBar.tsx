@@ -32,6 +32,8 @@ interface Props {
   dishType: Recipe["type"] | null;
   meals: (MealInput | null)[];
   onDishType: (type: Recipe["type"]) => void;
+  /** Every map's name, so the Map field can reserve room for the longest one. */
+  mapNames: string[];
 }
 
 /** Team Analysis's context: map, meals, event and camp ticket, always visible (PRD 0014). */
@@ -44,9 +46,26 @@ export function TeamContextBar({
   dishType,
   meals,
   onDishType,
+  mapNames,
 }: Props) {
   const { t, berry, lang } = useI18n();
   const weekly = map.weeklyBonus ? WEEKLY_MARK[map.weeklyBonus] : null;
+  const numberLocale = lang === "es" ? "es-AR" : "en-US";
+  const weeklyMark = (w: (typeof WEEKLY_MARK)[WeeklyBonus], decorative = false) => (
+    <span
+      className="metric-mark metric-mark--good"
+      role={decorative ? undefined : "img"}
+      aria-label={decorative ? undefined : t(w.labelKey)}
+      title={decorative ? undefined : t(w.labelKey)}
+    >
+      <img className="metric-mark__icon" src={w.icon} alt="" />
+      {w.op}
+      {w.n.toLocaleString(numberLocale)}
+    </span>
+  );
+  // The widest extras any map can show: three berries, the widest weekly mark, the top area.
+  const widestWeekly = WEEKLY_MARK.skill_trigger;
+  const MAX_AREA_PCT = 85;
   const mapBtnId = useId();
   const eventBtnId = useId();
   const mealsBtnId = useId();
@@ -67,38 +86,41 @@ export function TeamContextBar({
             aria-haspopup="dialog"
             onClick={() => onOpenDialog("map")}
           >
-            <span className="filter-btn__value">
-              {map.name ?? t("ctx.noMap")}
-              {map.berries.length > 0 && (
-                <span className="filter-btn__icons">
-                  {map.berries.map((b) => (
-                    <img
-                      key={b}
-                      className="mini-icon"
-                      src={berryIcon(b)}
-                      alt={berry(b)}
-                      title={berry(b)}
-                    />
-                  ))}
+            {/* The value and one invisible sizer per map share a grid cell, so the field is
+                as wide as the longest possible map line and never resizes. */}
+            <span className="ctx-map">
+              <span className="filter-btn__value">
+                {map.name ?? t("ctx.noMap")}
+                {map.berries.length > 0 && (
+                  <span className="filter-btn__icons">
+                    {map.berries.map((b) => (
+                      <img
+                        key={b}
+                        className="mini-icon"
+                        src={berryIcon(b)}
+                        alt={berry(b)}
+                        title={berry(b)}
+                      />
+                    ))}
+                  </span>
+                )}
+                {weekly && weeklyMark(weekly)}
+                {map.areaPct !== null && (
+                  <span className="ctx-sub">{t("ctx.area", { pct: map.areaPct })}</span>
+                )}
+              </span>
+              {[t("ctx.noMap"), ...mapNames].map((name) => (
+                <span key={name} className="filter-btn__value ctx-map__sizer" aria-hidden="true">
+                  <span>{name}</span>
+                  <span className="filter-btn__icons">
+                    {[0, 1, 2].map((i) => (
+                      <span key={i} className="mini-icon" />
+                    ))}
+                  </span>
+                  {weeklyMark(widestWeekly, true)}
+                  <span className="ctx-sub">{t("ctx.area", { pct: MAX_AREA_PCT })}</span>
                 </span>
-              )}
-              {weekly && (
-                <span
-                  className="metric-mark metric-mark--good"
-                  role="img"
-                  aria-label={t(weekly.labelKey)}
-                  title={t(weekly.labelKey)}
-                >
-                  <img className="metric-mark__icon" src={weekly.icon} alt="" />
-                  {weekly.op}
-                  {weekly.n.toLocaleString(lang === "es" ? "es-AR" : "en-US")}
-                </span>
-              )}
-              {map.areaPct !== null && (
-                <span className="ctx-sub">
-                  {t("ctx.area", { pct: map.areaPct })}
-                </span>
-              )}
+              ))}
             </span>
             <IconChevronDown className="filter-btn__chevron" />
           </button>
