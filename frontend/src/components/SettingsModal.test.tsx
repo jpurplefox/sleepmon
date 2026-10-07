@@ -27,7 +27,10 @@ const catalog: Catalog = {
 // SettingsModal's real Props, renders it, then opens the Meals tab — the
 // dish-type buttons and the pot stepper live there, and the modal defaults to
 // the Map (island) tab.
-function renderModal(overrides: Partial<React.ComponentProps<typeof SettingsModal>> = {}) {
+function renderModal(
+  overrides: Partial<React.ComponentProps<typeof SettingsModal>> = {},
+  { openMeals = true }: { openMeals?: boolean } = {},
+) {
   const props: React.ComponentProps<typeof SettingsModal> = {
     recipes: [],
     levelBonus: [],
@@ -78,7 +81,7 @@ function renderModal(overrides: Partial<React.ComponentProps<typeof SettingsModa
       <SettingsModal {...props} />
     </LanguageProvider>,
   );
-  fireEvent.click(screen.getByRole("tab", { name: "Meals" }));
+  if (openMeals) fireEvent.click(screen.getByRole("tab", { name: "Meals" }));
 
   return props;
 }
@@ -428,5 +431,18 @@ describe("SettingsModal tabs", () => {
   it("orders the tabs Map, Event, Meals", () => {
     renderModal();
     expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual(["Map", "Event", "Meals"]);
+  });
+});
+
+describe("SettingsModal — initial tab", () => {
+  it("opens on the Map tab by default", () => {
+    renderModal({}, { openMeals: false });
+    expect(screen.getByRole("tab", { name: "Map" })).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("opens on the tab it is asked for", () => {
+    renderModal({ initialTab: "event" }, { openMeals: false });
+    expect(screen.getByRole("tab", { name: "Event" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "Map" })).toHaveAttribute("aria-selected", "false");
   });
 });

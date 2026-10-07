@@ -59,7 +59,7 @@ function PotLadderStepper({
   );
 }
 
-type TabId = "island" | "event" | "meals";
+export type SettingsTab = "island" | "event" | "meals";
 
 interface Props {
   recipes: Recipe[];
@@ -123,6 +123,8 @@ interface Props {
   favoriteFor: (type: Recipe["type"]) => string | null;
   /** True when the last save attempt (any of the three) failed. */
   saveError?: boolean;
+  /** Tab to open on; the context bar and the Cooking card open the one they mean. */
+  initialTab?: SettingsTab;
 }
 
 export function SettingsModal({
@@ -168,11 +170,12 @@ export function SettingsModal({
   onSaveLevel,
   favoriteFor,
   saveError = false,
+  initialTab = "island",
 }: Props) {
   const { t } = useI18n();
 
   // Tab state: "island" is active by default.
-  const [activeTab, setActiveTab] = useState<TabId>("island");
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
 
   // Text search.
   const [search, setSearch] = useState("");
