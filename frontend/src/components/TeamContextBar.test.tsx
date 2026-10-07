@@ -11,7 +11,7 @@ beforeEach(() => {
   localStorage.setItem("sleepmon.lang", "en");
 });
 
-const NO_MAP: MapSummary = { name: null, berries: [], areaPct: null };
+const NO_MAP: MapSummary = { name: null, berries: [], areaPct: null, weeklyBonus: null };
 
 function renderBar(overrides: Partial<React.ComponentProps<typeof TeamContextBar>> = {}) {
   const onGoodCampTicket = vi.fn();
@@ -64,7 +64,7 @@ describe("TeamContextBar", () => {
   });
 
   it("shows the map name, its berries in order and the area bonus", () => {
-    renderBar({ map: { name: "Greengrass Isle (Expert)", berries: ["Leppa", "Grepa"], areaPct: 35 } });
+    renderBar({ map: { name: "Greengrass Isle (Expert)", berries: ["Leppa", "Grepa"], areaPct: 35, weeklyBonus: null } });
     const field = screen.getByText("Greengrass Isle (Expert)").closest("button")!;
     const alts = within(field).getAllByRole("img").map((img) => img.getAttribute("alt"));
     expect(alts).toEqual(["Leppa", "Grepa"]);
@@ -72,7 +72,7 @@ describe("TeamContextBar", () => {
   });
 
   it("omits the area figure when there is no area bonus", () => {
-    renderBar({ map: { name: "Cyan Beach", berries: [], areaPct: null } });
+    renderBar({ map: { name: "Cyan Beach", berries: [], areaPct: null, weeklyBonus: null } });
     expect(screen.queryByText(/Area \+/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^Map Cyan Beach/ })).toBeInTheDocument();
   });
@@ -129,5 +129,18 @@ describe("TeamContextBar", () => {
     const button = screen.getByRole("button", { name: /^Meals/ });
     expect(within(button).getAllByRole("img")).toHaveLength(2);
     expect(button.querySelectorAll(".ctx-recipe--empty")).toHaveLength(1);
+  });
+
+  it("shows an expert map's weekly bonus as a mark after its berries", () => {
+    renderBar({
+      map: { name: "Greengrass Isle (Expert)", berries: ["Leppa"], areaPct: null, weeklyBonus: "berry_strength" },
+    });
+    const field = screen.getByRole("button", { name: /^Map Greengrass Isle \(Expert\)/ });
+    expect(within(field).getByRole("img", { name: "Berries ×2.4" })).toHaveTextContent("×2.4");
+  });
+
+  it("names the ingredient and skill weekly bonuses by their effect", () => {
+    renderBar({ map: { name: "Cyan Beach (Expert)", berries: [], areaPct: null, weeklyBonus: "skill_trigger" } });
+    expect(screen.getByRole("img", { name: "Skill ×1.25" })).toHaveTextContent("×1.25");
   });
 });

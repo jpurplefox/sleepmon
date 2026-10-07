@@ -91,7 +91,7 @@ describe("IslandTab weekly bonus", () => {
   it("shows it on an expert map with berry strength active by default", () => {
     renderTab({ selectedIsland: "Cyan Beach (Expert)" });
     expect(screen.getByText("Weekly bonus")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Strength ×2.4" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Berries ×2.4" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );

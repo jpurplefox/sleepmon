@@ -131,7 +131,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.scenario": "Escenario",
     "prod.scenarioNone": "Sin bonus de baya",
     "prod.scenarioFavorite": "Baya favorita",
-    "prod.scenarioExpertBerry": "Experto · fuerza",
+    "prod.scenarioExpertBerry": "Experto · bayas",
     "prod.scenarioExpertIngredient": "Experto · ingrediente",
     "prod.scenarioExpertSkill": "Experto · skill",
     "prod.atMax":
@@ -466,7 +466,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.pickSplitPartner": "Elegí el segundo Pokémon del slot",
     // Expert mode
     "teams.weeklyBonus": "Bonus semanal",
-    "teams.weeklyBerryStrength": "Fuerza ×2,4",
+    "teams.weeklyBerryStrength": "Bayas ×2,4",
     "teams.weeklyIngredient": "+1 ingrediente",
     "teams.weeklySkillTrigger": "Skill ×1,25",
     "card.expertMainSpeed": "Baya principal: ayuda {pct}% más rápida",
@@ -635,7 +635,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.scenario": "Scenario",
     "prod.scenarioNone": "No berry bonus",
     "prod.scenarioFavorite": "Favorite berry",
-    "prod.scenarioExpertBerry": "Expert · strength",
+    "prod.scenarioExpertBerry": "Expert · berries",
     "prod.scenarioExpertIngredient": "Expert · ingredient",
     "prod.scenarioExpertSkill": "Expert · skill",
     "prod.atMax":
@@ -969,7 +969,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.pickSplitPartner": "Pick the slot's second Pokémon",
     // Expert mode
     "teams.weeklyBonus": "Weekly bonus",
-    "teams.weeklyBerryStrength": "Strength ×2.4",
+    "teams.weeklyBerryStrength": "Berries ×2.4",
     "teams.weeklyIngredient": "+1 ingredient",
     "teams.weeklySkillTrigger": "Skill ×1.25",
     "card.expertMainSpeed": "Main favorite: helps {pct}% faster",

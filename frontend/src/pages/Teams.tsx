@@ -252,6 +252,7 @@ export function Teams() {
     mainFavorite,
     expert: isExpert,
     areaBonusPct,
+    weeklyBonus,
   });
 
   // Role of a berry relative to the map: drives the card's state and marks.

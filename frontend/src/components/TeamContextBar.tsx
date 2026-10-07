@@ -4,14 +4,24 @@ import { berryIcon } from "../berries";
 import type { EventEffect } from "../eventBonus";
 import { useI18n } from "../i18n";
 import type { MapSummary } from "../mapSummary";
+import { statIcon } from "../natures";
 import { RECIPE_TYPES, dishTypeLabelKey, recipeImage } from "../recipes";
-import type { MealInput, Recipe } from "../types";
+import { GENERIC_BERRY_ICON } from "../skillIcons";
+import type { MealInput, Recipe, WeeklyBonus } from "../types";
 import { EventMarks } from "./EventMarks";
 import { IconChevronDown } from "./icons";
 import { ContextBar, ContextField } from "./ToolHeader";
 
 /** The dialog each context field opens. */
 export type TeamDialog = "map" | "event" | "meals";
+
+// The weekly bonus as a mark: the effect's icon and value, named in full for its tooltip
+// and accessible name. Values are formatted like the event marks beside it in the bar.
+const WEEKLY_MARK: Record<WeeklyBonus, { icon: string; op: "×" | "+"; n: number; labelKey: string }> = {
+  berry_strength: { icon: GENERIC_BERRY_ICON, op: "×", n: 2.4, labelKey: "teams.weeklyBerryStrength" },
+  ingredient: { icon: statIcon("Ingredient Finding"), op: "+", n: 1, labelKey: "teams.weeklyIngredient" },
+  skill_trigger: { icon: statIcon("Main Skill Chance"), op: "×", n: 1.25, labelKey: "teams.weeklySkillTrigger" },
+};
 
 interface Props {
   map: MapSummary;
@@ -35,7 +45,8 @@ export function TeamContextBar({
   meals,
   onDishType,
 }: Props) {
-  const { t, berry } = useI18n();
+  const { t, berry, lang } = useI18n();
+  const weekly = map.weeklyBonus ? WEEKLY_MARK[map.weeklyBonus] : null;
   const mapBtnId = useId();
   const eventBtnId = useId();
   const mealsBtnId = useId();
@@ -69,6 +80,18 @@ export function TeamContextBar({
                       title={berry(b)}
                     />
                   ))}
+                </span>
+              )}
+              {weekly && (
+                <span
+                  className="metric-mark metric-mark--good"
+                  role="img"
+                  aria-label={t(weekly.labelKey)}
+                  title={t(weekly.labelKey)}
+                >
+                  <img className="metric-mark__icon" src={weekly.icon} alt="" />
+                  {weekly.op}
+                  {weekly.n.toLocaleString(lang === "es" ? "es-AR" : "en-US")}
                 </span>
               )}
               {map.areaPct !== null && (
