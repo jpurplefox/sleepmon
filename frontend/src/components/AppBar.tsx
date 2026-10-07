@@ -18,7 +18,7 @@ export function AppBar() {
       <div className="appbar__inner">
         <Link href={ROUTES.box} className="brand">
           <img src={spriteUrl(SNORLAX_DEX)} alt="" width={30} height={30} />
-          sleepmon
+          <span className="brand__name">sleepmon</span>
         </Link>
         <NavTabs />
         <div className="appbar__right">

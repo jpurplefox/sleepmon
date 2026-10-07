@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 
 /** A tool's header: its title and, under it, the context bar (design-system §5). */
 export function ToolHeader({
@@ -41,11 +41,21 @@ export function ContextBar({ children }: { children: ReactNode }) {
 }
 
 /** One setting in the context bar: a muted label and its control. */
-export function ContextField({ label, children }: { label: string; children: ReactNode }) {
+export function ContextField({
+  label,
+  children,
+}: {
+  label: string;
+  /** A render function receives the label's id, to name the control with it. */
+  children: ReactNode | ((labelId: string) => ReactNode);
+}) {
+  const labelId = useId();
   return (
     <div className="ctx-field">
-      <span className="ctx-field__label">{label}</span>
-      {children}
+      <span className="ctx-field__label" id={labelId}>
+        {label}
+      </span>
+      {typeof children === "function" ? children(labelId) : children}
     </div>
   );
 }

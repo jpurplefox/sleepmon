@@ -18,7 +18,7 @@ export function EventMarks({ effects }: { effects: EventEffect[] }) {
               : null;
         const full = [t(EVENT_KINDS[e.kind].labelKey) + " " + value, scope?.label].filter(Boolean).join(" · ");
         return (
-          <span key={e.id} className="metric-mark metric-mark--good" title={full} aria-label={full}>
+          <span key={e.id} className="metric-mark metric-mark--good" role="img" title={full} aria-label={full}>
             <img className="metric-mark__icon" src={EVENT_KINDS[e.kind].icon} alt="" />
             {value}
             {scope && (

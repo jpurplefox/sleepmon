@@ -38,6 +38,8 @@ describe("TeamContextBar", () => {
     expect(screen.getByText("No event")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "No" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: "Yes" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: /^Map No map/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Event No event/ })).toBeInTheDocument();
   });
 
   it("turns the Good Camp Ticket on in place, and ignores the already-pressed side", async () => {
@@ -68,6 +70,7 @@ describe("TeamContextBar", () => {
   it("omits the area figure when there is no area bonus", () => {
     renderBar({ map: { name: "Cyan Beach", berries: [], areaPct: null } });
     expect(screen.queryByText(/Area \+/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Map Cyan Beach/ })).toBeInTheDocument();
   });
 
   it("shows the event's marks instead of 'No event' when it has effects", () => {

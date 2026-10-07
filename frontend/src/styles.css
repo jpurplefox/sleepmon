@@ -78,6 +78,16 @@ body {
   max-width: none;
 }
 
+/* Keep focused controls clear of the sticky app bar. */
+html {
+  scroll-padding-top: 3.25rem;
+}
+
+@media (max-width: 640px) {
+  html {
+    scroll-padding-top: 6rem;
+  }
+}
 
 .muted {
   color: var(--muted);
@@ -5276,8 +5286,7 @@ button.prod-card__base-tag--action:hover {
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  max-width: 1100px;
-  margin: 0 auto;
+  max-width: none; /* aligns with .layout--wide, so the brand meets the page title */
   padding: 0.6rem 1.5rem;
 }
 
@@ -5349,6 +5358,17 @@ button.prod-card__base-tag--action:hover {
     flex-wrap: wrap;
     gap: 0.5rem 0.75rem;
     padding: 0.6rem 1rem;
+  }
+
+  /* Sprite only: the name stays for screen readers. */
+  .brand__name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
   }
 
   .appbar .tabs {
