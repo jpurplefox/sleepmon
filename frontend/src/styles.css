@@ -5098,6 +5098,50 @@ button.prod-card__base-tag--action:hover {
   max-width: 22rem;
 }
 
+/* Sleep tab (PRD 0015): label + stepper rows, wrapping on narrow screens. */
+.sleep-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sleep-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.sleep-row__label {
+  min-width: 7rem;
+  font-size: var(--text-base);
+}
+
+.sleep-stepper {
+  width: min(16rem, 100%);
+}
+
+/* Centered value, scoped to this caller: the shared Stepper is unchanged. */
+.sleep-stepper .stepper__display {
+  justify-content: center;
+}
+
+.sleep-stepper .stepper__text {
+  align-items: center;
+}
+
+.sleep-stepper .stepper__display svg {
+  color: var(--accent-text);
+  flex-shrink: 0;
+}
+
+.sleep-sum {
+  margin: 0.9rem 0 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
 /* One row per dish type: label + recipe picker. */
 .progress-fav-row {
   display: flex;

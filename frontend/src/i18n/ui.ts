@@ -488,11 +488,22 @@ export const UI: Record<Lang, Record<string, string>> = {
     "error.body":
       "Ocurrió un error inesperado al mostrar esta vista. Probá recargar la página.",
     // Player progress
-    "progress.title": "Mi progreso",
-    "progress.loading": "Cargando tu progreso…",
+    "progress.title": "Perfil de jugador",
+    "progress.loading": "Cargando tu perfil…",
     "progress.tabKitchen": "Cocina",
     "progress.tabRecipes": "Recetas",
     "progress.tabAreas": "Áreas",
+    "progress.tabSleep": "Sueño",
+    "sleep.heading": "Horario de sueño",
+    "sleep.night": "Noche",
+    "sleep.napToggle": "Duermo siesta",
+    "sleep.nap": "Siesta",
+    "sleep.hours": "{hm} h",
+    "sleep.nightLess": "Menos tiempo de noche",
+    "sleep.nightMore": "Más tiempo de noche",
+    "sleep.napLess": "Menos siesta",
+    "sleep.napMore": "Más siesta",
+    "sleep.summary": "Dormís {asleep} h en total · despierto {awake} h",
     "progress.potSize": "Tamaño de olla",
     "progress.potUnit": "{n} ingredientes",
     "progress.potDown": "Olla más chica",
@@ -507,11 +518,11 @@ export const UI: Record<Lang, Record<string, string>> = {
     "progress.save": "Guardar",
     "progress.savedValue": "En mi progreso",
     "progress.saveError": "No se pudo guardar el cambio.",
-    "progress.loadError": "No se pudo cargar tu progreso.",
+    "progress.loadError": "No se pudo cargar tu perfil.",
     // Leaving with changes (PRD 0011): here, leaving without saving discards the draft.
     "progress.leaveWithoutSaving": "Salir sin guardar",
     "progress.exitConfirmMessage":
-      "Tenés cambios sin guardar en tu progreso. Si salís sin guardar, se descartan.",
+      "Tenés cambios sin guardar en tu perfil. Si salís sin guardar, se descartan.",
   },
   en: {
     // Common
@@ -996,11 +1007,22 @@ export const UI: Record<Lang, Record<string, string>> = {
     "error.body":
       "An unexpected error occurred while showing this view. Try reloading the page.",
     // Player progress
-    "progress.title": "My progress",
-    "progress.loading": "Loading your progress…",
+    "progress.title": "Player profile",
+    "progress.loading": "Loading your profile…",
     "progress.tabKitchen": "Kitchen",
     "progress.tabRecipes": "Recipes",
     "progress.tabAreas": "Areas",
+    "progress.tabSleep": "Sleep",
+    "sleep.heading": "Sleep schedule",
+    "sleep.night": "Night",
+    "sleep.napToggle": "I nap",
+    "sleep.nap": "Nap",
+    "sleep.hours": "{hm} h",
+    "sleep.nightLess": "Less night sleep",
+    "sleep.nightMore": "More night sleep",
+    "sleep.napLess": "Shorter nap",
+    "sleep.napMore": "Longer nap",
+    "sleep.summary": "You sleep {asleep} h in total · awake {awake} h",
     "progress.potSize": "Pot size",
     "progress.potUnit": "{n} ingredients",
     "progress.potDown": "Smaller pot",
@@ -1015,10 +1037,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "progress.save": "Save",
     "progress.savedValue": "In my progress",
     "progress.saveError": "Couldn't save the change.",
-    "progress.loadError": "Couldn't load your progress.",
+    "progress.loadError": "Couldn't load your profile.",
     // Leaving with changes (PRD 0011): here, leaving without saving discards the draft.
     "progress.leaveWithoutSaving": "Leave without saving",
     "progress.exitConfirmMessage":
-      "You have unsaved changes to your progress. Leaving without saving discards them.",
+      "You have unsaved changes to your profile. Leaving without saving discards them.",
   },
 };
