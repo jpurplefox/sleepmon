@@ -23,8 +23,8 @@ bonus is a set of **effects you compose**, not a pick from a list of named event
 3. **Apply it to the team** — every team total reflects the active effects.
 4. **Preload the running event** — when the repo defines the event running now, its
    effects are already there when Team Analysis opens.
-5. **Summarize it** — while it has effects, the page shows a short read-out of them
-   next to the Good Camp Ticket's, the way it shows the ticket is on.
+5. **Summarize it** — the Event chip in the page's context bar shows a short read-out
+   of its effects, or "No event" when it has none (see [Tool shell](0014-tool-shell.md)).
 
 ## How it works
 

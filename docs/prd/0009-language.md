@@ -20,8 +20,9 @@ actually uses?"*.
 
 ### Switching
 
-- A compact **ES / EN** switcher lives in the top navigation; the active language is
-  marked.
+- The **ES / EN** choice lives in the account menu when signed in, and in a small
+  language button next to sign-in when not (see [Tool shell](0014-tool-shell.md)); the
+  active language is marked.
 - Switching is **immediate** — all interface copy and all game terms update at once,
   with no reload.
 
@@ -40,7 +41,8 @@ actually uses?"*.
 
 ## Acceptance criteria
 
-- The navigation shows an **ES / EN** switcher, with the **active** language marked.
+- The account menu (signed in) or the language button (signed out) offers **ES / EN**,
+  with the **active** language marked.
 - Switching updates **all** interface copy **and all** game terms **immediately**,
   without a reload.
 - On a first visit with no saved choice, the app opens in **Spanish** if the browser
