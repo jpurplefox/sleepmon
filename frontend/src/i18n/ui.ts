@@ -22,6 +22,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "ctx.area": "Área +{pct}%",
     "ctx.event": "Evento",
     "ctx.noEvent": "Sin evento",
+    "ctx.noMeals": "Sin recetas",
     "ctx.gct": "Good Camp Ticket",
     // Navegación
     "nav.aria": "Navegación principal",
@@ -527,6 +528,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "ctx.area": "Area +{pct}%",
     "ctx.event": "Event",
     "ctx.noEvent": "No event",
+    "ctx.noMeals": "No recipes",
     "ctx.gct": "Good Camp Ticket",
     // Navigation
     "nav.aria": "Main navigation",

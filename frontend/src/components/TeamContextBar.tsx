@@ -4,6 +4,8 @@ import { berryIcon } from "../berries";
 import type { EventEffect } from "../eventBonus";
 import { useI18n } from "../i18n";
 import type { MapSummary } from "../mapSummary";
+import { RECIPE_TYPES, dishTypeLabelKey, recipeImage } from "../recipes";
+import type { MealInput, Recipe } from "../types";
 import { EventMarks } from "./EventMarks";
 import { IconChevronDown } from "./icons";
 import type { SettingsTab } from "./SettingsModal";
@@ -15,19 +17,27 @@ interface Props {
   goodCampTicket: boolean;
   onGoodCampTicket: (on: boolean) => void;
   onOpenSettings: (tab: SettingsTab) => void;
+  dishType: Recipe["type"] | null;
+  meals: (MealInput | null)[];
+  onDishType: (type: Recipe["type"]) => void;
 }
 
-/** Team Analysis's context: map, event and camp ticket, always visible (PRD 0014). */
+/** Team Analysis's context: map, meals, event and camp ticket, always visible (PRD 0014). */
 export function TeamContextBar({
   map,
   eventEffects,
   goodCampTicket,
   onGoodCampTicket,
   onOpenSettings,
+  dishType,
+  meals,
+  onDishType,
 }: Props) {
   const { t, berry } = useI18n();
   const mapBtnId = useId();
   const eventBtnId = useId();
+  const mealsBtnId = useId();
+  const chosenMeals = meals.filter((m): m is MealInput => m !== null);
   const toggle = (on: boolean) => {
     if (on !== goodCampTicket) onGoodCampTicket(on);
   };
@@ -67,6 +77,55 @@ export function TeamContextBar({
             </span>
             <IconChevronDown className="filter-btn__chevron" />
           </button>
+        )}
+      </ContextField>
+
+      <ContextField label={t("teams.tabMeals")}>
+        {(labelId) => (
+          <>
+            <div className="specialty-toggle" role="group" aria-label={t("teams.dishType")}>
+              {RECIPE_TYPES.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  className={"specialty-toggle__btn" + (dishType === type ? " is-on" : "")}
+                  aria-pressed={dishType === type}
+                  onClick={() => {
+                    if (type !== dishType) onDishType(type);
+                  }}
+                >
+                  {t(dishTypeLabelKey(type))}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              id={mealsBtnId}
+              aria-labelledby={`${labelId} ${mealsBtnId}`}
+              className="filter-btn"
+              aria-haspopup="dialog"
+              onClick={() => onOpenSettings("meals")}
+            >
+              <span className="filter-btn__value">
+                {chosenMeals.length > 0 ? (
+                  <span className="ctx-recipes">
+                    {chosenMeals.map((m, i) => (
+                      <img
+                        key={i}
+                        className="ctx-recipe"
+                        src={recipeImage(m.recipe)}
+                        alt={m.recipe}
+                        title={m.recipe}
+                      />
+                    ))}
+                  </span>
+                ) : (
+                  <span className="muted">{t("ctx.noMeals")}</span>
+                )}
+              </span>
+              <IconChevronDown className="filter-btn__chevron" />
+            </button>
+          </>
         )}
       </ContextField>
 

@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { EventEffect } from "../eventBonus";
 import { useI18n } from "../i18n";
 import { potBounds, stepPot } from "../progress";
-import { RECIPE_TYPES, dishTypeLabelKey } from "../recipes";
+import { RECIPE_TYPES, dishTypeLabelKey, mealsForDishType } from "../recipes";
 import type { Catalog, MealInput, Recipe, WeeklyBonus } from "../types";
 import { EventTab } from "./EventTab";
 import { IslandTab } from "./IslandTab";
@@ -218,17 +218,7 @@ export function SettingsModal({
   const pickDishType = (type: Recipe["type"] | null) => {
     onDishTypeChange(type);
     if (type === null) return;
-    const favorite = favoriteFor(type);
-    if (favorite === null) {
-      onChangeMeals([null, null, null]);
-      return;
-    }
-    const level = levelFor(favorite);
-    onChangeMeals([
-      { recipe: favorite, level },
-      { recipe: favorite, level },
-      { recipe: favorite, level },
-    ]);
+    onChangeMeals(mealsForDishType(favoriteFor(type), levelFor));
   };
 
   // Filter recipes. When dishType is set, only show recipes of that type.

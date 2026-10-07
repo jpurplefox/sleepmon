@@ -16,6 +16,7 @@ const NO_MAP: MapSummary = { name: null, berries: [], areaPct: null };
 function renderBar(overrides: Partial<React.ComponentProps<typeof TeamContextBar>> = {}) {
   const onGoodCampTicket = vi.fn();
   const onOpenSettings = vi.fn();
+  const onDishType = vi.fn();
   render(
     <LanguageProvider>
       <TeamContextBar
@@ -24,11 +25,14 @@ function renderBar(overrides: Partial<React.ComponentProps<typeof TeamContextBar
         goodCampTicket={false}
         onGoodCampTicket={onGoodCampTicket}
         onOpenSettings={onOpenSettings}
+        dishType={null}
+        meals={[null, null, null]}
+        onDishType={onDishType}
         {...overrides}
       />
     </LanguageProvider>,
   );
-  return { onGoodCampTicket, onOpenSettings };
+  return { onGoodCampTicket, onOpenSettings, onDishType };
 }
 
 describe("TeamContextBar", () => {
@@ -77,5 +81,36 @@ describe("TeamContextBar", () => {
     renderBar({ eventEffects: [{ id: "e1", kind: "pot_size", value: 2, scope: { kind: "team" } }] });
     expect(screen.queryByText("No event")).not.toBeInTheDocument();
     expect(screen.getByText("×2")).toBeInTheDocument();
+  });
+
+  it("picks the dish type in place, and ignores the type already picked", async () => {
+    const { onDishType, onOpenSettings } = renderBar({ dishType: "Curry" });
+    expect(screen.getByRole("button", { name: "Curry" })).toHaveAttribute("aria-pressed", "true");
+    await userEvent.click(screen.getByRole("button", { name: "Curry" }));
+    expect(onDishType).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole("button", { name: "Salad" }));
+    expect(onDishType).toHaveBeenCalledWith("Salad");
+    expect(onOpenSettings).not.toHaveBeenCalled();
+  });
+
+  it("opens the settings on the Meals tab from the meals, even before any is chosen", async () => {
+    const { onOpenSettings } = renderBar();
+    await userEvent.click(screen.getByRole("button", { name: /^Meals No recipes/ }));
+    expect(onOpenSettings).toHaveBeenCalledWith("meals");
+  });
+
+  it("shows the three chosen meals in order", () => {
+    renderBar({
+      dishType: "Curry",
+      meals: [
+        { recipe: "Bean Burger Curry", level: 1 },
+        { recipe: "Mild Honey Curry", level: 3 },
+        null,
+      ],
+    });
+    const button = screen.getByRole("button", { name: /^Meals/ });
+    const alts = within(button).getAllByRole("img").map((img) => img.getAttribute("alt"));
+    expect(alts).toEqual(["Bean Burger Curry", "Mild Honey Curry"]);
+    expect(within(button).queryByText("No recipes")).not.toBeInTheDocument();
   });
 });

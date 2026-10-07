@@ -4657,11 +4657,11 @@ button.prod-card__base-tag--action:hover {
    ============================================================ */
 
 /* Neutral placeholder for the auth slot while the session status is still
-   "checking" — same footprint as .avatar-btn so the app bar doesn't jump once
+   "checking" — same height as .avatar-btn so the app bar doesn't jump once
    the real control (Google button or avatar) mounts, but visibly inert (dim,
    no border color, no icon) so it never reads as either signed-in or signed-out. */
 .auth-slot-placeholder {
-  width: 34px;
+  width: 7rem;
   height: 34px;
   border-radius: 999px;
   border: 1px solid var(--border);
@@ -4733,20 +4733,45 @@ button.prod-card__base-tag--action:hover {
 
 /* Avatar (signed in) — foto de Google recortada al círculo, o iniciales sobre
    un círculo neutro cuando no hay foto (mismo vocabulario que .mini-icon--empty). */
+/* Account trigger: the photo (or initials) plus the first name, as one pill. */
 .avatar-btn {
-  width: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   height: 34px;
+  padding: 0 0.6rem 0 2px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--surface-2);
-  color: var(--muted);
+  color: var(--text);
   cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.avatar-btn__photo {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
   display: grid;
   place-items: center;
   font-weight: 700;
-  font-size: var(--text-sm);
-  padding: 0;
   overflow: hidden;
+  flex: none;
+}
+
+.avatar-btn__name {
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.avatar-btn__chevron {
+  color: var(--muted);
+  flex: none;
 }
 
 .avatar-btn:hover,
@@ -4754,7 +4779,7 @@ button.prod-card__base-tag--action:hover {
   border-color: var(--accent);
 }
 
-.avatar-btn img,
+.avatar-btn__photo img,
 .avatar-lg img {
   width: 100%;
   height: 100%;
@@ -5264,6 +5289,18 @@ button.prod-card__base-tag--action:hover {
 
 .ctx-marks .metric-mark {
   margin-left: 0;
+}
+
+/* The day's three dishes, side by side and large enough to recognize. */
+.ctx-recipes {
+  display: inline-flex;
+  gap: 0.2rem;
+}
+
+.ctx-recipe {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
 }
 
 @media (max-width: 640px) {

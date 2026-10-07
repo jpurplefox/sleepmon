@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { recipeImage, recipeStrengthAtLevel } from "./recipes";
+import { mealsForDishType, recipeImage, recipeStrengthAtLevel } from "./recipes";
 
 describe("recipeImage", () => {
   it("strips accents, punctuation and spaces into a lowercase slug", () => {
@@ -25,5 +25,20 @@ describe("recipeStrengthAtLevel", () => {
     expect(recipeStrengthAtLevel(100, 0, bonus)).toBe(100);
     expect(recipeStrengthAtLevel(100, -5, bonus)).toBe(100);
     expect(recipeStrengthAtLevel(100, 99, bonus)).toBe(200);
+  });
+});
+
+describe("mealsForDishType", () => {
+  it("fills the three meals with the favorite recipe at its level", () => {
+    const meals = mealsForDishType("Bean Burger Curry", (r) => (r === "Bean Burger Curry" ? 12 : 1));
+    expect(meals).toEqual([
+      { recipe: "Bean Burger Curry", level: 12 },
+      { recipe: "Bean Burger Curry", level: 12 },
+      { recipe: "Bean Burger Curry", level: 12 },
+    ]);
+  });
+
+  it("clears the meals when the dish type has no favorite", () => {
+    expect(mealsForDishType(null, () => 1)).toEqual([null, null, null]);
   });
 });

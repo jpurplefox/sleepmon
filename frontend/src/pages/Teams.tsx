@@ -36,7 +36,7 @@ import { ingredientIcon } from "../ingredients";
 import { CURRENT_EVENT, presetEffects } from "../currentEvent";
 import { toRequest as toEventRequest, type EventEffect } from "../eventBonus";
 import { fdown, fup } from "../utils/format";
-import { recipeImage } from "../recipes";
+import { mealsForDishType, recipeImage } from "../recipes";
 import { areaBonusOf, recipeLevelOf } from "../progress";
 import { statIcon } from "../natures";
 import {
@@ -65,6 +65,7 @@ import type {
   MealInput,
   Member,
   MemberInput,
+  Recipe,
   SkillEffectAgg,
   WeeklyBonus,
 } from "../types";
@@ -219,6 +220,8 @@ export function Teams() {
   const savedBonusPct = areaBonusOf(progress, selectedIsland);
 
   const savedLevelFor = (name: string): number => recipeLevelOf(progress, name);
+  const favoriteRecipeFor = (type: Recipe["type"]): string | null =>
+    progress.favorite_recipes[type] ?? null;
 
   const savePot = () => saveProgress({ pot_size: potSize });
   const saveBonus = () => {
@@ -413,6 +416,12 @@ export function Teams() {
           goodCampTicket={goodCampTicket}
           onGoodCampTicket={setGoodCampTicket}
           onOpenSettings={setSettingsTab}
+          dishType={dishType}
+          meals={meals}
+          onDishType={(type) => {
+            setDishType(type);
+            setMeals(mealsForDishType(favoriteRecipeFor(type), recipeLevelFor));
+          }}
         />
       </ToolHeader>
 
@@ -1303,7 +1312,7 @@ export function Teams() {
           levelUnsaved={recipeLevelUnsaved}
           savedLevelFor={savedLevelFor}
           onSaveLevel={saveLevel}
-          favoriteFor={(type) => progress.favorite_recipes[type] ?? null}
+          favoriteFor={favoriteRecipeFor}
           saveError={progressSaveError !== null}
         />
       )}

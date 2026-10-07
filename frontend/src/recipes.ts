@@ -1,7 +1,7 @@
 /**
  * Helpers para las recetas del juego.
  */
-import type { Recipe } from "./types";
+import type { MealInput, Recipe } from "./types";
 
 /** The three dish types, in the display order used across recipe pickers. */
 export const RECIPE_TYPES: Recipe["type"][] = ["Curry", "Salad", "Dessert"];
@@ -13,6 +13,16 @@ export function dishTypeLabelKey(type: Recipe["type"]): string {
     : type === "Salad"
       ? "teams.dishTypeSalad"
       : "teams.dishTypeDessert";
+}
+
+/** The meals a dish type starts with: its favorite recipe in all three slots, or none. */
+export function mealsForDishType(
+  favorite: string | null,
+  levelFor: (recipe: string) => number,
+): (MealInput | null)[] {
+  if (favorite === null) return [null, null, null];
+  const level = levelFor(favorite);
+  return [0, 1, 2].map(() => ({ recipe: favorite, level }));
 }
 
 /**

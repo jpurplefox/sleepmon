@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { LanguageSelector } from "../components/LanguageSelector";
-import { IconProgress, IconSignOut } from "../components/icons";
+import { IconChevronDown, IconProgress, IconSignOut } from "../components/icons";
 import { ProgressModal } from "../components/ProgressModal";
 import { useI18n } from "../i18n";
 import { useAuth } from "./AuthContext";
@@ -18,8 +18,8 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
-// Account menu in app bar (signed in). Trigger is `.avatar-btn` (Google photo or
-// initials). Panel reuses dropdown skeleton with account header and sign-out option.
+// Account menu in app bar (signed in). Trigger is `.avatar-btn`: the Google photo (or
+// initials) plus the first name. Panel reuses dropdown skeleton with account header and sign-out option.
 export function ProfileMenu() {
   const { user, logout } = useAuth();
   const { t } = useI18n();
@@ -63,11 +63,15 @@ export function ProfileMenu() {
         aria-label={t("auth.accountAria", { name: user.display_name })}
         onClick={() => setOpen((o) => !o)}
       >
-        {showPhoto ? (
-          <img src={user.avatar_url ?? ""} alt="" onError={() => setPhotoBroken(true)} />
-        ) : (
-          initials(user.display_name)
-        )}
+        <span className="avatar-btn__photo">
+          {showPhoto ? (
+            <img src={user.avatar_url ?? ""} alt="" onError={() => setPhotoBroken(true)} />
+          ) : (
+            initials(user.display_name)
+          )}
+        </span>
+        <span className="avatar-btn__name">{user.display_name.trim().split(/\s+/)[0]}</span>
+        <IconChevronDown className="avatar-btn__chevron" />
       </button>
       {open && (
         <div className="filter-pop" role="menu">
