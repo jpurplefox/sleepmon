@@ -18,6 +18,7 @@ const saved: PlayerProgress = {
   recipe_levels: { "Beanburger Curry": 55 },
   favorite_recipes: {},
   area_bonuses: { "Cyan Beach": 42, "Taupe Hollow": 10 },
+  sleep: { night_minutes: 510, nap_minutes: null },
 };
 
 const EMPTY: PlayerProgress = {
@@ -25,6 +26,7 @@ const EMPTY: PlayerProgress = {
   recipe_levels: {},
   favorite_recipes: {},
   area_bonuses: {},
+  sleep: { night_minutes: 510, nap_minutes: null },
 };
 
 describe("useSessionOverrides", () => {

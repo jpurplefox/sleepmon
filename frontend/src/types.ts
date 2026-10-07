@@ -179,6 +179,12 @@ export interface Distributions {
   nature_stats: Record<string, number>;
 }
 
+/** A night and an optional nap, in minutes on a 15-minute grid (PRD 0015). */
+export interface SleepSchedule {
+  night_minutes: number;
+  nap_minutes: number | null;
+}
+
 export interface ProductionInput {
   species: string;
   level: number;
@@ -189,6 +195,7 @@ export interface ProductionInput {
   skill_level: number;
   // Comparison's map scenario; omitted means "none" server-side.
   scenario?: Scenario;
+  sleep?: SleepSchedule;
 }
 
 export interface SlotProduction {
@@ -230,6 +237,7 @@ export interface TeamProductionInput {
   good_camp_ticket?: boolean;
   pot_size: number;
   event_effects?: EventEffectRequest[];
+  sleep?: SleepSchedule;
 }
 
 export interface IngredientBalance {
@@ -404,7 +412,7 @@ export interface Production {
   effective_skill_level: number;
 }
 
-/** What the user has unlocked in the game (PRD 0011). Mappings hold only non-defaults. */
+/** The player profile (PRD 0011, 0015). Mappings hold only non-defaults. */
 export interface PlayerProgress {
   pot_size: number;
   recipe_levels: Record<string, number>;
@@ -412,6 +420,7 @@ export interface PlayerProgress {
   favorite_recipes: Record<string, string>;
   /** Keyed by area name, in percentage points (0–85). */
   area_bonuses: Record<string, number>;
+  sleep: SleepSchedule;
 }
 
 /** A sparse change. An absent field is untouched; inside a mapping, a default removes. */
@@ -420,4 +429,5 @@ export interface ProgressPatch {
   recipe_levels?: Record<string, number>;
   favorite_recipes?: Record<string, string | null>;
   area_bonuses?: Record<string, number>;
+  sleep?: SleepSchedule;
 }

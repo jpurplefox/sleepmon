@@ -20,6 +20,7 @@ const saved: PlayerProgress = {
   recipe_levels: { "Beanburger Curry": 55 },
   favorite_recipes: { Curry: "Beanburger Curry" },
   area_bonuses: { "Cyan Beach": 42 },
+  sleep: { night_minutes: 510, nap_minutes: null },
 };
 
 describe("effective", () => {
@@ -247,5 +248,31 @@ describe("diffProgress", () => {
       recipe_levels: { "Beanburger Curry": 60 },
       area_bonuses: { "Cyan Beach": 60 },
     });
+  });
+});
+
+describe("sleep in the profile draft", () => {
+  const withSleep: PlayerProgress = { ...saved, sleep: { night_minutes: 510, nap_minutes: null } };
+
+  it("reads the default night when nothing is saved", () => {
+    expect(EMPTY_PROGRESS.sleep).toEqual({ night_minutes: 510, nap_minutes: null });
+  });
+
+  it("diffs a changed schedule as one whole value", () => {
+    const draft = { ...withSleep, sleep: { night_minutes: 390, nap_minutes: 120 } };
+    expect(diffProgress(withSleep, draft)).toEqual({
+      sleep: { night_minutes: 390, nap_minutes: 120 },
+    });
+  });
+
+  it("does not diff a schedule put back to the saved value", () => {
+    const draft = { ...withSleep, sleep: { night_minutes: 510, nap_minutes: null } };
+    expect(diffProgress(withSleep, draft)).toEqual({});
+  });
+
+  it("applies a sleep patch", () => {
+    const next = applyProgressPatch(withSleep, { sleep: { night_minutes: 390, nap_minutes: 120 } });
+    expect(next.sleep).toEqual({ night_minutes: 390, nap_minutes: 120 });
+    expect(next.pot_size).toBe(withSleep.pot_size);
   });
 });
