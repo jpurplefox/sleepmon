@@ -291,7 +291,9 @@ states · where it lives. Feature one-offs are intentionally not here.
   `.specialty-toggle` (No / Sí), and a rule's effect inside a trigger is its
   `.metric-mark`. A secondary figure inside a trigger (an area bonus) is `.ctx-sub`
   (`--muted`, `--text-xs`, 700). Flex, wraps (`gap: 0.6rem 1.5rem`); a field never splits
-  across lines. The Box's `.box-toolbar` is its context bar. A field is shown **even when
+  across lines. The Box's `.box-toolbar` is its context bar. A field may pair an in-place toggle with
+  a trigger (Team Analysis's Meals: dish-type `.specialty-toggle` + a `.filter-btn` with the
+  three dishes as 24px recipe images, `.ctx-recipes`). A field is shown **even when
   its setting is off** ("Sin mapa", "Sin evento", No), so the bar keeps its shape and every
   setting has a visible door.
 
@@ -356,10 +358,11 @@ states · where it lives. Feature one-offs are intentionally not here.
   panel (`role="listbox"`), arrow/Enter nav, click-outside + Escape to close. Same
   pattern applied to filters as `.filter-pop / .filter-grid / .filter-list`.
 - **Account menu** (`.avatar-btn` + profile dropdown) — the signed-in identity in the
-  app bar. Trigger: a round `.avatar-btn` showing the user's **photo**
-  (`object-fit: cover`, clipped to the circle), falling back to **initials** on a
-  neutral circle (`--surface-2` / `--muted`, the `.mini-icon--empty` vocabulary) when
-  there is no photo; border `--border`, open/focus → `--accent`. Panel: reuses the
+  app bar. Trigger: a 34px pill (`--surface-2`, `--border`, `--text-sm` 600) holding the
+  user's **photo** in a 28px circle (`.avatar-btn__photo`, `object-fit: cover`), falling
+  back to **initials** on a neutral circle (`--surface` / `--muted`) when there is no
+  photo, then the **first name** (`.avatar-btn__name`, ellipsis past 9rem) and a muted
+  chevron; open/focus → `--accent` border. Panel: reuses the
   dropdown skeleton (`.filter-pop` + `.filter-list__item`) with a header (avatar +
   name + email), a **language row** (`.menu-lang`: "Idioma" in `--muted` left, the
   `.lang-select` pair of `.lang-chip`s right, the active one `.lang-chip--active`), and a

@@ -37,8 +37,8 @@ is data, the page is the data and what shapes it.
 - Middle: **Box · Comparison · Team Analysis**. The current tool reads as a filled
   pill, not just brighter text.
 - Right: the **account**.
-  - Signed in: the avatar opens the account menu — name, **language (ES / EN)**, and
-    sign out.
+  - Signed in: the photo (or initials) **with the first name** opens the account menu —
+    name, **language (ES / EN)**, and sign out.
   - Signed out: **Sign in with Google**, and next to it a small **language** button
     that opens ES / EN.
 - It stays **fixed at the top** while scrolling, over the page background with a
@@ -71,17 +71,21 @@ Per tool:
 - **Comparison** — one chip, **Scenario: No berry bonus** (or the scenario picked),
   a dropdown with the same options and marks as today. Hidden while the comparison is
   empty, since there is nothing for it to apply to.
-- **Team Analysis** — three chips, **always shown**, active or not, even with an empty
+- **Team Analysis** — four fields, **always shown**, active or not, even with an empty
   team (the map can be chosen before the team is built):
   - **Map** — "No map", or the map's name followed by its favorite berries as icons
     (on an expert map the **main** favorite first) and **Area +X%** when the area
     bonus is above 0. Opens Settings on the **Map** tab.
+  - **Meals** — the **dish type** as a Curry / Salad / Dessert toggle, switched in place
+    (picking a type resets the three meals to that type's favorite recipe, exactly as
+    the dish-type control in Settings does), followed by the **three chosen dishes** as
+    recipe images in order (or "No recipes"). Touching the dishes opens Settings on the
+    **Meals** tab.
   - **Event** — "No event", or the marks of its effects (the same read-out the page
     shows today). Opens Settings on the **Event** tab.
   - **Good Camp Ticket** — a No / Sí toggle, switched in place; **No** when off.
-- The standalone **Settings** button goes away. Meals, the dialog's remaining tab, are
-  reached from a **Choose recipes** action on the Cooking card, which opens Settings
-  on the **Meals** tab.
+- The standalone **Settings** button goes away. The Cooking card keeps a **Choose
+  recipes** action that also opens Settings on the **Meals** tab.
 - When the chips don't fit the width, the bar **wraps** to a new line; it never makes
   the page scroll sideways.
 
@@ -126,7 +130,10 @@ sign-in gate ([Authentication](0010-authentication.md)) in place of all of this.
   without opening anything; touching **No** turns it off.
 - **Map / Event chips:** touching the Map chip opens Settings on the Map tab; the Event
   chip, on the Event tab.
-- **Meals:** Choose recipes on the Cooking card opens Settings on the Meals tab.
+- **Meals:** with nothing chosen the field reads "No recipes"; picking **Salad** turns the
+  toggle to Salad and fills the three meals with the favorite salad (or leaves them empty
+  when there is none); with three dishes chosen their images show in order; touching them,
+  or Choose recipes on the Cooking card, opens Settings on the Meals tab.
 - **Comparison scenario:** with one card, the bar shows **Scenario: No berry bonus**;
   picking **Expert · strength** from the chip applies it to every card, as today.
 - **Narrow screen:** at 375px, the menu takes two rows, the Team Analysis bar wraps
