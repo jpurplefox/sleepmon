@@ -164,6 +164,13 @@ class SlotProductionOut(msgspec.Struct):
     amount: float
 
 
+class SleepSessionOut(msgspec.Struct):
+    kind: str  # "night" | "nap"
+    hours: float
+    overflow_hours: float
+    skill_chances: list[float]
+
+
 class ProductionOut(msgspec.Struct):
     helps_per_day: float
     seconds_per_help: int
@@ -187,7 +194,7 @@ class ProductionOut(msgspec.Struct):
     skill_tasty_chance: float | None
     skill_extra_helpful: float | None
     skill_random_energy: float | None
-    night_skill_chances: list[float]
+    sleep_sessions: list[SleepSessionOut]
     inventory: int
     inventory_fill_hours: float
     skill_berry_amount: float | None = None

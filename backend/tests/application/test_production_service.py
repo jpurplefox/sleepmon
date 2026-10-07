@@ -608,7 +608,7 @@ def test_compute_team_production_member_carries_full_production(
     assert prod.berry == standalone.berry
     assert prod.inventory == standalone.inventory
     assert prod.inventory_fill_hours == standalone.inventory_fill_hours
-    assert prod.night_skill_chances == standalone.night_skill_chances
+    assert prod.sleep_sessions == standalone.sleep_sessions
 
 
 def test_compute_team_production_adds_cooking_to_grand_total(
@@ -957,7 +957,7 @@ def test_compute_production_expert_skill_scenario(
     favorite = production_service.compute_production(_pikachu(scenario="favorite"))
     expert = production_service.compute_production(_pikachu(scenario="expert_skill"))
     assert expert.skill_triggers > favorite.skill_triggers
-    assert expert.night_skill_chances[0] > favorite.night_skill_chances[0]
+    assert expert.sleep_sessions[0].skill_chances[0] > favorite.sleep_sessions[0].skill_chances[0]
 
 
 def test_compute_production_scenario_is_never_the_main_berry(

@@ -667,10 +667,14 @@ def test_team_production_endpoint(client: TestClient) -> None:
         "helps_per_day",
         "berry",
         "berry_strength",
-        "night_skill_chances",
+        "sleep_sessions",
         "inventory_fill_hours",
     ):
         assert key in prod, f"missing key {key!r} in member production"
+    session = prod["sleep_sessions"][0]
+    assert session["kind"] == "night"
+    assert session["hours"] == pytest.approx(8.5)
+    assert set(session) == {"kind", "hours", "overflow_hours", "skill_chances"}
 
 
 def test_team_production_exposes_effective_skill_level(client: TestClient) -> None:

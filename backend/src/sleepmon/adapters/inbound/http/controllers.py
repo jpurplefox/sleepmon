@@ -35,6 +35,7 @@ from sleepmon.adapters.inbound.http.schemas import (
     RatingOut,
     RecipeOut,
     SkillEffectAggOut,
+    SleepSessionOut,
     SlotIngredientStatusOut,
     SlotProductionOut,
     SpeciesOut,
@@ -106,7 +107,15 @@ def _full_production_out(result: ProductionResult) -> ProductionOut:
         skill_tasty_chance=result.skill_tasty_chance,
         skill_extra_helpful=result.skill_extra_helpful,
         skill_random_energy=result.skill_random_energy,
-        night_skill_chances=result.night_skill_chances,
+        sleep_sessions=[
+            SleepSessionOut(
+                kind=s.kind,
+                hours=s.hours,
+                overflow_hours=s.overflow_hours,
+                skill_chances=s.skill_chances,
+            )
+            for s in result.sleep_sessions
+        ],
         inventory=result.inventory,
         inventory_fill_hours=result.inventory_fill_hours,
         skill_berry_amount=result.skill_berry_amount,

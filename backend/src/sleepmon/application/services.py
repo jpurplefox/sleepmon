@@ -31,6 +31,7 @@ from sleepmon.application.dto import (
     ProductionResult,
     RecipeDTO,
     SkillEffectAggDTO,
+    SleepSessionDTO,
     SlotAmount,
     SlotEntryInput,
     SlotIngredientStatusDTO,
@@ -153,7 +154,10 @@ def _production_result(daily: DailyProduction, *, in_team: bool = False) -> Prod
         skill_tasty_chance=daily.skill_tasty_chance,
         skill_extra_helpful=daily.skill_extra_helpful,
         skill_random_energy=daily.skill_random_energy,
-        night_skill_chances=list(daily.night_skill_chances),
+        sleep_sessions=[
+            SleepSessionDTO(s.kind.value, s.hours, s.overflow_hours, list(s.skill_chances))
+            for s in daily.sleep_sessions
+        ],
         inventory=daily.inventory,
         inventory_fill_hours=daily.inventory_fill_hours,
         skill_berry_amount=daily.skill_berry_amount,

@@ -124,6 +124,16 @@ class MemberProduction:
 
 
 @dataclass(frozen=True, slots=True)
+class SleepSessionDTO:
+    """One sleep's length, overflow and skill chances (PRD 0015)."""
+
+    kind: str
+    hours: float
+    overflow_hours: float
+    skill_chances: list[float]
+
+
+@dataclass(frozen=True, slots=True)
 class ProductionResult:
     """Producción estimada de un Pokémon en un día."""
 
@@ -149,7 +159,7 @@ class ProductionResult:
     skill_tasty_chance: float | None
     skill_extra_helpful: float | None
     skill_random_energy: float | None
-    night_skill_chances: list[float]
+    sleep_sessions: list[SleepSessionDTO]
     inventory: int
     inventory_fill_hours: float
     # Berry Burst / Lunar Blessing: own berries (inside berry_amount/berry_strength) and

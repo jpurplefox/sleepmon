@@ -51,11 +51,6 @@ INVENTORY_BONUS_PER_EVOLUTION: Final[int] = 5
 # Una especie evoluciona como mucho dos veces (línea de tres formas).
 MAX_EVOLUTION_STAGE: Final[int] = 2
 
-# Reparto día/noche: de noche el inventario no se vacía, así que una vez lleno solo
-# se juntan bayas. De día se asume que nunca se llena.
-NIGHT_HOURS: Final[float] = 8.5
-DAY_HOURS: Final[float] = 24 - NIGHT_HOURS
-
 # Sleep schedule (PRD 0015): integer minutes on a 15-minute grid.
 MINUTES_PER_DAY: Final[int] = 1440
 SLEEP_STEP_MINUTES: Final[int] = 15

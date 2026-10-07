@@ -5,7 +5,6 @@ import pytest
 
 from sleepmon.domain.catalog_data import (
     FREQUENCY_REDUCTION_PER_LEVEL,
-    NIGHT_HOURS,
     max_ingredient_slots,
 )
 from sleepmon.domain.event_bonus import (
@@ -25,6 +24,7 @@ from sleepmon.domain.production import (
     scale_daily,
 )
 from sleepmon.domain.skills import TeamContext
+from sleepmon.domain.sleep import SleepKind, SleepSchedule
 from sleepmon.domain.species import Species
 from sleepmon.domain.value_objects import (
     Berry,
@@ -196,7 +196,7 @@ def test_skill_specialist_caps_skill_at_two_without_touching_berries() -> None:
     assert prod.berry_amount == pytest.approx(24 * 0.80 * 1)
 
 
-def test_night_skill_chances_reported_per_cap() -> None:
+def test_sleep_skill_chances_reported_per_cap() -> None:
     # freq 8000 a nivel 1 -> 8.5 ayudas de noche. El no-skill usa pity 78; el
     # especialista en skill usa su pity propio round(140000/8000)=18.
     lam_ns = 8.5 * _eff(0.50)
@@ -222,11 +222,11 @@ def test_night_skill_chances_reported_per_cap() -> None:
         level=1,
     )
     # No-skill (tope 1): una sola chance P(>=1). Skill (tope 2): P(>=1) y P(>=2).
-    assert len(non_skill.night_skill_chances) == 1
-    assert non_skill.night_skill_chances[0] == pytest.approx(1 - math.exp(-lam_ns))
-    assert len(skill.night_skill_chances) == 2
-    assert skill.night_skill_chances[0] == pytest.approx(1 - math.exp(-lam_sk))
-    assert skill.night_skill_chances[1] == pytest.approx(
+    assert len(non_skill.sleep_sessions[0].skill_chances) == 1
+    assert non_skill.sleep_sessions[0].skill_chances[0] == pytest.approx(1 - math.exp(-lam_ns))
+    assert len(skill.sleep_sessions[0].skill_chances) == 2
+    assert skill.sleep_sessions[0].skill_chances[0] == pytest.approx(1 - math.exp(-lam_sk))
+    assert skill.sleep_sessions[0].skill_chances[1] == pytest.approx(
         1 - math.exp(-lam_sk) - lam_sk * math.exp(-lam_sk)
     )
 
@@ -328,7 +328,8 @@ def test_inventory_never_fills_without_items_per_help() -> None:
         _INGREDIENTS,
         level=60,
     )
-    assert prod.inventory_fill_hours == pytest.approx(8.5)  # NIGHT_HOURS: no se llena
+    assert prod.inventory_fill_hours == pytest.approx(8.5)  # the longest session
+    assert prod.sleep_sessions[0].overflow_hours == 0
 
 
 def test_low_inventory_overflow_boosts_berries() -> None:
@@ -1264,7 +1265,7 @@ def _daily(
         skill_tasty_chance=skill_tasty_chance,
         skill_extra_helpful=None,
         skill_random_energy=None,
-        night_skill_chances=(),
+        sleep_sessions=(),
         inventory=100,
         inventory_fill_hours=5.0,
         effective_skill_level=effective_skill_level,
@@ -1301,7 +1302,7 @@ def test_scale_daily_keeps_intensive_fields() -> None:
     assert s.berry_percentage == d.berry_percentage
     assert s.seconds_per_help == d.seconds_per_help
     assert s.inventory == d.inventory
-    assert s.night_skill_chances == d.night_skill_chances
+    assert s.sleep_sessions == d.sleep_sessions
     assert s.effective_skill_level == d.effective_skill_level
 
 
@@ -1342,7 +1343,7 @@ def test_extra_ingredient_fills_inventory_sooner() -> None:
     boosted = daily_production(
         sp, _INGREDIENTS, level=60, event=_ev(EventEffect(K.EXTRA_INGREDIENTS, 1))
     )
-    assert base.inventory_fill_hours < NIGHT_HOURS  # it really fills at night
+    assert base.inventory_fill_hours < 8.5  # it really fills at night
     assert boosted.inventory_fill_hours < base.inventory_fill_hours
 
 
@@ -1394,11 +1395,11 @@ def test_stacked_skill_trigger_factors_keep_the_rate_bounded() -> None:
 def test_skill_trigger_keeps_night_cap() -> None:
     event = _ev(EventEffect(K.SKILL_TRIGGER, 3.0))
     plain = daily_production(_species(skill_percentage=5), _INGREDIENTS, level=60, event=event)
-    assert len(plain.night_skill_chances) == 1  # cap 1 for non-Skills
+    assert len(plain.sleep_sessions[0].skill_chances) == 1  # cap 1 for non-Skills
     skills = _species(specialty=Specialty.SKILLS, skill_percentage=30)
     prod = daily_production(skills, _INGREDIENTS, level=60, event=event)
-    assert len(prod.night_skill_chances) == 2
-    assert sum(prod.night_skill_chances) <= 2
+    assert len(prod.sleep_sessions[0].skill_chances) == 2
+    assert sum(prod.sleep_sessions[0].skill_chances) <= 2
 
 
 def test_event_skill_trigger_stacks_with_expert_weekly() -> None:
@@ -1519,7 +1520,7 @@ def test_extra_berries_apply_to_night_overflow() -> None:
     boosted = daily_production(
         sp, _INGREDIENTS, level=60, event=_ev(EventEffect(K.EXTRA_BERRIES, 1))
     )
-    assert base.inventory_fill_hours < NIGHT_HOURS  # overflow happens
+    assert base.inventory_fill_hours < 8.5  # overflow happens
     # 2 berries on every help, overflow included; ignoring overflow would fall short.
     assert boosted.berry_amount == pytest.approx(2 * base.berry_amount)
     assert boosted.berry_amount > base.berry_amount
@@ -1703,3 +1704,82 @@ def test_berry_juice_is_triggers_times_its_chance() -> None:
     assert prod.skill_berry_juice == pytest.approx(prod.skill_triggers * 0.185)
     assert prod.skill_candy is None
     assert scale_daily(prod, 0.5).skill_berry_juice == pytest.approx(prod.skill_berry_juice * 0.5)
+
+
+# A species that helps once an hour at level 1 (8000 s / 2.22 = 3600 s), 1 item per
+# help and a 4-item inventory: it fills in exactly 4 h of sleep.
+def _fills_in_4h(inventory: int = 4) -> Species:
+    return _species(
+        help_frequency_seconds=8000,
+        ingredient_percentage=20,
+        skill_percentage=0,
+        ingredient_amounts=((1,), (1, 1), (1, 1, 1)),
+        base_inventory=inventory,
+    )
+
+
+def test_default_schedule_is_one_night_session() -> None:
+    prod = daily_production(_fills_in_4h(), _INGREDIENTS, level=1)
+    (night,) = prod.sleep_sessions
+    assert night.kind is SleepKind.NIGHT
+    assert night.hours == pytest.approx(8.5)
+    assert night.overflow_hours == pytest.approx(4.5)
+
+
+def test_shorter_night_overflows_less_and_keeps_helps() -> None:
+    default = daily_production(_fills_in_4h(), _INGREDIENTS, level=1)
+    seven = daily_production(
+        _fills_in_4h(), _INGREDIENTS, level=1, sleep=SleepSchedule(night_minutes=420)
+    )
+    assert seven.sleep_sessions[0].overflow_hours == pytest.approx(3.0)
+    assert seven.helps_per_day == pytest.approx(default.helps_per_day)
+    # normal helps = 17 awake + 4 asleep = 21 -> ingredients 21 * 0.2
+    assert sum(s.amount for s in seven.ingredients) == pytest.approx(21 * 0.2)
+    assert sum(s.amount for s in seven.ingredients) > sum(
+        s.amount for s in default.ingredients
+    )
+
+
+def test_nap_is_its_own_session_with_its_own_fill() -> None:
+    prod = daily_production(
+        _fills_in_4h(),
+        _INGREDIENTS,
+        level=1,
+        sleep=SleepSchedule(night_minutes=390, nap_minutes=120),
+    )
+    night, nap = prod.sleep_sessions
+    assert (night.kind, nap.kind) == (SleepKind.NIGHT, SleepKind.NAP)
+    assert night.overflow_hours == pytest.approx(2.5)
+    assert nap.hours == pytest.approx(2.0)
+    assert nap.overflow_hours == 0
+    # normal = 15.5 awake + 4 night + 2 nap = 21.5 ; overflow = 2.5
+    assert prod.berry_amount == pytest.approx(21.5 * 0.8 + 2.5)
+    assert sum(s.amount for s in prod.ingredients) == pytest.approx(21.5 * 0.2)
+
+
+def test_a_sleep_as_long_as_the_fill_time_does_not_overflow() -> None:
+    # 2-item inventory -> fills in 2 h; a 2:00 nap ends exactly as it fills.
+    prod = daily_production(
+        _fills_in_4h(inventory=2),
+        _INGREDIENTS,
+        level=1,
+        sleep=SleepSchedule(night_minutes=390, nap_minutes=120),
+    )
+    night, nap = prod.sleep_sessions
+    assert night.overflow_hours == pytest.approx(4.5)
+    assert nap.overflow_hours == 0
+
+
+@pytest.mark.parametrize(("specialty", "cap"), [(Specialty.INGREDIENTS, 1), (Specialty.SKILLS, 2)])
+def test_skill_cap_applies_per_sleep(specialty: Specialty, cap: int) -> None:
+    # 100% skill and a fast help: each sleep saturates its own cap.
+    prod = daily_production(
+        _species(specialty=specialty, help_frequency_seconds=600, skill_percentage=100),
+        _INGREDIENTS,
+        level=1,
+        sleep=SleepSchedule(night_minutes=390, nap_minutes=120),
+    )
+    assert len(prod.sleep_sessions) == 2
+    for session in prod.sleep_sessions:
+        assert len(session.skill_chances) == cap
+        assert sum(session.skill_chances) == pytest.approx(cap)
