@@ -3243,6 +3243,11 @@ button.prod-card__base-tag--action:hover {
   color: var(--down);
 }
 
+/* A sleep that doesn't fill is neutral, not a bonus. */
+.fill-time__ok {
+  color: var(--text);
+}
+
 /* ---- Listón (ribbon) ---------------------------------------------------- */
 .ribbon-icon {
   flex-shrink: 0;

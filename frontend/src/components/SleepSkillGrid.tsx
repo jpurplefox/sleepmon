@@ -2,7 +2,7 @@ import { useI18n } from "../i18n";
 import type { SleepSession } from "../types";
 import { IconMoon, IconSun } from "./icons";
 
-const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
+const fracPct = (n: number) => `${(n * 100).toFixed(1)}%`;
 
 /** Skill chances per sleep: specialists read "≥ 1" and "2", others "1" (PRD 0015). */
 export function SleepSkillGrid({ sessions }: { sessions: SleepSession[] }) {
@@ -11,7 +11,7 @@ export function SleepSkillGrid({ sessions }: { sessions: SleepSession[] }) {
   const alone = sessions.length === 1;
   const name = (s: SleepSession) =>
     alone ? t("card.sleepOnly") : t(s.kind === "nap" ? "card.sleepNap" : "card.sleepNight");
-  const cell = (v: number | undefined) => (v === undefined ? t("common.dash") : pct(v));
+  const cell = (v: number | undefined) => (v === undefined ? t("common.dash") : fracPct(v));
   return (
     <div className={"night-grid" + (specialist ? "" : " night-grid--one")}>
       <span />

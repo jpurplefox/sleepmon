@@ -46,7 +46,7 @@ export function FillTime({ fillHours, sessions }: { fillHours: number; sessions:
           <Tooltip.Row key={r.kind}>
             <Tooltip.Label>{r.name}</Tooltip.Label>
             <Tooltip.Value>
-              <span className={r.over ? "fill-time__over" : undefined}>{r.what}</span>
+              <span className={r.over ? "fill-time__over" : "fill-time__ok"}>{r.what}</span>
             </Tooltip.Value>
           </Tooltip.Row>
         ))}
