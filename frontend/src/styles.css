@@ -5298,13 +5298,6 @@ button.prod-card__base-tag--action:hover {
   margin-left: 0;
 }
 
-/* "?" for a favorite berry still to choose: inside a trigger it needs its own ground to
-   read against the button. */
-.filter-btn__icons .island-tab__berry-icon--unknown {
-  background: var(--bg);
-  border-color: var(--muted);
-}
-
 /* Map value plus invisible sizers for every map, stacked in one cell. */
 .ctx-map {
   display: inline-grid;

@@ -117,7 +117,7 @@ export function TeamContextBar({
                     {Array.from({ length: Math.max(0, 3 - map.berries.length) }, (_, i) => (
                       <span
                         key={`unknown-${i}`}
-                        className="mini-icon island-tab__berry-icon--unknown"
+                        className="island-tab__berry-icon--unknown"
                         aria-hidden="true"
                       >
                         ?
@@ -132,8 +132,11 @@ export function TeamContextBar({
                 <span key={name} className="filter-btn__value ctx-map__sizer" aria-hidden="true">
                   <span>{name}</span>
                   <span className="filter-btn__icons">
+                    {/* Widest berry line: three "?" (they don't overlap like berry icons do). */}
                     {[0, 1, 2].map((i) => (
-                      <span key={i} className="mini-icon" />
+                      <span key={i} className="island-tab__berry-icon--unknown">
+                        ?
+                      </span>
                     ))}
                   </span>
                   {weeklyMark(widestWeekly, true)}
