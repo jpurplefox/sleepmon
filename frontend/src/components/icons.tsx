@@ -94,7 +94,7 @@ export function IconMagnifier(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-// Noche (refuerza la identidad "Luz de luna").
+// Night (nighttime proc chance).
 export function IconMoon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base} {...props}>

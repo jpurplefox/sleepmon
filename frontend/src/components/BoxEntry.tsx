@@ -51,7 +51,7 @@ interface Props {
 // Entrada de overview de la Caja: una card por Pokémon en tres zonas (identidad ·
 // config · producción). Reemplaza a MemberCard. La config reusa el mismo lenguaje
 // visual que el picker (MemberConfig). Las métricas de producción son de igual
-// jerarquía y van en color neutro; el único dorado es el badge de nivel.
+// jerarquía y van en color neutro.
 export function BoxEntry({
   member,
   species,
@@ -331,7 +331,7 @@ export function BoxEntry({
   return (
     <article className={"card box-entry" + (open ? " is-expanded" : "")}>
       {/* Columna 1 — Identidad: sprite a la izquierda; a su derecha el nombre con
-          el listón en una línea y el nivel (dorado) debajo. En mobile es el
+          el listón en una línea y el nivel debajo. En mobile es el
           disparador que pliega/despliega el resto de la card. */}
       {isMobile ? (
         <button
@@ -398,8 +398,7 @@ export function BoxEntry({
         />
       </div>
 
-      {/* Columna 4 — Bayas + Fuerza, en dos líneas. Números neutros (el único
-          dorado es el nivel). */}
+      {/* Column 4 — berries + strength, two lines, neutral figures. */}
       <div className="box-entry__berries" role="group" aria-label={t("box.productionAria")}>
         <div className="box-entry__metric" title={t("box.berriesTitle")}>
           {species ? (

@@ -131,8 +131,7 @@ export function MemberConfig({
         })}
       </span>
 
-      {/* Skill: el ícono propio de la main skill + "Lv. N". Color neutro (el
-          dorado es para el nivel del Pokémon). El nombre de la skill va en
+      {/* Skill: el ícono propio de la main skill + "Lv. N". Color neutro. El nombre de la skill va en
           sr-only/title para no depender solo del ícono. La Caja la apaga
           (showSkillLevel=false): muestra el nivel en su columna de skill. */}
       {showSkillLevel && (

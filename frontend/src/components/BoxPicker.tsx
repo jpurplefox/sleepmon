@@ -192,8 +192,7 @@ export function BoxPicker({
                       )}
                     </span>
                     {already && <span className="prod-box-item__tag">{t("prod.alreadyIn")}</span>}
-                    {/* El nivel (único dorado del topline) queda siempre al extremo
-                        derecho, independientemente de listón o tag. */}
+                    {/* The level always sits at the far right, whatever ribbon or tag precedes it. */}
                     <span className="badge badge--level">
                       {t("common.level", { level: m.level })}
                     </span>
