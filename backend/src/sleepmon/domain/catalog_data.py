@@ -56,6 +56,16 @@ MAX_EVOLUTION_STAGE: Final[int] = 2
 NIGHT_HOURS: Final[float] = 8.5
 DAY_HOURS: Final[float] = 24 - NIGHT_HOURS
 
+# Sleep schedule (PRD 0015): integer minutes on a 15-minute grid.
+MINUTES_PER_DAY: Final[int] = 1440
+SLEEP_STEP_MINUTES: Final[int] = 15
+MIN_SLEEP_MINUTES: Final[int] = 90  # under 1:30 a sleep doesn't count in the game
+MAX_NIGHT_MINUTES: Final[int] = 720
+MAX_NAP_MINUTES: Final[int] = 240
+MAX_TOTAL_SLEEP_MINUTES: Final[int] = 840
+DEFAULT_NIGHT_MINUTES: Final[int] = 510  # 8:30, the game's 100-point night
+DEFAULT_NAP_MINUTES: Final[int] = 120  # where a nap starts when turned on
+
 # La frecuencia de ayuda baja con el nivel (el Pokémon ayuda más rápido): cada nivel
 # por encima de 1 resta 0.2% de la frecuencia base -> freq = base * (1 - 0.002*(lvl-1)).
 FREQUENCY_REDUCTION_PER_LEVEL: Final[float] = 0.002
