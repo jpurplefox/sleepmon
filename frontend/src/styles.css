@@ -5315,3 +5315,81 @@ button.prod-card__base-tag--action:hover {
   color: var(--down);
   cursor: help;
 }
+
+/* ── Tool header: title only; the context bar sits under it (design-system §5). ── */
+.tool-head {
+  margin: 1.5rem 0 1.25rem;
+}
+
+.tool-head__row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+
+.tool-head h1 {
+  margin: 0;
+  font-size: var(--text-xl);
+}
+
+.tool-count {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: var(--text-lg);
+}
+
+.tool-head__action {
+  margin-left: auto;
+}
+
+.tool-head__action .btn {
+  margin-top: 0;
+}
+
+.tool-head > .error {
+  margin: 0.75rem 0 0;
+}
+
+/* ── Context bar: one labelled field per setting that shapes the numbers. ── */
+.ctx-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.5rem;
+  margin-top: 0.9rem;
+}
+
+.ctx-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: var(--text-sm);
+}
+
+.ctx-field__label {
+  color: var(--muted);
+}
+
+.ctx-sub {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  margin-left: 0.15rem;
+}
+
+.ctx-marks {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.ctx-marks .metric-mark {
+  margin-left: 0;
+}
+
+@media (max-width: 640px) {
+  .tool-head__action {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+}

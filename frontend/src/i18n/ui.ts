@@ -9,11 +9,20 @@ export const UI: Record<Lang, Record<string, string>> = {
     "common.cancel": "Cancelar",
     "common.edit": "Editar",
     "common.reload": "Recargar",
+    "common.yes": "Sí",
+    "common.no": "No",
     "common.loadingCatalog": "Cargando catálogo…",
     "common.catalogError":
       "No se pudo cargar el catálogo. ¿Está el backend en :8000?",
     "common.level": "Nv. {level}",
     "common.dash": "—",
+    // Barra de contexto
+    "ctx.map": "Mapa",
+    "ctx.noMap": "Sin mapa",
+    "ctx.area": "Área +{pct}%",
+    "ctx.event": "Evento",
+    "ctx.noEvent": "Sin evento",
+    "ctx.gct": "Good Camp Ticket",
     // Navegación
     "nav.aria": "Navegación principal",
     "nav.team": "Caja",
@@ -507,11 +516,20 @@ export const UI: Record<Lang, Record<string, string>> = {
     "common.cancel": "Cancel",
     "common.edit": "Edit",
     "common.reload": "Reload",
+    "common.yes": "Yes",
+    "common.no": "No",
     "common.loadingCatalog": "Loading catalog…",
     "common.catalogError":
       "Couldn't load the catalog. Is the backend on :8000?",
     "common.level": "Lv. {level}",
     "common.dash": "—",
+    // Context bar
+    "ctx.map": "Map",
+    "ctx.noMap": "No map",
+    "ctx.area": "Area +{pct}%",
+    "ctx.event": "Event",
+    "ctx.noEvent": "No event",
+    "ctx.gct": "Good Camp Ticket",
     // Navigation
     "nav.aria": "Main navigation",
     "nav.team": "Box",
