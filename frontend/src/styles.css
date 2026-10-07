@@ -5386,4 +5386,18 @@ button.prod-card__base-tag--action:hover {
     flex: 0 0 auto;
     padding: 0.4rem 0.7rem;
   }
+
+  /* Compact account controls so they fit beside the sprite on one row. */
+  .appbar .btn--google {
+    font-size: var(--text-sm);
+    padding: 0.4rem 0.7rem;
+  }
+
+  .appbar .lang-btn .filter-btn__value {
+    gap: 0;
+  }
+
+  .appbar .lang-btn .filter-btn__chevron {
+    display: none;
+  }
 }
