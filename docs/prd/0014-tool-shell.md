@@ -62,7 +62,8 @@ its setting depends on the setting:
 
 - **On/off** settings toggle in place.
 - **A choice from a list** opens a dropdown from the chip.
-- **Settings with several parts** open the tool's Settings dialog on their tab.
+- **Settings with several parts** open **their own dialog** — one dialog per setting,
+  titled after it, with no tabs.
 
 Per tool:
 
@@ -75,17 +76,20 @@ Per tool:
   team (the map can be chosen before the team is built):
   - **Map** — "No map", or the map's name followed by its favorite berries as icons
     (on an expert map the **main** favorite first) and **Area +X%** when the area
-    bonus is above 0. Opens Settings on the **Map** tab.
+    bonus is above 0. Opens the **Map** dialog: map, favorite berries, weekly bonus
+    (expert maps) and area bonus — no dish type and no Good Camp Ticket, which live in
+    the bar. With **No map** the dialog still shows the berry grid, every berry
+    disabled, so it is clear what a map would let you pick.
   - **Meals** — the **dish type** as a Curry / Salad / Dessert toggle, switched in place
     (picking a type resets the three meals to that type's favorite recipe, exactly as
-    the dish-type control in Settings does), followed by the **three chosen dishes** as
-    recipe images in order (or "No recipes"). Touching the dishes opens Settings on the
-    **Meals** tab.
+    the dish-type toggle did inside the old Settings dialog), followed by the **three chosen dishes** as
+    recipe images in order (or "No recipes"). Touching the dishes opens the **Meals**
+    dialog (recipe picker, pot size, clear).
   - **Event** — "No event", or the marks of its effects (the same read-out the page
-    shows today). Opens Settings on the **Event** tab.
+    shows today). Opens the **Event** dialog.
   - **Good Camp Ticket** — a No / Sí toggle, switched in place; **No** when off.
-- The standalone **Settings** button goes away. The Cooking card keeps a **Choose
-  recipes** action that also opens Settings on the **Meals** tab.
+- The standalone **Settings** button and its tabbed dialog go away. The Cooking card
+  keeps a **Choose recipes** action that also opens the **Meals** dialog.
 - When the chips don't fit the width, the bar **wraps** to a new line; it never makes
   the page scroll sideways.
 
@@ -128,12 +132,13 @@ sign-in gate ([Authentication](0010-authentication.md)) in place of all of this.
   it shows **Area +35%**.
 - **Good Camp Ticket:** touching **Sí** turns the ticket on and the totals recompute,
   without opening anything; touching **No** turns it off.
-- **Map / Event chips:** touching the Map chip opens Settings on the Map tab; the Event
-  chip, on the Event tab.
+- **Map / Event chips:** touching the Map chip opens the Map dialog (titled Map, no
+  tabs, no dish type, no Good Camp Ticket); the Event chip opens the Event dialog.
+- **No map:** the Map dialog shows every favorite berry, all disabled, and none selected.
 - **Meals:** with nothing chosen the field reads "No recipes"; picking **Salad** turns the
   toggle to Salad and fills the three meals with the favorite salad (or leaves them empty
   when there is none); with three dishes chosen their images show in order; touching them,
-  or Choose recipes on the Cooking card, opens Settings on the Meals tab.
+  or Choose recipes on the Cooking card, opens the Meals dialog.
 - **Comparison scenario:** with one card, the bar shows **Scenario: No berry bonus**;
   picking **Expert · strength** from the chip applies it to every card, as today.
 - **Narrow screen:** at 375px, the menu takes two rows, the Team Analysis bar wraps
@@ -149,13 +154,13 @@ sign-in gate ([Authentication](0010-authentication.md)) in place of all of this.
 - **Explanations belong to the empty state.** Once a tool has data, it doesn't repeat
   how it works.
 - **The chip changes its setting the shortest way:** toggle in place for on/off, a
-  dropdown for a choice, the dialog's tab only for settings with several parts.
+  dropdown for a choice, its own dialog only for settings with several parts.
 
 ## Out of scope
 
 - **Redefining the day assumption** (15.5 h + 8.5 h): only the on-screen note goes.
-- **The contents of the Settings dialog** (Map, Event, Meals tabs) and of the event
-  editor — only how they are reached changes.
-- **Moving the dish type** out of the Map tab.
+- **The contents of the Map, Event and Meals dialogs** beyond what is listed above
+  (removing the dish type and the ticket from Map, the disabled berries with no map) —
+  the rest only changes how it is reached.
 - **The cards** themselves (production cards, Box entries).
 - **A sticky context bar**: only the menu stays fixed.

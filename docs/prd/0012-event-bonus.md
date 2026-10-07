@@ -30,8 +30,8 @@ bonus is a set of **effects you compose**, not a pick from a list of named event
 
 ### Where it lives
 
-The bonus has its own place in Team Analysis's settings, between the map and the
-meals. There is **no on/off switch**: the bonus is active exactly when it holds at
+The bonus has its own place in Team Analysis: the Event field of the context bar, which
+opens the Event dialog. There is **no on/off switch**: the bonus is active exactly when it holds at
 least one effect, and removing every effect is how you turn it off.
 
 Like the roster, the map, the ticket, and the meals, it is **session state**: it asks

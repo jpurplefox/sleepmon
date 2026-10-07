@@ -286,8 +286,8 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **Context bar** (`.ctx-bar`) — the row under a tool's title that shows **what is
   shaping its numbers**, each setting as a **field** (`.ctx-field`: a `--muted`
   `--text-sm` label + an existing control). A layout, not a new control: choices are a
-  `.filter-control`/`.filter-btn` (opening a `.filter-pop`, or the tool's Settings dialog
-  on that setting's tab when the setting has several parts), on/off is a
+  `.filter-control`/`.filter-btn` (opening a `.filter-pop`, or the setting's own dialog —
+  one `Modal` per setting, titled after it, no tabs — when it has several parts), on/off is a
   `.specialty-toggle` (No / Sí), and a rule's effect inside a trigger is its
   `.metric-mark`. A secondary figure inside a trigger (an area bonus) is `.ctx-sub`
   (`--muted`, `--text-xs`, 700). Flex, wraps (`gap: 0.6rem 1.5rem`); a field never splits
@@ -659,11 +659,19 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   explanations and settings go? *Resolution:* every tool shares one shape — a title-only
   **tool header**, a **context bar** under it, then the content. The bar shows each
   setting that changes the tool's numbers as a labelled field, **even when off**, and the
-  field is the way to change it (toggle in place, dropdown, or the Settings dialog on its
-  tab). Explanations move into the empty state, next to the actions that start the tool.
+  field is the way to change it (toggle in place, dropdown, or the setting's own dialog). Explanations move into the empty state, next to the actions that start the tool.
   The bar is built from existing controls in the Box toolbar's language (labelled
   `.filter-btn`s and `.specialty-toggle`s) rather than a new chip — chips in the title row
   were tried and left the Box, whose filters don't fit there, looking like a different
   app. *Why:* a returning user reads the data, not the instructions, so instructions that
   stay forever become noise; and a setting that changes every number but isn't visible
   makes the numbers unexplainable at a glance.
+- **One dialog per setting, not one dialog with tabs.** *Question:* once every setting has
+  its own field in the context bar, should the fields still open a shared Settings dialog
+  on their tab? *Resolution:* no — each field opens its own `Modal`, titled after the
+  setting (Map, Meals, Event), with no tab bar; what the bar already controls in place
+  (dish type, Good Camp Ticket) leaves the dialogs. With no map chosen, the Map dialog
+  still shows the berry grid, every chip disabled. *Why:* a tab bar inside a dialog you
+  opened for one thing invites detours, and repeating a control that is already one tap
+  away in the bar gives the same state two places to drift. A disabled grid shows what a
+  map would let you pick instead of an empty gap.
