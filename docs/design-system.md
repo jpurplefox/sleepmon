@@ -141,7 +141,7 @@ Current catalog: `IconClock`, `IconHelp`, `IconPackage`, `IconHourglass`,
 `IconChevronDown`, `IconArrowUp`, `IconArrowDown`, `IconMore`, `IconClose`,
 `IconEdit`, `IconCopy`, `IconCheck`, `IconSaveBox`, `IconSplit`, `IconSignOut`,
 `IconProgress` (rising bars — what you have unlocked and levelled; the account menu's
-"Mi progreso"). A new UI icon is added here following the same stroke — no ad-hoc icons
+"Mi progreso"), `IconGlobe` (language, on the signed-out `.lang-btn`). A new UI icon is added here following the same stroke — no ad-hoc icons
 in components.
 
 **Metric display.** A metric reads as **its own icon + the number** — the icon marks
@@ -278,7 +278,23 @@ states · where it lives. Feature one-offs are intentionally not here.
   removes it for the production comparator).
 - **`.grid` / `.grid--3`** — 2- or 3-column layout, collapses to 1 under 860px.
 - **`.section-head` (`__title`)** — section title + aligned action/indicator.
-- **`.hero` (`__note`)** — page header (h1 + small secondary note).
+- **`.tool-head`** — a tool's header: the title (`h1`, `--text-xl`) and nothing that
+  explains the tool. Row `.tool-head__row` (flex, wraps): the title, an optional count
+  inside it (`.tool-count`, `--muted`, weight 600, `--text-lg` — "Caja (6)"), and an
+  optional primary action pushed right (`.btn--primary`, wraps under the title below
+  640px). Below the row, the tool's **context bar**. Replaces the old `.hero` (title +
+  subtitle + note): how a tool works is told in its empty state, not above its data.
+- **Context bar** (`.ctx-bar`) — the row under a tool's title that shows **what is
+  shaping its numbers**, each setting as a **field** (`.ctx-field`: a `--muted`
+  `--text-sm` label + an existing control). A layout, not a new control: choices are a
+  `.filter-control`/`.filter-btn` (opening a `.filter-pop`, or the tool's Settings dialog
+  on that setting's tab when the setting has several parts), on/off is a
+  `.specialty-toggle` (No / Sí), and a rule's effect inside a trigger is its
+  `.metric-mark`. A secondary figure inside a trigger (an area bonus) is `.ctx-sub`
+  (`--muted`, `--text-xs`, 700). Flex, wraps (`gap: 0.6rem 1.5rem`); a field never splits
+  across lines. The Box's `.box-toolbar` is its context bar. A field is shown **even when
+  its setting is off** ("Sin mapa", "Sin evento", No), so the bar keeps its shape and every
+  setting has a visible door.
 
 ### Chips & badges
 - **`.badge`** — compact pill for short metrics. Variants: `--level` (neutral
@@ -302,7 +318,8 @@ states · where it lives. Feature one-offs are intentionally not here.
   Skill block heading, saying part of what the skill does isn't calculated (Metronome,
   Skill Copy, Psystrike's Berry Zone, Nuzzle's bonus). Wrapped in `Tooltip` with the
   specific gap; focusable, `role="img"` + `aria-label` with the same text.
-- **Status notice** (`.status-notice`, inside a `.status-notices` wrapping row) — a
+- **Status notice** (`.status-notice`, inside a `.status-notices` wrapping row) — *being
+  replaced by the context bar*, which shows a modifier whether or not it is on. A
   page-level pill saying a modifier is active: `--surface-2` fill, `--border`,
   `--text-sm` weight 600, `999px`, leading game icon, `role="status"`. Several sit
   side by side in the `.status-notices` row above what they affect. Team Analysis shows one for
@@ -348,13 +365,20 @@ states · where it lives. Feature one-offs are intentionally not here.
   panel (`role="listbox"`), arrow/Enter nav, click-outside + Escape to close. Same
   pattern applied to filters as `.filter-pop / .filter-grid / .filter-list`.
 - **Account menu** (`.avatar-btn` + profile dropdown) — the signed-in identity in the
-  top bar. Trigger: a round `.avatar-btn` showing the user's **photo**
+  app bar. Trigger: a round `.avatar-btn` showing the user's **photo**
   (`object-fit: cover`, clipped to the circle), falling back to **initials** on a
   neutral circle (`--surface-2` / `--muted`, the `.mini-icon--empty` vocabulary) when
   there is no photo; border `--border`, open/focus → `--accent`. Panel: reuses the
   dropdown skeleton (`.filter-pop` + `.filter-list__item`) with a header (avatar +
-  name + email) and a **Sign out** item (leading `IconSignOut`, **neutral** hover —
-  red is reserved for confirming a delete). Click-outside + Escape to close.
+  name + email), a **language row** (`.menu-lang`: "Idioma" in `--muted` left, the
+  `.lang-select` pair of `.lang-chip`s right, the active one `.lang-chip--active`), and a
+  **Sign out** item (leading `IconSignOut`, **neutral** hover — red is reserved for
+  confirming a delete), rows split by `.filter-list__sep`. Click-outside + Escape to close.
+- **`.lang-btn`** — the language control when **signed out**, next to `.btn--google`: a
+  30px pill (`--surface-2`, `--border`, `--muted`, `--text-sm` 700) with `IconGlobe` +
+  the current code ("ES"); hover/open → `--accent` border. Opens a right-anchored
+  `.filter-pop` with the two languages as `.filter-list__item`s, the current one
+  `.is-selected`. Signed in, the language lives in the account menu instead.
 - **`Tooltip`** (`components/Tooltip.tsx`) — one bubble above its trigger, revealed
   on hover and keyboard focus, with `aria-label` on the trigger. Centers over the
   trigger and clamps to the viewport (any width, either edge). Plain string or rich
@@ -397,11 +421,17 @@ states · where it lives. Feature one-offs are intentionally not here.
   `.specialty-toggle`).
 
 ### Shared patterns
-- **Tabs** — `.tabs / .tab / --active` (main nav and inner modal tabs). In the top
-  bar under **640px** the row splits in two: the utility cluster (account +
-  language) on top, right aligned, and the tabs below at full width, compact
-  (`--text-base`, tighter padding) and scrollable inside themselves if a longer
-  translation still overflows.
+- **App bar** (`.appbar`) — the app's top menu, **sticky** (`top: 0`, `--bg`, a
+  `--border` hairline below, full bleed; content in a 1100px row). Left to right: the
+  **brand** (`.brand`: Snorlax sprite 30px, pixelated, + "sleepmon", `--text-lg` 800,
+  linking to the Box), the **tabs**, and the account cluster pushed right (account menu,
+  or `.btn--google` + `.lang-btn`). Under **640px** it wraps in two rows: brand + account
+  on top, the tabs below at full width, scrollable inside themselves if a longer
+  translation overflows; the whole bar stays sticky.
+- **Tabs** — `.tabs / .tab / --active` (app bar and inner modal tabs). In the app bar a
+  tab is a **pill** (`999px`, `--text-base`, `--muted`); the active one is filled
+  indigo — `--accent-dim` with an `--accent-border` outline and `--text` ink — and
+  carries `aria-current="page"`.
 - **Entrance (`appear-in`)** — the app's single entrance animation: `0.15s ease-out`,
   `opacity 0→1` + `scale(0.97)→none`, fired by the element being inserted. One
   keyframe shared by everything that shows up mid-interaction — `.prod-card--enter`
@@ -627,3 +657,19 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   one-pixel border competes with every other edge on a dense screen and two states
   can't share it; tinting only the header reads at a glance and keeps the data area
   neutral. "Which one is the base" is a label, not a state worth a color.
+- **What changes the numbers is on screen; how a tool works is in its empty state.**
+  *Question:* each tool opened with a paragraph on how it works and a note on the day the
+  calculation assumes, while the settings that reshape its numbers sat in odd places — a
+  lone scenario dropdown at the right of Comparison, a loose Settings button in Team
+  Analysis whose map, favorite berries and area bonus were nowhere on screen. Where do
+  explanations and settings go? *Resolution:* every tool shares one shape — a title-only
+  **tool header**, a **context bar** under it, then the content. The bar shows each
+  setting that changes the tool's numbers as a labelled field, **even when off**, and the
+  field is the way to change it (toggle in place, dropdown, or the Settings dialog on its
+  tab). Explanations move into the empty state, next to the actions that start the tool.
+  The bar is built from existing controls in the Box toolbar's language (labelled
+  `.filter-btn`s and `.specialty-toggle`s) rather than a new chip — chips in the title row
+  were tried and left the Box, whose filters don't fit there, looking like a different
+  app. *Why:* a returning user reads the data, not the instructions, so instructions that
+  stay forever become noise; and a setting that changes every number but isn't visible
+  makes the numbers unexplainable at a glance.
