@@ -12,11 +12,13 @@ const hms = (hours: number) => {
   return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 };
 
+const overflows = (s: SleepSession) => Math.round(s.overflow_hours * 60) >= 1;
+
 /** The ⏳ figure: marked with a "+" when the inventory fills before some sleep ends. */
 export function FillTime({ fillHours, sessions }: { fillHours: number; sessions: SleepSession[] }) {
   const { t } = useI18n();
   const time = hms(fillHours);
-  if (!sessions.some((s) => s.overflow_hours > 0)) {
+  if (!sessions.some((s) => overflows(s))) {
     return (
       <span title={t("card.fillsIn")}>
         <IconHourglass /> {time}
@@ -28,10 +30,10 @@ export function FillTime({ fillHours, sessions }: { fillHours: number; sessions:
       hm: formatHm(Math.round(s.hours * 60)),
     });
     const what =
-      s.overflow_hours > 0
+      overflows(s)
         ? t("card.fillOverflows", { hm: formatHours(s.overflow_hours) })
         : t("card.fillNoOverflow");
-    return { kind: s.kind, name, what, over: s.overflow_hours > 0 };
+    return { kind: s.kind, name, what, over: overflows(s) };
   });
   const label = t("card.fillAria", {
     time,

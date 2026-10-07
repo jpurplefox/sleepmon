@@ -93,6 +93,8 @@ from sleepmon.domain.value_objects import (
 _BERRY_PER_HELP_SPECIALTY: Final[int] = 2
 _BERRY_PER_HELP_OTHER: Final[int] = 1
 _SECONDS_PER_HOUR: Final[int] = 3600
+# Float noise from fill_helps / helps_per_second must not read as an overflow.
+_OVERFLOW_EPSILON_SECONDS: Final[float] = 1e-6
 # Neutral map (no favorites, no expert mode): the Box/Comparison default.
 # A singleton sidesteps ruff's B008 (no function calls in default arguments) —
 # safe since it's frozen.
@@ -500,17 +502,18 @@ def daily_production(
         fill_seconds = float(max(session_seconds))
 
     # Each sleep starts empty: it fills and overflows on its own, with its own skill cap.
-    night_skill_cap = 2 if species.specialty is Specialty.SKILLS else 1
+    sleep_skill_cap = 2 if species.specialty is Specialty.SKILLS else 1
     day_helps = day_seconds * helps_per_second
     asleep_normal_helps = 0.0
     overflow_helps = 0.0
     sleep_skill = 0.0
     sleep_sessions: list[SleepSessionProduction] = []
     for session, seconds in zip(sleep.sessions, session_seconds, strict=True):
-        normal = min(seconds, fill_seconds)
-        overflow = max(0.0, seconds - fill_seconds)
+        overflow = seconds - fill_seconds
+        overflow = overflow if overflow > _OVERFLOW_EPSILON_SECONDS else 0.0
+        normal = seconds - overflow
         session_helps = normal * helps_per_second
-        chances = _skill_chances(session_helps * effective_skill_rate, night_skill_cap)
+        chances = _skill_chances(session_helps * effective_skill_rate, sleep_skill_cap)
         asleep_normal_helps += session_helps
         overflow_helps += overflow * helps_per_second
         sleep_skill += sum(chances)  # E[min(N, cap)]
