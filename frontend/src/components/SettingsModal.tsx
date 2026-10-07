@@ -174,7 +174,7 @@ export function SettingsModal({
 }: Props) {
   const { t } = useI18n();
 
-  // Tab state: "island" is active by default.
+  // Dialog starts on initialTab (Map by default).
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
 
   // Text search.

@@ -18,10 +18,8 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
-// Menú de cuenta en la topbar (signed in). Trigger `.avatar-btn` (foto de Google
-// o iniciales); panel reusa el esqueleto de dropdown (`.filter-pop` +
-// `.filter-list__item`) con header de cuenta + "Cerrar sesión". Click afuera +
-// Escape cierran; el foco vuelve al trigger — mismo patrón que FilterPopover.
+// Account menu in app bar (signed in). Trigger is `.avatar-btn` (Google photo or
+// initials). Panel reuses dropdown skeleton with account header and sign-out option.
 export function ProfileMenu() {
   const { user, logout } = useAuth();
   const { t } = useI18n();
