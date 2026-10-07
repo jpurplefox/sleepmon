@@ -5258,7 +5258,8 @@ button.prod-card__base-tag--action:hover {
 
 /* ── Tool header: title only; the context bar sits under it (design-system §5). ── */
 .tool-head {
-  margin: 1.5rem 0 1.25rem;
+  /* The layout's top padding is the only gap under the app bar. */
+  margin: 0 0 1.25rem;
 }
 
 .tool-head__row {
