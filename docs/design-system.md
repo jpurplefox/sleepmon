@@ -141,7 +141,8 @@ Current catalog: `IconClock`, `IconHelp`, `IconPackage`, `IconHourglass`,
 `IconChevronDown`, `IconArrowUp`, `IconArrowDown`, `IconMore`, `IconClose`,
 `IconEdit`, `IconCopy`, `IconCheck`, `IconSaveBox`, `IconSplit`, `IconSignOut`,
 `IconProgress` (rising bars — what you have unlocked and levelled; the account menu's
-"Mi progreso"), `IconGlobe` (language, on the signed-out `.lang-btn`). A new UI icon is added here following the same stroke — no ad-hoc icons
+"Perfil de jugador"), `IconSun` (the nap — the daytime sleep, beside `IconMoon`'s
+night), `IconGlobe` (language, on the signed-out `.lang-btn`). A new UI icon is added here following the same stroke — no ad-hoc icons
 in components.
 
 **Metric display.** A metric reads as **its own icon + the number** — the icon marks
@@ -155,8 +156,8 @@ exists (`mainSkillIcon` — Berry Burst has its own). Metrics with
 no game icon get one **designated** UI icon that stands for them, used the same way
 everywhere: procs / triggers → `IconSparkle`, help cadence → `IconClock`, helps →
 `IconHelp` (a helping hand), inventory fill time → `IconHourglass`, inventory
-capacity → `IconPackage`, nighttime proc chance → `IconMoon`, help multiplier →
-`IconMagnifier`.
+capacity → `IconPackage`, nighttime proc chance → `IconMoon` (and the nap's →
+`IconSun`, so each sleep is named by its icon), help multiplier → `IconMagnifier`.
 
 Two kinds of figure stay **bare** (no metric icon):
 
@@ -274,6 +275,15 @@ states · where it lives. Feature one-offs are intentionally not here.
   `--up` 18%, `--main-favorite` (expert map) `--up` 30%, `--no-favorite` (expert map
   only) `--down` 20%. Neutral cards keep `--surface`. The
   comparison's base card has **no** surface treatment — its `Base` tag says it.
+- **`.night-grid`** — the card's **skill while asleep** read-out (inside
+  `.prod-card__night`): a small grid, `--text-sm`, tabular nums, `column-gap 0.9rem`.
+  A header row of `--text-xs` `--muted` column labels, then **one row per sleep** — the
+  sleep's icon (`IconMoon` night, `IconSun` nap; `--accent-text`, the night's ink) + its
+  `--muted` name ("al dormir" with no nap; "noche" / "siesta" with one) — and its
+  chances. Skill specialists: columns **≥ 1 vez** and **2 veces** (`auto 3.6rem 3.6rem`);
+  everyone else (`--one`): a single **1 vez** column. Every card under the same sleep
+  schedule has the same rows, so cards align without reserving space; the block keeps its
+  40px floor.
 - **`.layout` / `.layout--wide`** — page container (`max-width: 1100px`; `--wide`
   removes it for the production comparator).
 - **`.grid` / `.grid--3`** — 2- or 3-column layout, collapses to 1 under 860px.
@@ -315,6 +325,19 @@ states · where it lives. Feature one-offs are intentionally not here.
   the figure it changes (a summary of active rules), it leads with the effect's icon
   and may close with its scope's (a type icon) — `[icon] ×1,5 [scope]`, icons at
   14px inside the same pill.
+- **Tooltip cue** (`.strength-value__cue`) — a figure that hides more behind a
+  `Tooltip` (a breakdown, a per-sleep detail) is underlined **dotted** in `--muted`
+  (`text-underline-offset: 2px`, `cursor: help`); its color is untouched. First use: the
+  strength figure with its base/bonus breakdown; also the fill time when it overflows.
+  A figure without a tooltip is never underlined, so the dots always mean "hover or focus
+  for more".
+- **Overflow mark** (`.overflow-mark`) — a bare **`+`** in `--down`, weight 800, right
+  after a figure (`margin-left: 1px`), saying the thing it measures **overflows**: the
+  inventory fills before a sleep ends. The figure itself keeps `--text` — the `+` is the
+  only red, and as a shape it is a cue beyond color. `aria-hidden`: the figure's
+  `Tooltip` (which it always rides with, under a tooltip cue) and its `aria-label` say
+  which sleep overflows and by how much. Not a `.metric-mark`: no pill, no fill, because
+  it flags a state of this Pokémon rather than naming a rule's effect.
 - **`.skill-alert`** — a `--down` warning triangle (`IconAlert`, 14px) beside a card's
   Skill block heading, saying part of what the skill does isn't calculated (Metronome,
   Skill Copy, Psystrike's Berry Zone, Nuzzle's bonus). Wrapped in `Tooltip` with the
@@ -680,3 +703,19 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   opened for one thing invites detours, and repeating a control that is already one tap
   away in the bar gives the same state two places to drift. A disabled grid shows what a
   map would let you pick instead of an empty gap.
+- **A sleep's skill chance reads "at least once".** *Question:* a Skill specialist showed
+  *1 vez* (exactly once) and *2 veces* on two lines; with a nap that becomes four lines,
+  and in a comparison a stronger Pokémon could show a **lower** *1 vez* simply because more
+  of its chance moved to *2 veces*. How should the chances read? *Resolution:* a
+  `.night-grid` mini table, one row per sleep: specialists read **≥ 1 vez** and **2
+  veces**, others a single **1 vez** (capped at one, so it is the same number). The
+  alternative, one line per sleep (`1× 41% · 2× 22%`), abbreviates what the table names. *Why:* a
+  cumulative chance only rises as a Pokémon gets more active, so a comparison never reads
+  backwards; and a table names its columns once instead of on every line.
+- **An overflow is marked by a shape, not by recoloring the figure.** *Question:* when the
+  inventory fills before a sleep ends, how loud should the fill time be? *Resolution:* the
+  time keeps its color, gets the dotted **tooltip cue**, and a red **`+`** follows it; the
+  tooltip names each sleep and whether it fills. A `--down` time with a warning triangle
+  (too loud for a common, expected state) and a red time with no shape (color alone) were
+  both tried. *Why:* overflow is information, not an alarm — the production figures stay
+  the focus — and the `+` keeps good/bad off color alone.
