@@ -1358,27 +1358,43 @@ select:focus {
 /* Scrollbar estilizado para todo panel que scrollea por su cuenta. */
 .filter-grid,
 .filter-list,
-.settings-modal-panel {
+.settings-modal-panel,
+.modal-body,
+.nature-dropdown,
+.subskill-dropdown,
+.species-options {
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
 
 .filter-grid::-webkit-scrollbar,
 .filter-list::-webkit-scrollbar,
-.settings-modal-panel::-webkit-scrollbar {
+.settings-modal-panel::-webkit-scrollbar,
+.modal-body::-webkit-scrollbar,
+.nature-dropdown::-webkit-scrollbar,
+.subskill-dropdown::-webkit-scrollbar,
+.species-options::-webkit-scrollbar {
   width: 6px;
 }
 
 .filter-grid::-webkit-scrollbar-thumb,
 .filter-list::-webkit-scrollbar-thumb,
-.settings-modal-panel::-webkit-scrollbar-thumb {
+.settings-modal-panel::-webkit-scrollbar-thumb,
+.modal-body::-webkit-scrollbar-thumb,
+.nature-dropdown::-webkit-scrollbar-thumb,
+.subskill-dropdown::-webkit-scrollbar-thumb,
+.species-options::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 999px;
 }
 
 .filter-grid::-webkit-scrollbar-track,
 .filter-list::-webkit-scrollbar-track,
-.settings-modal-panel::-webkit-scrollbar-track {
+.settings-modal-panel::-webkit-scrollbar-track,
+.modal-body::-webkit-scrollbar-track,
+.nature-dropdown::-webkit-scrollbar-track,
+.subskill-dropdown::-webkit-scrollbar-track,
+.species-options::-webkit-scrollbar-track {
   background: transparent;
 }
 

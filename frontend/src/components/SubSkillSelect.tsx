@@ -32,12 +32,6 @@ export function SubSkillSelect({ subSkills, value, level, onChange, ariaLabel }:
   const { t, subSkill } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const dropRef = useRef<HTMLDivElement>(null);
-
-  // Inside a scrolling modal body, bring the opened list into view.
-  useEffect(() => {
-    if (open) dropRef.current?.scrollIntoView?.({ block: "nearest" });
-  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -148,7 +142,6 @@ export function SubSkillSelect({ subSkills, value, level, onChange, ariaLabel }:
 
       {open && (
         <div
-          ref={dropRef}
           className="subskill-dropdown"
           role="listbox"
           aria-multiselectable

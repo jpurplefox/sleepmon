@@ -354,7 +354,9 @@ states · where it lives. Feature one-offs are intentionally not here.
   `[data-autofocus]`, focus return; `role="dialog"`, `aria-modal`. Footer via
   `.modal-actions`. The panel never outgrows the viewport: the title stays fixed and
   only `.modal-body` scrolls (a body holding its own scrolling panel, like Progress,
-  doesn't scroll too). A dropdown opened inside scrolls itself into view.
+  doesn't scroll too). A dropdown opened inside shrinks its list to the body's visible
+  room below it (never under ~160px; then it scrolls into view), so the list and the
+  body never both scroll. Every scrolling surface uses the thin `--border` scrollbar.
 - **Dropdown / combobox pattern** — `SpeciesSelect`, `NatureSelect`,
   `SubSkillSelect` share one skeleton: trigger (`aria-haspopup/expanded`) + absolute
   panel (`role="listbox"`), arrow/Enter nav, click-outside + Escape to close. Same

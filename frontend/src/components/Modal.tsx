@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from "react";
 import type { ReactNode } from "react";
 
+import { fitDropdownsIn } from "../fitDropdowns";
 import { useI18n } from "../i18n";
 import { IconClose } from "./icons";
 
@@ -14,6 +15,7 @@ interface Props {
 export function Modal({ title, onClose, children, wide }: Props) {
   const { t } = useI18n();
   const panelRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
 
   // Cerrar con Escape, atrapar el foco con Tab dentro del panel y bloquear el
@@ -65,6 +67,9 @@ export function Modal({ title, onClose, children, wide }: Props) {
     return () => opener?.focus();
   }, []);
 
+  // Dropdowns opened inside fit the body, so only one thing scrolls.
+  useEffect(() => (bodyRef.current ? fitDropdownsIn(bodyRef.current) : undefined), []);
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
@@ -81,7 +86,9 @@ export function Modal({ title, onClose, children, wide }: Props) {
             <IconClose />
           </button>
         </header>
-        <div className="modal-body">{children}</div>
+        <div className="modal-body" ref={bodyRef}>
+          {children}
+        </div>
       </div>
     </div>
   );
