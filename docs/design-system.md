@@ -277,7 +277,6 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **`.layout` / `.layout--wide`** — page container (`max-width: 1100px`; `--wide`
   removes it for the production comparator).
 - **`.grid` / `.grid--3`** — 2- or 3-column layout, collapses to 1 under 860px.
-- **`.section-head` (`__title`)** — section title + aligned action/indicator.
 - **`.tool-head`** — a tool's header: the title (`h1`, `--text-xl`) and nothing that
   explains the tool. Row `.tool-head__row` (flex, wraps): the title, an optional count
   inside it (`.tool-count`, `--muted`, weight 600, `--text-lg` — "Caja (6)"), and an
@@ -318,14 +317,6 @@ states · where it lives. Feature one-offs are intentionally not here.
   Skill block heading, saying part of what the skill does isn't calculated (Metronome,
   Skill Copy, Psystrike's Berry Zone, Nuzzle's bonus). Wrapped in `Tooltip` with the
   specific gap; focusable, `role="img"` + `aria-label` with the same text.
-- **Status notice** (`.status-notice`, inside a `.status-notices` wrapping row) — *being
-  replaced by the context bar*, which shows a modifier whether or not it is on. A
-  page-level pill saying a modifier is active: `--surface-2` fill, `--border`,
-  `--text-sm` weight 600, `999px`, leading game icon, `role="status"`. Several sit
-  side by side in the `.status-notices` row above what they affect. Team Analysis shows one for
-  the **Good Camp Ticket** and one for the **Event bonus**, the latter followed by a
-  `.metric-mark` with icons per effect. Renders only while the modifier is active —
-  nothing when it isn't.
 - **`.progress-diff`** — marks a value the user has changed but **not saved** into the
   record it came from, and offers to save it (`__label` "sin guardar" + `__save`, an
   underlined text button). Indigo — `--accent-dim` fill, `--accent-border` outline,
@@ -611,8 +602,8 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   without losing it — but reading the screen, nobody could tell what it switched.
   Keep it and label it better, or drop it? *Resolution:* drop it. A modifier built
   from a list is active exactly when the list has entries; emptying it (one by one,
-  or `Quitar todos`) is how it turns off, and the page's status notice appears and
-  disappears with it. *Why:* a switch over a list creates a second state — effects
+  or `Quitar todos`) is how it turns off, and the Event field of the context bar reads
+  "Sin evento" when the list is empty. *Why:* a switch over a list creates a second state — effects
   present but inert — that the reader has to track and the screen has to explain;
   for an ephemeral bonus rebuilt by hand, the comparison it bought was not worth the
   ambiguity. A binary modifier with no content of its own (the Good Camp Ticket)
