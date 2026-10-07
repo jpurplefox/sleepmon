@@ -43,7 +43,9 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   });
 
   // The saved sleep schedule (defaults when signed out) shapes every card.
-  const { progress } = useProgress();
+  const { progress, isLoading: progressLoading } = useProgress();
+  // Hold the queries until the saved schedule is known, so no default-schedule flash.
+  const sleepReady = status === "anonymous" || (status === "authenticated" && !progressLoading);
 
   const [entries, setEntries] = useState<RosterEntry[]>([]);
   // The map scenario applies to EVERY card: it's an assumption of the
@@ -64,6 +66,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   // react-query (keyed por config) evita recalcular al reordenar.
   const productions = useQueries({
     queries: entries.map((e) => ({
+      enabled: sleepReady,
       queryKey: ["production", e.config, scenario, progress.sleep],
       queryFn: () =>
         api.computeProduction({

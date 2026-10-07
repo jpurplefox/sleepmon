@@ -516,7 +516,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "progress.noBonusYet": "sin bonus todavía",
     "progress.unsaved": "sin guardar",
     "progress.save": "Guardar",
-    "progress.savedValue": "En mi progreso",
+    "progress.savedValue": "En mi perfil",
     "progress.saveError": "No se pudo guardar el cambio.",
     "progress.loadError": "No se pudo cargar tu perfil.",
     // Leaving with changes (PRD 0011): here, leaving without saving discards the draft.
@@ -1035,7 +1035,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "progress.noBonusYet": "no bonus yet",
     "progress.unsaved": "unsaved",
     "progress.save": "Save",
-    "progress.savedValue": "In my progress",
+    "progress.savedValue": "In my profile",
     "progress.saveError": "Couldn't save the change.",
     "progress.loadError": "Couldn't load your profile.",
     // Leaving with changes (PRD 0011): here, leaving without saving discards the draft.

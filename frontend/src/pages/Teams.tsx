@@ -198,7 +198,13 @@ export function Teams() {
   const [mainFavorite, setMainFavorite] = useState<string | null>(null);
   const [weeklyBonus, setWeeklyBonus] = useState<WeeklyBonus>("berry_strength");
 
-  const { progress, save: saveProgress, saveError: progressSaveError } = useProgress();
+  const {
+    progress,
+    save: saveProgress,
+    saveError: progressSaveError,
+    isLoading: progressLoading,
+  } = useProgress();
+  const sleepReady = status === "anonymous" || (status === "authenticated" && !progressLoading);
 
   // Session-only edits, layered over the saved progress. Everything shown is
   // derived: override ?? saved ?? default, so there is no window where local
@@ -296,7 +302,7 @@ export function Teams() {
         pot_size: potSize,
         sleep: progress.sleep,
       }),
-    enabled: slots.length > 0,
+    enabled: slots.length > 0 && sleepReady,
     placeholderData: keepPreviousData,
     // A rejected config is a deterministic 400: retrying only delays the message.
     retry: false,

@@ -238,7 +238,7 @@ export function IconSignOut(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-// Rising bars: what you have unlocked and levelled. The account menu's "Mi progreso".
+// Rising bars: what you have unlocked and levelled. The account menu's "Perfil de jugador".
 export function IconProgress(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base} {...props}>
