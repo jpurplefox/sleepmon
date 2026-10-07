@@ -113,4 +113,19 @@ describe("TeamContextBar", () => {
     expect(alts).toEqual(["Bean Burger Curry", "Mild Honey Curry"]);
     expect(within(button).queryByText("No recipes")).not.toBeInTheDocument();
   });
+
+  it("always keeps three places, so the field doesn't change width as dishes are chosen", () => {
+    renderBar();
+    const empty = screen.getByRole("button", { name: /^Meals No recipes/ });
+    expect(empty.querySelectorAll(".ctx-recipe--empty")).toHaveLength(3);
+  });
+
+  it("fills the chosen places and leaves the rest as empty slots", () => {
+    renderBar({
+      meals: [{ recipe: "Bean Burger Curry", level: 1 }, null, { recipe: "Mild Honey Curry", level: 1 }],
+    });
+    const button = screen.getByRole("button", { name: /^Meals/ });
+    expect(within(button).getAllByRole("img")).toHaveLength(2);
+    expect(button.querySelectorAll(".ctx-recipe--empty")).toHaveLength(1);
+  });
 });

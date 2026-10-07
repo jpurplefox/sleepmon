@@ -109,9 +109,10 @@ export function TeamContextBar({
               onClick={() => onOpenDialog("meals")}
             >
               <span className="filter-btn__value">
-                {chosenMeals.length > 0 ? (
-                  <span className="ctx-recipes">
-                    {chosenMeals.map((m, i) => (
+                {/* Three fixed places: a chosen dish shows its image, an unset one a dim slot. */}
+                <span className="ctx-recipes">
+                  {meals.map((m, i) =>
+                    m ? (
                       <img
                         key={i}
                         className="ctx-recipe"
@@ -119,11 +120,12 @@ export function TeamContextBar({
                         alt={m.recipe}
                         title={m.recipe}
                       />
-                    ))}
-                  </span>
-                ) : (
-                  <span className="muted">{t("ctx.noMeals")}</span>
-                )}
+                    ) : (
+                      <span key={i} className="ctx-recipe ctx-recipe--empty" aria-hidden="true" />
+                    ),
+                  )}
+                </span>
+                {chosenMeals.length === 0 && <span className="sr-only">{t("ctx.noMeals")}</span>}
               </span>
               <IconChevronDown className="filter-btn__chevron" />
             </button>

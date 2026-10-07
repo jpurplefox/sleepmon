@@ -83,7 +83,7 @@ html {
   scroll-padding-top: 3.25rem;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 900px) {
   html {
     scroll-padding-top: 6rem;
   }
@@ -5316,6 +5316,13 @@ button.prod-card__base-tag--action:hover {
   object-fit: contain;
 }
 
+.ctx-recipe--empty {
+  box-sizing: border-box;
+  border: 1px dashed var(--muted);
+  border-radius: var(--r-sm);
+  opacity: 0.5;
+}
+
 @media (max-width: 640px) {
   .tool-head__action {
     margin-left: 0;
@@ -5361,6 +5368,11 @@ button.prod-card__base-tag--action:hover {
   gap: 0.25rem;
 }
 
+.appbar .tab,
+.appbar .btn--google {
+  white-space: nowrap;
+}
+
 .appbar .tab {
   font-size: var(--text-base);
   padding: 0.4rem 0.85rem;
@@ -5403,22 +5415,11 @@ button.prod-card__base-tag--action:hover {
   font-size: var(--text-sm);
 }
 
-@media (max-width: 640px) {
+/* Tablet and down: the tools move to their own row before anything has to wrap. */
+@media (max-width: 900px) {
   .appbar__inner {
     flex-wrap: wrap;
     gap: 0.5rem 0.75rem;
-    padding: 0.6rem 1rem;
-  }
-
-  /* Sprite only: the name stays for screen readers. */
-  .brand__name {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
   }
 
   .appbar .tabs {
@@ -5434,6 +5435,26 @@ button.prod-card__base-tag--action:hover {
 
   .appbar .tab {
     flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .appbar__inner {
+    padding: 0.6rem 1rem;
+  }
+
+  /* Sprite only: the name stays for screen readers. */
+  .brand__name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .appbar .tab {
     padding: 0.4rem 0.7rem;
   }
 
