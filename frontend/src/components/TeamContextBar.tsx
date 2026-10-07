@@ -8,15 +8,17 @@ import { RECIPE_TYPES, dishTypeLabelKey, recipeImage } from "../recipes";
 import type { MealInput, Recipe } from "../types";
 import { EventMarks } from "./EventMarks";
 import { IconChevronDown } from "./icons";
-import type { SettingsTab } from "./SettingsModal";
 import { ContextBar, ContextField } from "./ToolHeader";
+
+/** The dialog each context field opens. */
+export type TeamDialog = "map" | "event" | "meals";
 
 interface Props {
   map: MapSummary;
   eventEffects: EventEffect[];
   goodCampTicket: boolean;
   onGoodCampTicket: (on: boolean) => void;
-  onOpenSettings: (tab: SettingsTab) => void;
+  onOpenDialog: (dialog: TeamDialog) => void;
   dishType: Recipe["type"] | null;
   meals: (MealInput | null)[];
   onDishType: (type: Recipe["type"]) => void;
@@ -28,7 +30,7 @@ export function TeamContextBar({
   eventEffects,
   goodCampTicket,
   onGoodCampTicket,
-  onOpenSettings,
+  onOpenDialog,
   dishType,
   meals,
   onDishType,
@@ -52,7 +54,7 @@ export function TeamContextBar({
             aria-labelledby={`${labelId} ${mapBtnId}`}
             className="filter-btn"
             aria-haspopup="dialog"
-            onClick={() => onOpenSettings("island")}
+            onClick={() => onOpenDialog("map")}
           >
             <span className="filter-btn__value">
               {map.name ?? t("ctx.noMap")}
@@ -104,7 +106,7 @@ export function TeamContextBar({
               aria-labelledby={`${labelId} ${mealsBtnId}`}
               className="filter-btn"
               aria-haspopup="dialog"
-              onClick={() => onOpenSettings("meals")}
+              onClick={() => onOpenDialog("meals")}
             >
               <span className="filter-btn__value">
                 {chosenMeals.length > 0 ? (
@@ -137,7 +139,7 @@ export function TeamContextBar({
             aria-labelledby={`${labelId} ${eventBtnId}`}
             className="filter-btn"
             aria-haspopup="dialog"
-            onClick={() => onOpenSettings("event")}
+            onClick={() => onOpenDialog("event")}
           >
             <span className="filter-btn__value">
               {eventEffects.length > 0 ? (

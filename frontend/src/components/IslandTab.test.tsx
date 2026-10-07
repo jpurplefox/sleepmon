@@ -59,7 +59,6 @@ function renderTab(overrides: Partial<React.ComponentProps<typeof IslandTab>> = 
     weeklyBonus: "berry_strength" as const,
     islandBonus: 0,
     bonusDisabled: false,
-    goodCampTicket: false,
     bonusUnsaved: false,
     savedBonusPct: 0,
     onSelectIsland: vi.fn(),
@@ -67,10 +66,7 @@ function renderTab(overrides: Partial<React.ComponentProps<typeof IslandTab>> = 
     onMainFavorite: vi.fn(),
     onWeeklyBonus: vi.fn(),
     onIslandBonus: vi.fn(),
-    onGoodCampTicket: vi.fn(),
     onSaveBonus: vi.fn(),
-    dishType: null,
-    onDishTypeChange: vi.fn(),
     ...overrides,
   };
   render(
@@ -123,34 +119,16 @@ describe("IslandTab bonus slider", () => {
   });
 });
 
-describe("IslandTab dish type", () => {
-  it("reports the chosen type", async () => {
-    const props = renderTab({ dishType: null });
-    await userEvent.click(screen.getByRole("button", { name: "Salad" }));
-    expect(props.onDishTypeChange).toHaveBeenCalledWith("Salad");
-  });
-
-  it("marks the active type button", () => {
-    renderTab({ dishType: "Salad" });
-    expect(screen.getByRole("button", { name: "Salad" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    expect(screen.getByRole("button", { name: "Curry" })).toHaveAttribute(
-      "aria-pressed",
-      "false",
-    );
-  });
-
-  // There is no "all" option (PRD 0006): the group offers only the 3 real
-  // types, and with nothing chosen yet, none of them is marked active.
-  it("renders no 'all'/'Todo' option, and starts with nothing chosen", () => {
-    renderTab({ dishType: null });
-    expect(screen.queryByRole("button", { name: "All" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Todo" })).not.toBeInTheDocument();
-    for (const name of ["Curry", "Salad", "Dessert"]) {
-      expect(screen.getByRole("button", { name })).toHaveAttribute("aria-pressed", "false");
+describe("IslandTab favorite berries", () => {
+  it("shows every berry chip, all disabled, with no map selected", () => {
+    renderTab({ selectedIsland: null });
+    const chips = screen.getAllByRole("button", { name: /Grepa|Oran|Pecha/ });
+    expect(chips).toHaveLength(3);
+    for (const chip of chips) {
+      expect(chip).toBeDisabled();
+      expect(chip).toHaveAttribute("aria-pressed", "false");
     }
+    expect(screen.queryByText(/\/ 3/)).not.toBeInTheDocument();
   });
 });
 

@@ -15,7 +15,7 @@ const NO_MAP: MapSummary = { name: null, berries: [], areaPct: null };
 
 function renderBar(overrides: Partial<React.ComponentProps<typeof TeamContextBar>> = {}) {
   const onGoodCampTicket = vi.fn();
-  const onOpenSettings = vi.fn();
+  const onOpenDialog = vi.fn();
   const onDishType = vi.fn();
   render(
     <LanguageProvider>
@@ -24,7 +24,7 @@ function renderBar(overrides: Partial<React.ComponentProps<typeof TeamContextBar
         eventEffects={[]}
         goodCampTicket={false}
         onGoodCampTicket={onGoodCampTicket}
-        onOpenSettings={onOpenSettings}
+        onOpenDialog={onOpenDialog}
         dishType={null}
         meals={[null, null, null]}
         onDishType={onDishType}
@@ -32,7 +32,7 @@ function renderBar(overrides: Partial<React.ComponentProps<typeof TeamContextBar
       />
     </LanguageProvider>,
   );
-  return { onGoodCampTicket, onOpenSettings, onDishType };
+  return { onGoodCampTicket, onOpenDialog, onDishType };
 }
 
 describe("TeamContextBar", () => {
@@ -47,20 +47,20 @@ describe("TeamContextBar", () => {
   });
 
   it("turns the Good Camp Ticket on in place, and ignores the already-pressed side", async () => {
-    const { onGoodCampTicket, onOpenSettings } = renderBar();
+    const { onGoodCampTicket, onOpenDialog } = renderBar();
     await userEvent.click(screen.getByRole("button", { name: "No" }));
     expect(onGoodCampTicket).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole("button", { name: "Yes" }));
     expect(onGoodCampTicket).toHaveBeenCalledWith(true);
-    expect(onOpenSettings).not.toHaveBeenCalled();
+    expect(onOpenDialog).not.toHaveBeenCalled();
   });
 
   it("opens the settings on the Map tab from the Map field and on the Event tab from the Event field", async () => {
-    const { onOpenSettings } = renderBar();
+    const { onOpenDialog } = renderBar();
     await userEvent.click(screen.getByText("No map"));
-    expect(onOpenSettings).toHaveBeenLastCalledWith("island");
+    expect(onOpenDialog).toHaveBeenLastCalledWith("map");
     await userEvent.click(screen.getByText("No event"));
-    expect(onOpenSettings).toHaveBeenLastCalledWith("event");
+    expect(onOpenDialog).toHaveBeenLastCalledWith("event");
   });
 
   it("shows the map name, its berries in order and the area bonus", () => {
@@ -84,19 +84,19 @@ describe("TeamContextBar", () => {
   });
 
   it("picks the dish type in place, and ignores the type already picked", async () => {
-    const { onDishType, onOpenSettings } = renderBar({ dishType: "Curry" });
+    const { onDishType, onOpenDialog } = renderBar({ dishType: "Curry" });
     expect(screen.getByRole("button", { name: "Curry" })).toHaveAttribute("aria-pressed", "true");
     await userEvent.click(screen.getByRole("button", { name: "Curry" }));
     expect(onDishType).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole("button", { name: "Salad" }));
     expect(onDishType).toHaveBeenCalledWith("Salad");
-    expect(onOpenSettings).not.toHaveBeenCalled();
+    expect(onOpenDialog).not.toHaveBeenCalled();
   });
 
   it("opens the settings on the Meals tab from the meals, even before any is chosen", async () => {
-    const { onOpenSettings } = renderBar();
+    const { onOpenDialog } = renderBar();
     await userEvent.click(screen.getByRole("button", { name: /^Meals No recipes/ }));
-    expect(onOpenSettings).toHaveBeenCalledWith("meals");
+    expect(onOpenDialog).toHaveBeenCalledWith("meals");
   });
 
   it("shows the three chosen meals in order", () => {
