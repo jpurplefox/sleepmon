@@ -1508,7 +1508,9 @@ select:focus {
 .specialty-toggle__btn.is-on {
   background: var(--accent-dim);
   color: var(--accent-text);
-  font-weight: 600;
+  /* Emphasis without a heavier weight: a bolder face is wider and would shift every
+     button after it. */
+  text-shadow: 0 0 0.5px currentColor;
 }
 
 .box-entry {
