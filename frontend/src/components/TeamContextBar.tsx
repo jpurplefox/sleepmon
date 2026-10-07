@@ -102,7 +102,7 @@ export function TeamContextBar({
             <span className="ctx-map">
               <span className="filter-btn__value">
                 {map.name ?? t("ctx.noMap")}
-                {map.berries.length > 0 && (
+                {map.name !== null && (
                   <span className="filter-btn__icons">
                     {map.berries.map((b) => (
                       <img
@@ -112,6 +112,16 @@ export function TeamContextBar({
                         alt={berry(b)}
                         title={berry(b)}
                       />
+                    ))}
+                    {/* A favorite still to choose reads "?", like the map picker's own list. */}
+                    {Array.from({ length: Math.max(0, 3 - map.berries.length) }, (_, i) => (
+                      <span
+                        key={`unknown-${i}`}
+                        className="mini-icon island-tab__berry-icon--unknown"
+                        aria-hidden="true"
+                      >
+                        ?
+                      </span>
                     ))}
                   </span>
                 )}

@@ -75,7 +75,8 @@ Per tool:
 - **Team Analysis** — four fields, **always shown**, active or not, even with an empty
   team (the map can be chosen before the team is built):
   - **Map** — "No map", or the map's name followed by its favorite berries as icons
-    (on an expert map the **main** favorite first), then — on an expert map — the
+    (on an expert map the **main** favorite first; a favorite still to choose shows as a
+    "?", like the map picker's list, so a chosen map always shows three), then — on an expert map — the
     **weekly bonus** as a mark with its effect's icon (berries ×2.4, +1 ingredient or
     skill ×1.25, numbers in the active language like the event marks), and the **area bonus** as a bare **+X%** chip (named "Area +X%" in its tooltip)
     when the area bonus is above 0. Opens the **Map** dialog: map, favorite berries, weekly bonus

@@ -161,4 +161,21 @@ describe("TeamContextBar", () => {
     sizers.forEach((el) => expect(el).toHaveAttribute("aria-hidden", "true"));
     expect(field).not.toHaveAccessibleName(/Cyan Beach/);
   });
+
+  it("marks the favorite berries still to choose with a '?', and shows none with no map", () => {
+    renderBar({
+      map: { name: "Greengrass Isle (Expert)", berries: ["Leppa"], areaPct: null, weeklyBonus: null },
+    });
+    const field = screen.getByRole("button", { name: /^Map Greengrass Isle/ });
+    const value = field.querySelector(".filter-btn__value:not(.ctx-map__sizer)")!;
+    expect(value.querySelectorAll("img.mini-icon")).toHaveLength(1);
+    expect(value.querySelectorAll(".island-tab__berry-icon--unknown")).toHaveLength(2);
+  });
+
+  it("shows no berry places at all with no map", () => {
+    renderBar();
+    const field = screen.getByRole("button", { name: /^Map No map/ });
+    const value = field.querySelector(".filter-btn__value:not(.ctx-map__sizer)")!;
+    expect(value.querySelectorAll(".island-tab__berry-icon--unknown")).toHaveLength(0);
+  });
 });
