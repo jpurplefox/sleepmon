@@ -4,13 +4,10 @@ import { Redirect, Route, Switch, useLocation } from "wouter";
 
 import { AuthProvider, useAuth } from "./auth/AuthContext";
 import { GateCard } from "./auth/GateCard";
-import { GoogleSignInButton } from "./auth/GoogleSignInButton";
-import { ProfileMenu } from "./auth/ProfileMenu";
 import { SignInDialog } from "./auth/SignInDialog";
 import { GateProvider } from "./auth/useGate";
+import { AppBar } from "./components/AppBar";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { LanguageSelector } from "./components/LanguageSelector";
-import { NavTabs } from "./components/NavTabs";
 import { Placeholder } from "./components/Placeholder";
 import { useI18n } from "./i18n";
 import { Production } from "./pages/Production";
@@ -36,7 +33,7 @@ export default function App() {
   );
 }
 
-// App shell: topbar (nav + auth + language) and the routed tool pages. Kept
+// App shell: app bar (nav + account) and the routed tool pages. Kept
 // separate from App() so it can use useAuth()/useLocation() below their
 // providers.
 function AppShell() {
@@ -63,19 +60,7 @@ function AppShell() {
 
   return (
     <>
-      <div className="topbar">
-        <NavTabs />
-        <div className="topbar__right">
-          {checking ? (
-            <div className="auth-slot-placeholder" aria-hidden="true" />
-          ) : authenticated ? (
-            <ProfileMenu />
-          ) : (
-            <GoogleSignInButton />
-          )}
-          <LanguageSelector />
-        </div>
-      </div>
+      <AppBar />
       <main>
         <Switch>
           <Route path={ROUTES.box}>{gated(<Team onCompare={openCompare} />)}</Route>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import { LanguageSelector } from "../components/LanguageSelector";
 import { IconProgress, IconSignOut } from "../components/icons";
 import { ProgressModal } from "../components/ProgressModal";
 import { useI18n } from "../i18n";
@@ -80,6 +81,11 @@ export function ProfileMenu() {
               <div className="profile-head__name">{user.display_name}</div>
               <div className="profile-head__mail">{user.email}</div>
             </div>
+          </div>
+          <div className="filter-list__sep" />
+          <div className="menu-lang">
+            <span className="muted">{t("nav.language")}</span>
+            <LanguageSelector />
           </div>
           <div className="filter-list__sep" />
           <button

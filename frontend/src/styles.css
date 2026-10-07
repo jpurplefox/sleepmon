@@ -2245,59 +2245,6 @@ select:focus {
   border-color: var(--border);
 }
 
-/* Barra superior: tabs a la izquierda, selector de idioma a la derecha. */
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 1.25rem 1.5rem 0;
-}
-
-.topbar .tabs {
-  margin: 0;
-  padding: 0;
-}
-
-/* Mobile: the three tabs plus the account + language cluster never fit on one
-   375px row, and the overflow was scrolling the whole page sideways. The bar
-   wraps into two rows — utility cluster on top (right aligned), nav below at
-   full width — and the tabs get a compact size so they fit; if a longer
-   translation still doesn't, the strip scrolls inside itself instead of the
-   page. */
-@media (max-width: 640px) {
-  .topbar {
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    padding: 1rem 1rem 0;
-  }
-
-  .topbar__right {
-    order: -1;
-    width: 100%;
-    justify-content: flex-end;
-  }
-
-  .topbar .tabs {
-    width: 100%;
-    gap: 0.25rem;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .topbar .tabs::-webkit-scrollbar {
-    display: none;
-  }
-
-  .tab {
-    flex: 0 0 auto;
-    font-size: var(--text-base);
-    padding: 0.5rem 0.6rem;
-  }
-}
-
 .lang-select {
   display: flex;
   gap: 0.3rem;
@@ -4741,17 +4688,8 @@ button.prod-card__base-tag--action:hover {
    Autenticación — sign-in con Google, menú de cuenta, gate.
    ============================================================ */
 
-/* Cluster derecho de la topbar: control de sesión (botón Google / avatar) +
-   selector de idioma, agrupados para que el space-between de .topbar los
-   empuje juntos a la derecha. */
-.topbar__right {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
 /* Neutral placeholder for the auth slot while the session status is still
-   "checking" — same footprint as .avatar-btn so the topbar doesn't jump once
+   "checking" — same footprint as .avatar-btn so the app bar doesn't jump once
    the real control (Google button or avatar) mounts, but visibly inert (dim,
    no border color, no icon) so it never reads as either signed-in or signed-out. */
 .auth-slot-placeholder {
@@ -5364,5 +5302,110 @@ button.prod-card__base-tag--action:hover {
   .tool-head__action {
     margin-left: 0;
     flex-basis: 100%;
+  }
+}
+
+/* ── App bar: sticky top menu (design-system §5). ── */
+.appbar {
+  position: sticky;
+  top: 0;
+  z-index: 40; /* above in-page popovers (20–30), below modals (50) */
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.appbar__inner {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0.6rem 1.5rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+.brand img {
+  image-rendering: pixelated;
+}
+
+.appbar .tabs {
+  margin: 0;
+  padding: 0;
+  gap: 0.25rem;
+}
+
+.appbar .tab {
+  font-size: var(--text-base);
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+}
+
+.appbar .tab--active {
+  background: var(--accent-dim);
+  border-color: var(--accent-border);
+  color: var(--text);
+}
+
+.appbar__right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Popovers in the bar open inward from the right edge. */
+.appbar .filter-pop {
+  left: auto;
+  right: 0;
+}
+
+.filter-btn.lang-btn {
+  height: 30px;
+  padding: 0 0.6rem;
+  border-radius: 999px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.menu-lang {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.35rem 0.6rem;
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 640px) {
+  .appbar__inner {
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    padding: 0.6rem 1rem;
+  }
+
+  .appbar .tabs {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .appbar .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .appbar .tab {
+    flex: 0 0 auto;
+    padding: 0.4rem 0.7rem;
   }
 }
