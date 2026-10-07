@@ -35,6 +35,7 @@ from sleepmon.adapters.inbound.http.schemas import (
     RatingOut,
     RecipeOut,
     SkillEffectAggOut,
+    SleepIn,
     SleepSessionOut,
     SlotIngredientStatusOut,
     SlotProductionOut,
@@ -51,6 +52,7 @@ from sleepmon.application.dto import (
     ProductionInput,
     ProductionResult,
     ProgressPatchInput,
+    SleepInput,
     SlotEntryInput,
     SlotInput,
     TeamMemberInput,
@@ -198,6 +200,10 @@ def _nature_out(nature: Nature) -> NatureOut:
     )
 
 
+def _sleep_input(data: SleepIn | None) -> SleepInput | None:
+    return None if data is None else SleepInput(data.night_minutes, data.nap_minutes)
+
+
 def _to_input(payload: MemberIn) -> TeamMemberInput:
     return TeamMemberInput(
         species=payload.species,
@@ -287,6 +293,7 @@ class ProductionController(Controller):
                 ribbon=data.ribbon,
                 skill_level=data.skill_level,
                 scenario=data.scenario,
+                sleep=_sleep_input(data.sleep),
             )
         )
         return _full_production_out(result)
@@ -414,6 +421,7 @@ class TeamProductionController(Controller):
                     EventEffectInput(kind=e.kind, value=e.value, scope=e.scope, target=e.target)
                     for e in data.event_effects
                 ],
+                sleep=_sleep_input(data.sleep),
             )
         )
         return TeamProductionOut(

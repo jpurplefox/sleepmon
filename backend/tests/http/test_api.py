@@ -1049,3 +1049,28 @@ def test_berry_burst_fields_are_serialized(client: TestClient) -> None:
     assert member["production"]["teammate_berries"][0]["berry"] == "Grepa"
     grepa = next(r for r in team["berries"] if r["berry"] == "Grepa")
     assert [s["kind"] for s in grepa["sources"]] == ["helps", "skill"]
+
+
+def test_production_accepts_a_sleep_schedule(client: TestClient) -> None:
+    body = client.post(
+        "/production", json={**_pokemon_json(), "sleep": {"night_minutes": 390, "nap_minutes": 120}}
+    ).json()
+    assert [s["kind"] for s in body["sleep_sessions"]] == ["night", "nap"]
+
+
+def test_production_rejects_an_invalid_sleep_schedule(client: TestClient) -> None:
+    response = client.post("/production", json={**_pokemon_json(), "sleep": {"night_minutes": 500}})
+    assert response.status_code == 400
+
+
+def test_team_production_accepts_a_sleep_schedule(client: TestClient) -> None:
+    body = client.post(
+        "/teams/production",
+        json={
+            "slots": _slots_json(_pokemon_json()),
+            "meals": [None, None, None],
+            "sleep": {"night_minutes": 390, "nap_minutes": 120},
+        },
+    ).json()
+    prod = body["members"][0]["production"]
+    assert [s["kind"] for s in prod["sleep_sessions"]] == ["night", "nap"]

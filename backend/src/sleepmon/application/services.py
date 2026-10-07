@@ -40,7 +40,7 @@ from sleepmon.application.dto import (
     TeamProductionInput,
     TeamProductionResult,
 )
-from sleepmon.application.parsing import parse_enum
+from sleepmon.application.parsing import parse_enum, parse_sleep
 from sleepmon.domain import analytics
 from sleepmon.domain.analytics import team_production
 from sleepmon.domain.berry_burst import BurstMember, team_context_for, teammate_berries
@@ -551,6 +551,7 @@ class DefaultProductionService(ProductionService):
             cfg.ribbon,
             cfg.skill_level,
             map_bonuses=_scenario_bonuses(data.scenario, cfg.species.berry),
+            sleep=parse_sleep(data.sleep),
         )
         return _production_result(result)
 
@@ -611,6 +612,7 @@ class DefaultProductionService(ProductionService):
         validate_pot_size(data.pot_size)
         map_bonuses = _map_bonuses(data)
         event = _event_bonus(data)
+        sleep = parse_sleep(data.sleep)
 
         # Resolve every entry first: Draco Meteor reads the whole roster.
         configs = [
@@ -632,6 +634,7 @@ class DefaultProductionService(ProductionService):
                 good_camp_ticket=data.good_camp_ticket,
                 event=event,
                 team_context=team_context_for(slot_index, cfg.species, roster),
+                sleep=sleep,
             )
             scaled = scale_daily(daily, weight)
             members.append(

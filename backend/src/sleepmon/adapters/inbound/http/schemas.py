@@ -146,6 +146,11 @@ class DistributionsOut(msgspec.Struct):
     nature_stats: dict[str, int]
 
 
+class SleepIn(msgspec.Struct, forbid_unknown_fields=True):
+    night_minutes: int
+    nap_minutes: int | None = None
+
+
 class ProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     """Payload para estimar producción: especie, nivel, ingredientes, naturaleza y sub skills."""
 
@@ -157,6 +162,7 @@ class ProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     ribbon: str = ""  # vacío = sin listón
     skill_level: int = 1  # nivel de la main skill
     scenario: str = "none"  # ComparisonScenario: "none" = no berry bonus
+    sleep: SleepIn | None = None
 
 
 class SlotProductionOut(msgspec.Struct):
@@ -294,6 +300,7 @@ class TeamProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     good_camp_ticket: bool = False
     pot_size: int = DEFAULT_POT_SIZE
     event_effects: list[EventEffectIn] = msgspec.field(default_factory=list)
+    sleep: SleepIn | None = None
 
 
 class IngredientBalanceOut(msgspec.Struct):

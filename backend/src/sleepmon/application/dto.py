@@ -55,6 +55,14 @@ class Distributions:
 
 
 @dataclass(frozen=True, slots=True)
+class SleepInput:
+    """A sleep schedule as the client sends it, in minutes (PRD 0015)."""
+
+    night_minutes: int
+    nap_minutes: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class ProductionInput:
     """Datos crudos para estimar la producción de un Pokémon (no se persiste)."""
 
@@ -68,6 +76,7 @@ class ProductionInput:
     # Comparison's map scenario (PRD 0002): one assumption for the whole comparison,
     # instead of picking a map.
     scenario: str = "none"
+    sleep: SleepInput | None = None  # None -> the default night
 
 
 @dataclass(frozen=True, slots=True)
@@ -233,6 +242,7 @@ class TeamProductionInput:
     # The pot step (Player progress, overridable in the session).
     pot_size: int = DEFAULT_POT_SIZE
     event_effects: list[EventEffectInput] = field(default_factory=list)
+    sleep: SleepInput | None = None
 
 
 @dataclass(frozen=True, slots=True)
