@@ -193,6 +193,8 @@ _PROGRESS_COLS = (
     progress.recipe_levels,
     progress.favorite_recipes,
     progress.area_bonuses,
+    progress.night_minutes,
+    progress.nap_minutes,
 )
 
 SELECT_PROGRESS = (
@@ -228,14 +230,24 @@ UPSERT_PROGRESS = (
     cast(
         PostgreSQLQueryBuilder,
         PostgreSQLQuery.into(progress)
-        .columns("user_id", "pot_size", "recipe_levels", "favorite_recipes", "area_bonuses")
-        .insert(_P, _P, _P, _P, _P),
+        .columns(
+            "user_id",
+            "pot_size",
+            "recipe_levels",
+            "favorite_recipes",
+            "area_bonuses",
+            "night_minutes",
+            "nap_minutes",
+        )
+        .insert(_P, _P, _P, _P, _P, _P, _P),
     )
     .on_conflict(progress.user_id)
     .do_update("pot_size")
     .do_update("recipe_levels")
     .do_update("favorite_recipes")
     .do_update("area_bonuses")
+    .do_update("night_minutes")
+    .do_update("nap_minutes")
     .do_update("updated_at", Function("now"))
     .get_sql()
 )

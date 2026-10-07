@@ -1,4 +1,6 @@
-"""Player progress: what the user has unlocked in the game (PRD 0011).
+"""Player profile: what the user has unlocked, and how they sleep (PRD 0011, 0015).
+
+The class keeps its historical name, PlayerProgress.
 
 The pot step, the level of each recipe, one favorite recipe per dish type, and the
 bonus of each research area. Facts about an account that only ever move forward.
@@ -17,6 +19,7 @@ from sleepmon.domain.catalog_data import (
     POT_LADDER,
 )
 from sleepmon.domain.errors import ValidationError
+from sleepmon.domain.sleep import DEFAULT_SLEEP, SleepSchedule
 from sleepmon.domain.value_objects import Island, RecipeType
 
 DEFAULT_RECIPE_LEVEL: Final[int] = 1
@@ -65,6 +68,7 @@ class PlayerProgress:
     recipe_levels: Mapping[str, int] = field(default_factory=dict)
     favorite_recipes: Mapping[RecipeType, str] = field(default_factory=dict)
     area_bonuses: Mapping[Island, int] = field(default_factory=dict)
+    sleep: SleepSchedule = DEFAULT_SLEEP
 
     def __post_init__(self) -> None:
         validate_pot_size(self.pot_size)
@@ -86,6 +90,7 @@ class ProgressPatch:
     recipe_levels: Mapping[str, int] | None = None
     favorite_recipes: Mapping[RecipeType, str | None] | None = None
     area_bonuses: Mapping[Island, int] | None = None
+    sleep: SleepSchedule | None = None  # replaces the whole schedule
 
 
 def apply_patch(current: PlayerProgress, patch: ProgressPatch) -> PlayerProgress:
@@ -119,4 +124,6 @@ def apply_patch(current: PlayerProgress, patch: ProgressPatch) -> PlayerProgress
         else:
             bonuses[area] = pct
 
-    return PlayerProgress(pot, levels, favorites, bonuses)
+    sleep = current.sleep if patch.sleep is None else patch.sleep
+
+    return PlayerProgress(pot, levels, favorites, bonuses, sleep)

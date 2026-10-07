@@ -398,3 +398,4 @@ class ProgressPatchInput:
     recipe_levels: Mapping[str, int] | None = None
     favorite_recipes: Mapping[str, str | None] | None = None
     area_bonuses: Mapping[str, int] | None = None
+    sleep: SleepInput | None = None

@@ -36,6 +36,7 @@ from sleepmon.adapters.inbound.http.schemas import (
     RecipeOut,
     SkillEffectAggOut,
     SleepIn,
+    SleepOut,
     SleepSessionOut,
     SlotIngredientStatusOut,
     SlotProductionOut,
@@ -562,6 +563,9 @@ def _to_progress_out(progress: PlayerProgress) -> ProgressOut:
         recipe_levels=dict(progress.recipe_levels),
         favorite_recipes={t.value: n for t, n in progress.favorite_recipes.items()},
         area_bonuses={a.value: p for a, p in progress.area_bonuses.items()},
+        sleep=SleepOut(
+            night_minutes=progress.sleep.night_minutes, nap_minutes=progress.sleep.nap_minutes
+        ),
     )
 
 
@@ -592,6 +596,7 @@ class ProgressController(Controller):
                     recipe_levels=data.recipe_levels,
                     favorite_recipes=data.favorite_recipes,
                     area_bonuses=data.area_bonuses,
+                    sleep=_sleep_input(data.sleep),
                 ),
             )
         )

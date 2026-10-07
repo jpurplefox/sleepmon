@@ -229,6 +229,11 @@ class ErrorOut(msgspec.Struct):
     detail: str
 
 
+class SleepOut(msgspec.Struct):
+    night_minutes: int
+    nap_minutes: int | None
+
+
 class ProgressOut(msgspec.Struct):
     """The user's full progress. GET and PATCH both return this."""
 
@@ -236,6 +241,7 @@ class ProgressOut(msgspec.Struct):
     recipe_levels: dict[str, int]
     favorite_recipes: dict[str, str]
     area_bonuses: dict[str, int]
+    sleep: SleepOut
 
 
 class ProgressPatchIn(msgspec.Struct, forbid_unknown_fields=True):
@@ -249,6 +255,7 @@ class ProgressPatchIn(msgspec.Struct, forbid_unknown_fields=True):
     recipe_levels: dict[str, int] | None = None
     favorite_recipes: dict[str, str | None] | None = None
     area_bonuses: dict[str, int] | None = None
+    sleep: SleepIn | None = None
 
 
 class GoogleLoginIn(msgspec.Struct, forbid_unknown_fields=True):

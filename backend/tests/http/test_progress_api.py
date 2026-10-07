@@ -79,6 +79,7 @@ def test_a_new_account_reads_the_defaults(
         "recipe_levels": {},
         "favorite_recipes": {},
         "area_bonuses": {},
+        "sleep": {"night_minutes": 510, "nap_minutes": None},
     }
 
 
@@ -143,3 +144,20 @@ def test_progress_is_isolated_per_user(client: TestClient, auth_header: dict[str
     client.patch("/progress", json={"pot_size": 33}, headers=auth_header)
     other = {"Authorization": f"Bearer {ACCESS.issue(uuid4())}"}
     assert client.get("/progress", headers=other).json()["pot_size"] == 21
+
+
+def test_patch_sleep_round_trips(client: TestClient, auth_header: dict[str, str]) -> None:
+    body = client.patch(
+        "/progress",
+        json={"sleep": {"night_minutes": 390, "nap_minutes": 120}},
+        headers=auth_header,
+    ).json()
+    assert body["sleep"] == {"night_minutes": 390, "nap_minutes": 120}
+    assert client.get("/progress", headers=auth_header).json()["sleep"] == body["sleep"]
+
+
+def test_patch_rejects_an_invalid_sleep(client: TestClient, auth_header: dict[str, str]) -> None:
+    response = client.patch(
+        "/progress", json={"sleep": {"night_minutes": 500}}, headers=auth_header
+    )
+    assert response.status_code == 400

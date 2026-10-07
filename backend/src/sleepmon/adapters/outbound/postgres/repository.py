@@ -25,6 +25,7 @@ from sleepmon.domain.ports import (
     UserRepository,
 )
 from sleepmon.domain.progress import PlayerProgress
+from sleepmon.domain.sleep import SleepSchedule
 from sleepmon.domain.value_objects import Ingredient, Island, Nature, RecipeType, Ribbon, SubSkill
 
 _E = TypeVar("_E", bound=Enum)
@@ -313,6 +314,8 @@ class _ProgressRow:
     recipe_levels: dict[str, int]
     favorite_recipes: dict[str, str]
     area_bonuses: dict[str, int]
+    night_minutes: int
+    nap_minutes: int | None
 
 
 def _decode_optional(enum_cls: type[_E], value: str) -> _E | None:
@@ -343,7 +346,13 @@ def _to_progress(row: _ProgressRow) -> PlayerProgress:
 
     # Recipe names are catalogue strings, not an enum: nothing to decode, and a level
     # for a recipe the catalogue dropped is harmless where it sits.
-    return PlayerProgress(row.pot_size, dict(row.recipe_levels), favorites, bonuses)
+    return PlayerProgress(
+        row.pot_size,
+        dict(row.recipe_levels),
+        favorites,
+        bonuses,
+        SleepSchedule(row.night_minutes, row.nap_minutes),
+    )
 
 
 class PostgresPlayerProgressRepository(PlayerProgressRepository):
@@ -383,6 +392,8 @@ class PostgresPlayerProgressRepository(PlayerProgressRepository):
                         Jsonb(dict(updated.recipe_levels)),
                         Jsonb({t.value: n for t, n in updated.favorite_recipes.items()}),
                         Jsonb({a.value: p for a, p in updated.area_bonuses.items()}),
+                        updated.sleep.night_minutes,
+                        updated.sleep.nap_minutes,
                     ),
                 )
         return updated

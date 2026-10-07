@@ -12,7 +12,7 @@ from collections.abc import Mapping
 from uuid import UUID
 
 from sleepmon.application.dto import ProgressPatchInput
-from sleepmon.application.parsing import parse_enum
+from sleepmon.application.parsing import parse_enum, parse_sleep
 from sleepmon.domain.errors import ValidationError
 from sleepmon.domain.ports import PlayerProgressRepository, RecipeCatalog
 from sleepmon.domain.progress import PlayerProgress, ProgressPatch, apply_patch
@@ -48,6 +48,7 @@ class DefaultPlayerProgressService(PlayerProgressService):
             recipe_levels=self._parse_levels(data.recipe_levels),
             favorite_recipes=self._parse_favorites(data.favorite_recipes),
             area_bonuses=self._parse_bonuses(data.area_bonuses),
+            sleep=None if data.sleep is None else parse_sleep(data.sleep),
         )
 
     def _parse_levels(self, levels: Mapping[str, int] | None) -> Mapping[str, int] | None:
