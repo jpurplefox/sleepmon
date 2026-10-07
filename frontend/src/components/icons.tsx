@@ -240,6 +240,18 @@ export function IconProgress(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+// Language (signed-out language menu).
+export function IconGlobe(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3a14 14 0 0 1 0 18" />
+      <path d="M12 3a14 14 0 0 0 0 18" />
+    </svg>
+  );
+}
+
 // Alerta: triángulo con signo de exclamación (algo que no se está calculando).
 export function IconAlert(props: SVGProps<SVGSVGElement>) {
   return (

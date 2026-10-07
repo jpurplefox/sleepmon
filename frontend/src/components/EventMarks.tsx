@@ -2,13 +2,12 @@ import { EVENT_KINDS, SPECIALTY_ICON, formatEffectValue, type EventEffect } from
 import { useI18n } from "../i18n";
 import { typeIcon } from "../typeIcons";
 
-// Page status notice for an active event bonus: one icon mark per effect.
-export function EventBonusNotice({ effects }: { effects: EventEffect[] }) {
+/** The active event's effects as marks; nothing when there are none. */
+export function EventMarks({ effects }: { effects: EventEffect[] }) {
   const { t, lang, type: typeName, specialty } = useI18n();
   if (effects.length === 0) return null;
   return (
-    <div className="status-notice" role="status">
-      {t("event.title")}
+    <span className="ctx-marks">
       {effects.map((e) => {
         const value = formatEffectValue(e.kind, e.value, lang);
         const scope =
@@ -19,7 +18,7 @@ export function EventBonusNotice({ effects }: { effects: EventEffect[] }) {
               : null;
         const full = [t(EVENT_KINDS[e.kind].labelKey) + " " + value, scope?.label].filter(Boolean).join(" · ");
         return (
-          <span key={e.id} className="metric-mark metric-mark--good" title={full} aria-label={full}>
+          <span key={e.id} className="metric-mark metric-mark--good" role="img" title={full} aria-label={full}>
             <img className="metric-mark__icon" src={EVENT_KINDS[e.kind].icon} alt="" />
             {value}
             {scope && (
@@ -28,6 +27,6 @@ export function EventBonusNotice({ effects }: { effects: EventEffect[] }) {
           </span>
         );
       })}
-    </div>
+    </span>
   );
 }

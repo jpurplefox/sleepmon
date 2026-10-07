@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { berryIcon } from "../berries";
 import { useI18n } from "../i18n";
-import { RECIPE_TYPES, dishTypeLabelKey } from "../recipes";
-import type { Catalog, Island, Recipe, WeeklyBonus } from "../types";
+import type { Catalog, Island, WeeklyBonus } from "../types";
 import { IconChevronDown } from "./icons";
 import { UnsavedMark } from "./UnsavedMark";
 
@@ -14,7 +13,6 @@ interface Props {
   weeklyBonus: WeeklyBonus;
   islandBonus: number; // fracción 0.0–0.85
   bonusDisabled: boolean;
-  goodCampTicket: boolean;
   /** True when the shown area bonus differs from what is saved in Player progress. */
   bonusUnsaved: boolean;
   /** The saved area bonus, in percentage points, shown in the unsaved mark's tooltip. */
@@ -24,15 +22,7 @@ interface Props {
   onMainFavorite: (berry: string | null) => void;
   onWeeklyBonus: (bonus: WeeklyBonus) => void;
   onIslandBonus: (bonus: number) => void;
-  onGoodCampTicket: (value: boolean) => void;
   onSaveBonus: () => void;
-  /** Active dish type for all 3 meal slots. null = unset (nothing chosen
-   * yet); once a type is picked there is no UI path back to null. */
-  dishType: Recipe["type"] | null;
-  /** Called when the user picks a dish type. Replaces the day's three meals
-   * with that type's favorite recipe, or empties the plan if it has none
-   * (PRD 0006 / 0011). */
-  onDishTypeChange: (type: Recipe["type"] | null) => void;
 }
 
 // Derivar todas las bayas disponibles en el catálogo a partir de las especies.
@@ -53,7 +43,6 @@ export function IslandTab({
   weeklyBonus,
   islandBonus,
   bonusDisabled,
-  goodCampTicket,
   bonusUnsaved,
   savedBonusPct,
   onSelectIsland,
@@ -61,10 +50,7 @@ export function IslandTab({
   onMainFavorite,
   onWeeklyBonus,
   onIslandBonus,
-  onGoodCampTicket,
   onSaveBonus,
-  dishType,
-  onDishTypeChange,
 }: Props) {
   const { t, berry: berryName } = useI18n();
 
@@ -151,7 +137,9 @@ export function IslandTab({
 
   const selectedCount = favoriteBerries.length;
   const isUserPicks = island?.user_picks ?? false;
-  const isReadOnly = selectedIsland !== null && !isUserPicks;
+  // With no map the grid still shows, but every berry is locked.
+  const noMap = selectedIsland === null;
+  const isReadOnly = !noMap && !isUserPicks;
 
   return (
     <div className="island-tab">
@@ -257,94 +245,66 @@ export function IslandTab({
         </div>
       </div>
 
-      {/* Dish type — a setup choice for the day, chosen alongside the map
-          (PRD 0006): picking it fills the day's three meals with that type's
-          favorite, or empties the plan if none is saved. No "all" option —
-          once a type is chosen there is no UI path back to unset. */}
+      {/* Bayas favoritas — Item 4: grilla unificada (editable o read-only) */}
       <div className="island-tab__row">
-        <span className="island-tab__label">{t("teams.dishType")}</span>
-        <div
-          className="specialty-toggle"
-          role="group"
-          aria-label={t("teams.dishType")}
-        >
-          {RECIPE_TYPES.map((type) => (
-            <button
-              key={type}
-              type="button"
-              className={
-                "specialty-toggle__btn" + (dishType === type ? " is-on" : "")
-              }
-              aria-pressed={dishType === type}
-              onClick={() => onDishTypeChange(type)}
+        <span className="island-tab__label">{t("teams.favoriteBerries")}</span>
+
+        <div className="island-tab__berry-picker">
+          <div
+            className={
+              "island-tab__berry-grid" +
+              (isReadOnly ? " island-tab__berry-grid--readonly" : "")
+            }
+          >
+            {allBerries.map((b) => {
+              const isSelected = favoriteBerries.includes(b);
+              const isPrimary = isSelected && b === mainFavorite;
+              const isDisabled =
+                noMap || (!isReadOnly && !isSelected && selectedCount >= 3);
+
+              // Item 5: clase --primary y aria-label para la baya principal
+              const toggleClass =
+                "island-tab__berry-toggle" +
+                (isSelected ? " is-selected" : "") +
+                (isPrimary ? " island-tab__berry-toggle--primary" : "");
+
+              return (
+                <button
+                  key={b}
+                  type="button"
+                  className={toggleClass}
+                  disabled={isDisabled}
+                  onClick={isReadOnly ? undefined : () => handleBerryToggle(b)}
+                  aria-pressed={isSelected}
+                  title={isPrimary ? t("teams.berryPrimary") : undefined}
+                  aria-label={
+                    isPrimary
+                      ? t("teams.berryPrimary")
+                      : isSelected
+                      ? t("teams.berrySecondary")
+                      : berryName(b)
+                  }
+                >
+                  <img
+                    src={berryIcon(b)}
+                    alt=""
+                    className="island-tab__berry-icon"
+                  />
+                  {berryName(b)}
+                </button>
+              );
+            })}
+          </div>
+          {/* Contador solo en modo editable (user_picks) */}
+          {isUserPicks && (
+            <p
+              className={`island-tab__berry-count${selectedCount === 3 ? " island-tab__berry-count--full" : ""}`}
             >
-              {t(dishTypeLabelKey(type))}
-            </button>
-          ))}
+              {selectedCount} / 3
+            </p>
+          )}
         </div>
       </div>
-
-      {/* Bayas favoritas — Item 4: grilla unificada (editable o read-only) */}
-      {selectedIsland !== null && (
-        <div className="island-tab__row">
-          <span className="island-tab__label">{t("teams.favoriteBerries")}</span>
-
-          <div className="island-tab__berry-picker">
-            <div
-              className={
-                "island-tab__berry-grid" +
-                (isReadOnly ? " island-tab__berry-grid--readonly" : "")
-              }
-            >
-              {allBerries.map((b) => {
-                const isSelected = favoriteBerries.includes(b);
-                const isPrimary = isSelected && b === mainFavorite;
-                const isDisabled = !isReadOnly && !isSelected && selectedCount >= 3;
-
-                // Item 5: clase --primary y aria-label para la baya principal
-                const toggleClass =
-                  "island-tab__berry-toggle" +
-                  (isSelected ? " is-selected" : "") +
-                  (isPrimary ? " island-tab__berry-toggle--primary" : "");
-
-                return (
-                  <button
-                    key={b}
-                    type="button"
-                    className={toggleClass}
-                    disabled={!isReadOnly && isDisabled}
-                    onClick={isReadOnly ? undefined : () => handleBerryToggle(b)}
-                    aria-pressed={isSelected}
-                    title={isPrimary ? t("teams.berryPrimary") : undefined}
-                    aria-label={
-                      isPrimary
-                        ? t("teams.berryPrimary")
-                        : isSelected
-                        ? t("teams.berrySecondary")
-                        : berryName(b)
-                    }
-                  >
-                    <img
-                      src={berryIcon(b)}
-                      alt=""
-                      className="island-tab__berry-icon"
-                    />
-                    {berryName(b)}
-                  </button>
-                );
-              })}
-            </div>
-            {/* Contador solo en modo editable (user_picks) */}
-            {isUserPicks && (
-              <p
-                className={`island-tab__berry-count${selectedCount === 3 ? " island-tab__berry-count--full" : ""}`}
-              >
-                {selectedCount} / 3
-              </p>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Weekly bonus — expert-mode maps only */}
       {island?.expert && (
@@ -412,29 +372,6 @@ export function IslandTab({
             savedLabel={`${savedBonusPct}%`}
             onSave={onSaveBonus}
           />
-        </div>
-      </div>
-
-      {/* Good Camp Ticket */}
-      <div className="island-tab__row">
-        <span className="island-tab__label">{t("teams.goodCampTicket")}</span>
-        <div className="specialty-toggle" role="group" aria-label={t("teams.goodCampTicket")}>
-          <button
-            type="button"
-            className={"specialty-toggle__btn" + (!goodCampTicket ? " is-on" : "")}
-            aria-pressed={!goodCampTicket}
-            onClick={() => onGoodCampTicket(false)}
-          >
-            {t("teams.gctOff")}
-          </button>
-          <button
-            type="button"
-            className={"specialty-toggle__btn" + (goodCampTicket ? " is-on" : "")}
-            aria-pressed={goodCampTicket}
-            onClick={() => onGoodCampTicket(true)}
-          >
-            {t("teams.gctOn")}
-          </button>
         </div>
       </div>
     </div>

@@ -28,8 +28,8 @@ It answers: *"with what my team produces, how good is this meal plan?"*.
 
 - **Three meal slots** — breakfast, lunch, dinner. Each is a recipe at a chosen
   level, or empty.
-- A **dish type** (Curry / Salad / Dessert) is chosen alongside the map, before the
-  plan itself — it is a decision about the day, not a control on the recipe list. It
+- A **dish type** (Curry / Salad / Dessert) is chosen in Team Analysis's context bar,
+  before the plan itself — it is a decision about the day, not a control on the recipe list. It
   **narrows the recipe choices** and it does **not** restrict by map. It starts
   **unset**, and there is no "all" option: once you have chosen, you have chosen.
 - Choosing a dish type gives you **that type's day**: the three meals become your

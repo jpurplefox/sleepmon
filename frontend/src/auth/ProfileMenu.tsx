@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-import { IconProgress, IconSignOut } from "../components/icons";
+import { LanguageSelector } from "../components/LanguageSelector";
+import { IconChevronDown, IconProgress, IconSignOut } from "../components/icons";
 import { ProgressModal } from "../components/ProgressModal";
 import { useI18n } from "../i18n";
 import { useAuth } from "./AuthContext";
@@ -17,10 +18,8 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
-// Menú de cuenta en la topbar (signed in). Trigger `.avatar-btn` (foto de Google
-// o iniciales); panel reusa el esqueleto de dropdown (`.filter-pop` +
-// `.filter-list__item`) con header de cuenta + "Cerrar sesión". Click afuera +
-// Escape cierran; el foco vuelve al trigger — mismo patrón que FilterPopover.
+// Account menu in app bar (signed in). Trigger is `.avatar-btn`: the Google photo (or
+// initials) plus the first name. Panel reuses dropdown skeleton with account header and sign-out option.
 export function ProfileMenu() {
   const { user, logout } = useAuth();
   const { t } = useI18n();
@@ -64,11 +63,15 @@ export function ProfileMenu() {
         aria-label={t("auth.accountAria", { name: user.display_name })}
         onClick={() => setOpen((o) => !o)}
       >
-        {showPhoto ? (
-          <img src={user.avatar_url ?? ""} alt="" onError={() => setPhotoBroken(true)} />
-        ) : (
-          initials(user.display_name)
-        )}
+        <span className="avatar-btn__photo">
+          {showPhoto ? (
+            <img src={user.avatar_url ?? ""} alt="" onError={() => setPhotoBroken(true)} />
+          ) : (
+            initials(user.display_name)
+          )}
+        </span>
+        <span className="avatar-btn__name">{user.display_name.trim().split(/\s+/)[0]}</span>
+        <IconChevronDown className="avatar-btn__chevron" />
       </button>
       {open && (
         <div className="filter-pop" role="menu">
@@ -80,6 +83,11 @@ export function ProfileMenu() {
               <div className="profile-head__name">{user.display_name}</div>
               <div className="profile-head__mail">{user.email}</div>
             </div>
+          </div>
+          <div className="filter-list__sep" />
+          <div className="menu-lang">
+            <span className="muted">{t("nav.language")}</span>
+            <LanguageSelector />
           </div>
           <div className="filter-list__sep" />
           <button

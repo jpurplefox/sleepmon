@@ -23,15 +23,15 @@ bonus is a set of **effects you compose**, not a pick from a list of named event
 3. **Apply it to the team** — every team total reflects the active effects.
 4. **Preload the running event** — when the repo defines the event running now, its
    effects are already there when Team Analysis opens.
-5. **Summarize it** — while it has effects, the page shows a short read-out of them
-   next to the Good Camp Ticket's, the way it shows the ticket is on.
+5. **Summarize it** — the Event chip in the page's context bar shows a short read-out
+   of its effects, or "No event" when it has none (see [Tool shell](0014-tool-shell.md)).
 
 ## How it works
 
 ### Where it lives
 
-The bonus has its own place in Team Analysis's settings, between the map and the
-meals. There is **no on/off switch**: the bonus is active exactly when it holds at
+The bonus has its own place in Team Analysis: the Event field of the context bar, which
+opens the Event dialog. There is **no on/off switch**: the bonus is active exactly when it holds at
 least one effect, and removing every effect is how you turn it off.
 
 Like the roster, the map, the ticket, and the meals, it is **session state**: it asks

@@ -24,45 +24,43 @@ export function ScenarioSelect({ value, onChange }: Props) {
   const current = scenarioOption(value);
 
   return (
-    <div className="section-head prod-scenario">
-      <FilterPopover
-        open={open}
-        onOpenChange={setOpen}
-        triggerLabel={t("prod.scenario")}
-        triggerContent={
-          <span className="filter-btn__value">
-            {t(current.labelKey)}
-            <Mark mark={current.mark} />
-          </span>
-        }
+    <FilterPopover
+      open={open}
+      onOpenChange={setOpen}
+      triggerLabel={t("prod.scenario")}
+      triggerContent={
+        <span className="filter-btn__value">
+          {t(current.labelKey)}
+          <Mark mark={current.mark} />
+        </span>
+      }
+    >
+      <div
+        className="filter-list"
+        role="listbox"
+        aria-label={t("prod.scenario")}
+        onKeyDown={gridKeyDown}
       >
-        <div
-          className="filter-list"
-          role="listbox"
-          aria-label={t("prod.scenario")}
-          onKeyDown={gridKeyDown}
-        >
-          {SCENARIOS.map((option) => {
-            const selected = option.value === value;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                role="option"
-                aria-selected={selected}
-                className={"filter-list__item" + (selected ? " is-selected" : "")}
-                onClick={() => {
-                  onChange(option.value);
-                  setOpen(false);
-                }}
-              >
-                <span className="filter-list__label">{t(option.labelKey)}</span>
-                <Mark mark={option.mark} />
-              </button>
-            );
-          })}
-        </div>
-      </FilterPopover>
-    </div>
+        {SCENARIOS.map((option) => {
+          const selected = option.value === value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              role="option"
+              aria-selected={selected}
+              className={"filter-list__item" + (selected ? " is-selected" : "")}
+              onClick={() => {
+                onChange(option.value);
+                setOpen(false);
+              }}
+            >
+              <span className="filter-list__label">{t(option.labelKey)}</span>
+              <Mark mark={option.mark} />
+            </button>
+          );
+        })}
+      </div>
+    </FilterPopover>
   );
 }

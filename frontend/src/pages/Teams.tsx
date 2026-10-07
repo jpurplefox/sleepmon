@@ -11,14 +11,18 @@ import {
 } from "recharts";
 
 import { api } from "../api/client";
+import { mapSummary } from "../mapSummary";
 import { useAuth } from "../auth/AuthContext";
 import { useGate } from "../auth/useGate";
 import { berryIcon } from "../berries";
 import { BerryRowStrength } from "../components/BerryRowStrength";
 import { BoxPicker } from "../components/BoxPicker";
-import { EventBonusNotice } from "../components/EventBonusNotice";
 import { MemberForm } from "../components/MemberForm";
-import { SettingsModal } from "../components/SettingsModal";
+import { EventModal } from "../components/EventModal";
+import { MapModal } from "../components/MapModal";
+import { MealsModal } from "../components/MealsModal";
+import { TeamContextBar, type TeamDialog } from "../components/TeamContextBar";
+import { ToolHeader } from "../components/ToolHeader";
 import { Modal } from "../components/Modal";
 import { Placeholder } from "../components/Placeholder";
 import { TeamSlotCard } from "../components/TeamSlotCard";
@@ -34,7 +38,7 @@ import { ingredientIcon } from "../ingredients";
 import { CURRENT_EVENT, presetEffects } from "../currentEvent";
 import { toRequest as toEventRequest, type EventEffect } from "../eventBonus";
 import { fdown, fup } from "../utils/format";
-import { recipeImage } from "../recipes";
+import { mealsForDishType, recipeImage } from "../recipes";
 import { areaBonusOf, recipeLevelOf } from "../progress";
 import { statIcon } from "../natures";
 import {
@@ -63,6 +67,7 @@ import type {
   MealInput,
   Member,
   MemberInput,
+  Recipe,
   SkillEffectAgg,
   WeeklyBonus,
 } from "../types";
@@ -176,7 +181,8 @@ export function Teams() {
   // the catalog).
   const [notice, setNotice] = useState<string | null>(null);
   const [meals, setMeals] = useState<(MealInput | null)[]>([null, null, null]);
-  const [mealPickerOpen, setMealPickerOpen] = useState(false);
+  // Which Settings tab is open, or null: the context bar and the Cooking card each open theirs.
+  const [dialog, setDialog] = useState<TeamDialog | null>(null);
   const [goodCampTicket, setGoodCampTicket] = useState(false);
   // Preloaded with the event running now, if any (see currentEvent.ts).
   const [eventEffects, setEventEffects] = useState<EventEffect[]>(() =>
@@ -216,6 +222,8 @@ export function Teams() {
   const savedBonusPct = areaBonusOf(progress, selectedIsland);
 
   const savedLevelFor = (name: string): number => recipeLevelOf(progress, name);
+  const favoriteRecipeFor = (type: Recipe["type"]): string | null =>
+    progress.favorite_recipes[type] ?? null;
 
   const savePot = () => saveProgress({ pot_size: potSize });
   const saveBonus = () => {
@@ -238,6 +246,14 @@ export function Teams() {
   // Expert mode is derived from the selected island's own flag, not sent by the client.
   const island = catalog.data?.islands.find((i) => i.name === selectedIsland) ?? null;
   const isExpert = island?.expert ?? false;
+  const map = mapSummary({
+    island: selectedIsland,
+    berries: activeBerries,
+    mainFavorite,
+    expert: isExpert,
+    areaBonusPct,
+    weeklyBonus,
+  });
 
   // Role of a berry relative to the map: drives the card's state and marks.
   const berryRoleOf = (berry: string): BerryRole => {
@@ -375,9 +391,9 @@ export function Teams() {
     save(entry, (memberId) => setSlots((prev) => linkToBox(prev, entry.id, memberId)));
   };
 
-  // Dish type is a setup choice about the day, chosen on the Map tab (PRD
-  // 0006). This is just the raw state setter — SettingsModal.pickDishType
-  // wraps it with the favorite-replace/empty behavior before it fires.
+  // Dish type is a setup choice about the day, chosen in the context bar (PRD
+  // 0006). This is just the raw state setter — the bar's dish-type toggle
+  // adds the favorite-replace/empty behavior (mealsForDishType) around it.
   const handleDishTypeChange = (newType: 'Curry' | 'Salad' | 'Dessert' | null) => {
     setDishType(newType);
   };
@@ -396,38 +412,22 @@ export function Teams() {
 
   return (
     <div className="layout layout--wide">
-      <header className="hero">
-        <h1>{t("teams.title")}</h1>
-        <p className="muted">{t("teams.subtitle")}</p>
-        {notice && (
-          <p className="error" role="alert">
-            {notice}
-          </p>
-        )}
-      </header>
-
-      {/* ── Config toolbar above the roster (recipes + island + berries + bonuses) ── */}
-      <div className="teams-config-toolbar">
-        <button
-          type="button"
-          className="btn btn--ghost"
-          onClick={() => setMealPickerOpen(true)}
-        >
-          {t("teams.configure")}
-        </button>
-      </div>
-
-      {(goodCampTicket || eventEffects.length > 0) && (
-        <div className="status-notices">
-          {goodCampTicket && (
-            <div className="status-notice" role="status">
-              <img src="/good-camp-ticket.png" alt="" className="mini-icon" style={{ width: 20, height: 20 }} />
-              {t("teams.gctActive")}
-            </div>
-          )}
-          <EventBonusNotice effects={eventEffects} />
-        </div>
-      )}
+      <ToolHeader title={t("teams.title")} notice={notice}>
+        <TeamContextBar
+          map={map}
+          eventEffects={eventEffects}
+          goodCampTicket={goodCampTicket}
+          onGoodCampTicket={setGoodCampTicket}
+          onOpenDialog={setDialog}
+          mapNames={catalog.data.islands.map((i) => i.name)}
+          dishType={dishType}
+          meals={meals}
+          onDishType={(type) => {
+            setDishType(type);
+            setMeals(mealsForDishType(favoriteRecipeFor(type), recipeLevelFor));
+          }}
+        />
+      </ToolHeader>
 
       {/* ── Per-slot cards ── */}
       <div className="prod-cards prod-cards--compact">
@@ -462,9 +462,14 @@ export function Teams() {
           <div className="prod-card-cell">
             <div className="prod-card__toolbar prod-card__toolbar--empty" aria-hidden="true" />
             <article className="prod-card prod-card--add">
-              <p className="muted prod-add__hint">
-                {slots.length === 0 ? t("teams.empty") : t("teams.addHintMore")}
-              </p>
+              {slots.length === 0 ? (
+                <div className="prod-add__hint">
+                  <p className="prod-add__lead">{t("teams.emptyLead")}</p>
+                  <p className="muted">{t("teams.emptyBody")}</p>
+                </div>
+              ) : (
+                <p className="muted prod-add__hint">{t("teams.addHintMore")}</p>
+              )}
               <div className="prod-add__actions">
                 <button
                   type="button"
@@ -737,6 +742,9 @@ export function Teams() {
             <div className="card teams-aggregates__cooking">
               <div className="teams-cooking-head">
                 <h2 style={{ margin: 0 }}>{t("teams.cooking")}</h2>
+                <button type="button" className="btn btn--ghost" onClick={() => setDialog("meals")}>
+                  {t("teams.editRecipes")}
+                </button>
               </div>
 
               {/* Compact plan summary: one row per moment */}
@@ -1261,23 +1269,8 @@ export function Teams() {
         </Modal>
       )}
 
-      {/* SettingsModal */}
-      {mealPickerOpen && (
-        <SettingsModal
-          recipes={recipes.data ?? []}
-          levelBonus={catalog.data.recipe_level_bonus}
-          meals={meals}
-          onChangeMeals={setMeals}
-          onClose={() => setMealPickerOpen(false)}
-          potSize={potSize}
-          onPotSizeChange={(n) => setPotOverride(n)}
-          effectivePot={potKnown ? result.kitchen.pot.per_meal : null}
-          skillPerMeal={potKnown ? result.kitchen.pot.skill_per_meal : null}
-          eventEffects={eventEffects}
-          onEventEffects={setEventEffects}
-          eventTypes={[...new Set(catalog.data.species.map((s) => s.type))].sort((a, b) =>
-            typeName(a).localeCompare(typeName(b)),
-          )}
+      {dialog === "map" && (
+        <MapModal
           catalog={catalog.data}
           selectedIsland={selectedIsland}
           favoriteBerries={favoriteBerries}
@@ -1290,9 +1283,37 @@ export function Teams() {
           onIslandBonus={(fraction) => setAreaBonusOverride(Math.round(fraction * 100))}
           onMainFavorite={setMainFavorite}
           onWeeklyBonus={setWeeklyBonus}
-          goodCampTicket={goodCampTicket}
+          bonusUnsaved={areaBonusUnsaved}
+          savedBonusPct={savedBonusPct}
+          onSaveBonus={saveBonus}
+          saveError={progressSaveError !== null}
+          onClose={() => setDialog(null)}
+        />
+      )}
+
+      {dialog === "event" && (
+        <EventModal
+          eventEffects={eventEffects}
+          onEventEffects={setEventEffects}
+          eventTypes={[...new Set(catalog.data.species.map((s) => s.type))].sort((a, b) =>
+            typeName(a).localeCompare(typeName(b)),
+          )}
+          onClose={() => setDialog(null)}
+        />
+      )}
+
+      {dialog === "meals" && (
+        <MealsModal
+          recipes={recipes.data ?? []}
+          levelBonus={catalog.data.recipe_level_bonus}
+          catalog={catalog.data}
+          meals={meals}
+          onChangeMeals={setMeals}
+          potSize={potSize}
+          onPotSizeChange={(n) => setPotOverride(n)}
+          effectivePot={potKnown ? result.kitchen.pot.per_meal : null}
+          skillPerMeal={potKnown ? result.kitchen.pot.skill_per_meal : null}
           potMultiplied={potKnown && result.kitchen.pot.bonus_daily > 0}
-          onGoodCampTicket={setGoodCampTicket}
           dishType={dishType}
           onDishTypeChange={handleDishTypeChange}
           levelFor={recipeLevelFor}
@@ -1300,14 +1321,11 @@ export function Teams() {
           potUnsaved={potUnsaved}
           savedPotSize={progress.pot_size}
           onSavePot={savePot}
-          bonusUnsaved={areaBonusUnsaved}
-          savedBonusPct={savedBonusPct}
-          onSaveBonus={saveBonus}
           levelUnsaved={recipeLevelUnsaved}
           savedLevelFor={savedLevelFor}
           onSaveLevel={saveLevel}
-          favoriteFor={(type) => progress.favorite_recipes[type] ?? null}
           saveError={progressSaveError !== null}
+          onClose={() => setDialog(null)}
         />
       )}
     </div>

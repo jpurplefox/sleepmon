@@ -9,16 +9,29 @@ export const UI: Record<Lang, Record<string, string>> = {
     "common.cancel": "Cancelar",
     "common.edit": "Editar",
     "common.reload": "Recargar",
+    "common.yes": "Sí",
+    "common.no": "No",
     "common.loadingCatalog": "Cargando catálogo…",
     "common.catalogError":
       "No se pudo cargar el catálogo. ¿Está el backend en :8000?",
     "common.level": "Nv. {level}",
     "common.dash": "—",
+    // Barra de contexto
+    "ctx.map": "Mapa",
+    "ctx.noMap": "Sin mapa",
+    "ctx.area": "Área +{pct}%",
+    "ctx.event": "Evento",
+    "ctx.noEvent": "Sin evento",
+    "ctx.noMeals": "Sin recetas",
+    "ctx.gct": "Good Camp Ticket",
     // Navegación
     "nav.aria": "Navegación principal",
     "nav.team": "Caja",
     "nav.comparison": "Comparación",
     "nav.language": "Idioma",
+    // Idiomas
+    "lang.es": "Español",
+    "lang.en": "English",
     // Autenticación
     "auth.signInGoogle": "Iniciar sesión con Google",
     "auth.signInFailed": "No se completó el inicio de sesión.",
@@ -32,16 +45,15 @@ export const UI: Record<Lang, Record<string, string>> = {
     "auth.gateBody":
       "Iniciá sesión con Google para empezar tu Caja, registrar tu equipo y encontrarlo en cada visita.",
     // Página Equipo
-    "team.title": "Mi caja de Pokémon Sleep",
-    "team.subtitle":
-      "Registrá tus Pokémon con su naturaleza, sub skills e ingredientes, y mirá la distribución de toda la caja.",
     "team.box": "Caja",
     "team.updating": "Actualizando…",
     "team.add": "+ Agregar Pokémon",
     "team.loadingBox": "Cargando caja…",
     "team.boxError": "No se pudo cargar la caja.",
     "team.deleteError": "No se pudo eliminar: {error}",
-    "team.boxEmpty": "La caja está vacía. Agregá tu primer Pokémon.",
+    "team.emptyLead": "Tu caja está vacía.",
+    "team.emptyBody":
+      "Registrá tus Pokémon con su naturaleza, sub skills e ingredientes para ver cuánto produce cada uno.",
     "team.distribution": "Distribución de la caja",
     "team.distributionError": "No se pudo cargar la distribución.",
     "team.modalAdd": "Agregar Pokémon",
@@ -116,20 +128,17 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Sin especialistas en Ingredientes en la caja.",
     // Página Comparación
     "prod.title": "Comparación",
-    "prod.subtitle":
-      "Agregá Pokémon —de tu caja o nuevos— y compará su producción lado a lado. La primera card es la base: el resto muestra la diferencia contra ella.",
-    "prod.assumptions":
-      "Los cálculos asumen un día de 15.5 h despierto + 8.5 h de sueño con energía máxima.",
     "prod.scenario": "Escenario",
     "prod.scenarioNone": "Sin bonus de baya",
     "prod.scenarioFavorite": "Baya favorita",
-    "prod.scenarioExpertBerry": "Experto · fuerza",
+    "prod.scenarioExpertBerry": "Experto · bayas",
     "prod.scenarioExpertIngredient": "Experto · ingrediente",
     "prod.scenarioExpertSkill": "Experto · skill",
     "prod.atMax":
       "Ya hay 5 Pokémon: es el máximo del equipo en el juego. Quitá uno para agregar otro.",
-    "prod.addHintEmpty":
-      "Agregá un Pokémon —de tu caja o configurando uno nuevo— para comparar su producción lado a lado.",
+    "prod.emptyLead": "Compará hasta 5 Pokémon lado a lado.",
+    "prod.emptyBody":
+      "La primera card es la base: el resto muestra la diferencia contra ella. Agregá uno de tu caja o configurá uno nuevo.",
     "prod.addHintMore": "Agregá otro Pokémon para sumarlo a la comparación.",
     "prod.new": "+ Nuevo",
     "prod.myPokemon": "+ Mis Pokémon",
@@ -324,8 +333,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     // Página Análisis de equipo
     "nav.teams": "Análisis de equipo",
     "teams.title": "Análisis de equipo",
-    "teams.subtitle": "Armá un equipo de hasta 5 Pokémon y analizá su producción diaria y el total del equipo.",
-    "teams.empty": "Creá un Pokémon o traelo de tu Caja para comenzar el análisis.",
     "teams.aggregates": "Totales del equipo",
     "teams.berriesSkills": "Bayas y skills",
     "teams.cooking": "Cocina",
@@ -344,6 +351,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.midday": "Mediodía",
     "teams.noRecipe": "Sin receta",
     "teams.editRecipes": "Elegir recetas",
+    "teams.emptyLead": "Armá un equipo de hasta 5 Pokémon.",
+    "teams.emptyBody":
+      "Vas a ver la producción diaria de cada uno y el total del equipo, con cocina y rating de Snorlax. Creá uno o traelo de tu Caja.",
     "teams.configure": "Configuración",
     "teams.randomIngredients": "Ingredientes al azar",
     "teams.randomIngredientsTip":
@@ -401,7 +411,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.goodCampTicket": "Good Camp Ticket",
     "teams.gctOff": "Apagado",
     "teams.gctOn": "Activo",
-    "teams.gctActive": "Good Camp Ticket activo",
     "teams.potGct": "Good Camp Ticket (+50%)",
     "teams.fillers": "{n} fillers",
     "teams.potFits": "Entra",
@@ -409,7 +418,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.tabIsland": "Mapa",
     "teams.tabMeals": "Comidas",
     "teams.tabEvent": "Evento",
-    "event.title": "Bonus de evento",
     "event.add": "+ Agregar efecto",
     "event.removeAll": "Quitar todos",
     "event.empty": "Sin efectos. Agregá los del evento activo para ver cómo cambia la producción del equipo.",
@@ -458,7 +466,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.pickSplitPartner": "Elegí el segundo Pokémon del slot",
     // Expert mode
     "teams.weeklyBonus": "Bonus semanal",
-    "teams.weeklyBerryStrength": "Fuerza ×2,4",
+    "teams.weeklyBerryStrength": "Bayas ×2,4",
     "teams.weeklyIngredient": "+1 ingrediente",
     "teams.weeklySkillTrigger": "Skill ×1,25",
     "card.expertMainSpeed": "Baya principal: ayuda {pct}% más rápida",
@@ -484,7 +492,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "progress.potDown": "Olla más chica",
     "progress.potUp": "Olla más grande",
     "progress.favorites": "Receta favorita por tipo",
-    "progress.favoritesHint": "Se carga sola en las 3 comidas",
     "progress.noFavorite": "Ninguna",
     "progress.recipeLevels": "Niveles de receta",
     "progress.areas": "Bonus por área",
@@ -507,16 +514,29 @@ export const UI: Record<Lang, Record<string, string>> = {
     "common.cancel": "Cancel",
     "common.edit": "Edit",
     "common.reload": "Reload",
+    "common.yes": "Yes",
+    "common.no": "No",
     "common.loadingCatalog": "Loading catalog…",
     "common.catalogError":
       "Couldn't load the catalog. Is the backend on :8000?",
     "common.level": "Lv. {level}",
     "common.dash": "—",
+    // Context bar
+    "ctx.map": "Map",
+    "ctx.noMap": "No map",
+    "ctx.area": "Area +{pct}%",
+    "ctx.event": "Event",
+    "ctx.noEvent": "No event",
+    "ctx.noMeals": "No recipes",
+    "ctx.gct": "Good Camp Ticket",
     // Navigation
     "nav.aria": "Main navigation",
     "nav.team": "Box",
     "nav.comparison": "Comparison",
     "nav.language": "Language",
+    // Languages
+    "lang.es": "Español",
+    "lang.en": "English",
     // Authentication
     "auth.signInGoogle": "Sign in with Google",
     "auth.signInFailed": "Sign-in wasn't completed.",
@@ -530,16 +550,15 @@ export const UI: Record<Lang, Record<string, string>> = {
     "auth.gateBody":
       "Sign in with Google to start your Box, register your team, and find it again on every visit.",
     // Team page
-    "team.title": "My Pokémon Sleep box",
-    "team.subtitle":
-      "Log your Pokémon with their nature, sub skills and ingredients, and see the distribution of your whole box.",
     "team.box": "Box",
     "team.updating": "Updating…",
     "team.add": "+ Add Pokémon",
     "team.loadingBox": "Loading box…",
     "team.boxError": "Couldn't load the box.",
     "team.deleteError": "Couldn't delete: {error}",
-    "team.boxEmpty": "Your box is empty. Add your first Pokémon.",
+    "team.emptyLead": "Your box is empty.",
+    "team.emptyBody":
+      "Log your Pokémon with their nature, sub skills and ingredients to see what each one produces.",
     "team.distribution": "Box distribution",
     "team.distributionError": "Couldn't load the distribution.",
     "team.modalAdd": "Add Pokémon",
@@ -612,20 +631,17 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.noIngredientSpecialists": "No Ingredient specialists in the box.",
     // Comparison page
     "prod.title": "Comparison",
-    "prod.subtitle":
-      "Add Pokémon —from your box or new— and compare their production side by side. The first card is the base: the rest show the difference against it.",
-    "prod.assumptions":
-      "Calculations assume a day of 15.5 h awake + 8.5 h asleep at max energy.",
     "prod.scenario": "Scenario",
     "prod.scenarioNone": "No berry bonus",
     "prod.scenarioFavorite": "Favorite berry",
-    "prod.scenarioExpertBerry": "Expert · strength",
+    "prod.scenarioExpertBerry": "Expert · berries",
     "prod.scenarioExpertIngredient": "Expert · ingredient",
     "prod.scenarioExpertSkill": "Expert · skill",
     "prod.atMax":
       "There are already 5 Pokémon: that's the in-game team maximum. Remove one to add another.",
-    "prod.addHintEmpty":
-      "Add a Pokémon —from your box or by configuring a new one— to compare its production side by side.",
+    "prod.emptyLead": "Compare up to 5 Pokémon side by side.",
+    "prod.emptyBody":
+      "The first card is the base: the rest show the difference against it. Add one from your box or set up a new one.",
     "prod.addHintMore": "Add another Pokémon to the comparison.",
     "prod.new": "+ New",
     "prod.myPokemon": "+ My Pokémon",
@@ -821,8 +837,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     // Team analysis page
     "nav.teams": "Team analysis",
     "teams.title": "Team analysis",
-    "teams.subtitle": "Build a team of up to 5 Pokémon and read its daily production and team total.",
-    "teams.empty": "Create a Pokémon or bring one from your Box to start the analysis.",
     "teams.aggregates": "Team totals",
     "teams.berriesSkills": "Berries & skills",
     "teams.cooking": "Cooking",
@@ -839,7 +853,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.dinner": "Night",
     "teams.midday": "Midday",
     "teams.noRecipe": "No recipe",
-    "teams.editRecipes": "Edit recipes",
+    "teams.editRecipes": "Choose recipes",
+    "teams.emptyLead": "Build a team of up to 5 Pokémon.",
+    "teams.emptyBody":
+      "You'll see each one's daily production and the team total, with cooking and the Snorlax rating. Create one or bring it from your Box.",
     "teams.configure": "Settings",
     "teams.randomIngredients": "Random ingredients",
     "teams.randomIngredientsTip": "Average base strength of all ingredients",
@@ -896,7 +913,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.goodCampTicket": "Good Camp Ticket",
     "teams.gctOff": "Off",
     "teams.gctOn": "On",
-    "teams.gctActive": "Good Camp Ticket active",
     "teams.potGct": "Good Camp Ticket (+50%)",
     "teams.fillers": "{n} fillers",
     "teams.potFits": "Fits",
@@ -904,7 +920,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.tabIsland": "Map",
     "teams.tabMeals": "Meals",
     "teams.tabEvent": "Event",
-    "event.title": "Event bonus",
     "event.add": "+ Add effect",
     "event.removeAll": "Remove all",
     "event.empty": "No effects. Add the active event's to see how your team's production changes.",
@@ -953,7 +968,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.pickSplitPartner": "Pick the slot's second Pokémon",
     // Expert mode
     "teams.weeklyBonus": "Weekly bonus",
-    "teams.weeklyBerryStrength": "Strength ×2.4",
+    "teams.weeklyBerryStrength": "Berries ×2.4",
     "teams.weeklyIngredient": "+1 ingredient",
     "teams.weeklySkillTrigger": "Skill ×1.25",
     "card.expertMainSpeed": "Main favorite: helps {pct}% faster",
@@ -979,7 +994,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "progress.potDown": "Smaller pot",
     "progress.potUp": "Bigger pot",
     "progress.favorites": "Favorite recipe per dish type",
-    "progress.favoritesHint": "Fills the three meals on its own",
     "progress.noFavorite": "None",
     "progress.recipeLevels": "Recipe levels",
     "progress.areas": "Area bonus",

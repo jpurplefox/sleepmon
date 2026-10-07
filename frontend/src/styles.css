@@ -78,16 +78,15 @@ body {
   max-width: none;
 }
 
-.hero h1 {
-  margin: 0 0 0.25rem;
-  font-size: var(--text-xl);
+/* Keep focused controls clear of the sticky app bar. */
+html {
+  scroll-padding-top: 3.25rem;
 }
 
-/* Nota secundaria del hero (supuestos de cálculo): más chica y separada del
-   párrafo principal. */
-.hero__note {
-  font-size: var(--text-sm);
-  margin-top: 0.35rem;
+@media (max-width: 900px) {
+  html {
+    scroll-padding-top: 6rem;
+  }
 }
 
 .muted {
@@ -1047,28 +1046,6 @@ select:focus {
   font-size: var(--text-sm);
 }
 
-/* Section head (título + acción) */
-.section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin: 1.5rem 0 1rem;
-}
-
-.section-head h2 {
-  margin: 0;
-}
-
-/* Título de sección + indicador de refetch ("Actualizando…") en línea, alineados
-   por su línea base. El indicador vive fuera del <h2> (semántica estable). */
-.section-head__title {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  min-width: 0;
-}
-
 /* Modal */
 .modal-overlay {
   position: fixed;
@@ -1079,7 +1056,8 @@ select:focus {
   align-items: flex-start;
   justify-content: center;
   padding: 2rem 1rem;
-  overflow-y: auto;
+  /* The panel scrolls its own body; the overlay never scrolls. */
+  overflow: hidden;
   z-index: 50;
   animation: overlay-in 0.12s ease-out;
 }
@@ -1091,12 +1069,23 @@ select:focus {
   width: 100%;
   max-width: 560px;
   margin: auto;
+  /* Fits the viewport: the title stays put and only the body scrolls. */
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 4rem);
+  max-height: calc(100dvh - 4rem);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   animation: modal-in 0.12s ease-out;
 }
 
 .modal-panel--wide {
   max-width: min(900px, 96vw);
+}
+
+/* Fixed at the full available height: a search that filters the content never shrinks it. */
+.modal-panel--tall {
+  height: calc(100vh - 4rem);
+  height: calc(100dvh - 4rem);
 }
 
 /* Presencia del modal: aparición corta que hace legible el cambio de estado
@@ -1122,6 +1111,7 @@ select:focus {
 }
 
 .modal-head {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1153,6 +1143,9 @@ select:focus {
 
 .modal-body {
   padding: 1.25rem;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* Footer de acciones de un modal (p. ej. confirmación de borrado). */
@@ -1371,27 +1364,43 @@ select:focus {
 /* Scrollbar estilizado para todo panel que scrollea por su cuenta. */
 .filter-grid,
 .filter-list,
-.settings-modal-panel {
+.settings-modal-panel,
+.modal-body,
+.nature-dropdown,
+.subskill-dropdown,
+.species-options {
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
 
 .filter-grid::-webkit-scrollbar,
 .filter-list::-webkit-scrollbar,
-.settings-modal-panel::-webkit-scrollbar {
+.settings-modal-panel::-webkit-scrollbar,
+.modal-body::-webkit-scrollbar,
+.nature-dropdown::-webkit-scrollbar,
+.subskill-dropdown::-webkit-scrollbar,
+.species-options::-webkit-scrollbar {
   width: 6px;
 }
 
 .filter-grid::-webkit-scrollbar-thumb,
 .filter-list::-webkit-scrollbar-thumb,
-.settings-modal-panel::-webkit-scrollbar-thumb {
+.settings-modal-panel::-webkit-scrollbar-thumb,
+.modal-body::-webkit-scrollbar-thumb,
+.nature-dropdown::-webkit-scrollbar-thumb,
+.subskill-dropdown::-webkit-scrollbar-thumb,
+.species-options::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 999px;
 }
 
 .filter-grid::-webkit-scrollbar-track,
 .filter-list::-webkit-scrollbar-track,
-.settings-modal-panel::-webkit-scrollbar-track {
+.settings-modal-panel::-webkit-scrollbar-track,
+.modal-body::-webkit-scrollbar-track,
+.nature-dropdown::-webkit-scrollbar-track,
+.subskill-dropdown::-webkit-scrollbar-track,
+.species-options::-webkit-scrollbar-track {
   background: transparent;
 }
 
@@ -1531,7 +1540,9 @@ select:focus {
 .specialty-toggle__btn.is-on {
   background: var(--accent-dim);
   color: var(--accent-text);
-  font-weight: 600;
+  /* Emphasis without a heavier weight: a bolder face is wider and would shift every
+     button after it. */
+  text-shadow: 0 0 0.5px currentColor;
 }
 
 .box-entry {
@@ -2245,59 +2256,6 @@ select:focus {
   border-color: var(--border);
 }
 
-/* Barra superior: tabs a la izquierda, selector de idioma a la derecha. */
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 1.25rem 1.5rem 0;
-}
-
-.topbar .tabs {
-  margin: 0;
-  padding: 0;
-}
-
-/* Mobile: the three tabs plus the account + language cluster never fit on one
-   375px row, and the overflow was scrolling the whole page sideways. The bar
-   wraps into two rows — utility cluster on top (right aligned), nav below at
-   full width — and the tabs get a compact size so they fit; if a longer
-   translation still doesn't, the strip scrolls inside itself instead of the
-   page. */
-@media (max-width: 640px) {
-  .topbar {
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    padding: 1rem 1rem 0;
-  }
-
-  .topbar__right {
-    order: -1;
-    width: 100%;
-    justify-content: flex-end;
-  }
-
-  .topbar .tabs {
-    width: 100%;
-    gap: 0.25rem;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .topbar .tabs::-webkit-scrollbar {
-    display: none;
-  }
-
-  .tab {
-    flex: 0 0 auto;
-    font-size: var(--text-base);
-    padding: 0.5rem 0.6rem;
-  }
-}
-
 .lang-select {
   display: flex;
   gap: 0.3rem;
@@ -2345,6 +2303,13 @@ select:focus {
 /* La invitación a agregar responde al hover como cualquier elemento interactivo. */
 .prod-card--add:hover {
   border-color: var(--accent);
+}
+
+/* Empty state: the tool's explanation, a bold lead over a muted body. */
+.prod-add__lead {
+  margin: 0 0 0.35rem;
+  color: var(--text);
+  font-weight: 700;
 }
 
 .prod-add__hint {
@@ -2643,24 +2608,6 @@ select:focus {
 .prod-box-item.is-highlighted:not(:disabled) {
   border-color: var(--accent);
   background: var(--accent-dim);
-}
-
-/* Comparison's scenario: its own row above the grid, right-aligned.
-   It reuses .section-head with no left side, so this row supplies the grid's top margin. */
-.prod-scenario {
-  justify-content: flex-end;
-  margin: 1.5rem 0 0.5rem;
-}
-
-.prod-scenario + .prod-cards {
-  margin-top: 0;
-}
-
-/* The panel opens inward: this is the only trigger flush against the right edge,
-   and .filter-pop anchors left by default (it would run off the page). */
-.prod-scenario .filter-pop {
-  left: auto;
-  right: 0;
 }
 
 /* Comparación de producción: hasta 5 cards por fila (el tope del equipo en el
@@ -3459,34 +3406,6 @@ button.prod-card__base-tag--action:hover {
   width: 100%;
 }
 
-/* Config toolbar above the roster: right-aligned action. */
-.teams-config-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  margin: 0.5rem 0 0.75rem;
-}
-
-.status-notices {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0 0 0.75rem;
-}
-
-.status-notice {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.7rem;
-  border-radius: 999px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text);
-}
-
 .metric-mark__icon {
   width: 14px;
   height: 14px;
@@ -3696,9 +3615,8 @@ button.prod-card__base-tag--action:hover {
   margin-bottom: 0.75rem;
 }
 
-.teams-cooking-edit {
+.teams-cooking-head .btn {
   margin-top: 0;
-  padding: 0.3rem 0.75rem;
   font-size: var(--text-sm);
 }
 
@@ -3870,8 +3788,8 @@ button.prod-card__base-tag--action:hover {
   font-size: var(--text-sm);
 }
 
-/* Grid of recipe cards. No scrolling of its own: it always sits inside
-   .settings-modal-panel, which is the single scroll container — two nested
+/* Grid of recipe cards. No scrolling of its own: the modal body (or
+   .settings-modal-panel) is the single scroll container — two nested
    scrollers produced two side-by-side scrollbars. */
 .meal-picker-grid {
   display: grid;
@@ -4427,11 +4345,17 @@ button.prod-card__base-tag--action:hover {
   outline-offset: 2px;
 }
 
-/* Stable height between island/meals tabs: both panels share a fixed height
-   with internal scroll, so switching tabs never resizes the modal and tall
-   content (Greengrass berry grid) scrolls instead of overflowing the viewport. */
+/* Stable height between the Progress tabs: one fixed-height panel with its own
+   scroll. Its body doesn't scroll too — the panel shrinks to fit a short viewport. */
+.modal-body:has(> .settings-modal-panel) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .settings-modal-panel {
   height: 66vh;
+  min-height: 0;
   overflow-y: auto;
   /* Reserve the bar's width so it never overlaps the content's right edge. */
   scrollbar-gutter: stable;
@@ -4772,21 +4696,12 @@ button.prod-card__base-tag--action:hover {
    Autenticación — sign-in con Google, menú de cuenta, gate.
    ============================================================ */
 
-/* Cluster derecho de la topbar: control de sesión (botón Google / avatar) +
-   selector de idioma, agrupados para que el space-between de .topbar los
-   empuje juntos a la derecha. */
-.topbar__right {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
 /* Neutral placeholder for the auth slot while the session status is still
-   "checking" — same footprint as .avatar-btn so the topbar doesn't jump once
+   "checking" — same height as .avatar-btn so the app bar doesn't jump once
    the real control (Google button or avatar) mounts, but visibly inert (dim,
    no border color, no icon) so it never reads as either signed-in or signed-out. */
 .auth-slot-placeholder {
-  width: 34px;
+  width: 7rem;
   height: 34px;
   border-radius: 999px;
   border: 1px solid var(--border);
@@ -4858,20 +4773,45 @@ button.prod-card__base-tag--action:hover {
 
 /* Avatar (signed in) — foto de Google recortada al círculo, o iniciales sobre
    un círculo neutro cuando no hay foto (mismo vocabulario que .mini-icon--empty). */
+/* Account trigger: the photo (or initials) plus the first name, as one pill. */
 .avatar-btn {
-  width: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   height: 34px;
+  padding: 0 0.6rem 0 2px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--surface-2);
-  color: var(--muted);
+  color: var(--text);
   cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.avatar-btn__photo {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
   display: grid;
   place-items: center;
   font-weight: 700;
-  font-size: var(--text-sm);
-  padding: 0;
   overflow: hidden;
+  flex: none;
+}
+
+.avatar-btn__name {
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.avatar-btn__chevron {
+  color: var(--muted);
+  flex: none;
 }
 
 .avatar-btn:hover,
@@ -4879,7 +4819,7 @@ button.prod-card__base-tag--action:hover {
   border-color: var(--accent);
 }
 
-.avatar-btn img,
+.avatar-btn__photo img,
 .avatar-lg img {
   width: 100%;
   height: 100%;
@@ -5314,4 +5254,287 @@ button.prod-card__base-tag--action:hover {
   margin-left: 0.35rem;
   color: var(--down);
   cursor: help;
+}
+
+/* ── Tool header: title only; the context bar sits under it (design-system §5). ── */
+.tool-head {
+  /* The layout's top padding is the only gap under the app bar. */
+  margin: 0 0 1.25rem;
+}
+
+.tool-head__row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+
+.tool-head h1 {
+  margin: 0;
+  font-size: var(--text-xl);
+}
+
+.tool-count {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: var(--text-lg);
+}
+
+.tool-head__action {
+  margin-left: auto;
+}
+
+.tool-head__action .btn {
+  margin-top: 0;
+}
+
+.tool-head > .error {
+  margin: 0.75rem 0 0;
+}
+
+.tool-head .box-toolbar {
+  margin: 0.9rem 0 0;
+}
+
+/* ── Context bar: one labelled field per setting that shapes the numbers. ── */
+.ctx-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.5rem;
+  margin-top: 0.9rem;
+}
+
+.ctx-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: var(--text-sm);
+}
+
+.ctx-field__label {
+  color: var(--muted);
+}
+
+/* Every control in the bar shares one height, whatever it holds (marks, dish images). */
+.ctx-field .filter-btn,
+.ctx-field .specialty-toggle {
+  box-sizing: border-box;
+  height: 30px;
+}
+
+.ctx-field .filter-btn {
+  padding-block: 0;
+}
+
+
+.ctx-marks {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.ctx-marks .metric-mark {
+  margin-left: 0;
+}
+
+/* Map value plus invisible sizers for every map, stacked in one cell. */
+.ctx-map {
+  display: inline-grid;
+}
+
+.ctx-map > * {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+.ctx-map__sizer {
+  visibility: hidden;
+}
+
+/* Meals value: the dishes and "No recipes" stacked in one cell; only one shows. */
+.ctx-meals {
+  display: inline-grid;
+}
+
+.ctx-meals > * {
+  grid-area: 1 / 1;
+  align-self: center;
+}
+
+.ctx-meals .ctx-recipes[aria-hidden="true"],
+.ctx-meals .ctx-meals__none[aria-hidden="true"] {
+  visibility: hidden;
+}
+
+.ctx-meals__none {
+  white-space: nowrap;
+}
+
+/* The day's three dishes, side by side and large enough to recognize. */
+.ctx-recipes {
+  display: inline-flex;
+  gap: 0.2rem;
+}
+
+.ctx-recipe {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.ctx-recipe--empty {
+  box-sizing: border-box;
+  border: 1px dashed var(--muted);
+  border-radius: var(--r-sm);
+  opacity: 0.5;
+}
+
+@media (max-width: 640px) {
+  .tool-head__action {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+}
+
+/* ── App bar: sticky top menu (design-system §5). ── */
+.appbar {
+  position: sticky;
+  top: 0;
+  z-index: 40; /* above in-page popovers (20–30), below modals (50) */
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.appbar__inner {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  max-width: none; /* aligns with .layout--wide, so the brand meets the page title */
+  padding: 0.6rem 1.5rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+.brand img {
+  image-rendering: pixelated;
+}
+
+.appbar .tabs {
+  margin: 0;
+  padding: 0;
+  gap: 0.25rem;
+}
+
+.appbar .tab,
+.appbar .btn--google {
+  white-space: nowrap;
+}
+
+.appbar .tab {
+  font-size: var(--text-base);
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+}
+
+.appbar .tab--active {
+  background: var(--accent-dim);
+  border-color: var(--accent-border);
+  color: var(--text);
+}
+
+.appbar__right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Popovers in the bar open inward from the right edge. */
+.appbar .filter-pop {
+  left: auto;
+  right: 0;
+}
+
+.filter-btn.lang-btn {
+  height: 30px;
+  padding: 0 0.6rem;
+  border-radius: 999px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.menu-lang {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.35rem 0.6rem;
+  font-size: var(--text-sm);
+}
+
+/* Tablet and down: the tools move to their own row before anything has to wrap. */
+@media (max-width: 900px) {
+  .appbar__inner {
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+  }
+
+  .appbar .tabs {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .appbar .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .appbar .tab {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .appbar__inner {
+    padding: 0.6rem 1rem;
+  }
+
+  /* Sprite only: the name stays for screen readers. */
+  .brand__name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .appbar .tab {
+    padding: 0.4rem 0.7rem;
+  }
+
+  /* Compact account controls so they fit beside the sprite on one row. */
+  .appbar .btn--google {
+    font-size: var(--text-sm);
+    padding: 0.4rem 0.7rem;
+  }
+
+  .appbar .lang-btn .filter-btn__value {
+    gap: 0;
+  }
+
+  .appbar .lang-btn .filter-btn__chevron {
+    display: none;
+  }
 }

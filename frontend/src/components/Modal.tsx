@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from "react";
 import type { ReactNode } from "react";
 
+import { fitDropdownsIn } from "../fitDropdowns";
 import { useI18n } from "../i18n";
 import { IconClose } from "./icons";
 
@@ -9,11 +10,14 @@ interface Props {
   onClose: () => void;
   children: ReactNode;
   wide?: boolean;
+  /** Takes the full available height, so filtering its content never resizes it. */
+  tall?: boolean;
 }
 
-export function Modal({ title, onClose, children, wide }: Props) {
+export function Modal({ title, onClose, children, wide, tall }: Props) {
   const { t } = useI18n();
   const panelRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
 
   // Cerrar con Escape, atrapar el foco con Tab dentro del panel y bloquear el
@@ -65,10 +69,20 @@ export function Modal({ title, onClose, children, wide }: Props) {
     return () => opener?.focus();
   }, []);
 
+  // Dropdowns opened inside fit the body, so only one thing scrolls.
+  useEffect(
+    () => (bodyRef.current ? fitDropdownsIn(bodyRef.current) : undefined),
+    [],
+  );
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
-        className={"modal-panel" + (wide ? " modal-panel--wide" : "")}
+        className={
+          "modal-panel" +
+          (wide ? " modal-panel--wide" : "") +
+          (tall ? " modal-panel--tall" : "")
+        }
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -77,11 +91,17 @@ export function Modal({ title, onClose, children, wide }: Props) {
       >
         <header className="modal-head">
           <h2 id={titleId}>{title}</h2>
-          <button className="modal-close" onClick={onClose} aria-label={t("common.close")}>
+          <button
+            className="modal-close"
+            onClick={onClose}
+            aria-label={t("common.close")}
+          >
             <IconClose />
           </button>
         </header>
-        <div className="modal-body">{children}</div>
+        <div className="modal-body" ref={bodyRef}>
+          {children}
+        </div>
       </div>
     </div>
   );
