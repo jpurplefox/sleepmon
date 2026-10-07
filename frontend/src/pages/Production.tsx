@@ -16,6 +16,7 @@ import { configFromMember, linkEntryToBox, newEntry, type RosterEntry } from "..
 import { scenarioCardProps, type Scenario } from "../scenarios";
 import type { Member, MemberInput } from "../types";
 import { useSaveToBox } from "../useSaveToBox";
+import { useProgress } from "../useProgress";
 
 // Tope de la comparación: el máximo del equipo en el juego.
 const MAX_COMPARE = 5;
@@ -41,6 +42,9 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
     enabled: status === "authenticated",
   });
 
+  // The saved sleep schedule (defaults when signed out) shapes every card.
+  const { progress } = useProgress();
+
   const [entries, setEntries] = useState<RosterEntry[]>([]);
   // The map scenario applies to EVERY card: it's an assumption of the
   // comparison, not a property of any single Pokémon. Not persisted.
@@ -60,7 +64,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   // react-query (keyed por config) evita recalcular al reordenar.
   const productions = useQueries({
     queries: entries.map((e) => ({
-      queryKey: ["production", e.config, scenario],
+      queryKey: ["production", e.config, scenario, progress.sleep],
       queryFn: () =>
         api.computeProduction({
           species: e.config.species,
@@ -71,6 +75,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
           ribbon: e.config.ribbon,
           skill_level: e.config.skill_level,
           scenario,
+          sleep: progress.sleep,
         }),
       // El resultado de una config es estable: no re-pedir ni reflashear
       // "Calculando…" al reordenar o revisitar una card ya calculada.

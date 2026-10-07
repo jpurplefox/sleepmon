@@ -280,6 +280,7 @@ export function Teams() {
       goodCampTicket,
       eventEffects,
       potSize,
+      progress.sleep,
     ],
     queryFn: () =>
       api.computeTeamProduction({
@@ -293,6 +294,7 @@ export function Teams() {
         good_camp_ticket: goodCampTicket,
         event_effects: toEventRequest(eventEffects),
         pot_size: potSize,
+        sleep: progress.sleep,
       }),
     enabled: slots.length > 0,
     placeholderData: keepPreviousData,
