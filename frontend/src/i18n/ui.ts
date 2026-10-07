@@ -125,10 +125,6 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Sin especialistas en Ingredientes en la caja.",
     // Página Comparación
     "prod.title": "Comparación",
-    "prod.subtitle":
-      "Agregá Pokémon —de tu caja o nuevos— y compará su producción lado a lado. La primera card es la base: el resto muestra la diferencia contra ella.",
-    "prod.assumptions":
-      "Los cálculos asumen un día de 15.5 h despierto + 8.5 h de sueño con energía máxima.",
     "prod.scenario": "Escenario",
     "prod.scenarioNone": "Sin bonus de baya",
     "prod.scenarioFavorite": "Baya favorita",
@@ -137,8 +133,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.scenarioExpertSkill": "Experto · skill",
     "prod.atMax":
       "Ya hay 5 Pokémon: es el máximo del equipo en el juego. Quitá uno para agregar otro.",
-    "prod.addHintEmpty":
-      "Agregá un Pokémon —de tu caja o configurando uno nuevo— para comparar su producción lado a lado.",
+    "prod.emptyLead": "Compará hasta 5 Pokémon lado a lado.",
+    "prod.emptyBody":
+      "La primera card es la base: el resto muestra la diferencia contra ella. Agregá uno de tu caja o configurá uno nuevo.",
     "prod.addHintMore": "Agregá otro Pokémon para sumarlo a la comparación.",
     "prod.new": "+ Nuevo",
     "prod.myPokemon": "+ Mis Pokémon",
@@ -629,10 +626,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.noIngredientSpecialists": "No Ingredient specialists in the box.",
     // Comparison page
     "prod.title": "Comparison",
-    "prod.subtitle":
-      "Add Pokémon —from your box or new— and compare their production side by side. The first card is the base: the rest show the difference against it.",
-    "prod.assumptions":
-      "Calculations assume a day of 15.5 h awake + 8.5 h asleep at max energy.",
     "prod.scenario": "Scenario",
     "prod.scenarioNone": "No berry bonus",
     "prod.scenarioFavorite": "Favorite berry",
@@ -641,8 +634,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.scenarioExpertSkill": "Expert · skill",
     "prod.atMax":
       "There are already 5 Pokémon: that's the in-game team maximum. Remove one to add another.",
-    "prod.addHintEmpty":
-      "Add a Pokémon —from your box or by configuring a new one— to compare its production side by side.",
+    "prod.emptyLead": "Compare up to 5 Pokémon side by side.",
+    "prod.emptyBody":
+      "The first card is the base: the rest show the difference against it. Add one from your box or set up a new one.",
     "prod.addHintMore": "Add another Pokémon to the comparison.",
     "prod.new": "+ New",
     "prod.myPokemon": "+ My Pokémon",

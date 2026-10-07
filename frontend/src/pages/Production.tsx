@@ -10,6 +10,7 @@ import { Modal } from "../components/Modal";
 import { Placeholder } from "../components/Placeholder";
 import { ProductionCard } from "../components/ProductionCard";
 import { ScenarioSelect } from "../components/ScenarioSelect";
+import { ContextBar, ContextField, ToolHeader } from "../components/ToolHeader";
 import { useI18n } from "../i18n";
 import { configFromMember, linkEntryToBox, newEntry, type RosterEntry } from "../roster";
 import { scenarioCardProps, type Scenario } from "../scenarios";
@@ -196,18 +197,15 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
 
   return (
     <div className="layout layout--wide">
-      <header className="hero">
-        <h1>{t("prod.title")}</h1>
-        <p className="muted">{t("prod.subtitle")}</p>
-        <p className="muted hero__note">{t("prod.assumptions")}</p>
-        {notice && (
-          <p className="error" role="alert">
-            {notice}
-          </p>
+      <ToolHeader title={t("prod.title")} notice={notice}>
+        {entries.length > 0 && (
+          <ContextBar>
+            <ContextField label={t("prod.scenario")}>
+              <ScenarioSelect value={scenario} onChange={setScenario} />
+            </ContextField>
+          </ContextBar>
         )}
-      </header>
-
-      <ScenarioSelect value={scenario} onChange={setScenario} />
+      </ToolHeader>
 
       <div className="prod-cards">
         {entries.map((e, i) => (
@@ -258,11 +256,14 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
               <p className="muted prod-add__hint">{t("prod.atMax")}</p>
             ) : (
               <>
-                <p className="muted prod-add__hint">
-                  {entries.length === 0
-                    ? t("prod.addHintEmpty")
-                    : t("prod.addHintMore")}
-                </p>
+                {entries.length === 0 ? (
+                  <div className="prod-add__hint">
+                    <p className="prod-add__lead">{t("prod.emptyLead")}</p>
+                    <p className="muted">{t("prod.emptyBody")}</p>
+                  </div>
+                ) : (
+                  <p className="muted prod-add__hint">{t("prod.addHintMore")}</p>
+                )}
                 <div className="prod-add__actions">
                   <button type="button" className="btn btn--primary" onClick={() => openAdd("form")}>
                     {t("prod.new")}
