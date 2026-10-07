@@ -33,11 +33,11 @@ It answers: *"with what my team produces, how good is this meal plan?"*.
   **narrows the recipe choices** and it does **not** restrict by map. It starts
   **unset**, and there is no "all" option: once you have chosen, you have chosen.
 - Choosing a dish type gives you **that type's day**: the three meals become your
-  favorite recipe of that type (see [Player progress](0011-player-progress.md)), or an
+  favorite recipe of that type (see [Player profile](0011-player-profile.md)), or an
   **empty plan** when you have not named one. So a change of type never leaves a plan
   of the wrong type behind, and never leaves you with nothing to show for it.
 - A **pot size** (base capacity) comes from [Player
-  progress](0011-player-progress.md): one step of the game's pot ladder, overridable
+  profile](0011-player-profile.md): one step of the game's pot ladder, overridable
   for the session.
 
 ### Ingredient balance

@@ -1,18 +1,22 @@
-# Player progress
+# Player profile
 
 ## Purpose
 
-**Player progress** answers *"what do I actually have in the game?"*, kept apart from
-*"what if?"*. The pot you have expanded, the recipes you have levelled, the area bonus
+The **Player profile** answers *"what do I actually have in the game, and how do I
+play it?"*, kept apart from *"what if?"*. The pot you have expanded, the recipes you have levelled, the area bonus
 you have unlocked on each map — these are facts about your account that change slowly
-and only ever move forward.
+and only ever move forward. How long you sleep, and whether you nap, is a fact about how
+you play that every estimate depends on.
 
 You declare them **once**, on your account, and every [Team
 Analysis](0005-team-analysis.md) starts from them.
 
 It is the counterpart to the [Box](0001-box.md): the Box records **which Pokémon** you
-own, Player progress records **everything else** about your account's standing —
-kitchen and areas.
+own, the profile records **everything else** about your account — kitchen, areas, and
+sleep.
+
+(It was called *Player progress* until the sleep schedule joined it; the kitchen,
+recipe and area parts below are still its **progress**.)
 
 ## What it does (scope)
 
@@ -20,15 +24,19 @@ kitchen and areas.
 2. **Recipe levels** — the level of each recipe you have cooked up.
 3. **Favorite recipe per dish type** — one Curry, one Salad, one Dessert.
 4. **Area bonus per area** — the bonus you have unlocked on each research area.
-5. **Seeds Team Analysis** — the analysis starts from these values; what you change
-   there stays in the session and offers to be saved back.
+5. **Sleep schedule** — how long you sleep at night and, optionally, your nap; see
+   [Sleep schedule](0015-sleep-schedule.md).
+6. **Seeds Team Analysis** — the analysis starts from the progress values; what you
+   change there stays in the session and offers to be saved back. The sleep schedule is
+   not seeded but applied as saved, in every tool.
 
 ## How it works
 
 ### Where it lives
 
-Player progress is its own screen, reached from the **profile menu** — it belongs to
-*you*, not to any one tool. Like the Box and Team Analysis, it is available only when
+The Player profile is its own screen, reached from the **account menu** as **Perfil de
+jugador** / **Player profile**, with one tab per area: **Kitchen · Recipes · Areas ·
+Sleep**. It belongs to *you*, not to any one tool. Like the Box and Team Analysis, it is available only when
 signed in.
 
 It is a **draft**: what you change there is yours to review until you press **Guardar**,
@@ -73,9 +81,17 @@ with changes*).
   maps carrying their own bonus.
 - Untouched, every area reads **0%**.
 
+### Sleep schedule
+
+- The **Sleep** tab holds your night sleep (**8:30** untouched) and, optionally, a nap.
+  The controls, limits and how they change production are in [Sleep
+  schedule](0015-sleep-schedule.md).
+- Unlike the progress values, it is **not** a starting point for a session: every tool
+  — Box, Comparison, Team Analysis — uses it exactly as saved, and none overrides it.
+
 ### The bridge to Team Analysis
 
-Player progress is the analysis's **starting point**, never its master copy:
+The progress is the analysis's **starting point**, never its master copy:
 
 - The analysis **opens** with your pot size already set.
 - Selecting a **map** loads that area's saved bonus.
@@ -93,7 +109,7 @@ disappears on reload.
 
 ### Leaving with changes
 
-**Player progress** holds a draft, and leaving without saving **discards** it — so it
+The **Player profile** holds a draft, and leaving without saving **discards** it — so it
 asks first: **guardar**, **salir sin guardar**, **cancelar**. However you leave — the
 close button, Escape, or a click outside — the question is the same.
 
@@ -107,7 +123,7 @@ is what keeps a real change from going unnoticed.
 ## Acceptance criteria
 
 - A **new account** reads: pot **21**, every recipe at level **1**, no favorites, every
-  area at **0%**. This is an ordinary starting state, not an empty state or an error.
+  area at **0%**, Night **8:30** with no nap. This is an ordinary starting state, not an empty state or an error.
 - The pot control offers **exactly** the 23 ladder steps (21, 23, 25, 27, 29, 31, 33,
   36, …, 81). A value off the ladder cannot be selected.
 - A recipe level outside **1–70** and an area bonus outside **0–85%** are **clamped to
@@ -132,25 +148,28 @@ is what keeps a real change from going unnoticed.
   nothing to save.
 - An unsaved change is **gone** after a reload; a saved one is present on **another
   device**, signed into the same account.
-- Editing anything in Player progress writes **nothing** until **Guardar** is pressed;
+- Editing anything in the Player profile writes **nothing** until **Guardar** is pressed;
   Guardar writes every pending change at once and closes the screen.
-- Leaving Player progress with changes — by the close button, Escape, or a click outside
+- Leaving the Player profile with changes — by the close button, Escape, or a click outside
   — asks **guardar / salir sin guardar / cancelar**. *Salir sin guardar* discards the
   draft; *cancelar* returns to the screen with the draft intact.
-- Leaving Player progress with **nothing** changed closes it immediately, with no question.
+- Leaving the Player profile with **nothing** changed closes it immediately, with no question.
+- The menu entry reads **Perfil de jugador** (ES) / **Player profile** (EN), and the
+  screen has the tabs **Kitchen · Recipes · Areas · Sleep**.
 - Leaving Team Analysis's settings with values marked unsaved closes **immediately**,
   without a question, and keeps every one of those values in the session.
 
 ## Guidelines
 
-- **Progress is what only moves forward.** A setting belongs here when it records
-  something you unlocked or levelled in the game, not something you are trying out. If
-  it changes week to week or depends on the team you assembled, it stays ephemeral.
+- **The profile holds facts, never "what if".** A setting belongs here when it records
+  something you unlocked or levelled in the game (progress, which only moves forward)
+  or how you steadily play it (your sleep). If it changes week to week or depends on
+  the team you assembled, it stays ephemeral.
 - **Progress is never written implicitly.** Every save is an act the user takes.
   The cost of that choice is a record that can fall behind, which is why an unsaved
   value is always **marked** where it happens rather than left to be discovered.
-- **One value, one home.** A progress value is edited in Player progress, or overridden
-  for a session in the analysis — but Player progress stays the single answer to "what
+- **One value, one home.** A progress value is edited in the Player profile, or overridden
+  for a session in the analysis — but the profile stays the single answer to "what
   do I have".
 - **Game data stays honest.** The pot ladder and the recipe level cap are the game's,
   not ours; when the game changes them, the ladder changes with it.
@@ -160,10 +179,10 @@ is what keeps a real change from going unnoticed.
 - **Good Camp Ticket, favorite berries per map, and the expert weekly bonus** — these
   stay ephemeral per session. The ticket is a subscription you may pause, the weekly
   bonus rotates, and favorite berries are part of reading a map, not of progress.
-- **Comparison** — it compares Pokémon under a map scenario and uses none of these
-  values.
+- **Comparison** — it compares Pokémon under a map scenario and uses none of the
+  progress values (it does use the sleep schedule, like every tool).
 - **Suggesting or optimizing** — it records the favorite you name; it does not pick one
   for you.
-- **Importing, exporting, or resetting your progress** — no bulk operations, no factory
+- **Importing, exporting, or resetting your profile** — no bulk operations, no factory
   reset.
 - **Which Pokémon you own** — that's the [Box](0001-box.md).

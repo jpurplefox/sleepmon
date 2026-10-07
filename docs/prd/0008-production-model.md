@@ -26,13 +26,16 @@ It answers: *"how are a Pokémon's daily numbers estimated?"*.
 
 ### The day: awake + asleep
 
-A day is **15.5 h awake + 8.5 h asleep**.
+A day is **awake time + one or two sleeps**, following your [Sleep
+schedule](0015-sleep-schedule.md): by default **8.5 h asleep at night and no nap**
+(15.5 h awake); a nap adds a second sleep.
 
 - **Awake** — you tend the Pokémon (empty its inventory), so it never fills; every
   help yields berries, ingredients, or a skill trigger.
 - **Asleep** — you don't tend it; the inventory **fills and can overflow**. Until it
   fills, helps yield normally; once **full**, every remaining help yields **berries
-  only** (no ingredients, no skill).
+  only** (no ingredients, no skill). **Each sleep starts with an empty inventory** and
+  fills and overflows on its own.
 
 ### Help cadence
 
@@ -51,8 +54,8 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
 - **Capacity** = the species' carry limit (which grows with the Pokémon's **evolution
   stage**) + **Inventory Up** sub skills + the ribbon's bonus, then **×1.2** with the
   Good Camp Ticket.
-- **Fill time** = how long into the night before capacity is reached; after that,
-  overflow (berries only). If it never fills, fill time is the full **8.5 h**.
+- **Fill time** = how long into a sleep before capacity is reached; after that,
+  overflow (berries only). It is the same in every sleep, since each starts empty.
 
 ### Berries
 
@@ -80,10 +83,10 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
   skills and a skill **nature**, then adjusted by a **pity** mechanic that guarantees a
   trigger within a bounded number of helps (**78** for non-specialists; scaled by help
   frequency for Skill specialists).
-- **skill triggers/day** = daytime triggers (uncapped) + nighttime triggers, which are
-  **capped**: **1** for non-Skill Pokémon, **2** for Skill specialists. The night
-  activations are modeled as random arrivals (Poisson) and reported as
-  **probabilities** — P(exactly 1), and P(2) for specialists.
+- **skill triggers/day** = daytime triggers (uncapped) + each sleep's triggers, which
+  are **capped per sleep**: **1** for non-Skill Pokémon, **2** for Skill specialists.
+  The sleep activations are modeled as random arrivals (Poisson) and reported as
+  **probabilities** per sleep — P(at least 1), and P(2) for specialists.
 - **Skill effects** depend on the main skill and its level, and are `triggers/day ×
   per-trigger amount`: extra **strength** (Charge Strength), **energy** (to the team,
   to self, or to a random teammate), **ingredients** (Draw / Magnet), **dream shards**,
@@ -148,10 +151,12 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
   adds **+1**.
 - **Ingredient slots** unlock at **Lv 1 / 30 / 60**; below the unlock a slot does not
   produce (though it can be pre-set — see the [Pokémon form](0003-pokemon-form.md)).
-- At **night**, once inventory **fills**, further helps yield **berries only** (no
+- In **each sleep**, once inventory **fills**, further helps yield **berries only** (no
   ingredients, no skill).
-- **Night skill activations** are capped — **1** for non-Skill, **2** for Skill
-  specialists — and shown as **probabilities**.
+- **Sleep skill activations** are capped **per sleep** — **1** for non-Skill, **2** for
+  Skill specialists — and shown as **probabilities**.
+- With the default schedule (8.5 h at night, no nap) the numbers are those of a day of
+  **15.5 h awake + 8.5 h asleep**.
 - The **Good Camp Ticket** shortens the help interval (**×0.8**) and enlarges inventory
   (**×1.2**).
 - **Total strength** counts **berries + strength skills only**; ingredients / energy /

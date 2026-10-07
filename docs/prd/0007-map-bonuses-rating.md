@@ -46,7 +46,7 @@ it helps and which bonus it carries.
 - An **area bonus** from **0% to 85%**, adjustable, multiplies **all** strength
   (berries, skills, cooking, fillers).
 - The bonus belongs to the **area**: each map carries its own, saved in [Player
-  progress](0011-player-progress.md) and loaded when that map is selected. With **no
+  profile](0011-player-profile.md) and loaded when that map is selected. With **no
   map** selected there is no area, and so **no area bonus** — the same way no
   favorite-berry bonus applies.
 - Strength values show their **base** and **base + bonus** so the effect is legible
