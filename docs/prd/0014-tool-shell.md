@@ -75,8 +75,10 @@ Per tool:
 - **Team Analysis** — four fields, **always shown**, active or not, even with an empty
   team (the map can be chosen before the team is built):
   - **Map** — "No map", or the map's name followed by its favorite berries as icons
-    (on an expert map the **main** favorite first) and **Area +X%** when the area
-    bonus is above 0. Opens the **Map** dialog: map, favorite berries, weekly bonus
+    (on an expert map the **main** favorite first), then — on an expert map — the
+    **weekly bonus** as a mark with its effect's icon (berries ×2.4, +1 ingredient or
+    skill ×1.25, numbers in the active language like the event marks), and **Area +X%**
+    when the area bonus is above 0. Opens the **Map** dialog: map, favorite berries, weekly bonus
     (expert maps) and area bonus — no dish type and no Good Camp Ticket, which live in
     the bar. With **No map** the dialog still shows the berry grid, every berry
     disabled, so it is clear what a map would let you pick.
@@ -128,6 +130,11 @@ sign-in gate ([Authentication](0010-authentication.md)) in place of all of this.
 - **Team Analysis, expert map:** with Greengrass Isle (Expert), Leppa as main favorite
   and Grepa as a sub-favorite, the Map chip shows the map name with **Leppa first**,
   then Grepa.
+- **Weekly bonus:** on Greengrass Isle (Expert) with the berries bonus the Map field shows
+  a berry-icon mark "×2,4" (Spanish) / "×2.4" (English) after the berries; with +1
+  ingredient, "+1" with the ingredient icon; on a regular map, no mark. The bonus is
+  named "Bayas ×2,4" / "Berries ×2.4" everywhere it is chosen (Map dialog, Comparison's
+  "Experto · bayas" scenario).
 - **Area bonus:** with an area bonus of 0, the Map chip shows no area figure; with 35%,
   it shows **Area +35%**.
 - **Good Camp Ticket:** touching **Sí** turns the ticket on and the totals recompute,

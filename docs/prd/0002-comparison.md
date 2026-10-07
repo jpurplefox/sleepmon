@@ -85,8 +85,8 @@ the base.
 Comparison doesn't pick a map — that's [Team analysis](0007-map-bonuses-rating.md).
 It offers the **assumption**: one scenario for the whole comparison, off by default.
 
-**No berry bonus** · **Favorite berry** (berry strength ×2) · **Expert: strength ×2.4**
-(replaces the ×2, doesn't stack) · **Expert: +1 ingredient** per gather · **Expert:
+**No berry bonus** · **Favorite berry** (berry strength ×2) · **Expert: berries ×2.4**
+(favorite berries' strength ×2.4 — replaces the ×2, doesn't stack) · **Expert: +1 ingredient** per gather · **Expert:
 skill ×1.25**. The three expert scenarios read every card as a favorite berry too.
 
 Every card counts as a **sub-favorite**, never as the **main** favorite: only one
