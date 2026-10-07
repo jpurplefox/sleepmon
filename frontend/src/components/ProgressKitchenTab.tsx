@@ -58,7 +58,6 @@ export function ProgressKitchenTab({
       <div className="progress-section">
         <h3 className="progress-section__head">
           {t("progress.favorites")}
-          <span className="muted">{t("progress.favoritesHint")}</span>
         </h3>
         {DISH_TYPES.map((type) => {
           const current = draft.favorite_recipes[type] ?? null;
