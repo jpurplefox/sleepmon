@@ -14,7 +14,7 @@ const hms = (hours: number) => {
 
 const overflows = (s: SleepSession) => Math.round(s.overflow_hours * 60) >= 1;
 
-/** The ⏳ figure: marked with a "+" when the inventory fills before some sleep ends. */
+/** The ⏳ figure: marked with a "+" when some sleep's overflow rounds to at least one minute. */
 export function FillTime({ fillHours, sessions }: { fillHours: number; sessions: SleepSession[] }) {
   const { t } = useI18n();
   const time = hms(fillHours);

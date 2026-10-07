@@ -1783,3 +1783,26 @@ def test_skill_cap_applies_per_sleep(specialty: Specialty, cap: int) -> None:
     for session in prod.sleep_sessions:
         assert len(session.skill_chances) == cap
         assert sum(session.skill_chances) == pytest.approx(cap)
+
+
+def test_float_noise_does_not_read_as_overflow_when_a_sleep_fills_exactly() -> None:
+    # 1334 s / 2.22 -> 600 s per help; 12 one-item helps fill the 12-item inventory.
+    # 12 / (1 / 600) is 7200 - 9e-13 in floats, so a 2:00 nap would show a ~1e-16 h overflow.
+    species = _species(
+        help_frequency_seconds=1334,
+        ingredient_amounts=((1,), (1, 1), (1, 1, 1)),
+        base_inventory=12,
+    )
+    prod = daily_production(
+        species,
+        _INGREDIENTS,
+        level=1,
+        sleep=SleepSchedule(night_minutes=390, nap_minutes=120),
+    )
+    assert prod.seconds_per_help == 600
+    nap = prod.sleep_sessions[1]
+    assert nap.hours == 2.0
+    assert nap.overflow_hours == 0
+    # All 12 helps of the nap count as normal helps (none turned into overflow).
+    rate = prod.effective_skill_percentage / 100
+    assert nap.skill_chances[0] == pytest.approx(1 - math.exp(-12 * rate))
