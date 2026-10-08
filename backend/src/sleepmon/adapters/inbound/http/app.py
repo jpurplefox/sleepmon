@@ -24,6 +24,7 @@ from sleepmon.adapters.inbound.http.controllers import (
     ProductionController,
     ProgressController,
     RecipeController,
+    SavedTeamController,
     TeamController,
     TeamProductionController,
 )
@@ -38,6 +39,7 @@ from sleepmon.adapters.outbound.postgres.pool import create_pool
 from sleepmon.adapters.outbound.postgres.repository import (
     PostgresPlayerProgressRepository,
     PostgresRefreshTokenRepository,
+    PostgresSavedTeamRepository,
     PostgresTeamRepository,
     PostgresUserRepository,
 )
@@ -45,6 +47,10 @@ from sleepmon.application.auth_service import AuthService, DefaultAuthService
 from sleepmon.application.progress_service import (
     DefaultPlayerProgressService,
     PlayerProgressService,
+)
+from sleepmon.application.saved_team_service import (
+    DefaultSavedTeamService,
+    SavedTeamService,
 )
 from sleepmon.application.services import (
     DefaultProductionService,
@@ -54,7 +60,11 @@ from sleepmon.application.services import (
 )
 from sleepmon.config import Settings
 from sleepmon.domain.auth import InvalidCredentialError, InvalidRefreshError, InvalidTokenError
-from sleepmon.domain.errors import TeamMemberNotFoundError, ValidationError
+from sleepmon.domain.errors import (
+    SavedTeamNotFoundError,
+    TeamMemberNotFoundError,
+    ValidationError,
+)
 from sleepmon.domain.ports import AccessTokenService, RecipeCatalog, SpeciesCatalog
 
 
@@ -66,6 +76,12 @@ def _not_found_handler(
     _: Request[Any, Any, Any], exc: TeamMemberNotFoundError
 ) -> Response[ErrorOut]:
     return Response(ErrorOut(detail=f"No existe el miembro {exc}."), status_code=HTTP_404_NOT_FOUND)
+
+
+def _saved_team_not_found_handler(
+    _: Request[Any, Any, Any], exc: SavedTeamNotFoundError
+) -> Response[ErrorOut]:
+    return Response(ErrorOut(detail=f"No existe el equipo {exc}."), status_code=HTTP_404_NOT_FOUND)
 
 
 def _unauthorized_handler(_: Request[Any, Any, Any], exc: Exception) -> Response[ErrorOut]:
@@ -84,6 +100,7 @@ def create_app(
     access: AccessTokenService | None = None,
     auth_service: AuthService | None = None,
     progress_service: PlayerProgressService | None = None,
+    saved_team_service: SavedTeamService | None = None,
 ) -> Litestar:
     # ``object`` y no ``Any``: el valor de retorno de los hooks se descarta, pero
     # ``Any`` apagaría el chequeo de tipos sobre el cuerpo de cada callback.
@@ -115,7 +132,9 @@ def create_app(
         pool = team_pool
         repository = PostgresTeamRepository(team_pool)
         progress = PostgresPlayerProgressRepository(team_pool)
-        service = DefaultTeamService(repository, catalog, progress)
+        service = DefaultTeamService(
+            repository, catalog, progress, PostgresSavedTeamRepository(team_pool)
+        )
         # Litestar pasa el app a los hooks que aceptan un argumento; sin el lambda,
         # `pool.close` recibiría el app como su parámetro `timeout` y reventaría.
         # ``team_pool`` (a diferencia de ``pool``) tiene un único sitio de asignación,
@@ -162,12 +181,29 @@ def create_app(
             PostgresPlayerProgressRepository(progress_pool), recipe_catalog
         )
 
+    if saved_team_service is None:
+        settings = settings or Settings.from_env()
+        # Reuses the pool already opened above; never a second one.
+        if pool is None:
+            saved_pool = create_pool(settings.database_url)
+            pool = saved_pool
+            on_shutdown.append(lambda: saved_pool.close())
+        else:
+            saved_pool = pool
+        saved_team_service = DefaultSavedTeamService(
+            PostgresSavedTeamRepository(saved_pool),
+            PostgresTeamRepository(saved_pool),
+            recipe_catalog,
+            clock=lambda: datetime.now(UTC),
+        )
+
     # Singletons inyectados por DI (sync_to_thread=False: solo devuelven la instancia).
     bound_service = service
     bound_production_service = production_service
     bound_catalog = catalog
     bound_auth_service = auth_service
     bound_progress_service = progress_service
+    bound_saved_team_service = saved_team_service
 
     cookie_secure = settings.cookie_secure if settings is not None else True
     cookie_samesite = settings.cookie_samesite if settings is not None else "strict"
@@ -189,6 +225,7 @@ def create_app(
             TeamProductionController,
             AuthController,
             ProgressController,
+            SavedTeamController,
         ],
         state=State(
             {
@@ -207,10 +244,12 @@ def create_app(
             "current_user_id": Provide(current_user_id, sync_to_thread=False),
             "auth_service": Provide(lambda: bound_auth_service, sync_to_thread=False),
             "progress": Provide(lambda: bound_progress_service, sync_to_thread=False),
+            "saved_teams": Provide(lambda: bound_saved_team_service, sync_to_thread=False),
         },
         exception_handlers={
             ValidationError: _validation_handler,
             TeamMemberNotFoundError: _not_found_handler,
+            SavedTeamNotFoundError: _saved_team_not_found_handler,
             InvalidCredentialError: _unauthorized_handler,
             InvalidTokenError: _unauthorized_handler,
             InvalidRefreshError: _unauthorized_handler,

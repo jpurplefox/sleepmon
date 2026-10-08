@@ -15,6 +15,7 @@ from sleepmon.domain.auth import ExternalIdentity, RefreshToken, User
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.progress import PlayerProgress
 from sleepmon.domain.recipes import Recipe
+from sleepmon.domain.saved_team import SavedTeam
 from sleepmon.domain.species import Species
 
 
@@ -79,6 +80,32 @@ class PlayerProgressRepository(ABC):
         El adapter es dueño de la transacción; ``change`` es puro. Si ``change``
         levanta, la transacción se revierte y la fila queda intacta.
         """
+
+
+class SavedTeamRepository(ABC):
+    """Persistence of saved teams, isolated by owning user.
+
+    ``add`` and ``update`` raise ``ValidationError`` when the name collides with
+    another team of the same user (the storage's backstop for the service's check).
+    """
+
+    @abstractmethod
+    def list(self, user_id: UUID) -> list[SavedTeam]:
+        """The user's teams, most recently saved first."""
+
+    @abstractmethod
+    def get(self, team_id: UUID, user_id: UUID) -> SavedTeam | None: ...
+
+    @abstractmethod
+    def add(self, team: SavedTeam, user_id: UUID) -> None: ...
+
+    @abstractmethod
+    def update(self, team: SavedTeam, user_id: UUID) -> bool:
+        """Replace an existing team. Returns ``False`` if it did not exist."""
+
+    @abstractmethod
+    def delete(self, team_id: UUID, user_id: UUID) -> bool:
+        """Delete a team. Returns ``False`` if it did not exist."""
 
 
 class AccessTokenService(ABC):

@@ -7,8 +7,9 @@ para serializar derecho.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from uuid import UUID
 
 from sleepmon.domain.catalog_data import DEFAULT_POT_SIZE
 
@@ -399,3 +400,28 @@ class ProgressPatchInput:
     favorite_recipes: Mapping[str, str | None] | None = None
     area_bonuses: Mapping[str, int] | None = None
     sleep: SleepInput | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class SavedSlotInput:
+    """One slot of a saved team as the client sends it.
+
+    ``share`` is the first member's time share; it is ignored for a single member.
+    """
+
+    members: Sequence[UUID]
+    share: float = 1.0
+
+
+@dataclass(frozen=True, slots=True)
+class SavedTeamInput:
+    """A whole saved team as the client sends it (enum values as raw strings)."""
+
+    name: str
+    slots: Sequence[SavedSlotInput]
+    weekly_bonus: str
+    meals: Sequence[str | None]
+    island: str | None = None
+    favorite_berries: Sequence[str] = ()
+    main_favorite: str | None = None
+    dish_type: str | None = None

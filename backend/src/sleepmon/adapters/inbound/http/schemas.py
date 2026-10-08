@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+from uuid import UUID
+
 import msgspec
 
 from sleepmon.domain.catalog_data import DEFAULT_POT_SIZE
@@ -412,3 +415,45 @@ class TeamProductionOut(msgspec.Struct):
     grand_total_strength: float
     grand_total_strength_base: float
     berries: list[TeamBerryRowOut] = []
+
+
+class SavedSlotIn(msgspec.Struct, forbid_unknown_fields=True):
+    """A slot of a saved team: 1..2 Box entry ids; ``share`` is the first one's."""
+
+    members: list[UUID]
+    share: float
+
+
+class SavedTeamIn(msgspec.Struct, forbid_unknown_fields=True):
+    """A whole saved team, for POST (new) and PUT (replace)."""
+
+    name: str
+    slots: list[SavedSlotIn]
+    weekly_bonus: str
+    meals: list[str | None]
+    island: str | None = None
+    favorite_berries: list[str] = msgspec.field(default_factory=list)
+    main_favorite: str | None = None
+    dish_type: str | None = None
+
+
+class SavedTeamRenameIn(msgspec.Struct, forbid_unknown_fields=True):
+    name: str
+
+
+class SavedSlotOut(msgspec.Struct):
+    members: list[str]
+    share: float
+
+
+class SavedTeamOut(msgspec.Struct):
+    id: str
+    name: str
+    slots: list[SavedSlotOut]
+    island: str | None
+    favorite_berries: list[str]
+    main_favorite: str | None
+    weekly_bonus: str
+    dish_type: str | None
+    meals: list[str | None]
+    saved_at: datetime

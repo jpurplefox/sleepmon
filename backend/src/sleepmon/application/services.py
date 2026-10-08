@@ -75,6 +75,7 @@ from sleepmon.domain.map_bonuses import MapBonuses
 from sleepmon.domain.ports import (
     PlayerProgressRepository,
     RecipeCatalog,
+    SavedTeamRepository,
     SpeciesCatalog,
     TeamRepository,
 )
@@ -87,6 +88,7 @@ from sleepmon.domain.production import (
     scale_daily,
 )
 from sleepmon.domain.progress import validate_pot_size
+from sleepmon.domain.saved_team import contains, without_member
 from sleepmon.domain.sleep import SleepSchedule
 from sleepmon.domain.species import Species
 from sleepmon.domain.team_helps import HelpedYields, extra_help_yields
@@ -413,11 +415,14 @@ class DefaultTeamService(TeamService):
         repository: TeamRepository,
         catalog: SpeciesCatalog,
         progress: PlayerProgressRepository,
+        saved_teams: SavedTeamRepository,
     ) -> None:
         self._repo = repository
         self._catalog = catalog
         # The Box computes with the saved sleep schedule.
         self._progress = progress
+        # Deleting a Box entry detaches it from the saved teams it is in.
+        self._saved_teams = saved_teams
 
     def add_member(self, user_id: UUID, data: TeamMemberInput) -> TeamMember:
         member = self._build_member(data)
@@ -490,8 +495,22 @@ class DefaultTeamService(TeamService):
         return member
 
     def delete_member(self, user_id: UUID, member_id: UUID) -> None:
+        if self._repo.get(member_id, user_id) is None:
+            raise TeamMemberNotFoundError(str(member_id))
+        self._detach_from_saved_teams(user_id, member_id)
         if not self._repo.delete(member_id, user_id):
             raise TeamMemberNotFoundError(str(member_id))
+
+    def _detach_from_saved_teams(self, user_id: UUID, member_id: UUID) -> None:
+        """Remove the entry from every saved team; delete the teams it leaves empty."""
+        for team in self._saved_teams.list(user_id):
+            if not contains(team, member_id):
+                continue
+            remaining = without_member(team, member_id)
+            if remaining is None:
+                self._saved_teams.delete(team.id, user_id)
+            else:
+                self._saved_teams.update(remaining, user_id)
 
     def distributions(self, user_id: UUID) -> Distributions:
         members = self._repo.list(user_id)

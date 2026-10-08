@@ -9,7 +9,7 @@ from enum import Enum
 from typing import TypeVar
 from uuid import UUID
 
-from psycopg import Cursor
+from psycopg import Cursor, errors
 from psycopg.rows import TupleRow, class_row
 from psycopg.types.json import Jsonb
 from psycopg_pool import ConnectionPool
@@ -21,12 +21,23 @@ from sleepmon.domain.errors import ValidationError
 from sleepmon.domain.ports import (
     PlayerProgressRepository,
     RefreshTokenRepository,
+    SavedTeamRepository,
     TeamRepository,
     UserRepository,
 )
 from sleepmon.domain.progress import PlayerProgress
+from sleepmon.domain.saved_team import SavedSlot, SavedTeam, duplicate_name_error
 from sleepmon.domain.sleep import SleepSchedule
-from sleepmon.domain.value_objects import Ingredient, Island, Nature, RecipeType, Ribbon, SubSkill
+from sleepmon.domain.value_objects import (
+    Berry,
+    Ingredient,
+    Island,
+    Nature,
+    RecipeType,
+    Ribbon,
+    SubSkill,
+    WeeklyBonus,
+)
 
 _E = TypeVar("_E", bound=Enum)
 
@@ -397,3 +408,123 @@ class PostgresPlayerProgressRepository(PlayerProgressRepository):
                     ),
                 )
         return updated
+
+
+# The unique index on (user_id, lower(name)) from migration 0004.
+_SAVED_TEAM_NAME_KEY = "saved_team_user_name_key"
+
+
+@dataclass(frozen=True, slots=True)
+class _SavedTeamRow:
+    """Row of ``saved_team`` (the scalar columns plus the three JSONB documents)."""
+
+    id: UUID
+    name: str
+    island: str | None
+    favorite_berries: list[str]
+    main_favorite: str | None
+    weekly_bonus: str
+    dish_type: str | None
+    meals: list[str | None]
+    slots: list[dict[str, object]]
+    saved_at: datetime
+
+
+def _decode_slot(raw: dict[str, object]) -> SavedSlot:
+    members = raw.get("members")
+    share = raw.get("share", 1.0)
+    if not isinstance(members, list) or not isinstance(share, int | float):
+        raise ValidationError(f"Slot inválido en la base: {raw!r}.")
+    return SavedSlot(tuple(UUID(str(m)) for m in members), float(share))
+
+
+def _to_saved_team(row: _SavedTeamRow) -> SavedTeam:
+    """Decode a row, tolerating enum values the catalogue no longer has.
+
+    Like the progress row: an unknown map, berry or dish type is dropped (read as
+    "none") rather than turning the Teams screen into a 500. An unknown weekly bonus
+    falls back to the default one, since a team always has one.
+    """
+    berries = (_decode_optional(Berry, b) for b in row.favorite_berries)
+    meals = list(row.meals) + [None] * (3 - len(row.meals))
+    return SavedTeam(
+        id=row.id,
+        name=row.name,
+        slots=tuple(_decode_slot(s) for s in row.slots),
+        island=None if row.island is None else _decode_optional(Island, row.island),
+        favorite_berries=tuple(b for b in berries if b is not None),
+        main_favorite=(
+            None if row.main_favorite is None else _decode_optional(Berry, row.main_favorite)
+        ),
+        weekly_bonus=_decode_optional(WeeklyBonus, row.weekly_bonus) or WeeklyBonus.BERRY_STRENGTH,
+        dish_type=None if row.dish_type is None else _decode_optional(RecipeType, row.dish_type),
+        meals=(meals[0], meals[1], meals[2]),
+        saved_at=row.saved_at,
+    )
+
+
+def _saved_team_values(team: SavedTeam) -> tuple[object, ...]:
+    """The writable columns, in the order INSERT and UPDATE share (after the id)."""
+    return (
+        team.name,
+        None if team.island is None else team.island.value,
+        Jsonb([b.value for b in team.favorite_berries]),
+        None if team.main_favorite is None else team.main_favorite.value,
+        team.weekly_bonus.value,
+        None if team.dish_type is None else team.dish_type.value,
+        Jsonb(list(team.meals)),
+        Jsonb([{"members": [str(m) for m in s.members], "share": s.share} for s in team.slots]),
+        team.saved_at,
+    )
+
+
+class PostgresSavedTeamRepository(SavedTeamRepository):
+    def __init__(self, pool: ConnectionPool) -> None:
+        self._pool = pool
+
+    def list(self, user_id: UUID) -> list[SavedTeam]:
+        with (
+            self._pool.connection() as conn,
+            conn.cursor(row_factory=class_row(_SavedTeamRow)) as cur,
+        ):
+            cur.execute(queries.SELECT_SAVED_TEAMS, (user_id,))
+            rows = cur.fetchall()
+        return [_to_saved_team(r) for r in rows]
+
+    def get(self, team_id: UUID, user_id: UUID) -> SavedTeam | None:
+        with (
+            self._pool.connection() as conn,
+            conn.cursor(row_factory=class_row(_SavedTeamRow)) as cur,
+        ):
+            cur.execute(queries.SELECT_SAVED_TEAM_BY_ID, (team_id, user_id))
+            row = cur.fetchone()
+        return None if row is None else _to_saved_team(row)
+
+    def add(self, team: SavedTeam, user_id: UUID) -> None:
+        try:
+            with self._pool.connection() as conn, conn.cursor() as cur:
+                cur.execute(
+                    queries.INSERT_SAVED_TEAM, (team.id, *_saved_team_values(team), user_id)
+                )
+        except errors.UniqueViolation as exc:
+            if exc.diag.constraint_name == _SAVED_TEAM_NAME_KEY:
+                raise duplicate_name_error(team.name) from exc
+            raise
+
+    def update(self, team: SavedTeam, user_id: UUID) -> bool:
+        try:
+            with self._pool.connection() as conn, conn.cursor() as cur:
+                cur.execute(
+                    queries.UPDATE_SAVED_TEAM, (*_saved_team_values(team), team.id, user_id)
+                )
+                return cur.rowcount > 0
+        except errors.UniqueViolation as exc:
+            if exc.diag.constraint_name == _SAVED_TEAM_NAME_KEY:
+                raise duplicate_name_error(team.name) from exc
+            raise
+
+    def delete(self, team_id: UUID, user_id: UUID) -> bool:
+        with self._pool.connection() as conn, conn.cursor() as cur:
+            cur.execute(queries.DELETE_SAVED_TEAM, (team_id, user_id))
+            return cur.rowcount > 0
+

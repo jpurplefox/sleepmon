@@ -12,7 +12,11 @@ from sleepmon.domain.errors import (
 )
 from sleepmon.domain.progress import PlayerProgress
 from sleepmon.domain.sleep import SleepSchedule
-from tests.fakes import InMemoryPlayerProgressRepository, InMemoryTeamRepository
+from tests.fakes import (
+    InMemoryPlayerProgressRepository,
+    InMemorySavedTeamRepository,
+    InMemoryTeamRepository,
+)
 
 UID = uuid4()
 """Usuario fijo para los tests que no ejercitan el aislamiento entre usuarios
@@ -22,7 +26,10 @@ UID = uuid4()
 @pytest.fixture
 def service() -> DefaultTeamService:
     return DefaultTeamService(
-        InMemoryTeamRepository(), StaticSpeciesCatalog(), InMemoryPlayerProgressRepository()
+        InMemoryTeamRepository(),
+        StaticSpeciesCatalog(),
+        InMemoryPlayerProgressRepository(),
+        InMemorySavedTeamRepository(),
     )
 
 
@@ -47,7 +54,12 @@ def test_add_member_persists_and_returns(service: DefaultTeamService) -> None:
 
 def test_service_passes_user_id_to_repo() -> None:
     repo = InMemoryTeamRepository()
-    service = DefaultTeamService(repo, StaticSpeciesCatalog(), InMemoryPlayerProgressRepository())
+    service = DefaultTeamService(
+        repo,
+        StaticSpeciesCatalog(),
+        InMemoryPlayerProgressRepository(),
+        InMemorySavedTeamRepository(),
+    )
     uid = uuid4()
     created = service.add_member(uid, valid_input())
     assert service.get_member(uid, created.id).id == created.id
@@ -300,8 +312,15 @@ def test_box_overview_exposes_berry_burst_counts(service: DefaultTeamService) ->
 def test_box_production_uses_the_saved_sleep_schedule() -> None:
     progress = InMemoryPlayerProgressRepository()
     team = InMemoryTeamRepository()
-    plain = DefaultTeamService(team, StaticSpeciesCatalog(), InMemoryPlayerProgressRepository())
-    with_nap = DefaultTeamService(team, StaticSpeciesCatalog(), progress)
+    plain = DefaultTeamService(
+        team,
+        StaticSpeciesCatalog(),
+        InMemoryPlayerProgressRepository(),
+        InMemorySavedTeamRepository(),
+    )
+    with_nap = DefaultTeamService(
+        team, StaticSpeciesCatalog(), progress, InMemorySavedTeamRepository()
+    )
     plain.add_member(UID, valid_input())
     progress.transform(UID, lambda _: PlayerProgress(sleep=SleepSchedule(390, 120)))
 
