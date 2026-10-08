@@ -3114,6 +3114,14 @@ button.prod-card__base-tag--action {
   gap: 0.35rem;
 }
 
+/* On touch the ‹ › hit areas (40px) make the row taller than the name, which pushes
+   the name away from the toolbar above; the extra hit area overlaps the padding instead. */
+@media (pointer: coarse) {
+  .prod-card__topline {
+    margin-top: -0.25rem;
+  }
+}
+
 /* El sprite es el foco visual de la card: centrado bajo el nombre, generoso. */
 .prod-card__sprite {
   width: 88px;
