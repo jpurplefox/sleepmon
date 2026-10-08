@@ -162,7 +162,7 @@ There's no team, so the teammates' part has no berry to value.
 ## Acceptance criteria
 
 - A **Berry Burst** level 1 Pokémon at level 30 with Durin, per trigger: **11** own
-  berries worth **61** each (**671**); with the **favorite** scenario, **122** each.
+  berries worth **61** each (**671**); with its berry as a favorite, **122** each.
 - In Team Analysis, a **Pikachu** (Grepa) at level 30 as a teammate adds, per trigger
   of a level-1 Berry Burst, **1** Grepa worth **54** to the team's **Grepa** row; that
   row's tooltip splits **helps** and **Berry Burst**.
