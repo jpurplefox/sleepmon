@@ -55,6 +55,13 @@ export function useSaveTeam() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: saveTeam,
+    // Into the cache at once: until the refetch lands, the list would not hold the
+    // team just saved, and the session would read its open team as deleted.
+    onSuccess: (team) =>
+      qc.setQueryData<SavedTeam[]>(SAVED_TEAMS_KEY, (old) => [
+        team,
+        ...(old ?? []).filter((t) => t.id !== team.id),
+      ]),
     onSettled: () => {
       // Box writes may have landed even when the team itself failed.
       qc.invalidateQueries({ queryKey: ["members"] });
