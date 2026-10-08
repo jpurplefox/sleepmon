@@ -95,7 +95,8 @@ export function GoogleSignInButton() {
           disabled={busy}
         >
           <span className="g" aria-hidden="true">G</span>
-          {t("auth.signInGoogle")}
+          <span className="btn--google__long">{t("auth.signInGoogle")}</span>
+          <span className="btn--google__short">{t("auth.signInShort")}</span>
         </button>
         <div
           ref={overlayRef}

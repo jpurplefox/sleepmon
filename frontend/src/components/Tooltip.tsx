@@ -1,5 +1,5 @@
 import type React from "react";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 interface TooltipProps {
   /** Content shown in the bubble — a plain string or rich nodes (`Tooltip.Row`). */
@@ -16,8 +16,9 @@ interface TooltipProps {
 const VIEWPORT_MARGIN = 8;
 
 /**
- * The single tooltip in the app: a bubble above its trigger, revealed on hover
- * and keyboard focus. It centers over the trigger and clamps to the viewport so
+ * The single tooltip in the app: a bubble above its trigger, revealed on mouse
+ * hover, keyboard focus, or a tap (which toggles it; a tap elsewhere or Escape
+ * closes it). It centers over the trigger and clamps to the viewport so
  * it never overflows on either edge, for any bubble width. Rich content uses the
  * `Tooltip.Row` / `Tooltip.Label` / `Tooltip.Value` helpers.
  */
@@ -25,12 +26,32 @@ export function Tooltip({ content, label, children, className }: TooltipProps) {
   const wrapRef = useRef<HTMLSpanElement>(null);
   const bubbleRef = useRef<HTMLSpanElement>(null);
   const [left, setLeft] = useState<number | null>(null);
-  // React owns reveal/hide (no CSS :hover/:focus-within): hover and focus are
-  // tracked separately and OR'd, matching the old CSS semantics, so the bubble
-  // stays open while either is true.
+  // React owns reveal/hide (no CSS :hover/:focus-within): each way in is tracked
+  // on its own and OR'd, so the bubble stays open while any is true.
+  // Hover counts only for a real mouse: a touch's emulated hover would stick.
   const [hovered, setHovered] = useState(false);
+  // Focus counts only from the keyboard: a tapped button keeps focus, and would too.
   const [focused, setFocused] = useState(false);
-  const open = hovered || focused;
+  const [tapped, setTapped] = useState(false);
+  const lastPointer = useRef("mouse");
+  const open = hovered || focused || tapped;
+
+  // A tapped bubble stays until a tap elsewhere or Escape.
+  useEffect(() => {
+    if (!tapped) return;
+    const onDown = (e: PointerEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setTapped(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setTapped(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [tapped]);
 
   const ariaLabel = label ?? (typeof content === "string" ? content : undefined);
 
@@ -45,9 +66,11 @@ export function Tooltip({ content, label, children, className }: TooltipProps) {
     let x = t.width / 2 - width / 2;
     const vpLeft = t.left + x;
     if (vpLeft < VIEWPORT_MARGIN) x += VIEWPORT_MARGIN - vpLeft;
+    // Not innerWidth: on mobile it grows to fit the overflowing bubble itself.
+    const screenWidth = document.documentElement.clientWidth;
     const vpRight = t.left + x + width;
-    if (vpRight > window.innerWidth - VIEWPORT_MARGIN) {
-      x -= vpRight - (window.innerWidth - VIEWPORT_MARGIN);
+    if (vpRight > screenWidth - VIEWPORT_MARGIN) {
+      x -= vpRight - (screenWidth - VIEWPORT_MARGIN);
     }
     setLeft(x);
   };
@@ -65,9 +88,11 @@ export function Tooltip({ content, label, children, className }: TooltipProps) {
       ref={wrapRef}
       className={className ? `tooltip ${className}` : "tooltip"}
       aria-label={ariaLabel}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onFocus={() => setFocused(true)}
+      onPointerEnter={(e) => e.pointerType === "mouse" && setHovered(true)}
+      onPointerLeave={(e) => e.pointerType === "mouse" && setHovered(false)}
+      onPointerDown={(e) => (lastPointer.current = e.pointerType)}
+      onClick={() => lastPointer.current !== "mouse" && setTapped((t) => !t)}
+      onFocus={(e) => setFocused(e.target.matches(":focus-visible"))}
       onBlur={() => setFocused(false)}
     >
       {children}

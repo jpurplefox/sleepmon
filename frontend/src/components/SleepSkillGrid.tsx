@@ -1,6 +1,7 @@
 import { useI18n } from "../i18n";
 import type { SleepSession } from "../types";
 import { IconMoon, IconSun } from "./icons";
+import { Tooltip } from "./Tooltip";
 
 const fracPct = (n: number) => `${(n * 100).toFixed(1)}%`;
 
@@ -17,17 +18,17 @@ export function SleepSkillGrid({ sessions }: { sessions: SleepSession[] }) {
       <span />
       {specialist ? (
         <>
-          <span className="night-grid__h" title={t("card.sleepAtLeastOnceTitle")}>
+          <Tooltip content={t("card.sleepAtLeastOnceTitle")} className="tooltip--inline night-grid__h">
             {t("card.sleepAtLeastOnce")}
-          </span>
-          <span className="night-grid__h" title={t("card.sleepTwiceTitle")}>
+          </Tooltip>
+          <Tooltip content={t("card.sleepTwiceTitle")} className="tooltip--inline night-grid__h">
             {t("card.sleepTwice")}
-          </span>
+          </Tooltip>
         </>
       ) : (
-        <span className="night-grid__h" title={t("card.sleepOnceTitle")}>
+        <Tooltip content={t("card.sleepOnceTitle")} className="tooltip--inline night-grid__h">
           {t("card.sleepOnce")}
-        </span>
+        </Tooltip>
       )}
       {sessions.map((s) => (
         <div key={s.kind} className="night-grid__row">

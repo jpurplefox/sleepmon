@@ -74,10 +74,10 @@ export function TeamSlotCard({
         splitBtnRef.current?.focus();
       }
     };
-    document.addEventListener("mousedown", onDown);
+    document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("pointerdown", onDown);
       document.removeEventListener("keydown", onKey);
     };
   }, [menuOpen]);

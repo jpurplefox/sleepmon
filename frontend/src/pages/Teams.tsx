@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import type React from "react";
 import {
@@ -26,6 +26,7 @@ import { TeamContextBar, type TeamDialog } from "../components/TeamContextBar";
 import { ToolHeader } from "../components/ToolHeader";
 import { Modal } from "../components/Modal";
 import { Placeholder } from "../components/Placeholder";
+import { SwipePager } from "../components/SwipePager";
 import { TeamSlotCard } from "../components/TeamSlotCard";
 import { StrengthValue } from "../components/StrengthValue";
 import { SnorlaxRatingBadge } from "../components/SnorlaxRatingBadge";
@@ -41,6 +42,7 @@ import { fdown, fup } from "../utils/format";
 import { mealsForDishType, recipeImage } from "../recipes";
 import { areaBonusOf, recipeLevelOf } from "../progress";
 import { statIcon } from "../natures";
+import { spriteUrl } from "../sprites";
 import {
   BERRY_JUICE_ICON,
   CHARGE_STRENGTH_ICON,
@@ -57,6 +59,7 @@ import {
   replaceConfig,
   setSplitShare,
   splitSlot,
+  teamResult,
   toRequest,
 } from "../teamRoster";
 import { useProgress } from "../useProgress";
@@ -261,8 +264,7 @@ export function Teams() {
   const isExpert = island?.expert ?? false;
   const map = mapSummary({
     island: selectedIsland,
-    berries: activeBerries,
-    mainFavorite,
+    berries: favoriteBerries,
     expert: isExpert,
     areaBonusPct,
     weeklyBonus,
@@ -317,7 +319,7 @@ export function Teams() {
 
   // Everything renders daily; the totals card shows daily + ×7 on its own.
   const factor = 1;
-  const result = teamQuery.data;
+  const result = teamResult(slots, teamQuery.data);
   // A placeholder result is for the previous config, so its pot would be stale.
   const potKnown = result !== undefined && !teamQuery.isPlaceholderData;
   const eventPot = eventEffects.some((e) => e.kind === "pot_size");
@@ -347,6 +349,9 @@ export function Teams() {
   }, [result, meals]);
 
   const atMax = slots.length >= MAX_TEAM;
+
+  // On a phone the slots swipe one per screen (CSS), like the comparison.
+  const cardsRef = useRef<HTMLDivElement>(null);
 
   const openForm = (next: Intent) => {
     setNotice(null);
@@ -462,74 +467,100 @@ export function Teams() {
       </ToolHeader>
 
       {/* ── Per-slot cards ── */}
-      <div className="prod-cards prod-cards--compact">
-        {slots.map((slot, i) => {
-          const teamHasSplit = slots.some((s) => s.entries.length === 2);
-          return (
-            <TeamSlotCard
-              key={slot.entries.map((e) => e.id).join("+")}
-              slot={slot}
-              slotIndex={i}
-              catalog={catalog.data}
-              contributions={result?.members}
-              berryRoleOf={berryRoleOf}
-              expert={isExpert}
-              expertSpeed={island?.expert_speed ?? null}
-              weeklyBonus={weeklyBonus}
-              teamHasSplit={teamHasSplit}
-              saveStatus={statusOf}
-              onAddNew={(idx) => openForm({ kind: "split", slotIndex: idx })}
-              onAddFromBox={(idx) => guard(() => openBox({ kind: "split", slotIndex: idx }))}
-              onEdit={(si, ei) => openForm({ kind: "edit", slotIndex: si, entryIndex: ei })}
-              onSaveToBox={(si, ei) => guard(() => saveEntryToBox(si, ei))}
-              onRemoveSlot={(idx) => setSlots((prev) => removeSlot(prev, idx))}
-              onRemoveEntry={(si, ei) => setSlots((prev) => removeEntry(prev, si, ei))}
-              onWeightChange={(idx, pctA) => setSlots((prev) => setSplitShare(prev, idx, pctA))}
-            />
-          );
-        })}
+      {/* The pager docks only while the cards are on screen: the deck bounds its sticky. */}
+      <div className="swipe-deck">
+        {/* Mounted even with no slots, so it sees the first one arrive. */}
+        <SwipePager
+          track={cardsRef}
+          hidden={slots.length === 0}
+          label={t("pager.aria")}
+          items={[
+            ...slots.map((slot) => ({
+              key: slot.entries.map((e) => e.id).join("+"),
+              label: t("pager.show", { name: slot.entries.map((e) => e.config.species).join(" / ") }),
+              // A split slot shows both of its Pokémon.
+              icon: (
+                <span className="swipe-pager__sprites">
+                  {slot.entries.map((e) => {
+                    const dex = catalog.data.species.find((s) => s.name === e.config.species)?.dex;
+                    return dex ? <img key={e.id} src={spriteUrl(dex)} alt="" /> : null;
+                  })}
+                </span>
+              ),
+            })),
+            ...(atMax ? [] : [{ key: "add", label: t("pager.add"), icon: <span aria-hidden="true">+</span> }]),
+          ]}
+        />
 
-        {/* Trailing "add" slot — hidden once the team is full (max is obvious). */}
-        {!atMax && (
-          <div className="prod-card-cell">
-            <div className="prod-card__toolbar prod-card__toolbar--empty" aria-hidden="true" />
-            <article className="prod-card prod-card--add">
-              {slots.length === 0 ? (
-                <div className="prod-add__hint">
-                  <p className="prod-add__lead">{t("teams.emptyLead")}</p>
-                  <p className="muted">{t("teams.emptyBody")}</p>
-                </div>
-              ) : (
-                <p className="muted prod-add__hint">{t("teams.addHintMore")}</p>
-              )}
-              <div className="prod-add__actions">
-                <button
-                  type="button"
-                  className="btn btn--primary"
-                  onClick={() => openForm({ kind: "add" })}
-                >
-                  {t("prod.new")}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn--ghost"
-                  onClick={() => guard(() => openBox({ kind: "add" }))}
-                >
-                  {t("prod.myPokemon")}
-                </button>
-                {slots.length === 0 && status === "authenticated" && (
+        <div className="prod-cards prod-cards--compact prod-cards--swipe" ref={cardsRef}>
+          {slots.map((slot, i) => {
+            const teamHasSplit = slots.some((s) => s.entries.length === 2);
+            return (
+              <TeamSlotCard
+                key={slot.entries.map((e) => e.id).join("+")}
+                slot={slot}
+                slotIndex={i}
+                catalog={catalog.data}
+                contributions={result?.members}
+                berryRoleOf={berryRoleOf}
+                expert={isExpert}
+                expertSpeed={island?.expert_speed ?? null}
+                weeklyBonus={weeklyBonus}
+                teamHasSplit={teamHasSplit}
+                saveStatus={statusOf}
+                onAddNew={(idx) => openForm({ kind: "split", slotIndex: idx })}
+                onAddFromBox={(idx) => guard(() => openBox({ kind: "split", slotIndex: idx }))}
+                onEdit={(si, ei) => openForm({ kind: "edit", slotIndex: si, entryIndex: ei })}
+                onSaveToBox={(si, ei) => guard(() => saveEntryToBox(si, ei))}
+                onRemoveSlot={(idx) => setSlots((prev) => removeSlot(prev, idx))}
+                onRemoveEntry={(si, ei) => setSlots((prev) => removeEntry(prev, si, ei))}
+                onWeightChange={(idx, pctA) => setSlots((prev) => setSplitShare(prev, idx, pctA))}
+              />
+            );
+          })}
+
+          {/* Trailing "add" slot — hidden once the team is full (max is obvious). */}
+          {!atMax && (
+            <div className="prod-card-cell">
+              <div className="prod-card__toolbar prod-card__toolbar--empty" aria-hidden="true" />
+              <article className="prod-card prod-card--add">
+                {slots.length === 0 ? (
+                  <div className="prod-add__hint">
+                    <p className="prod-add__lead">{t("teams.emptyLead")}</p>
+                    <p className="muted">{t("teams.emptyBody")}</p>
+                  </div>
+                ) : (
+                  <p className="muted prod-add__hint">{t("teams.addHintMore")}</p>
+                )}
+                <div className="prod-add__actions">
+                  <button
+                    type="button"
+                    className="btn btn--primary"
+                    onClick={() => openForm({ kind: "add" })}
+                  >
+                    {t("prod.new")}
+                  </button>
                   <button
                     type="button"
                     className="btn btn--ghost"
-                    onClick={() => navigate(ROUTES.savedTeams)}
+                    onClick={() => guard(() => openBox({ kind: "add" }))}
                   >
-                    {t("saved.openTeam")}
+                    {t("prod.myPokemon")}
                   </button>
-                )}
-              </div>
-            </article>
-          </div>
-        )}
+                  {slots.length === 0 && status === "authenticated" && (
+                    <button
+                      type="button"
+                      className="btn btn--ghost"
+                      onClick={() => navigate(ROUTES.savedTeams)}
+                    >
+                      {t("saved.openTeam")}
+                    </button>
+                  )}
+                </div>
+              </article>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Loading / error states for the team query ── */}

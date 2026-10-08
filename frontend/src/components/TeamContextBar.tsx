@@ -101,28 +101,20 @@ export function TeamContextBar({
                 as wide as the longest possible map line and never resizes. */}
             <span className="ctx-map">
               <span className="filter-btn__value">
-                {map.name ?? t("ctx.noMap")}
+                <span className="ctx-map__name">{map.name ?? t("ctx.noMap")}</span>
                 {map.name !== null && (
                   <span className="filter-btn__icons">
-                    {map.berries.map((b) => (
-                      <img
-                        key={b}
-                        className="mini-icon"
-                        src={berryIcon(b)}
-                        alt={berry(b)}
-                        title={berry(b)}
-                      />
-                    ))}
-                    {/* A favorite still to choose reads "?", like the map picker's own list. */}
-                    {Array.from({ length: Math.max(0, 3 - map.berries.length) }, (_, i) => (
-                      <span
-                        key={`unknown-${i}`}
-                        className="island-tab__berry-icon--unknown"
-                        aria-hidden="true"
-                      >
-                        ?
-                      </span>
-                    ))}
+                    {/* Each slot in its place; an open one reads "?", like the map picker's own list. */}
+                    {[0, 1, 2].map((i) => {
+                      const b = map.berries[i];
+                      return b ? (
+                        <img key={i} className="mini-icon" src={berryIcon(b)} alt={berry(b)} title={berry(b)} />
+                      ) : (
+                        <span key={i} className="island-tab__berry-icon--unknown" aria-hidden="true">
+                          ?
+                        </span>
+                      );
+                    })}
                   </span>
                 )}
                 {weekly && weeklyMark(weekly)}

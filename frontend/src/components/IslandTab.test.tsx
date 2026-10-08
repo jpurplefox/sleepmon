@@ -140,14 +140,26 @@ describe("IslandTab main favorite", () => {
     expect(props.onMainFavorite).toHaveBeenCalledWith("Oran");
   });
 
-  it("clears the main favorite when it is removed, keeping the subs", async () => {
+  it("leaves the main's slot open when it is removed, keeping the subs in place", async () => {
     const props = renderTab({
       selectedIsland: "Cyan Beach (Expert)",
       favoriteBerries: ["Oran", "Pecha"],
       mainFavorite: "Oran",
     });
     await userEvent.click(screen.getByRole("button", { name: "Primary berry" }));
-    expect(props.onFavoriteBerries).toHaveBeenCalledWith(["Pecha"]);
+    expect(props.onFavoriteBerries).toHaveBeenCalledWith(["", "Pecha"]);
     expect(props.onMainFavorite).toHaveBeenCalledWith(null);
+  });
+
+  it("leaves a sub's slot open too, so the third doesn't move up", async () => {
+    const props = renderTab({
+      selectedIsland: "Cyan Beach (Expert)",
+      favoriteBerries: ["Oran", "Pecha", "Grepa"],
+      mainFavorite: "Oran",
+    });
+    const pecha = screen.getAllByRole("button", { name: "Secondary berry" }).find((b) => b.textContent?.includes("Pecha"))!;
+    await userEvent.click(pecha);
+    expect(props.onFavoriteBerries).toHaveBeenCalledWith(["Oran", "", "Grepa"]);
+    expect(props.onMainFavorite).toHaveBeenCalledWith("Oran");
   });
 });

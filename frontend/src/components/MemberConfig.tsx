@@ -73,10 +73,10 @@ export function MemberConfig({
 
       {/* Naturaleza: si tiene efecto, ↑/↓ con íconos de stat; si es neutra o no
           tiene, un placeholder que ocupa el MISMO espacio (cuadrados vacíos) para
-          que la fila quede alineada. El nombre va en title/sr-only. */}
-      <span
-        className="prod-box-item__nature icon-row"
-        title={nature ? natureLabel(nature) : t("card.noNature")}
+          que la fila quede alineada. El nombre va en el tooltip y sr-only. */}
+      <Tooltip
+        content={nature ? natureLabel(nature) : t("card.noNature")}
+        className="tooltip--inline prod-box-item__nature icon-row"
       >
         {natureMeta && !natureMeta.neutral && natureMeta.increased && natureMeta.decreased ? (
           <>
@@ -104,7 +104,7 @@ export function MemberConfig({
             <span className="sr-only">{nature ? natureLabel(nature) : t("card.noNature")}</span>
           </>
         )}
-      </span>
+      </Tooltip>
 
       {/* Sub skills: siempre los 5 slots; los no cargados como cuadrado vacío. */}
       <span className="ingredient-row">
@@ -135,7 +135,7 @@ export function MemberConfig({
           sr-only/title para no depender solo del ícono. La Caja la apaga
           (showSkillLevel=false): muestra el nivel en su columna de skill. */}
       {showSkillLevel && (
-        <span className="prod-box-item__skill-lv" title={`${skillName} · ${skillLv}`}>
+        <Tooltip content={`${skillName} · ${skillLv}`} className="tooltip--inline prod-box-item__skill-lv">
           {skillIcon.kind === "img" ? (
             <img className="mini-icon" src={skillIcon.src} alt="" />
           ) : (
@@ -143,7 +143,7 @@ export function MemberConfig({
           )}
           <span aria-hidden="true">{skillLv}</span>
           <span className="sr-only">{`${skillName} ${skillLv}`}</span>
-        </span>
+        </Tooltip>
       )}
     </>
   );

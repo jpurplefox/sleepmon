@@ -20,9 +20,9 @@ export function FillTime({ fillHours, sessions }: { fillHours: number; sessions:
   const time = hms(fillHours);
   if (!sessions.some((s) => overflows(s))) {
     return (
-      <span title={t("card.fillsIn")}>
+      <Tooltip content={t("card.fillsIn")} className="tooltip--inline">
         <IconHourglass /> {time}
-      </span>
+      </Tooltip>
     );
   }
   const rows = sessions.map((s) => {

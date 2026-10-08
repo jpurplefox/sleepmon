@@ -84,3 +84,9 @@ export function toRequest(slots: Slot[]): TeamProductionInput["slots"] {
     };
   });
 }
+
+/** The result to show for a team: none for an empty one, even if the last computed
+ *  result is still cached (the query keeps its previous data while a new one loads). */
+export function teamResult<T>(slots: Slot[], data: T | undefined): T | undefined {
+  return slots.length > 0 ? data : undefined;
+}

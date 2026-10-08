@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  NEUTRAL_MAP, berryRoleOf, comparisonIslands, displayFavorites, mapRequestFields, selectIsland, toggleFavorite,
+  NEUTRAL_MAP, berryRoleOf, comparisonIslands, mainOf, mapRequestFields, selectIsland, toggleFavorite,
   type ComparisonMap,
 } from "./comparisonMap";
 import type { Island } from "./types";
@@ -15,7 +15,7 @@ const pick = (...berries: string[]) => berries.reduce(toggleFavorite, NEUTRAL_MA
 
 describe("comparisonMap", () => {
   it("starts on Normal with no favorites", () => {
-    expect(NEUTRAL_MAP).toEqual({ island: null, favorites: [], main: null, weeklyBonus: "berry_strength" });
+    expect(NEUTRAL_MAP).toEqual({ island: null, favorites: [], weeklyBonus: "berry_strength" });
   });
 
   it("offers only the expert maps, in catalog order", () => {
@@ -23,49 +23,29 @@ describe("comparisonMap", () => {
     expect(comparisonIslands(list).map((i) => i.name)).toEqual(["Greengrass Isle (Expert)", "Cyan Beach (Expert)"]);
   });
 
-  it("makes the first pick the main and caps at three", () => {
+  it("makes slot 1 the main on an expert map only, and caps at three", () => {
     const map = pick("Oran", "Pecha", "Pamtre", "Grepa");
     expect(map.favorites).toEqual(["Oran", "Pecha", "Pamtre"]);
-    expect(map.main).toBe("Oran");
+    expect(mainOf(map, true)).toBe("Oran");
+    expect(mainOf(map, false)).toBeNull();
   });
 
-  it("leaves the main slot vacant on removal and refills it with the next pick", () => {
-    const removed = toggleFavorite(pick("Oran", "Pecha"), "Oran");
-    expect(removed).toMatchObject({ favorites: ["Pecha"], main: null });
-    expect(toggleFavorite(removed, "Grepa")).toMatchObject({ favorites: ["Pecha", "Grepa"], main: "Grepa" });
+  it("leaves a removed berry's slot open, the main's included, and refills it next", () => {
+    const noMain = toggleFavorite(pick("Oran", "Pecha", "Pamtre"), "Oran");
+    expect(noMain.favorites).toEqual(["", "Pecha", "Pamtre"]);
+    expect(mainOf(noMain, true)).toBeNull();
+    expect(mainOf(toggleFavorite(noMain, "Grepa"), true)).toBe("Grepa");
+
+    const noSecond = toggleFavorite(pick("Oran", "Pecha", "Pamtre"), "Pecha");
+    expect(noSecond.favorites).toEqual(["Oran", "", "Pamtre"]);
   });
 
-  it("keeps favorites when switching maps and fills a vacant main on an expert one", () => {
-    const vacant = toggleFavorite(pick("Oran", "Pecha"), "Oran");
-    const expert = selectIsland(vacant, CYAN);
-    expect(expert).toMatchObject({ island: CYAN.name, favorites: ["Pecha"], main: "Pecha" });
-    expect(selectIsland(expert, null)).toMatchObject({ island: null, favorites: ["Pecha"] });
-  });
-
-  it("makes the first favorite the main when entering an expert map from Normal", () => {
-    const hidden = toggleFavorite(toggleFavorite(pick("Oran", "Pecha"), "Oran"), "Grepa");
-    expect(hidden).toMatchObject({ favorites: ["Pecha", "Grepa"], main: "Grepa" });
-    expect(selectIsland(hidden, CYAN)).toMatchObject({ favorites: ["Pecha", "Grepa"], main: "Pecha" });
-  });
-
-  it("keeps the main when switching between expert maps", () => {
-    const onCyan = selectIsland(NEUTRAL_MAP, CYAN);
-    const refilled = toggleFavorite(toggleFavorite(toggleFavorite(onCyan, "Oran"), "Pecha"), "Oran");
-    const withMain = toggleFavorite(refilled, "Grepa");
-    expect(withMain.main).toBe("Grepa");
-    expect(selectIsland(withMain, island("Greengrass Isle (Expert)", true)).main).toBe("Grepa");
-  });
-
-  it("keeps an already set main when entering an expert map from Normal", () => {
-    const map = pick("Oran", "Pecha");
-    expect(selectIsland(map, CYAN).main).toBe("Oran");
-  });
-
-  it("displays the main first on expert maps only", () => {
-    const map: ComparisonMap = { ...pick("Oran", "Pecha", "Grepa"), main: "Grepa" };
-    expect(displayFavorites(map, true)).toEqual(["Grepa", "Oran", "Pecha"]);
-    expect(displayFavorites(map, false)).toEqual(["Oran", "Pecha", "Grepa"]);
-    expect(displayFavorites({ ...map, main: null }, true)).toEqual(["Oran", "Pecha", "Grepa"]);
+  it("keeps the slots when switching maps", () => {
+    const open = toggleFavorite(pick("Oran", "Pecha"), "Oran");
+    const expert = selectIsland(open, CYAN);
+    expect(expert).toEqual({ ...open, island: CYAN.name });
+    expect(mainOf(expert, true)).toBeNull();
+    expect(selectIsland(expert, null).favorites).toEqual(["", "Pecha"]);
   });
 
   it("reads roles: never main off an expert map", () => {
@@ -76,13 +56,14 @@ describe("comparisonMap", () => {
     expect(berryRoleOf(map, false, "Oran")).toBe("sub");
   });
 
-  it("sends main and weekly bonus only on an expert map", () => {
-    const map: ComparisonMap = { ...pick("Oran"), weeklyBonus: "ingredient" };
+  it("sends the picked berries without open slots, and main and weekly bonus only on an expert map", () => {
+    const map: ComparisonMap = { ...toggleFavorite(pick("Oran", "Pecha"), "Oran"), weeklyBonus: "ingredient" };
     expect(mapRequestFields(map, false)).toEqual({
-      island: null, favorite_berries: ["Oran"], main_favorite: null, weekly_bonus: null,
+      island: null, favorite_berries: ["Pecha"], main_favorite: null, weekly_bonus: null,
     });
-    expect(mapRequestFields({ ...map, island: CYAN.name }, true)).toEqual({
-      island: CYAN.name, favorite_berries: ["Oran"], main_favorite: "Oran", weekly_bonus: "ingredient",
+    const full: ComparisonMap = { ...pick("Oran", "Pecha"), island: CYAN.name, weeklyBonus: "ingredient" };
+    expect(mapRequestFields(full, true)).toEqual({
+      island: CYAN.name, favorite_berries: ["Oran", "Pecha"], main_favorite: "Oran", weekly_bonus: "ingredient",
     });
   });
 });

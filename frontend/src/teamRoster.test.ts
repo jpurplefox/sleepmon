@@ -12,6 +12,7 @@ import {
   replaceConfig,
   setSplitShare,
   splitSlot,
+  teamResult,
   toRequest,
   weightsOf,
 } from "./teamRoster";
@@ -165,5 +166,19 @@ describe("toRequest", () => {
     expect(req[0].entries.map((e) => e.weight)).toEqual([0.6, 0.4]);
     expect(req[0].entries[0].id).toBe(slots[0].entries[0].id);
     expect(req[0].entries[0].pokemon.species).toBe("Pikachu");
+  });
+});
+
+describe("teamResult", () => {
+  // The team query keeps its last data while a new one loads (no flicker), so the
+  // cache still holds a result after the last Pokémon is removed.
+  it("has none for an empty team, even with a result still cached", () => {
+    expect(teamResult([], { total: 1 })).toBeUndefined();
+  });
+
+  it("is the computed one while the team has Pokémon", () => {
+    const slots = addSlot([], newEntry(config()));
+    expect(teamResult(slots, { total: 1 })).toEqual({ total: 1 });
+    expect(teamResult(slots, undefined)).toBeUndefined();
   });
 });

@@ -29,11 +29,13 @@ export const UI: Record<Lang, Record<string, string>> = {
     "nav.team": "Caja",
     "nav.comparison": "Comparación",
     "nav.language": "Idioma",
+    "nav.menu": "Menú",
     // Idiomas
     "lang.es": "Español",
     "lang.en": "English",
     // Autenticación
     "auth.signInGoogle": "Iniciar sesión con Google",
+    "auth.signInShort": "Iniciar sesión",
     "auth.signInFailed": "No se completó el inicio de sesión.",
     "auth.checkingSession": "Comprobando tu sesión…",
     "auth.signOut": "Cerrar sesión",
@@ -130,13 +132,15 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.title": "Comparación",
     "prod.mapNormal": "Normal",
     "prod.favoritesNone": "Ninguna",
-    "prod.favoritesMainHint": "★ la primera es la principal",
     "prod.atMax":
       "Ya hay 5 Pokémon: es el máximo del equipo en el juego. Quitá uno para agregar otro.",
     "prod.emptyLead": "Compará hasta 5 Pokémon lado a lado.",
     "prod.emptyBody":
       "La primera card es la base: el resto muestra la diferencia contra ella. Agregá uno de tu caja o configurá uno nuevo.",
     "prod.addHintMore": "Agregá otro Pokémon para sumarlo a la comparación.",
+    "pager.aria": "Pokémon",
+    "pager.show": "Ver {name}",
+    "pager.add": "Agregar un Pokémon",
     "prod.new": "+ Nuevo",
     "prod.myPokemon": "+ Mis Pokémon",
     "prod.addToComparison": "Agregar a la comparación",
@@ -198,9 +202,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.saveUpdate": "Actualizar este Pokémon en tu caja",
     "card.saveNew": "Guardar como nuevo en tu caja",
     "card.remove": "Quitar",
-    "card.gripTitle":
-      "Arrastrar (o usar ← / → con foco) para reordenar; la primera card es la base",
-    "card.gripAria": "Reordenar: arrastrar, o flechas izquierda y derecha",
     "card.moveLeft": "Mover a la izquierda",
     "card.moveRight": "Mover a la derecha",
     "card.base": "Base",
@@ -606,11 +607,13 @@ export const UI: Record<Lang, Record<string, string>> = {
     "nav.team": "Box",
     "nav.comparison": "Comparison",
     "nav.language": "Language",
+    "nav.menu": "Menu",
     // Languages
     "lang.es": "Español",
     "lang.en": "English",
     // Authentication
     "auth.signInGoogle": "Sign in with Google",
+    "auth.signInShort": "Sign in",
     "auth.signInFailed": "Sign-in wasn't completed.",
     "auth.checkingSession": "Checking your session…",
     "auth.signOut": "Sign out",
@@ -705,13 +708,15 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.title": "Comparison",
     "prod.mapNormal": "Normal",
     "prod.favoritesNone": "None",
-    "prod.favoritesMainHint": "★ the first one is the main",
     "prod.atMax":
       "There are already 5 Pokémon: that's the in-game team maximum. Remove one to add another.",
     "prod.emptyLead": "Compare up to 5 Pokémon side by side.",
     "prod.emptyBody":
       "The first card is the base: the rest show the difference against it. Add one from your box or set up a new one.",
     "prod.addHintMore": "Add another Pokémon to the comparison.",
+    "pager.aria": "Pokémon",
+    "pager.show": "Show {name}",
+    "pager.add": "Add a Pokémon",
     "prod.new": "+ New",
     "prod.myPokemon": "+ My Pokémon",
     "prod.addToComparison": "Add to comparison",
@@ -772,9 +777,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.saveUpdate": "Update this Pokémon in your box",
     "card.saveNew": "Save as new to your box",
     "card.remove": "Remove",
-    "card.gripTitle":
-      "Drag (or use ← / → when focused) to reorder; the first card is the base",
-    "card.gripAria": "Reorder: drag, or left and right arrows",
     "card.moveLeft": "Move left",
     "card.moveRight": "Move right",
     "card.base": "Base",

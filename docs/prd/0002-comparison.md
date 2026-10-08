@@ -69,7 +69,8 @@ the base.
 - The **first card is the base**; the base itself shows no deltas.
 - Any other card can be promoted with **"Make base"**, and deltas recompute against
   the new base.
-- Cards can be **reordered** (drag the grip, or arrow keys / left-right controls).
+- Cards can be **reordered** with the ‹ › controls, which swap a card with its
+  neighbour. There is no drag and drop: it never worked on touch.
 
 ### Per-card actions
 
@@ -93,10 +94,11 @@ against one whose berry isn't a favorite at all.
   (Expert)**. Normal stands for any non-expert map: there the map only decides which
   berries are favorites, and that is chosen below.
 - **Favorite berries** — from **none** to **three**, any berry, no repeats. On an
-  expert map the **first** one chosen is the **main favorite** and the others are
-  **sub-favorites**; removing the main leaves its slot vacant and the next berry
-  chosen fills it, as in Team analysis. On Normal there is no main: they are all just
-  favorites.
+  expert map the berry in **slot 1** is the **main favorite** and the others are
+  **sub-favorites**. The three slots keep their places: removing any berry — the main
+  or a sub — leaves its slot open (shown as "?" where it was), and the next berry
+  chosen fills the first open slot, as in Team analysis. On Normal there is no main:
+  they are all just favorites.
 - **Weekly bonus** — only on an expert map: **berries ×2.4** (the default), **+1
   ingredient** per gather, or **skill ×1.25**.
 
@@ -116,8 +118,9 @@ Beach (Expert).
 - The terms reach **every card, the base included**, so the deltas keep comparing
   like with like, and each affected metric carries the same **mark** the team's cards
   use (`×2`, `×2.4`, `+1`, `×1.25`, `Skill +1`, and each map's cadence figures).
-- **Switching maps keeps the favorites.** Going back to Normal turns the main into one
-  more favorite; going to an expert map makes the first favorite the main again.
+- **Switching maps keeps the favorites**, slots and all. Going back to Normal turns the
+  main into one more favorite; going to an expert map makes slot 1 the main again (or
+  leaves the main open, if slot 1 is).
 - The other map effects — **area bonus** and **Snorlax rating** — stay in Team
   analysis: the area bonus multiplies every card alike, so it moves no delta.
 

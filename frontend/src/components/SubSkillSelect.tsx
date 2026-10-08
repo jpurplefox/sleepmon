@@ -46,12 +46,12 @@ export function SubSkillSelect({ subSkills, value, level, onChange, ariaLabel }:
     const onFocusOut = (e: FocusEvent) => {
       if (ref.current && !ref.current.contains(e.relatedTarget as Node)) setOpen(false);
     };
-    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("pointerdown", onDoc);
     document.addEventListener("keydown", onKey);
     const node = ref.current;
     node?.addEventListener("focusout", onFocusOut);
     return () => {
-      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("pointerdown", onDoc);
       document.removeEventListener("keydown", onKey);
       node?.removeEventListener("focusout", onFocusOut);
     };

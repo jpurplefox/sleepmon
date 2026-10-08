@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
 import { berryIcon } from "../berries";
@@ -41,7 +41,6 @@ import {
   IconClose,
   IconCopy,
   IconEdit,
-  IconGrip,
   IconHelp,
   IconMagnifier,
   IconPackage,
@@ -107,21 +106,14 @@ interface Props {
   onRemove: () => void;
   onMakeBase: () => void;
   onSaveToBox: () => void;
-  // Reordenamiento accesible por teclado: intercambia esta card con la anterior
-  // / siguiente. undefined en los extremos (deshabilita el botón).
+  // Reorder: swaps this card with the previous / next one. undefined at the
+  // ends (disables the button).
   onMoveLeft?: () => void;
   onMoveRight?: () => void;
   cloneDisabled?: boolean;
   inBox?: boolean;
   saveState?: "idle" | "saving" | "saved" | "error";
   saveError?: string | null;
-  // Reordenamiento por arrastre (cambia cuál card es la base).
-  dragging?: boolean;
-  dragOver?: boolean;
-  onDragStart?: () => void;
-  onDragEnter?: () => void;
-  onDrop?: () => void;
-  onDragEnd?: () => void;
   /** Role of this species' berry relative to the active map. */
   berryRole?: BerryRole;
   expert?: boolean;
@@ -151,19 +143,12 @@ export function ProductionCard({
   inBox,
   saveState = "idle",
   saveError,
-  dragging,
-  dragOver,
-  onDragStart,
-  onDragEnter,
-  onDrop,
-  onDragEnd,
   berryRole = "none",
   expert = false,
   expertSpeed = null,
   weeklyBonus = "berry_strength",
 }: Props) {
   const { t, ingredient, berry, subSkill, natureStat, nature: natureName } = useI18n();
-  const cardRef = useRef<HTMLElement>(null);
   // La animación de entrada solo debe correr al montar (al agregar una card). Al
   // reordenar/intercambiar, el navegador reinicia las animaciones CSS de los nodos
   // movidos aunque React no los desmonte; por eso la clase de entrada se quita al
@@ -367,12 +352,9 @@ export function ProductionCard({
       </div>
       )}
       <article
-        ref={cardRef}
         className={
           "prod-card" +
           (entering ? " prod-card--enter" : "") +
-          (dragging ? " prod-card--dragging" : "") +
-          (dragOver ? " prod-card--dragover" : "") +
           (readOnly ? " prod-card--readonly" : "") +
           (berryRole !== "none" ? " prod-card--favorite-berry" : "") +
           (berryRole === "main" ? " prod-card--main-favorite" : "") +
@@ -385,44 +367,14 @@ export function ProductionCard({
             setEntering(false);
           }
         }}
-        onDragEnter={!readOnly ? onDragEnter : undefined}
-        onDragOver={!readOnly ? (e) => e.preventDefault() : undefined}
-        onDrop={!readOnly ? (e) => { e.preventDefault(); onDrop?.(); } : undefined}
       >
         <div className="prod-card__identity">
           {notice}
           <header className="prod-card__head">
-            {/* Fila 1: grip de arrastre + reordenar por teclado + nombre / nivel / listón.
-                En modo readOnly no se muestran grip ni botones de movimiento. */}
+            {/* Row 1: reorder ‹ › + name / level / ribbon. No reorder when readOnly. */}
             <div className="prod-card__topline">
               {!readOnly && (
                 <>
-                  <button
-                    type="button"
-                    className="icon-btn prod-card__grip"
-                    draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.effectAllowed = "move";
-                      e.dataTransfer.setData("text/plain", config.species);
-                      if (cardRef.current) e.dataTransfer.setDragImage(cardRef.current, 20, 20);
-                      onDragStart?.();
-                    }}
-                    onDragEnd={onDragEnd}
-                    onKeyDown={(e) => {
-                      // Alternativa de teclado al arrastre: flechas mueven la card.
-                      if (e.key === "ArrowLeft" && onMoveLeft) {
-                        e.preventDefault();
-                        onMoveLeft();
-                      } else if (e.key === "ArrowRight" && onMoveRight) {
-                        e.preventDefault();
-                        onMoveRight();
-                      }
-                    }}
-                    title={t("card.gripTitle")}
-                    aria-label={t("card.gripAria")}
-                  >
-                    <IconGrip />
-                  </button>
                   <button
                     type="button"
                     className="icon-btn prod-card__move"
@@ -560,19 +512,19 @@ export function ProductionCard({
       ) : (
         <>
           <div className="prod-card__line">
-            <span title={t("card.helpCadence")}>
+            <Tooltip content={t("card.helpCadence")} className="tooltip--inline">
               <IconClock /> {mmss(d.seconds_per_help)}
               {markFor("cadence")}
-            </span>
-            <span title={t("card.helpsPerDay")}>
+            </Tooltip>
+            <Tooltip content={t("card.helpsPerDay")} className="tooltip--inline">
               <IconHelp /> {fmt(d.helps_per_day)} <Delta value={d.helps_per_day} base={base?.helps_per_day} />
-            </span>
+            </Tooltip>
           </div>
 
           <div className="prod-card__line">
-            <span title={t("card.inventory")}>
+            <Tooltip content={t("card.inventory")} className="tooltip--inline">
               <IconPackage /> {d.inventory}
-            </span>
+            </Tooltip>
             <FillTime fillHours={d.inventory_fill_hours} sessions={d.sleep_sessions} />
           </div>
 
@@ -589,12 +541,12 @@ export function ProductionCard({
                 <strong>{fmt(d.berry_amount)}</strong>
                 <Delta value={d.berry_amount} base={base?.berry_amount} />
                 {ownSkillBerries > 0 && species && (
-                  <span className="prod-ing__breakdown" title={t("card.berryBreakdownTitle")}>
+                  <Tooltip content={t("card.berryBreakdownTitle")} className="tooltip--inline prod-ing__breakdown">
                     <img src={berryIcon(species.berry)} alt="" title={t("card.fromHelpsTitle")} />{" "}
                     {fmt(d.berry_amount - ownSkillBerries)}
                     <img src={statIcon("Main Skill Chance")} alt="" title={t("card.skillTitle")} />{" "}
                     {fmt(ownSkillBerries)}
-                  </span>
+                  </Tooltip>
                 )}
               </li>
               {teammates && teammateAmount > 0 && (
@@ -630,27 +582,27 @@ export function ProductionCard({
                 <strong>{fmtInt(cardStrength(d))}</strong>
                 <Delta value={cardStrength(d)} base={base ? cardStrength(base) : undefined} />
                 {species && d.skill_strength != null && (
-                  <span className="prod-ing__breakdown" title={t("card.strengthBreakdownTitle")}>
+                  <Tooltip content={t("card.strengthBreakdownTitle")} className="tooltip--inline prod-ing__breakdown">
                     <img src={berryIcon(species.berry)} alt="" title={t("card.fromBerriesTitle")} />{" "}
                     {fmtInt(d.berry_strength)}
                     <img src={statIcon("Main Skill Chance")} alt="" title={t("card.skillTitle")} /> {fmtInt(d.skill_strength)}
-                  </span>
+                  </Tooltip>
                 )}
                 {species && d.skill_strength == null && teammateStrength > 0 && (
-                  <span className="prod-ing__breakdown" title={t("card.strengthBreakdownTitle")}>
+                  <Tooltip content={t("card.strengthBreakdownTitle")} className="tooltip--inline prod-ing__breakdown">
                     <img src={berryIcon(species.berry)} alt="" title={t("card.fromBerriesTitle")} />{" "}
                     {fmtInt(d.berry_strength)}
                     <img src={GENERIC_BERRY_ICON} alt="" title={t("card.teammateBerriesTitle")} />{" "}
                     {fmtInt(teammateStrength)}
-                  </span>
+                  </Tooltip>
                 )}
                 {species && d.skill_strength == null && teammateStrength === 0 && ownSkillBerries > 0 && (
-                  <span className="prod-ing__breakdown" title={t("card.strengthBreakdownTitle")}>
+                  <Tooltip content={t("card.strengthBreakdownTitle")} className="tooltip--inline prod-ing__breakdown">
                     <img src={berryIcon(species.berry)} alt="" title={t("card.fromHelpsTitle")} />{" "}
                     {fmtInt(d.berry_strength - (d.skill_berry_strength ?? 0))}
                     <img src={statIcon("Main Skill Chance")} alt="" title={t("card.skillTitle")} />{" "}
                     {fmtInt(d.skill_berry_strength ?? 0)}
-                  </span>
+                  </Tooltip>
                 )}
               </li>
             </ul>
@@ -672,11 +624,11 @@ export function ProductionCard({
                   <strong>{fmt(g.total)}</strong>
                   <Delta value={g.total} base={baseIng.get(g.ingredient)} />
                   {g.fromSkill > 0 && (
-                    <span className="prod-ing__breakdown" title={t("card.breakdownTitle")}>
+                    <Tooltip content={t("card.breakdownTitle")} className="tooltip--inline prod-ing__breakdown">
                       <img src={statIcon("Ingredient Finding")} alt="" title={t("card.normalTitle")} />{" "}
                       {fmt(g.fromNormal)}
                       <img src={statIcon("Main Skill Chance")} alt="" title={t("card.skillTitle")} /> {fmt(g.fromSkill)}
-                    </span>
+                    </Tooltip>
                   )}
                 </li>
               ))}
@@ -720,74 +672,74 @@ export function ProductionCard({
               )}
             </div>
             <div className="prod-card__line">
-              <span title={t("card.triggersTitle")}>
+              <Tooltip content={t("card.triggersTitle")} className="tooltip--inline">
                 <IconSparkle /> {fmt(d.skill_triggers)} <Delta value={d.skill_triggers} base={base?.skill_triggers} />
-              </span>
+              </Tooltip>
             </div>
             {teammates === null && d.skill_berries_per_teammate != null && (
               <div className="prod-card__line">
-                <span title={t("card.perTeammateTitle")}>
+                <Tooltip content={t("card.perTeammateTitle")} className="tooltip--inline">
                   <img className="mini-icon" src={GENERIC_BERRY_ICON} alt="" />{" "}
                   +{fmt(d.skill_berries_per_teammate)}{" "}
                   <Delta value={d.skill_berries_per_teammate} base={base?.skill_berries_per_teammate ?? null} />
                   <span className="muted"> {t("card.perTeammate")}</span>
-                </span>
+                </Tooltip>
               </div>
             )}
             {d.skill_energy != null && (
               <div className="prod-card__line">
-                <span title={t("card.energyEachTitle")}>
+                <Tooltip content={t("card.energyEachTitle")} className="tooltip--inline">
                   <img className="mini-icon" src={statIcon("Energy Recovery")} alt="" />{" "}
                   {fmt(d.skill_energy)} <Delta value={d.skill_energy} base={base?.skill_energy ?? null} />
                   <span className="muted"> {t("card.energyEach")}</span>
-                </span>
+                </Tooltip>
               </div>
             )}
             {d.skill_ingredient_total != null && (
               <div className="prod-card__line">
-                <span title={t("card.randomIngredientsTitle")}>
+                <Tooltip content={t("card.randomIngredientsTitle")} className="tooltip--inline">
                   <img className="mini-icon" src={statIcon("Ingredient Finding")} alt="" />{" "}
                   {fmt(d.skill_ingredient_total)}{" "}
                   <Delta value={d.skill_ingredient_total} base={base?.skill_ingredient_total ?? null} />
                   <span className="muted"> {t("card.randomIngredients")}</span>
-                </span>
+                </Tooltip>
               </div>
             )}
             {d.skill_cooking_ingredients != null && (
               <div className="prod-card__line">
-                <span title={t("card.cookingTitle")}>
+                <Tooltip content={t("card.cookingTitle")} className="tooltip--inline">
                   <img className="mini-icon" src={POT_EXPANSION_ICON} alt="" />{" "}
                   {fmt(d.skill_cooking_ingredients)}{" "}
                   <Delta value={d.skill_cooking_ingredients} base={base?.skill_cooking_ingredients ?? null} />
                   <span className="muted"> {t("card.cookingExtra")}</span>
-                </span>
+                </Tooltip>
               </div>
             )}
             {/* La fuerza por Charge Strength se muestra en el bloque de bayas
                 (es aporte de fuerza a Snorlax, junto con la fuerza directa de bayas). */}
             {d.skill_dream_shards != null && (
               <div className="prod-card__line">
-                <span title={t("card.dreamShardsTitle")}>
+                <Tooltip content={t("card.dreamShardsTitle")} className="tooltip--inline">
                   <img className="mini-icon" src="/shard.png" alt="" />{" "}
                   {fmtInt(d.skill_dream_shards)}{" "}
                   <Delta value={d.skill_dream_shards} base={base?.skill_dream_shards ?? null} />
                   <span className="muted"> {t("card.dreamShards")}</span>
-                </span>
+                </Tooltip>
               </div>
             )}
             {d.skill_tasty_chance != null && (
               <div className="prod-card__line">
-                <span title={t("card.extraTastyTitle")}>
+                <Tooltip content={t("card.extraTastyTitle")} className="tooltip--inline">
                   <img className="mini-icon" src="/extra-tasty.png" alt="" />{" "}
                   +{fmtInt(d.skill_tasty_chance)}%{" "}
                   <Delta value={d.skill_tasty_chance} base={base?.skill_tasty_chance ?? null} />
                   <span className="muted"> {t("card.extraTasty")}</span>
-                </span>
+                </Tooltip>
               </div>
             )}
             {d.skill_extra_helpful != null && (
               <div className="prod-card__line">
-                <span title={t("card.helpMultTitle")}>
+                <Tooltip content={t("card.helpMultTitle")} className="tooltip--inline">
                   <IconMagnifier /> ×{fmt(d.skill_extra_helpful)}{" "}
                   <Delta value={d.skill_extra_helpful} base={base?.skill_extra_helpful ?? null} />
                   <span className="muted">
@@ -800,43 +752,43 @@ export function ProductionCard({
                           : "card.helpMult",
                     )}
                   </span>
-                </span>
+                </Tooltip>
               </div>
             )}
             {d.skill_self_energy != null && (
               <div className="prod-card__line">
-                <span title={t("card.selfEnergyTitle")}>
+                <Tooltip content={t("card.selfEnergyTitle")} className="tooltip--inline">
                   <img className="mini-icon" src={statIcon("Energy Recovery")} alt="" />{" "}
                   {fmt(d.skill_self_energy)} <Delta value={d.skill_self_energy} base={base?.skill_self_energy ?? null} />
                   <span className="muted"> {t("card.selfEnergy")}</span>
-                </span>
+                </Tooltip>
               </div>
             )}
             {d.skill_random_energy != null && (
               <div className="prod-card__line">
-                <span title={t("card.randomEnergyTitle")}>
+                <Tooltip content={t("card.randomEnergyTitle")} className="tooltip--inline">
                   <img className="mini-icon" src={statIcon("Energy Recovery")} alt="" />{" "}
                   {fmt(d.skill_random_energy)} <Delta value={d.skill_random_energy} base={base?.skill_random_energy ?? null} />
                   <span className="muted"> {t("card.randomEnergy")}</span>
-                </span>
+                </Tooltip>
               </div>
             )}
             {d.skill_candy != null && (
               <div className="prod-card__line">
-                <span title={t("card.candyTitle")}>
+                <Tooltip content={t("card.candyTitle")} className="tooltip--inline">
                   <img className="mini-icon mini-icon--candy" src={GENERIC_CANDY_ICON} alt="" />{" "}
                   {fmt(d.skill_candy)} <Delta value={d.skill_candy} base={base?.skill_candy ?? null} />
                   <span className="muted"> {t("card.candy")}</span>
-                </span>
+                </Tooltip>
               </div>
             )}
             {d.skill_berry_juice != null && (
               <div className="prod-card__line">
-                <span title={t("card.berryJuiceTitle")}>
+                <Tooltip content={t("card.berryJuiceTitle")} className="tooltip--inline">
                   <img className="mini-icon" src={BERRY_JUICE_ICON} alt="" />{" "}
                   {fmt(d.skill_berry_juice)} <Delta value={d.skill_berry_juice} base={base?.skill_berry_juice ?? null} />
                   <span className="muted"> {t("card.berryJuice")}</span>
-                </span>
+                </Tooltip>
               </div>
             )}
             <div className="prod-card__night">

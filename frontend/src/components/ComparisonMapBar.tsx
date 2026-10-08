@@ -1,10 +1,12 @@
 import { useState } from "react";
 
 import { berryIcon } from "../berries";
-import { MAX_FAVORITES, comparisonIslands, displayFavorites, selectIsland, toggleFavorite, type ComparisonMap } from "../comparisonMap";
+import { MAX_FAVORITES, comparisonIslands, mainOf, selectIsland, toggleFavorite, type ComparisonMap } from "../comparisonMap";
+import { pickedFavorites } from "../favoriteSlots";
 import { speedLabels } from "../expertMarks";
 import { useI18n } from "../i18n";
 import type { Catalog, ExpertSpeed, WeeklyBonus } from "../types";
+import { BerryCount } from "./BerryCount";
 import { FilterPopover, gridKeyDown } from "./FilterPopover";
 import { ContextField } from "./ToolHeader";
 
@@ -40,7 +42,9 @@ export function ComparisonMapBar({ catalog, value, onChange }: Props) {
   const island = islands.find((i) => i.name === value.island) ?? null;
   const expert = island !== null;
   const berries = [...new Set(catalog.species.map((s) => s.berry).filter(Boolean))].sort();
-  const full = value.favorites.length >= MAX_FAVORITES;
+  const picked = pickedFavorites(value.favorites).length;
+  const full = picked >= MAX_FAVORITES;
+  const main = mainOf(value, expert);
 
   return (
     <>
@@ -87,16 +91,19 @@ export function ComparisonMapBar({ catalog, value, onChange }: Props) {
           triggerLabel={t("teams.favoriteBerries")}
           triggerContent={
             <span className="filter-btn__value">
-              {value.favorites.length === 0 ? (
+              {picked === 0 ? (
                 <span className="filter-btn__placeholder">{t("prod.favoritesNone")}</span>
               ) : (
                 <span className="filter-btn__icons">
-                  {displayFavorites(value, expert).map((b) => (
-                    <img key={b} className="mini-icon" src={berryIcon(b)} alt={berryName(b)} title={berryName(b)} />
-                  ))}
-                  {Array.from({ length: MAX_FAVORITES - value.favorites.length }, (_, i) => (
-                    <span key={i} className="island-tab__berry-icon--unknown" aria-hidden="true">?</span>
-                  ))}
+                  {/* Each slot in its place: an open one shows "?" where its berry was. */}
+                  {Array.from({ length: MAX_FAVORITES }, (_, i) => {
+                    const b = value.favorites[i];
+                    return b ? (
+                      <img key={i} className="mini-icon" src={berryIcon(b)} alt={berryName(b)} title={berryName(b)} />
+                    ) : (
+                      <span key={i} className="island-tab__berry-icon--unknown" aria-hidden="true">?</span>
+                    );
+                  })}
                 </span>
               )}
             </span>
@@ -106,7 +113,7 @@ export function ComparisonMapBar({ catalog, value, onChange }: Props) {
             <div className="island-tab__berry-grid">
               {berries.map((b) => {
                 const selected = value.favorites.includes(b);
-                const primary = expert && selected && b === value.main;
+                const primary = b === main;
                 return (
                   <button
                     key={b}
@@ -127,10 +134,11 @@ export function ComparisonMapBar({ catalog, value, onChange }: Props) {
                 );
               })}
             </div>
-            <p className={"island-tab__berry-count" + (full ? " island-tab__berry-count--full" : "")}>
-              {value.favorites.length} / {MAX_FAVORITES}
-              {expert && ` · ${t("prod.favoritesMainHint")}`}
-            </p>
+            <BerryCount
+              slots={value.favorites}
+              max={MAX_FAVORITES}
+              label={t("teams.favoriteBerries")}
+            />
           </div>
         </FilterPopover>
       </ContextField>

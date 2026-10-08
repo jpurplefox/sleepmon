@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { berryIcon } from "../berries";
 import { useI18n } from "../i18n";
 import type { Catalog, Island, WeeklyBonus } from "../types";
+import { pickedFavorites, slotOne, toggleFavoriteSlot } from "../favoriteSlots";
+import { BerryCount } from "./BerryCount";
 import { IconChevronDown } from "./icons";
 import { UnsavedMark } from "./UnsavedMark";
 
@@ -86,10 +88,10 @@ export function IslandTab({
       }
     };
 
-    document.addEventListener("mousedown", handleMouseDown);
+    document.addEventListener("pointerdown", handleMouseDown);
     document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener("mousedown", handleMouseDown);
+      document.removeEventListener("pointerdown", handleMouseDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [islandOpen]);
@@ -123,19 +125,14 @@ export function IslandTab({
 
   // Handlers para la grilla de chips (solo cuando user_picks === true).
   const handleBerryToggle = (berry: string) => {
-    if (favoriteBerries.includes(berry)) {
-      onFavoriteBerries(favoriteBerries.filter((b) => b !== berry));
-      // Removing the main leaves its slot open and keeps the sub-favorites.
-      if (berry === mainFavorite) onMainFavorite(null);
-    } else if (favoriteBerries.length < 3) {
-      onFavoriteBerries([...favoriteBerries, berry]);
-      // The first one picked (or the one that fills an open slot) becomes the main.
-      if (mainFavorite === null) onMainFavorite(berry);
-    }
-    // Si ya hay 3 y el chip no está seleccionado, el botón está disabled: no hace falta else.
+    // Positional slots: a removed berry leaves its slot open, the next pick fills the
+    // first open one, and slot 1 is the main (see favoriteSlots).
+    const next = toggleFavoriteSlot(favoriteBerries, berry);
+    onFavoriteBerries(next);
+    onMainFavorite(slotOne(next));
   };
 
-  const selectedCount = favoriteBerries.length;
+  const selectedCount = pickedFavorites(favoriteBerries).length;
   const isUserPicks = island?.user_picks ?? false;
   // With no map the grid still shows, but every berry is locked.
   const noMap = selectedIsland === null;
@@ -297,11 +294,11 @@ export function IslandTab({
           </div>
           {/* Contador solo en modo editable (user_picks) */}
           {isUserPicks && (
-            <p
-              className={`island-tab__berry-count${selectedCount === 3 ? " island-tab__berry-count--full" : ""}`}
-            >
-              {selectedCount} / 3
-            </p>
+            <BerryCount
+              slots={favoriteBerries}
+              max={3}
+              label={t("teams.favoriteBerries")}
+            />
           )}
         </div>
       </div>
