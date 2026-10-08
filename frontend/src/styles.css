@@ -4514,6 +4514,16 @@ button.prod-card__base-tag--action:hover {
 .island-tab__island-pop .filter-list__label {
   flex: 1;
 }
+/* Comparison's map terms: the map list fits its marks, the berry grid caps at the phone. */
+.cmp-map-pop {
+  width: 19rem;
+}
+.cmp-map-pop .filter-list__label {
+  flex: 1;
+}
+.cmp-fav-pop {
+  width: min(30rem, 86vw);
+}
 .island-tab__island-berries {
   display: inline-flex;
   gap: 0.2rem;

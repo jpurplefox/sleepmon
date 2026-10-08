@@ -5,15 +5,15 @@ import { api } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useGate } from "../auth/useGate";
 import { BoxPicker } from "../components/BoxPicker";
+import { ComparisonMapBar } from "../components/ComparisonMapBar";
 import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
 import { Placeholder } from "../components/Placeholder";
 import { ProductionCard } from "../components/ProductionCard";
-import { ScenarioSelect } from "../components/ScenarioSelect";
-import { ContextBar, ContextField, ToolHeader } from "../components/ToolHeader";
+import { ContextBar, ToolHeader } from "../components/ToolHeader";
+import { NEUTRAL_MAP, berryRoleOf, mapRequestFields, type ComparisonMap } from "../comparisonMap";
 import { useI18n } from "../i18n";
 import { configFromMember, linkEntryToBox, newEntry, type RosterEntry } from "../roster";
-import { scenarioCardProps, type Scenario } from "../scenarios";
 import type { Member, MemberInput } from "../types";
 import { useSaveToBox } from "../useSaveToBox";
 import { useProgress } from "../useProgress";
@@ -48,10 +48,12 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   const sleepReady = status === "anonymous" || (status === "authenticated" && !progressLoading);
 
   const [entries, setEntries] = useState<RosterEntry[]>([]);
-  // The map scenario applies to EVERY card: it's an assumption of the
-  // comparison, not a property of any single Pokémon. Not persisted.
-  const [scenario, setScenario] = useState<Scenario>("none");
-  const cardMarks = scenarioCardProps(scenario);
+  // The map terms apply to EVERY card, the base included. Not persisted.
+  const [map, setMap] = useState<ComparisonMap>(NEUTRAL_MAP);
+  const island = catalog.data?.islands.find((i) => i.name === map.island && i.expert) ?? null;
+  const expert = island !== null;
+  const mapFields = mapRequestFields(map, expert);
+  const berryOf = (species: string) => catalog.data?.species.find((s) => s.name === species)?.berry ?? "";
   const [modal, setModal] = useState<"form" | "box" | null>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   // Reordenamiento por arrastre: la card que se arrastra y el destino actual.
@@ -67,7 +69,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   const productions = useQueries({
     queries: entries.map((e) => ({
       enabled: sleepReady,
-      queryKey: ["production", e.config, scenario, progress.sleep],
+      queryKey: ["production", e.config, mapFields, progress.sleep],
       queryFn: () =>
         api.computeProduction({
           species: e.config.species,
@@ -77,7 +79,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
           sub_skills: e.config.sub_skills,
           ribbon: e.config.ribbon,
           skill_level: e.config.skill_level,
-          scenario,
+          ...mapFields,
           sleep: progress.sleep,
         }),
       // El resultado de una config es estable: no re-pedir ni reflashear
@@ -208,9 +210,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
       <ToolHeader title={t("prod.title")} notice={notice}>
         {entries.length > 0 && (
           <ContextBar>
-            <ContextField label={t("prod.scenario")}>
-              <ScenarioSelect value={scenario} onChange={setScenario} />
-            </ContextField>
+            <ComparisonMapBar catalog={catalog.data} value={map} onChange={setMap} />
           </ContextBar>
         )}
       </ToolHeader>
@@ -226,9 +226,10 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
             base={i === 0 ? null : baseProduction}
             isBase={i === 0 && entries.length > 1}
             comparing={entries.length > 1}
-            berryRole={cardMarks.berryRole}
-            expert={cardMarks.expert}
-            weeklyBonus={cardMarks.weeklyBonus}
+            berryRole={berryRoleOf(map, expert, berryOf(e.config.species))}
+            expert={expert}
+            expertSpeed={island?.expert_speed ?? null}
+            weeklyBonus={map.weeklyBonus}
             onEdit={() => openEdit(i)}
             onClone={() => cloneAt(i)}
             onRemove={() => removeAt(i)}
