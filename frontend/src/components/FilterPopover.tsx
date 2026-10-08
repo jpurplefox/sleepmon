@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { IconChevronDown } from "./icons";
@@ -8,6 +8,10 @@ import { IconChevronDown } from "./icons";
 // (primer ítem o el activo) y devuelve el foco al trigger al cerrar. La navegación
 // por flechas dentro de la grilla la maneja el contenedor del consumidor (roving
 // con onKeyDown sobre [role="option"]).
+// Keep the panel this many px away from the screen's edges: the page's own gutter
+// on a phone, so a shifted panel lines up with the content.
+const EDGE_MARGIN = 16;
+
 export function FilterPopover({
   open,
   onOpenChange,
@@ -26,6 +30,23 @@ export function FilterPopover({
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const popRef = useRef<HTMLDivElement>(null);
+  // Opens from the trigger's left edge, shifted left just enough to stay on screen
+  // when the trigger sits near the right edge.
+  const [shift, setShift] = useState(0);
+
+  // Before paint, so a shifted panel never shows cut off first.
+  useLayoutEffect(() => {
+    if (!open) {
+      setShift(0);
+      return;
+    }
+    const pop = popRef.current;
+    if (!pop) return;
+    const { left, right } = pop.getBoundingClientRect();
+    const overflow = right - (document.documentElement.clientWidth - EDGE_MARGIN);
+    if (overflow > 0) setShift(-Math.min(overflow, left - EDGE_MARGIN));
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -43,10 +64,10 @@ export function FilterPopover({
         triggerRef.current?.focus();
       }
     };
-    document.addEventListener("mousedown", onDown);
+    document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("pointerdown", onDown);
       document.removeEventListener("keydown", onKey);
     };
   }, [open, onOpenChange]);
@@ -69,7 +90,11 @@ export function FilterPopover({
         {triggerContent}
         <IconChevronDown className="filter-btn__chevron" />
       </button>
-      {open && <div className="filter-pop">{children}</div>}
+      {open && (
+        <div ref={popRef} className="filter-pop" style={shift ? { left: shift } : undefined}>
+          {children}
+        </div>
+      )}
     </div>
   );
 }

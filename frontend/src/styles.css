@@ -43,6 +43,8 @@
   --r-sm: 6px;
   --r-md: 10px;
   --r-lg: 16px;
+  /* The sticky app bar's height: what sticky content below it sits under. */
+  --appbar-h: 3.4rem;
 }
 
 * {
@@ -86,12 +88,6 @@ html {
   scroll-padding-top: 3.25rem;
 }
 
-@media (max-width: 900px) {
-  html {
-    scroll-padding-top: 6rem;
-  }
-}
-
 .muted {
   color: var(--muted);
 }
@@ -117,6 +113,12 @@ html {
 .tooltip {
   position: relative;
   display: inline-flex;
+}
+
+/* A label that explains a run of text (a metric line): stays in the text's flow,
+   so its spacing doesn't change. Classes defined later can still set display. */
+.tooltip--inline {
+  display: inline;
 }
 
 .tooltip__bubble {
@@ -236,6 +238,9 @@ html {
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   margin: 1rem 0 0;
+  /* Browsers default fieldsets to their content's width, so one would push past a
+     narrow modal instead of letting its content wrap. */
+  min-inline-size: 0;
 }
 
 .form legend {
@@ -252,6 +257,18 @@ select {
   border-radius: var(--r-md);
   padding: 0.5rem 0.6rem;
   font-size: var(--text-base);
+}
+
+/* iOS zooms the page into any field under 16px when it takes focus. Specific
+   enough to win over the search fields' own sizes. */
+@media (max-width: 640px), (pointer: coarse) {
+  input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not(
+      .level-stepper__input
+    ),
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 
 input:focus,
@@ -273,6 +290,8 @@ select:focus {
 .level-chip:focus-visible,
 .btn:focus-visible,
 .tab:focus-visible,
+.nav-menu__btn:focus-visible,
+.nav-menu__item:focus-visible,
 .filter-btn:focus-visible,
 .island-tab__island-trigger:focus-visible,
 .specialty-toggle__btn:focus-visible,
@@ -299,8 +318,10 @@ select:focus {
   margin-top: 1rem;
 }
 
-.btn--primary:hover {
-  background: var(--accent);
+@media (hover: hover) {
+  .btn--primary:hover {
+    background: var(--accent);
+  }
 }
 
 .btn--primary:disabled {
@@ -315,9 +336,11 @@ select:focus {
   margin-top: 0.75rem;
 }
 
-.btn--ghost:hover {
-  color: var(--text);
-  border-color: var(--muted);
+@media (hover: hover) {
+  .btn--ghost:hover {
+    color: var(--text);
+    border-color: var(--muted);
+  }
 }
 
 /* El rojo se reserva para la acción destructiva (confirmar eliminar un miembro):
@@ -329,8 +352,10 @@ select:focus {
   color: #fff;
 }
 
-.btn--danger:hover {
-  filter: brightness(0.9);
+@media (hover: hover) {
+  .btn--danger:hover {
+    filter: brightness(0.9);
+  }
 }
 
 /* Sub skill selector */
@@ -341,6 +366,7 @@ select:focus {
 
 .subskill-trigger {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.6rem;
@@ -352,8 +378,10 @@ select:focus {
   cursor: pointer;
 }
 
-.subskill-trigger:hover {
-  border-color: var(--accent);
+@media (hover: hover) {
+  .subskill-trigger:hover {
+    border-color: var(--accent);
+  }
 }
 
 .subskill-slots {
@@ -361,7 +389,9 @@ select:focus {
   gap: 0.5rem;
 }
 
+/* Drops below the slots when they fill the row, still at the right. */
 .subskill-trigger__hint {
+  margin-left: auto;
   font-size: var(--text-xs);
   color: var(--muted);
   white-space: nowrap;
@@ -488,8 +518,10 @@ select:focus {
   height: 20px;
 }
 
-.subskill-option:hover:not(:disabled) {
-  border-color: var(--accent);
+@media (hover: hover) {
+  .subskill-option:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
 }
 
 .subskill-option--selected {
@@ -522,8 +554,10 @@ select:focus {
   cursor: pointer;
 }
 
-.nature-trigger:hover {
-  border-color: var(--accent);
+@media (hover: hover) {
+  .nature-trigger:hover {
+    border-color: var(--accent);
+  }
 }
 
 .nature-trigger__name {
@@ -655,8 +689,10 @@ select:focus {
   margin-left: auto;
 }
 
-.nature-option:hover {
-  border-color: var(--accent);
+@media (hover: hover) {
+  .nature-option:hover {
+    border-color: var(--accent);
+  }
 }
 
 .nature-option--selected {
@@ -701,8 +737,10 @@ select:focus {
   text-align: left;
 }
 
-.species-trigger:hover {
-  border-color: var(--accent);
+@media (hover: hover) {
+  .species-trigger:hover {
+    border-color: var(--accent);
+  }
 }
 
 .species-trigger__name {
@@ -770,9 +808,14 @@ select:focus {
   text-align: left;
 }
 
-.species-option:hover,
 .species-option--highlight {
   background: var(--surface-2);
+}
+
+@media (hover: hover) {
+  .species-option:hover {
+    background: var(--surface-2);
+  }
 }
 
 .species-option--active {
@@ -851,8 +894,10 @@ select:focus {
   object-fit: contain;
 }
 
-.ingredient-icon:hover {
-  border-color: var(--accent);
+@media (hover: hover) {
+  .ingredient-icon:hover {
+    border-color: var(--accent);
+  }
 }
 
 .ingredient-icon--active {
@@ -899,9 +944,11 @@ select:focus {
   place-items: center;
 }
 
-.level-stepper__btn:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent-text);
+@media (hover: hover) {
+  .level-stepper__btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent-text);
+  }
 }
 
 .level-stepper__btn:disabled {
@@ -964,9 +1011,11 @@ select:focus {
   cursor: pointer;
 }
 
-.level-chip:hover {
-  border-color: var(--accent);
-  color: var(--text);
+@media (hover: hover) {
+  .level-chip:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
 }
 
 .level-chip--active {
@@ -1000,8 +1049,10 @@ select:focus {
     border-color 0.15s;
 }
 
-.stepper__btn:hover:not(:disabled) {
-  border-color: var(--accent);
+@media (hover: hover) {
+  .stepper__btn:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
 }
 
 .stepper__btn:disabled {
@@ -1141,9 +1192,11 @@ select:focus {
   border-radius: var(--r-sm);
 }
 
-.modal-close:hover {
-  color: var(--text);
-  background: var(--surface-2);
+@media (hover: hover) {
+  .modal-close:hover {
+    color: var(--text);
+    background: var(--surface-2);
+  }
 }
 
 .modal-body {
@@ -1238,8 +1291,10 @@ select:focus {
   cursor: pointer;
 }
 
-.sort-control__dir:hover {
-  color: var(--accent-text);
+@media (hover: hover) {
+  .sort-control__dir:hover {
+    color: var(--accent-text);
+  }
 }
 
 .box-toolbar__filters {
@@ -1312,9 +1367,14 @@ select:focus {
   cursor: pointer;
 }
 
-.filter-btn:hover,
 .filter-btn--open {
   border-color: var(--accent);
+}
+
+@media (hover: hover) {
+  .filter-btn:hover {
+    border-color: var(--accent);
+  }
 }
 
 .filter-btn__value {
@@ -1364,6 +1424,8 @@ select:focus {
   border-radius: var(--r-md);
   box-shadow: var(--shadow-dropdown);
   padding: 0.5rem;
+  /* Never wider than the screen, whichever side it opens from. */
+  max-width: calc(100vw - 2rem);
 }
 
 /* Scrollbar estilizado para todo panel que scrollea por su cuenta. */
@@ -1453,8 +1515,10 @@ select:focus {
   flex-shrink: 0;
 }
 
-.filter-list__item:hover {
-  background: var(--surface);
+@media (hover: hover) {
+  .filter-list__item:hover {
+    background: var(--surface);
+  }
 }
 
 .filter-list__item.is-selected {
@@ -1502,8 +1566,10 @@ select:focus {
   object-fit: contain;
 }
 
-.filter-grid__item:hover {
-  background: var(--surface);
+@media (hover: hover) {
+  .filter-grid__item:hover {
+    background: var(--surface);
+  }
 }
 
 .filter-grid__item.is-selected {
@@ -1538,8 +1604,10 @@ select:focus {
   border-left: none;
 }
 
-.specialty-toggle__btn:hover {
-  color: var(--text);
+@media (hover: hover) {
+  .specialty-toggle__btn:hover {
+    color: var(--text);
+  }
 }
 
 .specialty-toggle__btn.is-on {
@@ -1821,20 +1889,26 @@ select:focus {
   color: var(--muted);
 }
 
-.action-menu__item:hover {
-  background: var(--surface);
+@media (hover: hover) {
+  .action-menu__item:hover {
+    background: var(--surface);
+  }
 }
 
 /* Items are neutral at rest; color arrives only on hover (indigo for a way into
    another tool, red for a delete), so no action shouts while idle. */
-.action-menu__item--accent:hover,
-.action-menu__item--accent:hover svg {
-  color: var(--accent-text);
+@media (hover: hover) {
+  .action-menu__item--accent:hover,
+  .action-menu__item--accent:hover svg {
+    color: var(--accent-text);
+  }
 }
 
-.action-menu__item--danger:hover,
-.action-menu__item--danger:hover svg {
-  color: var(--error);
+@media (hover: hover) {
+  .action-menu__item--danger:hover,
+  .action-menu__item--danger:hover svg {
+    color: var(--error);
+  }
 }
 
 .action-menu__sep {
@@ -2275,9 +2349,11 @@ select:focus {
   text-decoration: none;
 }
 
-.tab:hover {
-  color: var(--text);
-  background: var(--surface);
+@media (hover: hover) {
+  .tab:hover {
+    color: var(--text);
+    background: var(--surface);
+  }
 }
 
 .tab--active {
@@ -2305,9 +2381,11 @@ select:focus {
   cursor: pointer;
 }
 
-.lang-chip:hover {
-  border-color: var(--accent);
-  color: var(--text);
+@media (hover: hover) {
+  .lang-chip:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
 }
 
 .lang-chip--active {
@@ -2331,8 +2409,10 @@ select:focus {
 }
 
 /* La invitación a agregar responde al hover como cualquier elemento interactivo. */
-.prod-card--add:hover {
-  border-color: var(--accent);
+@media (hover: hover) {
+  .prod-card--add:hover {
+    border-color: var(--accent);
+  }
 }
 
 /* Empty state: the tool's explanation, a bold lead over a muted body. */
@@ -2511,8 +2591,10 @@ select:focus {
   cursor: pointer;
 }
 
-.prod-box-item:hover:not(:disabled) {
-  border-color: var(--accent);
+@media (hover: hover) {
+  .prod-box-item:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
 }
 
 /* Ya en la comparación: no se puede volver a agregar. Borde punteado + atenuado
@@ -2671,6 +2753,108 @@ select:focus {
 @media (min-width: 1800px) {
   .prod-cards {
     grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+/* Phone: the comparison swipes one card per screen instead of stacking them, so a
+   metric sits in the same spot on every card and a swipe swaps one for the next.
+   The pager (sprites) says how many there are and which one is showing. */
+.swipe-pager {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .swipe-pager {
+    position: sticky;
+    top: var(--appbar-h);
+    z-index: 15; /* above the cards, below popovers (20) and the app bar (40) */
+    display: flex;
+    justify-content: center;
+    gap: 0.35rem;
+    margin: 1rem -1rem 0;
+    padding: 0.4rem 1rem;
+    background: var(--bg);
+  }
+
+  .swipe-pager[hidden] {
+    display: none;
+  }
+
+  .swipe-pager__item {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: var(--muted);
+    font: inherit;
+    font-size: var(--text-lg);
+    font-weight: 700;
+    cursor: pointer;
+    opacity: 0.55;
+  }
+
+  .swipe-pager__sprites {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .swipe-pager__sprites img {
+    width: 28px;
+    height: 28px;
+    image-rendering: pixelated;
+  }
+
+  /* A split slot: its two Pokémon, smaller and overlapping. */
+  .swipe-pager__sprites img:not(:only-child) {
+    width: 22px;
+    height: 22px;
+  }
+
+  .swipe-pager__sprites img + img {
+    margin-left: -8px;
+  }
+
+  .swipe-pager__item--active {
+    background: var(--accent-dim);
+    border-color: var(--accent-border);
+    opacity: 1;
+  }
+
+  .prod-cards.prod-cards--swipe {
+    /* Contains the cards' absolutely positioned bits (.sr-only, bubbles): without
+       it they escape the clip and the off-screen cards widen the page. */
+    position: relative;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 100%;
+    margin-top: 0.5rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .prod-cards--swipe::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* A sideways drag on a slider moves the slider, never the deck. */
+  .prod-cards--swipe input[type="range"] {
+    touch-action: pan-y;
+  }
+
+  .prod-cards--swipe > .prod-card-cell {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  /* The add slot keeps its own height instead of stretching to the cards'. */
+  .prod-cards--swipe > .prod-card-cell:last-child {
+    align-self: start;
   }
 }
 
@@ -2856,9 +3040,11 @@ button.prod-card__base-tag--action {
     color 0.12s;
 }
 
-button.prod-card__base-tag--action:hover {
-  border-color: var(--accent);
-  color: var(--text);
+@media (hover: hover) {
+  button.prod-card__base-tag--action:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
 }
 
 /* La acción destructiva respira un poco respecto del grupo de acciones positivas. */
@@ -2867,9 +3053,11 @@ button.prod-card__base-tag--action:hover {
 }
 
 /* Hover destructivo en rojo (lo que pide el concepto para la acción de borrar). */
-.prod-card__remove:hover:not(:disabled) {
-  color: var(--error);
-  background: transparent;
+@media (hover: hover) {
+  .prod-card__remove:hover:not(:disabled) {
+    color: var(--error);
+    background: transparent;
+  }
 }
 
 /* El estado de carga reserva el alto aproximado de las métricas, así la card no
@@ -2882,27 +3070,7 @@ button.prod-card__base-tag--action:hover {
   text-align: center;
 }
 
-/* Mientras se arrastra una card para reordenar. */
-.prod-card--dragging {
-  opacity: 0.4;
-}
-
-/* Card sobre la que se soltaría: marca el lugar de inserción. */
-.prod-card--dragover {
-  border-color: var(--accent);
-  box-shadow: inset 0 0 0 1px var(--accent);
-}
-
-/* El agarre de arrastre. */
-.prod-card__grip {
-  cursor: grab;
-}
-
-.prod-card__grip:active {
-  cursor: grabbing;
-}
-
-/* Botones de reorden por teclado (alternativa al arrastre): compactos, junto al grip. */
+/* Reorder buttons (‹ ›), left of the name. */
 .prod-card__move {
   font-size: 1.1rem;
   line-height: 1;
@@ -2946,7 +3114,7 @@ button.prod-card__base-tag--action:hover {
   gap: 0.35rem;
 }
 
-/* Fila 1: grip de arrastre (izquierda) + nombre/nivel/listón ocupando el resto. */
+/* Row 1: reorder ‹ › (left) + name/level/ribbon taking the rest. */
 .prod-card__topline {
   display: flex;
   align-items: center;
@@ -3027,9 +3195,26 @@ button.prod-card__base-tag--action:hover {
   justify-content: center;
 }
 
-.icon-btn:hover:not(:disabled) {
-  background: var(--surface-2);
-  color: var(--text);
+/* Touch screens: a fingertip needs ~40px. Only the hit area grows; the glyphs keep
+   their size, so the controls read the same and are just easier to land on. */
+@media (pointer: coarse) {
+  .icon-btn,
+  .modal-close {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .level-stepper__btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (hover: hover) {
+  .icon-btn:hover:not(:disabled) {
+    background: var(--surface-2);
+    color: var(--text);
+  }
 }
 
 .icon-btn:disabled {
@@ -3048,9 +3233,11 @@ button.prod-card__base-tag--action:hover {
   cursor: default;
 }
 
-.btn--ghost:disabled:hover {
-  color: var(--muted);
-  border-color: var(--border);
+@media (hover: hover) {
+  .btn--ghost:disabled:hover {
+    color: var(--muted);
+    border-color: var(--border);
+  }
 }
 
 .prod-card__tags {
@@ -3411,10 +3598,26 @@ button.prod-card__base-tag--action:hover {
 .team-slot__tab-wrap--active .team-slot__tab-remove {
   color: var(--text);
 }
-.team-slot__tab-remove:hover {
-  opacity: 1;
-  color: var(--error);
+@media (hover: hover) {
+  .team-slot__tab-remove:hover {
+    opacity: 1;
+    color: var(--error);
+  }
 }
+
+/* Touch: the ✕ takes a Pokémon out of the slot, so it must not be a near miss of
+   the tab beside it. */
+@media (pointer: coarse) {
+  .team-slot__tab {
+    min-height: 32px;
+  }
+
+  .team-slot__tab-remove {
+    width: 32px;
+    height: 32px;
+  }
+}
+
 .team-slot__slider {
   min-width: 0;
   max-width: none;
@@ -4004,9 +4207,11 @@ button.prod-card__base-tag--action:hover {
     color 0.1s;
 }
 
-.meal-picker-card__moment-btn:hover {
-  border-color: var(--accent);
-  color: var(--text);
+@media (hover: hover) {
+  .meal-picker-card__moment-btn:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
 }
 
 .meal-picker-card__moment-btn.is-active {
@@ -4412,8 +4617,10 @@ button.prod-card__base-tag--action:hover {
   transition: color 0.12s;
 }
 
-.settings-modal-tabs .specialty-toggle__btn:hover {
-  color: var(--text);
+@media (hover: hover) {
+  .settings-modal-tabs .specialty-toggle__btn:hover {
+    color: var(--text);
+  }
 }
 
 .settings-modal-tabs .specialty-toggle__btn.is-on {
@@ -4580,15 +4787,17 @@ button.prod-card__base-tag--action:hover {
 .island-tab__berry-picker {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 0.25rem;
   flex: 1;
   min-width: 14rem;
 }
 
+/* Three berries per row across the picker's width: every toggle the same, big
+   enough to land on (min-height below). */
 .island-tab__berry-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.35rem;
   max-width: 32rem;
 }
@@ -4604,15 +4813,38 @@ button.prod-card__base-tag--action:hover {
   font-size: var(--text-sm);
   color: var(--muted);
   cursor: pointer;
+  min-height: 40px;
+  min-width: 0;
   transition:
     border-color 0.1s,
     background 0.1s,
     color 0.1s;
 }
 
-.island-tab__berry-toggle:hover:not(:disabled) {
-  border-color: var(--accent-border);
-  color: var(--text);
+/* Phone: the popover spans the screen, and the dialog's picker drops under its label. */
+@media (max-width: 640px) {
+  /* The panel around it (.filter-pop) adds 0.5rem padding and a 1px border a side:
+     the whole panel spans the screen minus the page's 1rem gutters. */
+  .cmp-fav-pop {
+    width: calc(100vw - 3rem - 2px);
+  }
+
+  /* A row of its own, under its label (Team Analysis's map dialog). */
+  .island-tab__berry-picker {
+    flex-basis: 100%;
+    min-width: 0;
+  }
+
+  .island-tab__berry-grid {
+    max-width: none;
+  }
+}
+
+@media (hover: hover) {
+  .island-tab__berry-toggle:hover:not(:disabled) {
+    border-color: var(--accent-border);
+    color: var(--text);
+  }
 }
 
 .island-tab__berry-toggle.is-selected {
@@ -4643,15 +4875,38 @@ button.prod-card__base-tag--action:hover {
   cursor: default;
 }
 
-.island-tab__berry-count {
-  font-size: var(--text-xs);
-  color: var(--muted);
-  margin: 0;
+/* Favorite berries picked (BerryCount): one segment per berry, filling indigo as
+   they're picked and turning the "done" color when all are in. */
+.berry-count {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+  max-width: 32rem;
 }
 
-.island-tab__berry-count--full {
-  color: var(--up);
+.berry-count__bar {
+  display: grid;
+  grid-template-columns: repeat(var(--segments, 3), 1fr);
+  gap: 0.25rem;
 }
+
+.berry-count__seg {
+  height: 6px;
+  border-radius: 999px;
+  /* An empty slot still reads as one, on any surface (--border vanishes on --surface-2). */
+  background: color-mix(in srgb, var(--muted) 28%, transparent);
+  transition: background 0.2s ease-out;
+}
+
+.berry-count__seg.is-filled {
+  background: var(--accent);
+}
+
+.berry-count--full .berry-count__seg.is-filled {
+  background: var(--up);
+}
+
 
 /* ── Area Bonus Slider (custom: track+fill+thumb; input nativo oculto para a11y) ── */
 .bonus-slider {
@@ -4716,8 +4971,10 @@ button.prod-card__base-tag--action:hover {
     border-color 0.1s;
   z-index: 1;
 }
-.bonus-slider__track:hover .bonus-slider__thumb {
-  transform: translateY(-50%) scale(1.2);
+@media (hover: hover) {
+  .bonus-slider__track:hover .bonus-slider__thumb {
+    transform: translateY(-50%) scale(1.2);
+  }
 }
 .bonus-slider__track:has(.bonus-slider__input:active) .bonus-slider__thumb {
   background: var(--accent);
@@ -4814,8 +5071,15 @@ button.prod-card__base-tag--action:hover {
   margin-top: 0;
 }
 
-.btn--google:hover {
-  border-color: var(--accent);
+/* Short label only in the narrow app bar. */
+.btn--google__short {
+  display: none;
+}
+
+@media (hover: hover) {
+  .btn--google:hover {
+    border-color: var(--accent);
+  }
 }
 
 .btn--google:disabled {
@@ -4906,9 +5170,14 @@ button.prod-card__base-tag--action:hover {
   flex: none;
 }
 
-.avatar-btn:hover,
 .avatar-btn.is-open {
   border-color: var(--accent);
+}
+
+@media (hover: hover) {
+  .avatar-btn:hover {
+    border-color: var(--accent);
+  }
 }
 
 .avatar-btn__photo img,
@@ -5445,6 +5714,8 @@ button.prod-card__base-tag--action:hover {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+  min-width: 0;
+  max-width: 100%;
   font-size: var(--text-sm);
 }
 
@@ -5473,14 +5744,34 @@ button.prod-card__base-tag--action:hover {
   margin-left: 0;
 }
 
-/* Map value plus invisible sizers for every map, stacked in one cell. */
+/* Map value plus invisible sizers for every map, stacked in one cell. The field
+   may shrink below the longest map on a narrow screen: the name then ellipsizes. */
+.ctx-field .filter-btn {
+  min-width: 0;
+}
+
 .ctx-map {
   display: inline-grid;
+  grid-template-columns: minmax(0, auto);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .ctx-map > * {
   grid-area: 1 / 1;
+  min-width: 0;
   white-space: nowrap;
+}
+
+.ctx-map__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ctx-map .filter-btn__icons,
+.ctx-map .metric-mark {
+  flex-shrink: 0;
 }
 
 .ctx-map__sizer {
@@ -5617,32 +5908,111 @@ button.prod-card__base-tag--action:hover {
   font-size: var(--text-sm);
 }
 
-/* Tablet and down: the tools move to their own row before anything has to wrap. */
+.nav {
+  display: flex;
+}
+
+/* Narrow-screen menu: hidden while the tab row fits. */
+.nav-menu {
+  display: none;
+}
+
+.nav-menu__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  height: 34px;
+  padding: 0 0.8rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-base);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.nav-menu__btn[aria-expanded="true"] {
+  background: var(--surface);
+  border-color: var(--accent-border);
+}
+
+@media (hover: hover) {
+  .nav-menu__btn:hover {
+    background: var(--surface);
+    border-color: var(--accent-border);
+  }
+}
+
+/* Drops below the whole bar (the sticky .appbar is its containing block). */
+.nav-menu__panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem 0.75rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-dropdown);
+}
+
+.nav-menu__item {
+  padding: 0.7rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  color: var(--muted);
+  font-size: var(--text-base);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .nav-menu__item:hover {
+    color: var(--text);
+    background: var(--surface);
+  }
+}
+
+.nav-menu__item--active {
+  color: var(--text);
+  background: var(--accent-dim);
+  border-color: var(--accent-border);
+}
+
+/* Tablet and down: the tab row collapses into the menu button, left of the brand,
+   so the bar stays a single row. */
 @media (max-width: 900px) {
   .appbar__inner {
-    flex-wrap: wrap;
-    gap: 0.5rem 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .appbar .nav {
+    order: -1;
   }
 
   .appbar .tabs {
-    order: 3;
-    width: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .appbar .tabs::-webkit-scrollbar {
     display: none;
   }
 
-  .appbar .tab {
-    flex: 0 0 auto;
+  .nav-menu {
+    display: block;
   }
 }
 
 @media (max-width: 640px) {
   .appbar__inner {
+    gap: 0.5rem;
     padding: 0.6rem 1rem;
+  }
+
+  .appbar__right {
+    gap: 0.35rem;
   }
 
   /* Sprite only: the name stays for screen readers. */
@@ -5656,14 +6026,29 @@ button.prod-card__base-tag--action:hover {
     white-space: nowrap;
   }
 
-  .appbar .tab {
-    padding: 0.4rem 0.7rem;
+  /* Icon only: the page title already names the current tool. */
+  .nav-menu__btn {
+    width: 34px;
+    padding: 0;
+  }
+
+  .nav-menu__btn span {
+    display: none;
   }
 
   /* Compact account controls so they fit beside the sprite on one row. */
   .appbar .btn--google {
     font-size: var(--text-sm);
     padding: 0.4rem 0.7rem;
+  }
+
+  /* The "G" already says Google. */
+  .appbar .btn--google__long {
+    display: none;
+  }
+
+  .appbar .btn--google__short {
+    display: inline;
   }
 
   .appbar .lang-btn .filter-btn__value {
@@ -5709,9 +6094,11 @@ button.prod-card__base-tag--action:hover {
   cursor: pointer;
 }
 
-.saved-team-bar__name:hover {
-  border-color: var(--border);
-  background: var(--surface-2);
+@media (hover: hover) {
+  .saved-team-bar__name:hover {
+    border-color: var(--border);
+    background: var(--surface-2);
+  }
 }
 
 .saved-team-bar__name svg {

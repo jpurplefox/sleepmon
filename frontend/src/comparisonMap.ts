@@ -1,13 +1,14 @@
+import { MAX_FAVORITES, pickedFavorites, slotOne, toggleFavoriteSlot } from "./favoriteSlots";
 import type { BerryRole, Island, ProductionInput, WeeklyBonus } from "./types";
+
+export { MAX_FAVORITES };
 
 /** Comparison's map terms (PRD 0002): one set for every card, never persisted. */
 export interface ComparisonMap {
   /** Null is Normal: favorites double, no expert effects. */
   island: string | null;
-  /** In pick order, unique, at most three. */
+  /** Positional slots ("" is open, see favoriteSlots); on an expert map slot 1 is the main. */
   favorites: string[];
-  /** The main favorite; null is a vacant slot, as in Team Analysis. */
-  main: string | null;
   /** Kept while hidden on Normal. */
   weeklyBonus: WeeklyBonus;
 }
@@ -16,12 +17,9 @@ export type MapRequestFields = Required<
   Pick<ProductionInput, "island" | "favorite_berries" | "main_favorite" | "weekly_bonus">
 >;
 
-export const MAX_FAVORITES = 3;
-
 export const NEUTRAL_MAP: ComparisonMap = {
   island: null,
   favorites: [],
-  main: null,
   weeklyBonus: "berry_strength",
 };
 
@@ -30,40 +28,30 @@ export function comparisonIslands(islands: Island[]): Island[] {
   return islands.filter((i) => i.expert);
 }
 
+/** Switching maps keeps the favorites, slots and all. */
 export function selectIsland(map: ComparisonMap, island: Island | null): ComparisonMap {
-  // Entering an expert map from Normal: the first favorite becomes the main.
-  const main = island?.expert && map.island === null ? (map.favorites[0] ?? null) : map.main;
-  return { ...map, island: island?.name ?? null, main };
+  return { ...map, island: island?.name ?? null };
 }
 
-/** Favorites in display order: on an expert map the main first. */
-export function displayFavorites(map: ComparisonMap, expert: boolean): string[] {
-  if (!expert || map.main === null || !map.favorites.includes(map.main)) return map.favorites;
-  return [map.main, ...map.favorites.filter((b) => b !== map.main)];
+/** The main favorite: slot 1, on an expert map only. */
+export function mainOf(map: ComparisonMap, expert: boolean): string | null {
+  return expert ? slotOne(map.favorites) : null;
 }
 
 export function toggleFavorite(map: ComparisonMap, berry: string): ComparisonMap {
-  if (map.favorites.includes(berry)) {
-    return {
-      ...map,
-      favorites: map.favorites.filter((b) => b !== berry),
-      main: map.main === berry ? null : map.main,
-    };
-  }
-  if (map.favorites.length >= MAX_FAVORITES) return map;
-  return { ...map, favorites: [...map.favorites, berry], main: map.main ?? berry };
+  return { ...map, favorites: toggleFavoriteSlot(map.favorites, berry) };
 }
 
 export function berryRoleOf(map: ComparisonMap, expert: boolean, berry: string): BerryRole {
-  if (expert && berry === map.main) return "main";
-  return map.favorites.includes(berry) ? "sub" : "none";
+  if (berry === mainOf(map, expert)) return "main";
+  return pickedFavorites(map.favorites).includes(berry) ? "sub" : "none";
 }
 
 export function mapRequestFields(map: ComparisonMap, expert: boolean): MapRequestFields {
   return {
     island: map.island,
-    favorite_berries: map.favorites,
-    main_favorite: expert ? map.main : null,
+    favorite_berries: pickedFavorites(map.favorites),
+    main_favorite: mainOf(map, expert),
     weekly_bonus: expert ? map.weeklyBonus : null,
   };
 }

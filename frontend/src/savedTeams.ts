@@ -1,5 +1,6 @@
 // Saved teams (PRD 0016): the pure rules between Team Analysis's session and a
 // saved line-up. A saved team records Box member ids; the session holds configs.
+import { pickedFavorites, slotsWithMainFirst } from "./favoriteSlots";
 import { configFromMember, newEntry, type RosterEntry } from "./roster";
 import type { Slot } from "./teamRoster";
 import type {
@@ -87,7 +88,7 @@ export function toSavedTeamInput(name: string, def: TeamDefinition): SavedTeamIn
       share: s.entries.length === 2 ? s.share : 1,
     })),
     island: def.island,
-    favorite_berries: [...def.favoriteBerries],
+    favorite_berries: pickedFavorites(def.favoriteBerries),
     main_favorite: def.mainFavorite,
     weekly_bonus: def.weeklyBonus,
     dish_type: def.dishType,
@@ -131,7 +132,7 @@ export function definitionFromSavedTeam(
       }),
       dishType: team.dish_type,
       island: team.island,
-      favoriteBerries: [...team.favorite_berries],
+      favoriteBerries: slotsWithMainFirst(team.favorite_berries, team.main_favorite),
       mainFavorite: team.main_favorite,
       weeklyBonus: team.weekly_bonus,
     },
@@ -169,7 +170,7 @@ export function isUnsaved(
   const recipes = [0, 1, 2].map((i) => def.meals[i]?.recipe ?? null);
   return (
     def.island !== saved.island ||
-    !sameList([...def.favoriteBerries].sort(), [...saved.favorite_berries].sort()) ||
+    !sameList(pickedFavorites(def.favoriteBerries).sort(), [...saved.favorite_berries].sort()) ||
     def.mainFavorite !== saved.main_favorite ||
     def.weeklyBonus !== saved.weekly_bonus ||
     def.dishType !== saved.dish_type ||

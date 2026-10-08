@@ -113,20 +113,6 @@ export function IconSun(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-// Agarre para arrastrar y reordenar (dos columnas de puntos).
-export function IconGrip(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...base} {...props}>
-      <circle cx="9" cy="6" r="1" />
-      <circle cx="9" cy="12" r="1" />
-      <circle cx="9" cy="18" r="1" />
-      <circle cx="15" cy="6" r="1" />
-      <circle cx="15" cy="12" r="1" />
-      <circle cx="15" cy="18" r="1" />
-    </svg>
-  );
-}
-
 // Chevron hacia abajo: disparador de paneles desplegables (filtros con íconos).
 export function IconChevronDown(props: SVGProps<SVGSVGElement>) {
   return (
@@ -163,6 +149,15 @@ export function IconMore(props: SVGProps<SVGSVGElement>) {
       <circle cx="5" cy="12" r="1" />
       <circle cx="12" cy="12" r="1" />
       <circle cx="19" cy="12" r="1" />
+    </svg>
+  );
+}
+
+// Navigation menu (three bars), the app bar's tools on narrow screens.
+export function IconMenu(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4 6h16M4 12h16M4 18h16" />
     </svg>
   );
 }

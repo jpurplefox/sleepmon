@@ -1,5 +1,5 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { api } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
@@ -10,12 +10,15 @@ import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
 import { Placeholder } from "../components/Placeholder";
 import { ProductionCard } from "../components/ProductionCard";
+import { SwipePager } from "../components/SwipePager";
 import { ContextBar, ToolHeader } from "../components/ToolHeader";
 import { NEUTRAL_MAP, berryRoleOf, mapRequestFields, type ComparisonMap } from "../comparisonMap";
 import { useI18n } from "../i18n";
 import { configFromMember, linkEntryToBox, newEntry, type RosterEntry } from "../roster";
+import { spriteUrl } from "../sprites";
 import type { Member, MemberInput } from "../types";
 import { useSaveToBox } from "../useSaveToBox";
+import { useStickyData } from "../useStickyData";
 import { useProgress } from "../useProgress";
 
 // Tope de la comparación: el máximo del equipo en el juego.
@@ -56,9 +59,6 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   const berryOf = (species: string) => catalog.data?.species.find((s) => s.name === species)?.berry ?? "";
   const [modal, setModal] = useState<"form" | "box" | null>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
-  // Reordenamiento por arrastre: la card que se arrastra y el destino actual.
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   // Aviso al usuario cuando una acción no se pudo concretar (p. ej. agregar una
   // especie que no está en el catálogo cargado).
   const [notice, setNotice] = useState<string | null>(null);
@@ -91,16 +91,26 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
       retry: false,
     })),
   });
-  const baseProduction = productions[0]?.data ?? null;
+  // Each card keeps its numbers while a map change recomputes them (no blank flicker).
+  const shownProductions = useStickyData(
+    entries.map((e) => e.id),
+    productions.map((q) => q.data),
+  );
+  const baseProduction = shownProductions[0] ?? null;
 
   const atMax = entries.length >= MAX_COMPARE;
+
+  // On a phone the cards swipe one per screen (CSS); the pager keeps the card
+  // you're working with in view.
+  const cardsRef = useRef<HTMLDivElement>(null);
+  const dexOf = (species: string) => catalog.data?.species.find((s) => s.name === species)?.dex;
 
   // Miembros de la caja que ya están como card (por su id de origen), para no
   // ofrecer agregarlos dos veces sin querer.
   const inComparison = new Set(entries.map((e) => e.sourceId).filter(Boolean));
 
-  // Intercambia dos cards (swap), sin reacomodar las del medio: arrastrar la 1ª a
-  // la 3ª posición solo permuta esas dos. "Hacer base" intercambia con la 1ª.
+  // Swaps two cards without shifting the ones between: ‹ › swap neighbours,
+  // "Make base" swaps with the first.
   const swapEntries = (a: number, b: number) =>
     setEntries((prev) => {
       if (a === b || a < 0 || b < 0 || a >= prev.length || b >= prev.length) return prev;
@@ -108,12 +118,6 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
       [next[a], next[b]] = [next[b], next[a]];
       return next;
     });
-
-  const onCardDrop = (to: number) => {
-    if (dragIndex !== null) swapEntries(dragIndex, to);
-    setDragIndex(null);
-    setDragOverIndex(null);
-  };
 
   // Inserta una card nueva (sin origen) o reemplaza la config de la que estábamos
   // editando, manteniendo su sourceId. Cierra el modal.
@@ -215,79 +219,91 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
         )}
       </ToolHeader>
 
-      <div className="prod-cards">
-        {entries.map((e, i) => (
-          <ProductionCard
-            key={e.id}
-            config={e.config}
-            catalog={catalog.data}
-            production={productions[i]?.data ?? null}
-            productionError={(productions[i]?.error as Error | null) ?? null}
-            base={i === 0 ? null : baseProduction}
-            isBase={i === 0 && entries.length > 1}
-            comparing={entries.length > 1}
-            berryRole={berryRoleOf(map, expert, berryOf(e.config.species))}
-            expert={expert}
-            expertSpeed={island?.expert_speed ?? null}
-            weeklyBonus={map.weeklyBonus}
-            onEdit={() => openEdit(i)}
-            onClone={() => cloneAt(i)}
-            onRemove={() => removeAt(i)}
-            onMakeBase={() => swapEntries(i, 0)}
-            onMoveLeft={i > 0 ? () => swapEntries(i, i - 1) : undefined}
-            onMoveRight={i < entries.length - 1 ? () => swapEntries(i, i + 1) : undefined}
-            onSaveToBox={() => guard(() => saveToBox(i))}
-            cloneDisabled={atMax}
-            inBox={e.sourceId !== undefined}
-            saveState={statusOf(e.id).state}
-            saveError={statusOf(e.id).error ?? null}
-            dragging={dragIndex === i}
-            dragOver={dragOverIndex === i && dragIndex !== i}
-            onDragStart={() => setDragIndex(i)}
-            onDragEnter={() => setDragOverIndex(i)}
-            onDrop={() => onCardDrop(i)}
-            onDragEnd={() => {
-              setDragIndex(null);
-              setDragOverIndex(null);
-            }}
-          />
-        ))}
+      {/* The pager docks only while the cards are on screen: the deck bounds its sticky. */}
+      <div className="swipe-deck">
+        {/* Mounted even with no cards, so it sees the first one arrive. */}
+        <SwipePager
+          track={cardsRef}
+          hidden={entries.length === 0}
+          label={t("pager.aria")}
+          items={[
+            ...entries.map((e) => {
+              const dex = dexOf(e.config.species);
+              return {
+                key: e.id,
+                label: t("pager.show", { name: e.config.species }),
+                icon: <span className="swipe-pager__sprites">{dex ? <img src={spriteUrl(dex)} alt="" /> : null}</span>,
+              };
+            }),
+            { key: "add", label: t("pager.add"), icon: <span aria-hidden="true">+</span> },
+          ]}
+        />
 
-        {/* El slot de "agregar" vive siempre en la grilla: cuando se llega al
-            tope muestra el límite ahí mismo, donde el usuario busca el botón, en
-            vez de un párrafo suelto arriba. */}
-        <div className="prod-card-cell">
-          {/* Placeholder de la barra de acciones: reserva su alto para que el
-              cuerpo de esta card quede alineado con las demás. */}
-          <div className="prod-card__toolbar prod-card__toolbar--empty" aria-hidden="true" />
-          <article className="prod-card prod-card--add">
-            {atMax ? (
-              <p className="muted prod-add__hint">{t("prod.atMax")}</p>
-            ) : (
-              <>
-                {entries.length === 0 ? (
-                  <div className="prod-add__hint">
-                    <p className="prod-add__lead">{t("prod.emptyLead")}</p>
-                    <p className="muted">{t("prod.emptyBody")}</p>
+        <div className="prod-cards prod-cards--swipe" ref={cardsRef}>
+          {entries.map((e, i) => (
+            <ProductionCard
+              key={e.id}
+              config={e.config}
+              catalog={catalog.data}
+              production={shownProductions[i] ?? null}
+              productionError={(productions[i]?.error as Error | null) ?? null}
+              base={i === 0 ? null : baseProduction}
+              isBase={i === 0 && entries.length > 1}
+              comparing={entries.length > 1}
+              berryRole={berryRoleOf(map, expert, berryOf(e.config.species))}
+              expert={expert}
+              expertSpeed={island?.expert_speed ?? null}
+              weeklyBonus={map.weeklyBonus}
+              onEdit={() => openEdit(i)}
+              onClone={() => cloneAt(i)}
+              onRemove={() => removeAt(i)}
+              onMakeBase={() => swapEntries(i, 0)}
+              onMoveLeft={i > 0 ? () => swapEntries(i, i - 1) : undefined}
+              onMoveRight={i < entries.length - 1 ? () => swapEntries(i, i + 1) : undefined}
+              onSaveToBox={() => guard(() => saveToBox(i))}
+              cloneDisabled={atMax}
+              inBox={e.sourceId !== undefined}
+              saveState={statusOf(e.id).state}
+              saveError={statusOf(e.id).error ?? null}
+            />
+          ))}
+
+          {/* El slot de "agregar" vive siempre en la grilla: cuando se llega al
+              tope muestra el límite ahí mismo, donde el usuario busca el botón, en
+              vez de un párrafo suelto arriba. */}
+          <div className="prod-card-cell">
+            {/* Placeholder de la barra de acciones: reserva su alto para que el
+                cuerpo de esta card quede alineado con las demás. */}
+            <div className="prod-card__toolbar prod-card__toolbar--empty" aria-hidden="true" />
+            <article className="prod-card prod-card--add">
+              {atMax ? (
+                <p className="muted prod-add__hint">{t("prod.atMax")}</p>
+              ) : (
+                <>
+                  {entries.length === 0 ? (
+                    <div className="prod-add__hint">
+                      <p className="prod-add__lead">{t("prod.emptyLead")}</p>
+                      <p className="muted">{t("prod.emptyBody")}</p>
+                    </div>
+                  ) : (
+                    <p className="muted prod-add__hint">{t("prod.addHintMore")}</p>
+                  )}
+                  <div className="prod-add__actions">
+                    <button type="button" className="btn btn--primary" onClick={() => openAdd("form")}>
+                      {t("prod.new")}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--ghost"
+                      onClick={() => guard(() => openAdd("box"))}
+                    >
+                      {t("prod.myPokemon")}
+                    </button>
                   </div>
-                ) : (
-                  <p className="muted prod-add__hint">{t("prod.addHintMore")}</p>
-                )}
-                <div className="prod-add__actions">
-                  <button type="button" className="btn btn--primary" onClick={() => openAdd("form")}>
-                    {t("prod.new")}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn--ghost"
-                    onClick={() => guard(() => openAdd("box"))}
-                  >
-                    {t("prod.myPokemon")}
-                  </button>
-                </div>
-              </>
-            )}
-          </article>
+                </>
+              )}
+            </article>
+          </div>
         </div>
       </div>
 
