@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { expertMarks } from "./expertMarks";
+import { expertMarks, speedLabels } from "./expertMarks";
 
 const t = (key: string) => key;
 
@@ -104,5 +104,12 @@ describe("expertMarks", () => {
     for (const weeklyBonus of ["berry_strength", "ingredient", "skill_trigger"] as const) {
       expect(expertMarks({ ...args, weeklyBonus }).length).toBeLessThanOrEqual(4);
     }
+  });
+});
+
+describe("speedLabels", () => {
+  it("formats each map's cadence effects", () => {
+    expect(speedLabels({ main: 0.8, penalty: 1.35 })).toEqual({ main: "−20%", penalty: "+35%" });
+    expect(speedLabels(null)).toEqual({ main: "−10%", penalty: "+15%" });
   });
 });
