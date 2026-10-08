@@ -950,38 +950,33 @@ def test_team_production_rejects_a_bad_config(client: TestClient) -> None:
     assert "Missingno" in body.json()["detail"]
 
 
-def test_production_scenario_applies_the_bonus(client: TestClient) -> None:
+def test_production_map_terms_apply_the_expert_speed(client: TestClient) -> None:
     body = {
         "species": "Pikachu",
         "level": 60,
         "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
     }
     plain = client.post("/production", json=body).json()
-    favorite = client.post("/production", json={**body, "scenario": "favorite"}).json()
-    assert favorite["berry_strength"] == pytest.approx(plain["berry_strength"] * 2)
+    main = client.post(
+        "/production",
+        json={
+            **body,
+            "island": "Cyan Beach (Expert)",
+            "favorite_berries": ["Grepa"],
+            "main_favorite": "Grepa",
+        },
+    ).json()
+    assert main["seconds_per_help"] == pytest.approx(plain["seconds_per_help"] * 0.8, abs=1)
 
 
-def test_production_without_scenario_is_unchanged(client: TestClient) -> None:
-    # The field is optional: an existing client keeps getting today's numbers.
-    body = {
-        "species": "Pikachu",
-        "level": 60,
-        "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
-    }
-    assert (
-        client.post("/production", json=body).json()
-        == client.post("/production", json={**body, "scenario": "none"}).json()
-    )
-
-
-def test_production_unknown_scenario_returns_400(client: TestClient) -> None:
+def test_production_bad_favorite_returns_400(client: TestClient) -> None:
     res = client.post(
         "/production",
         json={
             "species": "Pikachu",
             "level": 60,
             "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
-            "scenario": "double_xp",
+            "favorite_berries": ["Durian"],
         },
     )
     assert res.status_code == 400

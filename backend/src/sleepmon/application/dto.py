@@ -74,9 +74,11 @@ class ProductionInput:
     sub_skills: list[str] = field(default_factory=list)
     ribbon: str = ""  # vacío = sin listón
     skill_level: int = 1  # nivel de la main skill (1..MAX_SKILL_LEVEL)
-    # Comparison's map scenario (PRD 0002): one assumption for the whole comparison,
-    # instead of picking a map.
-    scenario: str = "none"
+    # Comparison's map terms (PRD 0002), resolved exactly like Team Analysis's.
+    island: str | None = None
+    favorite_berries: list[str] = field(default_factory=list)
+    main_favorite: str | None = None
+    weekly_bonus: str | None = None
     sleep: SleepInput | None = None  # None -> the default night
 
 
