@@ -9,7 +9,7 @@ visual language lives in [`docs/design-system.md`](../design-system.md).
 
 Each tool used to introduce itself with a paragraph on how it works, and to place its
 controls wherever there was room: the Box had a clear sort/filter bar, but
-Comparison's berry scenario sat alone at the right, and Team Analysis had a loose
+Comparison's single scenario selector sat alone at the right, and Team Analysis had a loose
 Settings button with the active modifiers hanging below it — while the map, the
 favorite berries and the area bonus, which reshape every number, were nowhere on
 screen until the totals at the bottom.
@@ -69,9 +69,10 @@ Per tool:
 
 - **Box** — the existing sort and filter bar, unchanged, including its rule: it
   appears when the Box holds more than one Pokémon.
-- **Comparison** — one chip, **Scenario: No berry bonus** (or the scenario picked),
-  a dropdown with the same options and marks as today. Hidden while the comparison is
-  empty, since there is nothing for it to apply to.
+- **Comparison** — three fields: **Map** (Normal, or the expert map's name with its
+  two cadence marks), **Favorite berries** (their icons, or "Ninguna") and **Weekly
+  bonus** (expert maps only). Hidden while the comparison is empty, since there is
+  nothing for it to apply to.
 - **Team Analysis** — four fields, **always shown**, active or not, even with an empty
   team (the map can be chosen before the team is built):
   - **Map** — "No map", or the map's name followed by its favorite berries as icons
@@ -141,8 +142,8 @@ sign-in gate ([Authentication](0010-authentication.md)) in place of all of this.
 - **Weekly bonus:** on Greengrass Isle (Expert) with the berries bonus the Map field shows
   a berry-icon mark "×2,4" (Spanish) / "×2.4" (English) after the berries; with +1
   ingredient, "+1" with the ingredient icon; on a regular map, no mark. The bonus is
-  named "Bayas ×2,4" / "Berries ×2.4" everywhere it is chosen (Map dialog, Comparison's
-  "Experto · bayas" scenario).
+  named "Bayas ×2,4" / "Berries ×2.4" in the weekly bonus control (Team Analysis's Map
+  dialog and Comparison's bar).
 - **Area bonus:** with an area bonus of 0, the Map chip shows no area figure; with 35%,
   it shows a **+35%** chip.
 - **Good Camp Ticket:** touching **Sí** turns the ticket on and the totals recompute,
@@ -154,8 +155,9 @@ sign-in gate ([Authentication](0010-authentication.md)) in place of all of this.
   toggle to Salad and fills the three meals with the favorite salad (or leaves them empty
   when there is none); with three dishes chosen their images show in order; touching them,
   or Choose recipes on the Cooking card, opens the Meals dialog.
-- **Comparison scenario:** with one card, the bar shows **Scenario: No berry bonus**;
-  picking **Expert · strength** from the chip applies it to every card, as today.
+- **Comparison map terms:** with one card, the bar reads **Mapa: Normal · Bayas
+  favoritas: Ninguna**; picking an expert map shows the weekly bonus field and the
+  terms apply to every card.
 - **Narrow screen:** at 375px, the menu takes two rows, the Team Analysis bar wraps
   onto as many lines as it needs, and the page never scrolls sideways.
 

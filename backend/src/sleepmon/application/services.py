@@ -9,9 +9,8 @@ cada ingrediente sea válido para la especie en su slot.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from dataclasses import dataclass, replace
-from enum import StrEnum
-from typing import assert_never
 from uuid import UUID
 
 from sleepmon.application.dto import (
@@ -202,42 +201,6 @@ def _validate_ingredients(species: Species, ingredients: tuple[Ingredient, ...])
             )
 
 
-class ComparisonScenario(StrEnum):
-    """The five scenarios Comparison offers (PRD 0002, "Map scenario")."""
-
-    NONE = "none"
-    FAVORITE = "favorite"
-    EXPERT_BERRY = "expert_berry"
-    EXPERT_INGREDIENT = "expert_ingredient"
-    EXPERT_SKILL = "expert_skill"
-
-
-def _scenario_bonuses(scenario: str, berry: Berry) -> MapBonuses:
-    """Comparison's chosen scenario, as the domain's value object.
-
-    The species' own berry enters as a SUB favorite, so the x2 and the weekly bonus
-    reach every card alike without picking a map. Never as the MAIN favorite: only
-    one berry can be, so its perks aren't reproducible for a whole comparison.
-    """
-    chosen = parse_enum(ComparisonScenario, scenario, "Escenario")
-    subs = frozenset({berry})
-    # match on the enum (no wildcard) so mypy flags a new member missing a branch,
-    # instead of a dict lookup that would only fail at runtime (KeyError -> 500).
-    match chosen:
-        case ComparisonScenario.NONE:
-            return MapBonuses()
-        case ComparisonScenario.FAVORITE:
-            return MapBonuses(subs=subs)
-        case ComparisonScenario.EXPERT_BERRY:
-            return MapBonuses(subs=subs, expert=True, weekly_bonus=WeeklyBonus.BERRY_STRENGTH)
-        case ComparisonScenario.EXPERT_INGREDIENT:
-            return MapBonuses(subs=subs, expert=True, weekly_bonus=WeeklyBonus.INGREDIENT)
-        case ComparisonScenario.EXPERT_SKILL:
-            return MapBonuses(subs=subs, expert=True, weekly_bonus=WeeklyBonus.SKILL_TRIGGER)
-        case _ as unreachable:
-            assert_never(unreachable)
-
-
 @dataclass(frozen=True, slots=True)
 class _ResolvedConfig:
     """A raw config turned into domain values, already validated."""
@@ -326,31 +289,37 @@ def _event_bonus(data: TeamProductionInput) -> EventBonus:
     return EventBonus(tuple(effects))
 
 
-def _map_bonuses(data: TeamProductionInput) -> MapBonuses:
+def _map_bonuses(
+    *,
+    island: str | None,
+    favorite_berries: Sequence[str],
+    main_favorite: str | None,
+    weekly_bonus: str | None,
+) -> MapBonuses:
     """Translate the raw request into the domain's value object. Validates; doesn't compute.
 
     `expert` is NOT received: it's derived from the map, so a client can't ask
     for expert effects on a normal map.
     """
-    if len(data.favorite_berries) > MAX_FAVORITE_BERRIES:
+    if len(favorite_berries) > MAX_FAVORITE_BERRIES:
         raise ValidationError(f"Como máximo {MAX_FAVORITE_BERRIES} bayas favoritas.")
-    if len(set(data.favorite_berries)) != len(data.favorite_berries):
+    if len(set(favorite_berries)) != len(favorite_berries):
         raise ValidationError("Las bayas favoritas no pueden repetirse.")
 
-    favorites = {parse_enum(Berry, name, "Baya") for name in data.favorite_berries}
+    favorites = {parse_enum(Berry, name, "Baya") for name in favorite_berries}
 
-    island = parse_enum(Island, data.island, "Mapa") if data.island is not None else None
-    expert = island is not None and island in ISLAND_EXPERT
+    parsed_island = parse_enum(Island, island, "Mapa") if island is not None else None
+    expert = parsed_island is not None and parsed_island in ISLAND_EXPERT
 
     main: Berry | None = None
-    if data.main_favorite is not None:
-        main = parse_enum(Berry, data.main_favorite, "Baya principal")
+    if main_favorite is not None:
+        main = parse_enum(Berry, main_favorite, "Baya principal")
         if main not in favorites:
             raise ValidationError("La baya principal debe estar entre las favoritas.")
 
     weekly = WeeklyBonus.BERRY_STRENGTH
-    if data.weekly_bonus is not None:
-        weekly = parse_enum(WeeklyBonus, data.weekly_bonus, "Bonus semanal")
+    if weekly_bonus is not None:
+        weekly = parse_enum(WeeklyBonus, weekly_bonus, "Bonus semanal")
 
     # Outside expert mode the main berry/weekly bonus are ignored rather than
     # rejected (switching maps can leave them behind as stale client state).
@@ -359,7 +328,7 @@ def _map_bonuses(data: TeamProductionInput) -> MapBonuses:
 
     subs = frozenset(favorites - {main}) if main is not None else frozenset(favorites)
     return MapBonuses(
-        main=main, subs=subs, expert=True, weekly_bonus=weekly, island=island
+        main=main, subs=subs, expert=True, weekly_bonus=weekly, island=parsed_island
     )
 
 
@@ -579,7 +548,12 @@ class DefaultProductionService(ProductionService):
             cfg.sub_skills,
             cfg.ribbon,
             cfg.skill_level,
-            map_bonuses=_scenario_bonuses(data.scenario, cfg.species.berry),
+            map_bonuses=_map_bonuses(
+                island=data.island,
+                favorite_berries=data.favorite_berries,
+                main_favorite=data.main_favorite,
+                weekly_bonus=data.weekly_bonus,
+            ),
             sleep=parse_sleep(data.sleep),
         )
         return _production_result(result)
@@ -639,7 +613,12 @@ class DefaultProductionService(ProductionService):
                 f"El bonus de isla debe estar entre 0 y 0.85; llegó {data.island_bonus}."
             )
         validate_pot_size(data.pot_size)
-        map_bonuses = _map_bonuses(data)
+        map_bonuses = _map_bonuses(
+            island=data.island,
+            favorite_berries=data.favorite_berries,
+            main_favorite=data.main_favorite,
+            weekly_bonus=data.weekly_bonus,
+        )
         event = _event_bonus(data)
         sleep = parse_sleep(data.sleep)
 

@@ -128,12 +128,9 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Sin especialistas en Ingredientes en la caja.",
     // Página Comparación
     "prod.title": "Comparación",
-    "prod.scenario": "Escenario",
-    "prod.scenarioNone": "Sin bonus de baya",
-    "prod.scenarioFavorite": "Baya favorita",
-    "prod.scenarioExpertBerry": "Experto · bayas",
-    "prod.scenarioExpertIngredient": "Experto · ingrediente",
-    "prod.scenarioExpertSkill": "Experto · skill",
+    "prod.mapNormal": "Normal",
+    "prod.favoritesNone": "Ninguna",
+    "prod.favoritesMainHint": "★ la primera es la principal",
     "prod.atMax":
       "Ya hay 5 Pokémon: es el máximo del equipo en el juego. Quitá uno para agregar otro.",
     "prod.emptyLead": "Compará hasta 5 Pokémon lado a lado.",
@@ -706,12 +703,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.noIngredientSpecialists": "No Ingredient specialists in the box.",
     // Comparison page
     "prod.title": "Comparison",
-    "prod.scenario": "Scenario",
-    "prod.scenarioNone": "No berry bonus",
-    "prod.scenarioFavorite": "Favorite berry",
-    "prod.scenarioExpertBerry": "Expert · berries",
-    "prod.scenarioExpertIngredient": "Expert · ingredient",
-    "prod.scenarioExpertSkill": "Expert · skill",
+    "prod.mapNormal": "Normal",
+    "prod.favoritesNone": "None",
+    "prod.favoritesMainHint": "★ the first one is the main",
     "prod.atMax":
       "There are already 5 Pokémon: that's the in-game team maximum. Remove one to add another.",
     "prod.emptyLead": "Compare up to 5 Pokémon side by side.",

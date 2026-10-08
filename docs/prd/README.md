@@ -12,7 +12,7 @@ in the same style as the ADRs. Each is produced by the `design` skill.
 <!-- index — one line per PRD, most recent last -->
 
 - [0001 — Box](0001-box.md) — the persistent team record (source of truth) with a per-Pokémon production overview, sorting/filters, and berry/ingredient/specialty coverage.
-- [0002 — Comparison](0002-comparison.md) — put up to 5 Pokémon side by side and read their estimated daily production as a base plus deltas; ephemeral, persisted to the Box only by explicit save.
+- [0002 — Comparison](0002-comparison.md) — put up to 5 Pokémon side by side and read their estimated daily production as a base plus deltas; under shared map terms (Normal or an expert map, chosen favorite berries, weekly bonus); ephemeral, persisted to the Box only by explicit save.
 - [0003 — Pokémon form](0003-pokemon-form.md) — the shared, catalog-driven modal for creating/editing a Pokémon config; reused by the Box, Comparison and Team Analysis, which own persistence.
 - [0004 — Box picker](0004-box-picker.md) — the shared "My Pokémon" modal to find and recognize a saved Pokémon by its config and hand it to the calling tool; searchable, config-derived identity, agnostic of its caller.
 - [0005 — Team Analysis](0005-team-analysis.md) — assemble a team of up to 5 slots (splittable) from Pokémon created on the spot or copied from the Box, edit them in place, and read the team's aggregated daily/weekly production and grand total; open to anyone, plus the Good Camp Ticket.

@@ -913,7 +913,7 @@ def test_a_weekly_bonus_without_an_expert_map_is_ignored_not_rejected(
 
 
 def _pikachu(**extra: object) -> ProductionInput:
-    """The same config, with whatever scenario each test needs."""
+    """The same config, with whatever map terms each test needs."""
     return ProductionInput(
         species="Pikachu",
         level=60,
@@ -922,62 +922,147 @@ def _pikachu(**extra: object) -> ProductionInput:
     )
 
 
-def test_compute_production_favorite_berry_doubles_strength(
+CYAN_EXPERT = "Cyan Beach (Expert)"
+GREENGRASS_EXPERT = "Greengrass Isle (Expert)"
+
+
+def _mon(species: str, **extra: object) -> ProductionInput:
+    """A level-60 config with the species' first ingredient in every slot."""
+    ingredients = {
+        "Quagsire": ["Tasty Mushroom", "Tasty Mushroom", "Tasty Mushroom"],
+        "Amoonguss": ["Tasty Mushroom", "Tasty Mushroom", "Tasty Mushroom"],
+    }[species]
+    return ProductionInput(
+        species=species,
+        level=60,
+        ingredients=ingredients,
+        **extra,  # type: ignore[arg-type]
+    )
+
+
+def test_normal_favorite_doubles_strength_and_nothing_else(
     production_service: DefaultProductionService,
 ) -> None:
     plain = production_service.compute_production(_pikachu())
-    favorite = production_service.compute_production(_pikachu(scenario="favorite"))
-    assert favorite.berry_strength == pytest.approx(plain.berry_strength * 2)
-    # A favorite berry only multiplies strength: not cadence, not the skill.
+    favorite = production_service.compute_production(_pikachu(favorite_berries=["Grepa"]))
+    assert round(plain.berry_strength) == 14469
+    assert round(favorite.berry_strength) == 28937
     assert favorite.seconds_per_help == plain.seconds_per_help
     assert favorite.skill_triggers == pytest.approx(plain.skill_triggers)
 
 
-def test_compute_production_expert_berry_scenario(
+def test_normal_never_penalizes_a_non_favorite(
     production_service: DefaultProductionService,
 ) -> None:
     plain = production_service.compute_production(_pikachu())
-    expert = production_service.compute_production(_pikachu(scenario="expert_berry"))
-    # rel: per-berry strength is rounded to an integer AFTER the multiplier.
-    assert expert.berry_strength == pytest.approx(plain.berry_strength * 2.4, rel=0.01)
+    other = production_service.compute_production(_pikachu(favorite_berries=["Oran", "Pecha"]))
+    assert other == plain
 
 
-def test_compute_production_expert_ingredient_scenario(
+def test_normal_ignores_main_and_weekly(production_service: DefaultProductionService) -> None:
+    plain_fav = production_service.compute_production(_pikachu(favorite_berries=["Grepa"]))
+    stale = production_service.compute_production(
+        _pikachu(favorite_berries=["Grepa"], main_favorite="Grepa", weekly_bonus="skill_trigger")
+    )
+    assert stale == plain_fav
+
+
+def _assert_scaled_help(got: int, plain: int, factor: float) -> None:
+    # Both are floored whole seconds: got = floor(raw * f), plain = floor(raw).
+    assert plain * factor - 1 < got < plain * factor + factor
+
+
+@pytest.mark.parametrize(
+    ("island", "main", "penalty"), [(CYAN_EXPERT, 0.8, 1.35), (GREENGRASS_EXPERT, 0.9, 1.15)]
+)
+def test_expert_map_speeds_main_and_penalizes_non_favorite(
+    production_service: DefaultProductionService, island: str, main: float, penalty: float
+) -> None:
+    terms = {
+        "island": island,
+        "favorite_berries": ["Oran", "Pecha", "Pamtre"],
+        "main_favorite": "Oran",
+    }
+    quag_plain = production_service.compute_production(_mon("Quagsire", skill_level=3))
+    quag = production_service.compute_production(_mon("Quagsire", skill_level=3, **terms))
+    moon_plain = production_service.compute_production(_mon("Amoonguss"))
+    moon = production_service.compute_production(_mon("Amoonguss", **terms))
+    _assert_scaled_help(quag.seconds_per_help, quag_plain.seconds_per_help, main)
+    assert quag.effective_skill_level == 4
+    _assert_scaled_help(moon.seconds_per_help, moon_plain.seconds_per_help, penalty)
+
+
+def test_expert_berry_bonus_is_2_4_not_4_8(production_service: DefaultProductionService) -> None:
+    plain = production_service.compute_production(_mon("Quagsire"))
+    sub = production_service.compute_production(
+        _mon(
+            "Quagsire",
+            island=CYAN_EXPERT,
+            favorite_berries=["Pecha", "Oran"],
+            main_favorite="Pecha",
+        )
+    )
+    # rel: per-berry strength is rounded AFTER the multiplier; berry count is equal (sub: no speed).
+    assert sub.berry_strength == pytest.approx(plain.berry_strength * 2.4, rel=0.01)
+
+
+def test_expert_sub_favorite_gets_only_the_weekly_bonus(
     production_service: DefaultProductionService,
 ) -> None:
-    favorite = production_service.compute_production(_pikachu(scenario="favorite"))
-    expert = production_service.compute_production(_pikachu(scenario="expert_ingredient"))
-    assert sum(s.amount for s in expert.ingredients) > sum(s.amount for s in favorite.ingredients)
-    # More items per help also fills the inventory sooner.
-    assert expert.inventory_fill_hours < favorite.inventory_fill_hours
+    plain = production_service.compute_production(_mon("Quagsire", skill_level=3))
+    sub = production_service.compute_production(
+        _mon(
+            "Quagsire",
+            skill_level=3,
+            island=CYAN_EXPERT,
+            favorite_berries=["Pecha", "Oran"],
+            main_favorite="Pecha",
+            weekly_bonus="skill_trigger",
+        )
+    )
+    assert sub.seconds_per_help == plain.seconds_per_help
+    assert sub.effective_skill_level == 3
+    assert sub.skill_triggers > plain.skill_triggers
 
 
-def test_compute_production_expert_skill_scenario(
+def test_expert_ingredient_bonus_adds_ingredients(
     production_service: DefaultProductionService,
 ) -> None:
-    favorite = production_service.compute_production(_pikachu(scenario="favorite"))
-    expert = production_service.compute_production(_pikachu(scenario="expert_skill"))
-    assert expert.skill_triggers > favorite.skill_triggers
-    assert expert.sleep_sessions[0].skill_chances[0] > favorite.sleep_sessions[0].skill_chances[0]
+    terms = {"island": CYAN_EXPERT, "favorite_berries": ["Pecha", "Oran"], "main_favorite": "Pecha"}
+    berries = production_service.compute_production(_mon("Quagsire", **terms))
+    ingredient = production_service.compute_production(
+        _mon("Quagsire", weekly_bonus="ingredient", **terms)
+    )
+    assert sum(s.amount for s in ingredient.ingredients) > sum(
+        s.amount for s in berries.ingredients
+    )
+    assert ingredient.inventory_fill_hours < berries.inventory_fill_hours
 
 
-def test_compute_production_scenario_is_never_the_main_berry(
+def test_expert_map_with_no_favorites_penalizes_everyone(
     production_service: DefaultProductionService,
 ) -> None:
-    # Comparison reads every card as a SUB favorite: no x0.9 cadence, no Skill +1,
-    # which belong to the main berry alone.
-    plain = production_service.compute_production(_pikachu(skill_level=3))
-    for scenario in ("expert_berry", "expert_ingredient", "expert_skill"):
-        expert = production_service.compute_production(_pikachu(skill_level=3, scenario=scenario))
-        assert expert.effective_skill_level == plain.effective_skill_level == 3
-        assert expert.seconds_per_help == plain.seconds_per_help
+    plain = production_service.compute_production(_mon("Quagsire"))
+    bare = production_service.compute_production(_mon("Quagsire", island=CYAN_EXPERT))
+    _assert_scaled_help(bare.seconds_per_help, plain.seconds_per_help, 1.35)
 
 
-def test_compute_production_rejects_unknown_scenario(
-    production_service: DefaultProductionService,
+@pytest.mark.parametrize(
+    "terms",
+    [
+        {"favorite_berries": ["Oran", "Pecha", "Pamtre", "Grepa"]},
+        {"favorite_berries": ["Oran", "Oran"]},
+        {"island": CYAN_EXPERT, "favorite_berries": ["Oran"], "main_favorite": "Pecha"},
+        {"favorite_berries": ["Durian"]},
+        {"island": "Atlantis"},
+        {"island": CYAN_EXPERT, "weekly_bonus": "double_xp"},
+    ],
+)
+def test_compute_production_rejects_bad_map_terms(
+    production_service: DefaultProductionService, terms: dict[str, object]
 ) -> None:
     with pytest.raises(ValidationError):
-        production_service.compute_production(_pikachu(scenario="double_xp"))
+        production_service.compute_production(_pikachu(**terms))
 
 
 def _team(**overrides: object) -> TeamProductionInput:

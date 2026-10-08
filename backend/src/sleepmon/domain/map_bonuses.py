@@ -29,8 +29,8 @@ class MapBonuses:
     is False. On an expert map, ``main`` separates the main berry from the
     sub-favorites, and ``weekly_bonus`` says which of the three is active.
     ``main=None`` with ``expert=True`` is valid: the user hasn't picked a main
-    berry yet. ``island`` picks the map's own speed effects; without one
-    (Comparison's generic scenarios) the Greengrass Isle (Expert) ones apply.
+    berry yet. ``island`` picks the map's own speed effects; without one,
+    the Greengrass Isle (Expert) figures apply as a default.
     """
 
     main: Berry | None = None

@@ -301,7 +301,10 @@ class ProductionController(Controller):
                 sub_skills=data.sub_skills,
                 ribbon=data.ribbon,
                 skill_level=data.skill_level,
-                scenario=data.scenario,
+                island=data.island,
+                favorite_berries=data.favorite_berries,
+                main_favorite=data.main_favorite,
+                weekly_bonus=data.weekly_bonus,
                 sleep=_sleep_input(data.sleep),
             )
         )

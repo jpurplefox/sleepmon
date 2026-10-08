@@ -1,6 +1,5 @@
 // Tipos espejo de los schemas del backend (sleepmon.adapters.inbound.http.schemas).
 
-import type { Scenario } from "./scenarios";
 import type { EventEffectRequest } from "./eventBonus";
 
 export interface Nature {
@@ -201,8 +200,11 @@ export interface ProductionInput {
   sub_skills: string[];
   ribbon: string;
   skill_level: number;
-  // Comparison's map scenario; omitted means "none" server-side.
-  scenario?: Scenario;
+  // Comparison's map terms; omitted means Normal with no favorites.
+  island?: string | null;
+  favorite_berries?: string[];
+  main_favorite?: string | null;
+  weekly_bonus?: WeeklyBonus | null;
   sleep?: SleepSchedule;
 }
 

@@ -27,6 +27,12 @@ const BASE_EXPERT_SPEED: ExpertSpeed = { main: 0.9, penalty: 1.15 };
 /** A help-interval factor as a whole percentage, e.g. 0.8 -> 20, 1.35 -> 35. */
 const pct = (factor: number) => Math.round(Math.abs(1 - factor) * 100);
 
+/** A map's cadence effects as marks, e.g. { main: "−20%", penalty: "+35%" }. */
+export function speedLabels(speed: ExpertSpeed | null): { main: string; penalty: string } {
+  const { main, penalty } = speed ?? BASE_EXPERT_SPEED;
+  return { main: `−${pct(main)}%`, penalty: `+${pct(penalty)}%` };
+}
+
 /**
  * Marks for a member based on its berry and the current map (max four).
  * Normal map: just the x2 favorite, as before. Expert map: one mark per active
@@ -54,13 +60,15 @@ export function expertMarks({
         ];
   }
 
-  const { main, penalty } = speed ?? BASE_EXPERT_SPEED;
+  const resolved = speed ?? BASE_EXPERT_SPEED;
+  const { main, penalty } = resolved;
+  const labels = speedLabels(resolved);
 
   if (role === "none") {
     return [
       {
         metric: "cadence",
-        label: `+${pct(penalty)}%`,
+        label: labels.penalty,
         tone: "bad",
         effect: t("card.expertPenalty", { pct: pct(penalty) }),
       },
@@ -72,7 +80,7 @@ export function expertMarks({
   if (role === "main") {
     marks.push({
       metric: "cadence",
-      label: `−${pct(main)}%`,
+      label: labels.main,
       tone: "good",
       effect: t("card.expertMainSpeed", { pct: pct(main) }),
     });

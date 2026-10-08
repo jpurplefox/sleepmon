@@ -164,7 +164,10 @@ class ProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     sub_skills: list[str] = msgspec.field(default_factory=list)
     ribbon: str = ""  # vacío = sin listón
     skill_level: int = 1  # nivel de la main skill
-    scenario: str = "none"  # ComparisonScenario: "none" = no berry bonus
+    island: str | None = None
+    favorite_berries: list[str] = msgspec.field(default_factory=list)
+    main_favorite: str | None = None
+    weekly_bonus: str | None = None
     sleep: SleepIn | None = None
 
 
