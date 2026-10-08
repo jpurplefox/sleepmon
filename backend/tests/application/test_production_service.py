@@ -967,10 +967,14 @@ def test_normal_ignores_main_and_weekly(production_service: DefaultProductionSer
     assert stale == plain_fav
 
 
+def _assert_scaled_help(got: int, plain: int, factor: float) -> None:
+    # Both are floored whole seconds: got = floor(raw * f), plain = floor(raw).
+    assert plain * factor - 1 < got < plain * factor + factor
+
+
 @pytest.mark.parametrize(
     ("island", "main", "penalty"), [(CYAN_EXPERT, 0.8, 1.35), (GREENGRASS_EXPERT, 0.9, 1.15)]
 )
-# seconds_per_help is floored to whole seconds, hence abs=1 instead of a tight rel.
 def test_expert_map_speeds_main_and_penalizes_non_favorite(
     production_service: DefaultProductionService, island: str, main: float, penalty: float
 ) -> None:
@@ -983,9 +987,9 @@ def test_expert_map_speeds_main_and_penalizes_non_favorite(
     quag = production_service.compute_production(_mon("Quagsire", skill_level=3, **terms))
     moon_plain = production_service.compute_production(_mon("Amoonguss"))
     moon = production_service.compute_production(_mon("Amoonguss", **terms))
-    assert quag.seconds_per_help == pytest.approx(quag_plain.seconds_per_help * main, abs=1)
+    _assert_scaled_help(quag.seconds_per_help, quag_plain.seconds_per_help, main)
     assert quag.effective_skill_level == 4
-    assert moon.seconds_per_help == pytest.approx(moon_plain.seconds_per_help * penalty, abs=1)
+    _assert_scaled_help(moon.seconds_per_help, moon_plain.seconds_per_help, penalty)
 
 
 def test_expert_berry_bonus_is_2_4_not_4_8(production_service: DefaultProductionService) -> None:
@@ -1040,7 +1044,7 @@ def test_expert_map_with_no_favorites_penalizes_everyone(
 ) -> None:
     plain = production_service.compute_production(_mon("Quagsire"))
     bare = production_service.compute_production(_mon("Quagsire", island=CYAN_EXPERT))
-    assert bare.seconds_per_help == pytest.approx(plain.seconds_per_help * 1.35, abs=1)
+    _assert_scaled_help(bare.seconds_per_help, plain.seconds_per_help, 1.35)
 
 
 @pytest.mark.parametrize(
