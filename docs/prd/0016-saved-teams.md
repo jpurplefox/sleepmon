@@ -88,14 +88,22 @@ bonus, the dish type, a meal — marks the team's name **unsaved**. Undoing the 
 by hand, or saving, clears the mark. Changing the event or the Good Camp Ticket does
 not mark it.
 
-Unsaved changes are session state, like everything in Team Analysis: a reload drops
-them (the saved team is intact). Opening **another** team while the current one has
-unsaved changes would replace them, so it asks first: **save / discard / cancel**.
+Unsaved changes are session state, like everything in Team Analysis: moving between
+tools keeps them, a reload drops them (the saved team is intact). Opening a team
+replaces the session, so when that would lose work — the open team has unsaved
+changes, or the session holds a team never saved — it asks first: **save / discard /
+cancel**. **Save** saves (naming the team if it is new) and then opens the other one.
+
+**Save** is available only while the open team is **unsaved**; **Save as…** is always
+available. Next to the open team's name, **Close team** empties Team Analysis (asking
+the same question first when it would lose work) — the way back to building a new team
+without reloading.
 
 ### Entering Team Analysis
 
-Team Analysis still **starts empty**. Its empty state gains an **Open a team** action
-(when signed in) that goes to Teams.
+On a fresh load Team Analysis still **starts empty**; within a visit its session
+survives moving to another tool and back. Its empty state gains an **Open a team**
+action (when signed in) that goes to Teams.
 
 ### The Teams tool
 
@@ -163,8 +171,10 @@ A Box Pokémon in no team is deleted with the Box's usual confirmation, unchange
   original exactly as it was.
 - Moving a split weight marks the open team **unsaved**; moving it back clears the
   mark; saving clears it. Toggling the Good Camp Ticket does **not** mark it.
-- Opening another team with **unsaved** changes asks **save / discard / cancel**;
-  without changes it opens directly.
+- Opening a team while the session has **unsaved** changes (or an unsaved new team
+  with members) asks **save / discard / cancel**; otherwise it opens directly. The
+  same applies to **Close team**.
+- Going from Team Analysis to the Box and back keeps the roster, map and meals.
 - **Delete** asks for confirmation and leaves the Box unchanged. Deleting the team open
   in Team Analysis leaves its roster there, unsaved.
 - **Rename** follows the same name rules.

@@ -57,8 +57,8 @@ offers:
   Box entry is unaffected by what you do here.
 - **Either way fills either half** — a new slot, or the second half of a **split**
   slot.
-- The roster is **session state**: neither the composition nor the Pokémon created
-  in it survive a reload. What deserves to last is saved to the Box, and the whole
+- The roster is **session state**: it survives moving to another tool and back, but
+  neither the composition nor the Pokémon created in it survive a reload. What deserves to last is saved to the Box, and the whole
   line-up can be kept as a [saved team](0016-saved-teams.md) (signed in).
 - **Split slots** — a slot can hold **two** Pokémon with a weight split (default
   50/50, e.g. 60/40), modeling a slot that **rotates** during the week. Each

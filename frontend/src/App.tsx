@@ -11,9 +11,11 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Placeholder } from "./components/Placeholder";
 import { useI18n } from "./i18n";
 import { Production } from "./pages/Production";
+import { SavedTeams } from "./pages/SavedTeams";
 import { Team } from "./pages/Team";
 import { Teams } from "./pages/Teams";
 import { ROUTES } from "./routes";
+import { TeamSessionProvider } from "./teamSession";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false } },
@@ -25,7 +27,9 @@ export default function App() {
       <AuthProvider>
         <GateProvider>
           <ErrorBoundary>
-            <AppShell />
+            <TeamSessionProvider>
+              <AppShell />
+            </TeamSessionProvider>
           </ErrorBoundary>
         </GateProvider>
       </AuthProvider>
@@ -73,6 +77,7 @@ function AppShell() {
                 "My Pokémon" and saving ask for a session, in place. */}
             <Teams />
           </Route>
+          <Route path={ROUTES.savedTeams}>{gated(<SavedTeams />)}</Route>
           {/* Default and unknown paths land on the Box. */}
           <Route path="/">
             <Redirect to={ROUTES.box} />

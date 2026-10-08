@@ -256,7 +256,8 @@ states · where it lives. Feature one-offs are intentionally not here.
   variant, `:disabled`, unified focus.
 - **`.icon-btn`** — icon-only button (grip, move, remove, save). Variants:
   `--inbox` (tints to accent = "already in the box"), `--saving` (pulse while
-  saving; respects `prefers-reduced-motion`). States: hover, disabled, focus.
+  saving; respects `prefers-reduced-motion`), `--danger` (a delete action: neutral at
+  rest, `--error` only on hover — §4). States: hover, disabled, focus.
 - **`.filter-btn`** — trigger for filter/selector popovers (selected value +
   chevron). Subparts `__value/__icons/__placeholder/__chevron`; state `--open`.
 - **`.specialty-toggle`** — segmented toggle-button group; item state `.is-on`
@@ -284,6 +285,20 @@ states · where it lives. Feature one-offs are intentionally not here.
   everyone else (`--one`): a single **1 vez** column. Every card under the same sleep
   schedule has the same rows, so cards align without reserving space; the block keeps its
   40px floor.
+- **`.saved-team-card`** — one saved team in the Teams tool (PRD 0016): a `.card`
+  in a `.saved-teams` grid (`auto-fill`, min 300px, `gap 1rem`). Top to bottom: the
+  name (`--text-lg`, ellipsis) with rename / delete `.icon-btn`s; the members as 40px
+  sprites, a split as both sprites in one `--surface-2` pill with its weights
+  ("60/40", `--text-xs` `--muted`, tabular) under it; a `--text-sm` line with the map
+  (`--muted`) and its berries; a line with the dish type and the three 24px recipe
+  images (`.ctx-recipes`); a foot with the saved date (`--text-xs` `--muted`) and
+  `.btn--primary` **Open**. The card itself is not clickable — Open is the one action.
+- **`.saved-team-bar`** — Team Analysis's saved-team actions in the `.tool-head`
+  action slot: with no team open, a lone `.btn--primary` **Save team**; with one open,
+  its name (weight 700, ellipsis past 16rem), a **label-only** `.progress-diff`
+  ("sin guardar", no save button — the save is the **Save** beside it), a close
+  `.icon-btn`, then `.btn--primary` **Save** (enabled only while unsaved) and
+  `.btn--ghost` **Save as…**. Wraps; right-aligned.
 - **`.layout` / `.layout--wide`** — page container (`max-width: 1100px`; `--wide`
   removes it for the production comparator).
 - **`.grid` / `.grid--3`** — 2- or 3-column layout, collapses to 1 under 860px.
@@ -483,7 +498,7 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **Error feedback** — `.error` (red text) + `ErrorBoundary` app fallback
   (`role="alert"`, title + "reload" `.btn--primary`).
 - **`.gate-card`** — the anonymous gate that replaces a **reserved page's** content
-  when there is no session — today only the **Box**. Which pages those are follows
+  when there is no session — today the **Box** and **Teams**. Which pages those are follows
   from the rule, not from a list: a page is reserved when it reads or writes the Box
   (see PRD 0010), so a tool that only computes stays open and never shows this card.
   A centered `.card` composition: a **moon roundel** (`IconMoon` in `--accent-text`
@@ -719,3 +734,10 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   (too loud for a common, expected state) and a red time with no shape (color alone) were
   both tried. *Why:* overflow is information, not an alarm — the production figures stay
   the focus — and the `+` keeps good/bad off color alone.
+- **A saved team's state rides its name, not the page.** *Question:* how does Team
+  Analysis say "this is Cyan curry, and you've changed it"? *Resolution:* the open
+  team's name sits in the title row's action slot with the existing `.progress-diff`
+  pill as a bare label ("sin guardar"), and **Save** is disabled until there is
+  something to save. *Why:* the pill already means "changed, not saved" for profile
+  values, so the same mark reads the same way here; putting the save inside the pill
+  too would duplicate the Save button next to it.

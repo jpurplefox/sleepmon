@@ -7,6 +7,8 @@ import type {
   ProductionInput,
   ProgressPatch,
   Recipe,
+  SavedTeam,
+  SavedTeamInput,
   TeamProduction,
   TeamProductionInput,
 } from "../types";
@@ -92,4 +94,12 @@ export const api = {
   getProgress: () => request<PlayerProgress>("/progress"),
   patchProgress: (patch: ProgressPatch) =>
     request<PlayerProgress>("/progress", { method: "PATCH", body: JSON.stringify(patch) }),
+  listSavedTeams: () => request<SavedTeam[]>("/saved-teams"),
+  createSavedTeam: (data: SavedTeamInput) =>
+    request<SavedTeam>("/saved-teams", { method: "POST", body: JSON.stringify(data) }),
+  replaceSavedTeam: (id: string, data: SavedTeamInput) =>
+    request<SavedTeam>(`/saved-teams/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  renameSavedTeam: (id: string, name: string) =>
+    request<SavedTeam>(`/saved-teams/${id}`, { method: "PATCH", body: JSON.stringify({ name }) }),
+  deleteSavedTeam: (id: string) => request<void>(`/saved-teams/${id}`, { method: "DELETE" }),
 };
