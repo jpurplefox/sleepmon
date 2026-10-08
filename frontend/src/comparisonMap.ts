@@ -31,8 +31,15 @@ export function comparisonIslands(islands: Island[]): Island[] {
 }
 
 export function selectIsland(map: ComparisonMap, island: Island | null): ComparisonMap {
-  const main = island?.expert && map.main === null ? (map.favorites[0] ?? null) : map.main;
+  // Entering an expert map from Normal: the first favorite becomes the main.
+  const main = island?.expert && map.island === null ? (map.favorites[0] ?? null) : map.main;
   return { ...map, island: island?.name ?? null, main };
+}
+
+/** Favorites in display order: on an expert map the main first. */
+export function displayFavorites(map: ComparisonMap, expert: boolean): string[] {
+  if (!expert || map.main === null || !map.favorites.includes(map.main)) return map.favorites;
+  return [map.main, ...map.favorites.filter((b) => b !== map.main)];
 }
 
 export function toggleFavorite(map: ComparisonMap, berry: string): ComparisonMap {

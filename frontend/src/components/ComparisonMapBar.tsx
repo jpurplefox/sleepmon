@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { berryIcon } from "../berries";
-import { MAX_FAVORITES, comparisonIslands, selectIsland, toggleFavorite, type ComparisonMap } from "../comparisonMap";
+import { MAX_FAVORITES, comparisonIslands, displayFavorites, selectIsland, toggleFavorite, type ComparisonMap } from "../comparisonMap";
 import { speedLabels } from "../expertMarks";
 import { useI18n } from "../i18n";
 import type { Catalog, ExpertSpeed, WeeklyBonus } from "../types";
@@ -91,7 +91,7 @@ export function ComparisonMapBar({ catalog, value, onChange }: Props) {
                 <span className="filter-btn__placeholder">{t("prod.favoritesNone")}</span>
               ) : (
                 <span className="filter-btn__icons">
-                  {value.favorites.map((b) => (
+                  {displayFavorites(value, expert).map((b) => (
                     <img key={b} className="mini-icon" src={berryIcon(b)} alt={berryName(b)} title={berryName(b)} />
                   ))}
                   {Array.from({ length: MAX_FAVORITES - value.favorites.length }, (_, i) => (

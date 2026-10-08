@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  NEUTRAL_MAP, berryRoleOf, comparisonIslands, mapRequestFields, selectIsland, toggleFavorite,
+  NEUTRAL_MAP, berryRoleOf, comparisonIslands, displayFavorites, mapRequestFields, selectIsland, toggleFavorite,
   type ComparisonMap,
 } from "./comparisonMap";
 import type { Island } from "./types";
@@ -40,6 +40,32 @@ describe("comparisonMap", () => {
     const expert = selectIsland(vacant, CYAN);
     expect(expert).toMatchObject({ island: CYAN.name, favorites: ["Pecha"], main: "Pecha" });
     expect(selectIsland(expert, null)).toMatchObject({ island: null, favorites: ["Pecha"] });
+  });
+
+  it("makes the first favorite the main when entering an expert map from Normal", () => {
+    const hidden = toggleFavorite(toggleFavorite(pick("Oran", "Pecha"), "Oran"), "Grepa");
+    expect(hidden).toMatchObject({ favorites: ["Pecha", "Grepa"], main: "Grepa" });
+    expect(selectIsland(hidden, CYAN)).toMatchObject({ favorites: ["Pecha", "Grepa"], main: "Pecha" });
+  });
+
+  it("keeps the main when switching between expert maps", () => {
+    const onCyan = selectIsland(NEUTRAL_MAP, CYAN);
+    const refilled = toggleFavorite(toggleFavorite(toggleFavorite(onCyan, "Oran"), "Pecha"), "Oran");
+    const withMain = toggleFavorite(refilled, "Grepa");
+    expect(withMain.main).toBe("Grepa");
+    expect(selectIsland(withMain, island("Greengrass Isle (Expert)", true)).main).toBe("Grepa");
+  });
+
+  it("keeps an already set main when entering an expert map from Normal", () => {
+    const map = pick("Oran", "Pecha");
+    expect(selectIsland(map, CYAN).main).toBe("Oran");
+  });
+
+  it("displays the main first on expert maps only", () => {
+    const map: ComparisonMap = { ...pick("Oran", "Pecha", "Grepa"), main: "Grepa" };
+    expect(displayFavorites(map, true)).toEqual(["Grepa", "Oran", "Pecha"]);
+    expect(displayFavorites(map, false)).toEqual(["Oran", "Pecha", "Grepa"]);
+    expect(displayFavorites({ ...map, main: null }, true)).toEqual(["Oran", "Pecha", "Grepa"]);
   });
 
   it("reads roles: never main off an expert map", () => {

@@ -60,8 +60,9 @@ export function expertMarks({
         ];
   }
 
-  const { main, penalty } = speed ?? BASE_EXPERT_SPEED;
-  const labels = speedLabels(speed ?? null);
+  const resolved = speed ?? BASE_EXPERT_SPEED;
+  const { main, penalty } = resolved;
+  const labels = speedLabels(resolved);
 
   if (role === "none") {
     return [
