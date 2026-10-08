@@ -125,9 +125,10 @@ action (when signed in) that goes to Teams.
 A filter bar above the list, shown when there is **more than one team** (the Box's
 rule). Three filters, combined with **AND**; none active shows every team.
 
-- **Map** — a choice among the maps at least one team uses, plus **No map** when some
-  team has none.
-- **Dish type** — **Curry / Salad / Dessert / No type**, only those some team uses.
+- **Map** — any of the game's maps, plus **No map**. A map no team uses can be
+  chosen; it simply matches nothing.
+- **Dish type** — the Box's segmented toggle: **Curry / Salad / Dessert**; pressing
+  the active type again clears it.
 - **Pokémon** — opens the [Box picker](0004-box-picker.md); keeps the teams that
   contain **that Box entry**, in a single slot or a split. The chip shows its sprite
   and name.

@@ -231,22 +231,3 @@ export function filterTeams(teams: readonly SavedTeam[], f: TeamFilters): SavedT
       (f.memberId === undefined || holdsMember(t, f.memberId)),
   );
 }
-
-const DISH_ORDER: DishType[] = ["Curry", "Salad", "Dessert"];
-
-/** The filter choices worth offering: only values some team actually uses. */
-export function filterOptions(teams: readonly SavedTeam[]): {
-  islands: string[];
-  noIsland: boolean;
-  dishTypes: DishType[];
-  noDishType: boolean;
-} {
-  const islands = [...new Set(teams.flatMap((t) => (t.island === null ? [] : [t.island])))].sort();
-  const dishes = new Set(teams.flatMap((t) => (t.dish_type === null ? [] : [t.dish_type])));
-  return {
-    islands,
-    noIsland: teams.some((t) => t.island === null),
-    dishTypes: DISH_ORDER.filter((d) => dishes.has(d)),
-    noDishType: teams.some((t) => t.dish_type === null),
-  };
-}

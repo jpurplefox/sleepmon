@@ -5,7 +5,6 @@ import {
   boxWritesFor,
   definitionFromSavedTeam,
   deletionImpact,
-  filterOptions,
   filterTeams,
   isUnsaved,
   membersById,
@@ -239,12 +238,7 @@ describe("filters", () => {
   it("filters by a Box entry, including in a split", () => {
     expect(ids({ memberId: "b" })).toEqual(["1", "3", "4"]);
   });
-  it("offers only the values some team uses", () => {
-    expect(filterOptions(teams)).toEqual({
-      islands: ["Cyan Beach", "Taupe Hollow"],
-      noIsland: true,
-      dishTypes: ["Curry", "Salad"],
-      noDishType: true,
-    });
+  it("accepts a map no team uses, and finds nothing", () => {
+    expect(ids({ island: "Lapis Lakeside" })).toEqual([]);
   });
 });

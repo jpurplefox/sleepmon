@@ -12,11 +12,11 @@ import { Placeholder } from "../components/Placeholder";
 import { TeamNameDialog } from "../components/TeamNameDialog";
 import { ContextBar, ContextField, ToolHeader } from "../components/ToolHeader";
 import { useI18n } from "../i18n";
-import { dishTypeLabelKey, recipeImage } from "../recipes";
+import { RECIPE_TYPES, dishTypeLabelKey, recipeImage } from "../recipes";
 import { ROUTES } from "../routes";
-import { filterOptions, filterTeams, hasFilters, type TeamFilters } from "../savedTeams";
+import { filterTeams, hasFilters, type TeamFilters } from "../savedTeams";
 import { spriteUrl } from "../sprites";
-import type { Catalog, DishType, Member, SavedTeam } from "../types";
+import type { Catalog, Member, SavedTeam } from "../types";
 import { useDeleteTeam, useRenameTeam, useSavedTeamsQuery } from "../useSavedTeams";
 import { useTeamSaver } from "../useTeamSaver";
 
@@ -243,7 +243,6 @@ export function SavedTeams() {
       ? { ...filters, memberId: undefined }
       : filters;
   const visible = filterTeams(teams, activeFilters);
-  const options = filterOptions(teams);
   const filterMember = activeFilters.memberId ? members.get(activeFilters.memberId) : undefined;
 
   return (
@@ -263,22 +262,32 @@ export function SavedTeams() {
                 label={t("saved.filterMap")}
                 value={activeFilters.island}
                 options={[
-                  ...options.islands.map((i) => ({ value: i, label: i })),
-                  ...(options.noIsland ? [{ value: null, label: t("ctx.noMap") }] : []),
+                  ...catalog.data.islands.map((i) => ({ value: i.name, label: i.name })),
+                  { value: null, label: t("ctx.noMap") },
                 ]}
                 onChange={(island) => setFilters((f) => ({ ...f, island }))}
               />
             </ContextField>
             <ContextField label={t("saved.filterDish")}>
-              <ChoiceFilter<DishType | null>
-                label={t("saved.filterDish")}
-                value={activeFilters.dishType}
-                options={[
-                  ...options.dishTypes.map((d) => ({ value: d, label: t(dishTypeLabelKey(d)) })),
-                  ...(options.noDishType ? [{ value: null, label: t("saved.noDishType") }] : []),
-                ]}
-                onChange={(dishType) => setFilters((f) => ({ ...f, dishType }))}
-              />
+              {/* The Box's specialty toggle: pressing the active type again clears it. */}
+              <div className="specialty-toggle" role="group" aria-label={t("saved.filterDish")}>
+                {RECIPE_TYPES.map((type) => {
+                  const pressed = activeFilters.dishType === type;
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      className={"specialty-toggle__btn" + (pressed ? " is-on" : "")}
+                      aria-pressed={pressed}
+                      onClick={() =>
+                        setFilters((f) => ({ ...f, dishType: pressed ? undefined : type }))
+                      }
+                    >
+                      {t(dishTypeLabelKey(type))}
+                    </button>
+                  );
+                })}
+              </div>
             </ContextField>
             <ContextField label={t("saved.filterPokemon")}>
               <span className="saved-teams__pokemon-filter">
