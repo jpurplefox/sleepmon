@@ -66,9 +66,10 @@ it helps and which bonus it carries.
 ### Expert maps
 
 **The favorites split in two.** On an expert map you choose all three favorites. The
-**first** you pick is the **main favorite**; the other two are **sub-favorites**.
-Removing the main favorite leaves its slot vacant and keeps the sub-favorites; the
-next berry you pick fills it.
+**first** you pick is the **main favorite**; the other two are **sub-favorites**. The
+three slots keep their places: removing any berry — the main or a sub — leaves its
+slot open where it was, without the others moving up, and the next berry you pick
+fills the first open slot. Slot 1 is always the main.
 
 **Four effects, active from the moment you select the map** — whatever you have
 chosen so far:

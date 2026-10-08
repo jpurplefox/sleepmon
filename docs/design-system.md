@@ -121,6 +121,12 @@ and the game's artwork brings the rest. Surfaces separate by **tone** (`--bg` �
 
 `border-radius: 999px` only for pills (level chip, level badges).
 
+**Layout:**
+
+```
+--appbar-h: 3.4rem   /* the sticky app bar's height: where sticky content below it docks */
+```
+
 **Spacing:** base unit of 4px; values are multiples. No spacing tokens — the 4px
 grid is a mental guide.
 
@@ -138,8 +144,8 @@ Two icon languages that never mix:
   `--accent-text` when they mean "the night"). **Never emojis.**
 
 Current catalog: `IconClock`, `IconHelp`, `IconPackage`, `IconHourglass`,
-`IconSparkle`, `IconPot`, `IconMagnifier`, `IconMoon`, `IconGrip`,
-`IconChevronDown`, `IconArrowUp`, `IconArrowDown`, `IconMore`, `IconClose`,
+`IconSparkle`, `IconPot`, `IconMagnifier`, `IconMoon`,
+`IconChevronDown`, `IconArrowUp`, `IconArrowDown`, `IconMore`, `IconMenu`, `IconClose`,
 `IconEdit`, `IconCopy`, `IconCheck`, `IconSaveBox`, `IconSplit`, `IconSignOut`,
 `IconProgress` (rising bars — what you have unlocked and levelled; the account menu's
 "Perfil de jugador"), `IconSun` (the nap — the daytime sleep, beside `IconMoon`'s
@@ -327,7 +333,9 @@ states · where it lives. Feature one-offs are intentionally not here.
   `.specialty-toggle` (No / Sí), and a rule's effect inside a trigger is its
   `.metric-mark` — a bare figure too (the area bonus is a "+35%" mark, named in full in its
   tooltip and accessible name). Flex, wraps (`gap: 0.6rem 1.5rem`); a field never splits
-  across lines. The Box's `.box-toolbar` is its context bar. A field may pair an in-place toggle with
+  across lines, and never grows past the bar's width: the Map trigger reserves the longest
+  map's width (`.ctx-map` sizers) but may shrink below it on a narrow screen, where the map
+  name ellipsizes and its berries and marks keep their size. The Box's `.box-toolbar` is its context bar. A field may pair an in-place toggle with
   a trigger (Team Analysis's Meals: dish-type `.specialty-toggle` + a `.filter-btn` with the
   three dishes as 24px recipe images, `.ctx-recipes`). A field is shown **even when
   its setting is off** ("Sin mapa", "Sin evento", No), so the bar keeps its shape and every
@@ -409,8 +417,21 @@ states · where it lives. Feature one-offs are intentionally not here.
   body never both scroll. Every scrolling surface uses the thin `--border` scrollbar.
 - **Dropdown / combobox pattern** — `SpeciesSelect`, `NatureSelect`,
   `SubSkillSelect` share one skeleton: trigger (`aria-haspopup/expanded`) + absolute
-  panel (`role="listbox"`), arrow/Enter nav, click-outside + Escape to close. Same
-  pattern applied to filters as `.filter-pop / .filter-grid / .filter-list`.
+  panel (`role="listbox"`), arrow/Enter nav, outside `pointerdown` + Escape to close
+  (`pointerdown`, not `mousedown`: iOS only fires the latter on clickable elements). Same
+  pattern applied to filters as `.filter-pop / .filter-grid / .filter-list`; a
+  `FilterPopover` near the right edge shifts left just enough to stay on screen (16px,
+  the phone gutter), never wider than the screen.
+- **Berry toggles** (`.island-tab__berry-grid`) — three per row across the picker's
+  width, 40px tall, on every screen (Comparison's favorite-berries popover and Team
+  Analysis's map dialog); under **640px** the popover spans the screen and the dialog's
+  picker drops under its label. Below them, **`BerryCount`**: a bar with one 6px pill
+  segment per **slot** (empty: `--muted` at 28%, so it shows on any surface), filled
+  `--accent` where the slot holds a berry — an open slot stays empty in its place, like
+  the "?" in the field's summary — and turning `--up` when all are in. The bar **is** the
+  count — no "2 / 3" figures beside it (a `progressbar` named after what it counts, with
+  "2 / 3" as its value text). The main favorite's ★ carries no legend: expert players
+  already know the first berry counts most, so the star is a reminder, not a lesson.
 - **Account menu** (`.avatar-btn` + profile dropdown) — the signed-in identity in the
   app bar. Trigger: a 34px pill (`--surface-2`, `--border`, `--text-sm` 600) holding the
   user's **photo** in a 28px circle (`.avatar-btn__photo`, `object-fit: cover`), falling
@@ -428,8 +449,13 @@ states · where it lives. Feature one-offs are intentionally not here.
   `.filter-pop` with the two languages as `.filter-list__item`s, the current one
   `.is-selected`. Signed in, the language lives in the account menu instead.
 - **`Tooltip`** (`components/Tooltip.tsx`) — one bubble above its trigger, revealed
-  on hover and keyboard focus, with `aria-label` on the trigger. Centers over the
-  trigger and clamps to the viewport (any width, either edge). Plain string or rich
+  on a **real mouse's** hover, **keyboard** focus (`:focus-visible`), or a **tap**, which
+  toggles it (a tap elsewhere or Escape closes it); a touch's emulated hover and a tapped
+  button's focus don't count, so nothing sticks open. `aria-label` on the trigger.
+  `.tooltip--inline` keeps a wrapped run of text (a metric line) in the text's flow. What a
+  user needs to read goes in a `Tooltip`, never a `title`, which touch never shows. Centers over the
+  trigger and clamps to the page's width (`documentElement.clientWidth`, not
+  `innerWidth`; any bubble width, either edge). Plain string or rich
   content via `Tooltip.Row / Tooltip.Label / Tooltip.Value` (e.g. a strength
   base/bonus breakdown). Wraps the trigger element (`.tooltip` + `.tooltip__bubble`).
   The bubble sets its own typography (weight 400, no uppercase, normal tracking), so a
@@ -473,13 +499,34 @@ states · where it lives. Feature one-offs are intentionally not here.
   `--border` hairline below, full bleed; content in a 1100px row). Left to right: the
   **brand** (`.brand`: Snorlax sprite 30px, pixelated, + "sleepmon", `--text-lg` 800,
   linking to the Box), the **tabs**, and the account cluster pushed right (account menu,
-  or `.btn--google` + `.lang-btn`). Under **640px** it wraps in two rows: brand + account
-  on top, the tabs below at full width, scrollable inside themselves if a longer
-  translation overflows; the whole bar stays sticky.
+  or `.btn--google` + `.lang-btn`). Under **900px** the bar stays **one row**: the tabs
+  collapse into a **menu button** (`.nav-menu__btn`, a 34px pill: `IconMenu` + the current
+  tool's name, `--border`, `--text` 600; icon only under 640px, where the page title
+  already names the tool) placed **left of the brand**. It opens `.nav-menu__panel`, which
+  drops below the whole bar at full width (`--bg`, a `--border` hairline, `--shadow-dropdown`)
+  with every tool as a `.nav-menu__item` row, the current one in the active-tab indigo. It
+  closes on a pick, Escape (focus back to the button), a tap outside, or any navigation.
+  Under 640px the signed-out `.btn--google` shows a short label, the full one minus "with
+  Google" ("Iniciar sesión" / "Sign in") — the "G" already says Google; the full label
+  stays everywhere else.
 - **Tabs** — `.tabs / .tab / --active` (app bar and inner modal tabs). In the app bar a
   tab is a **pill** (`999px`, `--text-base`, `--muted`); the active one is filled
   indigo — `--accent-dim` with an `--accent-border` outline and `--text` ink — and
   carries `aria-current="page"`.
+- **Swipe deck** (`.prod-cards--swipe` + `SwipePager`, `components/SwipePager.tsx`) — the
+  card grids of Comparison and Team Analysis on a phone. Under **640px** the card grid becomes a horizontal scroll-snap
+  track: **one card per screen**, a swipe moves exactly one (`scroll-snap-stop: always`),
+  and the cards keep equal heights, so every metric sits at the same spot on every card;
+  the add slot keeps its own height. The track is `position: relative`, the containing
+  block of its slides' absolutely positioned bits. Above it, the **pager** docks sticky
+  under the app bar (`top: --appbar-h`, `--bg`): one 38px round button per card with the
+  species sprite (pixelated; a split slot shows both, smaller and overlapping), `+` for
+  the add slot; inactive at 0.55 opacity, the current
+  one in the active-tab indigo (`--accent-dim` + `--accent-border`, `aria-current`). It
+  follows the swipe, a tap slides to that card, a new card slides into view, and a
+  reorder (Make base, ‹ ›) follows the card that was showing. A slider inside a card
+  (`touch-action: pan-y`) keeps its sideways drag. Above 640px the grid is
+  unchanged and the pager hidden; also hidden with no cards.
 - **Entrance (`appear-in`)** — the app's single entrance animation: `0.15s ease-out`,
   `opacity 0→1` + `scale(0.97)→none`, fired by the element being inserted. One
   keyframe shared by everything that shows up mid-interaction — `.prod-card--enter`
@@ -586,7 +633,20 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   still adding to the document's scroll width. They hide with `display: none` now.
   *Why:* "invisible" is not "absent" — an off-screen hidden element is as real to
   the scroll box as a visible one, so hiding must remove it from layout, not just
-  from sight.
+  from sight. The same goes for clipping: a horizontal scroll track (the swipe deck)
+  is `position: relative`, or the `.sr-only` spans of its off-screen slides take the
+  page as their containing block, escape the track's clip and widen the page.
+- **Compare by swapping, not by stacking.** *Question:* on a phone the comparison
+  stacked its cards, so the same metric on two Pokémon sat a screen apart. *Resolution:*
+  one card per screen, swiped (the swipe deck), with a sprite pager that says how many
+  there are and which one is showing. *Why:* comparing means looking at the same spot
+  while the subject changes — a swipe keeps the eye still, a scroll makes it hunt.
+- **A tooltip clamps to the page, not the window.** *Question:* on a phone a bubble near
+  the right edge still ran off-screen, even with nothing else overflowing. *Resolution:*
+  mobile browsers grow `innerWidth` to fit overflowing content, and the bubble overflows
+  for an instant before it is moved — so the clamp measured a window the bubble itself
+  had widened. It measures `documentElement.clientWidth` now. *Why:* clamp against
+  something the thing being clamped can't stretch.
 - **A split slot's actions ride with the slider.** *Question:* a team slot can hold
   two Pokémon, so its toolbar already carries the tabs (which of the two is showing)
   and the split slider. Once each Pokémon can also be edited and saved to the Box,
@@ -758,3 +818,11 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   Pokémon's time, not unused time; a muted color read as "off". Sky is the hue the
   strength chart already gives skills, so it is in the app's vocabulary, and it sits far
   enough from indigo to read as a different Pokémon.
+- **Touch is not a mouse.** *Question:* on a phone, labels lived in `title`s nobody could
+  see, hovers stuck after a tap, 24px icons sat next to a destructive ✕, drag to reorder
+  did nothing, and fields under 16px made iOS zoom. *Resolution:* explanations go in a
+  tappable `Tooltip`; every `:hover` rule sits in `@media (hover: hover)` (a real state,
+  like "open", stays outside it); under `(pointer: coarse)` icon buttons, steppers and the
+  modal close get ~40px hit areas without growing their glyphs; drag and drop is gone
+  (the ‹ › controls reorder); fields are 16px on phones. *Why:* a fingertip has no hover,
+  no precision and no tooltip delay — the same screen has to work with only taps.
