@@ -12,7 +12,7 @@ function renderMenu() {
     <ActionMenu
       label="Actions for Cyan curry"
       items={[
-        { label: "Open in Analysis", icon: <IconOpen />, tone: "accent", onSelect: onOpen },
+        { label: "Open in Analysis", icon: <IconOpen />, onSelect: onOpen },
         {
           label: "Delete",
           icon: <IconTrash />,

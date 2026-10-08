@@ -1895,26 +1895,19 @@ select:focus {
   }
 }
 
-/* Items are neutral at rest; color arrives only on hover (indigo for a way into
-   another tool, red for a delete), so no action shouts while idle. */
-@media (hover: hover) {
-  .action-menu__item--accent:hover,
-  .action-menu__item--accent:hover svg {
-    color: var(--accent-text);
-  }
+/* Hover only says "clickable" (the background above); it never carries meaning, since
+   a fingertip has no hover. A delete is red at rest, so it reads as one on a phone too. */
+.action-menu__item--danger,
+.action-menu__item--danger svg {
+  color: var(--error);
 }
 
-@media (hover: hover) {
-  .action-menu__item--danger:hover,
-  .action-menu__item--danger:hover svg {
-    color: var(--error);
-  }
-}
-
+/* No margin of its own, so the gap across it matches the one between items. --border
+   would vanish on --surface-2; the line is a faint --muted instead. */
 .action-menu__sep {
   height: 1px;
-  background: var(--border);
-  margin: 0.25rem 0.2rem;
+  background: color-mix(in srgb, var(--muted) 25%, transparent);
+  margin: 0 0.6rem;
 }
 
 /* ── RESPONSIVE ANGOSTO (< 1024px) ───────────────────────────────────────────

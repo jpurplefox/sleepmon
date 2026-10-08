@@ -202,8 +202,9 @@ filter still uses berry icons; it predates this rule and should follow it.)
   (`opacity ~0.45`, sometimes `grayscale`) but still **interactive** — the value is
   already assigned, just not reached. Do NOT use `pointer-events: none` or
   `disabled` for this case.
-- **Destructive:** red (`--error`) only on the hover of a delete action; all other
-  hovers are neutral.
+- **Destructive:** a delete action is red (`--error`) **at rest**, not on hover, so it
+  reads as one on a phone too. Hover only says "clickable" (a neutral background) and
+  never carries meaning.
 - **Cost vs. destruction (the two reds):** a **cost** — a value the rules push down
   (a gameplay penalty, a stat that falls) — is `--down`, never `--error`. It may
   reach past a badge onto a **whole surface**: a card whose subject is being
@@ -267,9 +268,9 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **`ActionMenu`** (`components/ActionMenu.tsx`, `.action-menu`) — an item's actions
   behind a `···` `.icon-btn` (ARIA menu button: focus to the first item, arrows,
   Home/End, Escape and click-outside return focus). Each item leads with its 16px line
-  icon in `--muted`; items are neutral at rest and tint on hover only — `accent` for a
-  way into another tool (Compare, Open in Analysis), `danger` red for a delete, which
-  sits apart under a `--border` separator and uses the **trash** icon (the cross means
+  icon in `--muted`; hover is only a `--surface` background. A delete (`danger`) is red
+  at rest and sits apart under a faint `--muted` separator with no margin of its own,
+  so the spacing across it matches the spacing between items and uses the **trash** icon (the cross means
   "take out of this tool", not "delete what's saved"). Used by the Box entries and
   the Teams rows.
 - **`.filter-btn`** — trigger for filter/selector popovers (selected value +

@@ -218,7 +218,6 @@ function SavedTeamRow({
             {
               label: t("saved.openInAnalysis"),
               icon: <IconOpen />,
-              tone: "accent",
               onSelect: onOpen,
             },
             {
