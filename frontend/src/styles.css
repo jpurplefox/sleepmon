@@ -5779,6 +5779,15 @@ button.prod-card__base-tag--action:hover {
   height: 24px;
 }
 
+/* Sized like the filter triggers beside it, so the bar keeps one height and one line. */
+.saved-teams__clear {
+  margin-top: 0;
+  padding: 0.35rem 0.55rem;
+  font-size: var(--text-sm);
+  line-height: inherit;
+  align-self: center;
+}
+
 .saved-teams-empty {
   max-width: 34rem;
   margin: 2rem auto 0;

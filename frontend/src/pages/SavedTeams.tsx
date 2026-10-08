@@ -247,7 +247,7 @@ export function SavedTeams() {
   const filterMember = activeFilters.memberId ? members.get(activeFilters.memberId) : undefined;
 
   return (
-    <div className="layout">
+    <div className="layout layout--wide">
       <ToolHeader
         title={t("saved.title")}
         count={
@@ -314,7 +314,11 @@ export function SavedTeams() {
               </span>
             </ContextField>
             {hasFilters(activeFilters) && (
-              <button type="button" className="btn btn--ghost" onClick={() => setFilters({})}>
+              <button
+                type="button"
+                className="btn btn--ghost saved-teams__clear"
+                onClick={() => setFilters({})}
+              >
                 {t("saved.clearFilters")}
               </button>
             )}
