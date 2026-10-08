@@ -1,5 +1,5 @@
 import { useI18n } from "../i18n";
-import { IconClose } from "./icons";
+import { IconClose, IconEdit } from "./icons";
 
 interface Props {
   /** The open saved team's name, or null for a team not yet saved. */
@@ -10,11 +10,22 @@ interface Props {
   canSave: boolean;
   onSave: () => void;
   onSaveAs: () => void;
+  /** Renames the open team: the only place a team is renamed. */
+  onRename: () => void;
   onClose: () => void;
 }
 
 /** Team Analysis's saved-team actions, at the right of its title (PRD 0016). */
-export function SavedTeamBar({ teamName, unsaved, saving, canSave, onSave, onSaveAs, onClose }: Props) {
+export function SavedTeamBar({
+  teamName,
+  unsaved,
+  saving,
+  canSave,
+  onSave,
+  onSaveAs,
+  onRename,
+  onClose,
+}: Props) {
   const { t } = useI18n();
 
   if (teamName === null) {
@@ -36,9 +47,16 @@ export function SavedTeamBar({ teamName, unsaved, saving, canSave, onSave, onSav
     <div className="saved-team-bar">
       <span className="saved-team-bar__team">
         <span className="sr-only">{t("saved.openedTeam")}: </span>
-        <span className="saved-team-bar__name" title={teamName}>
-          {teamName}
-        </span>
+        <button
+          type="button"
+          className="saved-team-bar__name"
+          title={t("saved.renameTeam", { name: teamName })}
+          aria-label={t("saved.renameTeam", { name: teamName })}
+          onClick={onRename}
+        >
+          <span className="saved-team-bar__name-text">{teamName}</span>
+          <IconEdit />
+        </button>
         {unsaved && (
           <span className="progress-diff saved-team-bar__unsaved">
             <span className="progress-diff__label">{t("saved.unsaved")}</span>

@@ -18,6 +18,7 @@ function renderBar(props: Partial<Parameters<typeof SavedTeamBar>[0]> = {}) {
         canSave
         onSave={vi.fn()}
         onSaveAs={vi.fn()}
+        onRename={vi.fn()}
         onClose={vi.fn()}
         {...props}
       />
@@ -39,7 +40,7 @@ describe("SavedTeamBar", () => {
 
   it("shows the open team, and Save only once it is unsaved", () => {
     renderBar({ teamName: "Cyan curry" });
-    expect(screen.getByText("Cyan curry")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Rename “Cyan curry”" })).toHaveTextContent("Cyan curry");
     expect(screen.queryByText("unsaved")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Save as…" })).toBeEnabled();

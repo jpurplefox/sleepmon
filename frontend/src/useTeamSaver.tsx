@@ -23,7 +23,7 @@ import { EMPTY_DEFINITION, useTeamSession } from "./teamSession";
 import { linkToBox } from "./teamRoster";
 import type { Catalog, SavedTeam } from "./types";
 import { useProgress } from "./useProgress";
-import { useSaveTeam, useSavedTeamsQuery } from "./useSavedTeams";
+import { useRenameTeam, useSaveTeam, useSavedTeamsQuery } from "./useSavedTeams";
 
 /** The open saved team (if it still exists) and whether the session has work a replace would lose. */
 export function useOpenTeam(catalog: Catalog | undefined): {
@@ -68,7 +68,8 @@ export function useOpenTeam(catalog: Catalog | undefined): {
 type Dialog =
   | { kind: "name"; mode: "new" | "saveAs"; then?: () => void }
   | { kind: "over"; then?: () => void }
-  | { kind: "replace"; then: () => void };
+  | { kind: "replace"; then: () => void }
+  | { kind: "rename" };
 
 /**
  * Save, Save as…, open and close for the session's team. Returns the actions and
@@ -80,6 +81,7 @@ export function useTeamSaver(catalog: Catalog | undefined) {
   const { teams, openTeam, unsaved, dirty, members, ready } = useOpenTeam(catalog);
   const { progress } = useProgress();
   const mutation = useSaveTeam();
+  const renameMutation = useRenameTeam();
   const [, navigate] = useLocation();
   const [dialog, setDialog] = useState<Dialog | null>(null);
 
@@ -130,6 +132,11 @@ export function useTeamSaver(catalog: Catalog | undefined) {
     else action();
   };
 
+  const rename = () => {
+    renameMutation.reset();
+    setDialog({ kind: "rename" });
+  };
+
   const open = (team: SavedTeam) => {
     if (!catalog) return;
     guardReplace(() => {
@@ -149,7 +156,7 @@ export function useTeamSaver(catalog: Catalog | undefined) {
     });
 
   const closeDialog = () => {
-    if (!mutation.isPending) setDialog(null);
+    if (!mutation.isPending && !renameMutation.isPending) setDialog(null);
   };
 
   let node: ReactNode = null;
@@ -180,6 +187,22 @@ export function useTeamSaver(catalog: Catalog | undefined) {
         pending={mutation.isPending}
         serverError={mutation.error?.message ?? null}
         onConfirm={() => run(openTeam.name, openTeam.id, dialog.then)}
+        onClose={closeDialog}
+      />
+    );
+  } else if (dialog?.kind === "rename" && openTeam) {
+    node = (
+      <TeamNameDialog
+        title={t("saved.renameTitle")}
+        initialName={openTeam.name}
+        teams={teams}
+        ownId={openTeam.id}
+        confirmLabel={t("saved.save")}
+        pending={renameMutation.isPending}
+        serverError={renameMutation.error?.message ?? null}
+        onConfirm={(name) =>
+          renameMutation.mutate({ id: openTeam.id, name }, { onSuccess: () => setDialog(null) })
+        }
         onClose={closeDialog}
       />
     );
@@ -214,6 +237,7 @@ export function useTeamSaver(catalog: Catalog | undefined) {
     saveError: dialog === null ? (mutation.error?.message ?? null) : null,
     save,
     saveAs,
+    rename,
     open,
     close,
     dialog: node,

@@ -18,7 +18,7 @@ their split weights), the map, and the meals. It is kept on your account and
 reopened in Team Analysis with one action.
 
 It is its own tool, **Teams**, the fourth in the menu: the place to see, find, open,
-rename and delete your teams. Team Analysis stays where a team is built and read;
+delete your teams. Team Analysis stays where a team is built and read;
 Teams is where it is kept.
 
 ## What it does (scope)
@@ -28,7 +28,7 @@ Teams is where it is kept.
 2. **List your saved teams** in the **Teams** tool, each card showing what it is.
 3. **Filter the list** — by map, by dish type, and by a Box Pokémon it contains.
 4. **Open a team** — Team Analysis loads it.
-5. **Rename and delete** a team.
+5. **Rename** the open team in Team Analysis, and **delete** a team from Teams.
 6. **Keep teams honest with the Box** — a team's members follow their Box entries;
    deleting a Box Pokémon removes it from the teams it is in.
 7. **Account only** — like the Box, saved teams belong to a signed-in account.
@@ -67,8 +67,9 @@ Duplicates stay allowed: the same Box entry may sit in two slots.
 
 - With a team **not yet saved**, Team Analysis offers **Save team**, which asks for a
   name.
-- With a **saved team open**, its name shows next to the title, and Team Analysis
-  offers **Save** (over that team) and **Save as…** (a new team under another name,
+- With a **saved team open**, its name shows next to the title — touching it
+  **renames** the team (same name rules) — and Team Analysis offers **Save** (over that
+  team) and **Save as…** (a new team under another name,
   leaving the original as it was; from then on the new one is the open team).
 - **Every member must be in the Box.** When the team has members created on the spot,
   or members whose configuration was changed in the session, saving first lists what
@@ -107,12 +108,18 @@ action (when signed in) that goes to Teams.
 
 ### The Teams tool
 
-- One **card per team**, most recently saved first. A card shows the **name**, the
-  **members** as sprites (a split shows both, with their weights), the **map** with its
-  favorite berries, the **three meals** as recipe images, and when it was last saved.
-- **Open** loads it into Team Analysis and takes you there.
-- An overflow menu offers **Rename** (same name rules) and **Delete** (asks for
-  confirmation; the Box is untouched).
+- One **row per team**, most recently saved first, under a header — **Team · Slots ·
+  Map · Meals · Saved** — so teams compare down the columns. On a phone each row becomes
+  a card with the same order (map and meals labelled).
+- **Slots** are five equal boxes, empty ones dashed. A split stacks its two Pokémon in
+  its box with a vertical bar beside them: the top length is the top Pokémon's share,
+  the bottom length the other's, in two distinct colors. The percentages are a hover
+  (and the screen reader's text) away, not printed.
+- Each row's actions live in a **···** menu, like the Box's: **Open in Analysis**
+  (loads it into Team Analysis and takes you there) and, set apart, **Delete** (asks
+  for confirmation; the Box is untouched).
+- A team is **renamed only in Team Analysis**, from its name (see *Saving from Team
+  Analysis*); the list does not rename.
 - Deleting the team that is open in Team Analysis keeps its roster there, as a team
   not yet saved.
 - Signed out, Teams shows its explanation and the contextual sign-in prompt (see
@@ -178,7 +185,8 @@ A Box Pokémon in no team is deleted with the Box's usual confirmation, unchange
 - Going from Team Analysis to the Box and back keeps the roster, map and meals.
 - **Delete** asks for confirmation and leaves the Box unchanged. Deleting the team open
   in Team Analysis leaves its roster there, unsaved.
-- **Rename** follows the same name rules.
+- **Rename**, from the open team's name in Team Analysis, follows the same name rules;
+  the Teams list offers no rename.
 - Cards are ordered **most recently saved first**.
 - **Filters**: with teams on Cyan, Cyan and Taupe, filtering by **Cyan** shows 2;
   **Cyan + Curry** shows only the Cyan teams whose dish type is Curry. Filtering by a

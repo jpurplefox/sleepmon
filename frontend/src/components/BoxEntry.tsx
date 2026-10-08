@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 
 import { berryIcon } from "../berries";
 import { RIBBONS } from "../constants";
@@ -8,7 +8,8 @@ import { statIcon } from "../natures";
 import { spriteUrl } from "../sprites";
 import type { Member, Nature, Species } from "../types";
 import { CHARGE_STRENGTH_ICON, GENERIC_BERRY_ICON, mainSkillIcon } from "../skillIcons";
-import { IconChevronDown, IconMore } from "./icons";
+import { ActionMenu } from "./ActionMenu";
+import { IconChevronDown, IconCompare, IconEdit, IconTrash } from "./icons";
 import { IngredientLineup } from "./IngredientLineup";
 import { MemberConfig } from "./MemberConfig";
 import { RibbonIcon } from "./RibbonIcon";
@@ -62,73 +63,12 @@ export function BoxEntry({
   onCompare,
 }: Props) {
   const { t, berry, ingredient, mainSkill } = useI18n();
-  // Editar/Eliminar/Comparar viven en un menú overflow "···" (no botones siempre
-  // visibles: con muchas filas saturan). El borrado abre un modal de confirmación
-  // (lo maneja la página), más claro que un paso inline.
-  const [menuOpen, setMenuOpen] = useState(false);
-  // En mobile la card arranca plegada: solo identidad + la métrica que define al
-  // Pokémon. El resto (build + producción completa) se despliega al tocarla.
+  // Compare/Edit/Delete live in a "···" overflow menu (always-visible buttons crowd
+  // a long list). Delete opens a confirmation modal, handled by the page.
+  // On mobile the card starts folded: identity plus the metric that defines the
+  // Pokémon. The rest (build and full production) unfolds on tap.
   const isMobile = useIsMobile();
   const [expanded, setExpanded] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const menuBtnRef = useRef<HTMLButtonElement>(null);
-
-  // Manejo del menú: foco al primer item (= Comparar) al abrir; al cerrar (click
-  // afuera / Escape) el foco vuelve al disparador.
-  useEffect(() => {
-    if (!menuOpen) return;
-    menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
-    const onDown = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-        // Si el click NO cae sobre un control enfocable (que tomará el foco por sí
-        // mismo), devolvemos el foco al disparador para no perderlo en el body al
-        // desmontarse el item enfocado. Si cae sobre otro control, lo dejamos pasar.
-        const target = e.target as HTMLElement;
-        if (!target.closest("a, button, input, select, textarea, [tabindex]")) {
-          menuBtnRef.current?.focus();
-        }
-      }
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setMenuOpen(false);
-        menuBtnRef.current?.focus();
-      }
-    };
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [menuOpen]);
-
-  // Navegación por teclado dentro del menú (patrón ARIA menu): flechas mueven el
-  // foco entre items y Home/End van a los extremos; Tab queda atrapado (cicla) para
-  // no escapar del menú abierto. Escape lo cierra (en el efecto de arriba).
-  const onMenuKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const items = Array.from(
-      e.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]'),
-    );
-    if (items.length === 0) return;
-    const idx = items.indexOf(document.activeElement as HTMLElement);
-    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-      e.preventDefault();
-      const delta = e.key === "ArrowDown" ? 1 : -1;
-      items[(idx + delta + items.length) % items.length]?.focus();
-    } else if (e.key === "Home") {
-      e.preventDefault();
-      items[0]?.focus();
-    } else if (e.key === "End") {
-      e.preventDefault();
-      items[items.length - 1]?.focus();
-    } else if (e.key === "Tab") {
-      // Patrón ARIA de menu button: Tab cierra el menú y deja que el foco salga
-      // naturalmente al siguiente elemento (no se atrapa el foco).
-      setMenuOpen(false);
-    }
-  };
 
   const prod = member.production;
   const ribbonIdx = RIBBONS.findIndex((r) => r.name === member.ribbon);
@@ -568,58 +508,27 @@ export function BoxEntry({
 
       {/* Acciones: overflow "···" con Comparar (primero) + Editar/Eliminar. */}
       <div className="box-entry__actions">
-        <div className="box-entry__menu" ref={menuRef}>
-          <button
-            ref={menuBtnRef}
-            type="button"
-            className="icon-btn box-entry__menu-btn"
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-            aria-label={t("box.moreActions", { species: member.species })}
-            onClick={() => setMenuOpen((o) => !o)}
-          >
-            <IconMore />
-          </button>
-          {menuOpen && (
-            <div className="box-entry__menu-pop" role="menu" onKeyDown={onMenuKeyDown}>
-              <button
-                type="button"
-                role="menuitem"
-                className="box-entry__menu-item box-entry__menu-item--compare"
-                aria-label={t("box.compareAria", { species: member.species })}
-                onClick={() => {
-                  setMenuOpen(false);
-                  onCompare();
-                }}
-              >
-                {t("box.compareMenu")}
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                className="box-entry__menu-item"
-                onClick={() => {
-                  setMenuOpen(false);
-                  onEdit();
-                }}
-              >
-                {t("common.edit")}
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                className="box-entry__menu-item box-entry__menu-item--danger"
-                onClick={() => {
-                  setMenuOpen(false);
-                  onDelete(member.id);
-                }}
-                aria-label={t("member.deleteAria", { species: member.species })}
-              >
-                {t("member.delete")}
-              </button>
-            </div>
-          )}
-        </div>
+        <ActionMenu
+          label={t("box.moreActions", { species: member.species })}
+          items={[
+            {
+              label: t("box.compareMenu"),
+              icon: <IconCompare />,
+              tone: "accent",
+              ariaLabel: t("box.compareAria", { species: member.species }),
+              onSelect: onCompare,
+            },
+            { label: t("common.edit"), icon: <IconEdit />, onSelect: onEdit },
+            {
+              label: t("member.delete"),
+              icon: <IconTrash />,
+              tone: "danger",
+              separated: true,
+              ariaLabel: t("member.deleteAria", { species: member.species }),
+              onSelect: () => onDelete(member.id),
+            },
+          ]}
+        />
       </div>
     </article>
   );

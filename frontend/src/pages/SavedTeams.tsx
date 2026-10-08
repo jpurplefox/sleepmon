@@ -6,10 +6,10 @@ import { api } from "../api/client";
 import { berryIcon } from "../berries";
 import { BoxPicker } from "../components/BoxPicker";
 import { FilterPopover, gridKeyDown } from "../components/FilterPopover";
-import { IconClose, IconEdit } from "../components/icons";
+import { ActionMenu } from "../components/ActionMenu";
+import { IconClose, IconOpen, IconTrash } from "../components/icons";
 import { Modal } from "../components/Modal";
 import { Placeholder } from "../components/Placeholder";
-import { TeamNameDialog } from "../components/TeamNameDialog";
 import { ContextBar, ContextField, ToolHeader } from "../components/ToolHeader";
 import { useI18n } from "../i18n";
 import { RECIPE_TYPES, dishTypeLabelKey, recipeImage } from "../recipes";
@@ -17,7 +17,7 @@ import { ROUTES } from "../routes";
 import { filterTeams, hasFilters, type TeamFilters } from "../savedTeams";
 import { spriteUrl } from "../sprites";
 import type { Catalog, Member, SavedTeam } from "../types";
-import { useDeleteTeam, useRenameTeam, useSavedTeamsQuery } from "../useSavedTeams";
+import { useDeleteTeam, useSavedTeamsQuery } from "../useSavedTeams";
 import { useTeamSaver } from "../useTeamSaver";
 
 // Module level so the empty set is not re-created on every render.
@@ -73,27 +73,64 @@ function ChoiceFilter<V extends string | null>({
 function Sprite({ catalog, species }: { catalog: Catalog; species: string }) {
   const dex = catalog.species.find((s) => s.name === species)?.dex;
   return dex ? (
-    <img className="saved-team-card__sprite" src={spriteUrl(dex)} alt={species} title={species} />
+    <img className="team-slot-mini__sprite" src={spriteUrl(dex)} alt={species} title={species} />
   ) : (
-    <span className="saved-team-card__sprite saved-team-card__sprite--unknown" title={species}>
+    <span className="team-slot-mini__sprite team-slot-mini__sprite--unknown" title={species}>
       ?
     </span>
   );
 }
 
-function SavedTeamCard({
+/**
+ * One slot as a fixed box: a single Pokémon, or a split's two stacked with a
+ * vertical bar beside them whose two lengths are their shares (top is top).
+ */
+function SlotMini({
+  catalog,
+  species,
+  share,
+}: {
+  catalog: Catalog;
+  species: string[];
+  share: number;
+}) {
+  if (species.length < 2) {
+    return (
+      <li className="team-slot-mini">
+        <Sprite catalog={catalog} species={species[0] ?? "?"} />
+      </li>
+    );
+  }
+  const a = Math.round(share * 100);
+  const label = `${species[0]} ${a}% · ${species[1]} ${100 - a}%`;
+  return (
+    <li className="team-slot-mini team-slot-mini--split" title={label}>
+      <span className="sr-only">{label}</span>
+      <span className="team-slot-mini__pair" aria-hidden="true">
+        <Sprite catalog={catalog} species={species[0]} />
+        <Sprite catalog={catalog} species={species[1]} />
+      </span>
+      <span className="team-slot-mini__bar" aria-hidden="true">
+        <i className="team-slot-mini__bar-a" style={{ flexGrow: a }} />
+        <i className="team-slot-mini__bar-b" style={{ flexGrow: 100 - a }} />
+      </span>
+    </li>
+  );
+}
+
+const SLOT_COUNT = 5;
+
+function SavedTeamRow({
   team,
   catalog,
   members,
   onOpen,
-  onRename,
   onDelete,
 }: {
   team: SavedTeam;
   catalog: Catalog;
   members: ReadonlyMap<string, Member>;
   onOpen: () => void;
-  onRename: () => void;
   onDelete: () => void;
 }) {
   const { t, lang, berry } = useI18n();
@@ -112,91 +149,90 @@ function SavedTeamCard({
   const noMeals = team.meals.every((m) => m === null);
 
   return (
-    <article className="card saved-team-card" aria-labelledby={`team-${team.id}`}>
-      <div className="saved-team-card__head">
-        <h2 id={`team-${team.id}`} className="saved-team-card__name" title={team.name}>
-          {team.name}
-        </h2>
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label={t("saved.rename", { name: team.name })}
-          title={t("saved.rename", { name: team.name })}
-          onClick={onRename}
-        >
-          <IconEdit />
-        </button>
-        <button
-          type="button"
-          className="icon-btn icon-btn--danger"
-          aria-label={t("saved.delete", { name: team.name })}
-          title={t("saved.delete", { name: team.name })}
-          onClick={onDelete}
-        >
-          <IconClose />
-        </button>
-      </div>
+    <li className="team-row" aria-labelledby={`team-${team.id}`}>
+      <span id={`team-${team.id}`} className="team-row__name" title={team.name}>
+        {team.name}
+      </span>
 
-      <ul className="saved-team-card__members">
-        {team.slots.map((slot, i) =>
-          slot.members.length === 2 ? (
-            <li key={i} className="saved-team-card__split">
-              <span className="saved-team-card__pair">
-                <Sprite catalog={catalog} species={species(slot.members[0])} />
-                <Sprite catalog={catalog} species={species(slot.members[1])} />
-              </span>
-              <span className="saved-team-card__share muted">
-                {t("saved.split", {
-                  a: Math.round(slot.share * 100),
-                  b: 100 - Math.round(slot.share * 100),
-                })}
-              </span>
-            </li>
-          ) : (
-            <li key={i}>
-              <Sprite catalog={catalog} species={species(slot.members[0])} />
-            </li>
-          ),
-        )}
+      <ul className="team-row__slots" aria-label={t("saved.colSlots")}>
+        {team.slots.map((slot, i) => (
+          <SlotMini
+            key={i}
+            catalog={catalog}
+            species={slot.members.map(species)}
+            share={slot.share}
+          />
+        ))}
+        {Array.from({ length: Math.max(0, SLOT_COUNT - team.slots.length) }, (_, i) => (
+          <li key={`empty-${i}`} className="team-slot-mini team-slot-mini--empty" aria-hidden="true" />
+        ))}
       </ul>
 
-      <p className="saved-team-card__line">
-        <span className="muted">{team.island ?? t("ctx.noMap")}</span>
-        {team.island !== null && berries.length > 0 && (
-          <span className="filter-btn__icons">
-            {berries.map((b) => (
-              <img key={b} className="mini-icon" src={berryIcon(b)} alt={berry(b)} title={berry(b)} />
-            ))}
+      <span className="team-row__field team-row__map">
+        <span className="team-row__label">{t("saved.filterMap")}</span>
+        <span className="team-row__value">
+          <span className={team.island === null ? "muted" : undefined}>
+            {team.island ?? t("ctx.noMap")}
           </span>
-        )}
-      </p>
-
-      <p className="saved-team-card__line">
-        <span className="muted">
-          {team.dish_type ? t(dishTypeLabelKey(team.dish_type)) : t("saved.noDishType")}
+          {team.island !== null && berries.length > 0 && (
+            <span className="filter-btn__icons">
+              {berries.map((b) => (
+                <img key={b} className="mini-icon" src={berryIcon(b)} alt={berry(b)} title={berry(b)} />
+              ))}
+            </span>
+          )}
         </span>
-        {noMeals ? (
-          <span className="muted">{t("ctx.noMeals")}</span>
-        ) : (
-          <span className="ctx-recipes">
-            {team.meals.map((m, i) =>
-              m ? (
-                <img key={i} className="ctx-recipe" src={recipeImage(m)} alt={m} title={m} />
-              ) : (
-                <span key={i} className="ctx-recipe ctx-recipe--empty" aria-hidden="true" />
-              ),
-            )}
-          </span>
-        )}
-      </p>
+      </span>
 
-      <div className="saved-team-card__foot">
-        <span className="muted saved-team-card__date">{t("saved.savedOn", { date })}</span>
-        <button type="button" className="btn btn--primary" onClick={onOpen}>
-          {t("saved.open")}
-        </button>
-      </div>
-    </article>
+      <span className="team-row__field team-row__meals">
+        <span className="team-row__label">{t("saved.colMeals")}</span>
+        <span className="team-row__value">
+          <span className="muted">
+            {team.dish_type ? t(dishTypeLabelKey(team.dish_type)) : t("saved.noDishType")}
+          </span>
+          {noMeals ? (
+            <span className="muted">{t("ctx.noMeals")}</span>
+          ) : (
+            <span className="ctx-recipes">
+              {team.meals.map((m, i) =>
+                m ? (
+                  <img key={i} className="ctx-recipe" src={recipeImage(m)} alt={m} title={m} />
+                ) : (
+                  <span key={i} className="ctx-recipe ctx-recipe--empty" aria-hidden="true" />
+                ),
+              )}
+            </span>
+          )}
+        </span>
+      </span>
+
+      <span className="team-row__date">
+        <span className="sr-only">{t("saved.colSaved")}: </span>
+        {date}
+      </span>
+
+      <span className="team-row__actions">
+        <ActionMenu
+          label={t("saved.actions", { name: team.name })}
+          items={[
+            {
+              label: t("saved.openInAnalysis"),
+              icon: <IconOpen />,
+              tone: "accent",
+              onSelect: onOpen,
+            },
+            {
+              label: t("saved.deleteConfirm"),
+              icon: <IconTrash />,
+              tone: "danger",
+              separated: true,
+              ariaLabel: t("saved.delete", { name: team.name }),
+              onSelect: onDelete,
+            },
+          ]}
+        />
+      </span>
+    </li>
   );
 }
 
@@ -207,12 +243,10 @@ export function SavedTeams() {
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
   const saved = useSavedTeamsQuery();
   const saver = useTeamSaver(catalog.data);
-  const rename = useRenameTeam();
   const remove = useDeleteTeam();
 
   const [filters, setFilters] = useState<TeamFilters>({});
   const [picking, setPicking] = useState(false);
-  const [renaming, setRenaming] = useState<SavedTeam | null>(null);
   const [deleting, setDeleting] = useState<SavedTeam | null>(null);
 
   const membersQuery = useQuery({ queryKey: ["members"], queryFn: api.listMembers });
@@ -351,24 +385,30 @@ export function SavedTeams() {
           </button>
         </Placeholder>
       ) : (
-        <div className="saved-teams">
-          {visible.map((team) => (
-            <SavedTeamCard
-              key={team.id}
-              team={team}
-              catalog={catalog.data}
-              members={members}
-              onOpen={() => saver.open(team)}
-              onRename={() => {
-                rename.reset();
-                setRenaming(team);
-              }}
-              onDelete={() => {
-                remove.reset();
-                setDeleting(team);
-              }}
-            />
-          ))}
+        <div className="team-rows">
+          <div className="team-rows__head" aria-hidden="true">
+            <span>{t("saved.colTeam")}</span>
+            <span>{t("saved.colSlots")}</span>
+            <span>{t("saved.filterMap")}</span>
+            <span>{t("saved.colMeals")}</span>
+            <span>{t("saved.colSaved")}</span>
+            <span />
+          </div>
+          <ul className="team-rows__list">
+            {visible.map((team) => (
+              <SavedTeamRow
+                key={team.id}
+                team={team}
+                catalog={catalog.data}
+                members={members}
+                onOpen={() => saver.open(team)}
+                onDelete={() => {
+                  remove.reset();
+                  setDeleting(team);
+                }}
+              />
+            ))}
+          </ul>
         </div>
       )}
 
@@ -389,22 +429,6 @@ export function SavedTeams() {
             }}
           />
         </Modal>
-      )}
-
-      {renaming && (
-        <TeamNameDialog
-          title={t("saved.renameTitle")}
-          initialName={renaming.name}
-          teams={teams}
-          ownId={renaming.id}
-          confirmLabel={t("saved.save")}
-          pending={rename.isPending}
-          serverError={rename.error?.message ?? null}
-          onConfirm={(name) =>
-            rename.mutate({ id: renaming.id, name }, { onSuccess: () => setRenaming(null) })
-          }
-          onClose={() => setRenaming(null)}
-        />
       )}
 
       {deleting && (

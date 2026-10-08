@@ -439,6 +439,7 @@ export function Teams() {
               canSave={slots.length > 0}
               onSave={() => saver.save()}
               onSaveAs={saver.saveAs}
+              onRename={saver.rename}
               onClose={saver.close}
             />
           ) : undefined
