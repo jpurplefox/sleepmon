@@ -34,6 +34,10 @@ from sleepmon.adapters.inbound.http.schemas import (
     ProgressPatchIn,
     RatingOut,
     RecipeOut,
+    SavedSlotOut,
+    SavedTeamIn,
+    SavedTeamOut,
+    SavedTeamRenameIn,
     SkillEffectAggOut,
     SleepIn,
     SleepOut,
@@ -53,6 +57,8 @@ from sleepmon.application.dto import (
     ProductionInput,
     ProductionResult,
     ProgressPatchInput,
+    SavedSlotInput,
+    SavedTeamInput,
     SleepInput,
     SlotEntryInput,
     SlotInput,
@@ -60,6 +66,7 @@ from sleepmon.application.dto import (
     TeamProductionInput,
 )
 from sleepmon.application.progress_service import PlayerProgressService
+from sleepmon.application.saved_team_service import SavedTeamService
 from sleepmon.application.services import ProductionService, TeamService
 from sleepmon.domain.catalog_data import (
     EXPERT_SPEED_FACTORS,
@@ -76,6 +83,7 @@ from sleepmon.domain.catalog_data import (
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.ports import SpeciesCatalog
 from sleepmon.domain.progress import PlayerProgress
+from sleepmon.domain.saved_team import SavedTeam
 from sleepmon.domain.value_objects import Ingredient, Island, Nature, SubSkill
 
 
@@ -600,3 +608,86 @@ class ProgressController(Controller):
                 ),
             )
         )
+
+
+def _saved_team_input(data: SavedTeamIn) -> SavedTeamInput:
+    return SavedTeamInput(
+        name=data.name,
+        slots=[SavedSlotInput(members=tuple(s.members), share=s.share) for s in data.slots],
+        weekly_bonus=data.weekly_bonus,
+        meals=list(data.meals),
+        island=data.island,
+        favorite_berries=list(data.favorite_berries),
+        main_favorite=data.main_favorite,
+        dish_type=data.dish_type,
+    )
+
+
+def _saved_team_out(team: SavedTeam) -> SavedTeamOut:
+    return SavedTeamOut(
+        id=str(team.id),
+        name=team.name,
+        slots=[
+            SavedSlotOut(members=[str(m) for m in s.members], share=s.share) for s in team.slots
+        ],
+        island=None if team.island is None else team.island.value,
+        favorite_berries=[b.value for b in team.favorite_berries],
+        main_favorite=None if team.main_favorite is None else team.main_favorite.value,
+        weekly_bonus=team.weekly_bonus.value,
+        dish_type=None if team.dish_type is None else team.dish_type.value,
+        meals=list(team.meals),
+        saved_at=team.saved_at,
+    )
+
+
+class SavedTeamController(Controller):
+    path = "/saved-teams"
+    guards = [require_user]
+
+    @get("/", sync_to_thread=True)
+    def list_teams(
+        self,
+        saved_teams: NamedDependency[SavedTeamService],
+        current_user_id: NamedDependency[UUID],
+    ) -> list[SavedTeamOut]:
+        return [_saved_team_out(t) for t in saved_teams.list(current_user_id)]
+
+    @post("/", status_code=HTTP_201_CREATED, sync_to_thread=True)
+    def create_team(
+        self,
+        saved_teams: NamedDependency[SavedTeamService],
+        current_user_id: NamedDependency[UUID],
+        data: SavedTeamIn,
+    ) -> SavedTeamOut:
+        return _saved_team_out(saved_teams.create(current_user_id, _saved_team_input(data)))
+
+    @put("/{team_id:uuid}", sync_to_thread=True)
+    def replace_team(
+        self,
+        saved_teams: NamedDependency[SavedTeamService],
+        current_user_id: NamedDependency[UUID],
+        team_id: FromPath[UUID],
+        data: SavedTeamIn,
+    ) -> SavedTeamOut:
+        return _saved_team_out(
+            saved_teams.replace(current_user_id, team_id, _saved_team_input(data))
+        )
+
+    @patch("/{team_id:uuid}", status_code=HTTP_200_OK, sync_to_thread=True)
+    def rename_team(
+        self,
+        saved_teams: NamedDependency[SavedTeamService],
+        current_user_id: NamedDependency[UUID],
+        team_id: FromPath[UUID],
+        data: SavedTeamRenameIn,
+    ) -> SavedTeamOut:
+        return _saved_team_out(saved_teams.rename(current_user_id, team_id, data.name))
+
+    @delete("/{team_id:uuid}", sync_to_thread=True)
+    def delete_team(
+        self,
+        saved_teams: NamedDependency[SavedTeamService],
+        current_user_id: NamedDependency[UUID],
+        team_id: FromPath[UUID],
+    ) -> None:
+        saved_teams.delete(current_user_id, team_id)

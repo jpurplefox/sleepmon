@@ -73,6 +73,7 @@ and the game's artwork brings the rest. Surfaces separate by **tone** (`--bg` �
 --accent-dim:    rgba(99, 102, 241, 0.15);
 --accent-border: rgba(99, 102, 241, 0.4);
 --accent-text:   #8f95ff;   /* indigo as text/icon on dark — AA (6.3:1 on --surface) */
+--accent-2:      #38bdf8;   /* the other side of a share: a split's second Pokémon */
 
 /* Semantic good / bad — what the rules push up (a bonus, a stat that rises, a
    delta in favor) or down (a cost, a stat that falls, a delta against). The pair
@@ -257,6 +258,14 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **`.icon-btn`** — icon-only button (grip, move, remove, save). Variants:
   `--inbox` (tints to accent = "already in the box"), `--saving` (pulse while
   saving; respects `prefers-reduced-motion`). States: hover, disabled, focus.
+- **`ActionMenu`** (`components/ActionMenu.tsx`, `.action-menu`) — an item's actions
+  behind a `···` `.icon-btn` (ARIA menu button: focus to the first item, arrows,
+  Home/End, Escape and click-outside return focus). Each item leads with its 16px line
+  icon in `--muted`; items are neutral at rest and tint on hover only — `accent` for a
+  way into another tool (Compare, Open in Analysis), `danger` red for a delete, which
+  sits apart under a `--border` separator and uses the **trash** icon (the cross means
+  "take out of this tool", not "delete what's saved"). Used by the Box entries and
+  the Teams rows.
 - **`.filter-btn`** — trigger for filter/selector popovers (selected value +
   chevron). Subparts `__value/__icons/__placeholder/__chevron`; state `--open`.
 - **`.specialty-toggle`** — segmented toggle-button group; item state `.is-on`
@@ -284,6 +293,23 @@ states · where it lives. Feature one-offs are intentionally not here.
   everyone else (`--one`): a single **1 vez** column. Every card under the same sleep
   schedule has the same rows, so cards align without reserving space; the block keeps its
   40px floor.
+- **`.team-rows`** — the Teams tool's list (PRD 0016): one `--surface` panel, a
+  header row of `--text-xs` uppercase `--muted` column names, then one `.team-row` per
+  team on the **same fixed grid** (header and rows are separate grids, so no track is
+  sized by its content), split by `--border` hairlines. Columns: name (700) · five
+  slots · map + berries · dish type + recipe images · saved date (tabular) · a `···`
+  `ActionMenu`. Under 860px each row becomes its own `--surface` card (name + menu,
+  slots, labelled Map and Meals, the date), the header hidden.
+- **`.team-slot-mini`** — one slot as a fixed 64×84 `--surface-2` box (dashed when
+  empty). A split stacks its two Pokémon at the same size and a 5px vertical bar beside
+  them carries the shares: the top length is the top Pokémon's (`--accent`), the
+  bottom the other's (`--accent-2`). No printed numbers; the percentages are the
+  `title` and the screen reader's text.
+- **`.saved-team-bar`** — Team Analysis's saved-team actions in the `.tool-head`
+  action slot: with no team open, a lone `.btn--primary` **Save team**; with one open,
+  its name as a quiet button with a pencil (border on hover) that **renames** the team,
+  a **label-only** `.progress-diff` ("sin guardar"), a close `.icon-btn`, then
+  `.btn--primary` **Save** (enabled only while unsaved) and `.btn--ghost` **Save as…**.
 - **`.layout` / `.layout--wide`** — page container (`max-width: 1100px`; `--wide`
   removes it for the production comparator).
 - **`.grid` / `.grid--3`** — 2- or 3-column layout, collapses to 1 under 860px.
@@ -483,7 +509,7 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **Error feedback** — `.error` (red text) + `ErrorBoundary` app fallback
   (`role="alert"`, title + "reload" `.btn--primary`).
 - **`.gate-card`** — the anonymous gate that replaces a **reserved page's** content
-  when there is no session — today only the **Box**. Which pages those are follows
+  when there is no session — today the **Box** and **Teams**. Which pages those are follows
   from the rule, not from a list: a page is reserved when it reads or writes the Box
   (see PRD 0010), so a tool that only computes stays open and never shows this card.
   A centered `.card` composition: a **moon roundel** (`IconMoon` in `--accent-text`
@@ -719,3 +745,16 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   (too loud for a common, expected state) and a red time with no shape (color alone) were
   both tried. *Why:* overflow is information, not an alarm — the production figures stay
   the focus — and the `+` keeps good/bad off color alone.
+- **A saved team's state rides its name, not the page.** *Question:* how does Team
+  Analysis say "this is Cyan curry, and you've changed it"? *Resolution:* the open
+  team's name sits in the title row's action slot with the existing `.progress-diff`
+  pill as a bare label ("sin guardar"), and **Save** is disabled until there is
+  something to save. *Why:* the pill already means "changed, not saved" for profile
+  values, so the same mark reads the same way here; putting the save inside the pill
+  too would duplicate the Save button next to it.
+- **A share has two owners, so it has two colors.** *Question:* the split slider and
+  the saved team's split bar both draw a 60/40 split; what color is the 40? *Resolution:*
+  `--accent-2` (sky), never a grey or a dimmed indigo. *Why:* the 40 is the second
+  Pokémon's time, not unused time; a muted color read as "off". Sky is the hue the
+  strength chart already gives skills, so it is in the app's vocabulary, and it sits far
+  enough from indigo to read as a different Pokémon.

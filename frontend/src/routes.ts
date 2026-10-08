@@ -4,6 +4,7 @@ export const ROUTES = {
   box: "/box",
   compare: "/compare",
   teamAnalysis: "/team-analysis",
+  savedTeams: "/teams",
 } as const;
 
 // Navigation entries in display order. `labelKey` reuses the existing i18n
@@ -12,4 +13,5 @@ export const NAV_ITEMS: ReadonlyArray<{ path: string; labelKey: string }> = [
   { path: ROUTES.box, labelKey: "nav.team" },
   { path: ROUTES.compare, labelKey: "nav.comparison" },
   { path: ROUTES.teamAnalysis, labelKey: "nav.teams" },
+  { path: ROUTES.savedTeams, labelKey: "nav.savedTeams" },
 ];

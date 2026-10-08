@@ -251,3 +251,76 @@ UPSERT_PROGRESS = (
     .do_update("updated_at", Function("now"))
     .get_sql()
 )
+
+saved_team = Table("saved_team")
+
+_SAVED_TEAM_COLS = (
+    saved_team.id,
+    saved_team.name,
+    saved_team.island,
+    saved_team.favorite_berries,
+    saved_team.main_favorite,
+    saved_team.weekly_bonus,
+    saved_team.dish_type,
+    saved_team.meals,
+    saved_team.slots,
+    saved_team.saved_at,
+)
+
+INSERT_SAVED_TEAM = (
+    Query.into(saved_team)
+    .columns(
+        "id",
+        "name",
+        "island",
+        "favorite_berries",
+        "main_favorite",
+        "weekly_bonus",
+        "dish_type",
+        "meals",
+        "slots",
+        "saved_at",
+        "user_id",
+    )
+    .insert(_P, _P, _P, _P, _P, _P, _P, _P, _P, _P, _P)
+    .get_sql()
+)
+
+# Most recently saved first; the id breaks ties so the order is stable.
+SELECT_SAVED_TEAMS = (
+    Query.from_(saved_team)
+    .select(*_SAVED_TEAM_COLS)
+    .where(saved_team.user_id == _P)
+    .orderby(saved_team.saved_at, order=Order.desc)
+    .orderby(saved_team.id, order=Order.asc)
+    .get_sql()
+)
+
+SELECT_SAVED_TEAM_BY_ID = (
+    Query.from_(saved_team)
+    .select(*_SAVED_TEAM_COLS)
+    .where((saved_team.id == _P) & (saved_team.user_id == _P))
+    .get_sql()
+)
+
+UPDATE_SAVED_TEAM = (
+    Query.update(saved_team)
+    .set(saved_team.name, _P)
+    .set(saved_team.island, _P)
+    .set(saved_team.favorite_berries, _P)
+    .set(saved_team.main_favorite, _P)
+    .set(saved_team.weekly_bonus, _P)
+    .set(saved_team.dish_type, _P)
+    .set(saved_team.meals, _P)
+    .set(saved_team.slots, _P)
+    .set(saved_team.saved_at, _P)
+    .where((saved_team.id == _P) & (saved_team.user_id == _P))
+    .get_sql()
+)
+
+DELETE_SAVED_TEAM = (
+    Query.from_(saved_team)
+    .where((saved_team.id == _P) & (saved_team.user_id == _P))
+    .delete()
+    .get_sql()
+)

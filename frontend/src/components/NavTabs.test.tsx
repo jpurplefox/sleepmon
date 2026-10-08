@@ -22,7 +22,7 @@ describe("NavTabs", () => {
   it("renders one link per tool, in order, pointing at its route", () => {
     renderAt(ROUTES.box);
     const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href"));
-    expect(hrefs).toEqual([ROUTES.box, ROUTES.compare, ROUTES.teamAnalysis]);
+    expect(hrefs).toEqual([ROUTES.box, ROUTES.compare, ROUTES.teamAnalysis, ROUTES.savedTeams]);
   });
 
   it("marks the link matching the current path as the current page", () => {

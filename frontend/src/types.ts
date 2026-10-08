@@ -439,3 +439,31 @@ export interface ProgressPatch {
   area_bonuses?: Record<string, number>;
   sleep?: SleepSchedule;
 }
+
+// A saved team (PRD 0016): a named line-up of Box members plus the map and meals.
+export interface SavedTeamSlot {
+  // Box member ids: 1, or 2 for a split slot.
+  members: string[];
+  // The first member's time share, 0..1 (1 for a single slot).
+  share: number;
+}
+
+export interface SavedTeamInput {
+  name: string;
+  slots: SavedTeamSlot[];
+  island: string | null;
+  favorite_berries: string[];
+  main_favorite: string | null;
+  weekly_bonus: WeeklyBonus;
+  dish_type: DishType | null;
+  // Exactly 3: breakfast, lunch, dinner. Levels come from the Player profile.
+  meals: (string | null)[];
+}
+
+export interface SavedTeam extends SavedTeamInput {
+  id: string;
+  // ISO datetime of the last save (create or replace; a rename keeps it).
+  saved_at: string;
+}
+
+export type DishType = Recipe["type"];

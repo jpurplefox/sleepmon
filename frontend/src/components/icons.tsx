@@ -272,3 +272,31 @@ export function IconAlert(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+// Delete something saved (a trash can): unlike the cross, which takes a Pokémon out of a tool.
+export function IconTrash(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+    </svg>
+  );
+}
+
+// Open somewhere else (a box with an arrow leaving it).
+export function IconOpen(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
+    </svg>
+  );
+}
+
+// Compare (two columns side by side).
+export function IconCompare(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="3" y="4" width="7" height="16" rx="1.5" />
+      <rect x="14" y="4" width="7" height="16" rx="1.5" />
+    </svg>
+  );
+}

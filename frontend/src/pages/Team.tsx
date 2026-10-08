@@ -18,6 +18,8 @@ import { ToolHeader } from "../components/ToolHeader";
 import { useI18n } from "../i18n";
 import { totalIngredients } from "../ingredientProduction";
 import type { Catalog, Member, MemberInput, Species } from "../types";
+import { deletionImpact } from "../savedTeams";
+import { SAVED_TEAMS_KEY, useSavedTeamsQuery } from "../useSavedTeams";
 
 // Orden + filtros del overview, en el cliente (la producción ya viene en /team).
 function sortAndFilter(
@@ -78,6 +80,11 @@ interface TeamProps {
   onCompare: (memberId: string) => void;
 }
 
+// "A, B y C": a list of names in running text.
+function joinNames(names: string[], and: string): string {
+  return names.length <= 1 ? (names[0] ?? "") : `${names.slice(0, -1).join(", ")}${and}${names[names.length - 1]}`;
+}
+
 export function Team({ onCompare }: TeamProps) {
   const qc = useQueryClient();
   const { t } = useI18n();
@@ -95,6 +102,8 @@ export function Team({ onCompare }: TeamProps) {
 
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
   const members = useQuery({ queryKey: ["members"], queryFn: api.listMembers });
+  // Deleting a Box Pokémon also takes it out of the saved teams it is in (PRD 0016).
+  const savedTeams = useSavedTeamsQuery();
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["members"] });
@@ -127,6 +136,7 @@ export function Team({ onCompare }: TeamProps) {
       setDeleteError(null);
       setDeleting(null);
       invalidate();
+      qc.invalidateQueries({ queryKey: SAVED_TEAMS_KEY });
     },
     onError: (err: Error) => {
       setDeleting(null);
@@ -315,6 +325,21 @@ export function Team({ onCompare }: TeamProps) {
           }}
         >
           <p className="muted">{t("member.deleteModalBody")}</p>
+          {(() => {
+            const { inTeams, deleted } = deletionImpact(savedTeams.data ?? [], deleting.id);
+            if (inTeams.length === 0) return null;
+            const names = (teams: typeof inTeams) => joinNames(teams.map((tm) => `«${tm.name}»`), t("saved.and"));
+            return (
+              <p className="muted">
+                {t("saved.inTeams", { teams: names(inTeams) })}
+                {deleted.length > 0 &&
+                  " " +
+                    t(deleted.length === 1 ? "saved.deletedOne" : "saved.deletedMany", {
+                      teams: names(deleted),
+                    })}
+              </p>
+            );
+          })()}
           <div className="modal-actions">
             <button
               type="button"

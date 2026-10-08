@@ -48,7 +48,8 @@ The app distinguishes two classes of action:
   Team Analysis's companion read-outs, the cooking plan and map bonuses — and the
   cross-cutting pieces (language, the production model as a calculation).
 - **Reserved** — anything that reads or writes the Box: the **Box**, **"My Pokémon"**
-  (Box picker), and **saving to the Box** from Comparison or Team Analysis.
+  (Box picker), and **saving to the Box** from Comparison or Team Analysis, plus [saved teams](0016-saved-teams.md):
+  the **Teams** tool and **Save team** in Team Analysis.
 
 When someone **without a session** attempts a reserved action, a **contextual prompt**
 appears in place ("Sign in with Google to save to your Box") with the login button.

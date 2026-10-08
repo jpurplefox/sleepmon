@@ -1,5 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
+import { useLocation } from "wouter";
 import type React from "react";
 import {
   Cell,
@@ -35,8 +36,7 @@ import {
 } from "../components/icons";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
-import { CURRENT_EVENT, presetEffects } from "../currentEvent";
-import { toRequest as toEventRequest, type EventEffect } from "../eventBonus";
+import { toRequest as toEventRequest } from "../eventBonus";
 import { fdown, fup } from "../utils/format";
 import { mealsForDishType, recipeImage } from "../recipes";
 import { areaBonusOf, recipeLevelOf } from "../progress";
@@ -47,10 +47,9 @@ import {
   GENERIC_CANDY_ICON,
   POT_EXPANSION_ICON,
 } from "../skillIcons";
-import { configFromMember, newEntry, newId } from "../roster";
+import { configFromMember, newEntry } from "../roster";
 import {
   MAX_TEAM,
-  type Slot,
   addSlot,
   linkToBox,
   removeEntry,
@@ -64,14 +63,16 @@ import { useProgress } from "../useProgress";
 import { useSessionOverrides } from "../useSessionOverrides";
 import type {
   BerryRole,
-  MealInput,
   Member,
   MemberInput,
   Recipe,
   SkillEffectAgg,
-  WeeklyBonus,
 } from "../types";
 import { useSaveToBox } from "../useSaveToBox";
+import { useTeamSaver } from "../useTeamSaver";
+import { useTeamSession } from "../teamSession";
+import { ROUTES } from "../routes";
+import { SavedTeamBar } from "../components/SavedTeamBar";
 
 // kind → { icon renderer, i18n label key } — mirrors ProductionCard's skill section.
 // Used to render skill_effects rows in the aggregates card.
@@ -173,30 +174,36 @@ export function Teams() {
   });
   const recipes = useQuery({ queryKey: ["recipes"], queryFn: api.getRecipes });
 
-  // The roster: ordered slots of configs the tool owns. Ephemeral.
-  const [slots, setSlots] = useState<Slot[]>([]);
+  // The session (roster, map, meals, event, ticket) lives above the routes, so it
+  // survives moving between tools and a saved team can be opened into it.
+  const {
+    slots,
+    setSlots,
+    meals,
+    setMeals,
+    dishType,
+    setDishType,
+    selectedIsland,
+    setSelectedIsland,
+    favoriteBerries,
+    setFavoriteBerries,
+    mainFavorite,
+    setMainFavorite,
+    weeklyBonus,
+    setWeeklyBonus,
+    goodCampTicket,
+    setGoodCampTicket,
+    eventEffects,
+    setEventEffects,
+    notice,
+    setNotice,
+  } = useTeamSession();
   const [intent, setIntent] = useState<Intent | null>(null);
   const [modal, setModal] = useState<"form" | "box" | null>(null);
-  // Tells the user an action could not be carried out (e.g. a species outside
-  // the catalog).
-  const [notice, setNotice] = useState<string | null>(null);
-  const [meals, setMeals] = useState<(MealInput | null)[]>([null, null, null]);
   // Which Settings tab is open, or null: the context bar and the Cooking card each open theirs.
   const [dialog, setDialog] = useState<TeamDialog | null>(null);
-  const [goodCampTicket, setGoodCampTicket] = useState(false);
-  // Preloaded with the event running now, if any (see currentEvent.ts).
-  const [eventEffects, setEventEffects] = useState<EventEffect[]>(() =>
-    presetEffects(CURRENT_EVENT, new Date(), newId),
-  );
-
-  // Dish type: restricts all 3 meal slots to the same recipe type (ephemeral, frontend-only).
-  const [dishType, setDishType] = useState<'Curry' | 'Salad' | 'Dessert' | null>(null);
-
-  // Island state (efímero, como meals).
-  const [selectedIsland, setSelectedIsland] = useState<string | null>(null);
-  const [favoriteBerries, setFavoriteBerries] = useState<string[]>([]);
-  const [mainFavorite, setMainFavorite] = useState<string | null>(null);
-  const [weeklyBonus, setWeeklyBonus] = useState<WeeklyBonus>("berry_strength");
+  const saver = useTeamSaver(catalog.data);
+  const [, navigate] = useLocation();
 
   const {
     progress,
@@ -420,7 +427,24 @@ export function Teams() {
 
   return (
     <div className="layout layout--wide">
-      <ToolHeader title={t("teams.title")} notice={notice}>
+      <ToolHeader
+        title={t("teams.title")}
+        notice={notice ?? saver.saveError}
+        action={
+          status === "authenticated" && (slots.length > 0 || saver.openTeam !== null) ? (
+            <SavedTeamBar
+              teamName={saver.openTeam?.name ?? null}
+              unsaved={saver.unsaved}
+              saving={saver.saving}
+              canSave={slots.length > 0}
+              onSave={() => saver.save()}
+              onSaveAs={saver.saveAs}
+              onRename={saver.rename}
+              onClose={saver.close}
+            />
+          ) : undefined
+        }
+      >
         <TeamContextBar
           map={map}
           eventEffects={eventEffects}
@@ -493,6 +517,15 @@ export function Teams() {
                 >
                   {t("prod.myPokemon")}
                 </button>
+                {slots.length === 0 && status === "authenticated" && (
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={() => navigate(ROUTES.savedTeams)}
+                  >
+                    {t("saved.openTeam")}
+                  </button>
+                )}
               </div>
             </article>
           </div>
@@ -1276,6 +1309,8 @@ export function Teams() {
           />
         </Modal>
       )}
+
+      {saver.dialog}
 
       {dialog === "map" && (
         <MapModal

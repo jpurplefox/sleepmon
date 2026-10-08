@@ -20,7 +20,7 @@ is data, the page is the data and what shapes it.
 
 ## What it does (scope)
 
-1. **Menu** — the app's name, the three tools with the current one clearly marked,
+1. **Menu** — the app's name, the four tools with the current one clearly marked,
    and the account; it stays at the top while scrolling.
 2. **Header** — each tool shows only its title (plus, in the Box, its count and the
    add action).
@@ -34,7 +34,7 @@ is data, the page is the data and what shapes it.
 ### Menu
 
 - Left: **sleepmon** with a sprite; it takes you to the Box.
-- Middle: **Box · Comparison · Team Analysis**. The current tool reads as a filled
+- Middle: **Box · Comparison · Team Analysis · Teams** ([Saved teams](0016-saved-teams.md)). The current tool reads as a filled
   pill, not just brighter text.
 - Right: the **account**.
   - Signed in: the photo (or initials) **with the first name** opens the account menu —
@@ -43,7 +43,7 @@ is data, the page is the data and what shapes it.
     that opens ES / EN.
 - It stays **fixed at the top** while scrolling, over the page background with a
   hairline below it.
-- Under **640px**: name and account on the first row, the three tools on the second,
+- Under **640px**: name and account on the first row, the four tools on the second,
   full width; the whole menu stays fixed.
 
 ### Header
@@ -108,7 +108,10 @@ Each tool's explanation moves into its empty state, next to the actions that sta
 - **Comparison** (no cards): what comparing does — the first card is the base, the
   rest show the difference — with **+ New** and **+ My Pokémon**.
 - **Team Analysis** (no members): what it analyzes — up to 5 Pokémon, daily
-  production and team total — with **+ New** and **+ My Pokémon**.
+  production and team total — with **+ New** and **+ My Pokémon**, and **Open a team**
+  when signed in.
+- **Teams**: what saved teams are for, with a way to Team Analysis (signed in), or the
+  sign-in prompt (signed out).
 
 With data, no tool shows an explanation anywhere. Signed out, the Box keeps its
 sign-in gate ([Authentication](0010-authentication.md)) in place of all of this.

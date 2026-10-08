@@ -17,3 +17,7 @@ class SpeciesNotFoundError(ValidationError):
 
 class TeamMemberNotFoundError(DomainError):
     """No existe un miembro del equipo con ese id."""
+
+
+class SavedTeamNotFoundError(DomainError):
+    """No saved team with that id exists for the user."""

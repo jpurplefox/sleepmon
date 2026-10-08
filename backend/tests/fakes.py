@@ -13,10 +13,12 @@ from sleepmon.domain.ports import (
     IdentityProvider,
     PlayerProgressRepository,
     RefreshTokenRepository,
+    SavedTeamRepository,
     TeamRepository,
     UserRepository,
 )
 from sleepmon.domain.progress import PlayerProgress
+from sleepmon.domain.saved_team import SavedTeam
 
 
 class InMemoryTeamRepository(TeamRepository):
@@ -135,3 +137,39 @@ class InMemoryPlayerProgressRepository(PlayerProgressRepository):
         updated = change(self.get(user_id))
         self._rows[user_id] = updated
         return updated
+
+
+class InMemorySavedTeamRepository(SavedTeamRepository):
+    """Saved teams keyed by id with their owner, filtered by ``user_id`` on every call.
+
+    It does NOT enforce the unique name: that backstop lives in Postgres (covered by
+    the integration tests), so the service's own check is what these tests exercise.
+    """
+
+    def __init__(self) -> None:
+        self._teams: dict[UUID, tuple[UUID, SavedTeam]] = {}
+
+    def list(self, user_id: UUID) -> list[SavedTeam]:
+        teams = [t for owner, t in self._teams.values() if owner == user_id]
+        return sorted(teams, key=lambda t: t.saved_at, reverse=True)
+
+    def get(self, team_id: UUID, user_id: UUID) -> SavedTeam | None:
+        owner, team = self._teams.get(team_id, (None, None))
+        return team if owner == user_id else None
+
+    def add(self, team: SavedTeam, user_id: UUID) -> None:
+        self._teams[team.id] = (user_id, team)
+
+    def update(self, team: SavedTeam, user_id: UUID) -> bool:
+        owner, _ = self._teams.get(team.id, (None, None))
+        if owner != user_id:
+            return False
+        self._teams[team.id] = (user_id, team)
+        return True
+
+    def delete(self, team_id: UUID, user_id: UUID) -> bool:
+        owner, _ = self._teams.get(team_id, (None, None))
+        if owner != user_id:
+            return False
+        del self._teams[team_id]
+        return True

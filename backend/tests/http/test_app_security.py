@@ -10,7 +10,7 @@ de secretos corre antes de cualquier ``create_pool(...)``.
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -20,9 +20,14 @@ from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatal
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.application.auth_service import AuthResult, AuthService
 from sleepmon.application.progress_service import DefaultPlayerProgressService
+from sleepmon.application.saved_team_service import DefaultSavedTeamService
 from sleepmon.application.services import DefaultProductionService, DefaultTeamService
 from sleepmon.config import Settings
-from tests.fakes import InMemoryPlayerProgressRepository, InMemoryTeamRepository
+from tests.fakes import (
+    InMemoryPlayerProgressRepository,
+    InMemorySavedTeamRepository,
+    InMemoryTeamRepository,
+)
 
 
 def _settings(*, jwt_secret: str = "s3cr3t", google_client_id: str = "cid") -> Settings:
@@ -71,7 +76,10 @@ def test_create_app_does_not_raise_when_secrets_are_injected() -> None:
     repository = InMemoryTeamRepository()
     app = create_app(
         service=DefaultTeamService(
-            repository, StaticSpeciesCatalog(), InMemoryPlayerProgressRepository()
+            repository,
+            StaticSpeciesCatalog(),
+            InMemoryPlayerProgressRepository(),
+            InMemorySavedTeamRepository(),
         ),
         production_service=DefaultProductionService(StaticSpeciesCatalog(), StaticRecipeCatalog()),
         catalog=StaticSpeciesCatalog(),
@@ -80,6 +88,12 @@ def test_create_app_does_not_raise_when_secrets_are_injected() -> None:
         auth_service=_FakeAuth(),
         progress_service=DefaultPlayerProgressService(
             InMemoryPlayerProgressRepository(), StaticRecipeCatalog()
+        ),
+        saved_team_service=DefaultSavedTeamService(
+            InMemorySavedTeamRepository(),
+            InMemoryTeamRepository(),
+            StaticRecipeCatalog(),
+            clock=lambda: datetime.now(UTC),
         ),
     )
     assert app is not None
@@ -102,7 +116,10 @@ def test_create_app_opens_no_pool_when_every_service_is_injected(
 
     app = create_app(
         service=DefaultTeamService(
-            InMemoryTeamRepository(), StaticSpeciesCatalog(), InMemoryPlayerProgressRepository()
+            InMemoryTeamRepository(),
+            StaticSpeciesCatalog(),
+            InMemoryPlayerProgressRepository(),
+            InMemorySavedTeamRepository(),
         ),
         production_service=DefaultProductionService(StaticSpeciesCatalog(), StaticRecipeCatalog()),
         catalog=StaticSpeciesCatalog(),
@@ -111,6 +128,12 @@ def test_create_app_opens_no_pool_when_every_service_is_injected(
         auth_service=_FakeAuth(),
         progress_service=DefaultPlayerProgressService(
             InMemoryPlayerProgressRepository(), StaticRecipeCatalog()
+        ),
+        saved_team_service=DefaultSavedTeamService(
+            InMemorySavedTeamRepository(),
+            InMemoryTeamRepository(),
+            StaticRecipeCatalog(),
+            clock=lambda: datetime.now(UTC),
         ),
     )
     assert app is not None
