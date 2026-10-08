@@ -57,8 +57,9 @@ offers:
   Box entry is unaffected by what you do here.
 - **Either way fills either half** — a new slot, or the second half of a **split**
   slot.
-- The roster is **ephemeral** (session state): neither the composition nor the
-  Pokémon created in it survive a reload. What deserves to last is saved to the Box.
+- The roster is **session state**: neither the composition nor the Pokémon created
+  in it survive a reload. What deserves to last is saved to the Box, and the whole
+  line-up can be kept as a [saved team](0016-saved-teams.md) (signed in).
 - **Split slots** — a slot can hold **two** Pokémon with a weight split (default
   50/50, e.g. 60/40), modeling a slot that **rotates** during the week. Each
   Pokémon's production is **scaled linearly** by its weight before aggregating. A
@@ -145,8 +146,9 @@ says so where the decision is made, instead of leaving a silent hole in the team
 - Turning on the **Good Camp Ticket** applies all three effects: help interval
   **×0.8** (more helps/day → more berries, ingredients, skill triggers), inventory
   **×1.2**, and pot **+50%** per meal.
-- The roster is **ephemeral**: reloading restores neither the composition nor the
-  Pokémon created in it; whatever was saved to the Box is intact.
+- The roster is **session state**: reloading restores neither the composition nor the
+  Pokémon created in it; whatever was saved to the Box, or as a [saved
+  team](0016-saved-teams.md), is intact.
 
 ## Guidelines
 
@@ -157,14 +159,17 @@ says so where the decision is made, instead of leaving a silent hole in the team
   same one the Box and Comparison use).
 - **The computation never asks for an account.** A session buys access to the Box —
   reading it and writing it — and nothing else.
-- **The team holds configurations, not identities.** Every Pokémon in it is an
-  independent copy; nothing in the team changes because the Box changed.
+- **The session holds configurations, not identities.** Every Pokémon in the open
+  team is an independent copy for the session; nothing in it changes because the Box
+  changed while you work. A [saved team](0016-saved-teams.md) is different: it records
+  Box entries, and opening it loads them as they are in the Box then.
 - **One way to create, one way to pick.** The [Pokémon form](0003-pokemon-form.md) and
   the [Box picker](0004-box-picker.md); this tool never grows a second way to assemble
   a Pokémon.
 - **Nothing returns to the Box without an explicit action.**
 - **Ephemeral by default.** The roster, map, bonus, ticket, and meals are session
-  inputs; the tool persists nothing on its own.
+  inputs; the tool persists nothing on its own. Keeping a line-up is an explicit
+  **Save team** (see [Saved teams](0016-saved-teams.md)).
 - **Modifiers annotate, they don't replace.** Splits, the camp ticket, and map
   bonuses shape the aggregate; the underlying per-member production is unchanged.
 - **No false hierarchy.** Berries, skills, and cooking feed one total; none is "the
@@ -174,8 +179,10 @@ says so where the decision is made, instead of leaving a silent hole in the team
 
 - **Cloning a Pokémon within the team** — comparing variants of one configuration is
   [Comparison](0002-comparison.md)'s move, not this tool's.
-- **Persisting a team** — the roster is ephemeral; neither the browser nor a shareable
-  link remembers it, and there is no notion of a **saved team**.
+- **Keeping a team** — that is [Saved teams](0016-saved-teams.md): naming, saving,
+  listing and reopening a line-up. This tool only offers **Save team** / **Save** /
+  **Save as…** and the **unsaved** mark on the open team's name. Neither the browser
+  nor a shareable link remembers the session.
 - **The meal-planning and map/rating read-outs** — those are [Cooking
   plan](0006-cooking-plan.md) and [Map bonuses & Snorlax
   rating](0007-map-bonuses-rating.md), which share this tool's inputs.
