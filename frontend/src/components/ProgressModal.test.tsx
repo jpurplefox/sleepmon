@@ -1,10 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { api } from "../api/client";
 import { LanguageProvider } from "../i18n";
+import { recordEvents } from "../telemetry/testing";
 
 // The modal reads progress through useProgress, which now asks useAuth whether to
 // fetch at all (Team Analysis mounts it while anonymous). The modal itself only
@@ -102,6 +103,12 @@ beforeEach(() => {
     makeProgress(patch as Partial<PlayerProgress>),
   );
 });
+
+let rec: ReturnType<typeof recordEvents>;
+beforeEach(() => {
+  rec = recordEvents();
+});
+afterEach(() => rec.restore());
 
 describe("ProgressModal — reading the draft", () => {
   it("shows the saved pot size", async () => {
@@ -260,6 +267,12 @@ describe("ProgressModal — Guardar", () => {
       expect.anything(),
     );
     expect(onClose).toHaveBeenCalledOnce();
+    expect(rec.events).toEqual([
+      {
+        name: "profile_saved",
+        props: { from: "profile", sections: ["kitchen", "recipes", "areas"] },
+      },
+    ]);
   });
 
   it("shows it is saving and takes no second tap while the PATCH is in flight", async () => {
@@ -294,6 +307,7 @@ describe("ProgressModal — Guardar", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't save the change.");
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByText("36 ingredients")).toBeInTheDocument();
+    expect(rec.events).toEqual([]);
   });
 });
 
