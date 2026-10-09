@@ -7,6 +7,7 @@ import { ingredientIcon } from "../ingredients";
 import { statIcon } from "../natures";
 import { spriteUrl } from "../sprites";
 import type { Member, Nature, Species } from "../types";
+import { effectiveSkill } from "../versatile";
 import { CHARGE_STRENGTH_ICON, GENERIC_BERRY_ICON, mainSkillIcon } from "../skillIcons";
 import { ActionMenu } from "./ActionMenu";
 import { IconChevronDown, IconCompare, IconEdit, IconTrash } from "./icons";
@@ -75,8 +76,9 @@ export function BoxEntry({
 
   // Nivel de la main skill: se muestra en la columna de skill (junto a los
   // disparos), ya no en la fila de config. Mismo ícono/lenguaje que MemberConfig.
-  const skillIcon = mainSkillIcon(species?.main_skill);
-  const skillName = mainSkill(species?.main_skill ?? "");
+  const skill = effectiveSkill(species?.main_skill, member.versatile_skill);
+  const skillIcon = mainSkillIcon(skill);
+  const skillName = mainSkill(skill ?? "");
   const skillLv = t("prod.skillLv", { level: member.skill_level });
 
   // Producción combinada por ingrediente: para cada ingrediente, la mecánica
@@ -331,7 +333,7 @@ export function BoxEntry({
           subSkills={member.sub_skills}
           skillLevel={member.skill_level}
           natureMeta={nature}
-          mainSkillName={species?.main_skill}
+          mainSkillName={skill}
           tierBySubSkill={tierBySubSkill}
           showSkillLevel={false}
           showIngredients={false}

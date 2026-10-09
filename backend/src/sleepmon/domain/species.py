@@ -3,7 +3,7 @@
 Cada especie fija su número de Pokédex, qué baya carga, su tipo de sueño, su main
 skill y —lo que usa la validación— qué ingredientes son posibles en cada slot.
 
-Dataset completo del juego: 248 especies/formas. Generado desde nitoyon
+Dataset completo del juego: 249 especies/formas. Generado desde nitoyon
 (``pokesleep-tool``, ``src/data/pokemon.json``: sleep type, especialidad, skill,
 frecuencia, %ingrediente/%skill, ingredientes con cantidades por slot, inventario
 base y ``evolutionCount`` -> ``evolution_stage``)
@@ -12,9 +12,9 @@ especialidad/skill de cada especie. La baya sale del tipo del Pokémon (bijecci�
 fija del juego). Ampliarlo o corregirlo es solo agregar/editar entradas de
 ``SEED_SPECIES``.
 
-Darkrai, a mythical "All" specialist, draws every slot from an ingredient pool
-(``pool_slots``) instead of the prefix rule. Mew is still missing: its Versatile
-skill needs a per-member skill choice.
+The mythicals (Darkrai, Mew), "All" specialists, draw every slot from an ingredient
+pool (``pool_slots``) instead of the prefix rule. Mew's "Versatile" skill is a
+per-member choice, resolved in ``domain/versatile.py``.
 """
 
 from __future__ import annotations
@@ -184,6 +184,16 @@ class Species:
 _DARKRAI_POOL = (
     I.FANCY_APPLE, I.FIERY_HERB, I.BEAN_SAUSAGE, I.MOOMOO_MILK,
     I.HONEY, I.GREENGRASS_SOYBEANS, I.GREENGRASS_CORN, I.ROUSING_COFFEE,
+)
+
+# Mew's ingredient pool; Slowpoke Tail only comes at the level-60 slot.
+_MEW_EARLY_POOL = (
+    I.LARGE_LEEK, I.FANCY_EGG, I.FIERY_HERB, I.BEAN_SAUSAGE,
+    I.PURE_OIL, I.GREENGRASS_SOYBEANS, I.GLOSSY_AVOCADO,
+)
+_MEW_POOL = (
+    I.LARGE_LEEK, I.FANCY_EGG, I.FIERY_HERB, I.BEAN_SAUSAGE,
+    I.PURE_OIL, I.SLOWPOKE_TAIL, I.GREENGRASS_SOYBEANS, I.GLOSSY_AVOCADO,
 )
 
 SEED_SPECIES: tuple[Species, ...] = (
@@ -1677,5 +1687,14 @@ SEED_SPECIES: tuple[Species, ...] = (
         ((2, 2, 2, 2, 2, 2, 2, 2), (5, 3, 4, 4, 4, 4, 3, 3), (7, 5, 6, 6, 6, 6, 4, 4)),
         28,
         pool_slots=(_DARKRAI_POOL,) * MAX_INGREDIENTS,
+    ),
+    Species(
+        "Mew", 151, Specialty.ALL, Berry.MAGO, SleepType.SNOOZING,
+        "Versatile",
+        _MEW_POOL,
+        2900, 20, 4,
+        ((2, 2, 2, 2, 2, 2, 2), (3, 4, 4, 4, 4, 5, 3), (4, 6, 5, 7, 6, 2, 7, 4)),
+        26,
+        pool_slots=(_MEW_EARLY_POOL, _MEW_EARLY_POOL, _MEW_POOL),
     ),
 )

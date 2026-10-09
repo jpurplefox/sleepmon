@@ -80,6 +80,7 @@ describe("maxSkillLevel", () => {
     expect(maxSkillLevel("Energizing Cheer S")).toBe(6);
     expect(maxSkillLevel("Dream Shard Magnet S")).toBe(8);
     expect(maxSkillLevel("Dream Shard Magnet S (Aura Sphere)")).toBe(8);
+    expect(maxSkillLevel("Versatile")).toBe(8);
     expect(maxSkillLevel("Berry Zone (Psystrike)")).toBe(6);
     expect(maxSkillLevel("Charge Strength S")).toBe(7);
     expect(maxSkillLevel(undefined)).toBe(7);

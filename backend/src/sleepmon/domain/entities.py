@@ -94,6 +94,8 @@ class TeamMember:
     # Pokémon (caramelos, sub skills de Skill Level Up). Determina la salida de las
     # skills que escalan por nivel, como Ingredient Draw S.
     skill_level: int = 1
+    # Mew's chosen Versatile skill; None for every other species.
+    versatile_skill: str | None = None
     id: UUID = field(default_factory=uuid4)
 
     def __post_init__(self) -> None:

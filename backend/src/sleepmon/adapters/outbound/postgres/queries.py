@@ -17,8 +17,10 @@ _P = Parameter("%s")
 
 INSERT_MEMBER = (
     Query.into(member)
-    .columns("id", "species", "level", "nature", "ribbon", "skill_level", "user_id")
-    .insert(_P, _P, _P, _P, _P, _P, _P)
+    .columns(
+        "id", "species", "level", "nature", "ribbon", "skill_level", "versatile_skill", "user_id"
+    )
+    .insert(_P, _P, _P, _P, _P, _P, _P, _P)
     .get_sql()
 )
 
@@ -37,6 +39,7 @@ _MEMBER_COLS = (
     member.nature,
     member.ribbon,
     member.skill_level,
+    member.versatile_skill,
 )
 
 SELECT_MEMBERS_ALL = (
@@ -106,6 +109,7 @@ UPDATE_MEMBER = (
     .set(member.nature, _P)
     .set(member.ribbon, _P)
     .set(member.skill_level, _P)
+    .set(member.versatile_skill, _P)
     .where((member.id == _P) & (member.user_id == _P))
     .get_sql()
 )

@@ -35,10 +35,15 @@ the game's rules?"*.
 - **Nature** (optional, default none) — shows each nature's effect (the stat it
   raises and the one it lowers).
 - **Ingredients** — **3 slots**, unlocking at 1 / 30 / 60; each slot offers the
-  species' valid options. A mythical (Darkrai) offers its **whole ingredient pool** in
-  **every** slot, each with that slot's amount; repeats are allowed.
+  species' valid options. A mythical (Darkrai, Mew) offers its **whole ingredient pool**
+  in **every** slot, each with that slot's amount; repeats are allowed (Mew's Slowpoke
+  Tail only comes at the Lv 60 slot).
 - **Sub skills** — up to **5**, unlocking at 10 / 25 / 50 / 70 / 80; each unique.
 - **Main skill level** — from 1 up to the skill's maximum (typically 7).
+- **Mew's skill** — Mew's main skill, *Versatile*, is one of **12 skills** that each
+  Mew carries. Its name in the skill stepper opens a menu to pick it; a new Mew starts
+  with **Metronome**, as in the game. The stepper reaches Versatile's level 8, and the
+  description shows the chosen skill at its own maximum when that is lower.
 - **Ribbon** (optional, default none) — steps through the research thresholds
   (200 / 500 / 1000 / 2000 h), each showing its bonus.
 

@@ -43,6 +43,7 @@ class TeamMemberInput:
     sub_skills: list[str] = field(default_factory=list)
     ribbon: str = ""  # vacío = sin listón
     skill_level: int = 1  # nivel de la main skill (1..MAX_SKILL_LEVEL)
+    versatile_skill: str = ""  # Mew's chosen skill; empty = none (Mew: Metronome)
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,6 +75,7 @@ class ProductionInput:
     sub_skills: list[str] = field(default_factory=list)
     ribbon: str = ""  # vacío = sin listón
     skill_level: int = 1  # nivel de la main skill (1..MAX_SKILL_LEVEL)
+    versatile_skill: str = ""  # Mew's chosen skill; empty = none (Mew: Metronome)
     # Comparison's map terms (PRD 0002), resolved exactly like Team Analysis's.
     island: str | None = None
     favorite_berries: list[str] = field(default_factory=list)

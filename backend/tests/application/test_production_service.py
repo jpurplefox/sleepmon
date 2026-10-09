@@ -79,7 +79,7 @@ def test_compute_production_unknown_species_rejected(
     with pytest.raises(SpeciesNotFoundError):
         production_service.compute_production(
             ProductionInput(
-                species="Mew",
+                species="MissingNo.",
                 level=60,
                 ingredients=["Fancy Apple", "Warming Ginger", "Fancy Egg"],
             )
@@ -1447,3 +1447,45 @@ def test_team_members_use_the_requested_sleep(
 def test_an_invalid_sleep_is_rejected(production_service: DefaultProductionService) -> None:
     with pytest.raises(ValidationError):
         production_service.compute_production(_pokemon(sleep=SleepInput(night_minutes=60)))
+
+
+_MEW_INGREDIENTS = ["Fancy Egg", "Fancy Egg", "Fancy Egg"]
+
+
+def test_mew_produces_with_its_chosen_skill(production_service: DefaultProductionService) -> None:
+    result = production_service.compute_production(
+        _pokemon(species="Mew", ingredients=_MEW_INGREDIENTS, versatile_skill="Charge Energy S")
+    )
+    assert result.skill_percentage == 6.4
+    assert result.skill_self_energy is not None
+    assert result.skill_strength is None
+
+
+def test_mew_without_a_choice_produces_as_metronome(
+    production_service: DefaultProductionService,
+) -> None:
+    result = production_service.compute_production(
+        _pokemon(species="Mew", ingredients=_MEW_INGREDIENTS)
+    )
+    assert result.skill_percentage == 4
+    assert result.skill_strength is None
+
+
+def test_team_production_uses_mew_chosen_skill(
+    production_service: DefaultProductionService,
+) -> None:
+    mew = _entry(
+        "mew", species="Mew", ingredients=_MEW_INGREDIENTS, versatile_skill="Charge Strength M"
+    )
+    result = production_service.compute_team_production(
+        TeamProductionInput(slots=[SlotInput(entries=[mew])], meals=[None, None, None])
+    )
+    (member,) = result.members
+    assert member.production.skill_strength is not None
+
+
+def test_versatile_skill_rejected_for_other_species(
+    production_service: DefaultProductionService,
+) -> None:
+    with pytest.raises(ValidationError):
+        production_service.compute_production(_pokemon(versatile_skill="Charge Strength M"))

@@ -94,7 +94,7 @@ def test_species_lookup_is_case_insensitive(service: DefaultTeamService) -> None
 
 def test_unknown_species_rejected(service: DefaultTeamService) -> None:
     with pytest.raises(SpeciesNotFoundError):
-        service.add_member(UID, valid_input(species="Mew"))
+        service.add_member(UID, valid_input(species="MissingNo."))
 
 
 def test_darkrai_accepts_any_pool_ingredient_in_every_slot(
@@ -105,6 +105,50 @@ def test_darkrai_accepts_any_pool_ingredient_in_every_slot(
         valid_input(species="Darkrai", ingredients=["Rousing Coffee"] * 3),
     )
     assert member.ingredients == (Ingredient.ROUSING_COFFEE,) * 3
+
+
+_MEW_INGREDIENTS = ["Fancy Egg", "Fancy Egg", "Fancy Egg"]
+
+
+def test_mew_keeps_its_chosen_skill(service: DefaultTeamService) -> None:
+    member = service.add_member(
+        UID, valid_input(species="Mew", ingredients=_MEW_INGREDIENTS, versatile_skill="Berry Burst")
+    )
+    assert member.versatile_skill == "Berry Burst"
+    assert service.get_member(UID, member.id).versatile_skill == "Berry Burst"
+
+
+def test_mew_without_a_choice_is_saved_with_metronome(service: DefaultTeamService) -> None:
+    member = service.add_member(UID, valid_input(species="Mew", ingredients=_MEW_INGREDIENTS))
+    assert member.versatile_skill == "Metronome"
+
+
+def test_mew_rejects_a_skill_outside_its_list(service: DefaultTeamService) -> None:
+    with pytest.raises(ValidationError):
+        service.add_member(
+            UID,
+            valid_input(
+                species="Mew", ingredients=_MEW_INGREDIENTS, versatile_skill="Ingredient Draw S"
+            ),
+        )
+
+
+def test_other_species_have_no_versatile_skill(service: DefaultTeamService) -> None:
+    assert service.add_member(UID, valid_input()).versatile_skill is None
+    with pytest.raises(ValidationError):
+        service.add_member(UID, valid_input(versatile_skill="Charge Strength M"))
+
+
+def test_box_production_uses_mew_chosen_skill(service: DefaultTeamService) -> None:
+    service.add_member(
+        UID,
+        valid_input(
+            species="Mew", ingredients=_MEW_INGREDIENTS, versatile_skill="Charge Strength M"
+        ),
+    )
+    ((_, production),) = service.list_members_with_production(UID)
+    assert production is not None
+    assert production.skill_strength is not None
 
 
 def test_invalid_nature_rejected(service: DefaultTeamService) -> None:

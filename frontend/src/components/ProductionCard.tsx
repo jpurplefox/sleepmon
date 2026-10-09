@@ -22,6 +22,7 @@ import {
 import { spriteUrl } from "../sprites";
 import { unmodeledSkillKey } from "../skills";
 import { subSkillIcon } from "../subskills";
+import { effectiveSkill } from "../versatile";
 import type {
   BerryRole,
   BerryYield,
@@ -177,7 +178,7 @@ export function ProductionCard({
   const teammateIngs = d?.teammate_ingredients ?? [];
   const teammateIngAmount = teammateIngs.reduce((acc, s) => acc + s.amount, 0);
 
-  const unmodeledKey = unmodeledSkillKey(species?.main_skill);
+  const unmodeledKey = unmodeledSkillKey(effectiveSkill(species?.main_skill, config.versatile_skill));
 
   const marks = d
     ? expertMarks({

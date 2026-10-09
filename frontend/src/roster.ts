@@ -61,5 +61,6 @@ export function configFromMember(catalog: Catalog, m: Member): MemberInput | nul
     sub_skills: m.sub_skills,
     ribbon: m.ribbon,
     skill_level: m.skill_level,
+    ...(m.versatile_skill ? { versatile_skill: m.versatile_skill } : {}),
   };
 }

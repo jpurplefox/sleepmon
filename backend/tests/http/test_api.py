@@ -168,6 +168,57 @@ def test_catalog_serves_the_pot_ladder(client: TestClient) -> None:
     assert len(body["pot_ladder"]) == 23
 
 
+def test_catalog_lists_the_versatile_skills(client: TestClient) -> None:
+    body = client.get("/catalog").json()
+    assert len(body["versatile_skills"]) == 12
+    assert "Metronome" in body["versatile_skills"]
+
+
+def test_member_carries_mew_chosen_skill(client: TestClient, auth_header: dict[str, str]) -> None:
+    mew = valid_payload(
+        species="Mew", ingredients=["Fancy Egg"] * 3, versatile_skill="Charge Strength M"
+    )
+    created = client.post("/team", json=mew, headers=auth_header).json()
+    assert created["versatile_skill"] == "Charge Strength M"
+    listing = client.get("/team", headers=auth_header).json()
+    assert listing[0]["versatile_skill"] == "Charge Strength M"
+    assert listing[0]["production"]["skill_strength"] is not None
+
+
+def test_other_members_have_no_versatile_skill(
+    client: TestClient, auth_header: dict[str, str]
+) -> None:
+    created = client.post("/team", json=valid_payload(), headers=auth_header).json()
+    assert created["versatile_skill"] is None
+
+
+def test_production_accepts_a_null_versatile_skill(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json={
+            "species": "Pikachu",
+            "level": 30,
+            "ingredients": ["Fancy Apple", "Warming Ginger", "Fancy Egg"],
+            "versatile_skill": None,
+        },
+    )
+    assert res.status_code == 200
+
+
+def test_production_takes_mew_chosen_skill(client: TestClient) -> None:
+    body = client.post(
+        "/production",
+        json={
+            "species": "Mew",
+            "level": 30,
+            "ingredients": ["Fancy Egg"] * 3,
+            "versatile_skill": "Charge Energy S",
+        },
+    ).json()
+    assert body["skill_percentage"] == 6.4
+    assert body["skill_self_energy"] is not None
+
+
 def test_create_and_list_member(client: TestClient, auth_header: dict[str, str]) -> None:
     res = client.post("/team", json=valid_payload(), headers=auth_header)
     assert res.status_code == 201

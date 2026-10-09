@@ -102,6 +102,7 @@ from sleepmon.domain.value_objects import (
     Type,
     WeeklyBonus,
 )
+from sleepmon.domain.versatile import VERSATILE, resolve_versatile
 
 
 def _with_granted_helps(daily: DailyProduction, helped: HelpedYields) -> DailyProduction:
@@ -236,7 +237,7 @@ def _resolve_config(catalog: SpeciesCatalog, data: ProductionInput) -> _Resolved
     _validate_ingredients(species, ingredients)
 
     return _ResolvedConfig(
-        species=species,
+        species=resolve_versatile(species, data.versatile_skill),
         level=data.level,
         ingredients=ingredients,
         nature=nature,
@@ -421,7 +422,7 @@ class DefaultTeamService(TeamService):
         if species is None:  # especie fuera del catálogo curado: sin producción
             return None
         result = daily_production(
-            species,
+            resolve_versatile(species, member.versatile_skill),
             member.ingredients,
             member.level,
             member.nature,
@@ -502,6 +503,8 @@ class DefaultTeamService(TeamService):
         ribbon = parse_enum(Ribbon, data.ribbon, "ribbon")
 
         _validate_ingredients(species, ingredients)
+        resolved = resolve_versatile(species, data.versatile_skill)
+        versatile_skill = resolved.main_skill if species.main_skill == VERSATILE else None
 
         # El constructor de TeamMember aplica las invariantes absolutas (rango de
         # nivel, topes MAX_INGREDIENTS/MAX_SUB_SKILLS, sub skills sin repetir). NO
@@ -517,6 +520,7 @@ class DefaultTeamService(TeamService):
                 sub_skills=sub_skills,
                 ribbon=ribbon,
                 skill_level=data.skill_level,
+                versatile_skill=versatile_skill,
             )
         return TeamMember(
             id=member_id,
@@ -527,6 +531,7 @@ class DefaultTeamService(TeamService):
             sub_skills=sub_skills,
             ribbon=ribbon,
             skill_level=data.skill_level,
+            versatile_skill=versatile_skill,
         )
 
 

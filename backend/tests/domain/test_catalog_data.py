@@ -168,8 +168,8 @@ def test_species_names_are_unique() -> None:
 
 
 def test_catalog_covers_the_full_helper_roster() -> None:
-    # Full game dataset (nitoyon cross-checked with nerolis-lab), except Mew.
-    assert len(SEED_SPECIES) == 248
+    # Full game dataset (nitoyon cross-checked with nerolis-lab).
+    assert len(SEED_SPECIES) == 249
     assert {sp.specialty for sp in SEED_SPECIES} == set(Specialty)
     assert {sp.sleep_type for sp in SEED_SPECIES} == set(SleepType)
 
@@ -292,6 +292,39 @@ def test_darkrai_has_its_real_data() -> None:
     assert darkrai.ingredient_percentage == 19.2
     assert darkrai.skill_percentage == 2.3
     assert darkrai.carry_limit == 28
+
+
+def test_mew_has_its_real_data() -> None:
+    mew = _by_name("Mew")
+    assert mew.dex == 151
+    assert mew.specialty is Specialty.ALL
+    assert mew.berry is Berry.MAGO
+    assert mew.sleep_type is SleepType.SNOOZING
+    assert mew.main_skill == "Versatile"
+    assert mew.help_frequency_seconds == 2900
+    assert mew.ingredient_percentage == 20
+    assert mew.skill_percentage == 4
+    assert mew.carry_limit == 26
+
+
+def test_mew_offers_slowpoke_tail_only_in_the_level_60_slot() -> None:
+    mew = _by_name("Mew")
+    early = (
+        I.LARGE_LEEK, I.FANCY_EGG, I.FIERY_HERB, I.BEAN_SAUSAGE,
+        I.PURE_OIL, I.GREENGRASS_SOYBEANS, I.GLOSSY_AVOCADO,
+    )
+    late = (
+        I.LARGE_LEEK, I.FANCY_EGG, I.FIERY_HERB, I.BEAN_SAUSAGE,
+        I.PURE_OIL, I.SLOWPOKE_TAIL, I.GREENGRASS_SOYBEANS, I.GLOSSY_AVOCADO,
+    )
+    assert mew.ingredient_slots == (early, early, late)
+    assert mew.ingredient_amounts == (
+        (2, 2, 2, 2, 2, 2, 2),
+        (3, 4, 4, 4, 4, 5, 3),
+        (4, 6, 5, 7, 6, 2, 7, 4),
+    )
+    assert not mew.allows_ingredient(1, I.SLOWPOKE_TAIL)
+    assert mew.ingredient_amount(2, I.SLOWPOKE_TAIL) == 2
 
 
 def test_darkrai_draws_every_slot_from_its_ingredient_pool() -> None:

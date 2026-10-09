@@ -56,6 +56,11 @@ describe("configFromMember", () => {
     ]);
   });
 
+  it("carries Mew's chosen skill", () => {
+    const mew = member({ versatile_skill: "Berry Burst" });
+    expect(configFromMember(catalog, mew)?.versatile_skill).toBe("Berry Burst");
+  });
+
   it("returns null for a species outside the catalog", () => {
     expect(configFromMember(catalog, member({ species: "Missingno" }))).toBeNull();
   });

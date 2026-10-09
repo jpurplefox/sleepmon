@@ -60,7 +60,7 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
 ### Berries
 
 - **Per help**: **1** berry normally, **2** for a **Berry specialist**, **+1** with
-  **Berry Finding S**. **All** specialists (the mythical Darkrai) also get **2**, and
+  **Berry Finding S**. **All** specialists (the mythicals Darkrai and Mew) also get **2**, and
   follow the Skill specialists' pity and per-sleep cap.
 - **Strength per berry at a level** = `round(max(base + (level − 1), base ×
   1.025^(level − 1)))` — linear at low levels, exponential (×1.025 per level) at high
@@ -98,6 +98,10 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
 - **Variants use their own numbers.** A variant shares its base skill's mechanic but
   not necessarily its amounts: **Lunar Blessing**, **Nuzzle**, and **Present** have
   smaller tables, and **Heal Pulse** gives its own amount to **two** teammates.
+  **Mew** produces with the skill it carries (see the [Pokémon form](0003-pokemon-form.md)),
+  and its skill rate depends on it: 6.4% for Charge Strength S (Random) and Charge
+  Energy S, 4.39% for Energizing Cheer S, 3.37% for Energy for Everyone S, 2.84% for
+  Berry Burst, 4% for the rest. Versatile's extra candies (Lv 6+) aren't counted.
   **Bad Dreams** (Darkrai) has its own, bigger strength table, and also **takes 12
   energy** from each non-Dark teammate per trigger: shown as a daily total, like the
   energy Energy for Everyone gives. **Super Luck** and **Hyper Cutter** draw from a fixed selection of ingredients, not

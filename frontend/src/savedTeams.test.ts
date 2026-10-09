@@ -123,6 +123,19 @@ describe("isUnsaved", () => {
     expect(isUnsaved(edited, team(), box, catalog)).toBe(true);
   });
 
+  it("is true when a Mew's chosen skill changes", () => {
+    const def = loaded();
+    const entry = def.slots[0].entries[0];
+    const edited = {
+      ...def,
+      slots: [
+        { ...def.slots[0], entries: [{ ...entry, config: { ...entry.config, versatile_skill: "Berry Burst" } }] },
+        def.slots[1],
+      ],
+    };
+    expect(isUnsaved(edited, team(), box, catalog)).toBe(true);
+  });
+
   it("is true when the map, berries, dish type or a meal changes", () => {
     const def = loaded();
     expect(isUnsaved({ ...def, island: null }, team(), box, catalog)).toBe(true);

@@ -84,6 +84,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
           sub_skills: e.config.sub_skills,
           ribbon: e.config.ribbon,
           skill_level: e.config.skill_level,
+          versatile_skill: e.config.versatile_skill,
           ...mapFields,
           sleep: progress.sleep,
         }),

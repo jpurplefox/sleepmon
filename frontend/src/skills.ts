@@ -214,6 +214,7 @@ export const MOONLIGHT_SHARED_ENERGY = [6.3, 7.7, 10.1, 13.0, 17.2, 22.8];
 export function maxSkillLevel(mainSkill: string | undefined): number {
   if (mainSkill?.startsWith("Helper Boost")) return HELPER_BOOST_HELPS.length; // 6
   if (mainSkill?.startsWith("Berry Zone (Psystrike)")) return BERRY_ZONE_PSYSTRIKE_STRENGTH.length; // 6
+  if (mainSkill === "Versatile") return 8;
   if (restoresTeamEnergy(mainSkill)) return ENERGY_FOR_EVERYONE_AMOUNTS.length; // E4E: 6
   if (chargesSelfEnergy(mainSkill)) return CHARGE_ENERGY_S_AMOUNTS.length; // Charge Energy: 6
   if (magnetsDreamShards(mainSkill)) return DREAM_SHARD_MAGNET_S_AMOUNTS.length; // Dream Shard: 8
