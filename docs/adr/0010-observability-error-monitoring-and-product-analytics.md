@@ -55,7 +55,8 @@ key is absent.
   initialised in the composition root (`app.py`) and wrapped with the AWS Lambda
   integration in `lambda_handler.py` so events are flushed before the runtime
   freezes. The domain and application layers never import it.
-- **Errors at 100%, traces sampled at ~10%** (configurable). Browser traces
+- **Every error is reported; traces are sampled**, at a rate set per
+  environment by configuration and tuned to traffic. Browser traces
   propagate to the API (`sentry-trace` / `baggage` headers, allowed by CORS), so
   a slow request reads as one trace across the frontend, the Lambda and its
   cold start.
