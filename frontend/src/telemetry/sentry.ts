@@ -5,6 +5,14 @@ import type { TelemetryConfig } from "./config";
 
 let enabled = false;
 
+/**
+ * DOM breadcrumbs (ui.click, ui.input, ...) carry the element's aria-label,
+ * title and alt, which hold the user's display name and team names: drop them.
+ */
+export function dropUiBreadcrumb(breadcrumb: Sentry.Breadcrumb): Sentry.Breadcrumb | null {
+  return breadcrumb.category?.startsWith("ui.") ? null : breadcrumb;
+}
+
 export function initSentry(cfg: TelemetryConfig): boolean {
   if (!cfg.sentryDsn) return false;
   Sentry.init({
@@ -12,7 +20,9 @@ export function initSentry(cfg: TelemetryConfig): boolean {
     release: cfg.release,
     environment: cfg.environment,
     sendDefaultPii: false,
-    integrations: [Sentry.browserTracingIntegration()],
+    // INP span descriptions are built from the same element labels.
+    integrations: [Sentry.browserTracingIntegration({ enableInp: false })],
+    beforeBreadcrumb: dropUiBreadcrumb,
     tracesSampleRate: cfg.tracesSampleRate,
     // Continue browser traces into the API only (sentry-trace / baggage headers).
     tracePropagationTargets: [cfg.apiUrl],

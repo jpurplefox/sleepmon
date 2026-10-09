@@ -51,6 +51,10 @@ def init_sentry(settings: Settings) -> bool:
         release=settings.sentry_release,
         traces_sample_rate=settings.sentry_traces_sample_rate,
         send_default_pii=False,
+        # Frame locals hold request DTOs (team names) and the signed-in user's
+        # email/display name; the default denylist does not cover them.
+        include_local_variables=False,
+        max_request_body_size="never",
         integrations=[LitestarIntegration()],
         before_send=scrub_event,
         before_send_transaction=scrub_event,

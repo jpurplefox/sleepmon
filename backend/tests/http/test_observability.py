@@ -129,3 +129,53 @@ def test_authenticated_request_tags_the_user(monkeypatch: pytest.MonkeyPatch) ->
     uid = guards.current_user_id(_Req())  # type: ignore[arg-type]
     assert uid == UUID("00000000-0000-0000-0000-000000000002")
     assert tagged == [uid]
+
+
+class _Client:
+    def __init__(self, active: bool) -> None:
+        self._active = active
+
+    def is_active(self) -> bool:
+        return self._active
+
+
+def test_init_sentry_starts_without_pii_locals_or_request_bodies(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[dict[str, Any]] = []
+    monkeypatch.setattr(observability.sentry_sdk, "get_client", lambda: _Client(active=False))
+    monkeypatch.setattr(observability.sentry_sdk, "init", lambda **kw: calls.append(kw))
+    settings = _replace(
+        Settings.from_env(),
+        sentry_dsn="https://k@o.ingest.sentry.io/1",
+        sentry_environment="production",
+        sentry_release="abc123",
+        sentry_traces_sample_rate=0.25,
+    )
+
+    assert init_sentry(settings) is True
+
+    assert len(calls) == 1
+    kwargs = calls[0]
+    assert kwargs["dsn"] == "https://k@o.ingest.sentry.io/1"
+    assert kwargs["environment"] == "production"
+    assert kwargs["release"] == "abc123"
+    assert kwargs["traces_sample_rate"] == 0.25
+    assert kwargs["send_default_pii"] is False
+    # Frame locals would carry request DTOs (team names) and the signed-in email.
+    assert kwargs["include_local_variables"] is False
+    assert kwargs["max_request_body_size"] == "never"
+    assert kwargs["before_send"] is scrub_event
+    assert kwargs["before_send_transaction"] is scrub_event
+
+
+def test_init_sentry_does_not_reinitialise_an_active_client(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[dict[str, Any]] = []
+    monkeypatch.setattr(observability.sentry_sdk, "get_client", lambda: _Client(active=True))
+    monkeypatch.setattr(observability.sentry_sdk, "init", lambda **kw: calls.append(kw))
+    settings = _replace(Settings.from_env(), sentry_dsn="https://k@o.ingest.sentry.io/1")
+
+    assert init_sentry(settings) is True
+    assert calls == []

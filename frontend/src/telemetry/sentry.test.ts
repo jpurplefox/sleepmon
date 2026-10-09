@@ -9,7 +9,7 @@ const Sentry = vi.hoisted(() => ({
 vi.mock("@sentry/react", () => Sentry);
 
 import { readTelemetryConfig } from "./config";
-import { initSentry, reportError, setErrorUser } from "./sentry";
+import { dropUiBreadcrumb, initSentry, reportError, setErrorUser } from "./sentry";
 
 afterEach(() => vi.clearAllMocks());
 
@@ -46,5 +46,23 @@ describe("sentry", () => {
     expect(Sentry.setUser).toHaveBeenCalledWith({ id: "u-1" });
     setErrorUser(null);
     expect(Sentry.setUser).toHaveBeenLastCalledWith(null);
+  });
+
+  it("keeps DOM labels out: no UI breadcrumbs and no INP spans", () => {
+    initSentry(readTelemetryConfig({ VITE_SENTRY_DSN: "https://k@o.ingest.de.sentry.io/1" }));
+    // INP span descriptions carry the element's aria-label/title (names, team names).
+    expect(Sentry.browserTracingIntegration).toHaveBeenCalledWith({ enableInp: false });
+    expect(Sentry.init).toHaveBeenCalledWith(expect.objectContaining({ beforeBreadcrumb: dropUiBreadcrumb }));
+  });
+
+  it("drops ui.* breadcrumbs and keeps the rest", () => {
+    expect(dropUiBreadcrumb({ category: "ui.click", message: "button[aria-label=\"Ana\"]" })).toBeNull();
+    expect(dropUiBreadcrumb({ category: "ui.input" })).toBeNull();
+    const nav = { category: "navigation", data: { from: "/", to: "/box" } };
+    expect(dropUiBreadcrumb(nav)).toBe(nav);
+    const fetchCrumb = { category: "fetch", data: { url: "/api" } };
+    expect(dropUiBreadcrumb(fetchCrumb)).toBe(fetchCrumb);
+    const plain = { message: "x" };
+    expect(dropUiBreadcrumb(plain)).toBe(plain);
   });
 });
