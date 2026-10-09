@@ -6657,3 +6657,15 @@ button.prod-card__base-tag--action {
     min-height: 0;
   }
 }
+
+.delete-account-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  font-size: var(--text-sm);
+}
+
+.delete-account-form .error {
+  margin: 0.5rem 0 0;
+}
