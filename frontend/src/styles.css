@@ -876,6 +876,7 @@ select:focus {
   align-items: center;
   gap: 0.4rem;
   flex: 0 0 auto;
+  max-width: 100%;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
@@ -895,9 +896,10 @@ select:focus {
   color: var(--muted);
 }
 
+/* Wraps only for a mythical's 8-ingredient pool on narrow screens. */
 .ingredient-slot__options {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 0.35rem;
   justify-content: center;
 }

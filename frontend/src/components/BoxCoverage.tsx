@@ -3,6 +3,7 @@ import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { mainIngredient } from "../ingredientProduction";
 import { contributesBerryRole, producesIngredients } from "../skills";
+import { SPECIALTIES, matchesSpecialty } from "../specialties";
 import type { Catalog, Member } from "../types";
 
 interface Props {
@@ -23,15 +24,15 @@ export function BoxCoverage({ members, catalog }: Props) {
   const skillOf = (m: Member) => speciesByName.get(m.species)?.main_skill;
 
   // Conteo por especialidad (en el orden del juego; 0 se muestra explícito).
-  const SPECIALTIES = ["Berries", "Ingredients", "Skills"];
-  const specialtyCount = (sp: string) => members.filter((m) => specialtyOf(m) === sp).length;
+  const specialtyCount = (sp: string) =>
+    members.filter((m) => matchesSpecialty(specialtyOf(m), sp)).length;
 
   // Cobertura de BAYAS: cuenta su baya si es especialista en Bayas, o si es
   // especialista en Skills y su habilidad cumple el rol de bayas (Charge Strength /
   // Berry Burst). Golem (Charge Strength pero especialidad Ingredientes) NO cuenta.
   const coversBerry = (m: Member): boolean => {
     const sp = specialtyOf(m);
-    return sp === "Berries" || (sp === "Skills" && contributesBerryRole(skillOf(m)));
+    return matchesSpecialty(sp, "Berries") || (sp === "Skills" && contributesBerryRole(skillOf(m)));
   };
   const allBerries = [...new Set(catalog.species.map((s) => s.berry))].sort();
   const coveredBerries = new Set(
@@ -46,7 +47,7 @@ export function BoxCoverage({ members, catalog }: Props) {
   // habilidad produce ingredientes (Ingredient Draw/Magnet). Solo el principal: un
   // ingrediente secundario de baja producción (la hierba de Dragonite) no cuenta.
   const coversIngredient = (m: Member): boolean =>
-    specialtyOf(m) === "Ingredients" || producesIngredients(skillOf(m));
+    matchesSpecialty(specialtyOf(m), "Ingredients") || producesIngredients(skillOf(m));
   const allIngredients = catalog.ingredients;
   const coveredIngredients = new Set(
     members

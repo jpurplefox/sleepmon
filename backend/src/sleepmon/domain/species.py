@@ -3,7 +3,7 @@
 Cada especie fija su número de Pokédex, qué baya carga, su tipo de sueño, su main
 skill y —lo que usa la validación— qué ingredientes son posibles en cada slot.
 
-Dataset completo del juego: 247 especies/formas. Generado desde nitoyon
+Dataset completo del juego: 248 especies/formas. Generado desde nitoyon
 (``pokesleep-tool``, ``src/data/pokemon.json``: sleep type, especialidad, skill,
 frecuencia, %ingrediente/%skill, ingredientes con cantidades por slot, inventario
 base y ``evolutionCount`` -> ``evolution_stage``)
@@ -12,10 +12,9 @@ especialidad/skill de cada especie. La baya sale del tipo del Pokémon (bijecci�
 fija del juego). Ampliarlo o corregirlo es solo agregar/editar entradas de
 ``SEED_SPECIES``.
 
-Se omiten Mew y Darkrai (los dos especialistas "All"): usan un mecanismo
-"Versatile"/comodín y el juego no publica sus cantidades de ingrediente por slot,
-así que no se pueden cargar con datos reales en el modelo de 3 ingredientes
-ordenados.
+Darkrai, a mythical "All" specialist, draws every slot from an ingredient pool
+(``pool_slots``) instead of the prefix rule. Mew is still missing: its Versatile
+skill needs a per-member skill choice.
 """
 
 from __future__ import annotations
@@ -59,7 +58,7 @@ class Species:
     #   slot 2 (nivel 60): cualquiera de los tres
     # Modelarlo como lista ordenada (y derivar los slots) hace imposible que un
     # ingrediente posterior aparezca en un slot temprano, y fija el orden de
-    # display al orden del juego. Largo 1..3.
+    # display al orden del juego. Largo 1..3 (a mythical lists its whole pool).
     ingredients: tuple[Ingredient, ...]
     # Datos de producción del juego (ver SEED_SPECIES).
     help_frequency_seconds: float  # frecuencia de ayuda base, en segundos (sin bonus)
@@ -80,6 +79,9 @@ class Species:
     # valen 2) y define el bonus de velocidad del listón. Las formas que no
     # evolucionan son 0.
     line_evolutions: int = 0
+    # Mythicals: each slot's own options (any pool ingredient fits any slot), aligned
+    # with ``ingredient_amounts``. Empty = the prefix rule over ``ingredients``.
+    pool_slots: tuple[tuple[Ingredient, ...], ...] = ()
 
     def __post_init__(self) -> None:
         if not 0 <= self.evolution_stage <= MAX_EVOLUTION_STAGE:
@@ -126,7 +128,7 @@ class Species:
         velocidad real (energía, nivel, sub skills) no cambia cuántas ayudas hacen
         falta, solo el tiempo en completarlas.
         """
-        if self.specialty is Specialty.SKILLS:
+        if self.specialty in (Specialty.SKILLS, Specialty.ALL):
             return round(SKILL_SPECIALIST_PITY_SECONDS / self.help_frequency_seconds)
         return SKILL_PITY_HELPS
 
@@ -155,7 +157,10 @@ class Species:
 
         Siempre devuelve ``MAX_INGREDIENTS`` slots; si la especie tiene menos de
         ese número de ingredientes, los slots de más repiten el prefijo completo.
+        Mythicals list their own options per slot (``pool_slots``).
         """
+        if self.pool_slots:
+            return self.pool_slots
         return tuple(self.ingredients[: i + 1] for i in range(MAX_INGREDIENTS))
 
     def allows_ingredient(self, slot: int, ingredient: Ingredient) -> bool:
@@ -175,6 +180,12 @@ class Species:
 # ``ingredient_amounts[slot][j]`` da las unidades de ``ingredient_slots[slot][j]``
 # (mismo ingrediente rinde más en slots altos; distintos ingredientes rinden distinto
 # en el mismo slot).
+# Darkrai's ingredient pool: any of these fits any slot.
+_DARKRAI_POOL = (
+    I.FANCY_APPLE, I.FIERY_HERB, I.BEAN_SAUSAGE, I.MOOMOO_MILK,
+    I.HONEY, I.GREENGRASS_SOYBEANS, I.GREENGRASS_CORN, I.ROUSING_COFFEE,
+)
+
 SEED_SPECIES: tuple[Species, ...] = (
     Species(
         "Bulbasaur", 1, Specialty.INGREDIENTS, Berry.DURIN, SleepType.DOZING,
@@ -1657,5 +1668,14 @@ SEED_SPECIES: tuple[Species, ...] = (
         "Charge Strength S",
         (I.TASTY_MUSHROOM, I.FANCY_EGG, I.SNOOZY_TOMATO),
         3500, 20.4, 4.7, ((2,), (5, 7), (7, 10, 11)), 14, 1, 1,
+    ),
+    Species(
+        "Darkrai", 491, Specialty.ALL, Berry.WIKI, SleepType.DOZING,
+        "Charge Strength M (Bad Dreams)",
+        _DARKRAI_POOL,
+        2900, 19.2, 2.3,
+        ((2, 2, 2, 2, 2, 2, 2, 2), (5, 3, 4, 4, 4, 4, 3, 3), (7, 5, 6, 6, 6, 6, 4, 4)),
+        28,
+        pool_slots=(_DARKRAI_POOL,) * MAX_INGREDIENTS,
     ),
 )

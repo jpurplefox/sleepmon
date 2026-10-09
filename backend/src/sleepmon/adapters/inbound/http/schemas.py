@@ -215,6 +215,7 @@ class ProductionOut(msgspec.Struct):
     skill_help_targets: int | None = None
     skill_candy: float | None = None
     skill_berry_juice: float | None = None
+    skill_energy_drain: float | None = None
     teammate_berries: list[BerryYieldOut] | None = None
     teammate_ingredients: list[SlotProductionOut] | None = None
 

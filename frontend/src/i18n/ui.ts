@@ -233,6 +233,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.skill": "Skill",
     "card.triggersTitle": "Activaciones de skill por día",
     "card.energyEach": "a cada compañero",
+    "card.energyDrain": "menos a cada compañero no Siniestro",
+    "card.energyDrainTitle":
+      "Energía que la skill le saca por día a cada compañero que no es de tipo Siniestro",
     "card.energyEachTitle":
       "Energía que la skill recupera por día a cada compañero del equipo",
     "card.randomIngredients": "ingredientes al azar",
@@ -812,6 +815,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.skill": "Skill",
     "card.triggersTitle": "Skill activations per day",
     "card.energyEach": "to each teammate",
+    "card.energyDrain": "off each non-Dark teammate",
+    "card.energyDrainTitle": "Energy the skill takes per day from each non-Dark-type teammate",
     "card.energyEachTitle":
       "Energy the skill restores per day to each teammate",
     "card.randomIngredients": "random ingredients",

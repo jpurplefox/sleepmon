@@ -384,6 +384,8 @@ export interface Production {
   // Items per day: candies of any Pokémon (Present) and Berry Juice; null otherwise.
   skill_candy?: number | null;
   skill_berry_juice?: number | null;
+  // Bad Dreams: Energy per day each non-Dark teammate loses; null otherwise.
+  skill_energy_drain?: number | null;
   // Berry Burst: per-berry yield from teammates (null without a team).
   teammate_berries: BerryYield[] | null;
   // Extra Helpful: ingredients obtained from teammates (null without a team).

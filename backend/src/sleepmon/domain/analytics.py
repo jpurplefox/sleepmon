@@ -157,6 +157,7 @@ _OPTIONAL_SKILL_FIELDS: tuple[str, ...] = (
 _EFFECT_KIND_TO_FIELD: tuple[tuple[str, str], ...] = (
     ("strength", "skill_strength"),
     ("energy", "skill_energy"),
+    ("energy_drain", "skill_energy_drain"),
     ("self_energy", "skill_self_energy"),
     ("dream_shards", "skill_dream_shards"),
     ("tasty_chance", "skill_tasty_chance"),

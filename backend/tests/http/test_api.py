@@ -578,6 +578,14 @@ def test_production_exposes_candy_and_berry_juice(client: TestClient) -> None:
     assert shuckle["skill_candy"] is None
 
 
+def test_production_exposes_the_bad_dreams_energy_drain(client: TestClient) -> None:
+    darkrai = client.post(
+        "/production",
+        json={"species": "Darkrai", "level": 30, "ingredients": ["Rousing Coffee"] * 3},
+    ).json()
+    assert darkrai["skill_energy_drain"] == pytest.approx(darkrai["skill_triggers"] * 12)
+
+
 def test_production_exposes_random_energy_for_energizing_cheer(client: TestClient) -> None:
     res = client.post(
         "/production",

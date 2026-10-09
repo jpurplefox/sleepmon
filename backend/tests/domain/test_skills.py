@@ -3,6 +3,7 @@ import pytest
 from sleepmon.domain.catalog_data import MAX_SKILL_LEVEL
 from sleepmon.domain.skills import (
     AURA_SPHERE_STRENGTH_AMOUNTS,
+    BAD_DREAMS_STRENGTH_AMOUNTS,
     BERRY_BURST_DISGUISE_OWN,
     BERRY_BURST_OWN,
     BERRY_BURST_PER_TEAMMATE,
@@ -64,6 +65,7 @@ from sleepmon.domain.skills import (
     restores_team_energy,
     skill_berry_juice,
     skill_candy,
+    skill_energy_drain,
     skill_strength_amount,
     tasty_chance_amount,
 )
@@ -261,6 +263,14 @@ def test_charge_strength_fixed_s_and_m_match_tables() -> None:
     assert skill_strength_amount("Charge Strength S", 7) == 3212
     assert skill_strength_amount("Charge Strength M", 1) == 880
     assert skill_strength_amount("Charge Strength M", 7) == 6858
+
+
+def test_bad_dreams_uses_its_own_strength_table() -> None:
+    assert BAD_DREAMS_STRENGTH_AMOUNTS == (2640, 3753, 5178, 7149, 9870, 13638, 18515)
+    for level in range(1, MAX_SKILL_LEVEL + 1):
+        assert skill_strength_amount("Charge Strength M (Bad Dreams)", level) == (
+            BAD_DREAMS_STRENGTH_AMOUNTS[level - 1]
+        )
 
 
 def test_charge_strength_random_uses_midpoint() -> None:
@@ -680,6 +690,11 @@ def test_moonlight_shares_energy_half_the_time() -> None:
 
 
 # --- Items a skill also gets: candy (Present) and Berry Juice ------------------
+
+
+def test_bad_dreams_drains_energy_from_each_non_dark_teammate() -> None:
+    assert skill_energy_drain("Charge Strength M (Bad Dreams)") == 12
+    assert skill_energy_drain("Charge Strength M") is None
 
 
 def test_present_sometimes_gets_candy() -> None:

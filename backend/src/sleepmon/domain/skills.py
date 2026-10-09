@@ -35,6 +35,8 @@ Modela, por ahora, tres main skills:
 - **Cooking Assist S** (+ Bulk Up): random ingredients like Ingredient Magnet; Bulk Up
   also raises the Extra Tasty rate (accumulated like Tasty Chance).
 - **Berry Zone (Psystrike)**: only its Strength; the Berry Zone boost isn't modeled.
+- **Charge Strength M (Bad Dreams)**: Strength (own table), and Energy taken from each
+  non-Dark teammate, reported like Energy for Everyone's.
 - **Energy for Everyone S (Lunar Blessing)**: smaller team energy, plus Berry-Burst-like
   berries that grow with the species sharing Cresselia's berry.
 - **Extra Helpful S**, **Helper Boost** and **Heal Pulse**: helps granted to one, every,
@@ -304,10 +306,15 @@ CHARGE_STRENGTH_S_STOCKPILE_AVERAGE: tuple[int, ...] = (600, 853, 1177, 1625, 22
 # Strength added by skills whose main effect is something else (levels 1..8 / 1..6).
 AURA_SPHERE_STRENGTH_AMOUNTS: tuple[int, ...] = (200, 285, 393, 542, 748, 1033, 1501, 2042)
 BERRY_ZONE_PSYSTRIKE_STRENGTH_AMOUNTS: tuple[int, ...] = (1408, 2002, 2762, 3813, 5264, 7274)
+# Bad Dreams (Darkrai): its own Charge Strength M table, and Energy taken from each
+# non-Dark teammate per trigger.
+BAD_DREAMS_ENERGY_DRAIN = 12
+BAD_DREAMS_STRENGTH_AMOUNTS: tuple[int, ...] = (2640, 3753, 5178, 7149, 9870, 13638, 18515)
 
 assert len(CHARGE_STRENGTH_S_AMOUNTS) == MAX_SKILL_LEVEL
 assert len(CHARGE_STRENGTH_S_STOCKPILE_AVERAGE) == MAX_SKILL_LEVEL
 assert len(CHARGE_STRENGTH_M_AMOUNTS) == MAX_SKILL_LEVEL
+assert len(BAD_DREAMS_STRENGTH_AMOUNTS) == MAX_SKILL_LEVEL
 assert len(CHARGE_STRENGTH_S_RANDOM_RANGES) == MAX_SKILL_LEVEL
 
 
@@ -326,6 +333,8 @@ def skill_strength_amount(main_skill: str, skill_level: int) -> float | None:
         table = BERRY_ZONE_PSYSTRIKE_STRENGTH_AMOUNTS
         return table[min(max(skill_level, 1), len(table)) - 1]
     level = min(max(skill_level, 1), MAX_SKILL_LEVEL)
+    if main_skill.startswith("Charge Strength M (Bad Dreams)"):
+        return BAD_DREAMS_STRENGTH_AMOUNTS[level - 1]
     if main_skill.startswith("Charge Strength M"):
         return CHARGE_STRENGTH_M_AMOUNTS[level - 1]
     if main_skill.startswith("Charge Strength S (Random)"):
@@ -667,6 +676,13 @@ def skill_candy(main_skill: str) -> float | None:
     """Expected candies per trigger (any Pokémon's); None for skills without candy."""
     if main_skill.startswith("Ingredient Magnet S (Present)"):
         return PRESENT_CANDY_CHANCE * PRESENT_CANDY_AMOUNT
+    return None
+
+
+def skill_energy_drain(main_skill: str) -> int | None:
+    """Energy each non-Dark teammate loses per trigger (Bad Dreams); None for other skills."""
+    if main_skill.startswith("Charge Strength M (Bad Dreams)"):
+        return BAD_DREAMS_ENERGY_DRAIN
     return None
 
 

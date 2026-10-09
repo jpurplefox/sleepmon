@@ -33,6 +33,10 @@ describe("tMainSkill", () => {
     );
   });
 
+  it("translates Darkrai's Bad Dreams variant", () => {
+    expect(tMainSkill("Charge Strength M (Bad Dreams)", "es")).toBe("Carga Vigor M (Mal Sueño)");
+  });
+
   it("falls back to the original when a base or variant is unknown", () => {
     expect(tMainSkill("Unknown Skill", "es")).toBe("Unknown Skill");
     expect(tMainSkill("Unknown Skill (Weird)", "es")).toBe("Unknown Skill (Weird)");
