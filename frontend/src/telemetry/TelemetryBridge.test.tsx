@@ -38,6 +38,8 @@ function renderAt(path: string) {
 describe("TelemetryBridge", () => {
   it("sends tool_viewed once per arrival on a tool", () => {
     const { loc, rerenderUi } = renderAt("/compare");
+    // A re-render that changes the session must not repeat the view.
+    auth.value = { status: "authenticated", user: { id: "u-1", email: "a@b.c" } };
     rerenderUi();
     act(() => loc.navigate("/box"));
     act(() => loc.navigate("/box"));
@@ -58,6 +60,25 @@ describe("TelemetryBridge", () => {
     rerenderUi();
     expect(rec.identities).toEqual(["u-1", null]);
     expect(sentry.setErrorUser).toHaveBeenLastCalledWith(null);
+  });
+
+  it("waits for the session check, then sends one tool_viewed after the context", () => {
+    auth.value = { status: "checking", user: null };
+    const { rerenderUi } = renderAt("/compare");
+    expect(rec.events).toEqual([]);
+    auth.value = { status: "anonymous", user: null };
+    rerenderUi();
+    expect(rec.events).toEqual([{ name: "tool_viewed", props: { tool: "compare" } }]);
+    expect(rec.log.indexOf("register")).toBeGreaterThanOrEqual(0);
+    expect(rec.log.indexOf("register")).toBeLessThan(rec.log.indexOf("capture"));
+  });
+
+  it("re-registers the context after sign-out", () => {
+    auth.value = { status: "authenticated", user: { id: "u-1", email: "a@b.c" } };
+    const { rerenderUi } = renderAt("/compare");
+    auth.value = { status: "anonymous", user: null };
+    rerenderUi();
+    expect(rec.contexts[rec.contexts.length - 1]).toEqual({ signed_in: false, language: "en" });
   });
 
   it("registers signed_in and language", () => {

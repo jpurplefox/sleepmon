@@ -22,6 +22,8 @@ const noopSink: AnalyticsSink = {
 };
 
 let sink: AnalyticsSink = noopSink;
+// Super-properties registered once at init; PostHog's reset() drops them.
+let initProps: Record<string, unknown> | null = null;
 
 function safely(run: () => void): void {
   try {
@@ -34,6 +36,7 @@ function safely(run: () => void): void {
 export function initAnalytics(cfg: TelemetryConfig): void {
   if (!cfg.posthogKey) {
     sink = noopSink;
+    initProps = null;
     return;
   }
   const key = cfg.posthogKey;
@@ -54,7 +57,8 @@ export function initAnalytics(cfg: TelemetryConfig): void {
       reset: () => posthog.reset(),
       register: (props) => posthog.register(props),
     };
-    sink.register({ release: cfg.release });
+    initProps = { release: cfg.release };
+    sink.register(initProps);
   });
 }
 
@@ -67,7 +71,10 @@ export function identify(userId: string): void {
 }
 
 export function resetIdentity(): void {
-  safely(() => sink.reset());
+  safely(() => {
+    sink.reset();
+    if (initProps) sink.register(initProps);
+  });
 }
 
 export function registerContext(ctx: { signed_in: boolean; language: Lang }): void {

@@ -9,7 +9,7 @@ const posthog = vi.hoisted(() => ({
 }));
 vi.mock("posthog-js", () => ({ default: posthog }));
 
-import { __setSink, initAnalytics, registerContext, track } from "./analytics";
+import { __setSink, initAnalytics, registerContext, resetIdentity, track } from "./analytics";
 import { readTelemetryConfig } from "./config";
 import { recordEvents } from "./testing";
 
@@ -41,6 +41,19 @@ describe("analytics", () => {
     expect(posthog.register).toHaveBeenCalledWith({ release: "abc" });
     track({ name: "tool_viewed", props: { tool: "box" } });
     expect(posthog.capture).toHaveBeenCalledWith("tool_viewed", { tool: "box" });
+  });
+
+  it("re-registers the init properties right after a reset", () => {
+    initAnalytics(readTelemetryConfig({ VITE_POSTHOG_KEY: "phc_x", VITE_RELEASE: "abc" }));
+    posthog.register.mockClear();
+    const order: string[] = [];
+    posthog.reset.mockImplementation(() => order.push("reset"));
+    posthog.register.mockImplementation(() => order.push("register"));
+    resetIdentity();
+    expect(order).toEqual(["reset", "register"]);
+    expect(posthog.register).toHaveBeenCalledWith({ release: "abc" });
+    posthog.reset.mockReset();
+    posthog.register.mockReset();
   });
 
   it("never throws when the sink fails", () => {

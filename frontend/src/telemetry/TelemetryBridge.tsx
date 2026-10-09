@@ -36,11 +36,14 @@ export function TelemetryBridge(): null {
     registerContext({ signed_in: status === "authenticated", language: lang });
   }, [status, lang]);
 
+  // Declared after the context effect so registerContext runs first: every
+  // tool_viewed must carry signed_in and language.
   useEffect(() => {
+    if (status === "checking") return;
     const tool = toolOf(location);
     if (tool !== null && tool !== lastTool.current) track({ name: "tool_viewed", props: { tool } });
     lastTool.current = tool;
-  }, [location]);
+  }, [location, status]);
 
   return null;
 }
