@@ -13,24 +13,39 @@ It is also what going public needs: Google only lets an app's sign-in leave test
 mode with a public privacy-policy URL, and a fan tool built on Pokémon names should say
 plainly that it is not affiliated with their owners.
 
-The scope is deliberately minimal: a button to delete your account, a short privacy
-page, and one footer line. Nothing more than that.
+The scope is deliberately minimal: an account page that ends with deleting the account,
+a short privacy page, and one footer line. Nothing more than that.
 
 ## What it does (scope)
 
-1. **Delete my account** — from the account menu, with a confirmation that requires
+1. **Your account** — a page reached from the account menu (*Account & privacy*): who
+   you are signed in as, what you have saved, a link to the privacy page and, last,
+   **Delete my account**.
+2. **Delete my account** — at the end of that page, with a confirmation that requires
    typing your email; deletes the account and everything saved on it, at once.
-2. **Privacy page** — a short public page (`/privacy`): what is kept, the analytics and
+3. **Privacy page** — a short public page (`/privacy`): what is kept, the analytics and
    error reports, how to delete, and the contact email.
-3. **Footer** — on every screen: a link to the privacy page, the contact email, and the
+4. **Footer** — on every screen: a link to the privacy page, the contact email, and the
    non-affiliation notice.
 
 ## How it works
 
+### Your account
+
+- The **account menu** (signed in) gains **Account & privacy**, a neutral item before
+  sign out. Deleting is deliberately *not* in the menu: it is one page away, never one
+  tap away.
+- It opens **Your account** (`/account`, signed in only; signed out it shows the usual
+  sign-in prompt):
+  - your Google photo, name and email;
+  - **What you have saved**: the Box (how many Pokémon), saved teams (how many), Player
+    profile (saved or not), and a link to the privacy page;
+  - last, **Delete your account**: one line saying it deletes everything at once and
+    cannot be undone, and a **Delete my account…** button.
+
 ### Delete my account
 
-- The **account menu** (signed in) gains **Delete my account**, last, after sign out.
-- It opens a confirmation dialog that states what will be lost, with the real counts:
+- **Delete my account…** opens a confirmation dialog that states what will be lost, with the real counts:
   *"This deletes your account, the 23 Pokémon in your Box, your 4 saved teams and your
   Player profile. It cannot be undone."* Counts of zero still read naturally
   ("your Box is empty", "no saved teams").
@@ -62,8 +77,8 @@ page, and one footer line. Nothing more than that.
   4. **Usage metrics and error reports:** anonymous usage of the tools (PostHog) and
      technical error reports (Sentry), tied only to an internal id — never your email or
      name; IP addresses are not stored.
-  5. **Deleting your data:** *Delete my account* in the account menu, or write to the
-     contact email.
+  5. **Deleting your data:** *Delete my account* at the end of *Your account* (account
+     menu → Account & privacy), or write to the contact email.
   6. **Last updated** date.
 
 ### Footer
@@ -89,7 +104,10 @@ page, and one footer line. Nothing more than that.
 - A failed deletion (e.g. no connection) → an error in the dialog, the account and its
   data intact, the typed email still in the field.
 - Closing the dialog (✕, Escape, Cancel) deletes nothing.
-- Signed out, the account menu (and so *Delete my account*) is not available.
+- The account menu has no delete item; *Account & privacy* opens *Your account*, which
+  shows the photo, name, email, "23 Pokémon", "4" saved teams and ends with *Delete my
+  account…*.
+- Signed out, `/account` shows the sign-in prompt instead of the page.
 - One user deleting their account leaves every other user's data untouched.
 - `/privacy` opens signed out, in Spanish when the language is ES and in English when
   EN, and shows the contact email and the last-updated date.
@@ -100,8 +118,8 @@ page, and one footer line. Nothing more than that.
 
 ## Guidelines
 
-- **Leaving is as easy as joining, and as deliberate.** One menu item, one confirmation;
-  the typed email exists only to prevent accidents, never as a hurdle.
+- **Leaving is always possible, never accidental.** One page away from the menu, one
+  confirmation; the typed email exists only to prevent accidents, never as a hurdle.
 - **Delete means delete.** No soft delete, no grace period, no hidden copy of the
   account's data in the app.
 - **The privacy page tells the truth in a few lines.** When what is stored or sent
