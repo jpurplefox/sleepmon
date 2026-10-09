@@ -12,6 +12,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from litestar import Litestar, Request, Response
+from litestar.config.compression import CompressionConfig
 from litestar.config.cors import CORSConfig
 from litestar.datastructures import State
 from litestar.di import Provide
@@ -138,7 +139,7 @@ def create_app(
 
     if service is None:
         settings = settings or Settings.from_env()
-        team_pool = create_pool(settings.database_url)
+        team_pool = create_pool(settings.database_url, size=settings.db_pool_size)
         pool = team_pool
         repository = PostgresTeamRepository(team_pool)
         progress = PostgresPlayerProgressRepository(team_pool)
@@ -163,7 +164,7 @@ def create_app(
         # Reutiliza el pool del team repository si ya existe; si no, abre uno solo
         # (nunca dos pools contra la misma base).
         if pool is None:
-            auth_pool = create_pool(settings.database_url)
+            auth_pool = create_pool(settings.database_url, size=settings.db_pool_size)
             pool = auth_pool
             on_shutdown.append(lambda: auth_pool.close())
         else:
@@ -182,7 +183,7 @@ def create_app(
         settings = settings or Settings.from_env()
         # Reuses the pool the team repository (or auth) already opened; never a third.
         if pool is None:
-            progress_pool = create_pool(settings.database_url)
+            progress_pool = create_pool(settings.database_url, size=settings.db_pool_size)
             pool = progress_pool
             on_shutdown.append(lambda: progress_pool.close())
         else:
@@ -195,7 +196,7 @@ def create_app(
         settings = settings or Settings.from_env()
         # Reuses the pool already opened above; never a second one.
         if pool is None:
-            saved_pool = create_pool(settings.database_url)
+            saved_pool = create_pool(settings.database_url, size=settings.db_pool_size)
             pool = saved_pool
             on_shutdown.append(lambda: saved_pool.close())
         else:
@@ -269,5 +270,8 @@ def create_app(
             allow_origins=cors_origins,
             allow_credentials=True,
         ),
+        # gzip responses over 500 bytes when the client accepts it: the catalog shrinks
+        # ~10x, which cuts load time and the API's data-transfer bill alike.
+        compression_config=CompressionConfig(backend="gzip", gzip_compress_level=6),
         on_shutdown=on_shutdown,
     )

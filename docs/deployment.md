@@ -47,8 +47,9 @@ The security group that already lets whos-that in covers this too (same instance
 `migrate.py` creates the whole schema on first run.
 
 > Connection budget: the smallest RDS instance caps `max_connections` at a few
-> dozen, now shared with whos-that. Keep the Lambda pool small; if it saturates,
-> add RDS Proxy.
+> dozen, now shared with whos-that. Each Lambda instance holds **one** connection
+> (the entry point sizes the pool to 1), so sleepmon never holds more connections
+> than the function's reserved concurrency (step 4). If that saturates, add RDS Proxy.
 
 ### 2. ECR repository
 
@@ -84,6 +85,10 @@ aws ecr create-repository --repository-name sleepmon-lambda --region sa-east-1
   - `COOKIE_SAMESITE=none` — **required** when the frontend and API are on different
     domains (CloudFront vs. Function URL); the refresh cookie is cross-site.
     Use `strict` only if you serve the API under the same domain as the frontend.
+- Set **reserved concurrency** (Configuration → Concurrency) to **5**. The Function
+  URL has no rate limiting, so this caps both the cost of abuse and the connections
+  sleepmon can open on the shared RDS; requests beyond it get `429`. Setting it to
+  `0` is the emergency off switch.
 - Give the function enough memory/timeout for a cold start opening the DB pool
   (256–512 MB, ~10 s timeout is a safe start).
 
@@ -128,6 +133,14 @@ build bakes them into the bundle; an unset variable never fails the build.
 | `SENTRY_TRACES_SAMPLE_RATE` | Browser trace sample rate (`VITE_SENTRY_TRACES_SAMPLE_RATE`). |
 
 Locally, `docker compose` passes `VITE_CONTACT_EMAIL` through from your shell or `.env`.
+
+## Cost guard
+
+- An **AWS Budget** with an email alert, monthly plus a daily one (e.g. USD 5/day),
+  so abuse shows up within hours. A budget only alerts; the off switch is reserved
+  concurrency `0` (step 4).
+- API responses are gzipped (the catalog is ~100 KB of JSON, ~10 KB compressed),
+  which keeps data transfer, the dominant cost of a flood of requests, small.
 
 ## Third-party project settings
 

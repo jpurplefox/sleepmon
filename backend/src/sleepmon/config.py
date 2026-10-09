@@ -53,6 +53,9 @@ class Settings:
     sentry_environment: str = "development"
     sentry_traces_sample_rate: float = 0.0
     sentry_release: str | None = None
+    # Connections each process keeps open. A Lambda instance serves one request at a
+    # time, so the Lambda entry point lowers it to 1 (connections = instances).
+    db_pool_size: int = 4
 
     @classmethod
     def from_env(cls) -> Settings:
