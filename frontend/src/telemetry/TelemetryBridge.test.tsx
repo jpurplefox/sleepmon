@@ -9,6 +9,11 @@ const auth = vi.hoisted(() => ({
 vi.mock("../auth/AuthContext", () => ({ useAuth: () => auth.value }));
 const sentry = vi.hoisted(() => ({ setErrorUser: vi.fn() }));
 vi.mock("./sentry", () => sentry);
+const start = vi.hoisted(() => vi.fn(() => Promise.resolve()));
+vi.mock("./analytics", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./analytics")>()),
+  startAnalytics: start,
+}));
 
 import { LanguageProvider } from "../i18n";
 import { recordEvents } from "./testing";
@@ -20,7 +25,10 @@ beforeEach(() => {
   auth.value = { status: "anonymous", user: null };
   rec = recordEvents();
 });
-afterEach(() => rec.restore());
+afterEach(() => {
+  rec.restore();
+  start.mockClear();
+});
 
 function renderAt(path: string) {
   const loc = memoryLocation({ path, record: true });
@@ -90,5 +98,19 @@ describe("TelemetryBridge", () => {
     auth.value = { status: "authenticated", user: { id: "u-1", email: "a@b.c" } };
     renderAt("/box");
     expect(JSON.stringify([rec.events, rec.identities, rec.contexts])).not.toContain("a@b.c");
+  });
+
+  it("starts analytics only once the session check settles, with the id when signed in", () => {
+    auth.value = { status: "checking", user: null };
+    const { rerenderUi } = renderAt("/compare");
+    expect(start).not.toHaveBeenCalled();
+    auth.value = { status: "authenticated", user: { id: "u-1", email: "a@b.c" } };
+    rerenderUi();
+    expect(start).toHaveBeenCalledWith("u-1");
+  });
+
+  it("starts analytics anonymous when the check settles signed out", () => {
+    renderAt("/compare");
+    expect(start).toHaveBeenCalledWith(null);
   });
 });

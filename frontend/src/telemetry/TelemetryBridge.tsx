@@ -5,7 +5,7 @@ import { useLocation } from "wouter";
 
 import { useAuth } from "../auth/AuthContext";
 import { useI18n } from "../i18n";
-import { identify, registerContext, resetIdentity, track } from "./analytics";
+import { identify, registerContext, resetIdentity, startAnalytics, track } from "./analytics";
 import { setErrorUser } from "./sentry";
 import { toolOf } from "./toolOf";
 import type { Tool } from "./events";
@@ -20,6 +20,8 @@ export function TelemetryBridge(): null {
 
   useEffect(() => {
     if (status === "checking") return;
+    // First settle only (later calls are ignored): bootstraps the signed-in id.
+    void startAnalytics(userId);
     if (userId !== null && identified.current !== userId) {
       identify(userId);
       setErrorUser(userId);

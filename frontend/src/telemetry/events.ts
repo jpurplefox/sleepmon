@@ -52,3 +52,35 @@ export type AnalyticsEvent =
   | { name: "signed_out"; props: NoProps }
   | { name: "species_missing"; props: { species: string; tool: "compare" | "team_analysis" } }
   | { name: "compare_limit_reached"; props: NoProps };
+
+/**
+ * Every catalogue name at runtime, for PostHog's `before_send` allowlist.
+ * `satisfies` rejects a name outside the catalogue; events.test.ts fails the
+ * type-check if a catalogue name is missing here.
+ */
+export const EVENT_NAMES = [
+  "tool_viewed",
+  "pokemon_added",
+  "box_pokemon_saved",
+  "box_pokemon_deleted",
+  "list_filtered",
+  "list_sorted",
+  "team_saved",
+  "team_opened",
+  "team_renamed",
+  "team_deleted",
+  "map_set",
+  "dish_type_set",
+  "meals_set",
+  "event_effect_added",
+  "good_camp_ticket_set",
+  "profile_saved",
+  "language_changed",
+  "sign_in_prompted",
+  "sign_in_completed",
+  "sign_in_abandoned",
+  "sign_in_failed",
+  "signed_out",
+  "species_missing",
+  "compare_limit_reached",
+] as const satisfies readonly AnalyticsEvent["name"][];
