@@ -169,13 +169,15 @@ export function MemberForm({
 
       {footer}
 
-      <button
-        className="btn btn--primary"
-        type="submit"
-        disabled={pending || !species || speciesUnknown || !ingredientsComplete}
-      >
-        {pending ? t("form.saving") : label}
-      </button>
+      <div className="form__submit">
+        <button
+          className="btn btn--primary"
+          type="submit"
+          disabled={pending || !species || speciesUnknown || !ingredientsComplete}
+        >
+          {pending ? t("form.saving") : label}
+        </button>
+      </div>
     </form>
   );
 }

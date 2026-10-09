@@ -10,6 +10,7 @@ import { ActionMenu } from "../components/ActionMenu";
 import { IconClose, IconOpen, IconTrash } from "../components/icons";
 import { Modal } from "../components/Modal";
 import { Placeholder } from "../components/Placeholder";
+import { Tooltip } from "../components/Tooltip";
 import { ContextBar, ContextField, ToolHeader } from "../components/ToolHeader";
 import { useI18n } from "../i18n";
 import { RECIPE_TYPES, dishTypeLabelKey, recipeImage } from "../recipes";
@@ -73,9 +74,9 @@ function ChoiceFilter<V extends string | null>({
 function Sprite({ catalog, species }: { catalog: Catalog; species: string }) {
   const dex = catalog.species.find((s) => s.name === species)?.dex;
   return dex ? (
-    <img className="team-slot-mini__sprite" src={spriteUrl(dex)} alt={species} title={species} />
+    <img className="team-slot-mini__sprite" src={spriteUrl(dex)} alt={species} />
   ) : (
-    <span className="team-slot-mini__sprite team-slot-mini__sprite--unknown" title={species}>
+    <span className="team-slot-mini__sprite team-slot-mini__sprite--unknown">
       ?
     </span>
   );
@@ -97,23 +98,28 @@ function SlotMini({
   if (species.length < 2) {
     return (
       <li className="team-slot-mini">
-        <Sprite catalog={catalog} species={species[0] ?? "?"} />
+        {/* Tooltips, not `title`s: a phone has no hover to name the sprite. */}
+        <Tooltip content={species[0] ?? "?"}>
+          <Sprite catalog={catalog} species={species[0] ?? "?"} />
+        </Tooltip>
       </li>
     );
   }
   const a = Math.round(share * 100);
   const label = `${species[0]} ${a}% · ${species[1]} ${100 - a}%`;
   return (
-    <li className="team-slot-mini team-slot-mini--split" title={label}>
+    <li className="team-slot-mini team-slot-mini--split">
       <span className="sr-only">{label}</span>
-      <span className="team-slot-mini__pair" aria-hidden="true">
-        <Sprite catalog={catalog} species={species[0]} />
-        <Sprite catalog={catalog} species={species[1]} />
-      </span>
-      <span className="team-slot-mini__bar" aria-hidden="true">
-        <i className="team-slot-mini__bar-a" style={{ flexGrow: a }} />
-        <i className="team-slot-mini__bar-b" style={{ flexGrow: 100 - a }} />
-      </span>
+      <Tooltip content={label} className="team-slot-mini__tip">
+        <span className="team-slot-mini__pair" aria-hidden="true">
+          <Sprite catalog={catalog} species={species[0]} />
+          <Sprite catalog={catalog} species={species[1]} />
+        </span>
+        <span className="team-slot-mini__bar" aria-hidden="true">
+          <i className="team-slot-mini__bar-a" style={{ flexGrow: a }} />
+          <i className="team-slot-mini__bar-b" style={{ flexGrow: 100 - a }} />
+        </span>
+      </Tooltip>
     </li>
   );
 }
@@ -177,7 +183,9 @@ function SavedTeamRow({
           {team.island !== null && berries.length > 0 && (
             <span className="filter-btn__icons">
               {berries.map((b) => (
-                <img key={b} className="mini-icon" src={berryIcon(b)} alt={berry(b)} title={berry(b)} />
+                <Tooltip key={b} content={berry(b)}>
+                  <img className="mini-icon" src={berryIcon(b)} alt={berry(b)} />
+                </Tooltip>
               ))}
             </span>
           )}
@@ -196,7 +204,9 @@ function SavedTeamRow({
             <span className="ctx-recipes">
               {team.meals.map((m, i) =>
                 m ? (
-                  <img key={i} className="ctx-recipe" src={recipeImage(m)} alt={m} title={m} />
+                  <Tooltip key={i} content={m}>
+                    <img className="ctx-recipe" src={recipeImage(m)} alt={m} />
+                  </Tooltip>
                 ) : (
                   <span key={i} className="ctx-recipe ctx-recipe--empty" aria-hidden="true" />
                 ),

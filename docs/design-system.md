@@ -59,7 +59,10 @@ and the game's artwork brings the rest. Surfaces separate by **tone** (`--bg` �
 --bg:        #0e1220;
 --surface:   #171d30;   /* cards */
 --surface-2: #20283f;   /* controls and panels inside a card */
---border:    #262e47;   /* hairline dividers and control outlines — never a card edge */
+--border:    #262e47;   /* control outlines and dividers on --surface — never a card edge */
+--divider:   color-mix(in srgb, var(--muted) 35%, transparent);
+                        /* a hairline that holds on --surface-2 and on tinted zones,
+                           where --border vanishes (separators, tooltip rows, toggles) */
 
 /* Text */
 --text:      #e8ecf6;
@@ -289,8 +292,10 @@ states · where it lives. Feature one-offs are intentionally not here.
   skills, nature — bleeding to the card edges), while the figures below stay on
   `--surface`. `color-mix` of the semantic color into `--surface`: `--favorite-berry`
   `--up` 18%, `--main-favorite` (expert map) `--up` 30%, `--no-favorite` (expert map
-  only) `--down` 20%. Neutral cards keep `--surface`. The
-  comparison's base card has **no** surface treatment — its `Base` tag says it.
+  only) `--down` 20%. Neutral cards keep `--surface`. Inside a tinted zone `--muted`
+  and `--down` are lifted (`#c2cfd7`, `#ffb4ad`) to stay AA on the green, and
+  `--border` becomes `--divider`. The comparison's base card has **no** surface
+  treatment — its `Base` tag says it.
 - **`.night-grid`** — the card's **skill while asleep** read-out (inside
   `.prod-card__night`): a small grid, `--text-sm`, tabular nums, `column-gap 0.9rem`.
   A header row of `--text-xs` `--muted` column labels, then **one row per sleep** — the
@@ -477,6 +482,8 @@ states · where it lives. Feature one-offs are intentionally not here.
   **`SubSkillSelect`** — uses `.ss-icon`.
 - **`RibbonIcon`** — ribbon sprite with `--empty` variant.
 - **Base inputs** — global `input, select` styles with the unified focus outline.
+  `button, input, select, textarea` inherit the page's font family (one global rule),
+  so no component re-declares it.
 
 ### Editable rule lists
 - **Effect row** — one rule in a user-composed list (first use: the event bonus's
@@ -828,7 +835,11 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   see, hovers stuck after a tap, 24px icons sat next to a destructive ✕, drag to reorder
   did nothing, and fields under 16px made iOS zoom. *Resolution:* explanations go in a
   tappable `Tooltip`; every `:hover` rule sits in `@media (hover: hover)` (a real state,
-  like "open", stays outside it); under `(pointer: coarse)` icon buttons, steppers and the
-  modal close get ~40px hit areas without growing their glyphs; drag and drop is gone
+  like "open", stays outside it); under `(pointer: coarse)` icon buttons, steppers, the
+  modal close, segmented toggles, filter triggers, chips and list rows get ~40px hit
+  areas without growing their glyphs (the context bar and app bar keep one 36px row;
+  small inline controls such as "Make base" extend their tap area with an invisible
+  `::after`); on phones a modal takes nearly the whole screen and the form's submit
+  stays pinned at its bottom; drag and drop is gone
   (the ‹ › controls reorder); fields are 16px on phones. *Why:* a fingertip has no hover,
   no precision and no tooltip delay — the same screen has to work with only taps.

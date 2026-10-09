@@ -4,6 +4,9 @@
   --surface: #171d30;
   --surface-2: #20283f;
   --border: #262e47;
+  /* A hairline that holds on any surface: --border vanishes on --surface-2 and on a
+     tinted zone, so dividers there use this see-through --muted instead. */
+  --divider: color-mix(in srgb, var(--muted) 35%, transparent);
   /* Text */
   --text: #e8ecf6;
   --muted: #98a2bd;
@@ -62,6 +65,16 @@ body {
     sans-serif;
   background: var(--bg);
   color: var(--text);
+}
+
+/* Form controls don't inherit the page font by default: in the UA's own font a
+   label sits off-center and the control comes out a different height. Only the
+   family: each control keeps its own size and weight. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
 }
 
 .layout {
@@ -167,7 +180,7 @@ html {
 }
 
 .tooltip__row + .tooltip__row {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--divider);
   padding-top: 0.2rem;
   margin-top: 0.1rem;
 }
@@ -304,7 +317,8 @@ select:focus {
 }
 
 .btn {
-  border: none;
+  /* A transparent border, so a filled button is the same height as an outlined one. */
+  border: 1px solid transparent;
   border-radius: var(--r-md);
   padding: 0.6rem 1rem;
   font-size: var(--text-base);
@@ -315,7 +329,7 @@ select:focus {
 .btn--primary {
   background: var(--accent-strong);
   color: white;
-  margin-top: 1rem;
+  margin-top: 0.75rem;
 }
 
 @media (hover: hover) {
@@ -347,8 +361,7 @@ select:focus {
    botón sólido en el modal de confirmación. */
 .btn--danger {
   background: var(--error);
-  /* Borde propio (la base es `border: none`) para igualar la caja del botón ghost. */
-  border: 1px solid var(--error);
+  border-color: var(--error);
   color: #fff;
 }
 
@@ -1152,6 +1165,34 @@ select:focus {
   height: calc(100dvh - 4rem);
 }
 
+/* Phone: the modal takes nearly the whole screen (a 7-field form needs the room),
+   and the form's submit stays in reach at the bottom while the fields scroll. */
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+
+  .modal-panel,
+  .modal-panel--tall {
+    max-height: calc(100vh - 1rem);
+    max-height: calc(100dvh - 1rem);
+  }
+
+  .modal-panel--tall {
+    height: calc(100vh - 1rem);
+    height: calc(100dvh - 1rem);
+  }
+
+  .modal-body .form__submit {
+    position: sticky;
+    bottom: -1.25rem; /* the body's bottom padding: the bar sits flush with the panel */
+    margin: 0 -1.25rem -1.25rem;
+    padding: 0 1.25rem 1.25rem;
+    background: var(--surface);
+    border-top: 1px solid var(--divider);
+  }
+}
+
 /* Presencia del modal: aparición corta que hace legible el cambio de estado
    (abrir/cerrar es frecuente en el flujo de comparación) sin ser decorativa. */
 @keyframes overlay-in {
@@ -1294,7 +1335,7 @@ select:focus {
   padding: 0 0.6rem;
   background: transparent;
   border: none;
-  border-left: 1px solid var(--border);
+  border-left: 1px solid var(--divider);
   color: var(--text);
   cursor: pointer;
 }
@@ -1601,7 +1642,7 @@ select:focus {
 .specialty-toggle__btn {
   background: var(--surface-2);
   border: none;
-  border-left: 1px solid var(--border);
+  border-left: 1px solid var(--divider);
   color: var(--muted);
   font-size: var(--text-sm);
   padding: 0.35rem 0.6rem;
@@ -1914,7 +1955,7 @@ select:focus {
    would vanish on --surface-2; the line is a faint --muted instead. */
 .action-menu__sep {
   height: 1px;
-  background: color-mix(in srgb, var(--muted) 25%, transparent);
+  background: var(--divider);
   margin: 0 0.6rem;
 }
 
@@ -2979,6 +3020,16 @@ select:focus {
   background: color-mix(in srgb, var(--down) 20%, var(--surface));
 }
 
+/* Ink on a tinted zone: --muted and --down drop under AA on the green (3.1:1 and
+   2.8:1 on the main favorite) and --border disappears, so the zone lifts them:
+   muted 4.9:1 and down 4.6:1 at worst, and its hairlines use --divider. */
+.prod-card--favorite-berry .prod-card__identity,
+.prod-card--no-favorite .prod-card__identity {
+  --muted: #c2cfd7;
+  --down: #ffb4ad;
+  --border: var(--divider);
+}
+
 /* Annotation pinned to a metric: what the map does to THAT number
    (design-system §5, .metric-mark). */
 .metric-mark {
@@ -3013,9 +3064,6 @@ select:focus {
 .prod-card__base-tag {
   margin-left: auto;
   flex-shrink: 0;
-  /* A <button> doesn't inherit the font: in the UA default its caps sat ~2px above
-     center, and the button came out shorter than the Base chip. */
-  font-family: inherit;
   font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
@@ -3217,6 +3265,30 @@ button.prod-card__base-tag--action {
   .level-stepper__btn {
     width: 36px;
     height: 36px;
+  }
+
+  /* Toggles, triggers, chips and list rows: a fingertip-sized row. */
+  .specialty-toggle__btn,
+  .filter-btn,
+  .filter-list__item,
+  .level-chip,
+  .lang-chip {
+    min-height: 40px;
+  }
+
+  /* Inline controls keep their size; an invisible margin takes the tap. */
+  .prod-card__base-tag--action,
+  .progress-diff__save,
+  .box-filter-chip {
+    position: relative;
+  }
+
+  .prod-card__base-tag--action::after,
+  .progress-diff__save::after,
+  .box-filter-chip::after {
+    content: "";
+    position: absolute;
+    inset: -10px -6px;
   }
 }
 
@@ -4908,7 +4980,7 @@ button.prod-card__base-tag--action {
   height: 6px;
   border-radius: 999px;
   /* An empty slot still reads as one, on any surface (--border vanishes on --surface-2). */
-  background: color-mix(in srgb, var(--muted) 28%, transparent);
+  background: var(--divider);
   transition: background 0.2s ease-out;
 }
 
@@ -5939,7 +6011,7 @@ button.prod-card__base-tag--action {
   width: 1px;
   height: 1.1rem;
   margin: 0 0.35rem;
-  background: color-mix(in srgb, var(--muted) 35%, transparent);
+  background: var(--divider);
 }
 
 .nav-menu__panel .nav__sep {
@@ -6274,6 +6346,13 @@ button.prod-card__base-tag--action {
   padding: 5px 6px 5px 3px;
 }
 
+/* The split's tooltip trigger: fills the slot and lays out the pair and its bar. */
+.team-slot-mini__tip {
+  flex: 1;
+  align-self: stretch;
+  gap: 4px;
+}
+
 .team-slot-mini__pair {
   flex: 1;
   height: 100%;
@@ -6460,4 +6539,19 @@ button.prod-card__base-tag--action {
   padding: 0.3rem 0;
   border-bottom: 1px solid var(--border);
   font-size: var(--text-sm);
+}
+
+/* Touch: the context bar and the app bar keep one compact height per bar instead of
+   the 40px rows above (their 30px base sits later in this file, hence here). */
+@media (pointer: coarse) {
+  .ctx-field .filter-btn,
+  .ctx-field .specialty-toggle,
+  .filter-btn.lang-btn {
+    height: 36px;
+    min-height: 0;
+  }
+
+  .ctx-field .specialty-toggle__btn {
+    min-height: 0;
+  }
 }
