@@ -6,10 +6,12 @@ import { AuthProvider, useAuth } from "./auth/AuthContext";
 import { GateCard } from "./auth/GateCard";
 import { SignInDialog } from "./auth/SignInDialog";
 import { GateProvider } from "./auth/useGate";
+import { AccountDeletedDialog } from "./components/AccountDeletedDialog";
 import { AppBar } from "./components/AppBar";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Placeholder } from "./components/Placeholder";
 import { useI18n } from "./i18n";
+import { Account } from "./pages/Account";
 import { Production } from "./pages/Production";
 import { SavedTeams } from "./pages/SavedTeams";
 import { Team } from "./pages/Team";
@@ -52,6 +54,8 @@ function AppShell() {
   const { t } = useI18n();
   const { status } = useAuth();
   const [, navigate] = useLocation();
+  // Shown after a successful account deletion, over the first tool.
+  const [accountDeleted, setAccountDeleted] = useState(false);
 
   const authenticated = status === "authenticated";
   const checking = status === "checking";
@@ -83,6 +87,16 @@ function AppShell() {
             <Teams />
           </Route>
           <Route path={ROUTES.savedTeams}>{gated(<SavedTeams />)}</Route>
+          <Route path={ROUTES.account}>
+            {gated(
+              <Account
+                onDeleted={() => {
+                  navigate(HOME);
+                  setAccountDeleted(true);
+                }}
+              />,
+            )}
+          </Route>
           {/* Default and unknown paths land on the first tool. */}
           <Route path="/">
             <Redirect to={HOME} />
@@ -93,6 +107,7 @@ function AppShell() {
         </Switch>
       </main>
       <SignInDialog />
+      {accountDeleted && <AccountDeletedDialog onClose={() => setAccountDeleted(false)} />}
     </>
   );
 }
