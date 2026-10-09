@@ -92,7 +92,7 @@ export function SkillLevelSelector({
       onClick={() => setOpen((o) => !o)}
       aria-haspopup="listbox"
       aria-expanded={open}
-      aria-label={t("skillSel.versatile")}
+      aria-label={t("skillSel.chooseSkill")}
     >
       {name}
       <span className="versatile-trigger__caret" aria-hidden="true">
@@ -121,7 +121,7 @@ export function SkillLevelSelector({
         secondary={desc || undefined}
       />
       {picking && open && (
-        <div className="nature-dropdown versatile-dropdown" role="listbox" aria-label={t("skillSel.versatile")}>
+        <div className="nature-dropdown versatile-dropdown" role="listbox" aria-label={t("skillSel.chooseSkill")}>
           <div className="nature-group__items">
             {versatileSkills.map((s) => (
               <button

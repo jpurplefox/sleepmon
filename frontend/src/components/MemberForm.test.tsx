@@ -209,7 +209,7 @@ describe("MemberForm with Mew", () => {
     const user = userEvent.setup();
     const { onSubmit } = renderForm();
     await pickSpecies(user, /Mew/);
-    await user.click(screen.getByRole("button", { name: "Mew's skill" }));
+    await user.click(screen.getByRole("button", { name: "Choose main skill" }));
     await user.click(screen.getByRole("option", { name: "Charge Strength M" }));
     await user.click(screen.getByRole("button", { name: "Add to my box" }));
     expect(onSubmit).toHaveBeenCalledWith(
