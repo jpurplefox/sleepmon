@@ -235,7 +235,9 @@ export function Team({ onCompare }: TeamProps) {
               sortKey={sortKey}
               sortDir={sortDir}
               onSortKey={(k) => {
-                track({ name: "list_sorted", props: { list: "box", key: k, direction: sortDir } });
+                // Only a change of key counts; re-picking the current one is not a sort.
+                if (k !== sortKey)
+                  track({ name: "list_sorted", props: { list: "box", key: k, direction: sortDir } });
                 setSortKey(k);
               }}
               onToggleDir={() => {

@@ -157,7 +157,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
       - name: Sync to S3
-        run: aws s3 sync dist "s3://$S3_BUCKET" --delete
+        run: aws s3 sync dist "s3://$S3_BUCKET" --delete --exclude "*.map"
       - name: Invalidate CloudFront
         run: |
           aws cloudfront create-invalidation \

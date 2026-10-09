@@ -65,4 +65,20 @@ describe("useProgress", () => {
     await waitFor(() => expect(result.current.saveError).not.toBeNull());
     expect(onSaved).not.toHaveBeenCalled();
   });
+
+  it("calls each save's onSaved, not only the latest one's", async () => {
+    authState.status = "anonymous";
+    patchProgress.mockResolvedValue({ ...EMPTY_PROGRESS, pot_size: 40 });
+    const first = vi.fn();
+    const second = vi.fn();
+    const { result } = renderHook(() => useProgress(), { wrapper });
+
+    act(() => {
+      result.current.save({ pot_size: 40 }, first);
+      result.current.save({ area_bonuses: { Greengrass: 10 } }, second);
+    });
+
+    await waitFor(() => expect(second).toHaveBeenCalledTimes(1));
+    expect(first).toHaveBeenCalledTimes(1);
+  });
 });

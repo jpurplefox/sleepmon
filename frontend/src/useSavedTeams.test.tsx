@@ -14,7 +14,7 @@ vi.mock("./auth/AuthContext", () => ({ useAuth: () => ({ status: "authenticated"
 
 import { newEntry } from "./roster";
 import { recordEvents } from "./telemetry/testing";
-import type { Catalog, MemberInput } from "./types";
+import type { Catalog, Member, MemberInput } from "./types";
 import { useSaveTeam } from "./useSavedTeams";
 
 const cfg = (species: string): MemberInput => ({
@@ -59,6 +59,29 @@ describe("useSaveTeam analytics", () => {
       { kind: "new", slots: 2, split_slots: 0, members_from_box: 0, members_created: 2, has_map: false, expert_map: false, meals: 0 },
     ]);
     expect(JSON.stringify(rec.events)).not.toContain("Mi equipo");
+  });
+
+  it("records an overwrite that updates a changed Box Pokémon", async () => {
+    api.updateMember.mockResolvedValue({ id: "m-1" });
+    api.replaceSavedTeam.mockResolvedValue({ id: "t-1", name: "Mi equipo" });
+    // The Box holds it at level 30; the team now has it at level 50.
+    const member = { id: "m-1", ...cfg("Pikachu") } as Member;
+    const { result } = renderHook(() => useSaveTeam(), { wrapper });
+    act(() =>
+      result.current.mutate({
+        name: "Mi equipo", overId: "t-1", kind: "overwrite",
+        definition: definition([newEntry({ ...cfg("Pikachu"), level: 50 }, "m-1")]),
+        members: new Map([["m-1", member]]), catalog, islands: [], onLinked: () => {},
+      }),
+    );
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(api.replaceSavedTeam).toHaveBeenCalledWith("t-1", expect.anything());
+    expect(rec.events.filter((e) => e.name === "box_pokemon_saved").map((e) => e.props)).toEqual([
+      { origin: "team_save", action: "update", species: "Pikachu" },
+    ]);
+    expect(rec.events.filter((e) => e.name === "team_saved").map((e) => e.props)).toEqual([
+      { kind: "overwrite", slots: 1, split_slots: 0, members_from_box: 1, members_created: 0, has_map: false, expert_map: false, meals: 0 },
+    ]);
   });
 
   it("records nothing when the team write fails", async () => {

@@ -60,8 +60,15 @@ export function useProgress(): {
     progress: query.data ?? EMPTY_PROGRESS,
     isLoading: query.isLoading,
     isError: query.isError,
-    save: (patch, onSaved) =>
-      mutation.mutate(patch, onSaved ? { onSuccess: () => onSaved() } : undefined),
+    // Per-call callbacks of mutate() fire only for the latest call; chaining on
+    // mutateAsync reports every successful save. A failure is surfaced through
+    // saveError (the mutation state), so the rejection is swallowed here.
+    save: (patch, onSaved) => {
+      mutation
+        .mutateAsync(patch)
+        .then(() => onSaved?.())
+        .catch(() => {});
+    },
     saveAsync: mutation.mutateAsync,
     saveError: mutation.error,
     isSaving: mutation.isPending,

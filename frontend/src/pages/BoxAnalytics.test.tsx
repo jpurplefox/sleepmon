@@ -159,4 +159,12 @@ describe("Box analytics", () => {
       { list: "box", key: "level", direction: "desc" },
     ]);
   });
+
+  it("does not record re-picking the current sort key", async () => {
+    const user = userEvent.setup();
+    renderBox();
+    await user.click(await screen.findByRole("button", { name: "Sort by" }));
+    await user.click(screen.getByRole("option", { name: "Pokédex" }));
+    expect(rec.events.filter((e) => e.name === "list_sorted")).toEqual([]);
+  });
 });
