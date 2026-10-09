@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import type { EventEffect } from "../eventBonus";
 import { LanguageProvider } from "../i18n";
+import { recordEvents } from "../telemetry/testing";
 import { EventTab } from "./EventTab";
 
 beforeEach(() => localStorage.setItem("sleepmon.lang", "en"));
@@ -34,6 +35,40 @@ describe("EventTab", () => {
     expect(row).toHaveTextContent("Extra ingredients per help");
     expect(row).toHaveTextContent("+1");
     expect(row).toHaveTextContent("Whole team");
+  });
+
+  it("records a confirmed new effect with its kind and scope", async () => {
+    const rec = recordEvents();
+    try {
+      const user = userEvent.setup();
+      render(<Harness />);
+      await user.click(screen.getByRole("button", { name: "+ Add effect" }));
+      expect(rec.events).toEqual([]);
+      await user.click(screen.getByRole("button", { name: "Add" }));
+      expect(rec.events).toEqual([
+        { name: "event_effect_added", props: { effect: "extra_ingredients", scope: "team" } },
+      ]);
+    } finally {
+      rec.restore();
+    }
+  });
+
+  it("does not record an edit of an existing effect", async () => {
+    const rec = recordEvents();
+    try {
+      const user = userEvent.setup();
+      render(
+        <Harness
+          initial={[{ id: "a", kind: "dish_strength", value: 1.25, scope: { kind: "team" } }]}
+        />,
+      );
+      await user.click(screen.getByRole("button", { name: "Edit Dish strength" }));
+      await user.click(screen.getByRole("button", { name: "+" }));
+      await user.click(screen.getByRole("button", { name: "Save" }));
+      expect(rec.events).toEqual([]);
+    } finally {
+      rec.restore();
+    }
   });
 
   it("hides the scope for team-wide kinds", async () => {

@@ -7,6 +7,7 @@ import {
 } from "../eventBonus";
 import { useI18n } from "../i18n";
 import { newId } from "../roster";
+import { track } from "../telemetry/analytics";
 import { typeIcon } from "../typeIcons";
 import { IconChevronDown, IconClose, IconEdit } from "./icons";
 import { Placeholder } from "./Placeholder";
@@ -54,8 +55,10 @@ export function EventTab({ effects, onChange, types }: Props) {
     setDraft(target ? { kind: target.kind, value: target.value, scope: target.scope } : NEW_DRAFT);
   };
   const confirm = () => {
-    if (editing === "new") onChange([...effects, { id: newId(), ...draft }]);
-    else onChange(effects.map((e) => (e.id === editing ? { id: e.id, ...draft } : e)));
+    if (editing === "new") {
+      onChange([...effects, { id: newId(), ...draft }]);
+      track({ name: "event_effect_added", props: { effect: draft.kind, scope: draft.scope.kind } });
+    } else onChange(effects.map((e) => (e.id === editing ? { id: e.id, ...draft } : e)));
     setEditing(null);
   };
 

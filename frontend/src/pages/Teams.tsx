@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import type React from "react";
 import {
@@ -64,12 +64,15 @@ import {
   teamResult,
   toRequest,
 } from "../teamRoster";
+import { track } from "../telemetry/analytics";
+import { mapSetEvent, mealsCount, profileSections, sameMeals, teamAddedEvent } from "../telemetry/props";
 import { useProgress } from "../useProgress";
 import { useSessionOverrides } from "../useSessionOverrides";
 import type {
   BerryRole,
   Member,
   MemberInput,
+  ProgressPatch,
   Recipe,
   SkillEffectAgg,
 } from "../types";
@@ -245,13 +248,26 @@ export function Teams() {
   const favoriteRecipeFor = (type: Recipe["type"]): string | null =>
     progress.favorite_recipes[type] ?? null;
 
-  const savePot = () => saveProgress({ pot_size: potSize });
+  // Inline saves report usage only once the server accepted the patch.
+  const saveTracked = (patch: ProgressPatch) =>
+    saveProgress(patch, () =>
+      track({ name: "profile_saved", props: { from: "team_analysis", sections: profileSections(patch) } }),
+    );
+  const savePot = () => saveTracked({ pot_size: potSize });
   const saveBonus = () => {
     if (selectedIsland === null) return;
-    saveProgress({ area_bonuses: { [selectedIsland]: areaBonusPct } });
+    saveTracked({ area_bonuses: { [selectedIsland]: areaBonusPct } });
   };
   const saveLevel = (name: string) =>
-    saveProgress({ recipe_levels: { [name]: recipeLevelFor(name) } });
+    saveTracked({ recipe_levels: { [name]: recipeLevelFor(name) } });
+
+  // Meals as they were when the meals dialog opened, to tell a change on close.
+  const mealsAtOpen = useRef(meals);
+  useEffect(() => {
+    if (dialog === "meals") mealsAtOpen.current = meals;
+    // Only on opening: later meal edits must not move the baseline.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dialog]);
 
 
   // Set de bayas favoritas activas para lookup O(1) al renderizar las cards.
@@ -376,6 +392,14 @@ export function Teams() {
   // Applies a config according to the pending intent.
   const applyConfig = (config: MemberInput, sourceId?: string) => {
     if (!intent) return;
+    // Only count a Pokémon that actually lands: addSlot refuses past MAX_TEAM and
+    // splitSlot only splits a single-member slot.
+    const lands =
+      intent.kind === "add"
+        ? slots.length < MAX_TEAM
+        : intent.kind === "split" && slots[intent.slotIndex]?.entries.length === 1;
+    if (intent.kind !== "edit" && lands)
+      track(teamAddedEvent(intent.kind, sourceId, config.species));
     if (intent.kind === "edit") {
       // Editing replaces the config but not the id, so a stale save status
       // (saved or errored) would otherwise survive describing a config that
@@ -402,6 +426,7 @@ export function Teams() {
       // the decision is made instead of leaving a hole in the team. Close the
       // modal directly (not via closeModal) so the refusal notice survives —
       // closeModal also clears the notice, which would erase this one.
+      track({ name: "species_missing", props: { species: m.species, tool: "team_analysis" } });
       setNotice(t("prod.speciesNotInCatalog", { species: m.species }));
       setModal(null);
       setIntent(null);
@@ -419,6 +444,7 @@ export function Teams() {
   // 0006). This is just the raw state setter — the bar's dish-type toggle
   // adds the favorite-replace/empty behavior (mealsForDishType) around it.
   const handleDishTypeChange = (newType: 'Curry' | 'Salad' | 'Dessert' | null) => {
+    track({ name: "dish_type_set", props: { dish_type: newType ?? "none" } });
     setDishType(newType);
   };
 
@@ -458,12 +484,16 @@ export function Teams() {
           map={map}
           eventEffects={eventEffects}
           goodCampTicket={goodCampTicket}
-          onGoodCampTicket={setGoodCampTicket}
+          onGoodCampTicket={(on) => {
+            track({ name: "good_camp_ticket_set", props: { on } });
+            setGoodCampTicket(on);
+          }}
           onOpenDialog={setDialog}
           mapNames={catalog.data.islands.map((i) => i.name)}
           dishType={dishType}
           meals={meals}
           onDishType={(type) => {
+            track({ name: "dish_type_set", props: { dish_type: type } });
             setDishType(type);
             setMeals(mealsForDishType(favoriteRecipeFor(type), recipeLevelFor));
           }}
@@ -1358,7 +1388,11 @@ export function Teams() {
           bonusDisabled={selectedIsland === null}
           mainFavorite={mainFavorite}
           weeklyBonus={weeklyBonus}
-          onSelectIsland={setSelectedIsland}
+          onSelectIsland={(island) => {
+            if (island !== selectedIsland)
+              track(mapSetEvent("team_analysis", island, catalog.data.islands));
+            setSelectedIsland(island);
+          }}
           onFavoriteBerries={setFavoriteBerries}
           onIslandBonus={(fraction) => setAreaBonusOverride(Math.round(fraction * 100))}
           onMainFavorite={setMainFavorite}
@@ -1405,7 +1439,11 @@ export function Teams() {
           savedLevelFor={savedLevelFor}
           onSaveLevel={saveLevel}
           saveError={progressSaveError !== null}
-          onClose={() => setDialog(null)}
+          onClose={() => {
+            if (!sameMeals(mealsAtOpen.current, meals))
+              track({ name: "meals_set", props: { meals: mealsCount(meals) } });
+            setDialog(null);
+          }}
         />
       )}
     </div>
