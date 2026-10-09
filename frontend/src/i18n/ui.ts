@@ -622,6 +622,29 @@ export const UI: Record<Lang, Record<string, string>> = {
     "account.deleteCardBody":
       "Borra tu cuenta y todo lo que guardaste, al instante. No se puede deshacer.",
     "account.deleteEntry": "Borrar mi cuenta…",
+    // Privacidad y pie de página
+    "privacy.title": "Privacidad",
+    "privacy.updated": "Última actualización: {date}",
+    "privacy.whoTitle": "Quién está detrás",
+    "privacy.whoBody": "sleepmon es un proyecto personal de fans, hecho por una sola persona.",
+    "privacy.whoContact": "Para cualquier consulta sobre tus datos escribí a {email}.",
+    "privacy.dataTitle": "Qué guardamos de tu cuenta",
+    "privacy.dataBody":
+      "Al iniciar sesión con Google guardamos tu id de Google, tu email, tu nombre y tu foto, y lo que cargues: tu caja, tus equipos guardados y tu perfil de jugador. Se conserva hasta que borres tu cuenta.",
+    "privacy.browserTitle": "En tu navegador",
+    "privacy.browserBody":
+      "Usamos una cookie de sesión para mantenerte con la sesión iniciada y recordamos el idioma que elegiste. No usamos cookies de publicidad ni de analítica.",
+    "privacy.metricsTitle": "Métricas de uso y reportes de errores",
+    "privacy.metricsBody":
+      "Medimos cómo se usan las herramientas (PostHog) y recibimos reportes técnicos de errores (Sentry). Van asociados a un id interno, nunca a tu email ni a tu nombre, y no guardamos tu dirección IP. Cuando borrás tu cuenta, ese id deja de pertenecer a alguien.",
+    "privacy.deleteTitle": "Cómo borrar tus datos",
+    "privacy.deleteBefore": "Entrá a",
+    "privacy.deleteAfter":
+      "(menú de la cuenta → Cuenta y privacidad) y elegí Borrar mi cuenta…. Se borra todo al instante.",
+    "privacy.deleteMail": "También podés pedirlo por email a {email}.",
+    "footer.privacy": "Privacidad",
+    "footer.notice":
+      "sleepmon es un proyecto de fans, sin afiliación con Nintendo, Creatures, GAME FREAK ni The Pokémon Company. Pokémon y sus nombres son marcas de sus respectivos dueños.",
   },
   en: {
     // Common
@@ -1240,5 +1263,28 @@ export const UI: Record<Lang, Record<string, string>> = {
     "account.deleteCardBody":
       "Deletes your account and everything you saved, at once. It cannot be undone.",
     "account.deleteEntry": "Delete my account…",
+    // Privacy and footer
+    "privacy.title": "Privacy",
+    "privacy.updated": "Last updated: {date}",
+    "privacy.whoTitle": "Who is behind it",
+    "privacy.whoBody": "sleepmon is a personal fan project, made by one person.",
+    "privacy.whoContact": "For any question about your data, write to {email}.",
+    "privacy.dataTitle": "What we keep with your account",
+    "privacy.dataBody":
+      "When you sign in with Google we keep your Google id, email, name and photo, plus what you save: your Box, saved teams and Player profile. It is kept until you delete your account.",
+    "privacy.browserTitle": "In your browser",
+    "privacy.browserBody":
+      "We use a session cookie to keep you signed in and remember the language you chose. We use no advertising or analytics cookies.",
+    "privacy.metricsTitle": "Usage metrics and error reports",
+    "privacy.metricsBody":
+      "We measure how the tools are used (PostHog) and receive technical error reports (Sentry). They are tied to an internal id, never to your email or name, and we do not store your IP address. After you delete your account, that id no longer belongs to anyone.",
+    "privacy.deleteTitle": "How to delete your data",
+    "privacy.deleteBefore": "Open",
+    "privacy.deleteAfter":
+      "(account menu → Account & privacy) and choose Delete my account…. Everything is deleted at once.",
+    "privacy.deleteMail": "You can also ask by email at {email}.",
+    "footer.privacy": "Privacy",
+    "footer.notice":
+      "sleepmon is a fan project, not affiliated with Nintendo, Creatures, GAME FREAK or The Pokémon Company. Pokémon and its names are trademarks of their respective owners.",
   },
 };

@@ -418,6 +418,55 @@ select:focus {
   max-width: 65ch;
 }
 
+.doc-updated {
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+.doc-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.doc-sections h2 {
+  font-size: var(--text-lg);
+  margin: 0 0 0.3rem;
+}
+
+.doc-sections p {
+  margin: 0;
+}
+
+.app-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 0.5rem;
+  padding: 1.25rem 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.app-footer a {
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .app-footer a:hover {
+    color: var(--text);
+  }
+}
+
+.app-footer__email {
+  user-select: all;
+}
+
 .doc-identity {
   display: flex;
   align-items: center;
