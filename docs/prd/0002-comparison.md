@@ -184,7 +184,8 @@ for the rest.
 - The terms apply to **every card, the base included**, so the deltas keep comparing
   like with like.
 - The comparison **starts on Normal with no favorites** on every visit — reloading
-  resets it, and with those terms every card shows its plain production.
+  resets it, and with those terms every card shows its plain production. Moving to
+  another tool and back keeps the terms, like the cards.
 
 ## Guidelines
 
@@ -193,7 +194,9 @@ for the rest.
 - **Max 5 Pokémon** — the team size in the game. Comparing more has no product
   meaning and breaks parallel reading.
 - **Ephemeral by default, persistent by explicit action.** Configs are local to the
-  session; they only touch the Box when the user saves.
+  session; they only touch the Box when the user saves. The session survives moving
+  to another tool and back (the cards and the map terms are still there); only a
+  reload starts it over.
 - **Copy without coupling.** "My Pokémon" and "Clone" **copy** the config; editing a
   copy never affects its origin unless the user explicitly saves onto that origin.
 - **No false hierarchy.** Berries, ingredients, and skill are shown with **equal
