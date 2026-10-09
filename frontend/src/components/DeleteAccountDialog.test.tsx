@@ -94,7 +94,7 @@ describe("DeleteAccountDialog", () => {
     expect(confirmButton()).toBeEnabled();
   });
 
-  it("deletes, records the event, clears the cache, then clears the session and calls onDeleted", async () => {
+  it("deletes, records the event, clears the session, then the cache, and calls onDeleted", async () => {
     const del = vi.spyOn(api, "deleteAccount").mockResolvedValue(undefined);
     const client = new QueryClient();
     client.setQueryData(["members"], [{ id: "m1" }]);
@@ -110,8 +110,8 @@ describe("DeleteAccountDialog", () => {
     expect(del).toHaveBeenCalledTimes(1);
     expect(rec.events).toEqual([{ name: "account_deleted", props: { box_size: 23, saved_teams: 4 } }]);
     expect(clearSession).toHaveBeenCalledTimes(1);
-    // The event was recorded and the cache emptied before the session went away.
-    expect(order).toEqual(["clearSession(events=1,cached=0)", "onDeleted"]);
+    // The event was recorded before the session went away; the cache is emptied after it.
+    expect(order).toEqual(["clearSession(events=1,cached=1)", "onDeleted"]);
     expect(client.getQueryData(["members"])).toBeUndefined();
   });
 

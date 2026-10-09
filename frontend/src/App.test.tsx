@@ -94,6 +94,8 @@ describe("App shell", () => {
     await waitFor(() => expect(entry).toBeEnabled());
     await userEvent.click(entry);
     await userEvent.type(screen.getByLabelText(/To confirm, type your email/), USER.email);
+    const boxReadsBefore = api.listMembers.mock.calls.length;
+    const progressReadsBefore = api.getProgress.mock.calls.length;
     await userEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
 
     expect(await screen.findByRole("dialog", { name: "Account deleted" })).toBeInTheDocument();
@@ -103,5 +105,9 @@ describe("App shell", () => {
     expect(api.deleteAccount).toHaveBeenCalledTimes(1);
     expect(tokenStore.get()).toBeNull();
     expect(sessionHint.present()).toBe(false);
+    // Nothing re-reads the deleted Box while the app lands signed out (no 401 storm).
+    expect(api.listMembers.mock.calls.length).toBe(boxReadsBefore);
+    expect(api.getProgress.mock.calls.length).toBe(progressReadsBefore);
+    expect(authApi.postRefresh).toHaveBeenCalledTimes(1);
   });
 });

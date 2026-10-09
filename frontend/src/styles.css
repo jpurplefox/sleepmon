@@ -527,7 +527,8 @@ select:focus {
   margin: 0.8rem 0 0;
 }
 
-.doc-note a {
+.doc-note a,
+.doc-sections a {
   color: var(--accent-text);
 }
 

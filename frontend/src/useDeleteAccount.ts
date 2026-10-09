@@ -1,5 +1,6 @@
 // Deleting the signed-in account: the server call, then everything the client must forget.
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { flushSync } from "react-dom";
 
 import type { AccountSummary } from "./account";
 import { api } from "./api/client";
@@ -29,8 +30,11 @@ export function useDeleteAccount(onDeleted: () => void): {
         name: "account_deleted",
         props: { box_size: summary.boxSize, saved_teams: summary.savedTeams },
       });
+      // Commit the signed-out state before anything else renders: the navigation in
+      // onDeleted renders synchronously, and a page mounting while auth still reads
+      // "authenticated" would fetch the (now gone) Box without a token.
+      flushSync(() => clearSession());
       qc.clear();
-      clearSession();
       // What is on screen stays, as after signing out, but its Box no longer exists.
       comparison.unlinkFromBox();
       team.unlinkFromBox();

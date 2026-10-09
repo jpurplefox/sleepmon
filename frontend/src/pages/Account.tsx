@@ -17,12 +17,17 @@ import { useSavedTeamsQuery } from "../useSavedTeams";
 /** "Your account": who is signed in, what is saved, and the way out (PRD 0018). */
 export function Account({ onDeleted }: { onDeleted: () => void }) {
   const { t } = useI18n();
-  const { user } = useAuth();
+  const { user, status } = useAuth();
   const [photoBroken, setPhotoBroken] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const needsDataId = useId();
 
-  const members = useQuery({ queryKey: ["members"], queryFn: api.listMembers });
+  // Guarded like every Box read, so clearing the session after a deletion stops it.
+  const members = useQuery({
+    queryKey: ["members"],
+    queryFn: api.listMembers,
+    enabled: status === "authenticated",
+  });
   const teams = useSavedTeamsQuery();
   const progress = useProgress();
 
