@@ -3636,11 +3636,24 @@ button.prod-card__base-tag--action {
   justify-content: flex-end;
 }
 
-/* Slots compartidos (split) — toolbar con altura variable para las pestañas */
+/* Slots compartidos (split) — toolbar con altura variable para las pestañas.
+   The split header is two rows (tabs, then slider + actions); a single slot in a
+   team with a split reserves the same height, computed from the same two row
+   heights so they can't drift apart (touch makes both rows taller). */
 .prod-card__toolbar--slot {
+  --slot-tab-h: 1.3rem; /* a tab: text-xs on 0.15rem padding, plus its border */
+  --slot-row-h: 1.6rem; /* an icon button */
+  --slot-gap: 0.4rem;
   display: block;
   height: auto;
   padding: 0.35rem 0.5rem;
+}
+
+@media (pointer: coarse) {
+  .prod-card__toolbar--slot {
+    --slot-tab-h: 34px; /* the 32px tab plus its border */
+    --slot-row-h: 40px; /* the 40px icon button */
+  }
 }
 .team-slot__single {
   display: flex;
@@ -3651,19 +3664,19 @@ button.prod-card__base-tag--action {
 /* Reservar la altura del header de 2 filas del split para que, en un equipo con
    algún slot dividido, las cards single igualen la altura y los cuerpos alineen. */
 .team-slot__single--reserve {
-  min-height: 3.25rem;
+  min-height: calc(var(--slot-tab-h) + var(--slot-gap) + var(--slot-row-h));
   align-items: flex-end;
 }
 .team-slot__split {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  min-height: 3.25rem;
+  gap: var(--slot-gap);
 }
 .team-slot__tabs {
   display: flex;
   gap: 0.35rem;
   flex-wrap: wrap;
+  min-height: var(--slot-tab-h);
 }
 .team-slot__tab-wrap {
   display: inline-flex;
@@ -3762,7 +3775,7 @@ button.prod-card__base-tag--action {
 
 /* Slot dividido: el slider toma el ancho libre y las acciones del Pokémon activo
    se anclan a la derecha de esa misma fila, así la barra no crece de alto. */
-.team-slot__weights { display: flex; align-items: center; gap: 0.4rem; }
+.team-slot__weights { display: flex; align-items: center; gap: 0.4rem; min-height: var(--slot-row-h); }
 .team-slot__weights > .bonus-slider { flex: 1; min-width: 0; }
 .team-slot__weights-actions { display: flex; flex: 0 0 auto; }
 
