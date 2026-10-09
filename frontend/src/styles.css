@@ -3206,11 +3206,13 @@ button.prod-card__base-tag--action {
   gap: 0.35rem;
 }
 
-/* On touch the ‹ › hit areas (40px) make the row taller than the name, which pushes
-   the name away from the toolbar above; the extra hit area overlaps the padding instead. */
+/* On touch the ‹ › hit areas (40px) would make the row taller than the name and push
+   it away from the zone's top edge (and the sprite below). Their margins cancel the
+   extra, so the row is the name's height, exactly as on desktop, and the hit areas
+   overlap the padding. */
 @media (pointer: coarse) {
-  .prod-card__topline {
-    margin-top: -0.25rem;
+  .prod-card__move {
+    margin-block: -8px;
   }
 }
 
