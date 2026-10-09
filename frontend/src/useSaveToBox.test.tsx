@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // vi.hoisted keeps these safely reachable from the vi.mock factory below,
 // which Vitest hoists above this file's own const declarations.
@@ -11,6 +11,7 @@ const { createMember, updateMember } = vi.hoisted(() => ({
 vi.mock("./api/client", () => ({ api: { createMember, updateMember } }));
 
 import { newEntry } from "./roster";
+import { recordEvents } from "./telemetry/testing";
 import type { MemberInput } from "./types";
 import { useSaveToBox } from "./useSaveToBox";
 
@@ -37,7 +38,7 @@ describe("useSaveToBox", () => {
     const onCreated = vi.fn();
     const { result } = renderHook(() => useSaveToBox(), { wrapper });
 
-    act(() => result.current.save(entry, onCreated));
+    act(() => result.current.save(entry, "compare", onCreated));
 
     await waitFor(() => expect(onCreated).toHaveBeenCalledWith("box-7"));
     expect(createMember).toHaveBeenCalledWith(config);
@@ -50,7 +51,7 @@ describe("useSaveToBox", () => {
     const onCreated = vi.fn();
     const { result } = renderHook(() => useSaveToBox(), { wrapper });
 
-    act(() => result.current.save(entry, onCreated));
+    act(() => result.current.save(entry, "compare", onCreated));
 
     await waitFor(() => expect(result.current.statusOf(entry.id).state).toBe("saved"));
     expect(updateMember).toHaveBeenCalledWith("box-1", config);
@@ -63,7 +64,7 @@ describe("useSaveToBox", () => {
     const entry = newEntry(config);
     const { result } = renderHook(() => useSaveToBox(), { wrapper });
 
-    act(() => result.current.save(entry));
+    act(() => result.current.save(entry, "compare"));
 
     await waitFor(() => expect(result.current.statusOf(entry.id).state).toBe("error"));
     expect(result.current.statusOf(entry.id).error).toBe("La caja está llena");
@@ -80,14 +81,49 @@ describe("useSaveToBox", () => {
     const other = newEntry(config);
     const { result } = renderHook(() => useSaveToBox(), { wrapper });
 
-    act(() => result.current.save(failed));
+    act(() => result.current.save(failed, "compare"));
     await waitFor(() => expect(result.current.statusOf(failed.id).state).toBe("error"));
-    act(() => result.current.save(other));
+    act(() => result.current.save(other, "compare"));
     await waitFor(() => expect(result.current.statusOf(other.id).state).toBe("error"));
 
     act(() => result.current.reset(failed.id));
 
     expect(result.current.statusOf(failed.id).state).toBe("idle");
     expect(result.current.statusOf(other.id).state).toBe("error");
+  });
+});
+
+describe("useSaveToBox analytics", () => {
+  let rec: ReturnType<typeof recordEvents>;
+  beforeEach(() => { rec = recordEvents(); });
+  afterEach(() => rec.restore());
+
+  it("records a create with its origin", async () => {
+    createMember.mockResolvedValue({ id: "box-9" });
+    const entry = newEntry(config);
+    const { result } = renderHook(() => useSaveToBox(), { wrapper });
+    act(() => result.current.save(entry, "team_analysis"));
+    await waitFor(() => expect(result.current.statusOf(entry.id).state).toBe("saved"));
+    expect(rec.events).toEqual([
+      { name: "box_pokemon_saved", props: { origin: "team_analysis", action: "create", species: "Pikachu" } },
+    ]);
+  });
+
+  it("records an update for an entry from the Box", async () => {
+    updateMember.mockResolvedValue({ id: "box-1" });
+    const entry = newEntry(config, "box-1");
+    const { result } = renderHook(() => useSaveToBox(), { wrapper });
+    act(() => result.current.save(entry, "compare"));
+    await waitFor(() => expect(result.current.statusOf(entry.id).state).toBe("saved"));
+    expect(rec.events[0].props).toMatchObject({ origin: "compare", action: "update" });
+  });
+
+  it("records nothing when the save fails", async () => {
+    createMember.mockRejectedValue(new Error("nope"));
+    const entry = newEntry(config);
+    const { result } = renderHook(() => useSaveToBox(), { wrapper });
+    act(() => result.current.save(entry, "compare"));
+    await waitFor(() => expect(result.current.statusOf(entry.id).state).toBe("error"));
+    expect(rec.events).toEqual([]);
   });
 });

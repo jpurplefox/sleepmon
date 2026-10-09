@@ -412,7 +412,7 @@ export function Teams() {
 
   const saveEntryToBox = (slotIndex: number, entryIndex: number) => {
     const entry = slots[slotIndex].entries[entryIndex];
-    save(entry, (memberId) => setSlots((prev) => linkToBox(prev, entry.id, memberId)));
+    save(entry, "team_analysis", (memberId) => setSlots((prev) => linkToBox(prev, entry.id, memberId)));
   };
 
   // Dish type is a setup choice about the day, chosen in the context bar (PRD

@@ -17,6 +17,9 @@ import { useComparisonSession } from "../comparisonSession";
 import { useI18n } from "../i18n";
 import { configFromMember, linkEntryToBox, newEntry } from "../roster";
 import { spriteUrl } from "../sprites";
+import { track } from "../telemetry/analytics";
+import type { AddSource } from "../telemetry/events";
+import { mapSetEvent } from "../telemetry/props";
 import type { Member, MemberInput } from "../types";
 import { useSaveToBox } from "../useSaveToBox";
 import { useStickyData } from "../useStickyData";
@@ -123,11 +126,19 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
 
   // Inserta una card nueva (sin origen) o reemplaza la config de la que estábamos
   // editando, manteniendo su sourceId. Cierra el modal.
+  // A card landed in the comparison: record where it came from, and the limit.
+  const recordAdded = (source: AddSource, species: string, countBefore: number) => {
+    if (countBefore >= MAX_COMPARE) return;
+    track({ name: "pokemon_added", props: { tool: "compare", source, species } });
+    if (countBefore + 1 === MAX_COMPARE) track({ name: "compare_limit_reached", props: {} });
+  };
+
   const upsert = (config: MemberInput) => {
     // Editing replaces the config but not the id, so a stale save status
     // (saved or errored) would otherwise survive describing a config that
     // was never submitted.
     if (editIndex !== null) reset(entries[editIndex].id);
+    if (editIndex === null) recordAdded("new", config.species, entries.length);
     setEntries((prev) =>
       editIndex === null
         ? prev.length >= MAX_COMPARE
@@ -140,21 +151,25 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   };
 
   // Duplica una card como una variante nueva: el clon NO hereda el origen.
-  const cloneAt = (i: number) =>
+  const cloneAt = (i: number) => {
+    recordAdded("clone", entries[i].config.species, entries.length);
     setEntries((prev) =>
       prev.length >= MAX_COMPARE ? prev : [...prev, newEntry(prev[i].config)],
     );
+  };
 
   const pickMember = (m: Member) => {
     if (!catalog.data) return; // BoxPicker only renders once the catalog is loaded
     const config = configFromMember(catalog.data, m);
     if (!config) {
+      track({ name: "species_missing", props: { species: m.species, tool: "compare" } });
       setNotice(t("prod.speciesNotInCatalog", { species: m.species }));
       setModal(null);
       setEditIndex(null);
       return;
     }
     setNotice(null);
+    recordAdded("box", config.species, entries.length);
     setEntries((prev) => (prev.length >= MAX_COMPARE ? prev : [...prev, newEntry(config, m.id)]));
     setModal(null);
     setEditIndex(null);
@@ -170,6 +185,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
     }
     const config = configFromMember(catalog.data, m);
     if (!config) {
+      track({ name: "species_missing", props: { species: m.species, tool: "compare" } });
       setNotice(t("prod.speciesNotInCatalog", { species: m.species }));
       onBaseConsumed?.();
       return;
@@ -178,6 +194,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
     // "Compare" starts a comparison about this Pokémon: it is the only card, and the
     // base. Whatever the session held before (it survives moving between tools) would
     // otherwise mix into a comparison the user didn't ask for.
+    track({ name: "pokemon_added", props: { tool: "compare", source: "box_compare", species: config.species } });
     setEntries([newEntry(config, m.id)]);
     onBaseConsumed?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -197,7 +214,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
     const entry = entries[i];
     // Match by stable id, not index: the list can be reordered/edited while
     // this save is in flight, so `i` may no longer point at this entry.
-    save(entry, (memberId) => setEntries((prev) => linkEntryToBox(prev, entry.id, memberId)));
+    save(entry, "compare", (memberId) => setEntries((prev) => linkEntryToBox(prev, entry.id, memberId)));
   };
 
   if (catalog.isLoading) return <Placeholder loading>{t("common.loadingCatalog")}</Placeholder>;
@@ -216,7 +233,12 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
       <ToolHeader title={t("prod.title")} notice={notice}>
         {entries.length > 0 && (
           <ContextBar>
-            <ComparisonMapBar catalog={catalog.data} value={map} onChange={setMap} />
+            <ComparisonMapBar catalog={catalog.data} value={map} onChange={(next) => {
+                if (next.island !== map.island)
+                  track(mapSetEvent("compare", next.island, catalog.data?.islands ?? []));
+                setMap(next);
+              }}
+            />
           </ContextBar>
         )}
       </ToolHeader>
