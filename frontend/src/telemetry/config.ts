@@ -27,6 +27,6 @@ export function readTelemetryConfig(
     tracesSampleRate: sampleRate(env.VITE_SENTRY_TRACES_SAMPLE_RATE),
     apiUrl: env.VITE_API_URL || "http://localhost:8000",
     posthogKey: orNull(env.VITE_POSTHOG_KEY),
-    posthogHost: env.VITE_POSTHOG_HOST || "https://eu.i.posthog.com",
+    posthogHost: env.VITE_POSTHOG_HOST || "https://us.i.posthog.com",
   };
 }
