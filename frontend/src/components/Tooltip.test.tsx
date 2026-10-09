@@ -10,6 +10,9 @@ beforeEach(() => {
   vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
     this: HTMLElement,
   ) {
+    if (this.dataset.testid === "clip") {
+      return { left: 0, width: 140, top: 0, right: 140, bottom: 0, height: 0, x: 0, y: 0, toJSON() {} };
+    }
     if (this.classList.contains("tooltip")) {
       return { left: 100, width: 50, top: 0, right: 150, bottom: 0, height: 0, x: 100, y: 0, toJSON() {} };
     }
@@ -82,6 +85,21 @@ describe("Tooltip", () => {
     fireEvent.pointerEnter(bubble.closest(".tooltip")!, { pointerType: "mouse" });
     // Trigger at 100–150, bubble 80 wide: its right edge must stop at 150 - 8.
     expect(bubble.style.left).toBe("-38px");
+  });
+
+  it("stays inside a scrolling ancestor that would clip it (a swiped card deck)", () => {
+    render(
+      <div data-testid="clip" style={{ overflowX: "auto" }}>
+        <Tooltip content="Hint">
+          <span>Trigger</span>
+        </Tooltip>
+      </div>,
+    );
+    const bubble = bubbleOf("Trigger");
+
+    fireEvent.pointerEnter(bubble.closest(".tooltip")!, { pointerType: "mouse" });
+    // Trigger at 100–150, bubble 80 wide, the deck ends at 140: right edge at 140 - 8.
+    expect(bubble.style.left).toBe("-48px");
   });
 
   it("opens on keyboard focus and closes on blur", () => {
