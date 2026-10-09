@@ -12,9 +12,10 @@ import { Placeholder } from "../components/Placeholder";
 import { ProductionCard } from "../components/ProductionCard";
 import { SwipePager } from "../components/SwipePager";
 import { ContextBar, ToolHeader } from "../components/ToolHeader";
-import { NEUTRAL_MAP, berryRoleOf, mapRequestFields, type ComparisonMap } from "../comparisonMap";
+import { berryRoleOf, mapRequestFields } from "../comparisonMap";
+import { useComparisonSession } from "../comparisonSession";
 import { useI18n } from "../i18n";
-import { configFromMember, linkEntryToBox, newEntry, type RosterEntry } from "../roster";
+import { configFromMember, linkEntryToBox, newEntry } from "../roster";
 import { spriteUrl } from "../sprites";
 import type { Member, MemberInput } from "../types";
 import { useSaveToBox } from "../useSaveToBox";
@@ -50,9 +51,8 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   // Hold the queries until the saved schedule is known, so no default-schedule flash.
   const sleepReady = status === "anonymous" || (status === "authenticated" && !progressLoading);
 
-  const [entries, setEntries] = useState<RosterEntry[]>([]);
-  // The map terms apply to EVERY card, the base included. Not persisted.
-  const [map, setMap] = useState<ComparisonMap>(NEUTRAL_MAP);
+  // Cards and map terms live above the routes, so leaving the tool keeps them.
+  const { entries, setEntries, map, setMap } = useComparisonSession();
   const island = catalog.data?.islands.find((i) => i.name === map.island && i.expert) ?? null;
   const expert = island !== null;
   const mapFields = mapRequestFields(map, expert);

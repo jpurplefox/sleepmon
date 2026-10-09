@@ -15,6 +15,7 @@ import { SavedTeams } from "./pages/SavedTeams";
 import { Team } from "./pages/Team";
 import { Teams } from "./pages/Teams";
 import { HOME, ROUTES } from "./routes";
+import { ComparisonSessionProvider } from "./comparisonSession";
 import { TeamSessionProvider } from "./teamSession";
 
 const queryClient = new QueryClient({
@@ -27,9 +28,11 @@ export default function App() {
       <AuthProvider>
         <GateProvider>
           <ErrorBoundary>
-            <TeamSessionProvider>
-              <AppShell />
-            </TeamSessionProvider>
+            <ComparisonSessionProvider>
+              <TeamSessionProvider>
+                <AppShell />
+              </TeamSessionProvider>
+            </ComparisonSessionProvider>
           </ErrorBoundary>
         </GateProvider>
       </AuthProvider>
