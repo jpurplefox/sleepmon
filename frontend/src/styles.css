@@ -4650,6 +4650,9 @@ button.prod-card__base-tag--action {
   overflow-y: auto;
   /* Reserve the bar's width so it never overlaps the content's right edge. */
   scrollbar-gutter: stable;
+  /* Overlay scrollbars (phones, macOS) take no gutter and draw over the content:
+     keep the right edge (the slider values) clear of them. */
+  padding-right: 0.5rem;
 }
 
 /* ── Island Tab ──────────────────────────────────────────────────────────────── */
@@ -5600,6 +5603,12 @@ button.prod-card__base-tag--action {
   .progress-area-row .bonus-slider,
   .progress-fav-row .filter-control {
     max-width: none;
+  }
+
+  /* In a column, the row's flex-basis (15rem) would become the slider's height. */
+  .progress-area-row .bonus-slider {
+    flex: none;
+    min-width: 0;
   }
 
   .progress-fav-row__type {
