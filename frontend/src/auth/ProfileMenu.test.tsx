@@ -9,6 +9,9 @@ vi.mock("./AuthContext", () => ({
   }),
 }));
 
+import { Router } from "wouter";
+import { memoryLocation } from "wouter/memory-location";
+
 import { LanguageProvider } from "../i18n";
 import { recordEvents } from "../telemetry/testing";
 import { ProfileMenu } from "./ProfileMenu";
@@ -25,5 +28,21 @@ describe("ProfileMenu", () => {
     fireEvent.click(items[items.length - 1]);
     expect(rec.events).toEqual([{ name: "signed_out", props: {} }]);
     expect(logout).toHaveBeenCalledTimes(1);
+  });
+
+  it("offers Account & privacy, which closes the menu and opens /account, and no delete item", () => {
+    const { hook, history } = memoryLocation({ path: "/box", record: true });
+    render(
+      <LanguageProvider>
+        <Router hook={hook}>
+          <ProfileMenu />
+        </Router>
+      </LanguageProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Ana Perez/ }));
+    expect(screen.queryByRole("menuitem", { name: /delete/i })).toBeNull();
+    fireEvent.click(screen.getByRole("menuitem", { name: "Account & privacy" }));
+    expect(history[history.length - 1]).toBe("/account");
+    expect(screen.queryByRole("menu")).toBeNull();
   });
 });

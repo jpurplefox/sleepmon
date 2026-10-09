@@ -58,4 +58,18 @@ describe("useAuth", () => {
     expect(tokenStore.get()).toBeNull();
     expect(sessionHint.present()).toBe(false);
   });
+
+  it("clearSession drops the session without calling the server", async () => {
+    const logout = vi.spyOn(authApi, "postLogout").mockResolvedValue(undefined);
+    vi.spyOn(authApi, "postGoogle").mockResolvedValue({ access_token: "a1", user: ADA });
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.status).toBe("anonymous"));
+    await act(async () => { await result.current.login("id-token"); });
+    act(() => { result.current.clearSession(); });
+    expect(result.current.status).toBe("anonymous");
+    expect(result.current.user).toBeNull();
+    expect(tokenStore.get()).toBeNull();
+    expect(sessionHint.present()).toBe(false);
+    expect(logout).not.toHaveBeenCalled();
+  });
 });

@@ -16,6 +16,7 @@ from litestar.config.cors import CORSConfig
 from litestar.datastructures import State
 from litestar.di import Provide
 from litestar.status_codes import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
+from psycopg.errors import ForeignKeyViolation
 from psycopg_pool import ConnectionPool
 
 from sleepmon.adapters.inbound.http.auth_controller import AuthController
@@ -89,6 +90,13 @@ def _unauthorized_handler(_: Request[Any, Any, Any], exc: Exception) -> Response
     return Response(
         ErrorOut(detail=str(exc) or "No autenticado."), status_code=HTTP_401_UNAUTHORIZED
     )
+
+
+def _stale_user_handler(_: Request[Any, Any, Any], __: ForeignKeyViolation) -> Response[ErrorOut]:
+    # A still-valid access token can outlive its user (deleted account): a write
+    # then trips the ``user_id`` foreign key. That is a stale session, not a server
+    # error; 401 makes the client refresh, fail, and go anonymous.
+    return Response(ErrorOut(detail="session no longer valid"), status_code=HTTP_401_UNAUTHORIZED)
 
 
 def create_app(
@@ -255,6 +263,7 @@ def create_app(
             InvalidCredentialError: _unauthorized_handler,
             InvalidTokenError: _unauthorized_handler,
             InvalidRefreshError: _unauthorized_handler,
+            ForeignKeyViolation: _stale_user_handler,
         },
         cors_config=CORSConfig(
             allow_origins=cors_origins,

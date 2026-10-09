@@ -50,6 +50,7 @@ export type AnalyticsEvent =
   | { name: "sign_in_abandoned"; props: { reason: SignInReason } }
   | { name: "sign_in_failed"; props: NoProps }
   | { name: "signed_out"; props: NoProps }
+  | { name: "account_deleted"; props: { box_size: number; saved_teams: number } }
   | { name: "species_missing"; props: { species: string; tool: "compare" | "team_analysis" } }
   | { name: "compare_limit_reached"; props: NoProps };
 
@@ -81,6 +82,7 @@ export const EVENT_NAMES = [
   "sign_in_abandoned",
   "sign_in_failed",
   "signed_out",
+  "account_deleted",
   "species_missing",
   "compare_limit_reached",
 ] as const satisfies readonly AnalyticsEvent["name"][];

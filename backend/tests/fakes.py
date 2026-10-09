@@ -73,6 +73,9 @@ class InMemoryUserRepository(UserRepository):
     def add(self, user: User) -> None:
         self._by_id[user.id] = user
 
+    def delete(self, user_id: UUID) -> bool:
+        return self._by_id.pop(user_id, None) is not None
+
     def all(self) -> list[User]:
         return list(self._by_id.values())
 

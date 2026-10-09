@@ -24,6 +24,7 @@ export function useProgress(): {
   progress: PlayerProgress;
   isLoading: boolean;
   isError: boolean;
+  refetch: () => void;
   save: (patch: ProgressPatch, onSaved?: () => void) => void;
   /** Same mutation as `save`, awaitable — lets a caller (Player progress's
    * Guardar) know whether the save succeeded before deciding to close. */
@@ -60,6 +61,7 @@ export function useProgress(): {
     progress: query.data ?? EMPTY_PROGRESS,
     isLoading: query.isLoading,
     isError: query.isError,
+    refetch: () => void query.refetch(),
     // Per-call callbacks of mutate() fire only for the latest call; chaining on
     // mutateAsync reports every successful save. A failure is surfaced through
     // saveError (the mutation state), so the rejection is swallowed here.

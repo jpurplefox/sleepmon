@@ -115,3 +115,23 @@ Set these in the repo (Settings → Secrets and variables → Actions):
 `GOOGLE_CLIENT_ID`, `JWT_SECRET`, `COOKIE_SAMESITE`, `CORS_ORIGINS` and
 `COOKIE_SECURE` live on the **Lambda function** (step 4), not in GitHub — the
 backend reads them from its own environment at runtime.
+
+## GitHub variables
+
+Non-secret build settings, under the same page's **Variables** tab. The frontend
+build bakes them into the bundle; an unset variable never fails the build.
+
+| Variable | Value |
+| --- | --- |
+| `CONTACT_EMAIL` | Contact email shown in the footer and on the privacy page (passed to the build as `VITE_CONTACT_EMAIL`). Unset or empty hides the email in both places. See [PRD-0018](prd/0018-account-and-privacy.md). |
+| `POSTHOG_HOST` | PostHog ingest host (`VITE_POSTHOG_HOST`); empty uses the default US cloud ([ADR-0010](adr/0010-observability-error-monitoring-and-product-analytics.md)). |
+| `SENTRY_TRACES_SAMPLE_RATE` | Browser trace sample rate (`VITE_SENTRY_TRACES_SAMPLE_RATE`). |
+
+Locally, `docker compose` passes `VITE_CONTACT_EMAIL` through from your shell or `.env`.
+
+## Third-party project settings
+
+- **PostHog: "Discard client IP data" must be on** (Project settings). The privacy
+  page says the analytics tool does not store IP addresses; that is only true with
+  this setting enabled, since the SDK cannot prevent the ingest from recording the
+  client IP. See ADR-0010, *Configuration*.

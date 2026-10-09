@@ -152,7 +152,8 @@ Current catalog: `IconClock`, `IconHelp`, `IconPackage`, `IconHourglass`,
 `IconEdit`, `IconCopy`, `IconCheck`, `IconSaveBox`, `IconSplit`, `IconSignOut`,
 `IconProgress` (rising bars — what you have unlocked and levelled; the account menu's
 "Perfil de jugador"), `IconSun` (the nap — the daytime sleep, beside `IconMoon`'s
-night), `IconGlobe` (language, on the signed-out `.lang-btn`). A new UI icon is added here following the same stroke — no ad-hoc icons
+night), `IconGlobe` (language, on the signed-out `.lang-btn`), `IconUser` (the account — the
+account menu's "Account & privacy"), `IconTrash` (deleting what is saved). A new UI icon is added here following the same stroke — no ad-hoc icons
 in components.
 
 **Metric display.** A metric reads as **its own icon + the number** — the icon marks
@@ -261,7 +262,10 @@ states · where it lives. Feature one-offs are intentionally not here.
 ### Buttons & actions
 - **`.btn`** — generic action button. Variants: `--primary` (accent fill),
   `--ghost` (transparent, muted border), `--danger` (red, reserved for confirming
-  a delete), `--google` (neutral `--surface-2` surface + `--border`, `--text` label,
+  a delete), `--delete` (the **entry** to a delete, on a page: transparent, `--error`
+  text, `--border` outline, a leading `IconTrash`, label ending in "…"; hover
+  `border-color: --error` — red at rest per §4, while the solid `--danger` stays for the
+  confirmation it opens), `--google` (neutral `--surface-2` surface + `--border`, `--text` label,
   hover `border-color: --accent`; leads with the Google "G" mark — the one place a
   brand color is allowed, treated as artwork, not a voiced color). States: hover per
   variant, `:disabled`, unified focus.
@@ -452,8 +456,10 @@ states · where it lives. Feature one-offs are intentionally not here.
   dropdown skeleton (`.filter-pop` + `.filter-list__item`) with a header (avatar +
   name + email), a **language row** (`.menu-lang`: "Idioma" in `--muted` left, the
   `.lang-select` pair of `.lang-chip`s right, the active one `.lang-chip--active`), and a
-  **Sign out** item (leading `IconSignOut`, **neutral** hover — red is reserved for
-  confirming a delete), rows split by `.filter-list__sep`. Click-outside + Escape to close.
+  **Player profile**, **Account & privacy** (leading `IconUser`; opens the *Your account*
+  page) and **Sign out** items (leading `IconSignOut`), all **neutral** — no red in this
+  menu: deleting the account lives on *Your account* (§6), rows split by
+  `.filter-list__sep`. Click-outside + Escape to close.
 - **`.lang-btn`** — the language control when **signed out**, next to `.btn--google`: a
   30px pill (`--surface-2`, `--border`, `--muted`, `--text-sm` 700) with `IconGlobe` +
   the current code ("ES"); hover/open → `--accent` border. Opens a right-anchored
@@ -508,6 +514,21 @@ states · where it lives. Feature one-offs are intentionally not here.
   `.specialty-toggle`).
 
 ### Shared patterns
+- **App footer** (`.app-footer`) — one line after `<main>` on every route: a `--border`
+  hairline above, `--text-xs` `--muted`, centered, `line-height 1.5`, a wrapping flex row
+  (`gap 0.25rem 0.5rem`) of the **Privacy** link (`--muted`, underlined, `--text` on
+  hover), the contact email as selectable text, and the fan-project / non-affiliation
+  notice, joined by `aria-hidden` middots. Never fixed: `#root` is a column at least the
+  window tall with `<main>` taking the slack, so on a short page the footer rests at the
+  bottom of the window and on a long one it follows the content. Wraps to 2–3 centered
+  lines on a phone; drops
+  the email (and its dot) when none is configured.
+- **Document page** — a non-tool page (*Your account*, *Privacy*): `.layout` with an
+  inner 680px column, a `ToolHeader` with only its title (an optional `--text-sm`
+  `--muted` line under it, e.g. "Last updated"), then a stack of `.card`s (`gap 1rem`),
+  each with an `h2` (`--text-base` 700, or `--text-lg` for long-form sections) and text
+  near 65ch. Facts read as a `dl` grid (`dt` `--muted`, `dd` tabular nums). No app-bar tab
+  is active on these pages.
 - **App bar** (`.appbar`) — the app's top menu, **sticky** (`top: 0`, `--bg`, a
   `--border` hairline below, full bleed; content in a 1100px row). Left to right: the
   **brand** (`.brand`: Snorlax sprite 30px, pixelated, + "sleepmon", `--text-lg` 800,
@@ -848,3 +869,11 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   stays pinned at its bottom; drag and drop is gone
   (the ‹ › controls reorder); fields are 16px on phones. *Why:* a fingertip has no hover,
   no precision and no tooltip delay — the same screen has to work with only taps.
+- **Deleting the account is one page away, never one tap away.** *Question:* where does
+  "Delete my account" live — the account menu, the Player profile, or a page? A red item
+  in the account menu put an irreversible action next to everyday ones (language, sign
+  out). *Resolution:* the menu gets a neutral **Account & privacy** item that opens the
+  *Your account* document page; the page ends with a "Delete your account" card whose
+  `.btn--delete` opens the typed-email confirmation (`.btn--danger` to confirm).
+  *Why:* leaving must always be possible but never accidental; a page in between costs
+  one click and keeps the menu free of destruction.

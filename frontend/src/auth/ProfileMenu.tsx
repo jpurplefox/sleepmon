@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "wouter";
 
 import { LanguageSelector } from "../components/LanguageSelector";
-import { IconChevronDown, IconProgress, IconSignOut } from "../components/icons";
+import { IconChevronDown, IconProgress, IconSignOut, IconUser } from "../components/icons";
 import { ProgressModal } from "../components/ProgressModal";
 import { useI18n } from "../i18n";
+import { ROUTES } from "../routes";
 import { track } from "../telemetry/analytics";
 import { useAuth } from "./AuthContext";
 
 // Iniciales del nombre para el avatar sin foto (mismo vocabulario que
 // `.mini-icon--empty`: un placeholder neutro, no un error).
-function initials(name: string): string {
+export function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
   return parts
@@ -24,6 +26,7 @@ function initials(name: string): string {
 export function ProfileMenu() {
   const { user, logout } = useAuth();
   const { t } = useI18n();
+  const [, navigate] = useLocation();
   const [open, setOpen] = useState(false);
   const [progressOpen, setProgressOpen] = useState(false);
   const [photoBroken, setPhotoBroken] = useState(false);
@@ -102,6 +105,18 @@ export function ProfileMenu() {
           >
             <IconProgress className="mini-icon" />
             {t("progress.title")}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className="filter-list__item"
+            onClick={() => {
+              setOpen(false);
+              navigate(ROUTES.account);
+            }}
+          >
+            <IconUser className="mini-icon" />
+            {t("nav.account")}
           </button>
           <button
             type="button"

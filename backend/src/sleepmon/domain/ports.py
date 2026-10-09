@@ -147,6 +147,10 @@ class UserRepository(ABC):
     @abstractmethod
     def add(self, user: User) -> None: ...
 
+    @abstractmethod
+    def delete(self, user_id: UUID) -> bool:
+        """Remove the user and, by cascade, everything they own. True if a row was removed."""
+
 
 class RefreshTokenRepository(ABC):
     """Persistencia de refresh tokens, con soporte para revocar toda una familia."""

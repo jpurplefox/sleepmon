@@ -13,7 +13,7 @@ import {
 
 import { CURRENT_EVENT, presetEffects } from "./currentEvent";
 import type { EventEffect } from "./eventBonus";
-import { newId } from "./roster";
+import { newId, unlinkEntries } from "./roster";
 import type { TeamDefinition } from "./savedTeams";
 import type { Slot } from "./teamRoster";
 import type { DishType, MealInput, WeeklyBonus } from "./types";
@@ -49,6 +49,8 @@ export interface TeamSession {
   definition: TeamDefinition;
   /** Replaces what a saved team keeps; the event and the ticket stay. */
   load: (def: TeamDefinition, openTeamId: string | null) => void;
+  /** Keeps the team on screen but forgets its Box members and the saved team it came from. */
+  unlinkFromBox: () => void;
 }
 
 const EMPTY_MEALS: (MealInput | null)[] = [null, null, null];
@@ -113,6 +115,10 @@ export function TeamSessionProvider({ children }: { children: ReactNode }) {
         setMainFavorite(def.mainFavorite);
         setWeeklyBonus(def.weeklyBonus);
         setOpenTeamId(id);
+      },
+      unlinkFromBox: () => {
+        setSlots((prev) => prev.map((s) => ({ ...s, entries: unlinkEntries(s.entries) })));
+        setOpenTeamId(null);
       },
     }),
     [

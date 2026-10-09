@@ -316,7 +316,8 @@ select:focus {
 .avatar-btn:focus-visible,
 .prod-box-item:focus-visible,
 .box-entry__identity--toggle:focus-visible,
-.filter-list__item:focus-visible {
+.filter-list__item:focus-visible,
+.btn--delete:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -374,6 +375,175 @@ select:focus {
   .btn--danger:hover {
     filter: brightness(0.9);
   }
+}
+
+/* The entry to a delete, on a page (design-system: Buttons): red at rest, the solid
+   .btn--danger stays for the confirmation it opens. */
+.btn--delete {
+  background: transparent;
+  color: var(--error);
+  border-color: var(--border);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn--delete .mini-icon {
+  width: 15px;
+  height: 15px;
+}
+
+@media (hover: hover) {
+  .btn--delete:hover:not(:disabled) {
+    border-color: var(--error);
+  }
+}
+
+/* Disabled until the account's counts have loaded (PRD 0018). */
+.btn--delete:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Document page (Your account, Privacy): a 680px column of cards. */
+.doc-page {
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.doc-page h2 {
+  font-size: var(--text-base);
+  font-weight: 700;
+  margin: 0 0 0.6rem;
+}
+
+.doc-page .card p {
+  max-width: 65ch;
+}
+
+.doc-updated {
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+.doc-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.doc-sections h2 {
+  font-size: var(--text-lg);
+  margin: 0 0 0.3rem;
+}
+
+.doc-sections p {
+  margin: 0;
+}
+
+/* The page is a column at least as tall as the window and <main> takes the slack,
+   so on a short page the footer rests at the bottom of the window; on a long one
+   it simply follows the content (never fixed). */
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+#root > main {
+  flex: 1 0 auto;
+}
+
+.app-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 0.5rem;
+  padding: 1.25rem 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.app-footer a {
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .app-footer a:hover {
+    color: var(--text);
+  }
+}
+
+.app-footer__email {
+  user-select: all;
+}
+
+.doc-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+/* The .avatar-lg look at 48px: photo, or initials on a neutral circle. */
+.doc-identity__avatar {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: var(--muted);
+  overflow: hidden;
+}
+
+.doc-identity__name {
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.doc-identity__mail {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.doc-dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 1.5rem;
+  margin: 0;
+}
+
+.doc-dl dt {
+  color: var(--muted);
+}
+
+.doc-dl dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.doc-note {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin: 0.8rem 0 0;
+}
+
+.doc-note a,
+.doc-sections a {
+  color: var(--accent-text);
 }
 
 /* Sub skill selector */
@@ -6658,4 +6828,16 @@ button.prod-card__base-tag--action {
   .ctx-field .specialty-toggle__btn {
     min-height: 0;
   }
+}
+
+.delete-account-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  font-size: var(--text-sm);
+}
+
+.delete-account-form .error {
+  margin: 0.5rem 0 0;
 }

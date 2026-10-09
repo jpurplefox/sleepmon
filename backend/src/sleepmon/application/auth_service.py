@@ -65,6 +65,10 @@ class AuthService(ABC):
     @abstractmethod
     def logout(self, refresh_token: str) -> None: ...
 
+    @abstractmethod
+    def delete_account(self, user_id: UUID) -> None:
+        """Delete the user and all their data. Idempotent."""
+
 
 class DefaultAuthService(AuthService):
     def __init__(
@@ -126,6 +130,9 @@ class DefaultAuthService(AuthService):
         record = self._tokens.find_by_hash(self._refresh.hash(refresh_token))
         if record is not None:
             self._tokens.delete_family(record.family_id)
+
+    def delete_account(self, user_id: UUID) -> None:
+        self._users.delete(user_id)
 
     def _issue(self, user: User, *, family_id: UUID) -> AuthResult:
         access = self._access.issue(user.id)

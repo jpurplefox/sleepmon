@@ -7,17 +7,32 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from psycopg_pool import ConnectionPool
 
 from sleepmon.adapters.outbound.postgres.pool import create_pool
 from sleepmon.adapters.outbound.postgres.repository import (
+    PostgresPlayerProgressRepository,
     PostgresRefreshTokenRepository,
+    PostgresSavedTeamRepository,
+    PostgresTeamRepository,
     PostgresUserRepository,
 )
 from sleepmon.domain.auth import RefreshToken, User
+from sleepmon.domain.entities import TeamMember
+from sleepmon.domain.progress import PlayerProgress
+from sleepmon.domain.saved_team import SavedSlot, SavedTeam
+from sleepmon.domain.value_objects import (
+    Berry,
+    Ingredient,
+    Nature,
+    RecipeType,
+    Ribbon,
+    SubSkill,
+    WeeklyBonus,
+)
 
 pytestmark = pytest.mark.integration
 
@@ -35,10 +50,10 @@ def pool(test_dsn: str) -> Iterator[ConnectionPool]:
         p.close()
 
 
-def _user() -> User:
+def _user(google_sub: str = "g-1") -> User:
     return User(
         id=uuid4(),
-        google_sub="g-1",
+        google_sub=google_sub,
         email="a@b.com",
         display_name="Ada",
         avatar_url=None,
@@ -123,3 +138,80 @@ def test_delete_expired_removes_only_past(pool: ConnectionPool) -> None:
     assert tokens.delete_expired(now) == 1
     assert tokens.find_by_hash("old") is None
     assert tokens.find_by_hash("live") is not None
+
+
+def _member() -> TeamMember:
+    return TeamMember(
+        species="Pikachu",
+        level=60,
+        nature=Nature.ADAMANT,
+        ingredients=(Ingredient.FANCY_APPLE, Ingredient.WARMING_GINGER, Ingredient.FANCY_EGG),
+        sub_skills=(SubSkill.HELPING_SPEED_S, SubSkill.INVENTORY_UP_S),
+        ribbon=Ribbon.SLEEP_500,
+    )
+
+
+def _saved_team(member_id: UUID) -> SavedTeam:
+    return SavedTeam(
+        id=uuid4(),
+        name="Cyan curry",
+        slots=(SavedSlot((member_id,)),),
+        island=None,
+        favorite_berries=(Berry.ORAN,),
+        main_favorite=Berry.ORAN,
+        weekly_bonus=WeeklyBonus.INGREDIENT,
+        dish_type=RecipeType.CURRY,
+        meals=(None, None, None),
+        saved_at=datetime.now(UTC),
+    )
+
+
+def _token(user_id: UUID, token_hash: str) -> RefreshToken:
+    now = datetime.now(UTC)
+    return RefreshToken(
+        id=uuid4(),
+        family_id=uuid4(),
+        user_id=user_id,
+        token_hash=token_hash,
+        consumed=False,
+        expires_at=now + timedelta(days=1),
+        created_at=now,
+    )
+
+
+def test_delete_user_cascades_to_their_data_only(pool: ConnectionPool) -> None:
+    users = PostgresUserRepository(pool)
+    members = PostgresTeamRepository(pool)
+    progress = PostgresPlayerProgressRepository(pool)
+    saved = PostgresSavedTeamRepository(pool)
+    tokens = PostgresRefreshTokenRepository(pool)
+    a, b = _user("g-a"), _user("g-b")
+    users.add(a)
+    users.add(b)
+
+    member_a, member_b = _member(), _member()
+    team_a, team_b = _saved_team(member_a.id), _saved_team(member_b.id)
+    for owner, member, team, token_hash in (
+        (a, member_a, team_a, "tok-a"),
+        (b, member_b, team_b, "tok-b"),
+    ):
+        members.add(member, owner.id)
+        progress.transform(owner.id, lambda _: PlayerProgress(pot_size=33))
+        saved.add(team, owner.id)
+        tokens.add(_token(owner.id, token_hash))
+
+    assert users.delete(a.id) is True
+
+    assert users.get(a.id) is None
+    assert members.list(a.id) == []
+    assert progress.get(a.id) == PlayerProgress()  # defaults: its row is gone
+    assert saved.list(a.id) == []
+    assert tokens.find_by_hash("tok-a") is None
+
+    assert users.get(b.id) is not None
+    assert members.get(member_b.id, b.id) is not None
+    assert progress.get(b.id).pot_size == 33
+    assert saved.get(team_b.id, b.id) is not None
+    assert tokens.find_by_hash("tok-b") is not None
+
+    assert users.delete(a.id) is False

@@ -102,4 +102,5 @@ export const api = {
   renameSavedTeam: (id: string, name: string) =>
     request<SavedTeam>(`/saved-teams/${id}`, { method: "PATCH", body: JSON.stringify({ name }) }),
   deleteSavedTeam: (id: string) => request<void>(`/saved-teams/${id}`, { method: "DELETE" }),
+  deleteAccount: () => request<void>("/auth/account", { method: "DELETE" }),
 };

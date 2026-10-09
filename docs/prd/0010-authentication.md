@@ -146,8 +146,9 @@ once and never have to think about the login again*.
   Google only in v1.
 - **Roles and permissions** (admin, sharing the Box with someone, collaborative teams):
   each account is an individual silo.
-- **Advanced account management**: deleting the account, exporting data, merging two
-  Google accounts, changing the associated email.
+- **Advanced account management**: exporting data, merging two Google accounts,
+  changing the associated email. (Deleting the account is covered by
+  [Account & privacy](0018-account-and-privacy.md).)
 - **Preserving anonymous work across devices** or converting a "guest session" with
   saved data: the anonymous user persists nothing, so there is nothing to migrate on
   sign-in.

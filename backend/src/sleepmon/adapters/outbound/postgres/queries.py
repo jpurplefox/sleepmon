@@ -145,6 +145,8 @@ SELECT_USER_BY_SUB = (
     Query.from_(app_user).select(*_USER_COLS).where(app_user.google_sub == _P).get_sql()
 )
 
+DELETE_USER = Query.from_(app_user).delete().where(app_user.id == _P).get_sql()
+
 SELECT_USER_BY_ID = Query.from_(app_user).select(*_USER_COLS).where(app_user.id == _P).get_sql()
 
 INSERT_REFRESH = (

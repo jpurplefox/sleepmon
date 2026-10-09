@@ -42,6 +42,11 @@ export function linkEntryToBox(
   return entries.map((e) => (e.id === entryId ? { ...e, sourceId: memberId } : e));
 }
 
+/** The same entries, none linked to a Box member any more (e.g. after deleting the account). */
+export function unlinkEntries(entries: RosterEntry[]): RosterEntry[] {
+  return entries.map(({ sourceId: _sourceId, ...rest }) => rest);
+}
+
 // Copies a Box member into a config. Returns null when the species is outside
 // the curated catalog: its ingredient slots are unknown, so no valid config
 // exists and the caller must refuse the pick.

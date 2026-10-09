@@ -11,6 +11,7 @@ de secretos corre antes de cualquier ``create_pool(...)``.
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 import pytest
 
@@ -51,6 +52,9 @@ class _FakeAuth(AuthService):
         raise NotImplementedError
 
     def logout(self, refresh_token: str) -> None:
+        raise NotImplementedError
+
+    def delete_account(self, user_id: UUID) -> None:
         raise NotImplementedError
 
 
