@@ -513,9 +513,9 @@ export function Teams() {
                 teamHasSplit={teamHasSplit}
                 saveStatus={statusOf}
                 onAddNew={(idx) => openForm({ kind: "split", slotIndex: idx })}
-                onAddFromBox={(idx) => guard(() => openBox({ kind: "split", slotIndex: idx }))}
+                onAddFromBox={(idx) => guard(() => openBox({ kind: "split", slotIndex: idx }), "my_pokemon")}
                 onEdit={(si, ei) => openForm({ kind: "edit", slotIndex: si, entryIndex: ei })}
-                onSaveToBox={(si, ei) => guard(() => saveEntryToBox(si, ei))}
+                onSaveToBox={(si, ei) => guard(() => saveEntryToBox(si, ei), "save_to_box")}
                 onRemoveSlot={(idx) => setSlots((prev) => removeSlot(prev, idx))}
                 onRemoveEntry={(si, ei) => setSlots((prev) => removeEntry(prev, si, ei))}
                 onWeightChange={(idx, pctA) => setSlots((prev) => setSplitShare(prev, idx, pctA))}
@@ -547,7 +547,7 @@ export function Teams() {
                   <button
                     type="button"
                     className="btn btn--ghost"
-                    onClick={() => guard(() => openBox({ kind: "add" }))}
+                    onClick={() => guard(() => openBox({ kind: "add" }), "my_pokemon")}
                   >
                     {t("prod.myPokemon")}
                   </button>

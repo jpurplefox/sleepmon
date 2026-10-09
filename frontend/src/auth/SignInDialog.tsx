@@ -9,7 +9,7 @@ import { useGate } from "./useGate";
 // diálogo por su cuenta — el usuario vuelve exactamente a donde estaba. Sin
 // botón secundario: Escape / la ✕ / click en el fondo son el "ahora no".
 export function SignInDialog() {
-  const { dialogOpen, closeDialog } = useGate();
+  const { dialogOpen, closeDialog, reason } = useGate();
   const { t } = useI18n();
 
   if (!dialogOpen) return null;
@@ -18,7 +18,7 @@ export function SignInDialog() {
     <Modal title={t("auth.dialogTitle")} onClose={closeDialog}>
       <p>{t("auth.dialogBody")}</p>
       <div className="modal-actions modal-actions--center">
-        <GoogleSignInButton />
+        <GoogleSignInButton reason={reason ?? "my_pokemon"} />
       </div>
     </Modal>
   );

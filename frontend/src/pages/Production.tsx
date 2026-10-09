@@ -262,7 +262,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
               onMakeBase={() => swapEntries(i, 0)}
               onMoveLeft={i > 0 ? () => swapEntries(i, i - 1) : undefined}
               onMoveRight={i < entries.length - 1 ? () => swapEntries(i, i + 1) : undefined}
-              onSaveToBox={() => guard(() => saveToBox(i))}
+              onSaveToBox={() => guard(() => saveToBox(i), "save_to_box")}
               cloneDisabled={atMax}
               inBox={e.sourceId !== undefined}
               saveState={statusOf(e.id).state}
@@ -297,7 +297,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
                     <button
                       type="button"
                       className="btn btn--ghost"
-                      onClick={() => guard(() => openAdd("box"))}
+                      onClick={() => guard(() => openAdd("box"), "my_pokemon")}
                     >
                       {t("prod.myPokemon")}
                     </button>
