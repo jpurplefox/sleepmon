@@ -639,6 +639,14 @@ select:focus {
   gap: 0.7rem;
 }
 
+/* On a phone the field is already the modal's width: a wider panel would stick out
+   past the modal's left edge and be clipped. Match the field (one column). */
+@media (max-width: 640px) {
+  .nature-dropdown {
+    width: 100%;
+  }
+}
+
 .nature-group__title {
   display: flex;
   align-items: center;
