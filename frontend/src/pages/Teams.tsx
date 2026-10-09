@@ -30,6 +30,8 @@ import { SwipePager } from "../components/SwipePager";
 import { TeamSlotCard } from "../components/TeamSlotCard";
 import { StrengthValue } from "../components/StrengthValue";
 import { SnorlaxRatingBadge } from "../components/SnorlaxRatingBadge";
+// Aliased: Recharts already brings a `Tooltip` into this file.
+import { Tooltip as InfoTooltip } from "../components/Tooltip";
 import {
   IconPackage,
   IconPot,
@@ -1165,10 +1167,10 @@ export function Teams() {
                             </span>
                           </div>
                           <div className="cook-total-row">
-                            <span
-                              className="cook-total-row__label"
-                              style={{ cursor: "help" }}
-                              title={t("teams.extraTastyTooltip")}
+                            {/* A Tooltip, not a `title`: a phone has no hover to show it. */}
+                            <InfoTooltip
+                              content={t("teams.extraTastyTooltip")}
+                              className="tooltip--inline cook-total-row__label"
                             >
                               <img
                                 className="mini-icon"
@@ -1177,7 +1179,7 @@ export function Teams() {
                                 style={{ width: 14, height: 14 }}
                               />
                               {t("teams.extraTasty")} {extraTastyPct}% · ×{extraTastyMult}
-                            </span>
+                            </InfoTooltip>
                             <span className="cook-total-row__value">
                               +{fdown(k.extra_tasty_bonus)}
                             </span>
