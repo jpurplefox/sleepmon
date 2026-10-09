@@ -20,7 +20,9 @@ from tests.fakes import (
 )
 
 REFRESH_COOKIE = "refresh_token"
-ACCESS = JwtAccessTokenService("test-secret", timedelta(minutes=15))
+TEST_SECRET = "test-secret-at-least-32-bytes-long!"
+OTHER_SECRET = "another-secret-at-least-32-bytes-long"
+ACCESS = JwtAccessTokenService(TEST_SECRET, timedelta(minutes=15))
 
 
 class FakeAuth(AuthService):
@@ -128,4 +130,22 @@ def test_delete_account_without_token_is_401(
 ) -> None:
     client, auth = client_and_auth
     assert client.delete("/auth/account").status_code == 401
+    assert auth.deleted == []
+
+
+@pytest.mark.parametrize(
+    "token",
+    [
+        "not-a-jwt",
+        JwtAccessTokenService(OTHER_SECRET, timedelta(minutes=15)).issue(uuid4()),
+        JwtAccessTokenService(TEST_SECRET, timedelta(minutes=-1)).issue(uuid4()),
+    ],
+    ids=["malformed", "wrong-signature", "expired"],
+)
+def test_delete_account_with_invalid_or_expired_token_is_401(
+    client_and_auth: tuple[TestClient, FakeAuth], token: str
+) -> None:
+    client, auth = client_and_auth
+    res = client.delete("/auth/account", headers={"Authorization": f"Bearer {token}"})
+    assert res.status_code == 401
     assert auth.deleted == []
