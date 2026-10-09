@@ -598,7 +598,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "account.deleteConfirm": "Borrar definitivamente",
     "account.deleting": "Borrando…",
     "account.deleteFailed":
-      "No se pudo borrar la cuenta. Revisá tu conexión y probá de nuevo; no se borró nada.",
+      "No se pudo confirmar el borrado. Revisá tu conexión y probá de nuevo.",
     "account.deletedTitle": "Cuenta borrada",
     "account.deletedBody":
       "Tu cuenta y todo lo que tenías guardado fueron borrados. Podés seguir usando las herramientas sin iniciar sesión.",
@@ -622,6 +622,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "account.deleteCardBody":
       "Borra tu cuenta y todo lo que guardaste, al instante. No se puede deshacer.",
     "account.deleteEntry": "Borrar mi cuenta…",
+    "account.deleteNeedsData": "Cargá tus datos para poder borrar la cuenta.",
     // Privacidad y pie de página
     "privacy.title": "Privacidad",
     "privacy.updated": "Última actualización: {date}",
@@ -1238,7 +1239,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "account.deleteConfirm": "Delete permanently",
     "account.deleting": "Deleting…",
     "account.deleteFailed":
-      "Couldn't delete the account. Check your connection and try again; nothing was deleted.",
+      "Couldn't confirm the deletion. Check your connection and try again.",
     "account.deletedTitle": "Account deleted",
     "account.deletedBody":
       "Your account and everything you had saved were deleted. You can keep using the tools without signing in.",
@@ -1262,6 +1263,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "account.deleteCardBody":
       "Deletes your account and everything you saved, at once. It cannot be undone.",
     "account.deleteEntry": "Delete my account…",
+    "account.deleteNeedsData": "Load your data to delete your account.",
     // Privacy and footer
     "privacy.title": "Privacy",
     "privacy.updated": "Last updated: {date}",

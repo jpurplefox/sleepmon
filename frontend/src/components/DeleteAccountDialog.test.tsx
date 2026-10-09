@@ -1,9 +1,13 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AccountSummary } from "../account";
+import { ComparisonSessionProvider, useComparisonSession, type ComparisonSession } from "../comparisonSession";
+import { newEntry } from "../roster";
+import { TeamSessionProvider, useTeamSession, type TeamSession } from "../teamSession";
+import type { MemberInput } from "../types";
 import { api } from "../api/client";
 import { LanguageProvider } from "../i18n";
 import { recordEvents } from "../telemetry/testing";
@@ -27,13 +31,26 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+// Exposes both tool sessions, so a test can seed Box-linked entries and read them back.
+const sessions: { comparison?: ComparisonSession; team?: TeamSession } = {};
+function SessionProbe() {
+  sessions.comparison = useComparisonSession();
+  sessions.team = useTeamSession();
+  return null;
+}
+
 function renderDialog(summary: AccountSummary = FULL, client = new QueryClient()) {
   const onClose = vi.fn();
   const onDeleted = vi.fn();
   render(
     <QueryClientProvider client={client}>
       <LanguageProvider>
-        <DeleteAccountDialog email={EMAIL} summary={summary} onClose={onClose} onDeleted={onDeleted} />
+        <ComparisonSessionProvider>
+          <TeamSessionProvider>
+            <SessionProbe />
+            <DeleteAccountDialog email={EMAIL} summary={summary} onClose={onClose} onDeleted={onDeleted} />
+          </TeamSessionProvider>
+        </ComparisonSessionProvider>
       </LanguageProvider>
     </QueryClientProvider>,
   );
@@ -98,13 +115,51 @@ describe("DeleteAccountDialog", () => {
     expect(client.getQueryData(["members"])).toBeUndefined();
   });
 
+  it("keeps what is on screen in Comparison and Team Analysis, no longer linked to the Box", async () => {
+    vi.spyOn(api, "deleteAccount").mockResolvedValue(undefined);
+    const config = { species: "Pikachu" } as unknown as MemberInput;
+    const { onDeleted } = renderDialog();
+    act(() => {
+      sessions.comparison!.setEntries([newEntry(config, "box-1"), newEntry(config)]);
+      sessions.team!.setSlots([{ entries: [newEntry(config, "box-2"), newEntry(config, "box-3")], share: 0.5 }]);
+      sessions.team!.setOpenTeamId("team-1");
+    });
+    await userEvent.type(field(), EMAIL);
+    await userEvent.click(confirmButton());
+    await waitFor(() => expect(onDeleted).toHaveBeenCalledTimes(1));
+
+    const cards = sessions.comparison!.entries;
+    expect(cards).toHaveLength(2);
+    expect(cards.every((e) => !("sourceId" in e))).toBe(true);
+    const slot = sessions.team!.slots[0];
+    expect(slot.share).toBe(0.5);
+    expect(slot.entries).toHaveLength(2);
+    expect(slot.entries.every((e) => !("sourceId" in e))).toBe(true);
+    expect(sessions.team!.openTeamId).toBeNull();
+  });
+
+  it("leaves the Box links in place when deletion fails", async () => {
+    vi.spyOn(api, "deleteAccount").mockRejectedValue(new Error("boom"));
+    const config = { species: "Pikachu" } as unknown as MemberInput;
+    renderDialog();
+    act(() => {
+      sessions.comparison!.setEntries([newEntry(config, "box-1")]);
+      sessions.team!.setOpenTeamId("team-1");
+    });
+    await userEvent.type(field(), EMAIL);
+    await userEvent.click(confirmButton());
+    await screen.findByRole("alert");
+    expect(sessions.comparison!.entries[0].sourceId).toBe("box-1");
+    expect(sessions.team!.openTeamId).toBe("team-1");
+  });
+
   it("shows an error and keeps the value when deletion fails", async () => {
     vi.spyOn(api, "deleteAccount").mockRejectedValue(new Error("boom"));
     const { onDeleted } = renderDialog();
     await userEvent.type(field(), EMAIL);
     await userEvent.click(confirmButton());
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Couldn't delete the account. Check your connection and try again; nothing was deleted.",
+      "Couldn't confirm the deletion. Check your connection and try again.",
     );
     expect(field()).toHaveValue(EMAIL);
     expect(confirmButton()).toBeEnabled();
@@ -127,10 +182,15 @@ describe("DeleteAccountDialog", () => {
     await waitFor(() => expect(clearSession).toHaveBeenCalled());
   });
 
-  it("Cancel closes without calling the API", async () => {
+  it.each([
+    ["Cancel", async () => userEvent.click(screen.getByRole("button", { name: "Cancel" }))],
+    ["the close button", async () => userEvent.click(screen.getByRole("button", { name: "Close" }))],
+    ["Escape", async () => userEvent.keyboard("{Escape}")],
+  ])("%s closes without calling the API", async (_label, close) => {
     const del = vi.spyOn(api, "deleteAccount");
     const { onClose } = renderDialog();
-    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await userEvent.type(field(), "ana@");
+    await close();
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(del).not.toHaveBeenCalled();
   });

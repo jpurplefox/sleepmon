@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Link } from "wouter";
 
-import { accountSummary } from "../account";
+import { accountSummary, isDefaultProgress } from "../account";
 import { api } from "../api/client";
 import { initials } from "../auth/ProfileMenu";
 import { useAuth } from "../auth/AuthContext";
@@ -10,7 +10,6 @@ import { DeleteAccountDialog } from "../components/DeleteAccountDialog";
 import { IconTrash } from "../components/icons";
 import { ToolHeader } from "../components/ToolHeader";
 import { useI18n } from "../i18n";
-import { EMPTY_PROGRESS } from "../progress";
 import { ROUTES } from "../routes";
 import { useProgress } from "../useProgress";
 import { useSavedTeamsQuery } from "../useSavedTeams";
@@ -21,6 +20,7 @@ export function Account({ onDeleted }: { onDeleted: () => void }) {
   const { user } = useAuth();
   const [photoBroken, setPhotoBroken] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const needsDataId = useId();
 
   const members = useQuery({ queryKey: ["members"], queryFn: api.listMembers });
   const teams = useSavedTeamsQuery();
@@ -30,6 +30,8 @@ export function Account({ onDeleted }: { onDeleted: () => void }) {
 
   const loading = members.isLoading || teams.isLoading || progress.isLoading;
   const failed = members.isError || teams.isError || progress.isError;
+  // Once nothing is in flight, a failure offers Retry (and explains the disabled delete).
+  const needsRetry = !loading && failed;
   const showPhoto = Boolean(user.avatar_url) && !photoBroken;
 
   // What each row reads: its value, "—" if that query failed, "…" while loading.
@@ -37,7 +39,12 @@ export function Account({ onDeleted }: { onDeleted: () => void }) {
     ready ? text() : errored ? "—" : "…";
   const boxSize = members.data?.length ?? 0;
   const teamCount = teams.data?.length ?? 0;
-  const summary = accountSummary(members.data ?? [], teams.data ?? [], progress.isError ? EMPTY_PROGRESS : progress.progress);
+  // The dialog states, and the event records, real counts only: no summary (and no
+  // way to delete) until all three have loaded.
+  const summary =
+    members.isSuccess && teams.isSuccess && !progress.isLoading && !progress.isError
+      ? accountSummary(members.data, teams.data, progress.progress)
+      : null;
 
   const retry = () => {
     void members.refetch();
@@ -78,11 +85,11 @@ export function Account({ onDeleted }: { onDeleted: () => void }) {
             <dt>{t("account.profile")}</dt>
             <dd>
               {value(!progress.isLoading && !progress.isError, progress.isError, () =>
-                summary.hasProfile ? t("account.profileSaved") : t("account.profileNotSaved"),
+                isDefaultProgress(progress.progress) ? t("account.profileNotSaved") : t("account.profileSaved"),
               )}
             </dd>
           </dl>
-          {!loading && failed && (
+          {needsRetry && (
             <p className="error" role="alert">
               {t("account.loadError")}{" "}
               <button type="button" className="btn btn--ghost" onClick={retry}>
@@ -99,13 +106,24 @@ export function Account({ onDeleted }: { onDeleted: () => void }) {
         <section className="card">
           <h2>{t("account.deleteCardTitle")}</h2>
           <p className="muted">{t("account.deleteCardBody")}</p>
-          <button type="button" className="btn btn--delete" onClick={() => setDeleting(true)}>
+          <button
+            type="button"
+            className="btn btn--delete"
+            disabled={summary === null}
+            aria-describedby={needsRetry ? needsDataId : undefined}
+            onClick={() => setDeleting(true)}
+          >
             <IconTrash className="mini-icon" />
             {t("account.deleteEntry")}
           </button>
+          {needsRetry && (
+            <p className="muted" id={needsDataId}>
+              {t("account.deleteNeedsData")}
+            </p>
+          )}
         </section>
       </div>
-      {deleting && (
+      {deleting && summary && (
         <DeleteAccountDialog
           email={user.email}
           summary={summary}

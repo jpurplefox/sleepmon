@@ -18,8 +18,10 @@ vi.mock("../auth/AuthContext", () => ({
   }),
 }));
 
+import { ComparisonSessionProvider } from "../comparisonSession";
 import { LanguageProvider } from "../i18n";
 import { EMPTY_PROGRESS } from "../progress";
+import { TeamSessionProvider } from "../teamSession";
 import { Account } from "./Account";
 
 function renderPage() {
@@ -27,7 +29,11 @@ function renderPage() {
   return render(
     <QueryClientProvider client={client}>
       <LanguageProvider>
-        <Account onDeleted={vi.fn()} />
+        <ComparisonSessionProvider>
+          <TeamSessionProvider>
+            <Account onDeleted={vi.fn()} />
+          </TeamSessionProvider>
+        </ComparisonSessionProvider>
       </LanguageProvider>
     </QueryClientProvider>,
   );
@@ -80,5 +86,42 @@ describe("Account", () => {
     await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
     expect(screen.getByRole("dialog")).toHaveTextContent("Delete your account");
     expect(screen.getByRole("dialog")).toHaveTextContent("23 Pokémon");
+  });
+
+  const deleteEntry = () => screen.getByRole("button", { name: "Delete my account…" });
+  const NEEDS_DATA = "Load your data to delete your account.";
+
+  it.each([
+    ["the Box", () => api.listMembers.mockReturnValue(new Promise(() => {}))],
+    ["the saved teams", () => api.listSavedTeams.mockReturnValue(new Promise(() => {}))],
+    ["the Player profile", () => api.getProgress.mockReturnValue(new Promise(() => {}))],
+  ])("keeps the delete entry disabled while loading %s", async (_label, hang) => {
+    hang();
+    renderPage();
+    expect(deleteEntry()).toBeDisabled();
+    // The two other queries settle; the entry still waits for the third.
+    await waitFor(() => expect(screen.getAllByText("…")).toHaveLength(1));
+    expect(deleteEntry()).toBeDisabled();
+    expect(screen.queryByText(NEEDS_DATA)).not.toBeInTheDocument();
+    fireEvent.click(deleteEntry());
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["the Box", () => api.listMembers.mockRejectedValueOnce(new Error("boom"))],
+    ["the saved teams", () => api.listSavedTeams.mockRejectedValueOnce(new Error("boom"))],
+    ["the Player profile", () => api.getProgress.mockRejectedValueOnce(new Error("boom"))],
+  ])("disables the delete entry with a hint when loading %s fails, until Retry loads it", async (_label, fail) => {
+    fail();
+    renderPage();
+    expect(await screen.findByText(NEEDS_DATA)).toBeInTheDocument();
+    expect(deleteEntry()).toBeDisabled();
+    expect(deleteEntry()).toHaveAccessibleDescription(NEEDS_DATA);
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    await waitFor(() => expect(deleteEntry()).toBeEnabled());
+    expect(screen.queryByText(NEEDS_DATA)).not.toBeInTheDocument();
+    fireEvent.click(deleteEntry());
+    await waitFor(() => expect(screen.getByRole("dialog")).toHaveTextContent("23 Pokémon"));
+    expect(screen.getByRole("dialog")).toHaveTextContent("your 4 saved teams");
   });
 });

@@ -394,9 +394,15 @@ select:focus {
 }
 
 @media (hover: hover) {
-  .btn--delete:hover {
+  .btn--delete:hover:not(:disabled) {
     border-color: var(--error);
   }
+}
+
+/* Disabled until the account's counts have loaded (PRD 0018). */
+.btn--delete:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 /* Document page (Your account, Privacy): a 680px column of cards. */

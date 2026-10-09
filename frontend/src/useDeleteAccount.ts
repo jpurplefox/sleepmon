@@ -4,7 +4,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { AccountSummary } from "./account";
 import { api } from "./api/client";
 import { useAuth } from "./auth/AuthContext";
+import { useComparisonSession } from "./comparisonSession";
 import { useI18n } from "./i18n";
+import { useTeamSession } from "./teamSession";
 import { track } from "./telemetry/analytics";
 
 export function useDeleteAccount(onDeleted: () => void): {
@@ -15,6 +17,8 @@ export function useDeleteAccount(onDeleted: () => void): {
 } {
   const qc = useQueryClient();
   const { clearSession } = useAuth();
+  const comparison = useComparisonSession();
+  const team = useTeamSession();
   const { t } = useI18n();
 
   const mutation = useMutation({
@@ -27,6 +31,9 @@ export function useDeleteAccount(onDeleted: () => void): {
       });
       qc.clear();
       clearSession();
+      // What is on screen stays, as after signing out, but its Box no longer exists.
+      comparison.unlinkFromBox();
+      team.unlinkFromBox();
       onDeleted();
     },
   });
