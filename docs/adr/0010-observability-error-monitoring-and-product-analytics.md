@@ -52,9 +52,10 @@ key is absent.
 
 - Frontend: `@sentry/react`, initialised in `main.tsx`; the `ErrorBoundary`
   reports what it catches. Backend: `sentry-sdk` with its Litestar integration,
-  initialised in the composition root (`app.py`) and wrapped with the AWS Lambda
-  integration in `lambda_handler.py` so events are flushed before the runtime
-  freezes. The domain and application layers never import it.
+  initialised in the composition root (`app.py`); the Lambda entry point
+  (`lambda_handler.py`) wraps the handler in an explicit flush (`flush_after`)
+  so queued events are sent before the runtime freezes. The domain and
+  application layers never import it.
 - **Every error is reported; traces are sampled**, at a rate set per
   environment by configuration and tuned to traffic. Browser traces
   propagate to the API (`sentry-trace` / `baggage` headers, allowed by CORS), so
@@ -62,22 +63,30 @@ key is absent.
   cold start.
 - **Releases are the git commit SHA**, set in CI for both apps. Frontend source
   maps are uploaded to Sentry during the build and **not deployed** to S3.
-- **No PII:** `send_default_pii` off; `Authorization`, cookies and request bodies
-  are not sent; the only user attribute is the account's **internal opaque id**.
-  Sentry Session Replay is not enabled.
+- **No PII:** `send_default_pii` off; `Authorization`, cookies, request bodies
+  and stack-frame local variables are not sent; in the browser, DOM (`ui.*`)
+  breadcrumbs and INP spans are off, since both carry element labels (display
+  names, team names). The only user attribute is the account's **internal
+  opaque id**. Sentry Session Replay is not enabled.
 - Hosted in Sentry's **EU** region.
 
 **PostHog (frontend only)**
 
 - `posthog-js` against **PostHog Cloud EU**, with **in-memory persistence**: no
   cookies or local storage, so an anonymous identity lasts for the open tab.
-- **Identity:** anonymous when signed out; `identify` with the **internal opaque
-  user id** on sign-in (merging the tab's anonymous events into the account);
-  `reset` on sign-out. Every event carries `signed_in`, `language` and the
-  release.
+- **Identity:** PostHog starts once the session check settles. Signed in, it
+  starts already identified by the **internal opaque user id** (bootstrapped), so
+  a reload does not mint a new anonymous id to merge into the person; signed
+  out, it starts anonymous. A sign-in within the tab calls `identify` (merging
+  the tab's anonymous events into the account); sign-out calls `reset`. Every
+  event carries `signed_in`, `language` and the release.
 - **Only the curated catalogue is sent.** Autocapture, automatic pageviews,
-  session recording, heatmaps, surveys and feature flags are off. Tool views are
-  sent explicitly by the router as `tool_viewed`.
+  session recording, heatmaps, dead clicks, exception and web-vitals capture,
+  surveys, conversations, product tours, feature flags and external script
+  loading are off in code, so project settings on the server cannot switch them
+  on; a `before_send` allowlist drops any event outside the catalogue (except
+  PostHog's own `$identify`). Tool views are sent explicitly by the router as
+  `tool_viewed`.
 - Components never call PostHog directly: they call a single typed `track`
   function whose event names and properties are a closed TypeScript union
   mirroring PRD-0017. Tests replace it with a recorder.
@@ -86,9 +95,11 @@ key is absent.
 
 **Configuration**
 
-- Backend: `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE`.
-- Frontend (build-time): `VITE_SENTRY_DSN`, `VITE_POSTHOG_KEY`,
-  `VITE_POSTHOG_HOST`, plus the release injected by CI. The Sentry auth token
+- Backend: `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE`,
+  plus `SENTRY_RELEASE` injected by CI.
+- Frontend (build-time): `VITE_SENTRY_DSN`, `VITE_SENTRY_ENVIRONMENT`,
+  `VITE_SENTRY_TRACES_SAMPLE_RATE`, `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`,
+  plus the release (`VITE_RELEASE`) injected by CI. The Sentry auth token
   for source-map upload is a CI secret only.
 - An empty value disables the corresponding SDK entirely.
 
@@ -99,8 +110,11 @@ key is absent.
   cold starts become visible.
 - Usage questions are answered by PostHog's own insights, funnels and retention
   — no dashboards or event storage to build or operate.
-- Two more third-party services, two more SDKs in the bundle (PostHog and Sentry
-  add tens of KB gzipped), and two sets of keys to provision for each environment.
+- Two more third-party services, two more SDKs, and two sets of keys to
+  provision for each environment. Sentry is loaded up front (it must catch
+  startup errors) and adds about 55 kB gzipped to the main bundle (234 → 289 kB
+  as measured at introduction); PostHog (about 107 kB gzipped) is a separate
+  chunk fetched only when a key is configured, after the session check.
 - Cookieless analytics means **anonymous visitors cannot be counted across
   visits** (a reload is a new visitor); retention is meaningful only for
   signed-in accounts. Accepted in exchange for needing no consent banner.
