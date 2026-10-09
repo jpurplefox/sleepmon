@@ -9,6 +9,8 @@ interface AuthValue {
   status: Status;
   login: (credential: string) => Promise<void>;
   logout: () => Promise<void>;
+  /** Drops the local session without calling the server (e.g. after the account is deleted). */
+  clearSession: () => void;
 }
 const Ctx = createContext<AuthValue | null>(null);
 
@@ -60,9 +62,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const value = useMemo<AuthValue>(() => ({
+  const value = useMemo<AuthValue>(() => {
+    const clearSession = () => {
+      tokenStore.clear();
+      sessionHint.clear();
+      setUser(null);
+      setStatus("anonymous");
+    };
+    return {
     user,
     status,
+    clearSession,
     login: async (credential) => {
       const r = await postGoogle(credential);
       tokenStore.set(r.access_token);
@@ -74,13 +84,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         await postLogout();
       } finally {
-        tokenStore.clear();
-        sessionHint.clear();
-        setUser(null);
-        setStatus("anonymous");
+        clearSession();
       }
     },
-  }), [user, status]);
+    };
+  }, [user, status]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

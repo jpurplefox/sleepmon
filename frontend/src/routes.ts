@@ -5,6 +5,8 @@ export const ROUTES = {
   compare: "/compare",
   teamAnalysis: "/team-analysis",
   savedTeams: "/teams",
+  account: "/account",
+  privacy: "/privacy",
 } as const;
 
 // Navigation entries in display order: the analysis tools first (they work signed
