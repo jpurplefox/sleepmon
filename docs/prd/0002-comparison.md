@@ -42,8 +42,8 @@ is the comparison.
   Meant for comparing **variants** of a similar Pokémon (bump the level, swap a sub
   skill or an ingredient, and read the effect).
 
-Entering Comparison from the Box's **Compare** action seeds that Pokémon as the
-first card (the base).
+Entering Comparison from the Box's **Compare** action starts a comparison about that
+Pokémon: it becomes the only card (the base), replacing whatever the comparison held.
 
 ### What each card shows
 
