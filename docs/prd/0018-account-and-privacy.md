@@ -72,11 +72,12 @@ a short privacy page, and one footer line. Nothing more than that.
   1. **Who runs sleepmon** — a personal fan project — and the **contact email**.
   2. **What is kept with your account:** your Google id, email, name and photo, and what
      you save: Box, saved teams, Player profile. Kept until you delete the account.
-  3. **In your browser:** the session cookie that keeps you signed in, and your language
-     choice. No advertising or analytics cookies.
+  3. **In your browser:** a session cookie and a sign-in token stored in your
+     browser keep you signed in, and your language choice is stored there too. No
+     advertising or analytics cookies, and usage metrics store nothing in your browser.
   4. **Usage metrics and error reports:** anonymous usage of the tools (PostHog) and
      technical error reports (Sentry), tied only to an internal id — never your email or
-     name; IP addresses are not stored.
+     name; those tools do not store IP addresses.
   5. **Deleting your data:** *Delete my account* at the end of *Your account* (account
      menu → Account & privacy), or write to the contact email.
   6. **Last updated** date.

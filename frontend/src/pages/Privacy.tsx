@@ -15,6 +15,9 @@ export function Privacy({ email = CONTACT_EMAIL }: { email?: string | null }) {
     new Date(`${PRIVACY_UPDATED}T00:00:00Z`),
   );
 
+  // The delete sentence is one translatable string; {link} marks where the Link goes.
+  const [before, after] = t("privacy.deleteBody").split("{link}");
+
   return (
     <div className="layout">
       <div className="doc-page">
@@ -44,8 +47,9 @@ export function Privacy({ email = CONTACT_EMAIL }: { email?: string | null }) {
           <section>
             <h2>{t("privacy.deleteTitle")}</h2>
             <p>
-              {t("privacy.deleteBefore")} <Link href={ROUTES.account}>{t("account.title")}</Link>{" "}
-              {t("privacy.deleteAfter")}
+              {before}
+              <Link href={ROUTES.account}>{t("account.title")}</Link>
+              {after}
               {email && ` ${t("privacy.deleteMail", { email })}`}
             </p>
           </section>
