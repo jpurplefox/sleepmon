@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from uuid import UUID, uuid4
 
 import pytest
 from litestar.testing import TestClient
@@ -19,11 +20,13 @@ from tests.fakes import (
 )
 
 REFRESH_COOKIE = "refresh_token"
+ACCESS = JwtAccessTokenService("test-secret", timedelta(minutes=15))
 
 
 class FakeAuth(AuthService):
     def __init__(self) -> None:
         self.logged_out: list[str] = []
+        self.deleted: list[UUID] = []
 
     def login_with_google(self, credential: str) -> AuthResult:
         return AuthResult("access-1", "refresh-1", UserDTO("u1", "a@b.com", "Ada", None))
@@ -35,6 +38,9 @@ class FakeAuth(AuthService):
 
     def logout(self, refresh_token: str) -> None:
         self.logged_out.append(refresh_token)
+
+    def delete_account(self, user_id: UUID) -> None:
+        self.deleted.append(user_id)
 
 
 @pytest.fixture
@@ -53,7 +59,7 @@ def client_and_auth() -> tuple[TestClient, FakeAuth]:
         production_service=production_service,
         catalog=StaticSpeciesCatalog(),
         recipe_catalog=StaticRecipeCatalog(),
-        access=JwtAccessTokenService("test-secret", timedelta(minutes=15)),
+        access=ACCESS,
         auth_service=auth,
         progress_service=DefaultPlayerProgressService(
             InMemoryPlayerProgressRepository(), StaticRecipeCatalog()
@@ -100,3 +106,26 @@ def test_logout_clears_cookie(client_and_auth: tuple[TestClient, FakeAuth]) -> N
     res = client.post("/auth/logout")
     assert res.status_code == 204
     assert auth.logged_out == ["refresh-1"]
+
+
+def test_delete_account_removes_the_token_user_and_clears_cookie(
+    client_and_auth: tuple[TestClient, FakeAuth],
+) -> None:
+    client, auth = client_and_auth
+    user_id = uuid4()
+    res = client.delete(
+        "/auth/account", headers={"Authorization": f"Bearer {ACCESS.issue(user_id)}"}
+    )
+    assert res.status_code == 204
+    assert auth.deleted == [user_id]
+    set_cookie = res.headers["set-cookie"]
+    assert f"{REFRESH_COOKIE}=" in set_cookie
+    assert "Max-Age=0" in set_cookie
+
+
+def test_delete_account_without_token_is_401(
+    client_and_auth: tuple[TestClient, FakeAuth],
+) -> None:
+    client, auth = client_and_auth
+    assert client.delete("/auth/account").status_code == 401
+    assert auth.deleted == []

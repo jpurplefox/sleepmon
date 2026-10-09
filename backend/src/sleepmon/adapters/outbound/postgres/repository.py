@@ -239,6 +239,11 @@ class PostgresUserRepository(UserRepository):
     def get(self, user_id: UUID) -> User | None:
         return self._fetch(queries.SELECT_USER_BY_ID, user_id)
 
+    def delete(self, user_id: UUID) -> bool:
+        with self._pool.connection() as conn, conn.cursor() as cur:
+            cur.execute(queries.DELETE_USER, (user_id,))
+            return cur.rowcount > 0
+
 
 class PostgresRefreshTokenRepository(RefreshTokenRepository):
     def __init__(self, pool: ConnectionPool) -> None:

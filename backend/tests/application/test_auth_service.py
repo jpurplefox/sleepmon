@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 import pytest
 
@@ -108,3 +109,15 @@ def test_logout_is_idempotent() -> None:
     svc.logout(login.refresh_token)
     assert tokens.all() == []
     svc.logout(login.refresh_token)  # no error on second call
+
+
+def test_delete_account_removes_the_user_and_is_idempotent() -> None:
+    svc, users, _ = _service()
+    user_id = UUID(svc.login_with_google("id-token").user.id)
+    assert users.get(user_id) is not None
+
+    svc.delete_account(user_id)
+    assert users.get(user_id) is None
+
+    svc.delete_account(user_id)  # already gone: no error
+    assert users.get(user_id) is None

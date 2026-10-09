@@ -9,12 +9,14 @@ in a JSON response body.
 from __future__ import annotations
 
 from typing import Any
+from uuid import UUID
 
-from litestar import Controller, Request, Response, post
+from litestar import Controller, Request, Response, delete, post
 from litestar.datastructures import Cookie
 from litestar.di import NamedDependency
 from litestar.status_codes import HTTP_200_OK, HTTP_204_NO_CONTENT
 
+from sleepmon.adapters.inbound.http.guards import require_user
 from sleepmon.adapters.inbound.http.schemas import AuthOut, GoogleLoginIn, UserOut
 from sleepmon.application.auth_service import AuthResult, AuthService
 from sleepmon.config import SameSite
@@ -94,6 +96,24 @@ class AuthController(Controller):
         token = request.cookies.get(REFRESH_COOKIE)
         if token:
             auth_service.logout(token)
+        return self._cleared_refresh_response(request)
+
+    @delete(
+        "/account",
+        status_code=HTTP_204_NO_CONTENT,
+        guards=[require_user],
+        sync_to_thread=True,
+    )
+    def delete_account(
+        self,
+        auth_service: NamedDependency[AuthService],
+        current_user_id: NamedDependency[UUID],
+        request: Request[Any, Any, Any],
+    ) -> Response[None]:
+        auth_service.delete_account(current_user_id)
+        return self._cleared_refresh_response(request)
+
+    def _cleared_refresh_response(self, request: Request[Any, Any, Any]) -> Response[None]:
         cookie_secure: bool = request.app.state.cookie_secure
         cookie_samesite: SameSite = request.app.state.cookie_samesite
         cleared = Cookie(
