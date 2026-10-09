@@ -518,7 +518,10 @@ states · where it lives. Feature one-offs are intentionally not here.
   hairline above, `--text-xs` `--muted`, centered, `line-height 1.5`, a wrapping flex row
   (`gap 0.25rem 0.5rem`) of the **Privacy** link (`--muted`, underlined, `--text` on
   hover), the contact email as selectable text, and the fan-project / non-affiliation
-  notice, joined by `aria-hidden` middots. Wraps to 2–3 centered lines on a phone; drops
+  notice, joined by `aria-hidden` middots. Never fixed: `#root` is a column at least the
+  window tall with `<main>` taking the slack, so on a short page the footer rests at the
+  bottom of the window and on a long one it follows the content. Wraps to 2–3 centered
+  lines on a phone; drops
   the email (and its dot) when none is configured.
 - **Document page** — a non-tool page (*Your account*, *Privacy*): `.layout` with an
   inner 680px column, a `ToolHeader` with only its title (an optional `--text-sm`
