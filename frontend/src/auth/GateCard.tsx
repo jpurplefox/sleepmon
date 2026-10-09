@@ -1,5 +1,8 @@
+import { useEffect } from "react";
+
 import { IconMoon } from "../components/icons";
 import { useI18n } from "../i18n";
+import { track } from "../telemetry/analytics";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 
 // Gate anónimo de una página reservada (lee o escribe la Caja): el tab sigue
@@ -9,6 +12,10 @@ import { GoogleSignInButton } from "./GoogleSignInButton";
 // design system; el resto es neutro.
 export function GateCard() {
   const { t } = useI18n();
+  // The page itself is the prompt: record it each time it is shown.
+  useEffect(() => {
+    track({ name: "sign_in_prompted", props: { reason: "page_gate" } });
+  }, []);
   return (
     <div className="layout layout--wide">
       <div className="card gate-card">
@@ -17,7 +24,7 @@ export function GateCard() {
         </div>
         <p className="gate-card__title">{t("auth.gateTitle")}</p>
         <p className="gate-card__body">{t("auth.gateBody")}</p>
-        <GoogleSignInButton />
+        <GoogleSignInButton reason="page_gate" />
       </div>
     </div>
   );

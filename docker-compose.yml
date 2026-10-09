@@ -24,6 +24,10 @@ services:
       # defecto: hay que exportarlos en el entorno antes de levantar el stack.
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       JWT_SECRET: ${JWT_SECRET:-}
+      # Sentry (ADR-0010): empty = off. Sample rate is per environment.
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
+      SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0}
     ports:
       - "8000:8000"
     depends_on:
@@ -37,6 +41,10 @@ services:
     environment:
       VITE_API_URL: http://localhost:8000
       VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
+      VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
+      VITE_SENTRY_TRACES_SAMPLE_RATE: ${VITE_SENTRY_TRACES_SAMPLE_RATE:-}
+      VITE_POSTHOG_KEY: ${VITE_POSTHOG_KEY:-}
+      VITE_POSTHOG_HOST: ${VITE_POSTHOG_HOST:-}
     ports:
       - "5173:5173"
     depends_on:

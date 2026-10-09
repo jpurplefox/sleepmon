@@ -16,16 +16,26 @@ export function weightsOf(slot: Slot): number[] {
   return slot.entries.length === 2 ? [slot.share, 1 - slot.share] : [1];
 }
 
+/** Where a new Pokémon goes: a slot of its own, or sharing an existing slot. */
+export type AddIntent = { kind: "add" } | { kind: "split"; slotIndex: number };
+
+/** Whether a new Pokémon would land: a team holds at most MAX_TEAM slots, and
+ *  only a single-member slot can be split. addSlot/splitSlot refuse otherwise. */
+export function canAdd(slots: Slot[], intent: AddIntent): boolean {
+  return intent.kind === "add"
+    ? slots.length < MAX_TEAM
+    : slots[intent.slotIndex]?.entries.length === 1;
+}
+
 export function addSlot(slots: Slot[], entry: RosterEntry): Slot[] {
-  if (slots.length >= MAX_TEAM) return slots;
+  if (!canAdd(slots, { kind: "add" })) return slots;
   return [...slots, { entries: [entry], share: 1 }];
 }
 
 export function splitSlot(slots: Slot[], slotIndex: number, entry: RosterEntry): Slot[] {
+  if (!canAdd(slots, { kind: "split", slotIndex })) return slots;
   return slots.map((s, i) =>
-    i === slotIndex && s.entries.length === 1
-      ? { entries: [...s.entries, entry], share: 0.5 }
-      : s,
+    i === slotIndex ? { entries: [...s.entries, entry], share: 0.5 } : s,
   );
 }
 

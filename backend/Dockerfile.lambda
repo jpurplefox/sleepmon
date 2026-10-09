@@ -8,5 +8,9 @@ COPY pyproject.toml ${LAMBDA_TASK_ROOT}/
 COPY src ${LAMBDA_TASK_ROOT}/src
 RUN pip install --no-cache-dir "${LAMBDA_TASK_ROOT}[lambda]"
 
+# Release reported to Sentry (the git SHA, passed by CI). Empty locally.
+ARG SENTRY_RELEASE=""
+ENV SENTRY_RELEASE=${SENTRY_RELEASE}
+
 # module.function que Lambda invoca en cada request.
 CMD ["sleepmon.adapters.inbound.http.lambda_handler.handler"]

@@ -28,6 +28,11 @@ mypy src && ruff check .
 # Frontend (local)
 cd frontend && npm install && npm run dev
 npm run test                  # Vitest (logic + catalogue-driven form)
+
+# Telemetry (ADR-0010) — all optional; empty = off
+#   backend:  SENTRY_DSN, SENTRY_ENVIRONMENT, SENTRY_TRACES_SAMPLE_RATE, SENTRY_RELEASE
+#   frontend: VITE_SENTRY_DSN, VITE_SENTRY_ENVIRONMENT, VITE_SENTRY_TRACES_SAMPLE_RATE,
+#             VITE_POSTHOG_KEY, VITE_POSTHOG_HOST, VITE_RELEASE
 ```
 
 ## Structure

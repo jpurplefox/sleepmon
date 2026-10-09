@@ -28,7 +28,7 @@ export function AppBar() {
             <ProfileMenu />
           ) : (
             <>
-              <GoogleSignInButton />
+              <GoogleSignInButton reason="app_bar" />
               <LanguageMenu />
             </>
           )}

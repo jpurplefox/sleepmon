@@ -17,6 +17,7 @@ import { Placeholder } from "../components/Placeholder";
 import { ToolHeader } from "../components/ToolHeader";
 import { useI18n } from "../i18n";
 import { totalIngredients } from "../ingredientProduction";
+import { track } from "../telemetry/analytics";
 import type { Catalog, Member, MemberInput, Species } from "../types";
 import { deletionImpact } from "../savedTeams";
 import { SAVED_TEAMS_KEY, useSavedTeamsQuery } from "../useSavedTeams";
@@ -113,7 +114,8 @@ export function Team({ onCompare }: TeamProps) {
 
   const create = useMutation({
     mutationFn: (data: MemberInput) => api.createMember(data),
-    onSuccess: () => {
+    onSuccess: (member) => {
+      track({ name: "box_pokemon_saved", props: { origin: "box", action: "create", species: member.species } });
       setFormError(null);
       setFormOpen(false);
       invalidate();
@@ -124,7 +126,8 @@ export function Team({ onCompare }: TeamProps) {
   const update = useMutation({
     mutationFn: ({ id, data }: { id: string; data: MemberInput }) =>
       api.updateMember(id, data),
-    onSuccess: () => {
+    onSuccess: (member) => {
+      track({ name: "box_pokemon_saved", props: { origin: "box", action: "update", species: member.species } });
       setFormError(null);
       setEditing(null);
       invalidate();
@@ -133,8 +136,9 @@ export function Team({ onCompare }: TeamProps) {
   });
 
   const remove = useMutation({
-    mutationFn: (id: string) => api.deleteMember(id),
-    onSuccess: () => {
+    mutationFn: (vars: { id: string; teamsAffected: number }) => api.deleteMember(vars.id),
+    onSuccess: (_r, vars) => {
+      track({ name: "box_pokemon_deleted", props: { teams_affected: vars.teamsAffected } });
       setDeleteError(null);
       setDeleting(null);
       invalidate();
@@ -177,10 +181,13 @@ export function Team({ onCompare }: TeamProps) {
     filters.type.length > 0 ||
     filters.ingredient.length > 0;
   // Single-select (skill / specialty): set directo.
-  const setFilter = (key: "skill" | "specialty", value: string) =>
+  const setFilter = (key: "skill" | "specialty", value: string) => {
+    if (value !== "") track({ name: "list_filtered", props: { list: "box", filter: key } });
     setFilters((f) => ({ ...f, [key]: value }));
+  };
   // Multi-select (type / ingredient): toggle del valor dentro del array.
-  const toggleFilter = (key: "type" | "ingredient", value: string) =>
+  const toggleFilter = (key: "type" | "ingredient", value: string) => {
+    if (!filters[key].includes(value)) track({ name: "list_filtered", props: { list: "box", filter: key } });
     setFilters((f) => {
       const current = f[key];
       const next = current.includes(value)
@@ -188,6 +195,7 @@ export function Team({ onCompare }: TeamProps) {
         : [...current, value];
       return { ...f, [key]: next };
     });
+  };
   // Quita un valor concreto de cualquier dimensión (para el × de cada chip).
   const removeFilter = (key: keyof BoxFilters, value: string) =>
     setFilters((f) => {
@@ -226,8 +234,17 @@ export function Team({ onCompare }: TeamProps) {
             <BoxToolbar
               sortKey={sortKey}
               sortDir={sortDir}
-              onSortKey={setSortKey}
-              onToggleDir={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+              onSortKey={(k) => {
+                // Only a change of key counts; re-picking the current one is not a sort.
+                if (k !== sortKey)
+                  track({ name: "list_sorted", props: { list: "box", key: k, direction: sortDir } });
+                setSortKey(k);
+              }}
+              onToggleDir={() => {
+                const next = sortDir === "asc" ? "desc" : "asc";
+                track({ name: "list_sorted", props: { list: "box", key: sortKey, direction: next } });
+                setSortDir(next);
+              }}
               filters={filters}
               onFilter={setFilter}
               onToggle={toggleFilter}
@@ -357,7 +374,12 @@ export function Team({ onCompare }: TeamProps) {
             <button
               type="button"
               className="btn btn--danger"
-              onClick={() => remove.mutate(deleting.id)}
+              onClick={() =>
+                remove.mutate({
+                  id: deleting.id,
+                  teamsAffected: deletionImpact(savedTeams.data ?? [], deleting.id).inTeams.length,
+                })
+              }
               disabled={remove.isPending}
             >
               {remove.isPending ? t("member.deleting") : t("member.delete")}

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { useI18n } from "../i18n";
+import { track } from "../telemetry/analytics";
+import type { SignInReason } from "../telemetry/events";
 import { useAuth } from "./AuthContext";
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
@@ -38,7 +40,7 @@ function ensureGsiInitialized(clientId: string) {
 //
 // Si falta VITE_GOOGLE_CLIENT_ID, se muestra el `.btn--google` igual pero sin
 // inicializar GIS (no-op + warning en consola) — nunca rompe el render.
-export function GoogleSignInButton() {
+export function GoogleSignInButton({ reason }: { reason: SignInReason | "app_bar" }) {
   const { login } = useAuth();
   const { t } = useI18n();
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -59,7 +61,11 @@ export function GoogleSignInButton() {
       setFailed(false);
       setBusy(true);
       login(credential)
-        .catch(() => setFailed(true))
+        .then(() => track({ name: "sign_in_completed", props: { reason } }))
+        .catch(() => {
+          setFailed(true);
+          track({ name: "sign_in_failed", props: {} });
+        })
         .finally(() => setBusy(false));
     };
     currentCredentialHandler = handler;
@@ -81,7 +87,7 @@ export function GoogleSignInButton() {
       cancelled = true;
       if (currentCredentialHandler === handler) currentCredentialHandler = null;
     };
-  }, [login]);
+  }, [login, reason]);
 
   return (
     <div className="google-signin">

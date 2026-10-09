@@ -31,3 +31,4 @@ format: **Title / Status / Context / Decision / Consequences**.
 | [0007](0007-database-migrations-with-yoyo.md) | Database schema migrations with yoyo | Accepted |
 | [0008](0008-client-side-routing-per-tool-urls.md) | Client-side routing with per-tool URLs | Accepted |
 | [0009](0009-aws-deployment-and-ci-cd.md) | AWS deployment and CI/CD | Accepted |
+| [0010](0010-observability-error-monitoring-and-product-analytics.md) | Observability: error monitoring and product analytics | Accepted |

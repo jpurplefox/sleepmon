@@ -15,6 +15,7 @@ import { SavedTeams } from "./pages/SavedTeams";
 import { Team } from "./pages/Team";
 import { Teams } from "./pages/Teams";
 import { HOME, ROUTES } from "./routes";
+import { TelemetryBridge } from "./telemetry/TelemetryBridge";
 import { ComparisonSessionProvider } from "./comparisonSession";
 import { TeamSessionProvider } from "./teamSession";
 
@@ -67,6 +68,7 @@ function AppShell() {
 
   return (
     <>
+      <TelemetryBridge />
       <AppBar />
       <main>
         <Switch>

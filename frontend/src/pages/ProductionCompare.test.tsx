@@ -1,14 +1,25 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { useEffect } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { api } from "../api/client";
 import { ComparisonSessionProvider, useComparisonSession } from "../comparisonSession";
 import { LanguageProvider } from "../i18n";
 import { newEntry } from "../roster";
+import { recordEvents } from "../telemetry/testing";
 import type { Catalog, Member, MemberInput, Species } from "../types";
 
+const pikachuForm = vi.hoisted(() => ({
+  species: "Pikachu", level: 30, nature: "", ingredients: ["Fancy Apple", "Fancy Apple", "Fancy Apple"],
+  sub_skills: [], ribbon: "", skill_level: 1,
+}));
+vi.mock("../components/MemberForm", () => ({
+  MemberForm: ({ onSubmit }: { onSubmit: (c: unknown) => void }) => (
+    <button type="button" onClick={() => onSubmit(pikachuForm)}>submit-form</button>
+  ),
+}));
 vi.mock("../auth/AuthContext", () => ({ useAuth: () => ({ status: "authenticated" }) }));
 vi.mock("../auth/useGate", () => ({ useGate: () => ({ guard: (f: () => void) => f() }) }));
 
@@ -62,6 +73,7 @@ beforeEach(() => {
   localStorage.setItem("sleepmon.lang", "en");
   // jsdom has no scrolling; the swipe pager calls it when a card arrives.
   HTMLElement.prototype.scrollTo = () => {};
+  HTMLElement.prototype.scrollIntoView = () => {};
   vi.spyOn(api, "getCatalog").mockResolvedValue(catalog);
   vi.spyOn(api, "listMembers").mockResolvedValue([raichu]);
   vi.spyOn(api, "getProgress").mockReturnValue(new Promise(() => {}));
@@ -85,5 +97,88 @@ describe("Compare from the box", () => {
     await waitFor(() => expect(onBaseConsumed).toHaveBeenCalled());
     const shown = screen.getAllByRole("button", { name: /^Show / }).map((b) => b.getAttribute("aria-label"));
     expect(shown).toEqual(["Show Raichu"]);
+  });
+});
+
+function renderCompare(baseMemberId: string | null = null) {
+  return render(
+    <QueryClientProvider client={new QueryClient()}>
+      <LanguageProvider>
+        <ComparisonSessionProvider>
+          <Production baseMemberId={baseMemberId} onBaseConsumed={() => {}} />
+        </ComparisonSessionProvider>
+      </LanguageProvider>
+    </QueryClientProvider>,
+  );
+}
+
+describe("Comparison analytics", () => {
+  let rec: ReturnType<typeof recordEvents>;
+  beforeEach(() => { rec = recordEvents(); });
+  afterEach(() => rec.restore());
+
+  const added = () => rec.events.filter((e) => e.name === "pokemon_added").map((e) => e.props);
+
+  it("records New, My Pokémon and clone with their sources", async () => {
+    const user = userEvent.setup();
+    renderCompare();
+    await user.click(await screen.findByRole("button", { name: "+ New" }));
+    await user.click(screen.getByRole("button", { name: "submit-form" }));
+    await user.click(screen.getByRole("button", { name: "+ My Pokémon" }));
+    await user.click(await screen.findByRole("option", { name: /Raichu/ }));
+    await user.click(screen.getAllByRole("button", { name: "Clone" })[0]);
+    expect(added()).toEqual([
+      { tool: "compare", source: "new", species: "Pikachu" },
+      { tool: "compare", source: "box", species: "Raichu" },
+      { tool: "compare", source: "clone", species: "Pikachu" },
+    ]);
+  });
+
+  it("records Compare from the box as box_compare", async () => {
+    renderCompare("m-raichu");
+    await waitFor(() => expect(added()).toEqual([{ tool: "compare", source: "box_compare", species: "Raichu" }]));
+  });
+
+  it("records reaching the limit once", async () => {
+    const user = userEvent.setup();
+    renderCompare();
+    await user.click(await screen.findByRole("button", { name: "+ New" }));
+    await user.click(screen.getByRole("button", { name: "submit-form" }));
+    for (let i = 0; i < 4; i++) await user.click(screen.getAllByRole("button", { name: "Clone" })[0]);
+    expect(rec.events.filter((e) => e.name === "compare_limit_reached")).toHaveLength(1);
+    expect(added()).toHaveLength(5);
+  });
+
+  it("records nothing when an existing card is edited", async () => {
+    const user = userEvent.setup();
+    renderCompare("m-raichu");
+    await waitFor(() => expect(added()).toHaveLength(1));
+    await user.click(await screen.findByRole("button", { name: "Edit" }));
+    await user.click(screen.getByRole("button", { name: "submit-form" }));
+    expect(added()).toHaveLength(1);
+    expect(rec.events.map((e) => e.name)).toEqual(["pokemon_added"]);
+  });
+
+  it("records species_missing, not an add, for a Box Pokémon outside the catalogue", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(api, "listMembers").mockResolvedValue([{ ...raichu, id: "m-ghost", species: "Missingno" } as Member]);
+    renderCompare();
+    await user.click(await screen.findByRole("button", { name: "+ My Pokémon" }));
+    await user.click(await screen.findByRole("option", { name: /Missingno/ }));
+    expect(rec.events).toEqual([
+      { name: "species_missing", props: { species: "Missingno", tool: "compare" } },
+    ]);
+  });
+
+  it("records nothing more once the comparison is full", async () => {
+    const user = userEvent.setup();
+    renderCompare();
+    await user.click(await screen.findByRole("button", { name: "+ New" }));
+    await user.click(screen.getByRole("button", { name: "submit-form" }));
+    for (let i = 0; i < 4; i++) await user.click(screen.getAllByRole("button", { name: "Clone" })[0]);
+    // Clone is disabled at 5/5; a click must change nothing and record nothing.
+    await user.click(screen.getAllByRole("button", { name: "Clone" })[0]);
+    expect(added()).toHaveLength(5);
+    expect(rec.events.filter((e) => e.name === "compare_limit_reached")).toHaveLength(1);
   });
 });

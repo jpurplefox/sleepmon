@@ -5,6 +5,7 @@ import { useCallback, useRef, useState } from "react";
 
 import { api } from "./api/client";
 import type { RosterEntry } from "./roster";
+import { track } from "./telemetry/analytics";
 
 export type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -13,6 +14,8 @@ export interface SaveStatus {
   error?: string | null;
 }
 
+type Origin = "compare" | "team_analysis";
+
 const IDLE: SaveStatus = { state: "idle" };
 
 // How long "saved" stays on screen before fading back to idle. The durable
@@ -20,7 +23,7 @@ const IDLE: SaveStatus = { state: "idle" };
 const SAVED_MS = 2500;
 
 export function useSaveToBox(): {
-  save: (entry: RosterEntry, onCreated?: (memberId: string) => void) => void;
+  save: (entry: RosterEntry, origin: Origin, onCreated?: (memberId: string) => void) => void;
   statusOf: (entryId: string) => SaveStatus;
   reset: (entryId: string) => void;
 } {
@@ -33,12 +36,20 @@ export function useSaveToBox(): {
   }, []);
 
   const mutation = useMutation({
-    mutationFn: (vars: { entry: RosterEntry; onCreated?: (memberId: string) => void }) =>
+    mutationFn: (vars: { entry: RosterEntry; origin: Origin; onCreated?: (memberId: string) => void }) =>
       vars.entry.sourceId
         ? api.updateMember(vars.entry.sourceId, vars.entry.config)
         : api.createMember(vars.entry.config),
     onMutate: (vars) => setStatus(vars.entry.id, { state: "saving" }),
     onSuccess: (member, vars) => {
+      track({
+        name: "box_pokemon_saved",
+        props: {
+          origin: vars.origin,
+          action: vars.entry.sourceId ? "update" : "create",
+          species: vars.entry.config.species,
+        },
+      });
       setStatus(vars.entry.id, { state: "saved" });
       if (!vars.entry.sourceId) vars.onCreated?.(member.id);
       qc.invalidateQueries({ queryKey: ["members"] });
@@ -57,8 +68,8 @@ export function useSaveToBox(): {
   });
 
   const save = useCallback(
-    (entry: RosterEntry, onCreated?: (memberId: string) => void) =>
-      mutation.mutate({ entry, onCreated }),
+    (entry: RosterEntry, origin: Origin, onCreated?: (memberId: string) => void) =>
+      mutation.mutate({ entry, origin, onCreated }),
     [mutation],
   );
 

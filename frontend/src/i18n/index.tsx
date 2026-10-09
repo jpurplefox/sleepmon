@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
+import { track } from "../telemetry/analytics";
 import { UI } from "./ui";
 import {
   tBerry,
@@ -51,7 +52,12 @@ const Ctx = createContext<I18n | null>(null);
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(detectLang);
 
+  // Read by `setLang` so it keeps stable (empty) deps and can compare without
+  // tracking from inside a state updater (React may call updaters twice).
+  const langRef = useRef(lang);
+
   useEffect(() => {
+    langRef.current = lang;
     document.documentElement.lang = lang;
   }, [lang]);
 
@@ -60,6 +66,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(STORAGE_KEY, l);
     } catch {
       /* ignore */
+    }
+    if (langRef.current !== l) {
+      langRef.current = l;
+      track({ name: "language_changed", props: { language: l } });
     }
     setLangState(l);
   }, []);

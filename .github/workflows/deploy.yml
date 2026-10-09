@@ -107,7 +107,7 @@ jobs:
           # attestations (SLSA provenance) en vez de un manifiesto único. ECR lo
           # acepta, pero Lambda lo rechaza ("media type ... is not supported")
           # al actualizar la función. Mismo flag que usa whos-that.
-          docker build --platform linux/amd64 --provenance=false -f backend/Dockerfile.lambda -t "$IMAGE_URI" backend
+          docker build --platform linux/amd64 --provenance=false --build-arg SENTRY_RELEASE="$IMAGE_TAG" -f backend/Dockerfile.lambda -t "$IMAGE_URI" backend
           docker push "$IMAGE_URI"
           echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_ENV"
       - name: Update Lambda function code
@@ -139,6 +139,17 @@ jobs:
           # el Client ID de Google. Se hornean en el bundle en build time.
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+          # Telemetry (ADR-0010). Missing secrets leave the matching service off.
+          VITE_RELEASE: ${{ github.sha }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+          VITE_SENTRY_ENVIRONMENT: production
+          VITE_SENTRY_TRACES_SAMPLE_RATE: ${{ vars.SENTRY_TRACES_SAMPLE_RATE }}
+          VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
+          VITE_POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
+          # Source-map upload (build-time only, never in the bundle).
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT_FRONTEND }}
         run: npm run build
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -146,7 +157,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
       - name: Sync to S3
-        run: aws s3 sync dist "s3://$S3_BUCKET" --delete
+        run: aws s3 sync dist "s3://$S3_BUCKET" --delete --exclude "*.map"
       - name: Invalidate CloudFront
         run: |
           aws cloudfront create-invalidation \

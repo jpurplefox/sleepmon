@@ -137,3 +137,45 @@ def test_create_app_opens_no_pool_when_every_service_is_injected(
         ),
     )
     assert app is not None
+
+
+def test_cors_preflight_admits_sentry_trace_headers() -> None:
+    # Regression pin: the browser SDK adds ``sentry-trace``/``baggage`` to API calls,
+    # so the CORS preflight must admit them alongside ``authorization``.
+    from litestar.testing import TestClient
+
+    app = create_app(
+        service=DefaultTeamService(
+            InMemoryTeamRepository(),
+            StaticSpeciesCatalog(),
+            InMemoryPlayerProgressRepository(),
+            InMemorySavedTeamRepository(),
+        ),
+        production_service=DefaultProductionService(StaticSpeciesCatalog(), StaticRecipeCatalog()),
+        catalog=StaticSpeciesCatalog(),
+        recipe_catalog=StaticRecipeCatalog(),
+        access=JwtAccessTokenService("test-secret", timedelta(minutes=15)),
+        auth_service=_FakeAuth(),
+        progress_service=DefaultPlayerProgressService(
+            InMemoryPlayerProgressRepository(), StaticRecipeCatalog()
+        ),
+        saved_team_service=DefaultSavedTeamService(
+            InMemorySavedTeamRepository(),
+            InMemoryTeamRepository(),
+            StaticRecipeCatalog(),
+            clock=lambda: datetime.now(UTC),
+        ),
+        settings=_settings(),
+    )
+    with TestClient(app) as client:
+        r = client.options(
+            "/catalog",
+            headers={
+                "Origin": "http://localhost:5173",
+                "Access-Control-Request-Method": "GET",
+                "Access-Control-Request-Headers": "sentry-trace, baggage, authorization",
+            },
+        )
+    assert r.status_code == 204
+    allowed = r.headers["access-control-allow-headers"].lower()
+    assert "sentry-trace" in allowed and "baggage" in allowed and "authorization" in allowed

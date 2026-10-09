@@ -29,6 +29,7 @@ from sleepmon.adapters.inbound.http.controllers import (
     TeamProductionController,
 )
 from sleepmon.adapters.inbound.http.guards import current_user_id
+from sleepmon.adapters.inbound.http.observability import init_sentry
 from sleepmon.adapters.inbound.http.schemas import ErrorOut
 from sleepmon.adapters.outbound.auth.google_identity import GoogleIdentityProvider
 from sleepmon.adapters.outbound.auth.jwt_access_token import JwtAccessTokenService
@@ -125,6 +126,7 @@ def create_app(
             raise RuntimeError("JWT_SECRET must be set")
         if not settings.google_client_id:
             raise RuntimeError("GOOGLE_CLIENT_ID must be set")
+        init_sentry(settings)
 
     if service is None:
         settings = settings or Settings.from_env()

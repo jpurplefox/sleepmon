@@ -4,6 +4,7 @@ import { LanguageSelector } from "../components/LanguageSelector";
 import { IconChevronDown, IconProgress, IconSignOut } from "../components/icons";
 import { ProgressModal } from "../components/ProgressModal";
 import { useI18n } from "../i18n";
+import { track } from "../telemetry/analytics";
 import { useAuth } from "./AuthContext";
 
 // Iniciales del nombre para el avatar sin foto (mismo vocabulario que
@@ -108,6 +109,7 @@ export function ProfileMenu() {
             className="filter-list__item"
             onClick={() => {
               setOpen(false);
+              track({ name: "signed_out", props: {} });
               void logout();
             }}
           >

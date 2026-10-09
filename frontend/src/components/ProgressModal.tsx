@@ -4,6 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { useI18n } from "../i18n";
 import { applyProgressPatch, diffProgress } from "../progress";
+import { track } from "../telemetry/analytics";
+import { profileSections } from "../telemetry/props";
 import { useProgress } from "../useProgress";
 import type { PlayerProgress, ProgressPatch } from "../types";
 import { ExitConfirm } from "./ExitConfirm";
@@ -80,6 +82,7 @@ export function ProgressModal({ onClose }: { onClose: () => void }) {
     if (!hasChanges || isSaving) return;
     try {
       await saveAsync(patch);
+      track({ name: "profile_saved", props: { from: "profile", sections: profileSections(patch) } });
       // The Box computes server-side with the saved schedule: refetch it.
       if (patch.sleep) void queryClient.invalidateQueries({ queryKey: ["members"] });
       onClose();

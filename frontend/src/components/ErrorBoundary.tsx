@@ -2,6 +2,7 @@ import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 
 import { useI18n } from "../i18n";
+import { reportError } from "../telemetry/sentry";
 
 interface Props {
   children: ReactNode;
@@ -41,8 +42,9 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // Dejamos rastro en consola para diagnóstico; el usuario ve el fallback.
-    console.error("Error de render capturado por ErrorBoundary:", error, info);
+    // Keep a console trace for local diagnosis; Sentry gets it when enabled.
+    console.error("Render error caught by ErrorBoundary:", error, info);
+    reportError(error, { componentStack: info.componentStack ?? "" });
   }
 
   render() {

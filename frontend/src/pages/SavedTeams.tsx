@@ -17,6 +17,7 @@ import { RECIPE_TYPES, dishTypeLabelKey, recipeImage } from "../recipes";
 import { ROUTES } from "../routes";
 import { filterTeams, hasFilters, type TeamFilters } from "../savedTeams";
 import { spriteUrl } from "../sprites";
+import { track } from "../telemetry/analytics";
 import type { Catalog, Member, SavedTeam } from "../types";
 import { useDeleteTeam, useSavedTeamsQuery } from "../useSavedTeams";
 import { useTeamSaver } from "../useTeamSaver";
@@ -317,7 +318,12 @@ export function SavedTeams() {
                   ...catalog.data.islands.map((i) => ({ value: i.name, label: i.name })),
                   { value: null, label: t("ctx.noMap") },
                 ]}
-                onChange={(island) => setFilters((f) => ({ ...f, island }))}
+                onChange={(island) => {
+                  // `undefined` clears the filter; `null` ("no map") sets one.
+                  if (island !== undefined)
+                    track({ name: "list_filtered", props: { list: "teams", filter: "map" } });
+                  setFilters((f) => ({ ...f, island }));
+                }}
               />
             </ContextField>
             <ContextField label={t("saved.filterDish")}>
@@ -331,9 +337,11 @@ export function SavedTeams() {
                       type="button"
                       className={"specialty-toggle__btn" + (pressed ? " is-on" : "")}
                       aria-pressed={pressed}
-                      onClick={() =>
-                        setFilters((f) => ({ ...f, dishType: pressed ? undefined : type }))
-                      }
+                      onClick={() => {
+                        if (!pressed)
+                          track({ name: "list_filtered", props: { list: "teams", filter: "dish_type" } });
+                        setFilters((f) => ({ ...f, dishType: pressed ? undefined : type }));
+                      }}
                     >
                       {t(dishTypeLabelKey(type))}
                     </button>
@@ -442,6 +450,7 @@ export function SavedTeams() {
             catalog={catalog.data}
             inComparison={NOTHING_TAKEN}
             onPick={(m) => {
+              track({ name: "list_filtered", props: { list: "teams", filter: "pokemon" } });
               setFilters((f) => ({ ...f, memberId: m.id }));
               setPicking(false);
             }}
