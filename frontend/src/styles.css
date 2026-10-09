@@ -1140,6 +1140,7 @@ select:focus {
 }
 
 .modal-panel {
+  position: relative; /* anchors the discard question (.modal-confirm) */
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
@@ -1153,6 +1154,34 @@ select:focus {
   max-height: calc(100dvh - 4rem);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   animation: modal-in 0.12s ease-out;
+}
+
+/* "Discard your changes?": a card over the panel's content, which stays mounted
+   (inert) underneath so "Keep editing" loses nothing. */
+.modal-confirm {
+  position: absolute;
+  inset: 0;
+  z-index: 40; /* above the content's own popovers (≤30) */
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  animation: appear-in 0.15s ease-out;
+}
+
+.modal-confirm__card {
+  max-width: 22rem;
+  padding: 1.25rem;
+  background: var(--surface-2);
+  border: 1px solid var(--divider);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-dropdown);
+  text-align: center;
+}
+
+.modal-confirm__card p {
+  margin: 0;
 }
 
 .modal-panel--wide {
@@ -3571,6 +3600,7 @@ button.prod-card__base-tag--action {
   .prod-card--enter,
   .modal-panel,
   .modal-overlay,
+  .modal-confirm,
   .progress-diff,
   .icon-btn--saving {
     animation: none;

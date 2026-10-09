@@ -58,6 +58,8 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   const mapFields = mapRequestFields(map, expert);
   const berryOf = (species: string) => catalog.data?.species.find((s) => s.name === species)?.berry ?? "";
   const [modal, setModal] = useState<"form" | "box" | null>(null);
+  // Whether the open add/edit form holds unsaved input: leaving it then asks first.
+  const [formDirty, setFormDirty] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   // Aviso al usuario cuando una acción no se pudo concretar (p. ej. agregar una
   // especie que no está en el catálogo cargado).
@@ -314,9 +316,11 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
             setModal(null);
             setEditIndex(null);
           }}
+          dirty={formDirty}
         >
           <MemberForm
             catalog={catalog.data}
+            onDirtyChange={setFormDirty}
             pending={false}
             error={null}
             submitLabel={editIndex !== null ? t("prod.save") : t("prod.addToComparison")}

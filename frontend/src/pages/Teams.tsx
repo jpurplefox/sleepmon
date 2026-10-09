@@ -203,6 +203,8 @@ export function Teams() {
   } = useTeamSession();
   const [intent, setIntent] = useState<Intent | null>(null);
   const [modal, setModal] = useState<"form" | "box" | null>(null);
+  // Whether the open add/edit form holds unsaved input: leaving it then asks first.
+  const [formDirty, setFormDirty] = useState(false);
   // Which Settings tab is open, or null: the context bar and the Cooking card each open theirs.
   const [dialog, setDialog] = useState<TeamDialog | null>(null);
   const saver = useTeamSaver(catalog.data);
@@ -1298,9 +1300,11 @@ export function Teams() {
           <Modal
             title={intent.kind === "edit" ? t("team.modalEdit") : t("team.modalAdd")}
             onClose={closeModal}
+            dirty={formDirty}
           >
             <MemberForm
               catalog={catalog.data}
+              onDirtyChange={setFormDirty}
               pending={false}
               error={null}
               submitLabel={intent.kind === "edit" ? t("prod.save") : t("teams.addToTeam")}

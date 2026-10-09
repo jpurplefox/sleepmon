@@ -421,6 +421,11 @@ states · where it lives. Feature one-offs are intentionally not here.
   doesn't scroll too). A dropdown opened inside shrinks its list to the body's visible
   room below it (never under ~160px; then it scrolls into view), so the list and the
   body never both scroll. Every scrolling surface uses the thin `--border` scrollbar.
+  `dirty?` (the add/edit Pokémon form sets it from `MemberForm`'s `onDirtyChange`):
+  with unsaved input, a tap outside, Escape or ✕ first ask "Discard your changes?"
+  in a `.modal-confirm` card over the content (Keep editing · Discard, the discard in
+  `--danger`). The content stays mounted and `inert` underneath, so keeping on
+  editing loses nothing; Escape on the question means "keep editing".
 - **Dropdown / combobox pattern** — `SpeciesSelect`, `NatureSelect`,
   `SubSkillSelect` share one skeleton: trigger (`aria-haspopup/expanded`) + absolute
   panel (`role="listbox"`), arrow/Enter nav, outside `pointerdown` + Escape to close

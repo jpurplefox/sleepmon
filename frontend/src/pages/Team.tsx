@@ -91,6 +91,8 @@ export function Team({ onCompare }: TeamProps) {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Member | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  // Whether the open add/edit form holds unsaved input: leaving it then asks first.
+  const [formDirty, setFormDirty] = useState(false);
   // Error de borrado (DELETE): se muestra junto a la lista, separado del error
   // del formulario de alta/edición.
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -292,9 +294,10 @@ export function Team({ onCompare }: TeamProps) {
       {allMembers.length > 0 && <BoxCoverage members={allMembers} catalog={catalog.data} />}
 
       {formOpen && (
-        <Modal title={t("team.modalAdd")} onClose={() => setFormOpen(false)}>
+        <Modal title={t("team.modalAdd")} onClose={() => setFormOpen(false)} dirty={formDirty}>
           <MemberForm
             catalog={catalog.data}
+            onDirtyChange={setFormDirty}
             onSubmit={(data) => create.mutate(data)}
             pending={create.isPending}
             error={formError}
@@ -303,9 +306,10 @@ export function Team({ onCompare }: TeamProps) {
       )}
 
       {editing && (
-        <Modal title={t("team.modalEdit")} onClose={() => setEditing(null)}>
+        <Modal title={t("team.modalEdit")} onClose={() => setEditing(null)} dirty={formDirty}>
           <MemberForm
             catalog={catalog.data}
+            onDirtyChange={setFormDirty}
             initial={editing}
             submitLabel={t("team.saveChanges")}
             onSubmit={(data) => update.mutate({ id: editing.id, data })}

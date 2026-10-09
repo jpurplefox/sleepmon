@@ -6,6 +6,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     // Común
     "common.retry": "Reintentar",
     "common.close": "Cerrar",
+    "modal.discardQuestion": "¿Descartar los cambios? Lo que cargaste en este formulario se pierde.",
+    "modal.keepEditing": "Seguir editando",
+    "modal.discard": "Descartar",
     "common.cancel": "Cancelar",
     "common.edit": "Editar",
     "common.reload": "Recargar",
@@ -584,6 +587,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     // Common
     "common.retry": "Retry",
     "common.close": "Close",
+    "modal.discardQuestion": "Discard your changes? What you entered in this form will be lost.",
+    "modal.keepEditing": "Keep editing",
+    "modal.discard": "Discard",
     "common.cancel": "Cancel",
     "common.edit": "Edit",
     "common.reload": "Reload",

@@ -69,6 +69,32 @@ beforeEach(() => {
   localStorage.setItem("sleepmon.lang", "en");
 });
 
+describe("MemberForm unsaved changes", () => {
+  it("is clean until something is changed, new or edited", async () => {
+    const user = userEvent.setup();
+    const onDirtyChange = vi.fn();
+    renderForm({ onDirtyChange });
+    expect(onDirtyChange).toHaveBeenLastCalledWith(false);
+    await pickSpecies(user, /Pikachu/);
+    expect(onDirtyChange).toHaveBeenLastCalledWith(true);
+  });
+
+  it("an untouched edit is clean even after its ingredients load", () => {
+    const onDirtyChange = vi.fn();
+    const initial: MemberInput = {
+      species: "Pikachu",
+      level: 30,
+      nature: "",
+      ingredients: ["Fancy Apple", "Warming Ginger", "Fancy Apple"],
+      sub_skills: [],
+      ribbon: "",
+      skill_level: 1,
+    };
+    renderForm({ initial, onDirtyChange });
+    expect(onDirtyChange).toHaveBeenLastCalledWith(false);
+  });
+});
+
 describe("MemberForm (catalogue-driven)", () => {
   it("blocks the submit until a species is chosen", async () => {
     const user = userEvent.setup();

@@ -21,6 +21,8 @@ interface Props {
   initial?: MemberInput;
   // Nota al pie del form, justo antes del botón de submit.
   footer?: ReactNode;
+  /** Reports whether the form differs from what it opened with (so leaving can ask). */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 export function MemberForm({
@@ -31,6 +33,7 @@ export function MemberForm({
   submitLabel,
   initial,
   footer,
+  onDirtyChange,
 }: Props) {
   const { t } = useI18n();
   const label = submitLabel ?? t("form.addToTeam");
@@ -75,6 +78,19 @@ export function MemberForm({
   // selectedSpecies es undefined: el fieldset de Ingredientes no se renderiza y
   // no se puede validar/editar el kit. Bloqueamos el submit y avisamos.
   const speciesUnknown = !!species && !selectedSpecies;
+
+  // Dirty = differs from what the form opened with. The ingredients a species
+  // fills in are part of picking that species, so a new form only gets dirty once
+  // something is chosen, and an untouched edit stays clean.
+  const dirty =
+    species !== (initial?.species ?? "") ||
+    level !== (initial?.level ?? 30) ||
+    nature !== (initial?.nature ?? "") ||
+    ribbon !== (initial?.ribbon ?? "") ||
+    skillLevel !== (initial?.skill_level ?? 1) ||
+    subSkills.filter(Boolean).join("|") !== (initial?.sub_skills ?? []).join("|") ||
+    (initial !== undefined && ingredients.join("|") !== initial.ingredients.join("|"));
+  useEffect(() => onDirtyChange?.(dirty), [dirty, onDirtyChange]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
