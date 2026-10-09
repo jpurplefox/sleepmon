@@ -55,6 +55,7 @@ import { configFromMember, newEntry } from "../roster";
 import {
   MAX_TEAM,
   addSlot,
+  canAdd,
   linkToBox,
   removeEntry,
   removeSlot,
@@ -392,13 +393,8 @@ export function Teams() {
   // Applies a config according to the pending intent.
   const applyConfig = (config: MemberInput, sourceId?: string) => {
     if (!intent) return;
-    // Only count a Pokémon that actually lands: addSlot refuses past MAX_TEAM and
-    // splitSlot only splits a single-member slot.
-    const lands =
-      intent.kind === "add"
-        ? slots.length < MAX_TEAM
-        : intent.kind === "split" && slots[intent.slotIndex]?.entries.length === 1;
-    if (intent.kind !== "edit" && lands)
+    // Only count a Pokémon that actually lands (the same rule addSlot/splitSlot apply).
+    if (intent.kind !== "edit" && canAdd(slots, intent))
       track(teamAddedEvent(intent.kind, sourceId, config.species));
     if (intent.kind === "edit") {
       // Editing replaces the config but not the id, so a stale save status

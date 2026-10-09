@@ -6,6 +6,7 @@ import type { Slot } from "./teamRoster";
 import {
   MAX_TEAM,
   addSlot,
+  canAdd,
   linkToBox,
   removeEntry,
   removeSlot,
@@ -49,6 +50,33 @@ describe("addSlot", () => {
   it("refuses to grow past MAX_TEAM", () => {
     const full = teamOf(MAX_TEAM);
     expect(addSlot(full, newEntry(config()))).toHaveLength(MAX_TEAM);
+  });
+});
+
+describe("canAdd", () => {
+  // canAdd must agree with what addSlot/splitSlot actually do.
+  const lands = (before: Slot[], after: Slot[]) =>
+    after.reduce((n, s) => n + s.entries.length, 0) > before.reduce((n, s) => n + s.entries.length, 0);
+
+  it("adds a slot until the team is full", () => {
+    for (let n = 0; n <= MAX_TEAM; n++) {
+      const slots = teamOf(n);
+      expect(canAdd(slots, { kind: "add" })).toBe(n < MAX_TEAM);
+      expect(canAdd(slots, { kind: "add" })).toBe(lands(slots, addSlot(slots, newEntry(config()))));
+    }
+  });
+
+  it("splits only a single-member slot that exists", () => {
+    const single = teamOf(1);
+    const split = splitSlot(single, 0, newEntry(config()));
+    for (const [slots, i, expected] of [
+      [single, 0, true],
+      [split, 0, false],
+      [single, 3, false],
+    ] as const) {
+      expect(canAdd(slots, { kind: "split", slotIndex: i })).toBe(expected);
+      expect(lands(slots, splitSlot(slots, i, newEntry(config())))).toBe(expected);
+    }
   });
 });
 
