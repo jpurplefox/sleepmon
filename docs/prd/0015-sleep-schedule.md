@@ -42,7 +42,7 @@ as saved in every tool. Changing it means changing the profile.
 ### The controls
 
 - **Night** — a duration from **1:30 to 12:00**.
-- **I nap** — off by default. Turned on, a **Nap** duration appears, starting at
+- **Nap** (toggle) — off by default. Turned on, a **Nap** duration appears, starting at
   **2:00**, from **1:30 to 4:00**. Turned off, the nap is not counted at all.
 - Every duration moves in **15-minute steps** (8:30, 8:45…). Under 1:30 a sleep does not
   count in the game, so it cannot be entered.
@@ -95,7 +95,7 @@ These read the same in the Box, Comparison and Team Analysis.
 
 - **Default:** signed out, or signed in with no saved schedule, every number in every
   tool is **identical** to the tool before this feature (8:30 at night, no nap).
-- **A new account** reads Night **8:30**, I nap **off**.
+- **A new account** reads Night **8:30**, Nap **off**.
 - **Night only:** with Night **7:00**, a Pokémon that fills in **5:00** overflows **2:00**
   at night instead of 3:30, and so yields more ingredients/day than at 8:30; its helps/day
   are unchanged.
@@ -118,7 +118,7 @@ These read the same in the Box, Comparison and Team Analysis.
   be entered.
 - **Total limit:** with Night **11:00**, Nap offers up to **3:00**; with Nap **4:00**,
   Night offers up to **10:00**.
-- **Nap toggle:** turning I nap on shows Nap at **2:00**; turning it off removes the nap
+- **Nap toggle:** turning the Nap toggle on shows the Nap duration at **2:00**; turning it off removes the nap
   from every number once saved.
 - **Saving:** nothing changes in any tool until **Guardar**; after it, every open tool
   recomputes with the new schedule, and the schedule is present on another device signed

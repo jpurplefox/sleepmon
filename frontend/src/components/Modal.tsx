@@ -66,7 +66,9 @@ export function Modal({ title, onClose, children, wide, tall }: Props) {
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       );
     target?.focus();
-    return () => opener?.focus();
+    // preventScroll: the opener may sit in a swiped deck (the "+" slide), and
+    // scrolling it into view would undo the pager bringing the new card in.
+    return () => opener?.focus({ preventScroll: true });
   }, []);
 
   // Dropdowns opened inside fit the body, so only one thing scrolls.

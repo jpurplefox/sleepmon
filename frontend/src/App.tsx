@@ -14,7 +14,7 @@ import { Production } from "./pages/Production";
 import { SavedTeams } from "./pages/SavedTeams";
 import { Team } from "./pages/Team";
 import { Teams } from "./pages/Teams";
-import { ROUTES } from "./routes";
+import { HOME, ROUTES } from "./routes";
 import { TeamSessionProvider } from "./teamSession";
 
 const queryClient = new QueryClient({
@@ -78,12 +78,12 @@ function AppShell() {
             <Teams />
           </Route>
           <Route path={ROUTES.savedTeams}>{gated(<SavedTeams />)}</Route>
-          {/* Default and unknown paths land on the Box. */}
+          {/* Default and unknown paths land on the first tool. */}
           <Route path="/">
-            <Redirect to={ROUTES.box} />
+            <Redirect to={HOME} />
           </Route>
           <Route>
-            <Redirect to={ROUTES.box} />
+            <Redirect to={HOME} />
           </Route>
         </Switch>
       </main>

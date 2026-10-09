@@ -514,7 +514,6 @@ export function BoxEntry({
             {
               label: t("box.compareMenu"),
               icon: <IconCompare />,
-              tone: "accent",
               ariaLabel: t("box.compareAria", { species: member.species }),
               onSelect: onCompare,
             },

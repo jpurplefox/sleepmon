@@ -8,8 +8,8 @@ export interface ActionMenuItem {
   onSelect: () => void;
   /** Accessible name when the visible label needs its subject (e.g. the species). */
   ariaLabel?: string;
-  /** Hover tint: indigo for a way into another tool, red for a delete. Neutral at rest. */
-  tone?: "accent" | "danger";
+  /** A delete: red at rest (hover only says "clickable", and a phone has none). */
+  tone?: "danger";
   /** Draws a separator above the item, to set a destructive action apart. */
   separated?: boolean;
 }

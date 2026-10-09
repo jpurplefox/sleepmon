@@ -22,7 +22,23 @@ describe("NavTabs", () => {
   it("renders one link per tool, in order, pointing at its route", () => {
     renderAt(ROUTES.box);
     const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href"));
-    expect(hrefs).toEqual([ROUTES.box, ROUTES.compare, ROUTES.teamAnalysis, ROUTES.savedTeams]);
+    expect(hrefs).toEqual([ROUTES.compare, ROUTES.teamAnalysis, ROUTES.box, ROUTES.savedTeams]);
+  });
+
+  it("sets the saved tools apart from the analysis ones with one separator", () => {
+    const { container } = renderAt(ROUTES.compare);
+    const row = container.querySelector(".tabs")!;
+    const seps = row.querySelectorAll(".nav__sep");
+    expect(seps).toHaveLength(1);
+    expect(seps[0].previousElementSibling).toHaveAttribute("href", ROUTES.teamAnalysis);
+    expect(seps[0].nextElementSibling).toHaveAttribute("href", ROUTES.box);
+  });
+
+  it("names the saved tools \"My box\" and \"My teams\"", () => {
+    renderAt(ROUTES.compare);
+    const row = document.querySelector(".tabs") as HTMLElement;
+    expect(within(row).getByRole("link", { name: "My box" })).toHaveAttribute("href", ROUTES.box);
+    expect(within(row).getByRole("link", { name: "My teams" })).toHaveAttribute("href", ROUTES.savedTeams);
   });
 
   it("marks the link matching the current path as the current page", () => {
@@ -53,7 +69,7 @@ describe("NavTabs", () => {
 
       expect(menuButton()).toHaveAttribute("aria-expanded", "true");
       const hrefs = within(panel()!).getAllByRole("link").map((a) => a.getAttribute("href"));
-      expect(hrefs).toEqual([ROUTES.box, ROUTES.compare, ROUTES.teamAnalysis, ROUTES.savedTeams]);
+      expect(hrefs).toEqual([ROUTES.compare, ROUTES.teamAnalysis, ROUTES.box, ROUTES.savedTeams]);
       expect(within(panel()!).getByRole("link", { current: "page" })).toHaveAttribute("href", ROUTES.compare);
     });
 

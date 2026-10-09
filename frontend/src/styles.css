@@ -639,6 +639,14 @@ select:focus {
   gap: 0.7rem;
 }
 
+/* On a phone the field is already the modal's width: a wider panel would stick out
+   past the modal's left edge and be clipped. Match the field (one column). */
+@media (max-width: 640px) {
+  .nature-dropdown {
+    width: 100%;
+  }
+}
+
 .nature-group__title {
   display: flex;
   align-items: center;
@@ -1895,26 +1903,19 @@ select:focus {
   }
 }
 
-/* Items are neutral at rest; color arrives only on hover (indigo for a way into
-   another tool, red for a delete), so no action shouts while idle. */
-@media (hover: hover) {
-  .action-menu__item--accent:hover,
-  .action-menu__item--accent:hover svg {
-    color: var(--accent-text);
-  }
+/* Hover only says "clickable" (the background above); it never carries meaning, since
+   a fingertip has no hover. A delete is red at rest, so it reads as one on a phone too. */
+.action-menu__item--danger,
+.action-menu__item--danger svg {
+  color: var(--error);
 }
 
-@media (hover: hover) {
-  .action-menu__item--danger:hover,
-  .action-menu__item--danger:hover svg {
-    color: var(--error);
-  }
-}
-
+/* No margin of its own, so the gap across it matches the one between items. --border
+   would vanish on --surface-2; the line is a faint --muted instead. */
 .action-menu__sep {
   height: 1px;
-  background: var(--border);
-  margin: 0.25rem 0.2rem;
+  background: color-mix(in srgb, var(--muted) 25%, transparent);
+  margin: 0 0.6rem;
 }
 
 /* ── RESPONSIVE ANGOSTO (< 1024px) ───────────────────────────────────────────
@@ -3006,16 +3007,15 @@ select:focus {
   border-color: var(--down-border);
 }
 
-/* Fila de altura reservada para el chip/botón de base: aunque haya una sola card
-   (sin chip), reserva el alto para que ninguna salte al pasar de 1 a 2. */
-.prod-card__base-row {
-  display: flex;
-  min-height: 1.4rem;
-}
-
-/* Chip "Base" (estado) y botón "Hacer base" (acción), bajo el topline. */
+/* "Base" chip (state) and "Make base" button (action), at the right end of the name
+   row. Their colors are see-through mixes, so they hold on a berry-tinted identity
+   zone as well as on the plain surface. */
 .prod-card__base-tag {
-  align-self: flex-start;
+  margin-left: auto;
+  flex-shrink: 0;
+  /* A <button> doesn't inherit the font: in the UA default its caps sat ~2px above
+     center, and the button came out shorter than the Base chip. */
+  font-family: inherit;
   font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
@@ -3025,15 +3025,15 @@ select:focus {
 }
 
 span.prod-card__base-tag {
-  color: var(--accent-text);
+  color: var(--text);
   background: var(--accent-dim);
   border: 1px solid var(--accent-border);
 }
 
 button.prod-card__base-tag--action {
-  color: var(--muted);
-  background: transparent;
-  border: 1px solid var(--border);
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text) 30%, transparent);
   cursor: pointer;
   transition:
     border-color 0.12s,
@@ -3121,6 +3121,14 @@ button.prod-card__base-tag--action {
   gap: 0.35rem;
 }
 
+/* On touch the ‹ › hit areas (40px) make the row taller than the name, which pushes
+   the name away from the toolbar above; the extra hit area overlaps the padding instead. */
+@media (pointer: coarse) {
+  .prod-card__topline {
+    margin-top: -0.25rem;
+  }
+}
+
 /* El sprite es el foco visual de la card: centrado bajo el nombre, generoso. */
 .prod-card__sprite {
   width: 88px;
@@ -3138,6 +3146,8 @@ button.prod-card__base-tag--action {
   flex-wrap: wrap;
   gap: 0.3rem;
   line-height: 1.4;
+  /* Wraps (level under the name) before pushing the base tag out of the card. */
+  min-width: 0;
 }
 
 .prod-card__title strong {
@@ -4648,6 +4658,9 @@ button.prod-card__base-tag--action {
   overflow-y: auto;
   /* Reserve the bar's width so it never overlaps the content's right edge. */
   scrollbar-gutter: stable;
+  /* Overlay scrollbars (phones, macOS) take no gutter and draw over the content:
+     keep the right edge (the slider values) clear of them. */
+  padding-right: 0.5rem;
 }
 
 /* ── Island Tab ──────────────────────────────────────────────────────────────── */
@@ -5600,6 +5613,12 @@ button.prod-card__base-tag--action {
     max-width: none;
   }
 
+  /* In a column, the row's flex-basis (15rem) would become the slider's height. */
+  .progress-area-row .bonus-slider {
+    flex: none;
+    min-width: 0;
+  }
+
   .progress-fav-row__type {
     width: auto;
   }
@@ -5910,6 +5929,24 @@ button.prod-card__base-tag--action {
 
 .nav {
   display: flex;
+}
+
+/* Between the nav groups (analysis | saved): a hairline, vertical in the tab row and
+   horizontal in the narrow-screen menu. */
+.nav__sep {
+  flex-shrink: 0;
+  align-self: center;
+  width: 1px;
+  height: 1.1rem;
+  margin: 0 0.35rem;
+  background: color-mix(in srgb, var(--muted) 35%, transparent);
+}
+
+.nav-menu__panel .nav__sep {
+  align-self: stretch;
+  width: auto;
+  height: 1px;
+  margin: 0.25rem 0.9rem;
 }
 
 /* Narrow-screen menu: hidden while the tab row fits. */

@@ -202,8 +202,9 @@ filter still uses berry icons; it predates this rule and should follow it.)
   (`opacity ~0.45`, sometimes `grayscale`) but still **interactive** — the value is
   already assigned, just not reached. Do NOT use `pointer-events: none` or
   `disabled` for this case.
-- **Destructive:** red (`--error`) only on the hover of a delete action; all other
-  hovers are neutral.
+- **Destructive:** a delete action is red (`--error`) **at rest**, not on hover, so it
+  reads as one on a phone too. Hover only says "clickable" (a neutral background) and
+  never carries meaning.
 - **Cost vs. destruction (the two reds):** a **cost** — a value the rules push down
   (a gameplay penalty, a stat that falls) — is `--down`, never `--error`. It may
   reach past a badge onto a **whole surface**: a card whose subject is being
@@ -267,9 +268,9 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **`ActionMenu`** (`components/ActionMenu.tsx`, `.action-menu`) — an item's actions
   behind a `···` `.icon-btn` (ARIA menu button: focus to the first item, arrows,
   Home/End, Escape and click-outside return focus). Each item leads with its 16px line
-  icon in `--muted`; items are neutral at rest and tint on hover only — `accent` for a
-  way into another tool (Compare, Open in Analysis), `danger` red for a delete, which
-  sits apart under a `--border` separator and uses the **trash** icon (the cross means
+  icon in `--muted`; hover is only a `--surface` background. A delete (`danger`) is red
+  at rest and sits apart under a faint `--muted` separator with no margin of its own,
+  so the spacing across it matches the spacing between items and uses the **trash** icon (the cross means
   "take out of this tool", not "delete what's saved"). Used by the Box entries and
   the Teams rows.
 - **`.filter-btn`** — trigger for filter/selector popovers (selected value +
@@ -498,7 +499,7 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **App bar** (`.appbar`) — the app's top menu, **sticky** (`top: 0`, `--bg`, a
   `--border` hairline below, full bleed; content in a 1100px row). Left to right: the
   **brand** (`.brand`: Snorlax sprite 30px, pixelated, + "sleepmon", `--text-lg` 800,
-  linking to the Box), the **tabs**, and the account cluster pushed right (account menu,
+  linking to the first tool), the **tabs**, and the account cluster pushed right (account menu,
   or `.btn--google` + `.lang-btn`). Under **900px** the bar stays **one row**: the tabs
   collapse into a **menu button** (`.nav-menu__btn`, a 34px pill: `IconMenu` + the current
   tool's name, `--border`, `--text` 600; icon only under 640px, where the page title
@@ -506,6 +507,11 @@ states · where it lives. Feature one-offs are intentionally not here.
   drops below the whole bar at full width (`--bg`, a `--border` hairline, `--shadow-dropdown`)
   with every tool as a `.nav-menu__item` row, the current one in the active-tab indigo. It
   closes on a pick, Escape (focus back to the button), a tap outside, or any navigation.
+  The tools come in **two groups**: analysis first (Comparison, Team analysis — they work
+  signed out), then what you keep (My box, My teams), each ordered Pokémon then team. A
+  `.nav__sep` hairline (a faint `--muted`) sits between the groups: vertical in the tab
+  row, horizontal in the menu panel. Tool names are **sentence case** ("My box", "Team
+  analysis"), and so are their mentions in running text ("your box").
   Under 640px the signed-out `.btn--google` shows a short label, the full one minus "with
   Google" ("Iniciar sesión" / "Sign in") — the "G" already says Google; the full label
   stays everywhere else.

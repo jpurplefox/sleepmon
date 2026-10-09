@@ -73,7 +73,7 @@ describe("TeamNameDialog", () => {
         { entry: newEntry({ ...config, species: "Bulbasaur" }, "b"), kind: "update" },
       ],
     });
-    expect(screen.getByText("To save the team, these Pokémon go to your Box:")).toBeInTheDocument();
+    expect(screen.getByText("To save the team, these Pokémon go to your box:")).toBeInTheDocument();
     expect(screen.getByText("Pikachu").nextSibling).toHaveTextContent("new");
     expect(screen.getByText("Bulbasaur").nextSibling).toHaveTextContent("update");
   });
