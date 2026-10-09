@@ -126,7 +126,7 @@ function SlotMini({
 
 const SLOT_COUNT = 5;
 
-function SavedTeamRow({
+export function SavedTeamRow({
   team,
   catalog,
   members,
@@ -156,9 +156,18 @@ function SavedTeamRow({
 
   return (
     <li className="team-row" aria-labelledby={`team-${team.id}`}>
-      <span id={`team-${team.id}`} className="team-row__name" title={team.name}>
-        {team.name}
-      </span>
+      {/* The name opens the team: it's the one thing a saved team is for, so it is
+          one tap, not one behind the ··· menu (which keeps it too, beside Delete). */}
+      <button
+        type="button"
+        className="team-row__name"
+        title={team.name}
+        aria-label={t("saved.openNamed", { name: team.name })}
+        onClick={onOpen}
+      >
+        {/* The row is labelled by the bare name, not by the button's action. */}
+        <span id={`team-${team.id}`}>{team.name}</span>
+      </button>
 
       <ul className="team-row__slots" aria-label={t("saved.colSlots")}>
         {team.slots.map((slot, i) => (

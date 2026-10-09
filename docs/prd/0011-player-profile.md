@@ -149,7 +149,8 @@ is what keeps a real change from going unnoticed.
 - An unsaved change is **gone** after a reload; a saved one is present on **another
   device**, signed into the same account.
 - Editing anything in the Player profile writes **nothing** until **Guardar** is pressed;
-  Guardar writes every pending change at once and closes the screen.
+  Guardar writes every pending change at once and closes the screen. While it saves it
+  reads **Guardando…** and takes no second tap, so a change is never sent twice.
 - Leaving the Player profile with changes — by the close button, Escape, or a click outside
   — asks **guardar / salir sin guardar / cancelar**. *Salir sin guardar* discards the
   draft; *cancelar* returns to the screen with the draft intact.
