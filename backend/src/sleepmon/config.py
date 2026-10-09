@@ -21,6 +21,16 @@ def _parse_samesite(raw: str) -> SameSite:
     return value  # type: ignore[return-value]
 
 
+def _parse_sample_rate(raw: str) -> float:
+    try:
+        value = float(raw)
+    except ValueError as exc:
+        raise ValueError(f"SENTRY_TRACES_SAMPLE_RATE must be a number, got {raw!r}") from exc
+    if not 0.0 <= value <= 1.0:
+        raise ValueError(f"SENTRY_TRACES_SAMPLE_RATE must be within [0, 1], got {raw!r}")
+    return value
+
+
 @dataclass(frozen=True, slots=True)
 class Settings:
     """Settings de runtime."""
@@ -37,6 +47,12 @@ class Settings:
     # origen real del frontend en ``CORS_ORIGINS``.
     cors_origins: tuple[str, ...]
     cookie_samesite: SameSite
+    # Sentry (ADR-0010): an empty DSN disables it. The trace sample rate is
+    # per-environment configuration, tuned to traffic.
+    sentry_dsn: str = ""
+    sentry_environment: str = "development"
+    sentry_traces_sample_rate: float = 0.0
+    sentry_release: str | None = None
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -53,4 +69,10 @@ class Settings:
                 if origin.strip()
             ),
             cookie_samesite=_parse_samesite(os.environ.get("COOKIE_SAMESITE", "strict")),
+            sentry_dsn=os.environ.get("SENTRY_DSN", ""),
+            sentry_environment=os.environ.get("SENTRY_ENVIRONMENT", "development"),
+            sentry_traces_sample_rate=_parse_sample_rate(
+                os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0")
+            ),
+            sentry_release=os.environ.get("SENTRY_RELEASE") or None,
         )
