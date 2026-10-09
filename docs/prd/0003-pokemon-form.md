@@ -35,7 +35,8 @@ the game's rules?"*.
 - **Nature** (optional, default none) — shows each nature's effect (the stat it
   raises and the one it lowers).
 - **Ingredients** — **3 slots**, unlocking at 1 / 30 / 60; each slot offers the
-  species' valid options.
+  species' valid options. A mythical (Darkrai) offers its **whole ingredient pool** in
+  **every** slot, each with that slot's amount; repeats are allowed.
 - **Sub skills** — up to **5**, unlocking at 10 / 25 / 50 / 70 / 80; each unique.
 - **Main skill level** — from 1 up to the skill's maximum (typically 7).
 - **Ribbon** (optional, default none) — steps through the research thresholds

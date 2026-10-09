@@ -20,6 +20,7 @@ import { totalIngredients } from "../ingredientProduction";
 import { track } from "../telemetry/analytics";
 import type { Catalog, Member, MemberInput, Species } from "../types";
 import { deletionImpact } from "../savedTeams";
+import { SPECIALTIES, matchesSpecialty } from "../specialties";
 import { SAVED_TEAMS_KEY, useSavedTeamsQuery } from "../useSavedTeams";
 
 // Orden + filtros del overview, en el cliente (la producción ya viene en /team).
@@ -42,7 +43,7 @@ function sortAndFilter(
       return false;
     // Skill y especialidad siguen siendo single-select (string).
     if (filters.skill && sp?.main_skill !== filters.skill) return false;
-    if (filters.specialty && sp?.specialty !== filters.specialty) return false;
+    if (!matchesSpecialty(sp?.specialty, filters.specialty)) return false;
     return true;
   };
   const value = (m: Member): number => {
@@ -72,7 +73,7 @@ function filterOptions(catalog: Catalog) {
     types: uniq(catalog.species.map((s) => s.type)).sort(),
     ingredients: catalog.ingredients,
     skills: uniq(catalog.species.map((s) => s.main_skill)).sort(),
-    specialties: uniq(catalog.species.map((s) => s.specialty)).sort(),
+    specialties: [...SPECIALTIES],
   };
 }
 

@@ -27,9 +27,15 @@ from sleepmon.domain.value_objects import (
     SubSkillTier,
 )
 
+I = Ingredient  # noqa: E741 — compact alias for the ingredient pool
+
 
 def _by_name(name: str) -> Species:
     return next(sp for sp in SEED_SPECIES if sp.name == name)
+
+
+# Species whose slots follow the prefix rule (mythicals draw every slot from a pool).
+_PREFIX_SPECIES = tuple(sp for sp in SEED_SPECIES if not sp.pool_slots)
 
 
 def test_closed_sets_have_expected_sizes() -> None:
@@ -106,7 +112,7 @@ def test_allows_ingredient_rejects_ingredient_absent_from_a_valid_slot() -> None
 def test_species_primary_ingredient_is_single_and_present_downstream() -> None:
     # El slot 1 (nivel 1) es un único ingrediente fijo, y debe seguir siendo
     # válido en los slots posteriores.
-    for sp in SEED_SPECIES:
+    for sp in _PREFIX_SPECIES:
         assert len(sp.ingredient_slots[0]) == 1, sp.name
         primary = next(iter(sp.ingredient_slots[0]))
         assert primary in sp.ingredient_slots[1], sp.name
@@ -123,7 +129,7 @@ def test_ingredient_slots_are_ordered_prefixes_of_the_ingredient_list() -> None:
     # Cada slot expone exactamente un prefijo de los ingredientes de la especie,
     # en el orden del juego (1º, 2º, 3º). Esto fija el orden de display y deja al
     # 1º siempre primero.
-    for sp in SEED_SPECIES:
+    for sp in _PREFIX_SPECIES:
         for slot, options in enumerate(sp.ingredient_slots):
             assert options == sp.ingredients[: slot + 1], sp.name
 
@@ -131,7 +137,7 @@ def test_ingredient_slots_are_ordered_prefixes_of_the_ingredient_list() -> None:
 def test_lv30_slot_never_offers_the_third_ingredient() -> None:
     # Regresión: el slot de nivel 30 solo puede ser el 1º o el 2º ingrediente,
     # nunca el 3º (p. ej. Caterpie: miel o tomate, jamás los beans).
-    for sp in SEED_SPECIES:
+    for sp in _PREFIX_SPECIES:
         if len(sp.ingredients) < 3:
             continue
         third = sp.ingredients[2]
@@ -162,14 +168,9 @@ def test_species_names_are_unique() -> None:
 
 
 def test_catalog_covers_the_full_helper_roster() -> None:
-    # Dataset completo del juego (nitoyon cruzado con nerolis-lab), salvo Mew/Darkrai
-    # (especialistas "All" con cantidades de ingrediente no publicadas).
-    assert len(SEED_SPECIES) == 247
-    assert {sp.specialty for sp in SEED_SPECIES} == {
-        Specialty.BERRIES,
-        Specialty.INGREDIENTS,
-        Specialty.SKILLS,
-    }
+    # Full game dataset (nitoyon cross-checked with nerolis-lab), except Mew.
+    assert len(SEED_SPECIES) == 248
+    assert {sp.specialty for sp in SEED_SPECIES} == set(Specialty)
     assert {sp.sleep_type for sp in SEED_SPECIES} == set(SleepType)
 
 
@@ -273,6 +274,42 @@ def test_pity_helps_scales_with_base_frequency_for_skill_specialists() -> None:
     assert raikou.pity_helps == round(140_000 / raikou.help_frequency_seconds) == 67
     assert bonsly.pity_helps == round(140_000 / bonsly.help_frequency_seconds) == 22
     assert raikou.pity_helps > bonsly.pity_helps
+
+
+def test_pity_helps_for_all_specialists_follows_the_skill_specialist_rule() -> None:
+    darkrai = _by_name("Darkrai")
+    assert darkrai.specialty is Specialty.ALL
+    assert darkrai.pity_helps == round(140_000 / 2900) == 48
+
+
+def test_darkrai_has_its_real_data() -> None:
+    darkrai = _by_name("Darkrai")
+    assert darkrai.dex == 491
+    assert darkrai.berry is Berry.WIKI
+    assert darkrai.sleep_type is SleepType.DOZING
+    assert darkrai.main_skill == "Charge Strength M (Bad Dreams)"
+    assert darkrai.help_frequency_seconds == 2900
+    assert darkrai.ingredient_percentage == 19.2
+    assert darkrai.skill_percentage == 2.3
+    assert darkrai.carry_limit == 28
+
+
+def test_darkrai_draws_every_slot_from_its_ingredient_pool() -> None:
+    darkrai = _by_name("Darkrai")
+    pool = (
+        I.FANCY_APPLE, I.FIERY_HERB, I.BEAN_SAUSAGE, I.MOOMOO_MILK,
+        I.HONEY, I.GREENGRASS_SOYBEANS, I.GREENGRASS_CORN, I.ROUSING_COFFEE,
+    )
+    assert darkrai.ingredient_slots == (pool, pool, pool)
+    assert darkrai.ingredient_amounts == (
+        (2, 2, 2, 2, 2, 2, 2, 2),
+        (5, 3, 4, 4, 4, 4, 3, 3),
+        (7, 5, 6, 6, 6, 6, 4, 4),
+    )
+    # Any pool ingredient fits the level-1 slot, unlike the prefix rule.
+    assert darkrai.allows_ingredient(0, I.ROUSING_COFFEE)
+    assert darkrai.ingredient_amount(2, I.ROUSING_COFFEE) == 4
+    assert not darkrai.allows_ingredient(0, I.SLOWPOKE_TAIL)
 
 
 def test_evolution_stage_matches_known_lines() -> None:

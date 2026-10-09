@@ -689,6 +689,15 @@ export function ProductionCard({
                 </Tooltip>
               </div>
             )}
+            {d.skill_energy_drain != null && (
+              <div className="prod-card__line">
+                <Tooltip content={t("card.energyDrainTitle")} className="tooltip--inline">
+                  <img className="mini-icon" src={statIcon("Energy Recovery")} alt="" />{" "}
+                  {fmt(d.skill_energy_drain)} <Delta value={d.skill_energy_drain} base={base?.skill_energy_drain ?? null} />
+                  <span className="muted"> {t("card.energyDrain")}</span>
+                </Tooltip>
+              </div>
+            )}
             {d.skill_ingredient_total != null && (
               <div className="prod-card__line">
                 <Tooltip content={t("card.randomIngredientsTitle")} className="tooltip--inline">

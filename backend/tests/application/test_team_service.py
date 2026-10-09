@@ -12,6 +12,7 @@ from sleepmon.domain.errors import (
 )
 from sleepmon.domain.progress import PlayerProgress
 from sleepmon.domain.sleep import SleepSchedule
+from sleepmon.domain.value_objects import Ingredient
 from tests.fakes import (
     InMemoryPlayerProgressRepository,
     InMemorySavedTeamRepository,
@@ -94,6 +95,16 @@ def test_species_lookup_is_case_insensitive(service: DefaultTeamService) -> None
 def test_unknown_species_rejected(service: DefaultTeamService) -> None:
     with pytest.raises(SpeciesNotFoundError):
         service.add_member(UID, valid_input(species="Mew"))
+
+
+def test_darkrai_accepts_any_pool_ingredient_in_every_slot(
+    service: DefaultTeamService,
+) -> None:
+    member = service.add_member(
+        UID,
+        valid_input(species="Darkrai", ingredients=["Rousing Coffee"] * 3),
+    )
+    assert member.ingredients == (Ingredient.ROUSING_COFFEE,) * 3
 
 
 def test_invalid_nature_rejected(service: DefaultTeamService) -> None:

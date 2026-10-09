@@ -75,6 +75,7 @@ from sleepmon.domain.skills import (
     restores_team_energy,
     skill_berry_juice,
     skill_candy,
+    skill_energy_drain,
     skill_strength_amount,
     tasty_chance_amount,
 )
@@ -290,6 +291,8 @@ class DailyProduction:
     # Items per day a skill also gets: candies of any Pokémon (Present), Berry Juice.
     skill_candy: float | None = None
     skill_berry_juice: float | None = None
+    # Energy per day each non-Dark teammate loses (Bad Dreams); None if not applicable.
+    skill_energy_drain: float | None = None
 
 
 def scale_daily(daily: DailyProduction, weight: float) -> DailyProduction:
@@ -347,11 +350,14 @@ def scale_daily(daily: DailyProduction, weight: float) -> DailyProduction:
         ),
         skill_candy=_s(daily.skill_candy),
         skill_berry_juice=_s(daily.skill_berry_juice),
+        skill_energy_drain=_s(daily.skill_energy_drain),
     )
 
 
 def _berry_per_help(specialty: Specialty) -> int:
-    return _BERRY_PER_HELP_SPECIALTY if specialty is Specialty.BERRIES else _BERRY_PER_HELP_OTHER
+    if specialty in (Specialty.BERRIES, Specialty.ALL):
+        return _BERRY_PER_HELP_SPECIALTY
+    return _BERRY_PER_HELP_OTHER
 
 
 def daily_production(
@@ -502,7 +508,7 @@ def daily_production(
         fill_seconds = float(max(session_seconds))
 
     # Each sleep starts empty: it fills and overflows on its own, with its own skill cap.
-    sleep_skill_cap = 2 if species.specialty is Specialty.SKILLS else 1
+    sleep_skill_cap = 2 if species.specialty in (Specialty.SKILLS, Specialty.ALL) else 1
     day_helps = day_seconds * helps_per_second
     asleep_normal_helps = 0.0
     overflow_helps = 0.0
@@ -650,6 +656,7 @@ def daily_production(
     # Items on top of the main effect: candy (Present) and Berry Juice, per day.
     per_candy = skill_candy(species.main_skill)
     per_juice = skill_berry_juice(species.main_skill)
+    per_drain = skill_energy_drain(species.main_skill)
 
     # En el overflow nocturno TODAS las ayudas producen bayas.
     helps_berry_amount = (normal_helps * berry_rate + overflow_helps) * berry_per_help
@@ -727,4 +734,5 @@ def daily_production(
         help_grant=granted,
         skill_candy=None if per_candy is None else skill_triggers * per_candy,
         skill_berry_juice=None if per_juice is None else skill_triggers * per_juice,
+        skill_energy_drain=None if per_drain is None else skill_triggers * per_drain,
     )

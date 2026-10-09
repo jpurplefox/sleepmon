@@ -92,6 +92,10 @@ export const CHARGE_STRENGTH_S_RANDOM_RANGES: [number, number][] = [
   [1606, 6424],
 ];
 export const CHARGE_STRENGTH_S_STOCKPILE_AVERAGE = [600, 853, 1177, 1625, 2243, 3099, 4497];
+// Bad Dreams (Darkrai): its own Charge Strength M table, plus 12 Energy off each
+// non-Dark teammate per trigger.
+export const BAD_DREAMS_STRENGTH = [2640, 3753, 5178, 7149, 9870, 13638, 18515];
+export const BAD_DREAMS_ENERGY_DRAIN = 12;
 
 const idx = (level: number) => Math.min(Math.max(level, 1), MAX_SKILL_LEVEL) - 1;
 
@@ -296,6 +300,13 @@ export function skillDescription(
       : `Gives your pot room for ${n} more ingredients the next time you cook.`;
   }
   // Charge Strength: el orden importa porque (Random)/(Stockpile) empiezan con "S".
+  if (mainSkill?.startsWith("Charge Strength M (Bad Dreams)")) {
+    const n = num(BAD_DREAMS_STRENGTH[idx(level)]);
+    const drain = BAD_DREAMS_ENERGY_DRAIN;
+    return es
+      ? `Aumenta el Vigor de Snorlax en ${n} y reduce en ${drain} la Energía de cada compañero que no sea de tipo Siniestro.`
+      : `Increases Snorlax's Strength by ${n} and lowers the Energy of each non-Dark-type teammate by ${drain}.`;
+  }
   if (mainSkill?.startsWith("Charge Strength M")) {
     const n = num(CHARGE_STRENGTH_M_AMOUNTS[idx(level)]);
     return es ? `Aumenta el Vigor de Snorlax en ${n}.` : `Increases Snorlax's Strength by ${n}.`;

@@ -182,6 +182,15 @@ describe("skills with a second effect", () => {
     );
   });
 
+  it("describes Bad Dreams' strength and energy drain", () => {
+    expect(skillDescription("Charge Strength M (Bad Dreams)", 1, "en")).toBe(
+      "Increases Snorlax's Strength by 2,640 and lowers the Energy of each non-Dark-type teammate by 12.",
+    );
+    expect(skillDescription("Charge Strength M (Bad Dreams)", 7, "es")).toBe(
+      "Aumenta el Vigor de Snorlax en 18.515 y reduce en 12 la Energía de cada compañero que no sea de tipo Siniestro.",
+    );
+  });
+
   it("describes Stockpile with its average strength per trigger", () => {
     expect(skillDescription("Charge Strength S (Stockpile)", 1, "en")).toBe(
       "Chooses Stockpile or Spit Up. Spit Up gives Snorlax Strength based on what was stockpiled: about 600 per trigger on average.",
@@ -252,6 +261,7 @@ describe("unmodeledSkillKey", () => {
   it("leaves modeled skills alone", () => {
     expect(unmodeledSkillKey("Charge Strength S (Stockpile)")).toBeNull();
     expect(unmodeledSkillKey("Energizing Cheer S")).toBeNull();
+    expect(unmodeledSkillKey("Charge Strength M (Bad Dreams)")).toBeNull();
     expect(unmodeledSkillKey(undefined)).toBeNull();
   });
 });

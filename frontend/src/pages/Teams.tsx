@@ -103,6 +103,11 @@ function skillEffectMeta(kind: string): SkillEffectMeta {
         iconNode: () => <img className="mini-icon" src={statIcon("Energy Recovery")} alt="" />,
         labelKey: "card.energyEach",
       };
+    case "energy_drain":
+      return {
+        iconNode: () => <img className="mini-icon" src={statIcon("Energy Recovery")} alt="" />,
+        labelKey: "card.energyDrain",
+      };
     case "self_energy":
       return {
         iconNode: () => <img className="mini-icon" src={statIcon("Energy Recovery")} alt="" />,

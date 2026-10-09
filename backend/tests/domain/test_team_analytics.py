@@ -234,6 +234,13 @@ def test_skill_effects_include_candy_and_berry_juice() -> None:
     assert kinds["berry_juice"] == SkillEffectAgg(kind="berry_juice", total=0.37, triggers=2.0)
 
 
+def test_skill_effects_include_the_energy_drain() -> None:
+    darkrai = dataclasses.replace(_fake_daily(skill_triggers=2.0), skill_energy_drain=24.0)
+    result = team_production([("d", "Darkrai", darkrai)])
+    kinds = {e.kind: e for e in result.skill_effects}
+    assert kinds["energy_drain"] == SkillEffectAgg(kind="energy_drain", total=24.0, triggers=2.0)
+
+
 def test_skill_effects_strength_entry() -> None:
     """Un miembro con skill_strength → entry 'strength' con su total y triggers."""
     a = _fake_daily(skill_strength=200.0, skill_triggers=2.0)

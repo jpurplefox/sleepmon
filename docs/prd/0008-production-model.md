@@ -60,7 +60,8 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
 ### Berries
 
 - **Per help**: **1** berry normally, **2** for a **Berry specialist**, **+1** with
-  **Berry Finding S**.
+  **Berry Finding S**. **All** specialists (the mythical Darkrai) also get **2**, and
+  follow the Skill specialists' pity and per-sleep cap.
 - **Strength per berry at a level** = `round(max(base + (level − 1), base ×
   1.025^(level − 1)))` — linear at low levels, exponential (×1.025 per level) at high
   levels. Each berry has its own base. A **favorite** berry (see [Map
@@ -89,15 +90,17 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
   **probabilities** per sleep — P(at least 1), and P(2) for specialists.
 - **Skill effects** depend on the main skill and its level, and are `triggers/day ×
   per-trigger amount`: extra **strength** (Charge Strength), **energy** (to the team,
-  to self, or to a random teammate), **ingredients** (Draw / Magnet), **dream shards**,
-  **cooking pot** slots, **Tasty Chance** (feeds [Extra Tasty](0006-cooking-plan.md)),
+  to self, or to a random teammate — or taken from teammates), **ingredients** (Draw /
+  Magnet), **dream shards**, **cooking pot** slots, **Tasty Chance** (feeds [Extra Tasty](0006-cooking-plan.md)),
   or a **help multiplier**. **Berry Burst** yields **berries** — its own and its
   teammates' — and counts as berry strength (see [Berry Burst](0013-berry-burst.md)).
   The exact per-level amounts live in the domain catalog.
 - **Variants use their own numbers.** A variant shares its base skill's mechanic but
   not necessarily its amounts: **Lunar Blessing**, **Nuzzle**, and **Present** have
   smaller tables, and **Heal Pulse** gives its own amount to **two** teammates.
-  **Super Luck** and **Hyper Cutter** draw from a fixed selection of ingredients, not
+  **Bad Dreams** (Darkrai) has its own, bigger strength table, and also **takes 12
+  energy** from each non-Dark teammate per trigger: shown as a daily total, like the
+  energy Energy for Everyone gives. **Super Luck** and **Hyper Cutter** draw from a fixed selection of ingredients, not
   the species'; random outcomes count at their expected value — Super Luck sometimes
   gets **dream shards** instead of ingredients, Hyper Cutter sometimes gets **twice**
   the ingredients. Lunar Blessing also gets berries, like Berry Burst (see
@@ -147,14 +150,14 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
 - A higher **level** shortens the help interval (−0.2% per level) → **more helps/day**.
 - **Berry strength** follows `round(max(base + level − 1, base × 1.025^(level − 1)))`;
   a favorite berry **doubles** it.
-- A **Berry specialist** yields **2** berries/help (others **1**); **Berry Finding S**
-  adds **+1**.
+- A **Berry** or **All** specialist yields **2** berries/help (others **1**); **Berry
+  Finding S** adds **+1**.
 - **Ingredient slots** unlock at **Lv 1 / 30 / 60**; below the unlock a slot does not
   produce (though it can be pre-set — see the [Pokémon form](0003-pokemon-form.md)).
 - In **each sleep**, once inventory **fills**, further helps yield **berries only** (no
   ingredients, no skill).
 - **Sleep skill activations** are capped **per sleep** — **1** for non-Skill, **2** for
-  Skill specialists — and shown as **probabilities**.
+  Skill and All specialists — and shown as **probabilities**.
 - With the default schedule (8.5 h at night, no nap) the numbers are those of a day of
   **15.5 h awake + 8.5 h asleep**.
 - The **Good Camp Ticket** shortens the help interval (**×0.8**) and enlarges inventory

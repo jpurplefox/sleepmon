@@ -159,6 +159,7 @@ const SKILL_VARIANTS_ES: Record<string, string> = {
   Mimic: "Mimético",
   "Aura Sphere": "Esfera Aural",
   Transform: "Transformación",
+  "Bad Dreams": "Mal Sueño",
 };
 
 const pick = (map: Record<string, string>, name: string, lang: Lang) =>

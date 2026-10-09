@@ -119,6 +119,12 @@ def test_berry_specialty_yields_two_per_help() -> None:
     assert berries.berry_amount == pytest.approx(2 * other.berry_amount)
 
 
+def test_all_specialty_yields_two_berries_per_help() -> None:
+    other = daily_production(_species(specialty=Specialty.INGREDIENTS), _INGREDIENTS, level=60)
+    mythical = daily_production(_species(specialty=Specialty.ALL), _INGREDIENTS, level=60)
+    assert mythical.berry_amount == pytest.approx(2 * other.berry_amount)
+
+
 def test_amount_depends_on_chosen_ingredient_and_slot() -> None:
     # Default elige Honey/Snoozy Tomato/Soft Potato -> diagonal [2, 4, 6].
     prod = daily_production(
@@ -194,6 +200,17 @@ def test_skill_specialist_caps_skill_at_two_without_touching_berries() -> None:
     assert prod.skill_triggers == pytest.approx(15.5 * eff + _capped(8.5 * eff, 2))
     # Skill independiente: el tope NO suma a bayas; baya = 1 - ing = 0.80, 24 ayudas.
     assert prod.berry_amount == pytest.approx(24 * 0.80 * 1)
+
+
+def test_all_specialist_caps_skill_at_two_like_skill_specialists() -> None:
+    def triggers(specialty: Specialty) -> float:
+        return daily_production(
+            _species(specialty=specialty, help_frequency_seconds=8000, skill_percentage=50),
+            _INGREDIENTS,
+            level=1,
+        ).skill_triggers
+
+    assert triggers(Specialty.ALL) == pytest.approx(triggers(Specialty.SKILLS))
 
 
 def test_sleep_skill_chances_reported_per_cap() -> None:
@@ -1686,6 +1703,19 @@ def test_moonlight_also_shares_energy_with_a_teammate() -> None:
     prod = daily_production(species, _INGREDIENTS, level=60, skill_level=6)
     assert prod.skill_self_energy == pytest.approx(prod.skill_triggers * 43)
     assert prod.skill_random_energy == pytest.approx(prod.skill_triggers * 0.5 * 22.8)
+
+
+def test_bad_dreams_drain_is_triggers_times_its_energy() -> None:
+    species = _species(main_skill="Charge Strength M (Bad Dreams)")
+    prod = daily_production(species, _INGREDIENTS, level=60)
+    assert prod.skill_energy_drain == pytest.approx(prod.skill_triggers * 12)
+    assert prod.skill_energy is None
+    assert scale_daily(prod, 0.5).skill_energy_drain == pytest.approx(prod.skill_energy_drain * 0.5)
+
+
+def test_other_skills_drain_no_energy() -> None:
+    prod = daily_production(_species(main_skill="Charge Strength M"), _INGREDIENTS, level=60)
+    assert prod.skill_energy_drain is None
 
 
 # --- Items: candy (Present) and Berry Juice -------------------------------------
