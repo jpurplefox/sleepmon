@@ -72,7 +72,7 @@ key is absent.
 
 **PostHog (frontend only)**
 
-- `posthog-js` against **PostHog Cloud EU**, with **in-memory persistence**: no
+- `posthog-js` against **PostHog Cloud US** (the region the project lives in; the ingest host is configurable via `VITE_POSTHOG_HOST`), with **in-memory persistence**: no
   cookies or local storage, so an anonymous identity lasts for the open tab.
 - **Identity:** PostHog starts once the session check settles. Signed in, it
   starts already identified by the **internal opaque user id** (bootstrapped), so

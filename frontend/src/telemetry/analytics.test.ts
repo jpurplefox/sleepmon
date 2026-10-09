@@ -56,7 +56,7 @@ describe("analytics", () => {
     expect(posthog.init).toHaveBeenCalledWith(
       "phc_x",
       expect.objectContaining({
-        api_host: "https://eu.i.posthog.com",
+        api_host: "https://us.i.posthog.com",
         persistence: "memory",
         autocapture: false,
         capture_pageview: false,

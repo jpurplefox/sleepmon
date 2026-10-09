@@ -11,7 +11,7 @@ describe("readTelemetryConfig", () => {
       tracesSampleRate: 0,
       apiUrl: "http://localhost:8000",
       posthogKey: null,
-      posthogHost: "https://eu.i.posthog.com",
+      posthogHost: "https://us.i.posthog.com",
     });
   });
 
