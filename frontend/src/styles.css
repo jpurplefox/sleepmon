@@ -3915,16 +3915,16 @@ button.prod-card__base-tag--action {
   font-variant-numeric: tabular-nums;
 }
 
-/* Narrow: the headline leads. The grand total and its rating take the first row,
-   full width; the two subtotals it adds up sit side by side under a hairline, a
-   step smaller. Stacking the three made the card a screen tall with the headline last. */
+/* Narrow: the two subtotals sit side by side, a step smaller, and the total they
+   add up to closes the card under a hairline, full width with its rating. Stacking
+   the three made the card a screen tall with the rating floating at its corner. */
 @media (max-width: 860px) {
   .teams-totals {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas:
-      "grand grand"
-      "berries cooking";
+      "berries cooking"
+      "grand grand";
     gap: 0 1rem;
   }
 
@@ -3934,9 +3934,9 @@ button.prod-card__base-tag--action {
 
   .teams-totals__col--grand {
     grid-area: grand;
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid var(--border);
   }
 
   .teams-totals__col--berries {

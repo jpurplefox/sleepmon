@@ -1254,9 +1254,9 @@ export function Teams() {
 
             <span className="teams-totals__divider" aria-hidden="true" />
 
-            {/* Col 3 — Grand total (biggest number on the page) */}
+            {/* Col 3 — Total strength (biggest number on the page) */}
             <div className="teams-totals__col teams-totals__col--grand">
-              <span className="teams-totals__label">{t("teams.grandTotal")}</span>
+              <span className="teams-totals__label">{t("teams.totalStrength")}</span>
               <span className="teams-totals__kpi teams-totals__kpi--grand">
                 <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" style={{ width: 22, height: 22 }} />
                 <StrengthValue
