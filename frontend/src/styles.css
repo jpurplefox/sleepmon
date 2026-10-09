@@ -30,6 +30,10 @@
   --down-dim: rgba(249, 112, 102, 0.14);
   --down-border: rgba(249, 112, 102, 0.4);
   --error: #f85149;
+  /* Berry relation tints for a card's identity zone (design-system §5, .prod-card). */
+  --favorite-berry: color-mix(in srgb, var(--up) 18%, var(--surface));
+  --main-favorite: color-mix(in srgb, var(--up) 30%, var(--surface));
+  --no-favorite: color-mix(in srgb, var(--down) 20%, var(--surface));
   /* Sub-skill tiers (game content); the regular tier uses --muted, mapped in .ss-icon */
   --tier-gold: #d4a017;
   --tier-blue: #58a6ff;
@@ -3038,16 +3042,19 @@ select:focus {
 
 /* Berry relation: favorite reads as good, the expert map's main favorite one step
    stronger, and no favorite on an expert map as bad (--down, never --error). */
+/* The tints come from :root tokens, not from var(--up)/var(--down) here: the zone
+   lifts its own --down for legibility (below), and a background mixed from it on
+   the same element would turn pink. */
 .prod-card--favorite-berry .prod-card__identity {
-  background: color-mix(in srgb, var(--up) 18%, var(--surface));
+  background: var(--favorite-berry);
 }
 
 .prod-card--main-favorite .prod-card__identity {
-  background: color-mix(in srgb, var(--up) 30%, var(--surface));
+  background: var(--main-favorite);
 }
 
 .prod-card--no-favorite .prod-card__identity {
-  background: color-mix(in srgb, var(--down) 20%, var(--surface));
+  background: var(--no-favorite);
 }
 
 /* Ink on a tinted zone: --muted and --down drop under AA on the green (3.1:1 and
