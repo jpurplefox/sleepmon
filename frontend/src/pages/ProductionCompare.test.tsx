@@ -148,4 +148,37 @@ describe("Comparison analytics", () => {
     expect(rec.events.filter((e) => e.name === "compare_limit_reached")).toHaveLength(1);
     expect(added()).toHaveLength(5);
   });
+
+  it("records nothing when an existing card is edited", async () => {
+    const user = userEvent.setup();
+    renderCompare("m-raichu");
+    await waitFor(() => expect(added()).toHaveLength(1));
+    await user.click(await screen.findByRole("button", { name: "Edit" }));
+    await user.click(screen.getByRole("button", { name: "submit-form" }));
+    expect(added()).toHaveLength(1);
+    expect(rec.events.map((e) => e.name)).toEqual(["pokemon_added"]);
+  });
+
+  it("records species_missing, not an add, for a Box Pokémon outside the catalogue", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(api, "listMembers").mockResolvedValue([{ ...raichu, id: "m-ghost", species: "Missingno" } as Member]);
+    renderCompare();
+    await user.click(await screen.findByRole("button", { name: "+ My Pokémon" }));
+    await user.click(await screen.findByRole("option", { name: /Missingno/ }));
+    expect(rec.events).toEqual([
+      { name: "species_missing", props: { species: "Missingno", tool: "compare" } },
+    ]);
+  });
+
+  it("records nothing more once the comparison is full", async () => {
+    const user = userEvent.setup();
+    renderCompare();
+    await user.click(await screen.findByRole("button", { name: "+ New" }));
+    await user.click(screen.getByRole("button", { name: "submit-form" }));
+    for (let i = 0; i < 4; i++) await user.click(screen.getAllByRole("button", { name: "Clone" })[0]);
+    // Clone is disabled at 5/5; a click must change nothing and record nothing.
+    await user.click(screen.getAllByRole("button", { name: "Clone" })[0]);
+    expect(added()).toHaveLength(5);
+    expect(rec.events.filter((e) => e.name === "compare_limit_reached")).toHaveLength(1);
+  });
 });

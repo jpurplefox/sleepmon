@@ -124,8 +124,6 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
       return next;
     });
 
-  // Inserta una card nueva (sin origen) o reemplaza la config de la que estábamos
-  // editando, manteniendo su sourceId. Cierra el modal.
   // A card landed in the comparison: record where it came from, and the limit.
   const recordAdded = (source: AddSource, species: string, countBefore: number) => {
     if (countBefore >= MAX_COMPARE) return;
@@ -133,6 +131,8 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
     if (countBefore + 1 === MAX_COMPARE) track({ name: "compare_limit_reached", props: {} });
   };
 
+  // Inserta una card nueva (sin origen) o reemplaza la config de la que estábamos
+  // editando, manteniendo su sourceId. Cierra el modal.
   const upsert = (config: MemberInput) => {
     // Editing replaces the config but not the id, so a stale save status
     // (saved or errored) would otherwise survive describing a config that
@@ -200,6 +200,12 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseMemberId, members.data, catalog.data]);
 
+  const handleMapChange = (next: typeof map) => {
+    if (next.island !== map.island)
+      track(mapSetEvent("compare", next.island, catalog.data?.islands ?? []));
+    setMap(next);
+  };
+
   const openAdd = (which: "form" | "box") => {
     setEditIndex(null);
     setModal(which);
@@ -233,12 +239,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
       <ToolHeader title={t("prod.title")} notice={notice}>
         {entries.length > 0 && (
           <ContextBar>
-            <ComparisonMapBar catalog={catalog.data} value={map} onChange={(next) => {
-                if (next.island !== map.island)
-                  track(mapSetEvent("compare", next.island, catalog.data?.islands ?? []));
-                setMap(next);
-              }}
-            />
+            <ComparisonMapBar catalog={catalog.data} value={map} onChange={handleMapChange} />
           </ContextBar>
         )}
       </ToolHeader>
