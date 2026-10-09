@@ -26,8 +26,8 @@ import { useProgress } from "../useProgress";
 const MAX_COMPARE = 5;
 
 interface ProductionProps {
-  // Si viene seteado (desde "Comparar" en la Caja), se agrega ese Pokémon como
-  // base (primera card) al abrir Comparación; luego se limpia con onBaseConsumed.
+  // Set by "Compare" in the box: Comparison opens with only that Pokémon (as the
+  // base); then cleared through onBaseConsumed.
   baseMemberId?: string | null;
   onBaseConsumed?: () => void;
 }
@@ -160,7 +160,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
     setEditIndex(null);
   };
 
-  // "Comparar" desde la Caja: agrega el Pokémon indicado como base (primera card).
+  // "Compare" from the box: a new comparison with only that Pokémon.
   useEffect(() => {
     if (!baseMemberId || !members.data || !catalog.data) return;
     const m = members.data.find((x) => x.id === baseMemberId);
@@ -175,10 +175,10 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
       return;
     }
     setNotice(null);
-    setEntries((prev) => {
-      if (prev.some((e) => e.sourceId === m.id) || prev.length >= MAX_COMPARE) return prev;
-      return [newEntry(config, m.id), ...prev]; // como base
-    });
+    // "Compare" starts a comparison about this Pokémon: it is the only card, and the
+    // base. Whatever the session held before (it survives moving between tools) would
+    // otherwise mix into a comparison the user didn't ask for.
+    setEntries([newEntry(config, m.id)]);
     onBaseConsumed?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseMemberId, members.data, catalog.data]);
