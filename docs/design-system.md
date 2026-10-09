@@ -499,7 +499,7 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **App bar** (`.appbar`) — the app's top menu, **sticky** (`top: 0`, `--bg`, a
   `--border` hairline below, full bleed; content in a 1100px row). Left to right: the
   **brand** (`.brand`: Snorlax sprite 30px, pixelated, + "sleepmon", `--text-lg` 800,
-  linking to the Box), the **tabs**, and the account cluster pushed right (account menu,
+  linking to the first tool), the **tabs**, and the account cluster pushed right (account menu,
   or `.btn--google` + `.lang-btn`). Under **900px** the bar stays **one row**: the tabs
   collapse into a **menu button** (`.nav-menu__btn`, a 34px pill: `IconMenu` + the current
   tool's name, `--border`, `--text` 600; icon only under 640px, where the page title
@@ -507,6 +507,11 @@ states · where it lives. Feature one-offs are intentionally not here.
   drops below the whole bar at full width (`--bg`, a `--border` hairline, `--shadow-dropdown`)
   with every tool as a `.nav-menu__item` row, the current one in the active-tab indigo. It
   closes on a pick, Escape (focus back to the button), a tap outside, or any navigation.
+  The tools come in **two groups**: analysis first (Comparison, Team analysis — they work
+  signed out), then what you keep (My box, My teams), each ordered Pokémon then team. A
+  `.nav__sep` hairline (a faint `--muted`) sits between the groups: vertical in the tab
+  row, horizontal in the menu panel. Tool names are **sentence case** ("My box", "Team
+  analysis"), and so are their mentions in running text ("your box").
   Under 640px the signed-out `.btn--google` shows a short label, the full one minus "with
   Google" ("Iniciar sesión" / "Sign in") — the "G" already says Google; the full label
   stays everywhere else.

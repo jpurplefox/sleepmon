@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 
 import { useI18n } from "../i18n";
@@ -40,19 +40,25 @@ export function NavTabs() {
 
   const current = NAV_ITEMS.find((item) => item.path === location);
 
+  // A separator sits between the groups (analysis | saved); decorative, so the
+  // links stay the only thing a screen reader lists.
   const links = (className: string) =>
-    NAV_ITEMS.map(({ path, labelKey }) => {
+    NAV_ITEMS.map(({ path, labelKey, group }, i) => {
       const active = location === path;
       return (
-        <Link
-          key={path}
-          href={path}
-          className={className + (active ? ` ${className}--active` : "")}
-          aria-current={active ? "page" : undefined}
-          onClick={() => setOpen(false)}
-        >
-          {t(labelKey)}
-        </Link>
+        <Fragment key={path}>
+          {i > 0 && NAV_ITEMS[i - 1].group !== group && (
+            <span className="nav__sep" aria-hidden="true" />
+          )}
+          <Link
+            href={path}
+            className={className + (active ? ` ${className}--active` : "")}
+            aria-current={active ? "page" : undefined}
+            onClick={() => setOpen(false)}
+          >
+            {t(labelKey)}
+          </Link>
+        </Fragment>
       );
     });
 

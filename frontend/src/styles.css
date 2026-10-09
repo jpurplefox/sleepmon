@@ -5931,6 +5931,24 @@ button.prod-card__base-tag--action {
   display: flex;
 }
 
+/* Between the nav groups (analysis | saved): a hairline, vertical in the tab row and
+   horizontal in the narrow-screen menu. */
+.nav__sep {
+  flex-shrink: 0;
+  align-self: center;
+  width: 1px;
+  height: 1.1rem;
+  margin: 0 0.35rem;
+  background: color-mix(in srgb, var(--muted) 35%, transparent);
+}
+
+.nav-menu__panel .nav__sep {
+  align-self: stretch;
+  width: auto;
+  height: 1px;
+  margin: 0.25rem 0.9rem;
+}
+
 /* Narrow-screen menu: hidden while the tab row fits. */
 .nav-menu {
   display: none;

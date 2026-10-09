@@ -7,11 +7,16 @@ export const ROUTES = {
   savedTeams: "/teams",
 } as const;
 
-// Navigation entries in display order. `labelKey` reuses the existing i18n
-// nav.* keys so the tab bar keeps its bilingual labels.
-export const NAV_ITEMS: ReadonlyArray<{ path: string; labelKey: string }> = [
-  { path: ROUTES.box, labelKey: "nav.team" },
-  { path: ROUTES.compare, labelKey: "nav.comparison" },
-  { path: ROUTES.teamAnalysis, labelKey: "nav.teams" },
-  { path: ROUTES.savedTeams, labelKey: "nav.savedTeams" },
+// Navigation entries in display order: the analysis tools first (they work signed
+// out, so they are the way in), then what you keep ("My box", "My teams"), each group
+// ordered Pokémon then team. A new `group` starts behind a separator. `labelKey`
+// reuses the existing i18n nav.* keys.
+export const NAV_ITEMS: ReadonlyArray<{ path: string; labelKey: string; group: "analysis" | "saved" }> = [
+  { path: ROUTES.compare, labelKey: "nav.comparison", group: "analysis" },
+  { path: ROUTES.teamAnalysis, labelKey: "nav.teams", group: "analysis" },
+  { path: ROUTES.box, labelKey: "nav.team", group: "saved" },
+  { path: ROUTES.savedTeams, labelKey: "nav.savedTeams", group: "saved" },
 ];
+
+// Where "/" and unknown paths land: the first tool.
+export const HOME = NAV_ITEMS[0].path;
