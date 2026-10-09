@@ -21,6 +21,8 @@ import {
 } from "./savedTeams";
 import { EMPTY_DEFINITION, useTeamSession } from "./teamSession";
 import { linkToBox } from "./teamRoster";
+import { track } from "./telemetry/analytics";
+import type { TeamSavedProps } from "./telemetry/events";
 import type { Catalog, SavedTeam } from "./types";
 import { useProgress } from "./useProgress";
 import { useRenameTeam, useSaveTeam, useSavedTeamsQuery } from "./useSavedTeams";
@@ -87,15 +89,22 @@ export function useTeamSaver(catalog: Catalog | undefined) {
 
   const writes = catalog ? boxWritesFor(session.slots, members, catalog) : [];
 
-  const run = (name: string, overId: string | null, then?: () => void) => {
+  const run = (
+    kind: TeamSavedProps["kind"],
+    name: string,
+    overId: string | null,
+    then?: () => void,
+  ) => {
     if (!catalog) return;
     mutation.mutate(
       {
         name,
         overId,
+        kind,
         definition: session.definition,
         members,
         catalog,
+        islands: catalog.islands,
         onLinked: (entryId, memberId) =>
           session.setSlots((prev) => linkToBox(prev, entryId, memberId)),
       },
@@ -117,7 +126,7 @@ export function useTeamSaver(catalog: Catalog | undefined) {
     } else if (writes.length > 0) {
       setDialog({ kind: "over", then });
     } else {
-      run(openTeam.name, openTeam.id, then);
+      run("overwrite", openTeam.name, openTeam.id, then);
     }
   };
 
@@ -143,6 +152,9 @@ export function useTeamSaver(catalog: Catalog | undefined) {
       const { definition, skipped } = definitionFromSavedTeam(team, members, catalog, (name) =>
         recipeLevelOf(progress, name),
       );
+      const saved = team.slots.reduce((n, s) => n + s.members.length, 0);
+      const loaded = definition.slots.reduce((n, s) => n + s.entries.length, 0);
+      track({ name: "team_opened", props: { members_missing: saved - loaded } });
       session.load(definition, team.id);
       session.setNotice(skipped.length > 0 ? t("saved.skipped", { species: skipped.join(", ") }) : null);
       navigate(ROUTES.teamAnalysis);
@@ -171,7 +183,9 @@ export function useTeamSaver(catalog: Catalog | undefined) {
         confirmLabel={t("saved.save")}
         pending={mutation.isPending}
         serverError={mutation.error?.message ?? null}
-        onConfirm={(name) => run(name, null, dialog.then)}
+        onConfirm={(name) =>
+          run(dialog.mode === "new" ? "new" : "save_as", name, null, dialog.then)
+        }
         onClose={closeDialog}
       />
     );
@@ -186,7 +200,7 @@ export function useTeamSaver(catalog: Catalog | undefined) {
         confirmLabel={t("saved.save")}
         pending={mutation.isPending}
         serverError={mutation.error?.message ?? null}
-        onConfirm={() => run(openTeam.name, openTeam.id, dialog.then)}
+        onConfirm={() => run("overwrite", openTeam.name, openTeam.id, dialog.then)}
         onClose={closeDialog}
       />
     );
