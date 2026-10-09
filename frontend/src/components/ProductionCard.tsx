@@ -197,15 +197,10 @@ export function ProductionCard({
     marks
       .filter((m) => m.metric === metric)
       .map((m) => (
-        <span
-          key={m.label}
-          className={`metric-mark metric-mark--${m.tone}`}
-          title={m.effect}
-          role="img"
-          aria-label={m.effect}
-        >
-          {m.label}
-        </span>
+        // A tooltip, not a `title`: a phone has no hover to reveal what the mark does.
+        <Tooltip key={m.label} content={m.effect}>
+          <span className={`metric-mark metric-mark--${m.tone}`}>{m.label}</span>
+        </Tooltip>
       ));
 
   // Si dos slots dan el mismo ingrediente, se muestra una vez sumando.
@@ -508,10 +503,13 @@ export function ProductionCard({
       ) : (
         <>
           <div className="prod-card__line">
-            <Tooltip content={t("card.helpCadence")} className="tooltip--inline">
-              <IconClock /> {mmss(d.seconds_per_help)}
+            <span>
+              <Tooltip content={t("card.helpCadence")} className="tooltip--inline">
+                <IconClock /> {mmss(d.seconds_per_help)}
+              </Tooltip>
+              {/* Beside its metric's tooltip, not inside it: one tap, one bubble. */}
               {markFor("cadence")}
-            </Tooltip>
+            </span>
             <Tooltip content={t("card.helpsPerDay")} className="tooltip--inline">
               <IconHelp /> {fmt(d.helps_per_day)} <Delta value={d.helps_per_day} base={base?.helps_per_day} />
             </Tooltip>

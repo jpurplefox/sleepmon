@@ -74,11 +74,11 @@ describe("MemberForm (catalogue-driven)", () => {
     const user = userEvent.setup();
     renderForm();
 
-    expect(screen.getByRole("button", { name: "Add to team" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Add to my box" })).toBeDisabled();
 
     await pickSpecies(user, /Pikachu/);
 
-    expect(screen.getByRole("button", { name: "Add to team" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Add to my box" })).toBeEnabled();
   });
 
   it("defaults each ingredient slot to the chosen species' first option", async () => {
@@ -86,7 +86,7 @@ describe("MemberForm (catalogue-driven)", () => {
     const { onSubmit } = renderForm();
 
     await pickSpecies(user, /Pikachu/);
-    await user.click(screen.getByRole("button", { name: "Add to team" }));
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
 
     expect(onSubmit).toHaveBeenCalledWith({
       species: "Pikachu",
@@ -104,7 +104,7 @@ describe("MemberForm (catalogue-driven)", () => {
     const { onSubmit } = renderForm();
 
     await pickSpecies(user, /Bulbasaur/);
-    await user.click(screen.getByRole("button", { name: "Add to team" }));
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
 
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -127,7 +127,7 @@ describe("MemberForm (catalogue-driven)", () => {
     };
     const { onSubmit } = renderForm({ initial });
 
-    await user.click(screen.getByRole("button", { name: "Add to team" }));
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
 
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -150,6 +150,6 @@ describe("MemberForm (catalogue-driven)", () => {
     renderForm({ initial });
 
     expect(screen.getByRole("alert")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Add to team" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Add to my box" })).toBeDisabled();
   });
 });
