@@ -36,7 +36,7 @@ export function DeleteAccountDialog({ email, summary, onClose, onDeleted }: Prop
       : t(savedTeams === 1 ? "account.lossTeamsOne" : "account.lossTeams", { n: savedTeams }),
     ...(hasProfile ? [t("account.lossProfile")] : []),
   ];
-  const list = `${parts.slice(0, -1).join(", ")}${t("saved.and")}${parts[parts.length - 1]}`;
+  const list = `${parts.slice(0, -1).join(", ")}${t("common.and")}${parts[parts.length - 1]}`;
 
   return (
     // Not closable while the request is in flight: the outcome must stay in view.

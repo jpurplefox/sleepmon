@@ -20,18 +20,18 @@ let rec: ReturnType<typeof recordEvents>;
 beforeEach(() => {
   localStorage.setItem("sleepmon.lang", "en");
   rec = recordEvents();
-  clearSession.mockClear();
+  clearSession.mockReset();
 });
 afterEach(() => {
   rec.restore();
   vi.restoreAllMocks();
 });
 
-function renderDialog(summary: AccountSummary = FULL) {
+function renderDialog(summary: AccountSummary = FULL, client = new QueryClient()) {
   const onClose = vi.fn();
   const onDeleted = vi.fn();
   render(
-    <QueryClientProvider client={new QueryClient()}>
+    <QueryClientProvider client={client}>
       <LanguageProvider>
         <DeleteAccountDialog email={EMAIL} summary={summary} onClose={onClose} onDeleted={onDeleted} />
       </LanguageProvider>
@@ -63,7 +63,7 @@ describe("DeleteAccountDialog", () => {
   it("words an empty account without counts or a profile", () => {
     renderDialog({ boxSize: 0, savedTeams: 0, hasProfile: false });
     expect(screen.getByText(/This deletes your account/).textContent).toBe(
-      "This deletes your account, your Box (empty) and no saved teams.",
+      "This deletes your account, your Box (empty) and your saved teams (none).",
     );
   });
 
@@ -77,15 +77,25 @@ describe("DeleteAccountDialog", () => {
     expect(confirmButton()).toBeEnabled();
   });
 
-  it("deletes, records the event, then clears the session and calls onDeleted", async () => {
+  it("deletes, records the event, clears the cache, then clears the session and calls onDeleted", async () => {
     const del = vi.spyOn(api, "deleteAccount").mockResolvedValue(undefined);
-    const { onDeleted } = renderDialog();
+    const client = new QueryClient();
+    client.setQueryData(["members"], [{ id: "m1" }]);
+    const order: string[] = [];
+    clearSession.mockImplementation(() => {
+      order.push(`clearSession(events=${rec.events.length},cached=${client.getQueryCache().getAll().length})`);
+    });
+    const { onDeleted } = renderDialog(FULL, client);
+    onDeleted.mockImplementation(() => order.push("onDeleted"));
     await userEvent.type(field(), EMAIL);
     await userEvent.click(confirmButton());
     await waitFor(() => expect(onDeleted).toHaveBeenCalledTimes(1));
     expect(del).toHaveBeenCalledTimes(1);
     expect(rec.events).toEqual([{ name: "account_deleted", props: { box_size: 23, saved_teams: 4 } }]);
     expect(clearSession).toHaveBeenCalledTimes(1);
+    // The event was recorded and the cache emptied before the session went away.
+    expect(order).toEqual(["clearSession(events=1,cached=0)", "onDeleted"]);
+    expect(client.getQueryData(["members"])).toBeUndefined();
   });
 
   it("shows an error and keeps the value when deletion fails", async () => {
@@ -136,6 +146,20 @@ describe("AccountDeletedDialog", () => {
     );
     expect(screen.getByRole("dialog", { name: "Account deleted" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Got it" }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ["the close button", async () => userEvent.click(screen.getByRole("button", { name: "Close" }))],
+    ["Escape", async () => userEvent.keyboard("{Escape}")],
+  ])("closes with %s", async (_label, act) => {
+    const onClose = vi.fn();
+    render(
+      <LanguageProvider>
+        <AccountDeletedDialog onClose={onClose} />
+      </LanguageProvider>,
+    );
+    await act();
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });
