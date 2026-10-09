@@ -113,6 +113,7 @@ Opening a saved team does **not** emit `pokemon_added` for its members — that 
 | `sign_in_abandoned` | The sign-in dialog is closed without signing in. | `reason` |
 | `sign_in_failed` | Google sign-in fails. | — |
 | `signed_out` | The user signs out. | — |
+| `account_deleted` | The account is deleted ([Account & privacy](0018-account-and-privacy.md)). | `box_size`; `saved_teams` |
 
 **Gaps**
 
