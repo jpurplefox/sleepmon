@@ -330,6 +330,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     // Skill level selector
     "skillSel.title": "Nivel de skill {value} de {max}",
     "skillSel.pickSpecies": "Elegí una especie",
+    "skillSel.versatile": "Habilidad de Mew",
     "skillSel.down": "Bajar nivel de skill",
     "skillSel.up": "Subir nivel de skill",
     // Ribbon select
@@ -912,6 +913,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     // Skill level selector
     "skillSel.title": "Skill level {value} of {max}",
     "skillSel.pickSpecies": "Pick a species",
+    "skillSel.versatile": "Mew's skill",
     "skillSel.down": "Lower skill level",
     "skillSel.up": "Raise skill level",
     // Ribbon select

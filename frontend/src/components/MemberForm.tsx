@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { useI18n } from "../i18n";
 import type { Catalog, MemberInput } from "../types";
+import { VERSATILE, effectiveSkill } from "../versatile";
 import { IngredientSlots } from "./IngredientSlots";
 import { LevelSelector } from "./LevelSelector";
 import { NatureSelect } from "./NatureSelect";
@@ -49,6 +50,8 @@ export function MemberForm({
   const [subSkills, setSubSkills] = useState<string[]>(initial?.sub_skills ?? []);
   const [ribbon, setRibbon] = useState(initial?.ribbon ?? "");
   const [skillLevel, setSkillLevel] = useState(initial?.skill_level ?? 1);
+  // Mew's chosen skill; "" until picked (it then reads as Metronome).
+  const [versatileSkill, setVersatileSkill] = useState(initial?.versatile_skill ?? "");
 
   const selectedSpecies = useMemo(
     () => catalog.species.find((s) => s.name === species),
@@ -88,12 +91,16 @@ export function MemberForm({
     nature !== (initial?.nature ?? "") ||
     ribbon !== (initial?.ribbon ?? "") ||
     skillLevel !== (initial?.skill_level ?? 1) ||
+    versatileSkill !== (initial?.versatile_skill ?? "") ||
     subSkills.filter(Boolean).join("|") !== (initial?.sub_skills ?? []).join("|") ||
     (initial !== undefined && ingredients.join("|") !== initial.ingredients.join("|"));
   useEffect(() => onDirtyChange?.(dirty), [dirty, onDirtyChange]);
 
+  const versatile = selectedSpecies?.main_skill === VERSATILE;
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const chosen = effectiveSkill(selectedSpecies?.main_skill, versatileSkill);
     onSubmit({
       species,
       level,
@@ -104,6 +111,7 @@ export function MemberForm({
       sub_skills: subSkills.filter(Boolean),
       ribbon,
       skill_level: skillLevel,
+      ...(versatile && chosen ? { versatile_skill: chosen } : {}),
     });
   }
 
@@ -163,6 +171,9 @@ export function MemberForm({
           value={skillLevel}
           onChange={setSkillLevel}
           mainSkill={selectedSpecies?.main_skill}
+          versatileSkills={versatile ? catalog.versatile_skills : undefined}
+          versatileSkill={versatileSkill}
+          onVersatileChange={setVersatileSkill}
         />
       </fieldset>
 

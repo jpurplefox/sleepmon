@@ -32,11 +32,25 @@ const bulbasaur: Species = {
   base_inventory: 20,
 };
 
+const mew: Species = {
+  name: "Mew",
+  dex: 151,
+  specialty: "All",
+  berry: "Mago",
+  type: "Psychic",
+  sleep_type: "Snoozing",
+  main_skill: "Versatile",
+  ingredient_slots: [["Fancy Egg"], ["Fancy Egg"], ["Fancy Egg"]],
+  ingredient_amounts: [[2], [4], [6]],
+  base_inventory: 26,
+};
+
 const catalog: Catalog = {
   natures: [{ name: "Bashful", neutral: true, increased: null, decreased: null }],
   sub_skills: [{ name: "Helping Speed M", tier: "Blue" }],
   ingredients: ["Fancy Apple", "Warming Ginger", "Honey", "Snoozy Tomato", "Soft Potato"],
-  species: [pikachu, bulbasaur],
+  species: [pikachu, bulbasaur, mew],
+  versatile_skills: ["Charge Strength M", "Metronome", "Berry Burst"],
   recipe_level_bonus: [1.0],
   ingredient_strengths: { "Fancy Apple": 90 },
   islands: [],
@@ -177,5 +191,56 @@ describe("MemberForm (catalogue-driven)", () => {
 
     expect(screen.getByRole("alert")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add to my box" })).toBeDisabled();
+  });
+});
+
+describe("MemberForm with Mew", () => {
+  it("sends Metronome for a new Mew", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderForm();
+    await pickSpecies(user, /Mew/);
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ species: "Mew", versatile_skill: "Metronome" }),
+    );
+  });
+
+  it("sends the skill picked from the skill's menu", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderForm();
+    await pickSpecies(user, /Mew/);
+    await user.click(screen.getByRole("button", { name: "Mew's skill" }));
+    await user.click(screen.getByRole("option", { name: "Charge Strength M" }));
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ species: "Mew", versatile_skill: "Charge Strength M" }),
+    );
+  });
+
+  it("keeps an edited Mew's skill", async () => {
+    const user = userEvent.setup();
+    const initial: MemberInput = {
+      species: "Mew",
+      level: 30,
+      nature: "",
+      ingredients: ["Fancy Egg", "Fancy Egg", "Fancy Egg"],
+      sub_skills: [],
+      ribbon: "",
+      skill_level: 1,
+      versatile_skill: "Berry Burst",
+    };
+    const { onSubmit } = renderForm({ initial });
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ versatile_skill: "Berry Burst" }),
+    );
+  });
+
+  it("sends no skill choice for other species", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderForm();
+    await pickSpecies(user, /Pikachu/);
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
+    expect(onSubmit.mock.calls[0][0]).not.toHaveProperty("versatile_skill");
   });
 });

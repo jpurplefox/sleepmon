@@ -20,6 +20,7 @@ class MemberIn(msgspec.Struct, forbid_unknown_fields=True):
     sub_skills: list[str] = []
     ribbon: str = ""  # vacío = sin listón
     skill_level: int = 1  # nivel de la main skill
+    versatile_skill: str | None = None  # Mew's chosen skill; None/empty = none
 
 
 class BerryYieldOut(msgspec.Struct):
@@ -79,6 +80,7 @@ class MemberOut(msgspec.Struct):
     sub_skills: list[str]
     ribbon: str
     skill_level: int
+    versatile_skill: str | None
     # Producción del overview. Presente en el listado (/team); None en respuestas
     # de un solo miembro (alta/edición/detalle), donde no hace falta.
     production: MemberProductionOut | None = None
@@ -140,6 +142,8 @@ class CatalogOut(msgspec.Struct):
     pot_ladder: list[int]
     ingredient_strengths: dict[str, int]
     islands: list[IslandOut]
+    # Skills a Mew can carry (Versatile), in the game's order.
+    versatile_skills: list[str]
 
 
 class DistributionsOut(msgspec.Struct):
@@ -164,6 +168,7 @@ class ProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     sub_skills: list[str] = msgspec.field(default_factory=list)
     ribbon: str = ""  # vacío = sin listón
     skill_level: int = 1  # nivel de la main skill
+    versatile_skill: str | None = None  # Mew's chosen skill; None/empty = none
     island: str | None = None
     favorite_berries: list[str] = msgspec.field(default_factory=list)
     main_favorite: str | None = None

@@ -76,6 +76,8 @@ export interface Catalog {
   // Las 8 islas del juego con sus bayas favoritas configuradas.
   islands: Island[];
   pot_ladder: number[];
+  // Skills a Mew can carry (Versatile), in the game's order.
+  versatile_skills?: string[];
 }
 
 export interface BerryYield {
@@ -149,6 +151,8 @@ export interface Member {
   ribbon: string;
   // Nivel de la main skill (1..7); se sube aparte del nivel del Pokémon.
   skill_level: number;
+  // Mew's chosen Versatile skill; null for every other species.
+  versatile_skill?: string | null;
   // Producción del overview (presente en el listado de la caja).
   production?: MemberProduction;
 }
@@ -169,6 +173,8 @@ export interface MemberInput {
   ribbon: string;
   // Nivel de la main skill (1..7).
   skill_level: number;
+  // Mew's chosen Versatile skill; omitted (or null) for every other species.
+  versatile_skill?: string | null;
 }
 
 export interface Distributions {
@@ -200,6 +206,7 @@ export interface ProductionInput {
   sub_skills: string[];
   ribbon: string;
   skill_level: number;
+  versatile_skill?: string | null;
   // Comparison's map terms; omitted means Normal with no favorites.
   island?: string | null;
   favorite_berries?: string[];

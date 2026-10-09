@@ -5,6 +5,7 @@ import { RIBBONS } from "../constants";
 import { useI18n } from "../i18n";
 import { spriteUrl } from "../sprites";
 import type { Catalog, Member } from "../types";
+import { effectiveSkill } from "../versatile";
 import { MemberConfig } from "./MemberConfig";
 import { Placeholder } from "./Placeholder";
 import { RibbonIcon } from "./RibbonIcon";
@@ -206,7 +207,7 @@ export function BoxPicker({
                       subSkills={m.sub_skills}
                       skillLevel={m.skill_level}
                       natureMeta={natureByName.get(m.nature)}
-                      mainSkillName={mainSkillBySpecies.get(m.species)}
+                      mainSkillName={effectiveSkill(mainSkillBySpecies.get(m.species), m.versatile_skill)}
                       tierBySubSkill={(name) => tierBySubSkill.get(name)}
                     />
                   </div>

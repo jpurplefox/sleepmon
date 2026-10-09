@@ -45,6 +45,7 @@ export function sameConfig(a: MemberInput, b: MemberInput): boolean {
     a.nature === b.nature &&
     a.ribbon === b.ribbon &&
     a.skill_level === b.skill_level &&
+    (a.versatile_skill ?? "") === (b.versatile_skill ?? "") &&
     sameList(a.ingredients, b.ingredients) &&
     sameList(a.sub_skills, b.sub_skills)
   );

@@ -150,6 +150,51 @@ def test_update_changes_skill_level(repo: PostgresTeamRepository, user_id: UUID)
     assert fetched.skill_level == 7
 
 
+def _mew(versatile_skill: str) -> TeamMember:
+    return TeamMember(
+        species="Mew",
+        level=30,
+        nature=None,
+        ingredients=(Ingredient.FANCY_EGG,) * 3,
+        versatile_skill=versatile_skill,
+    )
+
+
+def test_versatile_skill_roundtrips(repo: PostgresTeamRepository, user_id: UUID) -> None:
+    member = _mew("Charge Strength M")
+    repo.add(member, user_id)
+    assert repo.get(member.id, user_id) == member
+
+
+def test_members_without_versatile_skill_read_back_none(
+    repo: PostgresTeamRepository, user_id: UUID
+) -> None:
+    member = sample()
+    repo.add(member, user_id)
+    fetched = repo.get(member.id, user_id)
+    assert fetched is not None
+    assert fetched.versatile_skill is None
+
+
+def test_update_changes_versatile_skill(repo: PostgresTeamRepository, user_id: UUID) -> None:
+    member = _mew("Metronome")
+    repo.add(member, user_id)
+    changed = _mew("Berry Burst")
+    changed = TeamMember(
+        id=member.id,
+        species=changed.species,
+        level=changed.level,
+        nature=changed.nature,
+        ingredients=changed.ingredients,
+        versatile_skill=changed.versatile_skill,
+    )
+    assert repo.update(changed, user_id) is True
+    fetched = repo.get(member.id, user_id)
+    assert fetched is not None
+    assert fetched.versatile_skill == "Berry Burst"
+    assert repo.list(user_id)[0].versatile_skill == "Berry Burst"
+
+
 def test_members_are_isolated_per_user(test_dsn: str) -> None:
     pool = create_pool(test_dsn)
     with pool.connection() as conn:

@@ -85,6 +85,7 @@ from sleepmon.domain.ports import SpeciesCatalog
 from sleepmon.domain.progress import PlayerProgress
 from sleepmon.domain.saved_team import SavedTeam
 from sleepmon.domain.value_objects import Ingredient, Island, Nature, SubSkill
+from sleepmon.domain.versatile import VERSATILE_SKILLS
 
 
 def _full_production_out(result: ProductionResult) -> ProductionOut:
@@ -196,6 +197,7 @@ def _to_out(member: TeamMember, production: MemberProduction | None = None) -> M
         sub_skills=[s.value for s in member.sub_skills],
         ribbon=member.ribbon.value,
         skill_level=member.skill_level,
+        versatile_skill=member.versatile_skill,
         production=_production_out(production),
     )
 
@@ -223,6 +225,7 @@ def _to_input(payload: MemberIn) -> TeamMemberInput:
         sub_skills=payload.sub_skills,
         ribbon=payload.ribbon,
         skill_level=payload.skill_level,
+        versatile_skill=payload.versatile_skill or "",
     )
 
 
@@ -302,6 +305,7 @@ class ProductionController(Controller):
                 sub_skills=data.sub_skills,
                 ribbon=data.ribbon,
                 skill_level=data.skill_level,
+                versatile_skill=data.versatile_skill or "",
                 island=data.island,
                 favorite_berries=data.favorite_berries,
                 main_favorite=data.main_favorite,
@@ -363,6 +367,7 @@ class CatalogController(Controller):
                 )
                 for island in Island
             ],
+            versatile_skills=list(VERSATILE_SKILLS),
         )
 
 
@@ -411,6 +416,7 @@ class TeamProductionController(Controller):
                                     sub_skills=e.pokemon.sub_skills,
                                     ribbon=e.pokemon.ribbon,
                                     skill_level=e.pokemon.skill_level,
+                                    versatile_skill=e.pokemon.versatile_skill or "",
                                 ),
                                 weight=e.weight,
                             )

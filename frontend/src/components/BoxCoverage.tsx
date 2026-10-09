@@ -5,6 +5,7 @@ import { mainIngredient } from "../ingredientProduction";
 import { contributesBerryRole, producesIngredients } from "../skills";
 import { SPECIALTIES, matchesSpecialty } from "../specialties";
 import type { Catalog, Member } from "../types";
+import { effectiveSkill } from "../versatile";
 
 interface Props {
   members: Member[];
@@ -21,7 +22,8 @@ export function BoxCoverage({ members, catalog }: Props) {
 
   const speciesByName = new Map(catalog.species.map((s) => [s.name, s]));
   const specialtyOf = (m: Member) => speciesByName.get(m.species)?.specialty;
-  const skillOf = (m: Member) => speciesByName.get(m.species)?.main_skill;
+  const skillOf = (m: Member) =>
+    effectiveSkill(speciesByName.get(m.species)?.main_skill, m.versatile_skill);
 
   // Conteo por especialidad (en el orden del juego; 0 se muestra explícito).
   const specialtyCount = (sp: string) =>

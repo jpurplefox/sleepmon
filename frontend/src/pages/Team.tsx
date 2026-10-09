@@ -21,6 +21,7 @@ import { track } from "../telemetry/analytics";
 import type { Catalog, Member, MemberInput, Species } from "../types";
 import { deletionImpact } from "../savedTeams";
 import { SPECIALTIES, matchesSpecialty } from "../specialties";
+import { VERSATILE, effectiveSkill } from "../versatile";
 import { SAVED_TEAMS_KEY, useSavedTeamsQuery } from "../useSavedTeams";
 
 // Orden + filtros del overview, en el cliente (la producción ya viene en /team).
@@ -42,7 +43,8 @@ function sortAndFilter(
     )
       return false;
     // Skill y especialidad siguen siendo single-select (string).
-    if (filters.skill && sp?.main_skill !== filters.skill) return false;
+    if (filters.skill && effectiveSkill(sp?.main_skill, m.versatile_skill) !== filters.skill)
+      return false;
     if (!matchesSpecialty(sp?.specialty, filters.specialty)) return false;
     return true;
   };
@@ -72,7 +74,11 @@ function filterOptions(catalog: Catalog) {
   return {
     types: uniq(catalog.species.map((s) => s.type)).sort(),
     ingredients: catalog.ingredients,
-    skills: uniq(catalog.species.map((s) => s.main_skill)).sort(),
+    // Mew's Versatile isn't a skill of its own: its options join the list instead.
+    skills: uniq([
+      ...catalog.species.map((s) => s.main_skill).filter((s) => s !== VERSATILE),
+      ...(catalog.versatile_skills ?? []),
+    ]).sort(),
     specialties: [...SPECIALTIES],
   };
 }
