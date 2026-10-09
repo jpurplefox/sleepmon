@@ -15,11 +15,29 @@ interface TooltipProps {
 // Keep the bubble this many px away from either viewport edge.
 const VIEWPORT_MARGIN = 8;
 
+// The horizontal room the bubble may use: the viewport, narrowed to the nearest
+// ancestor that clips sideways (e.g. the swiped card deck on a phone), so the
+// bubble isn't cut off by a container that ends before the screen does.
+function horizontalBounds(el: HTMLElement): { min: number; max: number } {
+  // Not innerWidth: on mobile it grows to fit the overflowing bubble itself.
+  let min = 0;
+  let max = document.documentElement.clientWidth;
+  for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+    if (getComputedStyle(p).overflowX !== "visible") {
+      const r = p.getBoundingClientRect();
+      min = Math.max(min, r.left);
+      max = Math.min(max, r.right);
+      break;
+    }
+  }
+  return { min: min + VIEWPORT_MARGIN, max: max - VIEWPORT_MARGIN };
+}
+
 /**
  * The single tooltip in the app: a bubble above its trigger, revealed on mouse
  * hover, keyboard focus, or a tap (which toggles it; a tap elsewhere or Escape
- * closes it). It centers over the trigger and clamps to the viewport so
- * it never overflows on either edge, for any bubble width. Rich content uses the
+ * closes it). It centers over the trigger and clamps to the viewport (or a clipping
+ * ancestor, when one ends sooner) so it never overflows on either edge, for any bubble width. Rich content uses the
  * `Tooltip.Row` / `Tooltip.Label` / `Tooltip.Value` helpers.
  */
 export function Tooltip({ content, label, children, className }: TooltipProps) {
@@ -64,14 +82,11 @@ export function Tooltip({ content, label, children, className }: TooltipProps) {
     const t = wrap.getBoundingClientRect();
     const width = bubble.offsetWidth;
     let x = t.width / 2 - width / 2;
+    const { min, max } = horizontalBounds(wrap);
     const vpLeft = t.left + x;
-    if (vpLeft < VIEWPORT_MARGIN) x += VIEWPORT_MARGIN - vpLeft;
-    // Not innerWidth: on mobile it grows to fit the overflowing bubble itself.
-    const screenWidth = document.documentElement.clientWidth;
+    if (vpLeft < min) x += min - vpLeft;
     const vpRight = t.left + x + width;
-    if (vpRight > screenWidth - VIEWPORT_MARGIN) {
-      x -= vpRight - (screenWidth - VIEWPORT_MARGIN);
-    }
+    if (vpRight > max) x -= vpRight - max;
     setLeft(x);
   };
 
