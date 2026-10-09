@@ -84,10 +84,12 @@ describe("analytics", () => {
     expect(initOptions().bootstrap).toEqual({ distinctID: "u-1", isIdentifiedID: true });
   });
 
-  it("stays anonymous (no bootstrap) when signed out", async () => {
+  it("bootstraps a per-tab anonymous id (not identified) when signed out", async () => {
     initAnalytics(withKey());
     await startAnalytics(null);
-    expect(initOptions()).not.toHaveProperty("bootstrap");
+    const bootstrap = initOptions().bootstrap as { distinctID: string };
+    expect(bootstrap.distinctID).toMatch(/^[0-9a-f-]{36}$/);
+    expect(bootstrap).not.toHaveProperty("isIdentifiedID");
   });
 
   it("flushes calls made before init, in order, after the init properties", async () => {

@@ -77,6 +77,17 @@ export function initAnalytics(cfg: TelemetryConfig): void {
  * otherwise. Only the first call does anything. The returned promise never
  * rejects; callers do not wait for it.
  */
+// A stable initial distinct id keeps posthog-js from warning (and from minting a
+// volatile id) under memory persistence. Signed in: the internal user id.
+// Signed out: a per-tab random id, never stored, so a later identify() still
+// merges the tab's anonymous events into the account.
+function bootstrapFor(userId: string | null): { distinctID: string; isIdentifiedID?: boolean } | undefined {
+  if (userId !== null) return { distinctID: userId, isIdentifiedID: true };
+  return typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? { distinctID: crypto.randomUUID() }
+    : undefined;
+}
+
 export function startAnalytics(userId: string | null): Promise<void> {
   if (!config?.posthogKey || started) return Promise.resolve();
   started = true;
@@ -102,7 +113,7 @@ export function startAnalytics(userId: string | null): Promise<void> {
         disable_conversations: true,
         disable_product_tours: true,
         before_send: (cr) => (cr && ALLOWED_EVENTS.has(cr.event) ? cr : null),
-        ...(userId !== null ? { bootstrap: { distinctID: userId, isIdentifiedID: true } } : {}),
+        bootstrap: bootstrapFor(userId),
       });
       const live = sinkFor(posthog);
       if (initProps) live.register(initProps);

@@ -77,7 +77,7 @@ key is absent.
 - **Identity:** PostHog starts once the session check settles. Signed in, it
   starts already identified by the **internal opaque user id** (bootstrapped), so
   a reload does not mint a new anonymous id to merge into the person; signed
-  out, it starts anonymous. A sign-in within the tab calls `identify` (merging
+  out, it starts with a random per-tab anonymous id (never stored). A sign-in within the tab calls `identify` (merging
   the tab's anonymous events into the account); sign-out calls `reset`. Every
   event carries `signed_in`, `language` and the release.
 - **Only the curated catalogue is sent.** Autocapture, automatic pageviews,
