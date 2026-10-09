@@ -3915,14 +3915,46 @@ button.prod-card__base-tag--action {
   font-variant-numeric: tabular-nums;
 }
 
+/* Narrow: the two subtotals sit side by side, a step smaller, and the total they
+   add up to closes the card under a hairline, full width with its rating. Stacking
+   the three made the card a screen tall with the rating floating at its corner. */
 @media (max-width: 860px) {
   .teams-totals {
-    flex-direction: column;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "berries cooking"
+      "grand grand";
+    gap: 0 1rem;
   }
+
   .teams-totals__divider {
-    width: auto;
-    height: 1px;
+    display: none;
+  }
+
+  .teams-totals__col--grand {
+    grid-area: grand;
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .teams-totals__col--berries {
+    grid-area: berries;
+  }
+
+  .teams-totals__col--cooking {
+    grid-area: cooking;
+  }
+
+  .teams-totals__col:not(.teams-totals__col--grand) .teams-totals__kpi {
+    font-size: var(--text-base);
+  }
+
+  /* The rating spans the card under the total instead of floating at its corner. */
+  .teams-totals__col--grand .snorlax-rating-badge {
+    align-self: stretch;
+    margin-top: 0.6rem;
   }
 }
 

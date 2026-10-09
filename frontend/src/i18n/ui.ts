@@ -344,7 +344,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.berriesSkills": "Bayas y skills",
     "teams.cooking": "Cocina",
     "teams.totalStrength": "Fuerza total",
-    "teams.grandTotal": "Gran total de fuerza",
     "teams.rating.aria":
       "Rating de Snorlax en {island}: {tier} {level} de {cap}",
     "teams.rating.toNext": "faltan {remaining}",
@@ -925,7 +924,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.berriesSkills": "Berries & skills",
     "teams.cooking": "Cooking",
     "teams.totalStrength": "Total strength",
-    "teams.grandTotal": "Grand total strength",
     "teams.rating.aria": "Snorlax rating on {island}: {tier} {level} of {cap}",
     "teams.rating.toNext": "{remaining} to next",
     "teams.rating.max": "Maxed!",

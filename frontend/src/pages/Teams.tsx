@@ -1219,7 +1219,7 @@ export function Teams() {
           When bonus=0 or floor(base)===floor(value) → no tooltip rendered (identity, no visual change). ── */}
           <div className="card teams-totals">
             {/* Col 1 — Berries & skills */}
-            <div className="teams-totals__col">
+            <div className="teams-totals__col teams-totals__col--berries">
               <span className="teams-totals__label">{t("teams.berriesSkills")}</span>
               <span className="teams-totals__kpi">
                 <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" style={{ width: 18, height: 18 }} />
@@ -1237,7 +1237,7 @@ export function Teams() {
             <span className="teams-totals__divider" aria-hidden="true" />
 
             {/* Col 2 — Cooking */}
-            <div className="teams-totals__col">
+            <div className="teams-totals__col teams-totals__col--cooking">
               <span className="teams-totals__label">{t("teams.cooking")}</span>
               <span className="teams-totals__kpi">
                 <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" style={{ width: 18, height: 18 }} />
@@ -1254,9 +1254,9 @@ export function Teams() {
 
             <span className="teams-totals__divider" aria-hidden="true" />
 
-            {/* Col 3 — Grand total (biggest number on the page) */}
+            {/* Col 3 — Total strength (biggest number on the page) */}
             <div className="teams-totals__col teams-totals__col--grand">
-              <span className="teams-totals__label">{t("teams.grandTotal")}</span>
+              <span className="teams-totals__label">{t("teams.totalStrength")}</span>
               <span className="teams-totals__kpi teams-totals__kpi--grand">
                 <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt="" style={{ width: 22, height: 22 }} />
                 <StrengthValue
