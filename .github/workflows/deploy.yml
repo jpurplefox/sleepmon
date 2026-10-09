@@ -107,7 +107,7 @@ jobs:
           # attestations (SLSA provenance) en vez de un manifiesto único. ECR lo
           # acepta, pero Lambda lo rechaza ("media type ... is not supported")
           # al actualizar la función. Mismo flag que usa whos-that.
-          docker build --platform linux/amd64 --provenance=false -f backend/Dockerfile.lambda -t "$IMAGE_URI" backend
+          docker build --platform linux/amd64 --provenance=false --build-arg SENTRY_RELEASE="$IMAGE_TAG" -f backend/Dockerfile.lambda -t "$IMAGE_URI" backend
           docker push "$IMAGE_URI"
           echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_ENV"
       - name: Update Lambda function code

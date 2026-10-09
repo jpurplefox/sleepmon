@@ -15,6 +15,7 @@ from litestar.connection import ASGIConnection
 from litestar.exceptions import NotAuthorizedException
 from litestar.handlers.base import BaseRouteHandler
 
+from sleepmon.adapters.inbound.http.observability import tag_request_user
 from sleepmon.domain.auth import InvalidTokenError
 from sleepmon.domain.ports import AccessTokenService
 
@@ -36,4 +37,6 @@ def require_user(connection: ASGIConnection[Any, Any, Any, Any], _: BaseRouteHan
 
 def current_user_id(request: Request[Any, Any, Any]) -> UUID:
     access: AccessTokenService = request.app.state.access
-    return access.verify(_bearer(request))
+    user_id = access.verify(_bearer(request))
+    tag_request_user(user_id)
+    return user_id

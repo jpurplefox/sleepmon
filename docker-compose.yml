@@ -24,6 +24,10 @@ services:
       # defecto: hay que exportarlos en el entorno antes de levantar el stack.
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       JWT_SECRET: ${JWT_SECRET:-}
+      # Sentry (ADR-0010): empty = off. Sample rate is per environment.
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
+      SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0}
     ports:
       - "8000:8000"
     depends_on:

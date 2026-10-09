@@ -107,3 +107,25 @@ def test_flush_after_flushes_when_the_handler_raises(monkeypatch: pytest.MonkeyP
     with pytest.raises(RuntimeError):
         flush_after(boom)({}, None)
     assert flushed == [2.0]
+
+
+def test_authenticated_request_tags_the_user(monkeypatch: pytest.MonkeyPatch) -> None:
+    from sleepmon.adapters.inbound.http import guards
+
+    tagged: list[UUID] = []
+    monkeypatch.setattr(guards, "tag_request_user", lambda uid: tagged.append(uid))
+
+    class _Access:
+        def verify(self, token: str) -> UUID:
+            return UUID("00000000-0000-0000-0000-000000000002")
+
+    class _Req:
+        headers = {"Authorization": "Bearer x"}
+
+        class app:  # noqa: N801 - mimics request.app
+            class state:  # noqa: N801
+                access = _Access()
+
+    uid = guards.current_user_id(_Req())  # type: ignore[arg-type]
+    assert uid == UUID("00000000-0000-0000-0000-000000000002")
+    assert tagged == [uid]
