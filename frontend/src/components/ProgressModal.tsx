@@ -33,6 +33,7 @@ export function ProgressModal({ onClose }: { onClose: () => void }) {
     isError,
     saveAsync,
     saveError,
+    isSaving,
   } = useProgress();
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
   const recipes = useQuery({ queryKey: ["recipes"], queryFn: api.getRecipes });
@@ -75,7 +76,8 @@ export function ProgressModal({ onClose }: { onClose: () => void }) {
   };
 
   const handleSave = async (): Promise<void> => {
-    if (!hasChanges) return;
+    // One PATCH at a time: a second tap while saving would send it again.
+    if (!hasChanges || isSaving) return;
     try {
       await saveAsync(patch);
       // The Box computes server-side with the saved schedule: refetch it.
@@ -181,10 +183,10 @@ export function ProgressModal({ onClose }: { onClose: () => void }) {
               <button
                 type="button"
                 className="btn btn--primary"
-                disabled={!hasChanges}
+                disabled={!hasChanges || isSaving}
                 onClick={() => void handleSave()}
               >
-                {t("progress.save")}
+                {isSaving ? t("form.saving") : t("progress.save")}
               </button>
             </div>
           )}

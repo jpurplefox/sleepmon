@@ -29,6 +29,8 @@ export function useProgress(): {
    * Guardar) know whether the save succeeded before deciding to close. */
   saveAsync: (patch: ProgressPatch) => Promise<PlayerProgress>;
   saveError: Error | null;
+  /** A save is in flight (Guardar shows "Guardando…" and takes no second tap). */
+  isSaving: boolean;
 } {
   const client = useQueryClient();
   const { status } = useAuth();
@@ -61,5 +63,6 @@ export function useProgress(): {
     save: mutation.mutate,
     saveAsync: mutation.mutateAsync,
     saveError: mutation.error,
+    isSaving: mutation.isPending,
   };
 }

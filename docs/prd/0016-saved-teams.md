@@ -115,9 +115,10 @@ action (when signed in) that goes to Teams.
   its box with a vertical bar beside them: the top length is the top Pokémon's share,
   the bottom length the other's, in two distinct colors. The percentages are a hover
   (and the screen reader's text) away, not printed.
-- Each row's actions live in a **···** menu, like the Box's: **Open in Analysis**
-  (loads it into Team Analysis and takes you there) and, set apart, **Delete** (asks
-  for confirmation; the Box is untouched).
+- Tapping a team's **name** opens it: it loads into Team Analysis and takes you there.
+  The row's actions also live in a **···** menu, like the Box's: **Open in Team
+  analysis** (the same) and, set apart, **Delete** (asks for confirmation; the Box is
+  untouched).
 - A team is **renamed only in Team Analysis**, from its name (see *Saving from Team
   Analysis*); the list does not rename.
 - Deleting the team that is open in Team Analysis keeps its roster there, as a team

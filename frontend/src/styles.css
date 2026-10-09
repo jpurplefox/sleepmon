@@ -296,6 +296,7 @@ select:focus {
 .species-trigger:focus-visible,
 .icon-btn:focus-visible,
 .saved-team-bar__name:focus-visible,
+.team-row__name:focus-visible,
 .action-menu__item:focus-visible,
 .level-stepper__btn:focus-visible,
 .stepper__btn:focus-visible,
@@ -6300,6 +6301,23 @@ button.prod-card__base-tag--action {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  /* A button that reads as the row's title: opens the team. */
+  justify-self: start;
+  max-width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .team-row__name:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
 
 .team-row__slots {

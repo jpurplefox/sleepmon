@@ -262,6 +262,25 @@ describe("ProgressModal — Guardar", () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
+  it("shows it is saving and takes no second tap while the PATCH is in flight", async () => {
+    let finish: (p: PlayerProgress) => void = () => {};
+    vi.spyOn(api, "patchProgress").mockImplementationOnce(
+      () => new Promise<PlayerProgress>((resolve) => (finish = resolve)),
+    );
+    renderModal();
+    await screen.findByText("33 ingredients");
+    await userEvent.click(screen.getByRole("button", { name: "Bigger pot" }));
+    const callsBefore = vi.mocked(api.patchProgress).mock.calls.length;
+
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    const saving = await screen.findByRole("button", { name: "Saving…" });
+    expect(saving).toBeDisabled();
+    await userEvent.click(saving);
+    expect(api.patchProgress).toHaveBeenCalledTimes(callsBefore + 1);
+
+    finish(makeProgress({ pot_size: 36 }));
+  });
+
   it("keeps the modal open with the draft intact and shows the error when the save fails", async () => {
     vi.spyOn(api, "patchProgress").mockRejectedValueOnce(new Error("network error"));
     const onClose = vi.fn();
