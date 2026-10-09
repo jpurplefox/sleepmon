@@ -102,6 +102,10 @@ key is absent.
   plus the release (`VITE_RELEASE`) injected by CI. The Sentry auth token
   for source-map upload is a CI secret only.
 - An empty value disables the corresponding SDK entirely.
+- PostHog project setting (deploy prerequisite): **Discard client IP data** must be
+  on. The SDK cannot stop the ingest from recording the client IP, and the privacy
+  page ([PRD-0018](../prd/0018-account-and-privacy.md)) states that the analytics
+  tool does not store IP addresses; that claim holds only with this setting on.
 
 ## Consequences
 

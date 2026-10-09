@@ -39,4 +39,21 @@ describe("Privacy", () => {
     renderPage(null);
     expect(screen.queryByText(/@/)).not.toBeInTheDocument();
   });
+
+  it.each(["en", "es"])("words the cookie, the deletion and sent reports accurately (%s)", (lang) => {
+    localStorage.setItem("sleepmon.lang", lang);
+    const { container } = renderPage("hi@example.com");
+    const text = container.textContent ?? "";
+    // The refresh cookie lasts for weeks: a sign-in cookie, not a session cookie.
+    expect(text).toMatch(lang === "en" ? /a sign-in cookie/ : /una cookie de inicio de sesión/);
+    expect(text).not.toMatch(/session cookie|cookie de sesión/);
+    // Already-sent metrics stay with the providers, tied to an orphaned id.
+    expect(text).toMatch(
+      lang === "en"
+        ? /already sent stay with those providers, tied to an id that no longer belongs to anyone/
+        : /ya enviados quedan en esas herramientas, asociados a un identificador que ya no corresponde a nadie/,
+    );
+    // No "…." where the button label ends a sentence.
+    expect(text).not.toMatch(/…\./);
+  });
 });

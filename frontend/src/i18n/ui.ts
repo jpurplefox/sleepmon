@@ -634,13 +634,13 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Al iniciar sesión con Google guardamos tu id de Google, tu email, tu nombre y tu foto, y lo que cargues: tu caja, tus equipos guardados y tu perfil de jugador. Se conserva hasta que borres tu cuenta.",
     "privacy.browserTitle": "En tu navegador",
     "privacy.browserBody":
-      "Para mantenerte con la sesión iniciada usamos una cookie de sesión y un token de inicio de sesión guardado en tu navegador; ahí también se guarda el idioma que elegiste. No usamos cookies de publicidad ni de analítica, y las métricas de uso no guardan nada en tu navegador.",
+      "Para mantenerte con la sesión iniciada usamos una cookie de inicio de sesión y un token guardado en tu navegador; ahí también se guarda el idioma que elegiste. No usamos cookies de publicidad ni de analítica, y las métricas de uso no guardan nada en tu navegador.",
     "privacy.metricsTitle": "Métricas de uso y reportes de errores",
     "privacy.metricsBody":
-      "Medimos cómo se usan las herramientas (PostHog) y recibimos reportes técnicos de errores (Sentry). Van asociados a un identificador interno, nunca a tu email ni a tu nombre, y esas herramientas no guardan tu dirección IP. Cuando borrás tu cuenta, ese identificador ya no corresponde a nadie.",
+      "Medimos cómo se usan las herramientas (PostHog) y recibimos reportes técnicos de errores (Sentry). Van asociados a un identificador interno, nunca a tu email ni a tu nombre, y esas herramientas no guardan tu dirección IP. Si borrás tu cuenta, las métricas y los reportes ya enviados quedan en esas herramientas, asociados a un identificador que ya no corresponde a nadie.",
     "privacy.deleteTitle": "Cómo borrar tus datos",
     "privacy.deleteBody":
-      "Entrá a {link} (menú de la cuenta → Cuenta y privacidad) y elegí Borrar mi cuenta…. Se borra todo al instante.",
+      "Entrá a {link} (menú de la cuenta → Cuenta y privacidad) y elegí Borrar mi cuenta: se borra todo al instante.",
     "privacy.deleteMail": "También podés pedirlo por email a {email}.",
     "footer.privacy": "Privacidad",
     "footer.notice":
@@ -1275,13 +1275,13 @@ export const UI: Record<Lang, Record<string, string>> = {
       "When you sign in with Google we keep your Google id, email, name and photo, plus what you save: your Box, saved teams and Player profile. It is kept until you delete your account.",
     "privacy.browserTitle": "In your browser",
     "privacy.browserBody":
-      "To keep you signed in we use a session cookie and a sign-in token stored in your browser; your language choice is stored there too. No advertising or analytics cookies, and usage metrics store nothing in your browser.",
+      "To keep you signed in we use a sign-in cookie and a token stored in your browser; your language choice is stored there too. No advertising or analytics cookies, and usage metrics store nothing in your browser.",
     "privacy.metricsTitle": "Usage metrics and error reports",
     "privacy.metricsBody":
-      "We measure how the tools are used (PostHog) and receive technical error reports (Sentry). They are tied to an internal id, never to your email or name, and these tools do not store your IP address. After you delete your account, that id no longer belongs to anyone.",
+      "We measure how the tools are used (PostHog) and receive technical error reports (Sentry). They are tied to an internal id, never to your email or name, and these tools do not store your IP address. If you delete your account, metrics and reports already sent stay with those providers, tied to an id that no longer belongs to anyone.",
     "privacy.deleteTitle": "How to delete your data",
     "privacy.deleteBody":
-      "Open {link} (account menu → Account & privacy) and choose Delete my account…. Everything is deleted at once.",
+      "Open {link} (account menu → Account & privacy) and choose Delete my account: everything is deleted at once.",
     "privacy.deleteMail": "You can also ask by email at {email}.",
     "footer.privacy": "Privacy",
     "footer.notice":
