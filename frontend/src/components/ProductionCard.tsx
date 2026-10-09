@@ -371,7 +371,7 @@ export function ProductionCard({
         <div className="prod-card__identity">
           {notice}
           <header className="prod-card__head">
-            {/* Row 1: reorder ‹ › + name / level / ribbon. No reorder when readOnly. */}
+            {/* Row 1: reorder ‹ › + name / level / ribbon + base. No reorder when readOnly. */}
             <div className="prod-card__topline">
               {!readOnly && (
                 <>
@@ -411,29 +411,25 @@ export function ProductionCard({
                   ) : null;
                 })()}
               </div>
+              {/* Base chip / "Make base", at the right of the name. Fits within the
+                  name's line, so going from 1 to 2 cards doesn't shift anything. */}
+              {!readOnly &&
+                comparing &&
+                (isBase ? (
+                  <span className="prod-card__base-tag" title={t("card.baseTitle")}>
+                    {t("card.base")}
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    className="prod-card__base-tag prod-card__base-tag--action"
+                    onClick={onMakeBase}
+                    title={t("card.makeBaseTitle")}
+                  >
+                    {t("card.makeBase")}
+                  </button>
+                ))}
             </div>
-            {/* Fila de altura reservada: evita que las cards salten al pasar de 1 a 2
-                (cuando aparecen el chip "Base" / el botón "Hacer base").
-                En modo readOnly no hay chip ni botón de base. */}
-            {!readOnly && (
-              <div className="prod-card__base-row">
-                {comparing &&
-                  (isBase ? (
-                    <span className="prod-card__base-tag" title={t("card.baseTitle")}>
-                      {t("card.base")}
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      className="prod-card__base-tag prod-card__base-tag--action"
-                      onClick={onMakeBase}
-                      title={t("card.makeBaseTitle")}
-                    >
-                      {t("card.makeBase")}
-                    </button>
-                  ))}
-              </div>
-            )}
             {/* Sprite centrado: foco visual de la card. */}
             {species && (
               <img className="prod-card__sprite" src={spriteUrl(species.dex)} alt="" loading="lazy" />

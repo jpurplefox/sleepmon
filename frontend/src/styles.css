@@ -2999,16 +2999,12 @@ select:focus {
   border-color: var(--down-border);
 }
 
-/* Fila de altura reservada para el chip/botón de base: aunque haya una sola card
-   (sin chip), reserva el alto para que ninguna salte al pasar de 1 a 2. */
-.prod-card__base-row {
-  display: flex;
-  min-height: 1.4rem;
-}
-
-/* Chip "Base" (estado) y botón "Hacer base" (acción), bajo el topline. */
+/* "Base" chip (state) and "Make base" button (action), at the right end of the name
+   row. Their colors are see-through mixes, so they hold on a berry-tinted identity
+   zone as well as on the plain surface. */
 .prod-card__base-tag {
-  align-self: flex-start;
+  margin-left: auto;
+  flex-shrink: 0;
   font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
@@ -3018,15 +3014,15 @@ select:focus {
 }
 
 span.prod-card__base-tag {
-  color: var(--accent-text);
+  color: var(--text);
   background: var(--accent-dim);
   border: 1px solid var(--accent-border);
 }
 
 button.prod-card__base-tag--action {
-  color: var(--muted);
-  background: transparent;
-  border: 1px solid var(--border);
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text) 30%, transparent);
   cursor: pointer;
   transition:
     border-color 0.12s,
@@ -3139,6 +3135,8 @@ button.prod-card__base-tag--action {
   flex-wrap: wrap;
   gap: 0.3rem;
   line-height: 1.4;
+  /* Wraps (level under the name) before pushing the base tag out of the card. */
+  min-width: 0;
 }
 
 .prod-card__title strong {
