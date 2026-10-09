@@ -3005,6 +3005,9 @@ select:focus {
 .prod-card__base-tag {
   margin-left: auto;
   flex-shrink: 0;
+  /* A <button> doesn't inherit the font: in the UA default its caps sat ~2px above
+     center, and the button came out shorter than the Base chip. */
+  font-family: inherit;
   font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
