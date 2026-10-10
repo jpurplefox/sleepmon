@@ -429,6 +429,8 @@ export interface Production {
   inventory_fill_hours: number;
   /** Skill level actually used (with the main favorite's +1, already capped). */
   effective_skill_level: number;
+  /** Skill levels the bonuses add (main favorite + event), before the cap. */
+  skill_level_bonus: number;
 }
 
 /** The player profile (PRD 0011, 0015). Mappings hold only non-defaults. */

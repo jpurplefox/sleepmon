@@ -3744,6 +3744,36 @@ button.prod-card__base-tag--action {
   color: var(--muted);
 }
 
+/* The main skill's level in the skill block's head: a value, so it drops the
+   head's uppercase and reads in --text, like the figures below. */
+.prod-card__skill-lv {
+  margin-left: 0.5rem;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Raised by a bonus: "Lv. 3 → 4" — the level set steps back, the one used reads as good. */
+.prod-card__skill-lv-set {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.prod-card__skill-lv-boost {
+  color: var(--up);
+}
+
+/* The bonus overflows the skill's max: a small caps note after the level used. */
+.prod-card__skill-lv-max {
+  margin-left: 0.3rem;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
 .prod-card__ings {
   list-style: none;
   margin: 0;

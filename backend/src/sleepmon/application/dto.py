@@ -161,6 +161,7 @@ class ProductionResult:
     skill_percentage: float
     effective_skill_percentage: float
     effective_skill_level: int
+    skill_level_bonus: int
     ingredients: list[SlotAmount]
     skill_triggers: float
     skill_ingredients: list[SlotAmount]

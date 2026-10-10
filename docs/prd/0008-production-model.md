@@ -131,6 +131,14 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
   the team's *Other skills*: **Present** (Delibird) brings 4 candies a third of the
   time, shown as a total with a generic candy icon (which Pokémon they're for isn't
   worked out); **Berry Juice** (Shuckle) brings a Berry Juice 18.5% of the time.
+- **The skill's level is at hand.** The card's Skill block shows the level the main
+  skill was set to (*Lv. N*), with the skill's name in its tooltip. When a bonus applies
+  (the expert map's main favorite, an event), it reads *Lv. 3 → 4*: the level set, then
+  the one the figures use, in the good color. Beside it, a chip per source says where
+  the bonus comes from: *Skill +1* for the main favorite, *Skill +N* for an event. The
+  chips show even when the bonus adds nothing past the max. A bonus that overflows the skill's max adds *max*: *Lv. 5 → 7 max*, and
+  *Lv. 7 → 7 max* when the skill already sits at its max. A bonus that lands exactly
+  on the max shows no *max*.
 - **Uncalculated skills are flagged.** Where a skill's production isn't calculated —
   **Metronome** and **Skill Copy** entirely; **Psystrike**'s Berry Zone and **Nuzzle**'s
   skill bonus partly — the card's Skill block shows a warning whose tooltip says what

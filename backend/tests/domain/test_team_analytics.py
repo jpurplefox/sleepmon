@@ -53,6 +53,7 @@ def _fake_daily(
         inventory=100,
         inventory_fill_hours=5.0,
         effective_skill_level=1,
+        skill_level_bonus=0,
     )
 
 
@@ -158,6 +159,7 @@ def test_team_production_skill_ingredients_folded_into_aggregation() -> None:
         inventory=100,
         inventory_fill_hours=5.0,
         effective_skill_level=1,
+        skill_level_bonus=0,
     )
     # Miembro B: slot normal de HONEY(2.0) + skill_ingredient HONEY(1.0)
     b = DailyProduction(
@@ -186,6 +188,7 @@ def test_team_production_skill_ingredients_folded_into_aggregation() -> None:
         inventory=100,
         inventory_fill_hours=5.0,
         effective_skill_level=1,
+        skill_level_bonus=0,
     )
     result = team_production([("a", "X", a), ("b", "Y", b)])
     # HONEY: 3 (slot A) + 2 (slot B) + 1 (skill B) = 6.0

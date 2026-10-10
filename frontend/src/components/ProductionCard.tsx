@@ -151,7 +151,7 @@ export function ProductionCard({
   expertSpeed = null,
   weeklyBonus = "berry_strength",
 }: Props) {
-  const { t, ingredient, berry, subSkill, nature: natureName } = useI18n();
+  const { t, ingredient, berry, subSkill, mainSkill, nature: natureName } = useI18n();
   // La animación de entrada solo debe correr al montar (al agregar una card). Al
   // reordenar/intercambiar, el navegador reinicia las animaciones CSS de los nodos
   // movidos aunque React no los desmonte; por eso la clase de entrada se quita al
@@ -180,18 +180,44 @@ export function ProductionCard({
   const teammateIngs = d?.teammate_ingredients ?? [];
   const teammateIngAmount = teammateIngs.reduce((acc, s) => acc + s.amount, 0);
 
-  const unmodeledKey = unmodeledSkillKey(effectiveSkill(species?.main_skill, config.versatile_skill));
+  const skill = effectiveSkill(species?.main_skill, config.versatile_skill);
+  const unmodeledKey = unmodeledSkillKey(skill);
+  // The level the user set and, when a bonus (main favorite, event) applies, the one
+  // the figures use: "Lv. 3 → 4". A bonus that overflows the skill's max adds "max"
+  // ("Lv. 5 → 7 max", "Lv. 7 → 7 max"). The mark beside it says where the bonus comes from.
+  const skillName = mainSkill(skill ?? "");
+  const skillLv = t("prod.skillLv", { level: config.skill_level });
+  const boostedSkillLevel = d && d.skill_level_bonus > 0 ? d.effective_skill_level : null;
+  const skillLevelCapped =
+    boostedSkillLevel !== null && config.skill_level + (d?.skill_level_bonus ?? 0) > boostedSkillLevel;
+  const skillLvText =
+    boostedSkillLevel === null
+      ? skillLv
+      : `${skillLv} → ${boostedSkillLevel}${skillLevelCapped ? ` ${t("card.skillMax")}` : ""}`;
+  const usedSkillLv = t("prod.skillLv", { level: boostedSkillLevel ?? config.skill_level });
 
-  const marks = d
-    ? expertMarks({
-        role: berryRole,
-        expert,
-        weeklyBonus,
-        speed: expertSpeed,
-        skillLevel: config.skill_level,
-        effectiveSkillLevel: d.effective_skill_level,
-        t,
-      })
+  // The skill level bonus beyond the main favorite's +1 comes from the event.
+  const eventSkillBonus = d ? d.skill_level_bonus - (expert && berryRole === "main" ? 1 : 0) : 0;
+  const marks: MetricMark[] = d
+    ? [
+        ...expertMarks({
+          role: berryRole,
+          expert,
+          weeklyBonus,
+          speed: expertSpeed,
+          t,
+        }),
+        ...(eventSkillBonus > 0
+          ? [
+              {
+                metric: "skill" as const,
+                label: `Skill +${eventSkillBonus}`,
+                tone: "good" as const,
+                effect: t("card.eventSkillLevel", { n: eventSkillBonus }),
+              },
+            ]
+          : []),
+      ]
     : [];
 
   // A metric can carry more than one mark at once (e.g. the main favorite's
@@ -649,6 +675,22 @@ export function ProductionCard({
           <div className="prod-card__block prod-card__block--skill">
             <div className="prod-card__block-head">
               {t("card.skill")} <span className="muted">{pct(d.effective_skill_percentage)}</span>
+              {species && (
+                <Tooltip content={`${skillName} · ${skillLvText}`} className="tooltip--inline prod-card__skill-lv">
+                  <span aria-hidden="true">
+                    {boostedSkillLevel === null ? (
+                      skillLv
+                    ) : (
+                      <>
+                        <span className="prod-card__skill-lv-set">{skillLv}</span> →{" "}
+                        <span className="prod-card__skill-lv-boost">{boostedSkillLevel}</span>
+                        {skillLevelCapped && <span className="prod-card__skill-lv-max">{t("card.skillMax")}</span>}
+                      </>
+                    )}
+                  </span>
+                  <span className="sr-only">{`${skillName} ${usedSkillLv}`}</span>
+                </Tooltip>
+              )}
               {markFor("skill")}
               {unmodeledKey && (
                 <Tooltip className="skill-alert" content={t(unmodeledKey)}>

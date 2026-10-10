@@ -1286,6 +1286,7 @@ def _daily(
         inventory=100,
         inventory_fill_hours=5.0,
         effective_skill_level=effective_skill_level,
+        skill_level_bonus=0,
     )
 
 
@@ -1440,6 +1441,33 @@ def test_skill_level_bonus_caps_at_max() -> None:
         sp, _INGREDIENTS, level=60, skill_level=6, event=_ev(EventEffect(K.SKILL_LEVEL, 5))
     )
     assert prod.effective_skill_level == 7
+
+
+def test_the_skill_level_bonus_is_reported_before_the_cap() -> None:
+    """The UI shows a capped bonus as "Lv. 6 → 7 MAX", so it needs the bonus itself."""
+    sp = _species(main_skill="Ingredient Draw S")
+    prod = daily_production(
+        sp, _INGREDIENTS, level=60, skill_level=6, event=_ev(EventEffect(K.SKILL_LEVEL, 5))
+    )
+    assert prod.skill_level_bonus == 5
+
+
+def test_the_skill_level_bonus_adds_the_main_favorite_and_the_event() -> None:
+    species = _species()
+    prod = daily_production(
+        species,
+        _INGREDIENTS,
+        level=60,
+        skill_level=3,
+        map_bonuses=_fav(species.berry, expert=True),
+        event=_ev(EventEffect(K.SKILL_LEVEL, 2)),
+    )
+    assert prod.skill_level_bonus == 3
+
+
+def test_without_a_bonus_the_skill_level_bonus_is_zero() -> None:
+    prod = daily_production(_species(), _INGREDIENTS, level=60, skill_level=3)
+    assert prod.skill_level_bonus == 0
 
 
 def test_skill_ingredients_factor() -> None:
