@@ -3409,10 +3409,12 @@ button.prod-card__base-tag--action {
 
 /* Drawn ▲/▼ (optically centered in its box): a solid triangle outweighs the
    digits, so it stays a notch under their height. */
-.prod-delta__arrow {
+.prod-delta .prod-delta__arrow {
   width: 8px;
   height: 8px;
   flex-shrink: 0;
+  /* The delta's own color, not the metric line's icon color. */
+  color: inherit;
 }
 
 .prod-delta--up {
@@ -3681,7 +3683,7 @@ button.prod-card__base-tag--action {
   font-size: var(--text-sm);
 }
 
-/* Cada dato lleva su ícono representativo (currentColor, atenuado). */
+/* Each figure carries its representative icon (currentColor). */
 .prod-card__line > span,
 .prod-card__night > span {
   display: inline-flex;
@@ -3689,8 +3691,9 @@ button.prod-card__base-tag--action {
   gap: 0.3rem;
 }
 
+/* White like the stat and sub-skill glyphs beside them. */
 .prod-card__line svg {
-  color: var(--muted);
+  color: var(--text);
   flex-shrink: 0;
 }
 
@@ -3708,6 +3711,11 @@ button.prod-card__base-tag--action {
 
 .prod-card__icon--backpack {
   transform: translateY(-1.25px);
+}
+
+/* Symmetric, but its box sits a little low on a line of its own. */
+.prod-card__icon--sparkle {
+  transform: translateY(-0.75px);
 }
 
 /* The night line is a mechanic, not a value: indigo ink. */

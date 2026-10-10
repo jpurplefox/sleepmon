@@ -96,11 +96,12 @@ export function IconPackage(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-// Skill / activación de la habilidad principal.
+// Main skill triggers: a filled four-point sparkle, drawn like the card's other
+// metric glyphs.
 export function IconSparkle(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg {...base} {...props}>
-      <path d="m12 3 1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3Z" />
+    <svg {...filled} {...props}>
+      <path d="M12 2.5Q14 10 21.5 12 14 14 12 21.5 10 14 2.5 12 10 10 12 2.5z" />
     </svg>
   );
 }

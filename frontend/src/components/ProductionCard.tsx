@@ -660,7 +660,7 @@ export function ProductionCard({
             </div>
             <div className="prod-card__line">
               <Tooltip content={t("card.triggersTitle")} className="tooltip--inline">
-                <IconSparkle /> {fmt(d.skill_triggers)} <Delta value={d.skill_triggers} base={base?.skill_triggers} />
+                <IconSparkle className="prod-card__icon--sparkle" /> {fmt(d.skill_triggers)} <Delta value={d.skill_triggers} base={base?.skill_triggers} />
               </Tooltip>
             </div>
             {teammates === null && d.skill_berries_per_teammate != null && (
