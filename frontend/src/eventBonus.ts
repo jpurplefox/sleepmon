@@ -58,7 +58,7 @@ const times = (icon: string, labelKey: string, scoped = true): KindSpec => ({
 
 export const EVENT_KINDS: Record<EventEffectKind, KindSpec> = {
   extra_ingredients: plus(5, "/subskill/ingredient-finder.svg", "event.kind.extraIngredients"),
-  extra_berries: plus(5, GENERIC_BERRY_ICON, "event.kind.extraBerries"),
+  extra_berries: plus(5, "/subskill/berry-finding.svg", "event.kind.extraBerries"),
   skill_ingredients: times("/nature/ingredient.png", "event.kind.skillIngredients"),
   skill_trigger: times("/subskill/skill-trigger.svg", "event.kind.skillTrigger"),
   skill_level: plus(5, "/subskill/skill-level-up.svg", "event.kind.skillLevel"),
