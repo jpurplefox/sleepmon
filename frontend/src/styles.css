@@ -3754,6 +3754,16 @@ button.prod-card__base-tag--action {
   color: var(--text);
 }
 
+/* Raised by a bonus: "Lv. 3 → 4" — the level set steps back, the one used reads as good. */
+.prod-card__skill-lv-set {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.prod-card__skill-lv-boost {
+  color: var(--up);
+}
+
 .prod-card__ings {
   list-style: none;
   margin: 0;

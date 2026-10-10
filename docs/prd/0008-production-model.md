@@ -132,8 +132,10 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
   time, shown as a total with a generic candy icon (which Pokémon they're for isn't
   worked out); **Berry Juice** (Shuckle) brings a Berry Juice 18.5% of the time.
 - **The skill's level is at hand.** The card's Skill block shows the level the main
-  skill was set to (*Lv. N*), with the skill's name in its tooltip. On the expert map's main
-  favorite, the +1 shows beside it as the *Skill +1* mark.
+  skill was set to (*Lv. N*), with the skill's name in its tooltip. When a bonus raises
+  it (the expert map's main favorite, an event), it reads *Lv. 3 → 4*: the level set, then
+  the one the figures use, in the good color; the main favorite's *Skill +1* mark stays
+  beside it.
 - **Uncalculated skills are flagged.** Where a skill's production isn't calculated —
   **Metronome** and **Skill Copy** entirely; **Psystrike**'s Berry Zone and **Nuzzle**'s
   skill bonus partly — the card's Skill block shows a warning whose tooltip says what

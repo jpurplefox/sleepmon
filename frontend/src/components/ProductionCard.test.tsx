@@ -128,14 +128,14 @@ const PRODUCTION = {
 
 const noop = () => {};
 
-function renderCard() {
+function renderCard(production: Production = PRODUCTION) {
   localStorage.setItem("sleepmon.lang", "en");
   return render(
     <LanguageProvider>
       <ProductionCard
         config={CONFIG}
         catalog={CATALOG}
-        production={PRODUCTION}
+        production={production}
         productionError={null}
         onEdit={noop}
         onClone={noop}
@@ -158,5 +158,13 @@ describe("ProductionCard skill block", () => {
   it("names the main skill for screen readers alongside its level", () => {
     renderCard();
     expect(screen.getByText("Energy for Everyone S Lv. 4")).toBeInTheDocument();
+  });
+
+  it("shows the boosted level after the one set when a bonus raises it", () => {
+    const { container } = renderCard({ ...PRODUCTION, effective_skill_level: 5 });
+    const level = container.querySelector(".prod-card__skill-lv") as HTMLElement;
+    expect(level).toHaveTextContent("Lv. 4 → 5");
+    expect(within(level).getByText("5")).toHaveClass("prod-card__skill-lv-boost");
+    expect(screen.getByText("Energy for Everyone S Lv. 5")).toBeInTheDocument();
   });
 });

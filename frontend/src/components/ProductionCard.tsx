@@ -182,9 +182,14 @@ export function ProductionCard({
 
   const skill = effectiveSkill(species?.main_skill, config.versatile_skill);
   const unmodeledKey = unmodeledSkillKey(skill);
-  // The level the user set; the main favorite's +1 is the "Skill +1" mark beside it.
+  // The level the user set and, when a bonus (main favorite, event) raises it, the
+  // one the figures use: "Lv. 3 → 4". The mark beside it says where the bonus comes from.
   const skillName = mainSkill(skill ?? "");
   const skillLv = t("prod.skillLv", { level: config.skill_level });
+  const boostedSkillLevel =
+    d && d.effective_skill_level > config.skill_level ? d.effective_skill_level : null;
+  const skillLvText = boostedSkillLevel === null ? skillLv : `${skillLv} → ${boostedSkillLevel}`;
+  const usedSkillLv = t("prod.skillLv", { level: boostedSkillLevel ?? config.skill_level });
 
   const marks = d
     ? expertMarks({
@@ -654,9 +659,18 @@ export function ProductionCard({
             <div className="prod-card__block-head">
               {t("card.skill")} <span className="muted">{pct(d.effective_skill_percentage)}</span>
               {species && (
-                <Tooltip content={`${skillName} · ${skillLv}`} className="tooltip--inline prod-card__skill-lv">
-                  <span aria-hidden="true">{skillLv}</span>
-                  <span className="sr-only">{`${skillName} ${skillLv}`}</span>
+                <Tooltip content={`${skillName} · ${skillLvText}`} className="tooltip--inline prod-card__skill-lv">
+                  <span aria-hidden="true">
+                    {boostedSkillLevel === null ? (
+                      skillLv
+                    ) : (
+                      <>
+                        <span className="prod-card__skill-lv-set">{skillLv}</span> →{" "}
+                        <span className="prod-card__skill-lv-boost">{boostedSkillLevel}</span>
+                      </>
+                    )}
+                  </span>
+                  <span className="sr-only">{`${skillName} ${usedSkillLv}`}</span>
                 </Tooltip>
               )}
               {markFor("skill")}
