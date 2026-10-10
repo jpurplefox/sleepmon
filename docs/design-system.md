@@ -308,11 +308,12 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **`.prod-card` berry header** — the card's relation to the map's favorite berries
   tints its **identity zone** (`.prod-card__identity`: name, sprite, ingredients, sub
   skills, nature — bleeding to the card edges), while the figures below stay on
-  `--surface`. `color-mix` of the semantic color into `--surface`: `--favorite-berry`
-  `--up` 18%, `--main-favorite` (expert map) `--up` 30%, `--no-favorite` (expert map
-  only) `--down` 20%. Neutral cards keep `--surface`. Inside a tinted zone `--muted`
-  and `--down` are lifted (`#c2cfd7`, `#ffb4ad`) to stay AA on the green, and
-  `--border` becomes `--divider`. The comparison's base card has **no** surface
+  `--surface`. Each tint is a deep hue at about `--surface`'s lightness, in `oklch`
+  (good = teal-green, bad = wine): `--favorite-berry` `oklch(0.29 0.055 185)`,
+  `--main-favorite` (expert map) `oklch(0.33 0.075 180)`, `--no-favorite` (expert map
+  only) `oklch(0.27 0.065 15)`. Neutral cards keep `--surface`. Inside any tinted zone
+  `--border` becomes `--divider`; the main favorite, the lightest tint, also lifts
+  `--muted` and `--down` (`#c2cfd7`, `#ffb4ad`) to stay AA. The comparison's base card has **no** surface
   treatment — its `Base` tag says it.
 - **`.night-grid`** — the card's **skill while asleep** read-out (inside
   `.prod-card__night`): a small grid, `--text-sm`, tabular nums, `column-gap 0.9rem`.
@@ -831,6 +832,15 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   one-pixel border competes with every other edge on a dense screen and two states
   can't share it; tinting only the header reads at a glance and keeps the data area
   neutral. "Which one is the base" is a label, not a state worth a color.
+- **A state tint keeps the surface's lightness.** *Question:* the header tints were
+  `--up` / `--down` mixed into `--surface` in sRGB, and they read as a muddy teal and a
+  greyish mauve. Lower the percentage, mix in another space, or build them differently?
+  *Resolution:* each tint is its own deep `oklch` color at about `--surface`'s lightness,
+  with chroma added in the semantic hue (teal-green / wine). An `oklch` mix was tried:
+  cleaner, but its hue path runs through blue and violet, so the favorite stopped reading
+  as green. *Why:* `--up` and `--down` are light inks, so mixing them into the navy
+  raises its lightness while the hue shift cancels chroma, which gives the grey cast.
+  Keeping the lightness and adding only color reads as a tint instead.
 - **What changes the numbers is on screen; how a tool works is in its empty state.**
   *Question:* each tool opened with a paragraph on how it works and a note on the day the
   calculation assumes, while the settings that reshape its numbers sat in odd places — a
