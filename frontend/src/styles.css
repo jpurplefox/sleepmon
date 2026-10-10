@@ -4417,6 +4417,13 @@ button.prod-card__base-tag--action {
   min-width: 0;
 }
 
+/* Wider rows have room to spare, so the label column keeps its roomier width. */
+@media (min-width: 641px) {
+  .teams-plan-row__label {
+    min-width: 5rem;
+  }
+}
+
 .teams-plan-row__thumb {
   width: 28px;
   height: 28px;
@@ -4485,10 +4492,12 @@ button.prod-card__base-tag--action {
   gap: 0.25rem;
 }
 
-/* In the plan summary the chips sit right, away from the moment label, under the
-   recipe's strength. */
-.teams-plan-row .cook-row__ings {
-  justify-content: flex-end;
+/* On phones the plan summary's chips sit right, away from the moment label, under
+   the recipe's strength; on wider rows that would strand them far from the name. */
+@media (max-width: 640px) {
+  .teams-plan-row .cook-row__ings {
+    justify-content: flex-end;
+  }
 }
 
 .cook-ing-chip {
