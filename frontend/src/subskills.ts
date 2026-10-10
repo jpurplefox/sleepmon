@@ -1,27 +1,7 @@
-// Sub skill icons, served from /public/subskill.
-// En el juego el ícono es por *familia/concepto* (Helping Speed S y M comparten
-// ícono), así que mapeamos cada sub skill a su concepto.
-const CONCEPT: Record<string, string> = {
-  "Sleep EXP Bonus": "exp",
-  "Research EXP Bonus": "research",
-  "Skill Level Up S": "skillLevel",
-  "Skill Level Up M": "skillLevel",
-  "Helping Bonus": "helper",
-  "Energy Recovery Bonus": "stamina",
-  "Dream Shard Bonus": "shard",
-  "Berry Finding S": "berryCount",
-  "Skill Trigger S": "mainSkillProbability",
-  "Skill Trigger M": "mainSkillProbability",
-  "Ingredient Finder S": "ingredientProbability",
-  "Ingredient Finder M": "ingredientProbability",
-  "Helping Speed S": "frequency",
-  "Helping Speed M": "frequency",
-  "Inventory Up S": "inventory",
-  "Inventory Up M": "inventory",
-  "Inventory Up L": "inventory",
-};
-
+// Sub-skill icons, served from /public/subskill as one SVG per sub skill: the
+// tier letter (S/M/L) is part of the icon, so Helping Speed S and M differ. The
+// file name is the sub skill's name in kebab case ("Helping Speed S" →
+// helping-speed-s.svg).
 export function subSkillIcon(name: string): string {
-  const concept = CONCEPT[name] ?? "exp";
-  return `/subskill/${concept}.png`;
+  return `/subskill/${name.toLowerCase().replace(/\s+/g, "-")}.svg`;
 }

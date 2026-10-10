@@ -34,19 +34,21 @@ import type {
 } from "../types";
 import { RibbonIcon } from "./RibbonIcon";
 import { FillTime } from "./FillTime";
+import { NaturePill } from "./NaturePill";
 import { SleepSkillGrid } from "./SleepSkillGrid";
 import { Tooltip } from "./Tooltip";
 import {
   IconAlert,
-  IconClock,
+  IconBackpack,
   IconClose,
   IconCopy,
   IconEdit,
   IconHelp,
   IconMagnifier,
-  IconPackage,
   IconSaveBox,
   IconSparkle,
+  IconStopwatch,
+  IconTriangle,
 } from "./icons";
 
 const fmt = (n: number) => n.toFixed(2);
@@ -75,7 +77,7 @@ function Delta({ value, base }: { value: number; base: number | null | undefined
   // Shape (▲/▼) carries the direction too, so it doesn't rest on color alone.
   return (
     <span className={`prod-delta ${cls}`}>
-      <span aria-hidden="true">{diff > 0 ? "▲" : "▼"}</span>
+      <IconTriangle dir={diff > 0 ? "up" : "down"} className="prod-delta__arrow" />
       <span className="sr-only">{diff > 0 ? "+" : "−"}</span>
       {fmt(Math.abs(diff))}
     </span>
@@ -149,7 +151,7 @@ export function ProductionCard({
   expertSpeed = null,
   weeklyBonus = "berry_strength",
 }: Props) {
-  const { t, ingredient, berry, subSkill, natureStat, nature: natureName } = useI18n();
+  const { t, ingredient, berry, subSkill, mainSkill, nature: natureName } = useI18n();
   // La animación de entrada solo debe correr al montar (al agregar una card). Al
   // reordenar/intercambiar, el navegador reinicia las animaciones CSS de los nodos
   // movidos aunque React no los desmonte; por eso la clase de entrada se quita al
@@ -178,18 +180,44 @@ export function ProductionCard({
   const teammateIngs = d?.teammate_ingredients ?? [];
   const teammateIngAmount = teammateIngs.reduce((acc, s) => acc + s.amount, 0);
 
-  const unmodeledKey = unmodeledSkillKey(effectiveSkill(species?.main_skill, config.versatile_skill));
+  const skill = effectiveSkill(species?.main_skill, config.versatile_skill);
+  const unmodeledKey = unmodeledSkillKey(skill);
+  // The level the user set and, when a bonus (main favorite, event) applies, the one
+  // the figures use: "Lv. 3 → 4". A bonus that overflows the skill's max adds "max"
+  // ("Lv. 5 → 7 max", "Lv. 7 → 7 max"). The mark beside it says where the bonus comes from.
+  const skillName = mainSkill(skill ?? "");
+  const skillLv = t("prod.skillLv", { level: config.skill_level });
+  const boostedSkillLevel = d && d.skill_level_bonus > 0 ? d.effective_skill_level : null;
+  const skillLevelCapped =
+    boostedSkillLevel !== null && config.skill_level + (d?.skill_level_bonus ?? 0) > boostedSkillLevel;
+  const skillLvText =
+    boostedSkillLevel === null
+      ? skillLv
+      : `${skillLv} → ${boostedSkillLevel}${skillLevelCapped ? ` ${t("card.skillMax")}` : ""}`;
+  const usedSkillLv = t("prod.skillLv", { level: boostedSkillLevel ?? config.skill_level });
 
-  const marks = d
-    ? expertMarks({
-        role: berryRole,
-        expert,
-        weeklyBonus,
-        speed: expertSpeed,
-        skillLevel: config.skill_level,
-        effectiveSkillLevel: d.effective_skill_level,
-        t,
-      })
+  // The skill level bonus beyond the main favorite's +1 comes from the event.
+  const eventSkillBonus = d ? d.skill_level_bonus - (expert && berryRole === "main" ? 1 : 0) : 0;
+  const marks: MetricMark[] = d
+    ? [
+        ...expertMarks({
+          role: berryRole,
+          expert,
+          weeklyBonus,
+          speed: expertSpeed,
+          t,
+        }),
+        ...(eventSkillBonus > 0
+          ? [
+              {
+                metric: "skill" as const,
+                label: `Skill +${eventSkillBonus}`,
+                tone: "good" as const,
+                effect: t("card.eventSkillLevel", { n: eventSkillBonus }),
+              },
+            ]
+          : []),
+      ]
     : [];
 
   // A metric can carry more than one mark at once (e.g. the main favorite's
@@ -433,7 +461,7 @@ export function ProductionCard({
           </header>
 
           <div className="prod-card__tags">
-            <div className="icon-row">
+            <div className="icon-row prod-card__ingredients">
               {config.ingredients.map((ing, i) => {
                 const locked = config.level < (INGREDIENT_UNLOCK_LEVELS[i] ?? 1);
                 return (
@@ -465,29 +493,19 @@ export function ProductionCard({
                     ? t("card.subSkillLocked", { name: subSkill(s), level: unlock })
                     : t("card.subSkillSlotUnavailable", { name: subSkill(s) });
                 return (
-                  <span
-                    key={i}
-                    className={`ss-icon ss-icon--${tierClass(s)}` + (locked ? " is-locked" : "")}
-                    title={title}
-                  >
-                    <img src={subSkillIcon(s)} alt={subSkill(s)} />
-                  </span>
+                  <Tooltip key={i} content={title}>
+                    <span className={`ss-icon ss-icon--${tierClass(s)}` + (locked ? " is-locked" : "")}>
+                      <img src={subSkillIcon(s)} alt={subSkill(s)} />
+                    </span>
+                  </Tooltip>
                 );
               })}
             </div>
             <div className="icon-row prod-card__nature">
               {!config.nature ? (
                 <span className="muted">{t("card.noNature")}</span>
-              ) : nature && !nature.neutral && nature.increased && nature.decreased ? (
-                <>
-                  <span className="nat-up">↑</span>
-                  <img className="mini-icon" src={statIcon(nature.increased)} alt={natureStat(nature.increased)} title={natureStat(nature.increased)} />
-                  <span className="nat-down">↓</span>
-                  <img className="mini-icon" src={statIcon(nature.decreased)} alt={natureStat(nature.decreased)} title={natureStat(nature.decreased)} />
-                  <span className="muted">{natureName(config.nature)}</span>
-                </>
               ) : (
-                <span className="muted">{natureName(config.nature)}</span>
+                <NaturePill nature={nature} name={natureName(config.nature)} />
               )}
             </div>
           </div>
@@ -506,19 +524,19 @@ export function ProductionCard({
           <div className="prod-card__line">
             <span>
               <Tooltip content={t("card.helpCadence")} className="tooltip--inline">
-                <IconClock /> {mmss(d.seconds_per_help)}
+                <IconStopwatch className="prod-card__icon--stopwatch" /> {mmss(d.seconds_per_help)}
               </Tooltip>
               {/* Beside its metric's tooltip, not inside it: one tap, one bubble. */}
               {markFor("cadence")}
             </span>
             <Tooltip content={t("card.helpsPerDay")} className="tooltip--inline">
-              <IconHelp /> {fmt(d.helps_per_day)} <Delta value={d.helps_per_day} base={base?.helps_per_day} />
+              <IconHelp className="prod-card__icon--help" /> {fmt(d.helps_per_day)} <Delta value={d.helps_per_day} base={base?.helps_per_day} />
             </Tooltip>
           </div>
 
           <div className="prod-card__line">
             <Tooltip content={t("card.inventory")} className="tooltip--inline">
-              <IconPackage /> {d.inventory}
+              <IconBackpack className="prod-card__icon--backpack" /> {d.inventory}
             </Tooltip>
             <FillTime fillHours={d.inventory_fill_hours} sessions={d.sleep_sessions} />
           </div>
@@ -657,6 +675,22 @@ export function ProductionCard({
           <div className="prod-card__block prod-card__block--skill">
             <div className="prod-card__block-head">
               {t("card.skill")} <span className="muted">{pct(d.effective_skill_percentage)}</span>
+              {species && (
+                <Tooltip content={`${skillName} · ${skillLvText}`} className="tooltip--inline prod-card__skill-lv">
+                  <span aria-hidden="true">
+                    {boostedSkillLevel === null ? (
+                      skillLv
+                    ) : (
+                      <>
+                        <span className="prod-card__skill-lv-set">{skillLv}</span> →{" "}
+                        <span className="prod-card__skill-lv-boost">{boostedSkillLevel}</span>
+                        {skillLevelCapped && <span className="prod-card__skill-lv-max">{t("card.skillMax")}</span>}
+                      </>
+                    )}
+                  </span>
+                  <span className="sr-only">{`${skillName} ${usedSkillLv}`}</span>
+                </Tooltip>
+              )}
               {markFor("skill")}
               {unmodeledKey && (
                 <Tooltip className="skill-alert" content={t(unmodeledKey)}>
@@ -668,7 +702,7 @@ export function ProductionCard({
             </div>
             <div className="prod-card__line">
               <Tooltip content={t("card.triggersTitle")} className="tooltip--inline">
-                <IconSparkle /> {fmt(d.skill_triggers)} <Delta value={d.skill_triggers} base={base?.skill_triggers} />
+                <IconSparkle className="prod-card__icon--sparkle" /> {fmt(d.skill_triggers)} <Delta value={d.skill_triggers} base={base?.skill_triggers} />
               </Tooltip>
             </div>
             {teammates === null && d.skill_berries_per_teammate != null && (

@@ -84,8 +84,6 @@ export const UI: Record<Lang, Record<string, string>> = {
       "{value} ingredientes al azar por día (main skill)",
     "box.skillAria": "Habilidad",
     // Detalle desplegado de la card en mobile (en pantalla ancha lo dicen las columnas).
-    "box.sectionBuild": "Build",
-    "box.sectionProduction": "Producción",
     "box.labelStrength": "Fuerza",
     "box.labelSkill": "Habilidad",
     "box.triggersTitle": "Disparos de habilidad por día",
@@ -160,6 +158,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.boxResultCount": "{count} resultados",
     "prod.boxResultOne": "1 resultado",
     "prod.skillLv": "Lv. {level}",
+    "card.skillMax": "máx",
     "prod.boxErrorRetry": "No se pudo cargar la caja. Reintentá.",
     "prod.alreadyIn": "Ya en comparación",
     "prod.speciesNotInCatalog":
@@ -482,6 +481,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.weeklySkillTrigger": "Skill ×1,25",
     "card.expertMainSpeed": "Baya principal: ayuda {pct}% más rápida",
     "card.expertSkillLevel": "Baya principal: Main Skill un nivel más arriba",
+    "card.eventSkillLevel": "Evento: Main Skill +{n} de nivel",
     "card.expertBerryStrength": "Baya favorita: fuerza ×2,4",
     "card.expertFavorite": "Baya favorita: fuerza ×2",
     "card.expertIngredient": "Baya favorita: +1 ingrediente por recolección",
@@ -732,8 +732,6 @@ export const UI: Record<Lang, Record<string, string>> = {
       "{value} random ingredients per day (main skill)",
     "box.skillAria": "Skill",
     // Expanded card detail on mobile (on wide screens the columns say it).
-    "box.sectionBuild": "Build",
-    "box.sectionProduction": "Production",
     "box.labelStrength": "Strength",
     "box.labelSkill": "Skill",
     "box.triggersTitle": "Skill triggers per day",
@@ -806,6 +804,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.boxResultCount": "{count} results",
     "prod.boxResultOne": "1 result",
     "prod.skillLv": "Lv. {level}",
+    "card.skillMax": "max",
     "prod.boxErrorRetry": "Couldn't load the box. Try again.",
     "prod.alreadyIn": "Already in comparison",
     "prod.speciesNotInCatalog":
@@ -1126,6 +1125,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.weeklySkillTrigger": "Skill ×1.25",
     "card.expertMainSpeed": "Main favorite: helps {pct}% faster",
     "card.expertSkillLevel": "Main favorite: Main Skill acts one level higher",
+    "card.eventSkillLevel": "Event: Main Skill +{n} level",
     "card.expertBerryStrength": "Favorite berry: strength ×2.4",
     "card.expertFavorite": "Favorite berry: strength ×2",
     "card.expertIngredient": "Favorite berry: +1 ingredient per find",

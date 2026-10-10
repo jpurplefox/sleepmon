@@ -1,4 +1,4 @@
-import type { SVGProps } from "react";
+import { useId, type SVGProps } from "react";
 
 /**
  * Íconos de línea coherentes (trazo currentColor, mismo estilo que el lápiz de
@@ -17,28 +17,75 @@ const base = {
   "aria-hidden": true,
 };
 
-// Cadencia / frecuencia de ayuda.
-export function IconClock(props: SVGProps<SVGSVGElement>) {
+// Filled glyphs for the production card's metrics: the same drawings as the
+// stat and sub-skill icons (stopwatch = help speed, backpack = inventory), in
+// currentColor so the card can mute them. Masks get a per-instance id.
+const filled = {
+  viewBox: "0 0 24 24",
+  width: 14,
+  height: 14,
+  fill: "currentColor",
+  "aria-hidden": true,
+};
+
+const useMaskId = () => useId().replace(/:/g, "");
+
+// Help cadence.
+export function IconStopwatch(props: SVGProps<SVGSVGElement>) {
+  const id = useMaskId();
   return (
-    <svg {...base} {...props}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 2" />
+    <svg {...filled} {...props}>
+      <mask id={id}>
+        <circle cx="12" cy="13.6" r="8.6" fill="#fff" />
+        <path d="M12 13.6V8.9M12 13.6l3.4 2.6" stroke="#000" strokeWidth="2" strokeLinecap="round" />
+      </mask>
+      <rect x="10.2" y="1.8" width="3.6" height="2.2" rx=".6" />
+      <rect x="11.2" y="3.6" width="1.6" height="2" />
+      <circle cx="12" cy="13.6" r="8.6" mask={`url(#${id})`} />
     </svg>
   );
 }
 
-// Ayudas (la mano que recolecta).
+// Helps: a hand offering what it gathered.
 export function IconHelp(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg {...base} {...props}>
-      <path d="M11 12h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 14" />
-      <path d="m7 18 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9" />
-      <path d="m2 13 6 6" />
+    <svg {...filled} {...props}>
+      <circle cx="15.2" cy="4.6" r="2.9" />
+      <path d="M1.5 14.2h4.8c1.5 0 2.6-.5 3.6-1.3l2.6-2c.9-.7 2.2-.5 2.8.4.5.8.3 1.8-.4 2.4l-2.2 1.9h4.6l3.2-2.5c.8-.6 2-.5 2.6.3.6.8.4 1.9-.3 2.5l-4.5 3.9c-.9.8-2 1.2-3.2 1.2H1.5z" />
     </svg>
   );
 }
 
-// Inventario.
+// Inventory capacity.
+export function IconBackpack(props: SVGProps<SVGSVGElement>) {
+  const id = useMaskId();
+  return (
+    <svg {...filled} {...props}>
+      <mask id={id}>
+        <rect x="3.5" y="7" width="17" height="15" rx="3.2" fill="#fff" />
+        <rect x="3" y="11.4" width="18" height="1.4" fill="#000" />
+        <circle cx="12" cy="12.1" r="3.3" fill="#000" />
+        <circle cx="12" cy="12.1" r="2.3" fill="#fff" />
+        <circle cx="12" cy="12.1" r="1" fill="#000" />
+      </mask>
+      <path d="M8.5 7.5V6a3.5 3.5 0 0 1 7 0v1.5" fill="none" stroke="currentColor" strokeWidth="2" />
+      <rect x="3.5" y="7" width="17" height="15" rx="3.2" mask={`url(#${id})`} />
+    </svg>
+  );
+}
+
+// Time until the inventory is full.
+export function IconHourglass(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...filled} {...props}>
+      <rect x="5" y="1.5" width="14" height="2.4" rx="1.2" />
+      <rect x="5" y="20.1" width="14" height="2.4" rx="1.2" />
+      <path d="M7.2 4.6h9.6v1.8c0 1.2-.5 2.3-1.3 3.1L12.6 12l2.9 2.5c.8.8 1.3 1.9 1.3 3.1v1.8H7.2v-1.8c0-1.2.5-2.3 1.3-3.1L11.4 12 8.5 9.5C7.7 8.7 7.2 7.6 7.2 6.4z" />
+    </svg>
+  );
+}
+
+// A box of unknown contents (random ingredients). Line icon.
 export function IconPackage(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base} {...props}>
@@ -49,23 +96,12 @@ export function IconPackage(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-// Tiempo en llenarse el inventario.
-export function IconHourglass(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...base} {...props}>
-      <path d="M5 22h14" />
-      <path d="M5 2h14" />
-      <path d="M17 22v-4.2a2 2 0 0 0-.6-1.4L12 12l-4.4 4.4a2 2 0 0 0-.6 1.4V22" />
-      <path d="M7 2v4.2a2 2 0 0 0 .6 1.4L12 12l4.4-4.4a2 2 0 0 0 .6-1.4V2" />
-    </svg>
-  );
-}
-
-// Skill / activación de la habilidad principal.
+// Main skill triggers: a filled four-point sparkle, drawn like the card's other
+// metric glyphs.
 export function IconSparkle(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg {...base} {...props}>
-      <path d="m12 3 1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3Z" />
+    <svg {...filled} {...props}>
+      <path d="M12 2.5Q14 10 21.5 12 14 14 12 21.5 10 14 2.5 12 10 10 12 2.5z" />
     </svg>
   );
 }
@@ -302,6 +338,18 @@ export function IconUser(props: SVGProps<SVGSVGElement>) {
     <svg {...base} {...props}>
       <circle cx="12" cy="8" r="4" />
       <path d="M4 21a8 8 0 0 1 16 0" />
+    </svg>
+  );
+}
+
+// ▲/▼ drawn, not typed: a text glyph sits wherever each device's font puts it.
+// Each triangle is placed in its 10×10 box so the middle between its box and its
+// centroid lands on the box's center — a triangle's weight is at its base, so
+// centering by the box alone would read low (▲) or high (▼). Size it with CSS.
+export function IconTriangle({ dir, ...props }: { dir: "up" | "down" } & SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 10 10" fill="currentColor" aria-hidden {...props}>
+      <path d={dir === "up" ? "M5 0 10 8.6H0z" : "M0 1.4h10L5 10z"} />
     </svg>
   );
 }

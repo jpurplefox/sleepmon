@@ -28,6 +28,7 @@ mypy src && ruff check .
 # Frontend (local)
 cd frontend && npm install && npm run dev
 npm run test                  # Vitest (logic + catalogue-driven form)
+python3 scripts/icons.py       # regenerate stat/sub-skill icons into public/
 
 # Telemetry (ADR-0010) — all optional; empty = off
 #   backend:  SENTRY_DSN, SENTRY_ENVIRONMENT, SENTRY_TRACES_SAMPLE_RATE, SENTRY_RELEASE

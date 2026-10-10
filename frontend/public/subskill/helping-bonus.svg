@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="72" height="72"><mask id="helpingbonusb"><rect width="24" height="24" fill="#fff"/><circle cx="20.25" cy="3.75" r="5.4" fill="#000"/></mask>
+<g mask="url(#helpingbonusb)"><g transform="translate(0 5.3) scale(.78)"><mask id="helpingbonusig"><rect width="24" height="24" fill="#fff"/><circle cx="15" cy="14.8" r="8.7" fill="#000"/><rect x="12.4" y="3" width="5.2" height="4.6" rx="1" fill="#000"/></mask><g mask="url(#helpingbonusig)"><rect fill="#fff" x="5.4" y="2.399999999999999" width="3.6" height="2.2" rx=".6"/>
+<rect fill="#fff" x="6.4" y="4.199999999999999" width="1.6" height="2"/>
+<mask id="helpingbonusiam"><circle cx="7.2" cy="11.2" r="5.4" fill="#fff"/>
+<path d="M7.2 11.2V8.229999999999999M7.2 11.2l2.16 1.62" stroke="#000" stroke-width="2" stroke-linecap="round"/></mask>
+<circle fill="#fff" cx="7.2" cy="11.2" r="5.4" mask="url(#helpingbonusiam)"/></g><rect fill="#fff" x="13.2" y="4.200000000000001" width="3.6" height="2.2" rx=".6"/>
+<rect fill="#fff" x="14.2" y="6.0" width="1.6" height="2"/>
+<mask id="helpingbonusibm"><circle cx="15" cy="14.8" r="7.2" fill="#fff"/>
+<path d="M15 14.8V10.84M15 14.8l2.8800000000000003 2.16" stroke="#000" stroke-width="2" stroke-linecap="round"/></mask>
+<circle fill="#fff" cx="15" cy="14.8" r="7.2" mask="url(#helpingbonusibm)"/></g></g><path fill="#fff" d="M20.25 0 24 4h-2.65v3.5h-2.2V4H16.5z"/></svg>

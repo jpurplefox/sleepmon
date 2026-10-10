@@ -122,7 +122,7 @@ and the game's artwork brings the rest. Surfaces separate by **tone** (`--bg` �
 --r-lg: 16px   /* main cards, modals, dropdowns */
 ```
 
-`border-radius: 999px` only for pills (level chip, level badges).
+`border-radius: 999px` only for pills (level chip, level badges, the nature pill).
 
 **Layout:**
 
@@ -141,13 +141,27 @@ Two icon languages that never mix:
 
 - **Game content** → sprites and official icons (ingredients, sub-skills, berries,
   stats). They are "the artwork" and keep their real color.
+  - **Stat and sub-skill glyphs** (`public/nature`, `public/subskill`): the game's
+    sprite where it has one (energy, ingredient, dream shard, generic berry); where
+    it doesn't, an own **filled white glyph** (SVG, 24-unit box) drawn in the same
+    voice — EXP → our own block letters, main skill → a straight bolt, help speed → a
+    stopwatch. All of them come from `frontend/scripts/icons.py`: edit a glyph there
+    and re-run it, never hand-edit the SVGs. Sub skills
+    are **one SVG each**, named in kebab case (`helping-speed-s.svg`), built from a
+    glyph plus marks: the **tier letter** (S/M/L) top-right on tiered sub skills; a
+    **`%`** (chance: Skill Trigger, Ingredient Finder) or **`LV`** (Skill Level Up)
+    subscript bottom-right at the letter's size, the glyph nudged left to balance it;
+    **↑** top-right on gold bonus sub skills (Berry Finding S, being tiered, carries its S). Research EXP → a clipboard, Helping
+    Bonus → two stopwatches, Inventory Up → a backpack. Stat icons carry no marks:
+    they double as metric icons.
 - **UI metrics & actions** → own line icons in `src/components/icons.tsx`:
   `currentColor`, `stroke-width: 2`, `viewBox 0 0 24 24`, 14px default, rounded
   caps/joins, `aria-hidden`. They inherit context color (dimmed to `--muted`,
   `--accent-text` when they mean "the night"). **Never emojis.**
 
-Current catalog: `IconClock`, `IconHelp`, `IconPackage`, `IconHourglass`,
-`IconSparkle`, `IconPot`, `IconMagnifier`, `IconMoon`,
+Current catalog: `IconStopwatch`, `IconHelp`, `IconBackpack`, `IconHourglass`,
+`IconSparkle` (the five **filled** metric glyphs, below), `IconPackage` (a box of unknown
+contents — random ingredients), `IconPot`, `IconMagnifier`, `IconMoon`,
 `IconChevronDown`, `IconArrowUp`, `IconArrowDown`, `IconMore`, `IconMenu`, `IconClose`,
 `IconEdit`, `IconCopy`, `IconCheck`, `IconSaveBox`, `IconSplit`, `IconSignOut`,
 `IconProgress` (rising bars — what you have unlocked and levelled; the account menu's
@@ -165,9 +179,9 @@ from teammates → the game's **generic berry**, `GENERIC_BERRY_ICON`, for a ber
 type the view can't name). A main skill is shown by its game skill icon where one
 exists (`mainSkillIcon` — Berry Burst has its own). Metrics with
 no game icon get one **designated** UI icon that stands for them, used the same way
-everywhere: procs / triggers → `IconSparkle`, help cadence → `IconClock`, helps →
-`IconHelp` (a helping hand), inventory fill time → `IconHourglass`, inventory
-capacity → `IconPackage`, nighttime proc chance → `IconMoon` (and the nap's →
+everywhere: procs / triggers → `IconSparkle`, help cadence → `IconStopwatch`, helps →
+`IconHelp` (a hand offering what it gathered), inventory fill time → `IconHourglass`,
+inventory capacity → `IconBackpack`, nighttime proc chance → `IconMoon` (and the nap's →
 `IconSun`, so each sleep is named by its icon), help multiplier → `IconMagnifier`.
 
 Two kinds of figure stay **bare** (no metric icon):
@@ -294,12 +308,16 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **`.prod-card` berry header** — the card's relation to the map's favorite berries
   tints its **identity zone** (`.prod-card__identity`: name, sprite, ingredients, sub
   skills, nature — bleeding to the card edges), while the figures below stay on
-  `--surface`. `color-mix` of the semantic color into `--surface`: `--favorite-berry`
-  `--up` 18%, `--main-favorite` (expert map) `--up` 30%, `--no-favorite` (expert map
-  only) `--down` 20%. Neutral cards keep `--surface`. Inside a tinted zone `--muted`
-  and `--down` are lifted (`#c2cfd7`, `#ffb4ad`) to stay AA on the green, and
-  `--border` becomes `--divider`. The comparison's base card has **no** surface
-  treatment — its `Base` tag says it.
+  `--surface`. Each tint is a deep hue at about `--surface`'s lightness, in `oklch`
+  (good = teal-green, bad = wine): `--favorite-berry` `oklch(0.29 0.055 185)`,
+  `--main-favorite` (expert map) `oklch(0.37 0.08 180)`, `--no-favorite` (expert map
+  only) `oklch(0.27 0.065 15)`. Neutral cards keep `--surface`. Inside any tinted zone
+  `--border` becomes `--divider`; the main favorite, the lightest tint, also lifts
+  `--muted` and `--down` (`#c2cfd7`, `#ffb4ad`) to stay AA. The comparison's base card has **no** surface
+  treatment — its `Base` tag says it. The `Base` tag is plain `--text`, no box, so the
+  state never reads as a control; the other cards' `Make base` button is the control,
+  with a solid fill (`--surface-2` + 8% `--text`) and a `--divider` outline, so a berry
+  tint never shows through it.
 - **`.night-grid`** — the card's **skill while asleep** read-out (inside
   `.prod-card__night`): a small grid, `--text-sm`, tabular nums, `column-gap 0.9rem`.
   A header row of `--text-xs` `--muted` column labels, then **one row per sleep** — the
@@ -410,8 +428,21 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **`.mini-icon`** — small inline icon (nature stat, ingredient, sub-skill) with
   states `--empty` (dim placeholder) and `--locked` (grayscale + opacity).
 - **`.ss-icon`** — sub-skill icon framed by tier color (`--gold/--blue/--regular/
-  --empty`), with level badge `.ss-icon__lv` and `.is-locked`. Reused at different
-  sizes.
+  --empty`), with the unlock-level badge `.ss-icon__lv` at the **top-left** (the icon's
+  tier letter sits top-right and its `%`/`LV` mark bottom-right) and `.is-locked`.
+  Every tile carries a `Tooltip` with the sub skill's name (lock state included),
+  unless the name is written beside it (the selector's options). Sizes: 36px with a
+  2px border in the selector; **28px with a 1.5px border** on the
+  card and the Box row (the same proportions — never a 2px border on a compact tile).
+- **`NaturePill`** (`.nature-pill`) — a nature as one `999px` pill: `▲` + the raised
+  stat's icon (`--up`), `▼` + the lowered one's (`--down`), then the name (`--text`)
+  after a hairline divider. Neutral → a white circled X on both sides (only the arrows carry
+  color); no nature → `--empty` (muted marks, same footprint, so rows stay aligned).
+  Two versions: **with the name** (the card) or **effects only** where the row must
+  summarize more (the Box row) — the effects-only pill always sits in a `Tooltip` with
+  the nature's name. `NatureSelect` is the one place the name sits *outside* the pill:
+  trigger and options read as a list of names, each with its effects-only pill. Fill
+  is `--surface-2`, or `--surface` on a `--surface-2` ground (`--pill-bg`).
 - **State vocabulary** shared across selects/menus/toggles: `.is-active`,
   `.is-selected`, `.is-highlighted`, `.is-locked`, `.is-on`.
 
@@ -489,7 +520,7 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **`LevelStepperInput`** — headless stepper (buttons + input, no container) to
   embed in another layout.
 - **`SpeciesSelect`** — searchable dropdown with sprite. **`NatureSelect`** —
-  dropdown with ↑/↓ stat badges, grouped by raised stat, X circle for neutral.
+  dropdown grouped by raised stat; the trigger and each option show a `NaturePill`.
   **`SubSkillSelect`** — uses `.ss-icon`.
 - **`RibbonIcon`** — ribbon sprite with `--empty` variant.
 - **Base inputs** — global `input, select` styles with the unified focus outline.
@@ -804,6 +835,15 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   one-pixel border competes with every other edge on a dense screen and two states
   can't share it; tinting only the header reads at a glance and keeps the data area
   neutral. "Which one is the base" is a label, not a state worth a color.
+- **A state tint keeps the surface's lightness.** *Question:* the header tints were
+  `--up` / `--down` mixed into `--surface` in sRGB, and they read as a muddy teal and a
+  greyish mauve. Lower the percentage, mix in another space, or build them differently?
+  *Resolution:* each tint is its own deep `oklch` color at about `--surface`'s lightness,
+  with chroma added in the semantic hue (teal-green / wine). An `oklch` mix was tried:
+  cleaner, but its hue path runs through blue and violet, so the favorite stopped reading
+  as green. *Why:* `--up` and `--down` are light inks, so mixing them into the navy
+  raises its lightness while the hue shift cancels chroma, which gives the grey cast.
+  Keeping the lightness and adding only color reads as a tint instead.
 - **What changes the numbers is on screen; how a tool works is in its empty state.**
   *Question:* each tool opened with a paragraph on how it works and a note on the day the
   calculation assumes, while the settings that reshape its numbers sat in odd places — a
@@ -877,3 +917,34 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   `.btn--delete` opens the typed-email confirmation (`.btn--danger` to confirm).
   *Why:* leaving must always be possible but never accidental; a page in between costs
   one click and keeps the menu free of destruction.
+- **Stat and sub-skill icons are ours or the game's, never a third party's.**
+  *Question:* the nature-stat and sub-skill icons had been taken from RaenonX, and two
+  of them read wrong (a jagged "Pikachu tail" bolt for skill, chevrons for help speed).
+  Keep them, or replace them? *Resolution:* keep the game's sprite where the game has
+  one; draw an own filled glyph where it doesn't; give sub skills one marked SVG each
+  (tier letter, `%` / `LV` subscript, ↑ on gold bonuses — §3). *Why:* the artwork must
+  be the game's or the app's own; the marks let a tile say *which* sub skill (and which
+  tier) without reading its name.
+- **The card's four metric icons are filled glyphs.** *Question:* help cadence, helps,
+  inventory capacity and fill time used line icons (a clock, a lucide hand, a box), while
+  the stat and sub-skill icons for the same ideas had become filled glyphs (stopwatch,
+  backpack). Redraw them as lines or fill them? *Resolution:* `IconStopwatch`, `IconHelp`,
+  `IconBackpack` and `IconHourglass` are filled, in `currentColor`, drawn like the stat
+  glyphs; every other UI icon stays a line icon. *Why:* these four
+  name game mechanics the stat icons already draw; one drawing per idea reads the same
+  on a sub-skill tile and on the card.
+- **A nature is one pill, wherever it appears.** *Question:* on the card the nature
+  was loose icons with arrows under the tiled sub skills, and read as hanging from
+  nothing; the selector used two separate chips. *Resolution:* `NaturePill` — the two
+  marks and the name in one pill — on the card, the Box row and the selector; the
+  sub-skill unlock level moves to the tile's top-left, and compact tiles go to 28px
+  with a 1.5px border. *Why:* each piece of a Pokémon's config reads as a contained
+  unit, the nature looks the same in the place you set it and the places you read it,
+  and the icon marks stay uncovered.
+- **The card's metric glyphs are white, and the sparkle joins them.** *Question:* the
+  card's metric icons were muted while the stat and sub-skill glyphs around them are
+  white, and `IconSparkle` (skill triggers) was still a line icon among filled ones.
+  *Resolution:* metric icons on the card's lines take `--text`; `IconSparkle` is a
+  filled four-point sparkle, so the card has five filled metric glyphs. The comparison
+  deltas keep their own up/down color. *Why:* one icon voice per card: every glyph
+  that names a figure reads at the same weight and color.

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="72" height="72"><mask id="sleepexpbonusb"><rect width="24" height="24" fill="#fff"/><circle cx="20.25" cy="3.75" r="5.4" fill="#000"/></mask>
+<g mask="url(#sleepexpbonusb)"><g transform="translate(0 5.3) scale(.78)"><clipPath id="sleepexpbonusic"><rect x="0" y="7.5" width="24" height="9"/></clipPath>
+<path fill="#fff" d="M1 7.5h5.6v2H3.2v1.5h3.1v2H3.2v1.5h3.4v2H1z"/>
+<path d="M8.4 7.5l5.4 9M13.8 7.5l-5.4 9" stroke="#fff" stroke-width="2.4" clip-path="url(#sleepexpbonusic)"/>
+<path fill="#fff" fill-rule="evenodd" d="M15.4 7.5h4.4a2.85 2.85 0 0 1 0 5.7h-2.2v3.3h-2.2zM17.6 9.4v1.9h2a.95.95 0 0 0 0-1.9z"/></g></g><path fill="#fff" d="M20.25 0 24 4h-2.65v3.5h-2.2V4H16.5z"/></svg>

@@ -770,6 +770,12 @@ def test_team_production_main_favorite_bumps_effective_skill_level(client: TestC
     # Gathering the map's main favorite (Pikachu's berry is Grepa) grants +1 Main
     # Skill level, capped at the skill's max (Charge Strength S caps at 7).
     assert member["effective_skill_level"] == 2
+    assert member["skill_level_bonus"] == 1
+
+
+def test_production_exposes_the_skill_level_bonus(client: TestClient) -> None:
+    body = client.post("/production", json=valid_payload()).json()
+    assert body["skill_level_bonus"] == 0
 
 
 def test_team_production_exposes_extra_tasty(client: TestClient) -> None:

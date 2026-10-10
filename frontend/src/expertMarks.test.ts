@@ -7,21 +7,19 @@ const args = {
   role: "main" as const,
   expert: true,
   weeklyBonus: "berry_strength" as const,
-  skillLevel: 3,
-  effectiveSkillLevel: 4,
   t,
 };
 
 describe("expertMarks", () => {
   it("marks the berry doubling on a normal map and nothing else", () => {
-    const marks = expertMarks({ ...args, expert: false, role: "sub", effectiveSkillLevel: 3 });
+    const marks = expertMarks({ ...args, expert: false, role: "sub" });
     expect(marks).toHaveLength(1);
     expect(marks[0]).toMatchObject({ metric: "berries", label: "×2", tone: "good" });
   });
 
   it("marks nothing for a non-favorite berry on a normal map", () => {
     expect(
-      expertMarks({ ...args, expert: false, role: "none", effectiveSkillLevel: 3 }),
+      expertMarks({ ...args, expert: false, role: "none" }),
     ).toEqual([]);
   });
 
@@ -32,19 +30,19 @@ describe("expertMarks", () => {
     expect(marks.find((m) => m.metric === "berries")?.label).toBe("×2,4");
   });
 
-  it("omits the skill level mark when the Pokémon is already at its cap", () => {
-    const marks = expertMarks({ ...args, effectiveSkillLevel: 3 });
-    expect(marks.some((m) => m.label === "Skill +1")).toBe(false);
+  it("keeps the skill level mark even when the skill is already at its cap", () => {
+    // The mark no longer depends on the level: at the cap the card reads "Lv. 7 → 7 max".
+    expect(expertMarks(args).some((m) => m.label === "Skill +1")).toBe(true);
   });
 
   it("gives a sub-favorite only the weekly bonus", () => {
-    const marks = expertMarks({ ...args, role: "sub", effectiveSkillLevel: 3 });
+    const marks = expertMarks({ ...args, role: "sub" });
     expect(marks).toHaveLength(1);
     expect(marks[0].metric).toBe("berries");
   });
 
   it("marks the penalty in the bad tone on the cadence", () => {
-    const marks = expertMarks({ ...args, role: "none", effectiveSkillLevel: 3 });
+    const marks = expertMarks({ ...args, role: "none" });
     expect(marks).toEqual([
       expect.objectContaining({ metric: "cadence", label: "+15%", tone: "bad" }),
     ]);
@@ -54,7 +52,7 @@ describe("expertMarks", () => {
     const speed = { main: 0.8, penalty: 1.35 };
     const main = expertMarks({ ...args, speed });
     expect(main.find((m) => m.metric === "cadence")?.label).toBe("−20%");
-    const none = expertMarks({ ...args, speed, role: "none", effectiveSkillLevel: 3 });
+    const none = expertMarks({ ...args, speed, role: "none" });
     expect(none).toEqual([
       expect.objectContaining({ metric: "cadence", label: "+35%", tone: "bad" }),
     ]);
@@ -65,7 +63,6 @@ describe("expertMarks", () => {
       ...args,
       role: "sub",
       weeklyBonus: "ingredient",
-      effectiveSkillLevel: 3,
     });
     expect(marks).toEqual([
       expect.objectContaining({ metric: "berries", label: "×2", tone: "good" }),
@@ -78,7 +75,6 @@ describe("expertMarks", () => {
       ...args,
       role: "sub",
       weeklyBonus: "skill_trigger",
-      effectiveSkillLevel: 3,
     });
     expect(marks).toEqual([
       expect.objectContaining({ metric: "berries", label: "×2", tone: "good" }),

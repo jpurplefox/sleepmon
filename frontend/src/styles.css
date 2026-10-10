@@ -30,10 +30,12 @@
   --down-dim: rgba(249, 112, 102, 0.14);
   --down-border: rgba(249, 112, 102, 0.4);
   --error: #f85149;
-  /* Berry relation tints for a card's identity zone (design-system §5, .prod-card). */
-  --favorite-berry: color-mix(in srgb, var(--up) 18%, var(--surface));
-  --main-favorite: color-mix(in srgb, var(--up) 30%, var(--surface));
-  --no-favorite: color-mix(in srgb, var(--down) 20%, var(--surface));
+  /* Berry relation tints for a card's identity zone (design-system §5, .prod-card).
+     Deep hues at about --surface's lightness, not --up/--down mixed into it: mixing a
+     light color into the navy lifts it and drains its chroma, a muddy teal / mauve. */
+  --favorite-berry: oklch(0.29 0.055 185);
+  --main-favorite: oklch(0.37 0.08 180);
+  --no-favorite: oklch(0.27 0.065 15);
   /* Sub-skill tiers (game content); the regular tier uses --muted, mapped in .ss-icon */
   --tier-gold: #d4a017;
   --tier-blue: #58a6ff;
@@ -634,10 +636,11 @@ select:focus {
   filter: brightness(0.45);
 }
 
+/* Top-left: the icon's tier letter sits top-right and its %/LV mark bottom-right. */
 .ss-icon__lv {
   position: absolute;
-  bottom: -7px;
-  right: -7px;
+  top: -7px;
+  left: -7px;
   min-width: 16px;
   text-align: center;
   background: var(--surface-2);
@@ -752,58 +755,84 @@ select:focus {
   font-weight: 600;
 }
 
-/* Badges ↑/↓ con el símbolo del stat. Reusados en trigger, opciones y títulos. */
-.nature-effect {
+/* A nature as one pill: ▲ raised stat, ▼ lowered stat, then the name after a
+   divider. Card, Box row, selector trigger and options (NaturePill). */
+.nature-pill {
   display: inline-flex;
-  gap: 0.3rem;
+  align-items: center;
+  gap: 0.5rem;
+  height: 28px;
+  padding: 0 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--pill-bg, var(--surface-2));
+  line-height: 1;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
-.nat-stat {
-  position: relative;
+.nature-pill__mark {
   display: inline-flex;
   align-items: center;
   gap: 1px;
-  height: 24px;
-  padding: 0 5px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  line-height: 1;
+  font-size: var(--text-xs);
+  font-weight: 700;
 }
 
-/* Stat icon (white PNG). The X SVG uses currentColor. */
-.nat-stat img {
+/* Good/bad colors (not the game's red-up/blue-down). */
+.nature-pill__mark--up {
+  color: var(--up);
+}
+
+.nature-pill__mark--down {
+  color: var(--down);
+}
+
+/* Stat icon (white glyph); the neutral X is an SVG in currentColor. */
+.nature-pill__mark img,
+.nature-pill__mark svg,
+.nature-pill__blank {
   width: 15px;
   height: 15px;
   object-fit: contain;
 }
 
-.nat-stat svg {
-  width: 15px;
-  height: 15px;
+/* Only the arrow carries the color: the neutral X is white like the stat icons. */
+.nature-pill__mark svg {
+  color: var(--text);
 }
 
-/* Up/down chevron in the app's good/bad colors (not the game's red-up/blue-down). */
-.nat-stat::before {
-  font-size: var(--text-xs);
-  font-weight: 700;
+/* The stat icons' ink sits a little below their box's middle; the arrows follow. */
+.nature-pill__mark .nature-pill__arrow {
+  width: 10px;
+  height: 10px;
+  color: inherit;
+  transform: translateY(0.5px);
 }
 
-.nat-stat--up {
-  color: var(--up);
+/* No nature yet: muted marks and blank icons, same footprint. */
+.nature-pill--empty .nature-pill__mark {
+  color: var(--muted);
+  opacity: 0.6;
 }
 
-.nat-stat--up::before {
-  content: "▲";
+/* --text, not --muted: the pill sits on the card's berry tints, where --muted
+   shifts from one tint to the next. */
+.nature-pill__name {
+  font-size: var(--text-sm);
+  color: var(--text);
+  border-left: 1px solid var(--border);
+  padding-left: 0.5rem;
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
 }
 
-.nat-stat--down {
-  color: var(--down);
-}
-
-.nat-stat--down::before {
-  content: "▼";
+/* On a --surface-2 ground (the selector, a Box row) the pill takes --surface. */
+.nature-trigger,
+.nature-option,
+.prod-box-item {
+  --pill-bg: var(--surface);
 }
 
 .nature-dropdown {
@@ -855,7 +884,9 @@ select:focus {
 
 .nature-group__items {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  /* min(): a field narrower than one 170px column (the phone's two-column form)
+     gets one column of its own width instead of a column that sticks out. */
+  grid-template-columns: repeat(auto-fill, minmax(min(170px, 100%), 1fr));
   gap: 0.35rem;
 }
 
@@ -872,16 +903,20 @@ select:focus {
   font-size: var(--text-sm);
   cursor: pointer;
   text-align: left;
+  /* Shrinks with its column; a name that can't fit ellipsizes, the pill stays whole. */
+  min-width: 0;
 }
 
 .nature-option__name {
   font-weight: 600;
   min-width: 0;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* El grupo de íconos ↑/↓ siempre pegado a la derecha de la opción. */
-.nature-option .nature-effect {
+/* The nature's pill always pinned to the option's right. */
+.nature-option .nature-pill {
   margin-left: auto;
 }
 
@@ -1754,6 +1789,14 @@ select:focus {
   scrollbar-color: var(--border) transparent;
 }
 
+/* The filter lists scroll inside a padded pop, and their rows reach the list's edge,
+   which is where the bar draws: a phone's overlay bar sat on the rows' right end. A
+   gap on that side keeps the bar beside the rows. */
+.filter-grid,
+.filter-list {
+  padding-right: 0.4rem;
+}
+
 .filter-grid::-webkit-scrollbar,
 .filter-list::-webkit-scrollbar,
 .settings-modal-panel::-webkit-scrollbar,
@@ -2278,6 +2321,7 @@ select:focus {
   .box-entry__config .ss-icon {
     width: 26px;
     height: 26px;
+    border-width: 1.5px;
   }
 
   .box-entry__berries {
@@ -2395,16 +2439,11 @@ select:focus {
     gap: 0.15rem 0.75rem;
   }
 
-  /* Encabezados de sección: separan build de producción sin cajas ni color. */
-  .box-entry__section {
+  /* Bare dividers: split build from production without boxes, color or a title. */
+  .box-entry__divider {
     grid-column: 1 / -1;
-    margin: 0.35rem 0 0;
-    padding-top: 0.5rem;
+    margin: 0.35rem 0 0.15rem;
     border-top: 1px solid var(--border);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-size: var(--text-xs);
-    color: var(--muted);
   }
 
   .box-entry__label {
@@ -2420,7 +2459,7 @@ select:focus {
     display: contents;
   }
 
-  .box-entry__section--build {
+  .box-entry__divider--build {
     grid-row: 2;
   }
   .box-entry__label--nature {
@@ -2448,7 +2487,7 @@ select:focus {
     opacity: 1;
   }
 
-  .box-entry__section--prod {
+  .box-entry__divider--prod {
     grid-row: 6;
   }
   .box-entry__label--berries {
@@ -2545,14 +2584,6 @@ select:focus {
 .badge--low {
   color: var(--down);
   border-color: var(--down);
-}
-
-.nature-effect .up {
-  color: var(--up);
-}
-
-.nature-effect .down {
-  color: var(--down);
 }
 
 .chips {
@@ -2964,26 +2995,12 @@ select:focus {
   white-space: nowrap;
 }
 
-/* Naturaleza con íconos de stat, mismo lenguaje que la comparación. */
-.prod-box-item__nature .nat-up {
-  color: var(--up);
-}
-
-.prod-box-item__nature .nat-down {
-  color: var(--down);
-}
-
-/* Flechas de una naturaleza neutra / sin cargar: en muted (sin verde/rojo). */
-.prod-box-item__nature .nat-up--muted,
-.prod-box-item__nature .nat-down--muted {
-  color: var(--muted);
-}
-
-/* Ingredientes y sub skills a la misma escala compacta de las prod-cards (26px),
-   no la de la Caja (28/30px): así la fila de config queda a una sola altura. */
+/* Sub skills at the prod-cards' compact scale (28px, 1.5px border), so the
+   config row keeps one height. */
 .prod-box-item .ss-icon {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
+  border-width: 1.5px;
 }
 
 .prod-box-item .ss-icon img {
@@ -3273,9 +3290,6 @@ select:focus {
 
 /* Berry relation: favorite reads as good, the expert map's main favorite one step
    stronger, and no favorite on an expert map as bad (--down, never --error). */
-/* The tints come from :root tokens, not from var(--up)/var(--down) here: the zone
-   lifts its own --down for legibility (below), and a background mixed from it on
-   the same element would turn pink. */
 .prod-card--favorite-berry .prod-card__identity {
   background: var(--favorite-berry);
 }
@@ -3288,14 +3302,17 @@ select:focus {
   background: var(--no-favorite);
 }
 
-/* Ink on a tinted zone: --muted and --down drop under AA on the green (3.1:1 and
-   2.8:1 on the main favorite) and --border disappears, so the zone lifts them:
-   muted 4.9:1 and down 4.6:1 at worst, and its hairlines use --divider. */
+/* Ink on a tinted zone: --border disappears on every tint, so hairlines use --divider.
+   The main favorite, the lightest tint, also drops --muted and --down under AA
+   (3.9:1 and 3.5:1), so it lifts them: muted 6.2:1 and down 5.8:1. */
 .prod-card--favorite-berry .prod-card__identity,
 .prod-card--no-favorite .prod-card__identity {
+  --border: var(--divider);
+}
+
+.prod-card--main-favorite .prod-card__identity {
   --muted: #c2cfd7;
   --down: #ffb4ad;
-  --border: var(--divider);
 }
 
 /* Annotation pinned to a metric: what the map does to THAT number
@@ -3327,8 +3344,9 @@ select:focus {
 }
 
 /* "Base" chip (state) and "Make base" button (action), at the right end of the name
-   row. Their colors are see-through mixes, so they hold on a berry-tinted identity
-   zone as well as on the plain surface. */
+   row. The chip is plain text, so the state never reads as a control; the button
+   has a solid fill a step above --surface-2, so a berry tint never shows through it
+   and it stands apart from the nature pill below. */
 .prod-card__base-tag {
   margin-left: auto;
   flex-shrink: 0;
@@ -3342,14 +3360,13 @@ select:focus {
 
 span.prod-card__base-tag {
   color: var(--text);
-  background: var(--accent-dim);
-  border: 1px solid var(--accent-border);
+  padding-right: 0;
 }
 
 button.prod-card__base-tag--action {
   color: var(--text);
-  background: color-mix(in srgb, var(--text) 6%, transparent);
-  border: 1px solid color-mix(in srgb, var(--text) 30%, transparent);
+  background: color-mix(in srgb, var(--surface-2), var(--text) 8%);
+  border: 1px solid var(--divider);
   cursor: pointer;
   transition:
     border-color 0.12s,
@@ -3406,6 +3423,16 @@ button.prod-card__base-tag--action {
   /* Al cambiar la base, los deltas se recalculan en bloque: la transición de
      color hace legible que algo cambió sin ser ostentosa. */
   transition: color 0.15s ease-out;
+}
+
+/* Drawn ▲/▼ (optically centered in its box): a solid triangle outweighs the
+   digits, so it stays a notch under their height. */
+.prod-delta .prod-delta__arrow {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  /* The delta's own color, not the metric line's icon color. */
+  color: inherit;
 }
 
 .prod-delta--up {
@@ -3608,6 +3635,11 @@ button.prod-card__base-tag--action {
   min-height: 26px;
 }
 
+/* Ingredients at the sub skills' 28px, so the two identity rows read at one size. */
+.prod-card__ingredients .mini-icon {
+  height: 28px;
+}
+
 .icon-row {
   display: flex;
   align-items: center;
@@ -3648,23 +3680,17 @@ button.prod-card__base-tag--action {
 }
 
 /* Sub skills en la card de producción: marco coloreado por tier, tamaño compacto */
+/* 28px with a 1.5px border: the selector's 36/2px proportions at card size. */
 .prod-card .ss-icon {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
+  border-width: 1.5px;
   border-radius: var(--r-sm);
 }
 
 .prod-card .ss-icon img {
   width: 18px;
   height: 18px;
-}
-
-.prod-card__nature .nat-up {
-  color: var(--up);
-}
-
-.prod-card__nature .nat-down {
-  color: var(--down);
 }
 
 .prod-card__line {
@@ -3675,7 +3701,7 @@ button.prod-card__base-tag--action {
   font-size: var(--text-sm);
 }
 
-/* Cada dato lleva su ícono representativo (currentColor, atenuado). */
+/* Each figure carries its representative icon (currentColor). */
 .prod-card__line > span,
 .prod-card__night > span {
   display: inline-flex;
@@ -3683,9 +3709,31 @@ button.prod-card__base-tag--action {
   gap: 0.3rem;
 }
 
+/* White like the stat and sub-skill glyphs beside them. */
 .prod-card__line svg {
-  color: var(--muted);
+  color: var(--text);
   flex-shrink: 0;
+}
+
+/* Optical alignment: the stopwatch fills its box to the top (crown), so it reads
+   above the digits; the help glyph's weight is the hand at the bottom, so it reads
+   below, and so does the backpack's body. Each moves toward the digits' middle by
+   what the eye sees, not its box. */
+.prod-card__icon--stopwatch {
+  transform: translateY(1.5px);
+}
+
+.prod-card__icon--help {
+  transform: translateY(-1.5px);
+}
+
+.prod-card__icon--backpack {
+  transform: translateY(-1.25px);
+}
+
+/* Symmetric, but its box sits a little low on a line of its own. */
+.prod-card__icon--sparkle {
+  transform: translateY(-0.75px);
 }
 
 /* The night line is a mechanic, not a value: indigo ink. */
@@ -3707,6 +3755,36 @@ button.prod-card__base-tag--action {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+/* The main skill's level in the skill block's head: a value, so it drops the
+   head's uppercase and reads in --text, like the figures below. */
+.prod-card__skill-lv {
+  margin-left: 0.5rem;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Raised by a bonus: "Lv. 3 → 4" — the level set steps back, the one used reads as good. */
+.prod-card__skill-lv-set {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.prod-card__skill-lv-boost {
+  color: var(--up);
+}
+
+/* The bonus overflows the skill's max: a small caps note after the level used. */
+.prod-card__skill-lv-max {
+  margin-left: 0.3rem;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: var(--muted);
 }
 
@@ -4304,10 +4382,19 @@ button.prod-card__base-tag--action {
 }
 
 /* Compact plan row: one per day-moment. */
+/* The label column is as wide as the longest moment name (not a fixed width), so
+   the recipe's ingredient chips get the room to sit on one line. */
+.teams-plan-rows {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+}
+
 .teams-plan-row {
-  display: flex;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
   align-items: center;
-  gap: 0.5rem;
+  column-gap: 0.5rem;
   padding: 0.3rem 0;
   font-size: var(--text-sm);
   min-height: 2rem;
@@ -4319,8 +4406,7 @@ button.prod-card__base-tag--action {
 }
 
 .teams-plan-row__label {
-  min-width: 5rem;
-  flex-shrink: 0;
+  min-width: 0;
 }
 
 .teams-plan-row__thumb {
@@ -4389,6 +4475,12 @@ button.prod-card__base-tag--action {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
+}
+
+/* In the plan summary the chips sit right, away from the moment label, under the
+   recipe's strength. */
+.teams-plan-row .cook-row__ings {
+  justify-content: flex-end;
 }
 
 .cook-ing-chip {

@@ -239,6 +239,9 @@ class DailyProduction:
     # Skill level actually used: the member's level plus the main berry's +1,
     # capped at the skill's real max. The UI compares it to the member's own level.
     effective_skill_level: int
+    # Skill level the bonuses add (main favorite + event), before the cap: the UI shows
+    # a bonus that overflows the max as "Lv. 6 → 7 MAX".
+    skill_level_bonus: int
     # Ingredientes/día que aporta la main skill (p. ej. Ingredient Draw S), uno por
     # ingrediente del pool. Vacío si la skill de la especie no produce ingredientes.
     skill_ingredients: tuple[SlotProduction, ...]
@@ -402,9 +405,9 @@ def daily_production(
     # use (capped at the skill's real max — a maxed-out member gains nothing).
     effects = berry_effects(map_bonuses, species.berry)
     boosts = event.boosts_for(species)
+    skill_level_bonus = effects.skill_level_bonus + boosts.skill_level_bonus
     effective_skill_level = min(
-        skill_level + effects.skill_level_bonus + boosts.skill_level_bonus,
-        max_skill_level(species.main_skill),
+        skill_level + skill_level_bonus, max_skill_level(species.main_skill)
     )
 
     # Solo cuentan las sub skills DESBLOQUEADAS al nivel (cada slot abre a 10/25/50/
@@ -714,6 +717,7 @@ def daily_production(
         ingredients=slots,
         skill_triggers=skill_triggers,
         effective_skill_level=effective_skill_level,
+        skill_level_bonus=skill_level_bonus,
         skill_ingredients=skill_ingredients,
         skill_energy=skill_energy,
         skill_ingredient_total=skill_ingredient_total,
