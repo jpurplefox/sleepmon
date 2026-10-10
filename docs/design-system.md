@@ -142,9 +142,11 @@ Two icon languages that never mix:
 - **Game content** → sprites and official icons (ingredients, sub-skills, berries,
   stats). They are "the artwork" and keep their real color.
   - **Stat and sub-skill glyphs** (`public/nature`, `public/subskill`): the game's
-    sprite where it has one (energy, EXP, ingredient, dream shard, generic berry);
-    where it doesn't, an own **filled white glyph** (SVG, 24-unit box) drawn in the
-    same voice — main skill → a straight bolt, help speed → a stopwatch. Sub skills
+    sprite where it has one (energy, ingredient, dream shard, generic berry); where
+    it doesn't, an own **filled white glyph** (SVG, 24-unit box) drawn in the same
+    voice — EXP → our own block letters, main skill → a straight bolt, help speed → a
+    stopwatch. All of them come from `frontend/scripts/icons.py`: edit a glyph there
+    and re-run it, never hand-edit the SVGs. Sub skills
     are **one SVG each**, named in kebab case (`helping-speed-s.svg`), built from a
     glyph plus marks: the **tier letter** (S/M/L) top-right on tiered sub skills; a
     **`%`** (chance: Skill Trigger, Ingredient Finder) or **`LV`** (Skill Level Up)
