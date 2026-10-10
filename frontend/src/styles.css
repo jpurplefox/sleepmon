@@ -800,6 +800,14 @@ select:focus {
   color: var(--text);
 }
 
+/* The stat icons' ink sits a little below their box's middle; the arrows follow. */
+.nature-pill__mark .nature-pill__arrow {
+  width: 10px;
+  height: 10px;
+  color: inherit;
+  transform: translateY(0.5px);
+}
+
 /* No nature yet: muted marks and blank icons, same footprint. */
 .nature-pill--empty .nature-pill__mark {
   color: var(--muted);
@@ -2413,16 +2421,11 @@ select:focus {
     gap: 0.15rem 0.75rem;
   }
 
-  /* Encabezados de sección: separan build de producción sin cajas ni color. */
-  .box-entry__section {
+  /* Bare dividers: split build from production without boxes, color or a title. */
+  .box-entry__divider {
     grid-column: 1 / -1;
-    margin: 0.35rem 0 0;
-    padding-top: 0.5rem;
+    margin: 0.35rem 0 0.15rem;
     border-top: 1px solid var(--border);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-size: var(--text-xs);
-    color: var(--muted);
   }
 
   .box-entry__label {
@@ -2438,7 +2441,7 @@ select:focus {
     display: contents;
   }
 
-  .box-entry__section--build {
+  .box-entry__divider--build {
     grid-row: 2;
   }
   .box-entry__label--nature {
@@ -2466,7 +2469,7 @@ select:focus {
     opacity: 1;
   }
 
-  .box-entry__section--prod {
+  .box-entry__divider--prod {
     grid-row: 6;
   }
   .box-entry__label--berries {
@@ -3404,6 +3407,14 @@ button.prod-card__base-tag--action {
   transition: color 0.15s ease-out;
 }
 
+/* Drawn ▲/▼ (optically centered in its box): a solid triangle outweighs the
+   digits, so it stays a notch under their height. */
+.prod-delta__arrow {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+}
+
 .prod-delta--up {
   color: var(--up);
   background: var(--up-dim);
@@ -3604,6 +3615,11 @@ button.prod-card__base-tag--action {
   min-height: 26px;
 }
 
+/* Ingredients at the sub skills' 28px, so the two identity rows read at one size. */
+.prod-card__ingredients .mini-icon {
+  height: 28px;
+}
+
 .icon-row {
   display: flex;
   align-items: center;
@@ -3676,6 +3692,22 @@ button.prod-card__base-tag--action {
 .prod-card__line svg {
   color: var(--muted);
   flex-shrink: 0;
+}
+
+/* Optical alignment: the stopwatch fills its box to the top (crown), so it reads
+   above the digits; the help glyph's weight is the hand at the bottom, so it reads
+   below, and so does the backpack's body. Each moves toward the digits' middle by
+   what the eye sees, not its box. */
+.prod-card__icon--stopwatch {
+  transform: translateY(1.5px);
+}
+
+.prod-card__icon--help {
+  transform: translateY(-1.5px);
+}
+
+.prod-card__icon--backpack {
+  transform: translateY(-1.25px);
 }
 
 /* The night line is a mechanic, not a value: indigo ink. */

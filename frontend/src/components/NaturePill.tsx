@@ -1,6 +1,7 @@
 import { useI18n } from "../i18n";
 import { statIcon } from "../natures";
 import type { Nature } from "../types";
+import { IconTriangle } from "./icons";
 
 // A neutral nature shows a circled X on both sides.
 function XCircle() {
@@ -34,7 +35,7 @@ export function NaturePill({ nature, name }: Props) {
         : undefined;
     return (
       <span className={`nature-pill__mark nature-pill__mark--${dir}`} title={stat ? undefined : label}>
-        <span aria-hidden>{dir === "up" ? "▲" : "▼"}</span>
+        <IconTriangle dir={dir} className="nature-pill__arrow" />
         {stat ? (
           <img src={statIcon(stat)} alt={label} title={label} />
         ) : nature ? (

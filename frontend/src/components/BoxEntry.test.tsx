@@ -97,17 +97,20 @@ describe("BoxEntry", () => {
 
     const toggle = screen.getByRole("button", { name: /^Venusaur/ });
     // Collapsed: no production detail, only the headline metric of its specialty.
-    expect(screen.queryByText("Production")).not.toBeInTheDocument();
+    expect(screen.queryByText("Berries")).not.toBeInTheDocument();
 
     await user.click(toggle);
 
     expect(toggle).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByText("Production")).toBeInTheDocument();
-    expect(screen.getByText("Build")).toBeInTheDocument();
+    expect(screen.getByText("Berries")).toBeInTheDocument();
+    expect(screen.getByText("Nature")).toBeInTheDocument();
+    // No section titles: the row labels already say what each block is.
+    expect(screen.queryByText("Build")).not.toBeInTheDocument();
+    expect(screen.queryByText("Production")).not.toBeInTheDocument();
 
     await user.click(toggle);
     expect(toggle).toHaveAttribute("aria-expanded", "false");
-    expect(screen.queryByText("Production")).not.toBeInTheDocument();
+    expect(screen.queryByText("Berries")).not.toBeInTheDocument();
   });
 
   it("above the mobile breakpoint there is no toggle and the detail is always there", () => {
@@ -117,8 +120,8 @@ describe("BoxEntry", () => {
 
     // Only the overflow "···" menu is a button; the identity is not a disclosure.
     expect(screen.queryByRole("button", { name: /^Venusaur/ })).not.toBeInTheDocument();
-    // Section labels belong to the collapsible layout only.
-    expect(screen.queryByText("Production")).not.toBeInTheDocument();
+    // Row labels belong to the collapsible layout only.
+    expect(screen.queryByText("Berries")).not.toBeInTheDocument();
     // ...but the production numbers are rendered.
     expect(screen.getByText("75.3")).toBeInTheDocument();
   });

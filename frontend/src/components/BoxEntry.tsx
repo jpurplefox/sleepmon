@@ -290,18 +290,17 @@ export function BoxEntry({
 
       {/* Etiquetas del detalle desplegado, solo en mobile: sin las columnas, los
           números quedarían sueltos sin nada que diga qué son. En pantallas anchas
-          la posición de cada columna ya cumple ese papel. */}
+          la posición de cada columna ya cumple ese papel. Build and production are
+          split by a bare divider: the row labels already say what each block is. */}
       {isMobile && expanded && (
         <>
-          <p className="box-entry__section box-entry__section--build">{t("box.sectionBuild")}</p>
+          <div className="box-entry__divider box-entry__divider--build" aria-hidden="true" />
           <span className="box-entry__label box-entry__label--nature">{t("member.nature")}</span>
           <span className="box-entry__label box-entry__label--ss">{t("member.subSkills")}</span>
           <span className="box-entry__label box-entry__label--ing-config">
             {t("member.ingredients")}
           </span>
-          <p className="box-entry__section box-entry__section--prod">
-            {t("box.sectionProduction")}
-          </p>
+          <div className="box-entry__divider box-entry__divider--prod" aria-hidden="true" />
           <span className="box-entry__label box-entry__label--berries">{t("card.berries")}</span>
           {hasStrength && (
             <span className="box-entry__label box-entry__label--strength">

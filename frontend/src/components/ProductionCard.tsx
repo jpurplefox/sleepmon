@@ -48,6 +48,7 @@ import {
   IconSaveBox,
   IconSparkle,
   IconStopwatch,
+  IconTriangle,
 } from "./icons";
 
 const fmt = (n: number) => n.toFixed(2);
@@ -76,7 +77,7 @@ function Delta({ value, base }: { value: number; base: number | null | undefined
   // Shape (▲/▼) carries the direction too, so it doesn't rest on color alone.
   return (
     <span className={`prod-delta ${cls}`}>
-      <span aria-hidden="true">{diff > 0 ? "▲" : "▼"}</span>
+      <IconTriangle dir={diff > 0 ? "up" : "down"} className="prod-delta__arrow" />
       <span className="sr-only">{diff > 0 ? "+" : "−"}</span>
       {fmt(Math.abs(diff))}
     </span>
@@ -434,7 +435,7 @@ export function ProductionCard({
           </header>
 
           <div className="prod-card__tags">
-            <div className="icon-row">
+            <div className="icon-row prod-card__ingredients">
               {config.ingredients.map((ing, i) => {
                 const locked = config.level < (INGREDIENT_UNLOCK_LEVELS[i] ?? 1);
                 return (
@@ -497,19 +498,19 @@ export function ProductionCard({
           <div className="prod-card__line">
             <span>
               <Tooltip content={t("card.helpCadence")} className="tooltip--inline">
-                <IconStopwatch /> {mmss(d.seconds_per_help)}
+                <IconStopwatch className="prod-card__icon--stopwatch" /> {mmss(d.seconds_per_help)}
               </Tooltip>
               {/* Beside its metric's tooltip, not inside it: one tap, one bubble. */}
               {markFor("cadence")}
             </span>
             <Tooltip content={t("card.helpsPerDay")} className="tooltip--inline">
-              <IconHelp /> {fmt(d.helps_per_day)} <Delta value={d.helps_per_day} base={base?.helps_per_day} />
+              <IconHelp className="prod-card__icon--help" /> {fmt(d.helps_per_day)} <Delta value={d.helps_per_day} base={base?.helps_per_day} />
             </Tooltip>
           </div>
 
           <div className="prod-card__line">
             <Tooltip content={t("card.inventory")} className="tooltip--inline">
-              <IconBackpack /> {d.inventory}
+              <IconBackpack className="prod-card__icon--backpack" /> {d.inventory}
             </Tooltip>
             <FillTime fillHours={d.inventory_fill_hours} sessions={d.sleep_sessions} />
           </div>
