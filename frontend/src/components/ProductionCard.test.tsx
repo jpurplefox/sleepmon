@@ -132,6 +132,7 @@ const noop = () => {};
 function renderCard(
   production: Production = PRODUCTION,
   map: { berryRole?: "main" | "sub" | "none"; expert?: boolean } = {},
+  base?: Production,
 ) {
   localStorage.setItem("sleepmon.lang", "en");
   return render(
@@ -141,6 +142,7 @@ function renderCard(
         catalog={CATALOG}
         production={production}
         productionError={null}
+        base={base}
         berryRole={map.berryRole}
         expert={map.expert}
         onEdit={noop}
@@ -216,5 +218,44 @@ describe("ProductionCard skill block", () => {
       { berryRole: "main", expert: true },
     );
     expect(chipsOf(container)).toEqual(["Skill +1", "Skill +2"]);
+  });
+});
+
+describe("ProductionCard deltas", () => {
+  const BASE = {
+    ...PRODUCTION,
+    berry_amount: PRODUCTION.berry_amount - 12.24,
+    berry_strength: PRODUCTION.berry_strength - 4727.64,
+  } as Production;
+
+  it("formats a strength delta like the strength: whole, with thousands separators", () => {
+    const { container } = renderCard(PRODUCTION, {}, BASE);
+    const deltas = [...container.querySelectorAll(".prod-delta")].map((d) => d.textContent);
+    expect(deltas).toContain("+4,728");
+  });
+
+  it("keeps two decimals on a berry amount delta", () => {
+    const { container } = renderCard(PRODUCTION, {}, BASE);
+    const deltas = [...container.querySelectorAll(".prod-delta")].map((d) => d.textContent);
+    expect(deltas).toContain("+12.24");
+  });
+
+  it("takes a strength delta between the values as shown, not the raw ones", () => {
+    // Shown as 10,577 and 6,155: the delta reads 4,422, though the raw gap (4,422.8) rounds up.
+    const shown = { ...PRODUCTION, berry_strength: 10577.4 } as Production;
+    const base = { ...PRODUCTION, berry_strength: 6154.6 } as Production;
+    const { container } = renderCard(shown, {}, base);
+    const deltas = [...container.querySelectorAll(".prod-delta")].map((d) => d.textContent);
+    expect(deltas).toContain("+4,422");
+  });
+
+  it("shows no change when both strengths read the same", () => {
+    // 10,577.72 and 10,577.6 both show as 10,578.
+    const close = { ...PRODUCTION, berry_strength: 10577.6 } as Production;
+    const { container } = renderCard(PRODUCTION, {}, close);
+    const strengthLine = [...container.querySelectorAll("li")].find((li) =>
+      li.textContent?.includes("10,578"),
+    );
+    expect(strengthLine?.querySelector(".prod-delta")?.textContent).toBe("≈");
   });
 });
