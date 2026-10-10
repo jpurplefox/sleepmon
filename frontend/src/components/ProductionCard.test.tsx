@@ -129,7 +129,10 @@ const PRODUCTION = {
 
 const noop = () => {};
 
-function renderCard(production: Production = PRODUCTION) {
+function renderCard(
+  production: Production = PRODUCTION,
+  map: { berryRole?: "main" | "sub" | "none"; expert?: boolean } = {},
+) {
   localStorage.setItem("sleepmon.lang", "en");
   return render(
     <LanguageProvider>
@@ -138,6 +141,8 @@ function renderCard(production: Production = PRODUCTION) {
         catalog={CATALOG}
         production={production}
         productionError={null}
+        berryRole={map.berryRole}
+        expert={map.expert}
         onEdit={noop}
         onClone={noop}
         onRemove={noop}
@@ -187,5 +192,29 @@ describe("ProductionCard skill block", () => {
   it("shows no max when the bonus fits under the cap", () => {
     const { container } = renderCard({ ...PRODUCTION, effective_skill_level: 6, skill_level_bonus: 2 });
     expect(levelOf(container)).toHaveTextContent(/^Lv\. 4 → 6$/);
+  });
+
+  const chipsOf = (container: HTMLElement) =>
+    [...container.querySelectorAll(".prod-card__block--skill .metric-mark")].map((m) => m.textContent);
+
+  it("keeps the main favorite's Skill +1 chip when the skill is already at its cap", () => {
+    const { container } = renderCard(
+      { ...PRODUCTION, effective_skill_level: 4, skill_level_bonus: 1 },
+      { berryRole: "main", expert: true },
+    );
+    expect(chipsOf(container)).toContain("Skill +1");
+  });
+
+  it("chips an event's skill level bonus, capped or not", () => {
+    const { container } = renderCard({ ...PRODUCTION, effective_skill_level: 6, skill_level_bonus: 5 });
+    expect(chipsOf(container)).toEqual(["Skill +5"]);
+  });
+
+  it("splits the main favorite's +1 from the event's part", () => {
+    const { container } = renderCard(
+      { ...PRODUCTION, effective_skill_level: 6, skill_level_bonus: 3 },
+      { berryRole: "main", expert: true },
+    );
+    expect(chipsOf(container)).toEqual(["Skill +1", "Skill +2"]);
   });
 });

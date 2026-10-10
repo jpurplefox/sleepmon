@@ -196,16 +196,28 @@ export function ProductionCard({
       : `${skillLv} → ${boostedSkillLevel}${skillLevelCapped ? ` ${t("card.skillMax")}` : ""}`;
   const usedSkillLv = t("prod.skillLv", { level: boostedSkillLevel ?? config.skill_level });
 
-  const marks = d
-    ? expertMarks({
-        role: berryRole,
-        expert,
-        weeklyBonus,
-        speed: expertSpeed,
-        skillLevel: config.skill_level,
-        effectiveSkillLevel: d.effective_skill_level,
-        t,
-      })
+  // The skill level bonus beyond the main favorite's +1 comes from the event.
+  const eventSkillBonus = d ? d.skill_level_bonus - (expert && berryRole === "main" ? 1 : 0) : 0;
+  const marks: MetricMark[] = d
+    ? [
+        ...expertMarks({
+          role: berryRole,
+          expert,
+          weeklyBonus,
+          speed: expertSpeed,
+          t,
+        }),
+        ...(eventSkillBonus > 0
+          ? [
+              {
+                metric: "skill" as const,
+                label: `Skill +${eventSkillBonus}`,
+                tone: "good" as const,
+                effect: t("card.eventSkillLevel", { n: eventSkillBonus }),
+              },
+            ]
+          : []),
+      ]
     : [];
 
   // A metric can carry more than one mark at once (e.g. the main favorite's

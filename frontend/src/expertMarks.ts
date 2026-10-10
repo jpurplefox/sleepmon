@@ -15,10 +15,6 @@ interface Args {
   weeklyBonus: WeeklyBonus;
   /** The expert map's speed factors; defaults to Greengrass Isle (Expert)'s. */
   speed?: ExpertSpeed | null;
-  /** The member's own skill level. */
-  skillLevel: number;
-  /** Level the domain actually used (already capped at the skill's max). */
-  effectiveSkillLevel: number;
   t: (key: string, vars?: Record<string, string | number>) => string;
 }
 
@@ -43,8 +39,6 @@ export function expertMarks({
   expert,
   weeklyBonus,
   speed,
-  skillLevel,
-  effectiveSkillLevel,
   t,
 }: Args): MetricMark[] {
   if (!expert) {
@@ -84,15 +78,13 @@ export function expertMarks({
       tone: "good",
       effect: t("card.expertMainSpeed", { pct: pct(main) }),
     });
-    // Only if the +1 actually applied: a Pokemon already at its skill cap gains nothing.
-    if (effectiveSkillLevel > skillLevel) {
-      marks.push({
-        metric: "skill",
-        label: "Skill +1",
-        tone: "good",
-        effect: t("card.expertSkillLevel"),
-      });
-    }
+    // Shown even at the skill's cap: the card's "Lv. 7 → 7 max" says it adds nothing.
+    marks.push({
+      metric: "skill",
+      label: "Skill +1",
+      tone: "good",
+      effect: t("card.expertSkillLevel"),
+    });
   }
 
   // A favorite berry (main or sub) always doubles the berry strength; the weekly
