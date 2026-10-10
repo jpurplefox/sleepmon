@@ -340,3 +340,15 @@ export function IconUser(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+// ▲/▼ drawn, not typed: a text glyph sits wherever each device's font puts it.
+// Each triangle is placed in its 10×10 box so the middle between its box and its
+// centroid lands on the box's center — a triangle's weight is at its base, so
+// centering by the box alone would read low (▲) or high (▼). Size it with CSS.
+export function IconTriangle({ dir, ...props }: { dir: "up" | "down" } & SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 10 10" fill="currentColor" aria-hidden {...props}>
+      <path d={dir === "up" ? "M5 0 10 8.6H0z" : "M0 1.4h10L5 10z"} />
+    </svg>
+  );
+}

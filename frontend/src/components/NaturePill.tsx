@@ -1,18 +1,7 @@
 import { useI18n } from "../i18n";
 import { statIcon } from "../natures";
 import type { Nature } from "../types";
-
-// ▲/▼ drawn, not typed: a text glyph sits wherever each device's font puts it.
-// Each triangle is placed in its 10×10 box so the middle between its box and its
-// centroid lands on the box's center — a triangle's weight is at its base, so
-// centering by the box alone would read low (▲) or high (▼).
-function Arrow({ dir }: { dir: "up" | "down" }) {
-  return (
-    <svg className="nature-pill__arrow" viewBox="0 0 10 10" fill="currentColor" aria-hidden>
-      <path d={dir === "up" ? "M5 0 10 8.6H0z" : "M0 1.4h10L5 10z"} />
-    </svg>
-  );
-}
+import { IconTriangle } from "./icons";
 
 // A neutral nature shows a circled X on both sides.
 function XCircle() {
@@ -46,7 +35,7 @@ export function NaturePill({ nature, name }: Props) {
         : undefined;
     return (
       <span className={`nature-pill__mark nature-pill__mark--${dir}`} title={stat ? undefined : label}>
-        <Arrow dir={dir} />
+        <IconTriangle dir={dir} className="nature-pill__arrow" />
         {stat ? (
           <img src={statIcon(stat)} alt={label} title={label} />
         ) : nature ? (

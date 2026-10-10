@@ -48,6 +48,7 @@ import {
   IconSaveBox,
   IconSparkle,
   IconStopwatch,
+  IconTriangle,
 } from "./icons";
 
 const fmt = (n: number) => n.toFixed(2);
@@ -76,7 +77,7 @@ function Delta({ value, base }: { value: number; base: number | null | undefined
   // Shape (▲/▼) carries the direction too, so it doesn't rest on color alone.
   return (
     <span className={`prod-delta ${cls}`}>
-      <span aria-hidden="true">{diff > 0 ? "▲" : "▼"}</span>
+      <IconTriangle dir={diff > 0 ? "up" : "down"} className="prod-delta__arrow" />
       <span className="sr-only">{diff > 0 ? "+" : "−"}</span>
       {fmt(Math.abs(diff))}
     </span>

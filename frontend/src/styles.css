@@ -3407,6 +3407,14 @@ button.prod-card__base-tag--action {
   transition: color 0.15s ease-out;
 }
 
+/* Drawn ▲/▼ (optically centered in its box): a solid triangle outweighs the
+   digits, so it stays a notch under their height. */
+.prod-delta__arrow {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+}
+
 .prod-delta--up {
   color: var(--up);
   background: var(--up-dim);
