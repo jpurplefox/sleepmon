@@ -23,7 +23,7 @@ describe("NaturePill", () => {
   it("names the raised and lowered stats, then the nature", () => {
     renderPill(brave, "Brave");
     expect(screen.getByRole("img", { name: "Raises: Speed of Help" })).toHaveAttribute("src", "/nature/speed.svg");
-    expect(screen.getByRole("img", { name: "Lowers: EXP Gains" })).toHaveAttribute("src", "/nature/exp.png");
+    expect(screen.getByRole("img", { name: "Lowers: EXP Gains" })).toHaveAttribute("src", "/nature/exp.svg");
     expect(screen.getByText("Brave")).toBeInTheDocument();
   });
 
