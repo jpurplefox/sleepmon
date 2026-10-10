@@ -1789,6 +1789,14 @@ select:focus {
   scrollbar-color: var(--border) transparent;
 }
 
+/* The filter lists scroll inside a padded pop, and their rows reach the list's edge,
+   which is where the bar draws: a phone's overlay bar sat on the rows' right end. A
+   gap on that side keeps the bar beside the rows. */
+.filter-grid,
+.filter-list {
+  padding-right: 0.4rem;
+}
+
 .filter-grid::-webkit-scrollbar,
 .filter-list::-webkit-scrollbar,
 .settings-modal-panel::-webkit-scrollbar,
