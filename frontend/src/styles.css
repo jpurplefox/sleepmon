@@ -3599,6 +3599,11 @@ button.prod-card__base-tag--action {
   min-height: 26px;
 }
 
+/* Ingredients at the sub skills' 28px, so the two identity rows read at one size. */
+.prod-card__ingredients .mini-icon {
+  height: 28px;
+}
+
 .icon-row {
   display: flex;
   align-items: center;

@@ -434,7 +434,7 @@ export function ProductionCard({
           </header>
 
           <div className="prod-card__tags">
-            <div className="icon-row">
+            <div className="icon-row prod-card__ingredients">
               {config.ingredients.map((ing, i) => {
                 const locked = config.level < (INGREDIENT_UNLOCK_LEVELS[i] ?? 1);
                 return (
