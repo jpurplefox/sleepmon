@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="72" height="72"><rect fill="#fff" x="10.2" y="1.6" width="3.6" height="2.2" rx=".6"/>
+<rect fill="#fff" x="11.2" y="3.4" width="1.6" height="2"/>
+<mask id="speedm"><circle cx="12" cy="13.6" r="8.6" fill="#fff"/>
+<path d="M12 13.6V8.87M12 13.6l3.44 2.5799999999999996" stroke="#000" stroke-width="2" stroke-linecap="round"/></mask>
+<circle fill="#fff" cx="12" cy="13.6" r="8.6" mask="url(#speedm)"/></svg>

@@ -14,7 +14,7 @@ import {
   restoresTeamEnergy,
 } from "./skills";
 
-// Íconos del juego (RaenonX) para skills sin un stat-icon propio.
+// Game icons for skills without a stat icon of their own.
 export const POT_EXPANSION_ICON = "/skill/pot-expansion.webp";
 export const CHARGE_STRENGTH_ICON = "/skill/charge-strength.webp";
 export const GENERIC_BERRY_ICON = "/skill/generic-berry.webp";

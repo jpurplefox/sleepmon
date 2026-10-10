@@ -141,6 +141,17 @@ Two icon languages that never mix:
 
 - **Game content** → sprites and official icons (ingredients, sub-skills, berries,
   stats). They are "the artwork" and keep their real color.
+  - **Stat and sub-skill glyphs** (`public/nature`, `public/subskill`): the game's
+    sprite where it has one (energy, EXP, ingredient, dream shard, generic berry);
+    where it doesn't, an own **filled white glyph** (SVG, 24-unit box) drawn in the
+    same voice — main skill → a straight bolt, help speed → a stopwatch. Sub skills
+    are **one SVG each**, named in kebab case (`helping-speed-s.svg`), built from a
+    glyph plus marks: the **tier letter** (S/M/L) top-right on tiered sub skills; a
+    **`%`** (chance: Skill Trigger, Ingredient Finder) or **`LV`** (Skill Level Up)
+    subscript bottom-right at the letter's size, the glyph nudged left to balance it;
+    **↑** top-right on gold bonus sub skills. Research EXP → a clipboard, Helping
+    Bonus → two stopwatches, Inventory Up → a backpack. Stat icons carry no marks:
+    they double as metric icons.
 - **UI metrics & actions** → own line icons in `src/components/icons.tsx`:
   `currentColor`, `stroke-width: 2`, `viewBox 0 0 24 24`, 14px default, rounded
   caps/joins, `aria-hidden`. They inherit context color (dimmed to `--muted`,
@@ -877,3 +888,11 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   `.btn--delete` opens the typed-email confirmation (`.btn--danger` to confirm).
   *Why:* leaving must always be possible but never accidental; a page in between costs
   one click and keeps the menu free of destruction.
+- **Stat and sub-skill icons are ours or the game's, never a third party's.**
+  *Question:* the nature-stat and sub-skill icons had been taken from RaenonX, and two
+  of them read wrong (a jagged "Pikachu tail" bolt for skill, chevrons for help speed).
+  Keep them, or replace them? *Resolution:* keep the game's sprite where the game has
+  one; draw an own filled glyph where it doesn't; give sub skills one marked SVG each
+  (tier letter, `%` / `LV` subscript, ↑ on gold bonuses — §3). *Why:* the artwork must
+  be the game's or the app's own; the marks let a tile say *which* sub skill (and which
+  tier) without reading its name.

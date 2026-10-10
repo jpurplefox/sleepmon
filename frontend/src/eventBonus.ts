@@ -57,12 +57,12 @@ const times = (icon: string, labelKey: string, scoped = true): KindSpec => ({
 });
 
 export const EVENT_KINDS: Record<EventEffectKind, KindSpec> = {
-  extra_ingredients: plus(5, "/subskill/ingredientProbability.png", "event.kind.extraIngredients"),
-  extra_berries: plus(5, "/subskill/berryCount.png", "event.kind.extraBerries"),
+  extra_ingredients: plus(5, "/subskill/ingredient-finder.svg", "event.kind.extraIngredients"),
+  extra_berries: plus(5, "/subskill/berry-finding-s.svg", "event.kind.extraBerries"),
   skill_ingredients: times("/nature/ingredient.png", "event.kind.skillIngredients"),
-  skill_trigger: times("/subskill/mainSkillProbability.png", "event.kind.skillTrigger"),
-  skill_level: plus(5, "/subskill/skillLevel.png", "event.kind.skillLevel"),
-  carry_limit: plus(50, "/subskill/inventory.png", "event.kind.carryLimit"),
+  skill_trigger: times("/subskill/skill-trigger.svg", "event.kind.skillTrigger"),
+  skill_level: plus(5, "/subskill/skill-level-up.svg", "event.kind.skillLevel"),
+  carry_limit: plus(50, "/subskill/inventory-up.svg", "event.kind.carryLimit"),
   dish_strength: times("/pot.webp", "event.kind.dishStrength", false),
   pot_size: times(POT_EXPANSION_ICON, "event.kind.potSize", false),
 };
@@ -71,9 +71,9 @@ export const EVENT_KIND_ORDER = Object.keys(EVENT_KINDS) as EventEffectKind[];
 
 export const SCOPE_SPECIALTIES = ["Berries", "Ingredients", "Skills"] as const;
 export const SPECIALTY_ICON: Record<string, string> = {
-  Berries: "/subskill/berryCount.png",
+  Berries: "/subskill/berry-finding-s.svg",
   Ingredients: "/nature/ingredient.png",
-  Skills: "/nature/mainSkill.png",
+  Skills: "/nature/mainSkill.svg",
 };
 
 // Round to the step's precision so 1.15 + 0.05 is 1.2, not 1.2000000000000002.
