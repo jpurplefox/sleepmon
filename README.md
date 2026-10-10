@@ -5,6 +5,8 @@ nature, sub skills, ingredients, level, ribbon and main skill, and see its **est
 production** — and your team's — the same way the game rewards it: berries, ingredients,
 skill effects, cooking, and Snorlax research strength.
 
+**Try it live at [sleepmon.app](https://sleepmon.app/).**
+
 ## What you can do
 
 - **Box** — your persistent team (the source of truth): one entry per Pokémon, with its
@@ -86,6 +88,24 @@ backend/    Litestar + hexagonal: domain (core rules, catalog) · application
 frontend/   React app: the Box, Comparison and Team Analysis tools.
 docs/       Product requirements (prd/), decision records (adr/), design system.
 ```
+
+## Credits
+
+sleepmon stands on the research and data shared by the Pokémon Sleep community,
+especially:
+
+- [RaenonX Pokémon Sleep Wiki](https://pks.raenonx.cc/)
+- [nitoyon/pokesleep-tool](https://github.com/nitoyon/pokesleep-tool)
+- [Neroli's Lab](https://github.com/nerolis-lab/nerolis-lab)
+- [PokeAPI sprites](https://github.com/PokeAPI/sprites)
+
+sleepmon is a fan project, not affiliated with Nintendo, Creatures, GAME FREAK or The
+Pokémon Company. Pokémon and its names are trademarks of their respective owners.
+
+## License
+
+The sleepmon source code is released under the [MIT License](LICENSE). It doesn't cover
+Pokémon names, game images or icons, which belong to their respective owners.
 
 ## Documentation
 

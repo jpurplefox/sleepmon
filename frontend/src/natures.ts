@@ -15,8 +15,8 @@ export const NATURE_STATS: Record<string, NatureStatMeta> = {
   "Ingredient Finding": { icon: "ingredient.png", label: "Búsqueda de ingredientes" },
 };
 
-// Orden de los grupos en el selector (por stat que la naturaleza *sube*), igual
-// que RaenonX. Las neutras van primero, sin título.
+// Selector group order (by the stat the nature *raises*). Neutral natures go
+// first, untitled.
 export const NATURE_GROUP_ORDER = [
   "Energy Recovery",
   "EXP Gains",

@@ -50,8 +50,8 @@ export function NatureSelect({ natures, value, onChange, allowNone, ariaLabel }:
 
   const selected = natures.find((n) => n.name === value);
 
-  // Neutras primero (sin título), luego un grupo por stat que la naturaleza sube,
-  // en el orden de RaenonX. filter() preserva el orden canónico del catálogo.
+  // Neutral natures first (untitled), then one group per raised stat, in
+  // NATURE_GROUP_ORDER. filter() keeps the catalog's canonical order.
   const groups = [
     { title: "", items: natures.filter((n) => n.neutral) },
     ...NATURE_GROUP_ORDER.map((stat) => ({
