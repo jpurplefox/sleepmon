@@ -159,10 +159,9 @@ Two icon languages that never mix:
   caps/joins, `aria-hidden`. They inherit context color (dimmed to `--muted`,
   `--accent-text` when they mean "the night"). **Never emojis.**
 
-Current catalog: `IconStopwatch`, `IconHelp`, `IconBackpack`, `IconHourglass` (the four
-**filled** metric glyphs, below), `IconPackage` (a box of unknown contents — random
-ingredients),
-`IconSparkle`, `IconPot`, `IconMagnifier`, `IconMoon`,
+Current catalog: `IconStopwatch`, `IconHelp`, `IconBackpack`, `IconHourglass`,
+`IconSparkle` (the five **filled** metric glyphs, below), `IconPackage` (a box of unknown
+contents — random ingredients), `IconPot`, `IconMagnifier`, `IconMoon`,
 `IconChevronDown`, `IconArrowUp`, `IconArrowDown`, `IconMore`, `IconMenu`, `IconClose`,
 `IconEdit`, `IconCopy`, `IconCheck`, `IconSaveBox`, `IconSplit`, `IconSignOut`,
 `IconProgress` (rising bars — what you have unlocked and levelled; the account menu's
@@ -917,8 +916,8 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   inventory capacity and fill time used line icons (a clock, a lucide hand, a box), while
   the stat and sub-skill icons for the same ideas had become filled glyphs (stopwatch,
   backpack). Redraw them as lines or fill them? *Resolution:* `IconStopwatch`, `IconHelp`,
-  `IconBackpack` and `IconHourglass` are filled, in `currentColor` (muted on the card),
-  drawn like the stat glyphs; every other UI icon stays a line icon. *Why:* these four
+  `IconBackpack` and `IconHourglass` are filled, in `currentColor`, drawn like the stat
+  glyphs; every other UI icon stays a line icon. *Why:* these four
   name game mechanics the stat icons already draw; one drawing per idea reads the same
   on a sub-skill tile and on the card.
 - **A nature is one pill, wherever it appears.** *Question:* on the card the nature
@@ -929,3 +928,10 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   with a 1.5px border. *Why:* each piece of a Pokémon's config reads as a contained
   unit, the nature looks the same in the place you set it and the places you read it,
   and the icon marks stay uncovered.
+- **The card's metric glyphs are white, and the sparkle joins them.** *Question:* the
+  card's metric icons were muted while the stat and sub-skill glyphs around them are
+  white, and `IconSparkle` (skill triggers) was still a line icon among filled ones.
+  *Resolution:* metric icons on the card's lines take `--text`; `IconSparkle` is a
+  filled four-point sparkle, so the card has five filled metric glyphs. The comparison
+  deltas keep their own up/down color. *Why:* one icon voice per card: every glyph
+  that names a figure reads at the same weight and color.
