@@ -69,17 +69,29 @@ const TIER_CLASS: Record<string, string> = { Gold: "gold", Blue: "blue", Regular
 // Diferencia de un valor contra la base (la primera card). Verde si esta config
 // rinde más, rojo si rinde menos. No se muestra en la card base ni cuando no hay
 // un valor base comparable (p. ej. un ingrediente que la base no produce).
-function Delta({ value, base }: { value: number; base: number | null | undefined }) {
+// `digits` should match the value's own: the delta is the gap between the values as
+// shown, and one that rounds to zero reads as no change.
+function Delta({
+  value,
+  base,
+  digits = 2,
+}: {
+  value: number;
+  base: number | null | undefined;
+  digits?: 0 | 2;
+}) {
   if (base == null) return null;
-  const diff = value - base;
-  if (Math.abs(diff) < 0.005) return <span className="prod-delta prod-delta--same">≈</span>;
+  const format = digits === 0 ? fmtInt : fmt;
+  const round = (n: number) => Number(n.toFixed(digits));
+  const diff = round(value) - round(base);
+  if (format(Math.abs(diff)) === format(0)) return <span className="prod-delta prod-delta--same">≈</span>;
   const cls = diff > 0 ? "prod-delta--up" : "prod-delta--down";
   // Shape (▲/▼) carries the direction too, so it doesn't rest on color alone.
   return (
     <span className={`prod-delta ${cls}`}>
       <IconTriangle dir={diff > 0 ? "up" : "down"} className="prod-delta__arrow" />
       <span className="sr-only">{diff > 0 ? "+" : "−"}</span>
-      {fmt(Math.abs(diff))}
+      {format(Math.abs(diff))}
     </span>
   );
 }
@@ -593,7 +605,7 @@ export function ProductionCard({
               <li>
                 <img className="mini-icon" src={CHARGE_STRENGTH_ICON} alt={t("card.strength")} title={t("card.strengthTitle")} />
                 <strong>{fmtInt(cardStrength(d))}</strong>
-                <Delta value={cardStrength(d)} base={base ? cardStrength(base) : undefined} />
+                <Delta value={cardStrength(d)} base={base ? cardStrength(base) : undefined} digits={0} />
                 {species && d.skill_strength != null && (
                   <Tooltip content={t("card.strengthBreakdownTitle")} className="tooltip--inline prod-ing__breakdown">
                     <img src={berryIcon(species.berry)} alt="" title={t("card.fromBerriesTitle")} />{" "}
@@ -760,7 +772,7 @@ export function ProductionCard({
                 <Tooltip content={t("card.dreamShardsTitle")} className="tooltip--inline">
                   <img className="mini-icon" src="/shard.png" alt="" />{" "}
                   {fmtInt(d.skill_dream_shards)}{" "}
-                  <Delta value={d.skill_dream_shards} base={base?.skill_dream_shards ?? null} />
+                  <Delta value={d.skill_dream_shards} base={base?.skill_dream_shards ?? null} digits={0} />
                   <span className="muted"> {t("card.dreamShards")}</span>
                 </Tooltip>
               </div>
@@ -770,7 +782,7 @@ export function ProductionCard({
                 <Tooltip content={t("card.extraTastyTitle")} className="tooltip--inline">
                   <img className="mini-icon" src="/extra-tasty.png" alt="" />{" "}
                   +{fmtInt(d.skill_tasty_chance)}%{" "}
-                  <Delta value={d.skill_tasty_chance} base={base?.skill_tasty_chance ?? null} />
+                  <Delta value={d.skill_tasty_chance} base={base?.skill_tasty_chance ?? null} digits={0} />
                   <span className="muted"> {t("card.extraTasty")}</span>
                 </Tooltip>
               </div>
