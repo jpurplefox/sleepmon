@@ -1,4 +1,4 @@
-// Íconos de sub skills (los mismos que RaenonX), servidos desde /public/subskill.
+// Sub skill icons, served from /public/subskill.
 // En el juego el ícono es por *familia/concepto* (Helping Speed S y M comparten
 // ícono), así que mapeamos cada sub skill a su concepto.
 const CONCEPT: Record<string, string> = {

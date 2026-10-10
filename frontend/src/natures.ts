@@ -1,7 +1,6 @@
 // Metadatos de los 5 stats que una naturaleza puede subir/bajar. La clave es el
 // valor exacto que manda el backend (NatureStat: "Speed of Help", etc.).
-// Los íconos son los mismos que usa RaenonX (public/images/generic), servidos
-// desde /public/nature.
+// Icons are served from /public/nature.
 export interface NatureStatMeta {
   icon: string; // nombre del archivo en /public/nature
   label: string; // nombre legible (es) para tooltips y títulos de grupo
@@ -15,8 +14,8 @@ export const NATURE_STATS: Record<string, NatureStatMeta> = {
   "Ingredient Finding": { icon: "ingredient", label: "Búsqueda de ingredientes" },
 };
 
-// Orden de los grupos en el selector (por stat que la naturaleza *sube*), igual
-// que RaenonX. Las neutras van primero, sin título.
+// Selector group order (by the stat the nature *raises*). Neutral natures go
+// first, untitled.
 export const NATURE_GROUP_ORDER = [
   "Energy Recovery",
   "EXP Gains",

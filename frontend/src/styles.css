@@ -772,7 +772,7 @@ select:focus {
   line-height: 1;
 }
 
-/* Ícono del stat (blanco, los mismos PNG de RaenonX). El SVG de la X usa currentColor. */
+/* Stat icon (white PNG). The X SVG uses currentColor. */
 .nat-stat img {
   width: 15px;
   height: 15px;
