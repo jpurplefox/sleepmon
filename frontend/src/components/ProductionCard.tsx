@@ -17,6 +17,7 @@ import {
   CHARGE_STRENGTH_ICON,
   GENERIC_BERRY_ICON,
   GENERIC_CANDY_ICON,
+  mainSkillIcon,
   POT_EXPANSION_ICON,
 } from "../skillIcons";
 import { spriteUrl } from "../sprites";
@@ -151,7 +152,7 @@ export function ProductionCard({
   expertSpeed = null,
   weeklyBonus = "berry_strength",
 }: Props) {
-  const { t, ingredient, berry, subSkill, nature: natureName } = useI18n();
+  const { t, ingredient, berry, subSkill, mainSkill, nature: natureName } = useI18n();
   // La animación de entrada solo debe correr al montar (al agregar una card). Al
   // reordenar/intercambiar, el navegador reinicia las animaciones CSS de los nodos
   // movidos aunque React no los desmonte; por eso la clase de entrada se quita al
@@ -180,7 +181,12 @@ export function ProductionCard({
   const teammateIngs = d?.teammate_ingredients ?? [];
   const teammateIngAmount = teammateIngs.reduce((acc, s) => acc + s.amount, 0);
 
-  const unmodeledKey = unmodeledSkillKey(effectiveSkill(species?.main_skill, config.versatile_skill));
+  const skill = effectiveSkill(species?.main_skill, config.versatile_skill);
+  const unmodeledKey = unmodeledSkillKey(skill);
+  // The level the user set; the main favorite's +1 is the "Skill +1" mark beside it.
+  const skillIcon = mainSkillIcon(skill);
+  const skillName = mainSkill(skill ?? "");
+  const skillLv = t("prod.skillLv", { level: config.skill_level });
 
   const marks = d
     ? expertMarks({
@@ -649,6 +655,17 @@ export function ProductionCard({
           <div className="prod-card__block prod-card__block--skill">
             <div className="prod-card__block-head">
               {t("card.skill")} <span className="muted">{pct(d.effective_skill_percentage)}</span>
+              {species && (
+                <Tooltip content={`${skillName} · ${skillLv}`} className="tooltip--inline prod-card__skill-lv">
+                  {skillIcon.kind === "img" ? (
+                    <img src={skillIcon.src} alt="" />
+                  ) : (
+                    <skillIcon.Component aria-hidden="true" />
+                  )}
+                  <span aria-hidden="true">{skillLv}</span>
+                  <span className="sr-only">{`${skillName} ${skillLv}`}</span>
+                </Tooltip>
+              )}
               {markFor("skill")}
               {unmodeledKey && (
                 <Tooltip className="skill-alert" content={t(unmodeledKey)}>

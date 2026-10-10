@@ -131,6 +131,9 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
   the team's *Other skills*: **Present** (Delibird) brings 4 candies a third of the
   time, shown as a total with a generic candy icon (which Pokémon they're for isn't
   worked out); **Berry Juice** (Shuckle) brings a Berry Juice 18.5% of the time.
+- **The skill's level is at hand.** The card's Skill block names the main skill (icon,
+  name in its tooltip) and the level it was set to (*Lv. N*). On the expert map's main
+  favorite, the +1 shows beside it as the *Skill +1* mark.
 - **Uncalculated skills are flagged.** Where a skill's production isn't calculated —
   **Metronome** and **Skill Copy** entirely; **Psystrike**'s Berry Zone and **Nuzzle**'s
   skill bonus partly — the card's Skill block shows a warning whose tooltip says what
