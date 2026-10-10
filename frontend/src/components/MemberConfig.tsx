@@ -3,11 +3,11 @@ import {
   SUB_SKILL_UNLOCK_LEVELS,
 } from "../constants";
 import { useI18n } from "../i18n";
-import { statIcon } from "../natures";
 import { mainSkillIcon } from "../skillIcons";
 import { subSkillIcon } from "../subskills";
 import type { Nature } from "../types";
 import { IngredientLineup } from "./IngredientLineup";
+import { NaturePill } from "./NaturePill";
 import { Tooltip } from "./Tooltip";
 
 const TIER_CLASS: Record<string, string> = { Gold: "gold", Blue: "blue", Regular: "regular" };
@@ -59,7 +59,7 @@ export function MemberConfig({
   showSkillLevel = true,
   showIngredients = true,
 }: Props) {
-  const { t, nature: natureLabel, natureStat, subSkill, mainSkill } = useI18n();
+  const { t, nature: natureLabel, subSkill, mainSkill } = useI18n();
 
   const skillIcon = mainSkillIcon(mainSkillName);
   const skillName = mainSkill(mainSkillName ?? "");
@@ -71,38 +71,16 @@ export function MemberConfig({
           ingredientes (showIngredients=false): los muestra en su propia columna. */}
       {showIngredients && <IngredientLineup level={level} ingredients={ingredients} />}
 
-      {/* Naturaleza: si tiene efecto, ↑/↓ con íconos de stat; si es neutra o no
-          tiene, un placeholder que ocupa el MISMO espacio (cuadrados vacíos) para
-          que la fila quede alineada. El nombre va en el tooltip y sr-only. */}
+      {/* Nature: the pill without its name (it goes in the tooltip, and sr-only
+          when the pill's images don't already say it). Without a nature the pill
+          keeps its shape, so the row stays aligned. */}
       <Tooltip
         content={nature ? natureLabel(nature) : t("card.noNature")}
         className="tooltip--inline prod-box-item__nature icon-row"
       >
-        {natureMeta && !natureMeta.neutral && natureMeta.increased && natureMeta.decreased ? (
-          <>
-            <span className="nat-up">↑</span>
-            <img
-              className="mini-icon"
-              src={statIcon(natureMeta.increased)}
-              alt={natureStat(natureMeta.increased)}
-              title={natureStat(natureMeta.increased)}
-            />
-            <span className="nat-down">↓</span>
-            <img
-              className="mini-icon"
-              src={statIcon(natureMeta.decreased)}
-              alt={natureStat(natureMeta.decreased)}
-              title={natureStat(natureMeta.decreased)}
-            />
-          </>
-        ) : (
-          <>
-            <span className="nat-up nat-up--muted">↑</span>
-            <span className="mini-icon mini-icon--empty" aria-hidden="true" />
-            <span className="nat-down nat-down--muted">↓</span>
-            <span className="mini-icon mini-icon--empty" aria-hidden="true" />
-            <span className="sr-only">{nature ? natureLabel(nature) : t("card.noNature")}</span>
-          </>
+        <NaturePill nature={natureMeta} />
+        {(!natureMeta || natureMeta.neutral) && (
+          <span className="sr-only">{nature ? natureLabel(nature) : t("card.noNature")}</span>
         )}
       </Tooltip>
 

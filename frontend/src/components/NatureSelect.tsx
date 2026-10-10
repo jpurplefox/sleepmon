@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useI18n } from "../i18n";
 import { NATURE_GROUP_ORDER, statIcon } from "../natures";
 import type { Nature } from "../types";
+import { NaturePill } from "./NaturePill";
 
 interface Props {
   natures: Nature[];
@@ -13,50 +14,6 @@ interface Props {
   // Nombre accesible para el botón disparador (el <label> que lo envuelve no
   // nombra un control nativo).
   ariaLabel?: string;
-}
-
-// Círculo con X para las naturalezas neutras (mismo criterio que RaenonX).
-function XCircle() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M9 9l6 6M15 9l-6 6" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-// Badges ↑/↓: chevron de color (rojo sube, azul baja) + ícono del stat. Para las
-// neutras se muestra el círculo con X en ambos lados.
-function NatureEffect({ nature }: { nature: Nature }) {
-  const { t, natureStat } = useI18n();
-  if (nature.neutral) {
-    return (
-      <span className="nature-effect">
-        <span className="nat-stat nat-stat--up" title={t("natureSel.noEffect")}>
-          <XCircle />
-        </span>
-        <span className="nat-stat nat-stat--down" title={t("natureSel.noEffect")}>
-          <XCircle />
-        </span>
-      </span>
-    );
-  }
-  return (
-    <span className="nature-effect">
-      <span
-        className="nat-stat nat-stat--up"
-        title={t("natureSel.raises", { stat: natureStat(nature.increased!) })}
-      >
-        <img src={statIcon(nature.increased!)} alt="" />
-      </span>
-      <span
-        className="nat-stat nat-stat--down"
-        title={t("natureSel.lowers", { stat: natureStat(nature.decreased!) })}
-      >
-        <img src={statIcon(nature.decreased!)} alt="" />
-      </span>
-    </span>
-  );
 }
 
 export function NatureSelect({ natures, value, onChange, allowNone, ariaLabel }: Props) {
@@ -155,6 +112,8 @@ export function NatureSelect({ natures, value, onChange, allowNone, ariaLabel }:
         aria-expanded={open}
         aria-label={ariaLabel}
       >
+        {/* The one place a nature's name sits outside its pill: the selector reads
+            as a list of names, each with its effects-only pill. */}
         <span className="nature-trigger__name">
           {selected
             ? natureLabel(selected.name)
@@ -162,7 +121,7 @@ export function NatureSelect({ natures, value, onChange, allowNone, ariaLabel }:
               ? t("natureSel.noNature")
               : t("natureSel.choose")}
         </span>
-        {selected && <NatureEffect nature={selected} />}
+        {selected && <NaturePill nature={selected} />}
       </button>
 
       {open && (
@@ -228,7 +187,7 @@ export function NatureSelect({ natures, value, onChange, allowNone, ariaLabel }:
                       tabIndex={-1}
                     >
                       <span className="nature-option__name">{natureLabel(n.name)}</span>
-                      <NatureEffect nature={n} />
+                      <NaturePill nature={n} />
                     </button>
                   ))}
                 </div>
