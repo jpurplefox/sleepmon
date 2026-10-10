@@ -3678,6 +3678,17 @@ button.prod-card__base-tag--action {
   flex-shrink: 0;
 }
 
+/* Optical alignment: the stopwatch fills its box to the top (crown), so it reads
+   above the digits; the help glyph's weight is the hand at the bottom, so it reads
+   below. Each moves toward the digits' middle by what the eye sees, not its box. */
+.prod-card__icon--stopwatch {
+  transform: translateY(1.5px);
+}
+
+.prod-card__icon--help {
+  transform: translateY(-1.5px);
+}
+
 /* The night line is a mechanic, not a value: indigo ink. */
 .prod-card__night svg {
   color: var(--accent-text);

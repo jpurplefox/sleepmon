@@ -497,13 +497,13 @@ export function ProductionCard({
           <div className="prod-card__line">
             <span>
               <Tooltip content={t("card.helpCadence")} className="tooltip--inline">
-                <IconStopwatch /> {mmss(d.seconds_per_help)}
+                <IconStopwatch className="prod-card__icon--stopwatch" /> {mmss(d.seconds_per_help)}
               </Tooltip>
               {/* Beside its metric's tooltip, not inside it: one tap, one bubble. */}
               {markFor("cadence")}
             </span>
             <Tooltip content={t("card.helpsPerDay")} className="tooltip--inline">
-              <IconHelp /> {fmt(d.helps_per_day)} <Delta value={d.helps_per_day} base={base?.helps_per_day} />
+              <IconHelp className="prod-card__icon--help" /> {fmt(d.helps_per_day)} <Delta value={d.helps_per_day} base={base?.helps_per_day} />
             </Tooltip>
           </div>
 
