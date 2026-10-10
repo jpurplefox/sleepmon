@@ -314,9 +314,10 @@ states · where it lives. Feature one-offs are intentionally not here.
   only) `oklch(0.27 0.065 15)`. Neutral cards keep `--surface`. Inside any tinted zone
   `--border` becomes `--divider`; the main favorite, the lightest tint, also lifts
   `--muted` and `--down` (`#c2cfd7`, `#ffb4ad`) to stay AA. The comparison's base card has **no** surface
-  treatment — its `Base` tag says it. The `Base` tag (solid `--accent-strong`, white
-  text) and the other cards' `Make base` button (`--surface-2`, `--divider` outline)
-  have solid fills, so a berry tint never shows through them.
+  treatment — its `Base` tag says it. The `Base` tag is plain `--text`, no box, so the
+  state never reads as a control; the other cards' `Make base` button is the control,
+  with a solid fill (`--surface-2` + 8% `--text`) and a `--divider` outline, so a berry
+  tint never shows through it.
 - **`.night-grid`** — the card's **skill while asleep** read-out (inside
   `.prod-card__night`): a small grid, `--text-sm`, tabular nums, `column-gap 0.9rem`.
   A header row of `--text-xs` `--muted` column labels, then **one row per sleep** — the

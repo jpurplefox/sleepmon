@@ -3330,8 +3330,9 @@ select:focus {
 }
 
 /* "Base" chip (state) and "Make base" button (action), at the right end of the name
-   row. Both have solid fills, so a berry tint never shows through them: the chip is
-   the accent fill of an active chip, the button the --surface-2 of the nature pill. */
+   row. The chip is plain text, so the state never reads as a control; the button
+   has a solid fill a step above --surface-2, so a berry tint never shows through it
+   and it stands apart from the nature pill below. */
 .prod-card__base-tag {
   margin-left: auto;
   flex-shrink: 0;
@@ -3344,14 +3345,13 @@ select:focus {
 }
 
 span.prod-card__base-tag {
-  color: #fff;
-  background: var(--accent-strong);
-  border: 1px solid var(--accent-strong);
+  color: var(--text);
+  padding-right: 0;
 }
 
 button.prod-card__base-tag--action {
   color: var(--text);
-  background: var(--surface-2);
+  background: color-mix(in srgb, var(--surface-2), var(--text) 8%);
   border: 1px solid var(--divider);
   cursor: pointer;
   transition:
