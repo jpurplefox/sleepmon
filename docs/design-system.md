@@ -310,7 +310,7 @@ states · where it lives. Feature one-offs are intentionally not here.
   skills, nature — bleeding to the card edges), while the figures below stay on
   `--surface`. Each tint is a deep hue at about `--surface`'s lightness, in `oklch`
   (good = teal-green, bad = wine): `--favorite-berry` `oklch(0.29 0.055 185)`,
-  `--main-favorite` (expert map) `oklch(0.33 0.075 180)`, `--no-favorite` (expert map
+  `--main-favorite` (expert map) `oklch(0.37 0.08 180)`, `--no-favorite` (expert map
   only) `oklch(0.27 0.065 15)`. Neutral cards keep `--surface`. Inside any tinted zone
   `--border` becomes `--divider`; the main favorite, the lightest tint, also lifts
   `--muted` and `--down` (`#c2cfd7`, `#ffb4ad`) to stay AA. The comparison's base card has **no** surface

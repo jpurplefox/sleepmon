@@ -34,7 +34,7 @@
      Deep hues at about --surface's lightness, not --up/--down mixed into it: mixing a
      light color into the navy lifts it and drains its chroma, a muddy teal / mauve. */
   --favorite-berry: oklch(0.29 0.055 185);
-  --main-favorite: oklch(0.33 0.075 180);
+  --main-favorite: oklch(0.37 0.08 180);
   --no-favorite: oklch(0.27 0.065 15);
   /* Sub-skill tiers (game content); the regular tier uses --muted, mapped in .ss-icon */
   --tier-gold: #d4a017;
@@ -3288,7 +3288,7 @@ select:focus {
 
 /* Ink on a tinted zone: --border disappears on every tint, so hairlines use --divider.
    The main favorite, the lightest tint, also drops --muted and --down under AA
-   (4.5:1 and 4.1:1), so it lifts them: muted 7.3:1 and down 6.8:1. */
+   (3.9:1 and 3.5:1), so it lifts them: muted 6.2:1 and down 5.8:1. */
 .prod-card--favorite-berry .prod-card__identity,
 .prod-card--no-favorite .prod-card__identity {
   --border: var(--divider);
