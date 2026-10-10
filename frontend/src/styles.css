@@ -4334,10 +4334,19 @@ button.prod-card__base-tag--action {
 }
 
 /* Compact plan row: one per day-moment. */
+/* The label column is as wide as the longest moment name (not a fixed width), so
+   the recipe's ingredient chips get the room to sit on one line. */
+.teams-plan-rows {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+}
+
 .teams-plan-row {
-  display: flex;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
   align-items: center;
-  gap: 0.5rem;
+  column-gap: 0.5rem;
   padding: 0.3rem 0;
   font-size: var(--text-sm);
   min-height: 2rem;
@@ -4349,8 +4358,7 @@ button.prod-card__base-tag--action {
 }
 
 .teams-plan-row__label {
-  min-width: 5rem;
-  flex-shrink: 0;
+  min-width: 0;
 }
 
 .teams-plan-row__thumb {
