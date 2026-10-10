@@ -102,6 +102,11 @@ especially:
 sleepmon is a fan project, not affiliated with Nintendo, Creatures, GAME FREAK or The
 Pokémon Company. Pokémon and its names are trademarks of their respective owners.
 
+## License
+
+The sleepmon source code is released under the [MIT License](LICENSE). It doesn't cover
+Pokémon names, game images or icons, which belong to their respective owners.
+
 ## Documentation
 
 Product, technical and visual documentation lives in **[`docs/`](docs/)** — start at
