@@ -17,7 +17,6 @@ import {
   CHARGE_STRENGTH_ICON,
   GENERIC_BERRY_ICON,
   GENERIC_CANDY_ICON,
-  mainSkillIcon,
   POT_EXPANSION_ICON,
 } from "../skillIcons";
 import { spriteUrl } from "../sprites";
@@ -184,7 +183,6 @@ export function ProductionCard({
   const skill = effectiveSkill(species?.main_skill, config.versatile_skill);
   const unmodeledKey = unmodeledSkillKey(skill);
   // The level the user set; the main favorite's +1 is the "Skill +1" mark beside it.
-  const skillIcon = mainSkillIcon(skill);
   const skillName = mainSkill(skill ?? "");
   const skillLv = t("prod.skillLv", { level: config.skill_level });
 
@@ -657,11 +655,6 @@ export function ProductionCard({
               {t("card.skill")} <span className="muted">{pct(d.effective_skill_percentage)}</span>
               {species && (
                 <Tooltip content={`${skillName} · ${skillLv}`} className="tooltip--inline prod-card__skill-lv">
-                  {skillIcon.kind === "img" ? (
-                    <img src={skillIcon.src} alt="" />
-                  ) : (
-                    <skillIcon.Component aria-hidden="true" />
-                  )}
                   <span aria-hidden="true">{skillLv}</span>
                   <span className="sr-only">{`${skillName} ${skillLv}`}</span>
                 </Tooltip>

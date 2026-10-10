@@ -3744,25 +3744,14 @@ button.prod-card__base-tag--action {
   color: var(--muted);
 }
 
-/* The main skill's icon + level in the skill block's head: a value, so it drops
-   the head's uppercase and reads in --text, like the figures below. */
+/* The main skill's level in the skill block's head: a value, so it drops the
+   head's uppercase and reads in --text, like the figures below. */
 .prod-card__skill-lv {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
   margin-left: 0.5rem;
   text-transform: none;
   letter-spacing: normal;
   font-weight: 600;
   color: var(--text);
-  vertical-align: middle;
-}
-
-.prod-card__skill-lv img,
-.prod-card__skill-lv svg {
-  width: 16px;
-  height: 16px;
-  object-fit: contain;
 }
 
 .prod-card__ings {
