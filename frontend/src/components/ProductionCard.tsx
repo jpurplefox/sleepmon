@@ -466,13 +466,11 @@ export function ProductionCard({
                     ? t("card.subSkillLocked", { name: subSkill(s), level: unlock })
                     : t("card.subSkillSlotUnavailable", { name: subSkill(s) });
                 return (
-                  <span
-                    key={i}
-                    className={`ss-icon ss-icon--${tierClass(s)}` + (locked ? " is-locked" : "")}
-                    title={title}
-                  >
-                    <img src={subSkillIcon(s)} alt={subSkill(s)} />
-                  </span>
+                  <Tooltip key={i} content={title}>
+                    <span className={`ss-icon ss-icon--${tierClass(s)}` + (locked ? " is-locked" : "")}>
+                      <img src={subSkillIcon(s)} alt={subSkill(s)} />
+                    </span>
+                  </Tooltip>
                 );
               })}
             </div>

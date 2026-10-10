@@ -816,15 +816,11 @@ select:focus {
   align-items: center;
 }
 
-/* In the selector the pill sits on --surface-2, and the name is the value. */
+/* On a --surface-2 ground (the selector, a Box row) the pill takes --surface. */
 .nature-trigger,
-.nature-option {
+.nature-option,
+.prod-box-item {
   --pill-bg: var(--surface);
-}
-
-.nature-trigger .nature-pill__name {
-  color: var(--text);
-  font-weight: 600;
 }
 
 .nature-dropdown {

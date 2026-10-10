@@ -425,15 +425,19 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **`.ss-icon`** — sub-skill icon framed by tier color (`--gold/--blue/--regular/
   --empty`), with the unlock-level badge `.ss-icon__lv` at the **top-left** (the icon's
   tier letter sits top-right and its `%`/`LV` mark bottom-right) and `.is-locked`.
-  Sizes: 36px with a 2px border in the selector; **28px with a 1.5px border** on the
+  Every tile carries a `Tooltip` with the sub skill's name (lock state included),
+  unless the name is written beside it (the selector's options). Sizes: 36px with a
+  2px border in the selector; **28px with a 1.5px border** on the
   card and the Box row (the same proportions — never a 2px border on a compact tile).
 - **`NaturePill`** (`.nature-pill`) — a nature as one `999px` pill: `▲` + the raised
   stat's icon (`--up`), `▼` + the lowered one's (`--down`), then the name after a
-  hairline divider. Neutral → a white circled X on both sides (only the arrows carry color); no nature → `--empty` (muted
-  marks, same footprint, so rows stay aligned). The name is omitted where it is shown
-  elsewhere (a dropdown option, a tooltip). Fill is `--surface-2`, or `--surface` when
-  it sits on `--surface-2` (`--pill-bg`). Used on the card, the Box row and
-  `NatureSelect` (trigger with the name, options without).
+  hairline divider. Neutral → a white circled X on both sides (only the arrows carry
+  color); no nature → `--empty` (muted marks, same footprint, so rows stay aligned).
+  Two versions: **with the name** (the card) or **effects only** where the row must
+  summarize more (the Box row) — the effects-only pill always sits in a `Tooltip` with
+  the nature's name. `NatureSelect` is the one place the name sits *outside* the pill:
+  trigger and options read as a list of names, each with its effects-only pill. Fill
+  is `--surface-2`, or `--surface` on a `--surface-2` ground (`--pill-bg`).
 - **State vocabulary** shared across selects/menus/toggles: `.is-active`,
   `.is-selected`, `.is-highlighted`, `.is-locked`, `.is-on`.
 

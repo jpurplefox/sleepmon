@@ -112,13 +112,16 @@ export function NatureSelect({ natures, value, onChange, allowNone, ariaLabel }:
         aria-expanded={open}
         aria-label={ariaLabel}
       >
-        {selected ? (
-          <NaturePill nature={selected} name={natureLabel(selected.name)} />
-        ) : (
-          <span className="nature-trigger__name">
-            {allowNone ? t("natureSel.noNature") : t("natureSel.choose")}
-          </span>
-        )}
+        {/* The one place a nature's name sits outside its pill: the selector reads
+            as a list of names, each with its effects-only pill. */}
+        <span className="nature-trigger__name">
+          {selected
+            ? natureLabel(selected.name)
+            : allowNone
+              ? t("natureSel.noNature")
+              : t("natureSel.choose")}
+        </span>
+        {selected && <NaturePill nature={selected} />}
       </button>
 
       {open && (
