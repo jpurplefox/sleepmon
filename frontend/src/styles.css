@@ -2413,16 +2413,11 @@ select:focus {
     gap: 0.15rem 0.75rem;
   }
 
-  /* Encabezados de sección: separan build de producción sin cajas ni color. */
-  .box-entry__section {
+  /* Bare dividers: split build from production without boxes, color or a title. */
+  .box-entry__divider {
     grid-column: 1 / -1;
-    margin: 0.35rem 0 0;
-    padding-top: 0.5rem;
+    margin: 0.35rem 0 0.15rem;
     border-top: 1px solid var(--border);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-size: var(--text-xs);
-    color: var(--muted);
   }
 
   .box-entry__label {
@@ -2438,7 +2433,7 @@ select:focus {
     display: contents;
   }
 
-  .box-entry__section--build {
+  .box-entry__divider--build {
     grid-row: 2;
   }
   .box-entry__label--nature {
@@ -2466,7 +2461,7 @@ select:focus {
     opacity: 1;
   }
 
-  .box-entry__section--prod {
+  .box-entry__divider--prod {
     grid-row: 6;
   }
   .box-entry__label--berries {
