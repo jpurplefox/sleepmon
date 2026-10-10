@@ -182,13 +182,18 @@ export function ProductionCard({
 
   const skill = effectiveSkill(species?.main_skill, config.versatile_skill);
   const unmodeledKey = unmodeledSkillKey(skill);
-  // The level the user set and, when a bonus (main favorite, event) raises it, the
-  // one the figures use: "Lv. 3 → 4". The mark beside it says where the bonus comes from.
+  // The level the user set and, when a bonus (main favorite, event) applies, the one
+  // the figures use: "Lv. 3 → 4". A bonus that overflows the skill's max adds "max"
+  // ("Lv. 5 → 7 max", "Lv. 7 → 7 max"). The mark beside it says where the bonus comes from.
   const skillName = mainSkill(skill ?? "");
   const skillLv = t("prod.skillLv", { level: config.skill_level });
-  const boostedSkillLevel =
-    d && d.effective_skill_level > config.skill_level ? d.effective_skill_level : null;
-  const skillLvText = boostedSkillLevel === null ? skillLv : `${skillLv} → ${boostedSkillLevel}`;
+  const boostedSkillLevel = d && d.skill_level_bonus > 0 ? d.effective_skill_level : null;
+  const skillLevelCapped =
+    boostedSkillLevel !== null && config.skill_level + (d?.skill_level_bonus ?? 0) > boostedSkillLevel;
+  const skillLvText =
+    boostedSkillLevel === null
+      ? skillLv
+      : `${skillLv} → ${boostedSkillLevel}${skillLevelCapped ? ` ${t("card.skillMax")}` : ""}`;
   const usedSkillLv = t("prod.skillLv", { level: boostedSkillLevel ?? config.skill_level });
 
   const marks = d
@@ -667,6 +672,7 @@ export function ProductionCard({
                       <>
                         <span className="prod-card__skill-lv-set">{skillLv}</span> →{" "}
                         <span className="prod-card__skill-lv-boost">{boostedSkillLevel}</span>
+                        {skillLevelCapped && <span className="prod-card__skill-lv-max">{t("card.skillMax")}</span>}
                       </>
                     )}
                   </span>

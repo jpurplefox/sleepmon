@@ -158,6 +158,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.boxResultCount": "{count} resultados",
     "prod.boxResultOne": "1 resultado",
     "prod.skillLv": "Lv. {level}",
+    "card.skillMax": "máx",
     "prod.boxErrorRetry": "No se pudo cargar la caja. Reintentá.",
     "prod.alreadyIn": "Ya en comparación",
     "prod.speciesNotInCatalog":
@@ -802,6 +803,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.boxResultCount": "{count} results",
     "prod.boxResultOne": "1 result",
     "prod.skillLv": "Lv. {level}",
+    "card.skillMax": "max",
     "prod.boxErrorRetry": "Couldn't load the box. Try again.",
     "prod.alreadyIn": "Already in comparison",
     "prod.speciesNotInCatalog":

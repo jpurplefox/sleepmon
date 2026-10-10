@@ -77,6 +77,7 @@ const PRODUCTION = {
   "skill_percentage": 4.2,
   "effective_skill_percentage": 5.906909447664128,
   "effective_skill_level": 3,
+  "skill_level_bonus": 0,
   "ingredients": [
     {
       "ingredient": "Fancy Apple",
@@ -160,11 +161,31 @@ describe("ProductionCard skill block", () => {
     expect(screen.getByText("Energy for Everyone S Lv. 4")).toBeInTheDocument();
   });
 
+  const levelOf = (container: HTMLElement) =>
+    container.querySelector(".prod-card__skill-lv > [aria-hidden]") as HTMLElement;
+
   it("shows the boosted level after the one set when a bonus raises it", () => {
-    const { container } = renderCard({ ...PRODUCTION, effective_skill_level: 5 });
-    const level = container.querySelector(".prod-card__skill-lv") as HTMLElement;
-    expect(level).toHaveTextContent("Lv. 4 → 5");
-    expect(within(level).getByText("5")).toHaveClass("prod-card__skill-lv-boost");
+    const { container } = renderCard({ ...PRODUCTION, effective_skill_level: 5, skill_level_bonus: 1 });
+    expect(levelOf(container)).toHaveTextContent(/^Lv\. 4 → 5$/);
+    expect(within(levelOf(container)).getByText("5")).toHaveClass("prod-card__skill-lv-boost");
     expect(screen.getByText("Energy for Everyone S Lv. 5")).toBeInTheDocument();
+  });
+
+  it("adds max when the bonus overflows the skill's cap", () => {
+    // Set at 4, +5 from an event, Energy for Everyone S caps at 6.
+    const { container } = renderCard({ ...PRODUCTION, effective_skill_level: 6, skill_level_bonus: 5 });
+    expect(levelOf(container)).toHaveTextContent(/^Lv\. 4 → 6max$/);
+  });
+
+  it("shows the same level on both sides when it already sits at the cap", () => {
+    const { container } = renderCard(
+      { ...PRODUCTION, effective_skill_level: 4, skill_level_bonus: 1 },
+    );
+    expect(levelOf(container)).toHaveTextContent(/^Lv\. 4 → 4max$/);
+  });
+
+  it("shows no max when the bonus fits under the cap", () => {
+    const { container } = renderCard({ ...PRODUCTION, effective_skill_level: 6, skill_level_bonus: 2 });
+    expect(levelOf(container)).toHaveTextContent(/^Lv\. 4 → 6$/);
   });
 });
