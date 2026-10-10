@@ -1,5 +1,5 @@
 // Event bonus: the effect kinds, their limits (PRD 0012) and how the UI shows them.
-import { POT_EXPANSION_ICON } from "./skillIcons";
+import { GENERIC_BERRY_ICON, POT_EXPANSION_ICON } from "./skillIcons";
 import type { Lang } from "./i18n/terms";
 
 export type EventEffectKind =
@@ -58,7 +58,7 @@ const times = (icon: string, labelKey: string, scoped = true): KindSpec => ({
 
 export const EVENT_KINDS: Record<EventEffectKind, KindSpec> = {
   extra_ingredients: plus(5, "/subskill/ingredient-finder.svg", "event.kind.extraIngredients"),
-  extra_berries: plus(5, "/subskill/berry-finding-s.svg", "event.kind.extraBerries"),
+  extra_berries: plus(5, GENERIC_BERRY_ICON, "event.kind.extraBerries"),
   skill_ingredients: times("/nature/ingredient.png", "event.kind.skillIngredients"),
   skill_trigger: times("/subskill/skill-trigger.svg", "event.kind.skillTrigger"),
   skill_level: plus(5, "/subskill/skill-level-up.svg", "event.kind.skillLevel"),
@@ -71,7 +71,7 @@ export const EVENT_KIND_ORDER = Object.keys(EVENT_KINDS) as EventEffectKind[];
 
 export const SCOPE_SPECIALTIES = ["Berries", "Ingredients", "Skills"] as const;
 export const SPECIALTY_ICON: Record<string, string> = {
-  Berries: "/subskill/berry-finding-s.svg",
+  Berries: GENERIC_BERRY_ICON,
   Ingredients: "/nature/ingredient.png",
   Skills: "/nature/mainSkill.svg",
 };

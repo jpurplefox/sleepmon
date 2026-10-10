@@ -149,7 +149,7 @@ Two icon languages that never mix:
     glyph plus marks: the **tier letter** (S/M/L) top-right on tiered sub skills; a
     **`%`** (chance: Skill Trigger, Ingredient Finder) or **`LV`** (Skill Level Up)
     subscript bottom-right at the letter's size, the glyph nudged left to balance it;
-    **↑** top-right on gold bonus sub skills. Research EXP → a clipboard, Helping
+    **↑** top-right on gold bonus sub skills (Berry Finding S, being tiered, carries its S). Research EXP → a clipboard, Helping
     Bonus → two stopwatches, Inventory Up → a backpack. Stat icons carry no marks:
     they double as metric icons.
 - **UI metrics & actions** → own line icons in `src/components/icons.tsx`:
@@ -157,7 +157,9 @@ Two icon languages that never mix:
   caps/joins, `aria-hidden`. They inherit context color (dimmed to `--muted`,
   `--accent-text` when they mean "the night"). **Never emojis.**
 
-Current catalog: `IconClock`, `IconHelp`, `IconPackage`, `IconHourglass`,
+Current catalog: `IconStopwatch`, `IconHelp`, `IconBackpack`, `IconHourglass` (the four
+**filled** metric glyphs, below), `IconPackage` (a box of unknown contents — random
+ingredients),
 `IconSparkle`, `IconPot`, `IconMagnifier`, `IconMoon`,
 `IconChevronDown`, `IconArrowUp`, `IconArrowDown`, `IconMore`, `IconMenu`, `IconClose`,
 `IconEdit`, `IconCopy`, `IconCheck`, `IconSaveBox`, `IconSplit`, `IconSignOut`,
@@ -176,9 +178,9 @@ from teammates → the game's **generic berry**, `GENERIC_BERRY_ICON`, for a ber
 type the view can't name). A main skill is shown by its game skill icon where one
 exists (`mainSkillIcon` — Berry Burst has its own). Metrics with
 no game icon get one **designated** UI icon that stands for them, used the same way
-everywhere: procs / triggers → `IconSparkle`, help cadence → `IconClock`, helps →
-`IconHelp` (a helping hand), inventory fill time → `IconHourglass`, inventory
-capacity → `IconPackage`, nighttime proc chance → `IconMoon` (and the nap's →
+everywhere: procs / triggers → `IconSparkle`, help cadence → `IconStopwatch`, helps →
+`IconHelp` (a hand offering what it gathered), inventory fill time → `IconHourglass`,
+inventory capacity → `IconBackpack`, nighttime proc chance → `IconMoon` (and the nap's →
 `IconSun`, so each sleep is named by its icon), help multiplier → `IconMagnifier`.
 
 Two kinds of figure stay **bare** (no metric icon):
@@ -896,3 +898,11 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   (tier letter, `%` / `LV` subscript, ↑ on gold bonuses — §3). *Why:* the artwork must
   be the game's or the app's own; the marks let a tile say *which* sub skill (and which
   tier) without reading its name.
+- **The card's four metric icons are filled glyphs.** *Question:* help cadence, helps,
+  inventory capacity and fill time used line icons (a clock, a lucide hand, a box), while
+  the stat and sub-skill icons for the same ideas had become filled glyphs (stopwatch,
+  backpack). Redraw them as lines or fill them? *Resolution:* `IconStopwatch`, `IconHelp`,
+  `IconBackpack` and `IconHourglass` are filled, in `currentColor` (muted on the card),
+  drawn like the stat glyphs; every other UI icon stays a line icon. *Why:* these four
+  name game mechanics the stat icons already draw; one drawing per idea reads the same
+  on a sub-skill tile and on the card.

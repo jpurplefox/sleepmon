@@ -38,15 +38,15 @@ import { SleepSkillGrid } from "./SleepSkillGrid";
 import { Tooltip } from "./Tooltip";
 import {
   IconAlert,
-  IconClock,
+  IconBackpack,
   IconClose,
   IconCopy,
   IconEdit,
   IconHelp,
   IconMagnifier,
-  IconPackage,
   IconSaveBox,
   IconSparkle,
+  IconStopwatch,
 } from "./icons";
 
 const fmt = (n: number) => n.toFixed(2);
@@ -506,7 +506,7 @@ export function ProductionCard({
           <div className="prod-card__line">
             <span>
               <Tooltip content={t("card.helpCadence")} className="tooltip--inline">
-                <IconClock /> {mmss(d.seconds_per_help)}
+                <IconStopwatch /> {mmss(d.seconds_per_help)}
               </Tooltip>
               {/* Beside its metric's tooltip, not inside it: one tap, one bubble. */}
               {markFor("cadence")}
@@ -518,7 +518,7 @@ export function ProductionCard({
 
           <div className="prod-card__line">
             <Tooltip content={t("card.inventory")} className="tooltip--inline">
-              <IconPackage /> {d.inventory}
+              <IconBackpack /> {d.inventory}
             </Tooltip>
             <FillTime fillHours={d.inventory_fill_hours} sessions={d.sleep_sessions} />
           </div>
