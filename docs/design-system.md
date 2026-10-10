@@ -122,7 +122,7 @@ and the game's artwork brings the rest. Surfaces separate by **tone** (`--bg` �
 --r-lg: 16px   /* main cards, modals, dropdowns */
 ```
 
-`border-radius: 999px` only for pills (level chip, level badges).
+`border-radius: 999px` only for pills (level chip, level badges, the nature pill).
 
 **Layout:**
 
@@ -423,8 +423,17 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **`.mini-icon`** — small inline icon (nature stat, ingredient, sub-skill) with
   states `--empty` (dim placeholder) and `--locked` (grayscale + opacity).
 - **`.ss-icon`** — sub-skill icon framed by tier color (`--gold/--blue/--regular/
-  --empty`), with level badge `.ss-icon__lv` and `.is-locked`. Reused at different
-  sizes.
+  --empty`), with the unlock-level badge `.ss-icon__lv` at the **top-left** (the icon's
+  tier letter sits top-right and its `%`/`LV` mark bottom-right) and `.is-locked`.
+  Sizes: 36px with a 2px border in the selector; **28px with a 1.5px border** on the
+  card and the Box row (the same proportions — never a 2px border on a compact tile).
+- **`NaturePill`** (`.nature-pill`) — a nature as one `999px` pill: `▲` + the raised
+  stat's icon (`--up`), `▼` + the lowered one's (`--down`), then the name after a
+  hairline divider. Neutral → a circled X on both sides; no nature → `--empty` (muted
+  marks, same footprint, so rows stay aligned). The name is omitted where it is shown
+  elsewhere (a dropdown option, a tooltip). Fill is `--surface-2`, or `--surface` when
+  it sits on `--surface-2` (`--pill-bg`). Used on the card, the Box row and
+  `NatureSelect` (trigger with the name, options without).
 - **State vocabulary** shared across selects/menus/toggles: `.is-active`,
   `.is-selected`, `.is-highlighted`, `.is-locked`, `.is-on`.
 
@@ -502,7 +511,7 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **`LevelStepperInput`** — headless stepper (buttons + input, no container) to
   embed in another layout.
 - **`SpeciesSelect`** — searchable dropdown with sprite. **`NatureSelect`** —
-  dropdown with ↑/↓ stat badges, grouped by raised stat, X circle for neutral.
+  dropdown grouped by raised stat; the trigger and each option show a `NaturePill`.
   **`SubSkillSelect`** — uses `.ss-icon`.
 - **`RibbonIcon`** — ribbon sprite with `--empty` variant.
 - **Base inputs** — global `input, select` styles with the unified focus outline.
@@ -906,3 +915,11 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   drawn like the stat glyphs; every other UI icon stays a line icon. *Why:* these four
   name game mechanics the stat icons already draw; one drawing per idea reads the same
   on a sub-skill tile and on the card.
+- **A nature is one pill, wherever it appears.** *Question:* on the card the nature
+  was loose icons with arrows under the tiled sub skills, and read as hanging from
+  nothing; the selector used two separate chips. *Resolution:* `NaturePill` — the two
+  marks and the name in one pill — on the card, the Box row and the selector; the
+  sub-skill unlock level moves to the tile's top-left, and compact tiles go to 28px
+  with a 1.5px border. *Why:* each piece of a Pokémon's config reads as a contained
+  unit, the nature looks the same in the place you set it and the places you read it,
+  and the icon marks stay uncovered.

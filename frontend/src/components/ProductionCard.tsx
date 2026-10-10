@@ -34,6 +34,7 @@ import type {
 } from "../types";
 import { RibbonIcon } from "./RibbonIcon";
 import { FillTime } from "./FillTime";
+import { NaturePill } from "./NaturePill";
 import { SleepSkillGrid } from "./SleepSkillGrid";
 import { Tooltip } from "./Tooltip";
 import {
@@ -149,7 +150,7 @@ export function ProductionCard({
   expertSpeed = null,
   weeklyBonus = "berry_strength",
 }: Props) {
-  const { t, ingredient, berry, subSkill, natureStat, nature: natureName } = useI18n();
+  const { t, ingredient, berry, subSkill, nature: natureName } = useI18n();
   // La animación de entrada solo debe correr al montar (al agregar una card). Al
   // reordenar/intercambiar, el navegador reinicia las animaciones CSS de los nodos
   // movidos aunque React no los desmonte; por eso la clase de entrada se quita al
@@ -478,16 +479,8 @@ export function ProductionCard({
             <div className="icon-row prod-card__nature">
               {!config.nature ? (
                 <span className="muted">{t("card.noNature")}</span>
-              ) : nature && !nature.neutral && nature.increased && nature.decreased ? (
-                <>
-                  <span className="nat-up">↑</span>
-                  <img className="mini-icon" src={statIcon(nature.increased)} alt={natureStat(nature.increased)} title={natureStat(nature.increased)} />
-                  <span className="nat-down">↓</span>
-                  <img className="mini-icon" src={statIcon(nature.decreased)} alt={natureStat(nature.decreased)} title={natureStat(nature.decreased)} />
-                  <span className="muted">{natureName(config.nature)}</span>
-                </>
               ) : (
-                <span className="muted">{natureName(config.nature)}</span>
+                <NaturePill nature={nature} name={natureName(config.nature)} />
               )}
             </div>
           </div>

@@ -634,10 +634,11 @@ select:focus {
   filter: brightness(0.45);
 }
 
+/* Top-left: the icon's tier letter sits top-right and its %/LV mark bottom-right. */
 .ss-icon__lv {
   position: absolute;
-  bottom: -7px;
-  right: -7px;
+  top: -7px;
+  left: -7px;
   min-width: 16px;
   text-align: center;
   background: var(--surface-2);
@@ -752,58 +753,73 @@ select:focus {
   font-weight: 600;
 }
 
-/* Badges ↑/↓ con el símbolo del stat. Reusados en trigger, opciones y títulos. */
-.nature-effect {
+/* A nature as one pill: ▲ raised stat, ▼ lowered stat, then the name after a
+   divider. Card, Box row, selector trigger and options (NaturePill). */
+.nature-pill {
   display: inline-flex;
-  gap: 0.3rem;
+  align-items: center;
+  gap: 0.5rem;
+  height: 28px;
+  padding: 0 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--pill-bg, var(--surface-2));
+  line-height: 1;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
-.nat-stat {
-  position: relative;
+.nature-pill__mark {
   display: inline-flex;
   align-items: center;
   gap: 1px;
-  height: 24px;
-  padding: 0 5px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  line-height: 1;
+  font-size: var(--text-xs);
+  font-weight: 700;
 }
 
-/* Stat icon (white glyph). The neutral nature's X SVG uses currentColor. */
-.nat-stat img {
+/* Good/bad colors (not the game's red-up/blue-down). */
+.nature-pill__mark--up {
+  color: var(--up);
+}
+
+.nature-pill__mark--down {
+  color: var(--down);
+}
+
+/* Stat icon (white glyph); the neutral X is an SVG in currentColor. */
+.nature-pill__mark img,
+.nature-pill__mark svg,
+.nature-pill__blank {
   width: 15px;
   height: 15px;
   object-fit: contain;
 }
 
-.nat-stat svg {
-  width: 15px;
-  height: 15px;
+/* No nature yet: muted marks and blank icons, same footprint. */
+.nature-pill--empty .nature-pill__mark {
+  color: var(--muted);
+  opacity: 0.6;
 }
 
-/* Up/down chevron in the app's good/bad colors (not the game's red-up/blue-down). */
-.nat-stat::before {
-  font-size: var(--text-xs);
-  font-weight: 700;
+.nature-pill__name {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  border-left: 1px solid var(--border);
+  padding-left: 0.5rem;
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
 }
 
-.nat-stat--up {
-  color: var(--up);
+/* In the selector the pill sits on --surface-2, and the name is the value. */
+.nature-trigger,
+.nature-option {
+  --pill-bg: var(--surface);
 }
 
-.nat-stat--up::before {
-  content: "▲";
-}
-
-.nat-stat--down {
-  color: var(--down);
-}
-
-.nat-stat--down::before {
-  content: "▼";
+.nature-trigger .nature-pill__name {
+  color: var(--text);
+  font-weight: 600;
 }
 
 .nature-dropdown {
@@ -880,8 +896,8 @@ select:focus {
   white-space: nowrap;
 }
 
-/* El grupo de íconos ↑/↓ siempre pegado a la derecha de la opción. */
-.nature-option .nature-effect {
+/* The nature's pill always pinned to the option's right. */
+.nature-option .nature-pill {
   margin-left: auto;
 }
 
@@ -2278,6 +2294,7 @@ select:focus {
   .box-entry__config .ss-icon {
     width: 26px;
     height: 26px;
+    border-width: 1.5px;
   }
 
   .box-entry__berries {
@@ -2545,14 +2562,6 @@ select:focus {
 .badge--low {
   color: var(--down);
   border-color: var(--down);
-}
-
-.nature-effect .up {
-  color: var(--up);
-}
-
-.nature-effect .down {
-  color: var(--down);
 }
 
 .chips {
@@ -2964,26 +2973,12 @@ select:focus {
   white-space: nowrap;
 }
 
-/* Naturaleza con íconos de stat, mismo lenguaje que la comparación. */
-.prod-box-item__nature .nat-up {
-  color: var(--up);
-}
-
-.prod-box-item__nature .nat-down {
-  color: var(--down);
-}
-
-/* Flechas de una naturaleza neutra / sin cargar: en muted (sin verde/rojo). */
-.prod-box-item__nature .nat-up--muted,
-.prod-box-item__nature .nat-down--muted {
-  color: var(--muted);
-}
-
-/* Ingredientes y sub skills a la misma escala compacta de las prod-cards (26px),
-   no la de la Caja (28/30px): así la fila de config queda a una sola altura. */
+/* Sub skills at the prod-cards' compact scale (28px, 1.5px border), so the
+   config row keeps one height. */
 .prod-box-item .ss-icon {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
+  border-width: 1.5px;
 }
 
 .prod-box-item .ss-icon img {
@@ -3648,23 +3643,17 @@ button.prod-card__base-tag--action {
 }
 
 /* Sub skills en la card de producción: marco coloreado por tier, tamaño compacto */
+/* 28px with a 1.5px border: the selector's 36/2px proportions at card size. */
 .prod-card .ss-icon {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
+  border-width: 1.5px;
   border-radius: var(--r-sm);
 }
 
 .prod-card .ss-icon img {
   width: 18px;
   height: 18px;
-}
-
-.prod-card__nature .nat-up {
-  color: var(--up);
-}
-
-.prod-card__nature .nat-down {
-  color: var(--down);
 }
 
 .prod-card__line {
