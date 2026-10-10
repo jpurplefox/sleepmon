@@ -816,9 +816,11 @@ select:focus {
   opacity: 0.6;
 }
 
+/* --text, not --muted: the pill sits on the card's berry tints, where --muted
+   shifts from one tint to the next. */
 .nature-pill__name {
   font-size: var(--text-sm);
-  color: var(--muted);
+  color: var(--text);
   border-left: 1px solid var(--border);
   padding-left: 0.5rem;
   align-self: stretch;

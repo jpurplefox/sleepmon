@@ -432,8 +432,8 @@ states · where it lives. Feature one-offs are intentionally not here.
   2px border in the selector; **28px with a 1.5px border** on the
   card and the Box row (the same proportions — never a 2px border on a compact tile).
 - **`NaturePill`** (`.nature-pill`) — a nature as one `999px` pill: `▲` + the raised
-  stat's icon (`--up`), `▼` + the lowered one's (`--down`), then the name after a
-  hairline divider. Neutral → a white circled X on both sides (only the arrows carry
+  stat's icon (`--up`), `▼` + the lowered one's (`--down`), then the name (`--text`)
+  after a hairline divider. Neutral → a white circled X on both sides (only the arrows carry
   color); no nature → `--empty` (muted marks, same footprint, so rows stay aligned).
   Two versions: **with the name** (the card) or **effects only** where the row must
   summarize more (the Box row) — the effects-only pill always sits in a `Tooltip` with
