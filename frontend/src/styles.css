@@ -152,10 +152,11 @@ html {
   border: 1px solid var(--border);
   color: var(--text);
   font-size: var(--text-xs);
-  /* Its own typography: a trigger inside an uppercase heading mustn't restyle it. */
+  /* Its own typography: an uppercase heading or a nowrap trigger mustn't restyle it. */
   font-weight: 400;
   text-transform: none;
   letter-spacing: normal;
+  white-space: normal;
   padding: 0.25rem 0.5rem;
   border-radius: var(--r-sm);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
