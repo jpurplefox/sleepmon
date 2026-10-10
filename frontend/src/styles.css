@@ -30,10 +30,12 @@
   --down-dim: rgba(249, 112, 102, 0.14);
   --down-border: rgba(249, 112, 102, 0.4);
   --error: #f85149;
-  /* Berry relation tints for a card's identity zone (design-system §5, .prod-card). */
-  --favorite-berry: color-mix(in srgb, var(--up) 18%, var(--surface));
-  --main-favorite: color-mix(in srgb, var(--up) 30%, var(--surface));
-  --no-favorite: color-mix(in srgb, var(--down) 20%, var(--surface));
+  /* Berry relation tints for a card's identity zone (design-system §5, .prod-card).
+     Deep hues at about --surface's lightness, not --up/--down mixed into it: mixing a
+     light color into the navy lifts it and drains its chroma, a muddy teal / mauve. */
+  --favorite-berry: oklch(0.29 0.055 185);
+  --main-favorite: oklch(0.37 0.08 180);
+  --no-favorite: oklch(0.27 0.065 15);
   /* Sub-skill tiers (game content); the regular tier uses --muted, mapped in .ss-icon */
   --tier-gold: #d4a017;
   --tier-blue: #58a6ff;
@@ -814,9 +816,11 @@ select:focus {
   opacity: 0.6;
 }
 
+/* --text, not --muted: the pill sits on the card's berry tints, where --muted
+   shifts from one tint to the next. */
 .nature-pill__name {
   font-size: var(--text-sm);
-  color: var(--muted);
+  color: var(--text);
   border-left: 1px solid var(--border);
   padding-left: 0.5rem;
   align-self: stretch;
@@ -3272,9 +3276,6 @@ select:focus {
 
 /* Berry relation: favorite reads as good, the expert map's main favorite one step
    stronger, and no favorite on an expert map as bad (--down, never --error). */
-/* The tints come from :root tokens, not from var(--up)/var(--down) here: the zone
-   lifts its own --down for legibility (below), and a background mixed from it on
-   the same element would turn pink. */
 .prod-card--favorite-berry .prod-card__identity {
   background: var(--favorite-berry);
 }
@@ -3287,14 +3288,17 @@ select:focus {
   background: var(--no-favorite);
 }
 
-/* Ink on a tinted zone: --muted and --down drop under AA on the green (3.1:1 and
-   2.8:1 on the main favorite) and --border disappears, so the zone lifts them:
-   muted 4.9:1 and down 4.6:1 at worst, and its hairlines use --divider. */
+/* Ink on a tinted zone: --border disappears on every tint, so hairlines use --divider.
+   The main favorite, the lightest tint, also drops --muted and --down under AA
+   (3.9:1 and 3.5:1), so it lifts them: muted 6.2:1 and down 5.8:1. */
 .prod-card--favorite-berry .prod-card__identity,
 .prod-card--no-favorite .prod-card__identity {
+  --border: var(--divider);
+}
+
+.prod-card--main-favorite .prod-card__identity {
   --muted: #c2cfd7;
   --down: #ffb4ad;
-  --border: var(--divider);
 }
 
 /* Annotation pinned to a metric: what the map does to THAT number
@@ -3326,8 +3330,9 @@ select:focus {
 }
 
 /* "Base" chip (state) and "Make base" button (action), at the right end of the name
-   row. Their colors are see-through mixes, so they hold on a berry-tinted identity
-   zone as well as on the plain surface. */
+   row. The chip is plain text, so the state never reads as a control; the button
+   has a solid fill a step above --surface-2, so a berry tint never shows through it
+   and it stands apart from the nature pill below. */
 .prod-card__base-tag {
   margin-left: auto;
   flex-shrink: 0;
@@ -3341,14 +3346,13 @@ select:focus {
 
 span.prod-card__base-tag {
   color: var(--text);
-  background: var(--accent-dim);
-  border: 1px solid var(--accent-border);
+  padding-right: 0;
 }
 
 button.prod-card__base-tag--action {
   color: var(--text);
-  background: color-mix(in srgb, var(--text) 6%, transparent);
-  border: 1px solid color-mix(in srgb, var(--text) 30%, transparent);
+  background: color-mix(in srgb, var(--surface-2), var(--text) 8%);
+  border: 1px solid var(--divider);
   cursor: pointer;
   transition:
     border-color 0.12s,
