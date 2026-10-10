@@ -884,7 +884,9 @@ select:focus {
 
 .nature-group__items {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  /* min(): a field narrower than one 170px column (the phone's two-column form)
+     gets one column of its own width instead of a column that sticks out. */
+  grid-template-columns: repeat(auto-fill, minmax(min(170px, 100%), 1fr));
   gap: 0.35rem;
 }
 
@@ -901,12 +903,16 @@ select:focus {
   font-size: var(--text-sm);
   cursor: pointer;
   text-align: left;
+  /* Shrinks with its column; a name that can't fit ellipsizes, the pill stays whole. */
+  min-width: 0;
 }
 
 .nature-option__name {
   font-weight: 600;
   min-width: 0;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* The nature's pill always pinned to the option's right. */
