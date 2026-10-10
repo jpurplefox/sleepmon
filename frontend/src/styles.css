@@ -3358,6 +3358,14 @@ select:focus {
   border-radius: var(--r-sm);
 }
 
+/* All-caps label: trim the descender space so the text centers in its box. */
+@supports (text-box: trim-both cap alphabetic) {
+  .prod-card__base-tag {
+    text-box: trim-both cap alphabetic;
+    padding-block: 0.25rem;
+  }
+}
+
 span.prod-card__base-tag {
   color: var(--text);
   padding-right: 0;
