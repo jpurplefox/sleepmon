@@ -795,6 +795,11 @@ select:focus {
   object-fit: contain;
 }
 
+/* Only the arrow carries the color: the neutral X is white like the stat icons. */
+.nature-pill__mark svg {
+  color: var(--text);
+}
+
 /* No nature yet: muted marks and blank icons, same footprint. */
 .nature-pill--empty .nature-pill__mark {
   color: var(--muted);

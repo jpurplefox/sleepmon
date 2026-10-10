@@ -429,7 +429,7 @@ states · where it lives. Feature one-offs are intentionally not here.
   card and the Box row (the same proportions — never a 2px border on a compact tile).
 - **`NaturePill`** (`.nature-pill`) — a nature as one `999px` pill: `▲` + the raised
   stat's icon (`--up`), `▼` + the lowered one's (`--down`), then the name after a
-  hairline divider. Neutral → a circled X on both sides; no nature → `--empty` (muted
+  hairline divider. Neutral → a white circled X on both sides (only the arrows carry color); no nature → `--empty` (muted
   marks, same footprint, so rows stay aligned). The name is omitted where it is shown
   elsewhere (a dropdown option, a tooltip). Fill is `--surface-2`, or `--surface` when
   it sits on `--surface-2` (`--pill-bg`). Used on the card, the Box row and
