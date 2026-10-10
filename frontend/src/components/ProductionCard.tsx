@@ -509,7 +509,7 @@ export function ProductionCard({
 
           <div className="prod-card__line">
             <Tooltip content={t("card.inventory")} className="tooltip--inline">
-              <IconBackpack /> {d.inventory}
+              <IconBackpack className="prod-card__icon--backpack" /> {d.inventory}
             </Tooltip>
             <FillTime fillHours={d.inventory_fill_hours} sessions={d.sleep_sessions} />
           </div>
