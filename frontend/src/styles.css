@@ -4429,6 +4429,12 @@ button.prod-card__base-tag--action {
   gap: 0.25rem;
 }
 
+/* In the plan summary the chips sit right, away from the moment label, under the
+   recipe's strength. */
+.teams-plan-row .cook-row__ings {
+  justify-content: flex-end;
+}
+
 .cook-ing-chip {
   display: inline-flex;
   align-items: center;
