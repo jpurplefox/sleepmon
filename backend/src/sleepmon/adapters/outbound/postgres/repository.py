@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
 from typing import TypeVar
 from uuid import UUID
@@ -19,6 +19,7 @@ from sleepmon.domain.auth import RefreshToken, User
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.errors import ValidationError
 from sleepmon.domain.ports import (
+    ImportQuotaRepository,
     PlayerProgressRepository,
     RefreshTokenRepository,
     SavedTeamRepository,
@@ -537,3 +538,16 @@ class PostgresSavedTeamRepository(SavedTeamRepository):
             cur.execute(queries.DELETE_SAVED_TEAM, (team_id, user_id))
             return cur.rowcount > 0
 
+
+class PostgresImportQuotaRepository(ImportQuotaRepository):
+    def __init__(self, pool: ConnectionPool) -> None:
+        self._pool = pool
+
+    def reserve(self, user_id: UUID, day: date, limit: int) -> bool:
+        with self._pool.connection() as conn, conn.cursor() as cur:
+            cur.execute(queries.RESERVE_IMPORT, (user_id, day, limit))
+            return cur.fetchone() is not None
+
+    def release(self, user_id: UUID, day: date) -> None:
+        with self._pool.connection() as conn, conn.cursor() as cur:
+            cur.execute(queries.RELEASE_IMPORT, (user_id, day))
