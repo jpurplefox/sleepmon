@@ -32,13 +32,6 @@ python3 scripts/icons.py       # regenerate stat/sub-skill icons into public/
 
 # Telemetry (ADR-0010) — all optional; empty = off
 #   backend:  SENTRY_DSN, SENTRY_ENVIRONMENT, SENTRY_TRACES_SAMPLE_RATE, SENTRY_RELEASE
-# Screenshot import (ADR-0011): two passes on Bedrock, BEDROCK_REGION (default us-east-1):
-#   SCREENSHOT_TRIAGE_MODEL and SCREENSHOT_MODEL (English; default Nova 2 Lite),
-#   SCREENSHOT_MODEL_OTHER_LANGUAGES (default qwen.qwen3-vl-235b-a22b),
-#   SCREENSHOT_DAILY_LIMIT (default 50). Reference data: backend/scripts/ingredient_sheet.py,
-#   backend/scripts/evolution_lines.py (regenerate after catalog changes).
-#   Auth: AWS_BEARER_TOKEN_BEDROCK (local dev) or AWS credentials / the Lambda role with
-#   bedrock:InvokeModel (prod); with neither, the endpoint answers 503
 #   frontend: VITE_SENTRY_DSN, VITE_SENTRY_ENVIRONMENT, VITE_SENTRY_TRACES_SAMPLE_RATE,
 #             VITE_POSTHOG_KEY, VITE_POSTHOG_HOST, VITE_RELEASE,
 #             VITE_CONTACT_EMAIL (privacy page + footer; empty = hidden)
