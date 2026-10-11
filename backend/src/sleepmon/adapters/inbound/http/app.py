@@ -9,14 +9,22 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, cast
 
+from anthropic import AnthropicBedrockMantle
 from litestar import Litestar, Request, Response
 from litestar.config.compression import CompressionConfig
 from litestar.config.cors import CORSConfig
 from litestar.datastructures import State
 from litestar.di import Provide
-from litestar.status_codes import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
+from litestar.status_codes import (
+    HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
+    HTTP_404_NOT_FOUND,
+    HTTP_422_UNPROCESSABLE_ENTITY,
+    HTTP_429_TOO_MANY_REQUESTS,
+    HTTP_503_SERVICE_UNAVAILABLE,
+)
 from psycopg.errors import ForeignKeyViolation
 from psycopg_pool import ConnectionPool
 
@@ -27,19 +35,25 @@ from sleepmon.adapters.inbound.http.controllers import (
     ProgressController,
     RecipeController,
     SavedTeamController,
+    ScreenshotImportController,
     TeamController,
     TeamProductionController,
 )
 from sleepmon.adapters.inbound.http.guards import current_user_id
 from sleepmon.adapters.inbound.http.observability import init_sentry
-from sleepmon.adapters.inbound.http.schemas import ErrorOut
+from sleepmon.adapters.inbound.http.schemas import ErrorOut, ImportLimitOut
 from sleepmon.adapters.outbound.auth.google_identity import GoogleIdentityProvider
 from sleepmon.adapters.outbound.auth.jwt_access_token import JwtAccessTokenService
 from sleepmon.adapters.outbound.auth.refresh_token import SecretsRefreshTokenCodec
+from sleepmon.adapters.outbound.bedrock.screenshot_reader import (
+    BedrockScreenshotReader,
+    MessagesClient,
+)
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.adapters.outbound.postgres.pool import create_pool
 from sleepmon.adapters.outbound.postgres.repository import (
+    PostgresImportQuotaRepository,
     PostgresPlayerProgressRepository,
     PostgresRefreshTokenRepository,
     PostgresSavedTeamRepository,
@@ -55,6 +69,11 @@ from sleepmon.application.saved_team_service import (
     DefaultSavedTeamService,
     SavedTeamService,
 )
+from sleepmon.application.screenshot_import_service import (
+    DefaultScreenshotImportService,
+    ScreenshotImportService,
+    UnavailableScreenshotImportService,
+)
 from sleepmon.application.services import (
     DefaultProductionService,
     DefaultTeamService,
@@ -64,7 +83,10 @@ from sleepmon.application.services import (
 from sleepmon.config import Settings
 from sleepmon.domain.auth import InvalidCredentialError, InvalidRefreshError, InvalidTokenError
 from sleepmon.domain.errors import (
+    DailyImportLimitError,
+    PokemonNotRecognizedError,
     SavedTeamNotFoundError,
+    ScreenshotReaderUnavailableError,
     TeamMemberNotFoundError,
     ValidationError,
 )
@@ -100,6 +122,30 @@ def _stale_user_handler(_: Request[Any, Any, Any], __: ForeignKeyViolation) -> R
     return Response(ErrorOut(detail="session no longer valid"), status_code=HTTP_401_UNAUTHORIZED)
 
 
+def _not_recognized_handler(
+    _: Request[Any, Any, Any], exc: PokemonNotRecognizedError
+) -> Response[ErrorOut]:
+    return Response(ErrorOut(detail=str(exc)), status_code=HTTP_422_UNPROCESSABLE_ENTITY)
+
+
+def _import_limit_handler(
+    _: Request[Any, Any, Any], exc: DailyImportLimitError
+) -> Response[ImportLimitOut]:
+    return Response(
+        ImportLimitOut(detail="Daily import limit reached.", resets_at=exc.resets_at.isoformat()),
+        status_code=HTTP_429_TOO_MANY_REQUESTS,
+    )
+
+
+def _reader_unavailable_handler(
+    _: Request[Any, Any, Any], __: ScreenshotReaderUnavailableError
+) -> Response[ErrorOut]:
+    return Response(
+        ErrorOut(detail="Screenshot reading is unavailable."),
+        status_code=HTTP_503_SERVICE_UNAVAILABLE,
+    )
+
+
 def create_app(
     *,
     service: TeamService | None = None,
@@ -111,6 +157,7 @@ def create_app(
     auth_service: AuthService | None = None,
     progress_service: PlayerProgressService | None = None,
     saved_team_service: SavedTeamService | None = None,
+    screenshot_import_service: ScreenshotImportService | None = None,
 ) -> Litestar:
     # ``object`` y no ``Any``: el valor de retorno de los hooks se descarta, pero
     # ``Any`` apagaría el chequeo de tipos sobre el cuerpo de cada callback.
@@ -208,6 +255,28 @@ def create_app(
             clock=lambda: datetime.now(UTC),
         )
 
+    if screenshot_import_service is None:
+        if pool is not None:
+            settings = settings or Settings.from_env()
+            bedrock = AnthropicBedrockMantle(
+                aws_region=settings.bedrock_region, timeout=45.0, max_retries=1
+            )
+            screenshot_import_service = DefaultScreenshotImportService(
+                BedrockScreenshotReader(
+                    # The SDK's typed ``create`` is narrower than the adapter's protocol.
+                    cast(MessagesClient, bedrock),
+                    settings.screenshot_model,
+                    catalog,
+                ),
+                PostgresImportQuotaRepository(pool),
+                catalog,
+                clock=lambda: datetime.now(UTC),
+                daily_limit=settings.screenshot_daily_limit,
+            )
+        else:
+            # Every test-injection path: no pool, so no real reader.
+            screenshot_import_service = UnavailableScreenshotImportService()
+
     # Singletons inyectados por DI (sync_to_thread=False: solo devuelven la instancia).
     bound_service = service
     bound_production_service = production_service
@@ -215,6 +284,7 @@ def create_app(
     bound_auth_service = auth_service
     bound_progress_service = progress_service
     bound_saved_team_service = saved_team_service
+    bound_screenshot_import = screenshot_import_service
 
     cookie_secure = settings.cookie_secure if settings is not None else True
     cookie_samesite = settings.cookie_samesite if settings is not None else "strict"
@@ -237,6 +307,7 @@ def create_app(
             AuthController,
             ProgressController,
             SavedTeamController,
+            ScreenshotImportController,
         ],
         state=State(
             {
@@ -256,6 +327,7 @@ def create_app(
             "auth_service": Provide(lambda: bound_auth_service, sync_to_thread=False),
             "progress": Provide(lambda: bound_progress_service, sync_to_thread=False),
             "saved_teams": Provide(lambda: bound_saved_team_service, sync_to_thread=False),
+            "screenshot_import": Provide(lambda: bound_screenshot_import, sync_to_thread=False),
         },
         exception_handlers={
             ValidationError: _validation_handler,
@@ -264,6 +336,9 @@ def create_app(
             InvalidCredentialError: _unauthorized_handler,
             InvalidTokenError: _unauthorized_handler,
             InvalidRefreshError: _unauthorized_handler,
+            PokemonNotRecognizedError: _not_recognized_handler,
+            DailyImportLimitError: _import_limit_handler,
+            ScreenshotReaderUnavailableError: _reader_unavailable_handler,
             ForeignKeyViolation: _stale_user_handler,
         },
         cors_config=CORSConfig(

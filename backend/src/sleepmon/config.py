@@ -56,6 +56,10 @@ class Settings:
     # Connections each process keeps open. A Lambda instance serves one request at a
     # time, so the Lambda entry point lowers it to 1 (connections = instances).
     db_pool_size: int = 4
+    # Screenshot import (PRD 0019, ADR 0011).
+    screenshot_model: str = "anthropic.claude-opus-5-5"
+    bedrock_region: str = "sa-east-1"
+    screenshot_daily_limit: int = 50
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -78,4 +82,9 @@ class Settings:
                 os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0")
             ),
             sentry_release=os.environ.get("SENTRY_RELEASE") or None,
+            screenshot_model=os.environ.get("SCREENSHOT_MODEL", "anthropic.claude-opus-5-5"),
+            bedrock_region=(
+                os.environ.get("BEDROCK_REGION") or os.environ.get("AWS_REGION") or "sa-east-1"
+            ),
+            screenshot_daily_limit=int(os.environ.get("SCREENSHOT_DAILY_LIMIT", "50")),
         )

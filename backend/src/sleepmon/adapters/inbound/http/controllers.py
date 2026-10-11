@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+import binascii
 from uuid import UUID
 
 from litestar import Controller, delete, get, patch, post, put
@@ -38,6 +40,9 @@ from sleepmon.adapters.inbound.http.schemas import (
     SavedTeamIn,
     SavedTeamOut,
     SavedTeamRenameIn,
+    ScreenshotImportIn,
+    ScreenshotImportOut,
+    ScreenshotIn,
     SkillEffectAggOut,
     SleepIn,
     SleepOut,
@@ -67,6 +72,7 @@ from sleepmon.application.dto import (
 )
 from sleepmon.application.progress_service import PlayerProgressService
 from sleepmon.application.saved_team_service import SavedTeamService
+from sleepmon.application.screenshot_import_service import ScreenshotImportService
 from sleepmon.application.services import ProductionService, TeamService
 from sleepmon.domain.catalog_data import (
     EXPERT_SPEED_FACTORS,
@@ -81,9 +87,11 @@ from sleepmon.domain.catalog_data import (
     SUB_SKILL_TIERS,
 )
 from sleepmon.domain.entities import TeamMember
+from sleepmon.domain.errors import ValidationError
 from sleepmon.domain.ports import SpeciesCatalog
 from sleepmon.domain.progress import PlayerProgress
 from sleepmon.domain.saved_team import SavedTeam
+from sleepmon.domain.screenshot_import import ImportedConfig, ImportField, Screenshot
 from sleepmon.domain.value_objects import Ingredient, Island, Nature, SubSkill
 from sleepmon.domain.versatile import VERSATILE_SKILLS
 
@@ -702,3 +710,40 @@ class SavedTeamController(Controller):
         team_id: FromPath[UUID],
     ) -> None:
         saved_teams.delete(current_user_id, team_id)
+
+
+class ScreenshotImportController(Controller):
+    path = "/screenshot-import"
+    guards = [require_user]
+
+    @post("/", status_code=HTTP_200_OK, sync_to_thread=True)
+    def read_screenshots(
+        self,
+        screenshot_import: NamedDependency[ScreenshotImportService],
+        current_user_id: NamedDependency[UUID],
+        data: ScreenshotImportIn,
+    ) -> ScreenshotImportOut:
+        images = [_screenshot(image) for image in data.images]
+        return _to_import_out(screenshot_import.read(current_user_id, images))
+
+
+def _screenshot(image: ScreenshotIn) -> Screenshot:
+    try:
+        raw = base64.b64decode(image.data, validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise ValidationError("Una de las imágenes no se pudo leer.") from exc
+    return Screenshot(media_type=image.media_type, data=raw)
+
+
+def _to_import_out(cfg: ImportedConfig) -> ScreenshotImportOut:
+    return ScreenshotImportOut(
+        species=cfg.species,
+        level=cfg.level,
+        nature=cfg.nature.value if cfg.nature else None,
+        ingredients=[i.value if i else None for i in cfg.ingredients],
+        sub_skills=[s.value for s in cfg.sub_skills],
+        skill_level=cfg.skill_level,
+        ribbon=cfg.ribbon.value if cfg.ribbon is not None else None,
+        versatile_skill=cfg.versatile_skill,
+        unread=[f.value for f in ImportField if f in cfg.unread],
+    )
