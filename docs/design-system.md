@@ -527,8 +527,9 @@ states · where it lives. Feature one-offs are intentionally not here.
   uploads for one job (first use: the screenshot import, PRD 0019): a row of **3**
   portrait tiles (`gap 0.6rem`), each **88px** wide at `aspect-ratio 9/16`, `--r-md`,
   the image `object-fit: cover` on `--surface-2`. An **empty** tile is the add control
-  itself: a `<button>` with a `1px dashed --border` outline and a `--muted` `+` that opens
-  the file picker (on desktop the row also takes dropped files) — there is no separate
+  itself: a `<button>` with a `1px dashed --muted` outline (a control, so 3:1 against the
+  modal's `--surface` — `--border` vanishes there) and a `--muted` `+` that opens the file
+  picker; the remaining empty slots are inert `--divider` dashed placeholders (on desktop the row also takes dropped files) — there is no separate
   drop zone, and with every tile filled there is no add control. A filled tile carries a
   20px round **remove** badge at its top-right (`--overlay` fill, 10px `IconClose` in
   `--text`). **Invalid**: a `2px --error` outline inset on the tile, the reason in the
