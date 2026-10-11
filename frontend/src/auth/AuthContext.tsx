@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { __setRefreshHandler } from "../api/client";
 import { postGoogle, postLogout, postRefresh, type AuthUser } from "./authApi";
+import { forgetImportLimit } from "../components/ImportDialog";
 import { sessionHint, tokenStore } from "./tokenStore";
 
 type Status = "checking" | "anonymous" | "authenticated";
@@ -21,6 +22,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // session" (anonymous) — avoids a flash of signed-out UI on load while the
   // initial postRefresh() below is still in flight.
   const [status, setStatus] = useState<Status>("checking");
+
+  // A remembered import cap belongs to one account, not to the tab.
+  useEffect(() => forgetImportLimit, [user?.id]);
 
   useEffect(() => {
     // Silent-renewal handler used by the api client on 401.

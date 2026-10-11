@@ -53,6 +53,16 @@ def test_the_cap_refuses_without_calling_the_model() -> None:
     assert reader.calls == 0
 
 
+def test_a_zero_cap_refuses_every_read() -> None:
+    quota = InMemoryImportQuota()
+    reader = FakeScreenshotReader(PIKACHU)
+    with pytest.raises(DailyImportLimitError) as exc:
+        service(reader, quota, limit=0).read(USER, IMAGES)
+    assert exc.value.resets_at == datetime(2026, 10, 12, tzinfo=UTC)
+    assert reader.calls == 0
+    assert quota.counts == {}
+
+
 def test_an_unavailable_model_gives_the_read_back() -> None:
     quota = InMemoryImportQuota()
     reader = FakeScreenshotReader(error=ScreenshotReaderUnavailableError("down"))

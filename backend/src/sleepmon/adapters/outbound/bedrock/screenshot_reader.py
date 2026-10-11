@@ -12,7 +12,7 @@ from collections.abc import Sequence
 from typing import Any, Protocol
 
 import anthropic
-from botocore.exceptions import BotoCoreError
+from botocore.exceptions import BotoCoreError, ClientError
 
 from sleepmon.domain.errors import ScreenshotReaderUnavailableError
 from sleepmon.domain.ports import ScreenshotReader, SpeciesCatalog
@@ -115,9 +115,10 @@ class BedrockScreenshotReader(ScreenshotReader):
                 tool_choice={"type": "auto"},
                 messages=[{"role": "user", "content": _content(images)}],
             )
-        except (anthropic.APIError, BotoCoreError, RuntimeError) as exc:
-            # Never log the images; the error type is enough.
-            log.warning("Screenshot reading failed: %s", type(exc).__name__)
+        except (anthropic.APIError, BotoCoreError, ClientError, RuntimeError) as exc:
+            # Never log the request or images; the error type and HTTP status are enough.
+            status = getattr(exc, "status_code", None)
+            log.warning("Screenshot reading failed: %s (status %s)", type(exc).__name__, status)
             raise ScreenshotReaderUnavailableError(str(exc)) from exc
         return _parse(response)
 

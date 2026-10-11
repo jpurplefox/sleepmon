@@ -44,6 +44,9 @@ class DefaultScreenshotImportService(ScreenshotImportService):
     def read(self, user_id: UUID, images: Sequence[Screenshot]) -> ImportedConfig:
         validate_screenshots(images)
         now = self._clock()
+        if self._limit <= 0:
+            # The quota upsert lets the first read through, so a zero cap is checked here.
+            raise DailyImportLimitError(next_reset(now))
         day = now.astimezone(UTC).date()
         if not self._quota.reserve(user_id, day, self._limit):
             raise DailyImportLimitError(next_reset(now))

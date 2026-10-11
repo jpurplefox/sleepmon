@@ -8,7 +8,7 @@ from typing import Any
 import anthropic
 import httpx2
 import pytest
-from botocore.exceptions import NoCredentialsError
+from botocore.exceptions import ClientError, NoCredentialsError
 
 from sleepmon.adapters.outbound.bedrock.screenshot_reader import BedrockScreenshotReader
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
@@ -101,6 +101,7 @@ def test_no_tool_call_or_a_refusal_reads_nothing() -> None:
     [
         anthropic.APIConnectionError(request=httpx2.Request("POST", "https://x")),
         NoCredentialsError(),
+        ClientError({"Error": {"Code": "ExpiredToken", "Message": "x"}}, "CreateInference"),
         RuntimeError("Could not resolve AWS credentials from session"),
     ],
 )

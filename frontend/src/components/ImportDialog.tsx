@@ -12,7 +12,16 @@ import { ShotSlots } from "./ShotSlots";
 // The daily-cap reset time, remembered for the session so a reopened dialog skips the round trip.
 let knownResetAt: string | null = null;
 
-function futureReset(): string | null {
+/** Drops the remembered reset time (the signed-in account changed). */
+export function forgetImportLimit(): void {
+  knownResetAt = null;
+}
+
+export function rememberImportLimit(resetsAt: string | null): void {
+  knownResetAt = resetsAt;
+}
+
+export function futureReset(): string | null {
   return knownResetAt && new Date(knownResetAt).getTime() > Date.now() ? knownResetAt : null;
 }
 
@@ -83,8 +92,9 @@ export function ImportDialog({ catalog, onClose, onImported }: Props) {
       const status = err instanceof ApiError ? err.status : 0;
       if (status === 429) {
         const body = (err as ApiError).body as { resets_at?: string } | null;
-        knownResetAt = body?.resets_at ?? null;
-        setResetsAt(knownResetAt);
+        const resets = body?.resets_at ?? null;
+        rememberImportLimit(resets);
+        setResetsAt(resets);
         setPhase("limit");
         track({ name: "screenshots_read", props: { result: "limit_reached", images: files.length, unread_fields: 0 } });
         return;
