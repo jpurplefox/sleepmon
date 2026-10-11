@@ -74,6 +74,12 @@ event. Property values are closed sets (listed here) or numbers.
 Opening a saved team does **not** emit `pokemon_added` for its members — that is
 `team_opened`.
 
+**Screenshot import** ([0019](0019-screenshot-import.md))
+
+| Event | When | Properties |
+|---|---|---|
+| `screenshots_read` | An import finishes or is refused. | `result`: `full` / `partial` / `not_recognized` / `limit_reached` / `failed`; `images` (1–3); `unread_fields` (number, for `partial`) |
+
 **The Box**
 
 | Event | When | Properties |
@@ -108,7 +114,7 @@ Opening a saved team does **not** emit `pokemon_added` for its members — that 
 
 | Event | When | Properties |
 |---|---|---|
-| `sign_in_prompted` | The sign-in prompt appears. | `reason`: `page_gate` (Box or Teams signed out) / `my_pokemon` / `save_to_box` |
+| `sign_in_prompted` | The sign-in prompt appears. | `reason`: `page_gate` (Box or Teams signed out) / `my_pokemon` / `save_to_box` / `import_screenshots` |
 | `sign_in_completed` | Sign-in succeeds. | `reason`: the prompt's reason, or `app_bar` when started from the menu |
 | `sign_in_abandoned` | The sign-in dialog is closed without signing in. | `reason` |
 | `sign_in_failed` | Google sign-in fails. | — |
