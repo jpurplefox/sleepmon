@@ -16,6 +16,7 @@ dependencies = [
     "google-auth[requests]>=2.34",
     "yoyo-migrations>=8.2",
     "sentry-sdk[litestar]>=2.20",
+    "anthropic[bedrock]>=1.13",
 ]
 
 [project.optional-dependencies]
@@ -67,4 +68,9 @@ mypy_path = "src"
 [[tool.mypy.overrides]]
 # yoyo-migrations ships no stubs or py.typed marker.
 module = "yoyo.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# botocore ships no stubs or py.typed marker.
+module = "botocore.*"
 ignore_missing_imports = true
