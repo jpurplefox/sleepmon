@@ -2,23 +2,26 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import replace
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
 from sleepmon.domain.auth import ExternalIdentity, RefreshToken, User
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.ports import (
     IdentityProvider,
+    ImportQuotaRepository,
     PlayerProgressRepository,
     RefreshTokenRepository,
     SavedTeamRepository,
+    ScreenshotReader,
     TeamRepository,
     UserRepository,
 )
 from sleepmon.domain.progress import PlayerProgress
 from sleepmon.domain.saved_team import SavedTeam
+from sleepmon.domain.screenshot_import import Screenshot, ScreenshotReading
 
 
 class InMemoryTeamRepository(TeamRepository):
@@ -176,3 +179,37 @@ class InMemorySavedTeamRepository(SavedTeamRepository):
             return False
         del self._teams[team_id]
         return True
+
+
+class FakeScreenshotReader(ScreenshotReader):
+    """Returns a canned reading, or raises the given error."""
+
+    def __init__(
+        self, reading: ScreenshotReading | None = None, error: Exception | None = None
+    ) -> None:
+        self._reading = reading or ScreenshotReading()
+        self._error = error
+        self.calls = 0
+
+    def read(self, images: Sequence[Screenshot]) -> ScreenshotReading:
+        self.calls += 1
+        if self._error is not None:
+            raise self._error
+        return self._reading
+
+
+class InMemoryImportQuota(ImportQuotaRepository):
+    def __init__(self) -> None:
+        self.counts: dict[tuple[UUID, date], int] = {}
+
+    def reserve(self, user_id: UUID, day: date, limit: int) -> bool:
+        current = self.counts.get((user_id, day), 0)
+        if current >= limit:
+            return False
+        self.counts[(user_id, day)] = current + 1
+        return True
+
+    def release(self, user_id: UUID, day: date) -> None:
+        key = (user_id, day)
+        if self.counts.get(key, 0) > 0:
+            self.counts[key] -= 1
