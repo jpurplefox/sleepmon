@@ -68,6 +68,16 @@ def test_system_prompt_uses_the_real_sub_skill_unlock_levels() -> None:
     assert "10, 25, 50, 70 and 80" in messages.kwargs["system"][0]["text"]
 
 
+def test_system_prompt_derives_the_ribbon_from_sleeping_time_shared() -> None:
+    messages = FakeMessages(tool_response({}))
+    reader(messages).read(IMAGES)
+    prompt = messages.kwargs["system"][0]["text"]
+    assert "Sleeping Time Shared" in prompt
+    # Every ribbon value the schema allows is named in the threshold rule.
+    for value in ('"200h"', '"500h"', '"1000h"', '"2000h"'):
+        assert value in prompt
+
+
 def test_parses_a_full_tool_call() -> None:
     payload = {
         "species": "Pikachu", "level": 25, "nature": "Jolly",

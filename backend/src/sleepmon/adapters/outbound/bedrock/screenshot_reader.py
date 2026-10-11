@@ -42,7 +42,10 @@ and 60). A slot shown locked, as "?", or not visible is null.
 levels 10, 25, 50, 70 and 80), including locked ones. Use null if no screenshot shows \
 the sub skills.
 - skill_level is the main skill's level ("Lv. N" next to the main skill).
-- ribbon is "" only when the ribbon area is visible and empty; null when it isn't shown.
+- ribbon comes from "Sleeping Time Shared" (or its translation), shown in hours: pick \
+the closest threshold at or below it — under 200 hrs is "", then "200h", "500h", \
+"1000h", "2000h" (e.g. 1521 hrs 17 mins is "1000h"). Use null only if neither the \
+ribbon nor the sleeping time is visible.
 - versatile_skill is only for Mew: the skill currently shown for its Versatile main skill.
 - If no screenshot shows a Pokémon Sleep Pokémon, call the tool with species null.
 """
