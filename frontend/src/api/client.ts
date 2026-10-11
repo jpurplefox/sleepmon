@@ -8,6 +8,8 @@ import type {
   ProgressPatch,
   Recipe,
   SavedTeam,
+  ScreenshotImport,
+  ShotPayload,
   SavedTeamInput,
   TeamProduction,
   TeamProductionInput,
@@ -45,6 +47,13 @@ function authedInit(init?: RequestInit): RequestInit {
   };
 }
 
+export class ApiError extends Error {
+  constructor(message: string, readonly status: number, readonly body: unknown) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit, retry = true): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, authedInit(init));
   if (res.status === 401 && retry) {
@@ -52,13 +61,15 @@ async function request<T>(path: string, init?: RequestInit, retry = true): Promi
   }
   if (!res.ok) {
     let detail = `Error ${res.status}`;
+    let body: unknown = null;
     try {
-      const body = await res.json();
-      if (body?.detail) detail = body.detail;
+      body = await res.json();
+      const d = (body as { detail?: unknown } | null)?.detail;
+      if (d) detail = String(d);
     } catch {
       // respuesta sin cuerpo JSON
     }
-    throw new Error(detail);
+    throw new ApiError(detail, res.status, body);
   }
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
@@ -103,4 +114,6 @@ export const api = {
     request<SavedTeam>(`/saved-teams/${id}`, { method: "PATCH", body: JSON.stringify({ name }) }),
   deleteSavedTeam: (id: string) => request<void>(`/saved-teams/${id}`, { method: "DELETE" }),
   deleteAccount: () => request<void>("/auth/account", { method: "DELETE" }),
+  importScreenshots: (images: ShotPayload[]) =>
+    request<ScreenshotImport>("/screenshot-import", { method: "POST", body: JSON.stringify({ images }) }),
 };

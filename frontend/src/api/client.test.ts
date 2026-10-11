@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { api, __setRefreshHandler } from "./client";
+import { api, ApiError, __setRefreshHandler } from "./client";
 import { tokenStore } from "../auth/tokenStore";
 
 afterEach(() => { tokenStore.clear(); vi.restoreAllMocks(); localStorage.clear(); });
@@ -34,5 +34,21 @@ describe("api client auth", () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse({ detail: "unauthorized" }, 401));
     __setRefreshHandler(async () => false);
     await expect(api.listMembers()).rejects.toThrow();
+  });
+});
+
+describe("api client errors", () => {
+  it("throws an ApiError carrying the status and body", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      jsonResponse({ detail: "Daily import limit reached.", resets_at: "2026-10-12T00:00:00+00:00" }, 429),
+    );
+    const err = await api.importScreenshots([]).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ApiError);
+    expect(err).toBeInstanceOf(Error);
+    expect(err).toMatchObject({
+      status: 429,
+      message: "Daily import limit reached.",
+      body: { resets_at: "2026-10-12T00:00:00+00:00" },
+    });
   });
 });

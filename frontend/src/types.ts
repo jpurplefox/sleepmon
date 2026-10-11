@@ -480,3 +480,29 @@ export interface SavedTeam extends SavedTeamInput {
 }
 
 export type DishType = Recipe["type"];
+
+// Screenshot import (PRD 0019): the backend reading of 1-3 screenshots.
+export type ImportField = "nature" | "level" | "ingredients" | "sub_skills" | "skill_level" | "ribbon";
+
+export interface ShotPayload {
+  media_type: "image/jpeg" | "image/png" | "image/webp";
+  data: string;
+}
+
+export interface ScreenshotImport {
+  species: string;
+  level: number | null;
+  nature: string | null;
+  ingredients: (string | null)[];
+  sub_skills: string[];
+  skill_level: number | null;
+  ribbon: string | null;
+  versatile_skill: string | null;
+  unread: ImportField[];
+}
+
+export interface ImportedForm {
+  values: MemberInput;
+  unread: ImportField[];
+  images: number;
+}
