@@ -3,9 +3,9 @@
 import type { Lang } from "../i18n";
 
 export type Tool = "compare" | "team_analysis" | "box" | "teams";
-export type AddSource = "new" | "box" | "box_compare" | "clone";
+export type AddSource = "new" | "box" | "box_compare" | "clone" | "screenshots";
 export type BoxOrigin = "box" | "compare" | "team_analysis" | "team_save";
-export type SignInReason = "page_gate" | "my_pokemon" | "save_to_box";
+export type SignInReason = "page_gate" | "my_pokemon" | "save_to_box" | "import_screenshots";
 export type ProfileSection = "kitchen" | "recipes" | "areas" | "sleep";
 export type BoxFilter = "type" | "ingredient" | "skill" | "specialty";
 export type TeamsFilter = "map" | "dish_type" | "pokemon";
@@ -28,9 +28,9 @@ export type AnalyticsEvent =
   | { name: "pokemon_added"; props: { tool: "compare"; source: AddSource; species: string } }
   | {
       name: "pokemon_added";
-      props: { tool: "team_analysis"; source: "new" | "box"; slot: "single" | "split"; species: string };
+      props: { tool: "team_analysis"; source: "new" | "box" | "screenshots"; slot: "single" | "split"; species: string };
     }
-  | { name: "box_pokemon_saved"; props: { origin: BoxOrigin; action: "create" | "update"; species: string } }
+  | { name: "box_pokemon_saved"; props: { origin: BoxOrigin; action: "create" | "update"; species: string; from_screenshots?: boolean } }
   | { name: "box_pokemon_deleted"; props: { teams_affected: number } }
   | { name: "list_filtered"; props: { list: "box"; filter: BoxFilter } | { list: "teams"; filter: TeamsFilter } }
   | { name: "list_sorted"; props: { list: "box"; key: BoxSortKey; direction: "asc" | "desc" } }
@@ -52,7 +52,15 @@ export type AnalyticsEvent =
   | { name: "signed_out"; props: NoProps }
   | { name: "account_deleted"; props: { box_size: number; saved_teams: number } }
   | { name: "species_missing"; props: { species: string; tool: "compare" | "team_analysis" } }
-  | { name: "compare_limit_reached"; props: NoProps };
+  | { name: "compare_limit_reached"; props: NoProps }
+  | {
+      name: "screenshots_read";
+      props: {
+        result: "full" | "partial" | "not_recognized" | "limit_reached" | "failed";
+        images: number;
+        unread_fields: number;
+      };
+    };
 
 /**
  * Every catalogue name at runtime, for PostHog's `before_send` allowlist.
@@ -85,4 +93,5 @@ export const EVENT_NAMES = [
   "account_deleted",
   "species_missing",
   "compare_limit_reached",
+  "screenshots_read",
 ] as const satisfies readonly AnalyticsEvent["name"][];
