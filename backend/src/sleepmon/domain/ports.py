@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
 from sleepmon.domain.auth import ExternalIdentity, RefreshToken, User
@@ -16,6 +16,7 @@ from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.progress import PlayerProgress
 from sleepmon.domain.recipes import Recipe
 from sleepmon.domain.saved_team import SavedTeam
+from sleepmon.domain.screenshot_import import Screenshot, ScreenshotReading
 from sleepmon.domain.species import Species
 
 
@@ -170,3 +171,23 @@ class RefreshTokenRepository(ABC):
     @abstractmethod
     def delete_expired(self, now: datetime) -> int:
         """Borra los tokens vencidos a partir de ``now``. Devuelve cuántos borró."""
+
+
+class ScreenshotReader(ABC):
+    """Reads game screenshots into a raw, untrusted reading."""
+
+    @abstractmethod
+    def read(self, images: Sequence[Screenshot]) -> ScreenshotReading:
+        """Raises ``ScreenshotReaderUnavailableError`` when the model can't be reached."""
+
+
+class ImportQuotaRepository(ABC):
+    """Per-user, per-day count of screenshot reads."""
+
+    @abstractmethod
+    def reserve(self, user_id: UUID, day: date, limit: int) -> bool:
+        """Count one read for ``day`` unless ``limit`` is reached; False when it is."""
+
+    @abstractmethod
+    def release(self, user_id: UUID, day: date) -> None:
+        """Undo one reservation (the read never got an answer)."""

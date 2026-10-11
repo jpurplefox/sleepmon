@@ -52,10 +52,12 @@ offers:
 - **New** — an ad-hoc configuration built with the [Pokémon
   form](0003-pokemon-form.md), the same form the Box and Comparison use. It is
   saved nowhere until you ask.
+- **From screenshots** — the same form, opened pre-filled from game screenshots
+  ([Screenshot import](0019-screenshot-import.md)).
 - **My Pokémon** — a configuration **copied** from the Box through the [Box
   picker](0004-box-picker.md). Copied, not linked: the team holds its own copy, so the
   Box entry is unaffected by what you do here.
-- **Either way fills either half** — a new slot, or the second half of a **split**
+- **Any of them fills either half** — a new slot, or the second half of a **split**
   slot.
 - The roster is **session state**: it survives moving to another tool and back, but
   neither the composition nor the Pokémon created in it survive a reload. What deserves to last is saved to the Box, and the whole

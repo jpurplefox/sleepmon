@@ -16,6 +16,7 @@ dependencies = [
     "google-auth[requests]>=2.34",
     "yoyo-migrations>=8.2",
     "sentry-sdk[litestar]>=2.20",
+    "anthropic[bedrock]>=1.13",
 ]
 
 [project.optional-dependencies]
@@ -39,6 +40,8 @@ where = ["src"]
 [tool.setuptools.package-data]
 # setuptools ships only .py by default; without this the wheel has no migrations.
 "sleepmon.adapters.outbound.postgres" = ["migrations/*.sql"]
+# The reference sheets and evolution lines the screenshot reader sends to the model.
+"sleepmon.adapters.outbound.bedrock" = ["*.png", "*.json", "lines/*.webp"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -67,4 +70,9 @@ mypy_path = "src"
 [[tool.mypy.overrides]]
 # yoyo-migrations ships no stubs or py.typed marker.
 module = "yoyo.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# boto3/botocore ship no stubs or py.typed marker.
+module = ["botocore.*", "boto3.*"]
 ignore_missing_imports = true

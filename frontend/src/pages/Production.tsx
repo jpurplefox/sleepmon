@@ -22,6 +22,7 @@ import type { AddSource } from "../telemetry/events";
 import { mapSetEvent } from "../telemetry/props";
 import type { Member, MemberInput } from "../types";
 import { useSaveToBox } from "../useSaveToBox";
+import { useScreenshotImport } from "../useScreenshotImport";
 import { useStickyData } from "../useStickyData";
 import { useProgress } from "../useProgress";
 
@@ -59,6 +60,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   const island = catalog.data?.islands.find((i) => i.name === map.island && i.expert) ?? null;
   const expert = island !== null;
   const mapFields = mapRequestFields(map, expert);
+  const shots = useScreenshotImport(catalog.data);
   const berryOf = (species: string) => catalog.data?.species.find((s) => s.name === species)?.berry ?? "";
   const [modal, setModal] = useState<"form" | "box" | null>(null);
   // Whether the open add/edit form holds unsaved input: leaving it then asks first.
@@ -125,6 +127,14 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
       return next;
     });
 
+  // An import arrived: open the add form pre-filled with it.
+  useEffect(() => {
+    if (shots.imported) {
+      setEditIndex(null);
+      setModal("form");
+    }
+  }, [shots.imported]);
+
   // A card landed in the comparison: record where it came from, and the limit.
   const recordAdded = (source: AddSource, species: string, countBefore: number) => {
     if (countBefore >= MAX_COMPARE) return;
@@ -139,7 +149,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
     // (saved or errored) would otherwise survive describing a config that
     // was never submitted.
     if (editIndex !== null) reset(entries[editIndex].id);
-    if (editIndex === null) recordAdded("new", config.species, entries.length);
+    if (editIndex === null) recordAdded(shots.imported ? "screenshots" : "new", config.species, entries.length);
     setEntries((prev) =>
       editIndex === null
         ? prev.length >= MAX_COMPARE
@@ -149,6 +159,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
     );
     setModal(null);
     setEditIndex(null);
+    shots.clear();
   };
 
   // Duplica una card como una variante nueva: el clon NO hereda el origen.
@@ -318,6 +329,9 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
                     <button type="button" className="btn btn--primary" onClick={() => openAdd("form")}>
                       {t("prod.new")}
                     </button>
+                    <button type="button" className="btn btn--ghost" onClick={shots.start}>
+                      {t("import.button")}
+                    </button>
                     <button
                       type="button"
                       className="btn btn--ghost"
@@ -339,6 +353,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
           onClose={() => {
             setModal(null);
             setEditIndex(null);
+            shots.clear();
           }}
           dirty={formDirty}
         >
@@ -349,6 +364,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
             error={null}
             submitLabel={editIndex !== null ? t("prod.save") : t("prod.addToComparison")}
             initial={editIndex !== null ? entries[editIndex].config : undefined}
+            imported={editIndex === null ? (shots.imported ?? undefined) : undefined}
             onSubmit={upsert}
             footer={
               editIndex === null ? (
@@ -362,6 +378,8 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
           />
         </Modal>
       )}
+
+      {shots.dialog}
 
       {modal === "box" && (
         <Modal

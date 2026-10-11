@@ -467,3 +467,29 @@ class SavedTeamOut(msgspec.Struct):
     dish_type: str | None
     meals: list[str | None]
     saved_at: datetime
+
+
+class ScreenshotIn(msgspec.Struct, forbid_unknown_fields=True):
+    media_type: str
+    data: str  # base64
+
+
+class ScreenshotImportIn(msgspec.Struct, forbid_unknown_fields=True):
+    images: list[ScreenshotIn]
+
+
+class ScreenshotImportOut(msgspec.Struct):
+    species: str
+    level: int | None
+    nature: str | None
+    ingredients: list[str | None]
+    sub_skills: list[str]
+    skill_level: int | None
+    ribbon: str | None
+    versatile_skill: str | None
+    unread: list[str]
+
+
+class ImportLimitOut(msgspec.Struct):
+    detail: str
+    resets_at: str

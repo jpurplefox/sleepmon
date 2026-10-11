@@ -330,3 +330,26 @@ DELETE_SAVED_TEAM = (
     .delete()
     .get_sql()
 )
+
+import_usage = Table("screenshot_import_usage")
+
+# Counts one read unless the day's count already reached the limit (the WHERE on the
+# conflict branch): no row comes back then, and the caller refuses the read.
+RESERVE_IMPORT = (
+    cast(
+        PostgreSQLQueryBuilder,
+        PostgreSQLQuery.into(import_usage).columns("user_id", "day", "reads").insert(_P, _P, 1),
+    )
+    .on_conflict(import_usage.user_id, import_usage.day)
+    .do_update(import_usage.reads, import_usage.reads + 1)
+    .where(import_usage.reads < _P)
+    .returning(import_usage.reads)
+    .get_sql()
+)
+
+RELEASE_IMPORT = (
+    Query.update(import_usage)
+    .set(import_usage.reads, import_usage.reads - 1)
+    .where((import_usage.user_id == _P) & (import_usage.day == _P) & (import_usage.reads > 0))
+    .get_sql()
+)

@@ -308,6 +308,8 @@ select:focus {
 .level-stepper__btn:focus-visible,
 .stepper__btn:focus-visible,
 .modal-close:focus-visible,
+.shot__x:focus-visible,
+button.shot--empty:focus-visible,
 .level-chip:focus-visible,
 .btn:focus-visible,
 .tab:focus-visible,
@@ -6210,6 +6212,16 @@ button.prod-card__base-tag--action {
   margin-top: 0;
 }
 
+.tool-head__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tool-head__actions .btn {
+  margin-top: 0;
+}
+
 .tool-head > .error {
   margin: 0.75rem 0 0;
 }
@@ -7010,3 +7022,46 @@ button.prod-card__base-tag--action {
 .delete-account-form .error {
   margin: 0.5rem 0 0;
 }
+
+/* Form summary line (design-system: Shared patterns) */
+.form-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
+  margin-bottom: 1rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+.form-summary svg { width: 16px; height: 16px; flex: none; color: var(--accent-text); }
+
+/* "No leído" — label-only .progress-diff beside a field's name */
+.label-row { display: inline-flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+.form legend .unread-mark { margin-left: 0.35rem; vertical-align: 1px; }
+.unread-mark { padding: 0.1rem 0.45rem; }
+.unread-mark--static:not(.progress-diff--leaving) { animation: none; }
+
+/* Screenshot slots (design-system: Form controls) */
+.shot-slots { display: flex; gap: 0.6rem; }
+.shot-slots--busy .shot { opacity: 0.45; }
+.shot { position: relative; width: 88px; aspect-ratio: 9 / 16; max-width: 100%; flex: none;
+  border-radius: var(--r-md); background: var(--surface-2); overflow: hidden; }
+.shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.shot--empty { background: transparent; border: 1px dashed var(--divider); display: grid; place-items: center;
+  color: var(--muted); font-size: 1.3rem; padding: 0; }
+/* The add tile is a control: its outline meets the 3:1 UI contrast (design-system §4). */
+button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6rem; }
+.shot--bad { outline: 2px solid var(--error); outline-offset: -2px; }
+.shot__x { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; padding: 0; border: none;
+  border-radius: 999px; background: var(--overlay); color: var(--text); display: grid; place-items: center; cursor: pointer; }
+.shot__x svg { width: 10px; height: 10px; }
+.import-dialog { display: flex; flex-direction: column; gap: 0.9rem; }
+.import-dialog__help { margin: 0; color: var(--muted); font-size: var(--text-sm); line-height: 1.45; }
+.import-dialog .modal-actions { margin: 0; }
+.import-dialog .btn { margin-top: 0; }
+@keyframes import-pulse { 50% { opacity: 0.55; } }
+.btn--reading { animation: import-pulse 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .btn--reading { animation: none; } }

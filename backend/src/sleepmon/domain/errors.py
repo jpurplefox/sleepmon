@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 
 class DomainError(Exception):
     """Base de todos los errores del dominio."""
@@ -21,3 +23,19 @@ class TeamMemberNotFoundError(DomainError):
 
 class SavedTeamNotFoundError(DomainError):
     """No saved team with that id exists for the user."""
+
+
+class PokemonNotRecognizedError(DomainError):
+    """The screenshots show no Pokémon species the catalog knows."""
+
+
+class ScreenshotReaderUnavailableError(DomainError):
+    """The model that reads screenshots couldn't be reached or failed."""
+
+
+class DailyImportLimitError(DomainError):
+    """The user used up today's screenshot imports."""
+
+    def __init__(self, resets_at: datetime) -> None:
+        super().__init__(f"Daily import limit reached; resets at {resets_at.isoformat()}.")
+        self.resets_at = resets_at

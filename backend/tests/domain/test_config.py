@@ -63,3 +63,22 @@ def test_invalid_samesite_is_rejected(monkeypatch) -> None:
     monkeypatch.setenv("COOKIE_SAMESITE", "bogus")
     with pytest.raises(ValueError, match="COOKIE_SAMESITE"):
         Settings.from_env()
+
+
+def test_screenshot_settings_default_to_nova_and_qwen_in_us_east_1(monkeypatch) -> None:
+    names = (
+        "SCREENSHOT_TRIAGE_MODEL", "SCREENSHOT_MODEL", "SCREENSHOT_MODEL_OTHER_LANGUAGES",
+        "BEDROCK_REGION", "SCREENSHOT_DAILY_LIMIT",
+    )
+    for name in names:
+        monkeypatch.delenv(name, raising=False)
+    # The Lambda's own region doesn't move Bedrock: Nova 2 Lite is only in us-east-1.
+    monkeypatch.setenv("AWS_REGION", "sa-east-1")
+    s = Settings.from_env()
+    assert s.screenshot_triage_model == "us.amazon.nova-2-lite-v1:0"
+    assert s.screenshot_model == "us.amazon.nova-2-lite-v1:0"
+    assert s.screenshot_model_other_languages == "qwen.qwen3-vl-235b-a22b"
+    assert s.bedrock_region == "us-east-1"
+    assert s.screenshot_daily_limit == 50
+    monkeypatch.setenv("BEDROCK_REGION", "us-west-2")
+    assert Settings.from_env().bedrock_region == "us-west-2"

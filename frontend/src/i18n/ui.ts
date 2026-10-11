@@ -169,6 +169,11 @@ export const UI: Record<Lang, Record<string, string>> = {
     "form.addToTeam": "Agregar a mi caja",
     "form.species": "Especie",
     "form.nature": "Naturaleza",
+    "form.level": "Nivel",
+    "import.unread": "No leído",
+    "import.summary": "Leído de {n} imágenes",
+    "import.summaryOne": "Leído de 1 imagen",
+    "import.summaryCheck": "{summary} · revisá {fields}",
     "form.ingredients": "Ingredientes",
     "form.subSkills": "Sub skills",
     "form.skillLevel": "Nivel de skill",
@@ -642,6 +647,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "privacy.metricsTitle": "Métricas de uso y reportes de errores",
     "privacy.metricsBody":
       "Medimos cómo se usan las herramientas (PostHog) y recibimos reportes técnicos de errores (Sentry). Van asociados a un identificador interno, nunca a tu email ni a tu nombre, y esas herramientas no guardan tu dirección IP. Si borrás tu cuenta, las métricas y los reportes ya enviados quedan en esas herramientas, asociados a un identificador que ya no corresponde a nadie.",
+    "privacy.screenshots":
+      "Importar desde imágenes: las capturas que importás se envían a un modelo de IA (Claude, de Anthropic, a través de Amazon Web Services) solo para leerlas, y se descartan enseguida: ni sleepmon ni el proveedor las guardan.",
     "privacy.deleteTitle": "Cómo borrar tus datos",
     "privacy.deleteBody":
       "Entrá a {link} (menú de la cuenta → Cuenta y privacidad) y elegí Borrar mi cuenta: se borra todo al instante.",
@@ -649,6 +656,20 @@ export const UI: Record<Lang, Record<string, string>> = {
     "footer.privacy": "Privacidad",
     "footer.notice":
       "sleepmon es un proyecto de fans, sin afiliación con Nintendo, Creatures, GAME FREAK ni The Pokémon Company. Pokémon y sus nombres son marcas de sus respectivos dueños.",
+    "import.button": "+ Desde imágenes",
+    "import.title": "Importar desde imágenes",
+    "import.help": "Subí hasta 3 capturas de pantalla del juego, todas del mismo Pokémon: su resumen y la pantalla de sub skills. PNG, JPEG o WebP, hasta 5 MB cada una. Se leen y se descartan.",
+    "import.add": "Agregar imagen",
+    "import.remove": "Quitar imagen {i}",
+    "import.read": "Leer imágenes",
+    "import.reading": "Leyendo…",
+    "import.errFormat": "La {i}.ª imagen no es PNG, JPEG ni WebP.",
+    "import.errSize": "La {i}.ª imagen pesa {mb} MB: el máximo es 5 MB.",
+    "import.errNotRecognized": "No pudimos reconocer un Pokémon en estas imágenes. Probá con la pantalla de resumen del Pokémon.",
+    "import.errService": "No pudimos leer las imágenes. Probá de nuevo.",
+    "import.limit": "Usaste las 50 importaciones de hoy. Se renuevan a las {time}.",
+    "import.limitHint": "Mientras tanto, podés agregarlo con + Nuevo.",
+    "import.gotIt": "Entendido",
   },
   en: {
     // Common
@@ -814,6 +835,11 @@ export const UI: Record<Lang, Record<string, string>> = {
     "form.addToTeam": "Add to my box",
     "form.species": "Species",
     "form.nature": "Nature",
+    "form.level": "Level",
+    "import.unread": "Not read",
+    "import.summary": "Read from {n} screenshots",
+    "import.summaryOne": "Read from 1 screenshot",
+    "import.summaryCheck": "{summary} · check {fields}",
     "form.ingredients": "Ingredients",
     "form.subSkills": "Sub skills",
     "form.skillLevel": "Skill level",
@@ -1286,6 +1312,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "privacy.metricsTitle": "Usage metrics and error reports",
     "privacy.metricsBody":
       "We measure how the tools are used (PostHog) and receive technical error reports (Sentry). They are tied to an internal id, never to your email or name, and these tools do not store your IP address. If you delete your account, metrics and reports already sent stay with those providers, tied to an id that no longer belongs to anyone.",
+    "privacy.screenshots":
+      "Import from screenshots: screenshots you import are sent to an AI model (Anthropic's Claude, through Amazon Web Services) only to be read, and discarded right after — neither sleepmon nor the provider keeps them.",
     "privacy.deleteTitle": "How to delete your data",
     "privacy.deleteBody":
       "Open {link} (account menu → Account & privacy) and choose Delete my account: everything is deleted at once.",
@@ -1293,5 +1321,19 @@ export const UI: Record<Lang, Record<string, string>> = {
     "footer.privacy": "Privacy",
     "footer.notice":
       "sleepmon is a fan project, not affiliated with Nintendo, Creatures, GAME FREAK or The Pokémon Company. Pokémon and its names are trademarks of their respective owners.",
+    "import.button": "+ From screenshots",
+    "import.title": "Import from screenshots",
+    "import.help": "Add up to 3 screenshots of the game, all of the same Pokémon: its summary and its sub skills screen. PNG, JPEG or WebP, up to 5 MB each. They're read and discarded.",
+    "import.add": "Add screenshot",
+    "import.remove": "Remove screenshot {i}",
+    "import.read": "Read screenshots",
+    "import.reading": "Reading…",
+    "import.errFormat": "Screenshot {i} isn't a PNG, JPEG or WebP.",
+    "import.errSize": "Screenshot {i} is {mb} MB: the limit is 5 MB.",
+    "import.errNotRecognized": "We couldn't recognize a Pokémon in these screenshots. Try the Pokémon's summary screen.",
+    "import.errService": "We couldn't read the screenshots. Try again.",
+    "import.limit": "You've used today's 50 imports. They reset at {time}.",
+    "import.limitHint": "Until then, you can add it with + New.",
+    "import.gotIt": "Got it",
   },
 };

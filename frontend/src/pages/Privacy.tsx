@@ -45,6 +45,9 @@ export function Privacy({ email = CONTACT_EMAIL }: { email?: string | null }) {
             <p>{t("privacy.metricsBody")}</p>
           </section>
           <section>
+            <p>{t("privacy.screenshots")}</p>
+          </section>
+          <section>
             <h2>{t("privacy.deleteTitle")}</h2>
             <p>
               {before}

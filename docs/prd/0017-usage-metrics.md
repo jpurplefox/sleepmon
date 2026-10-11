@@ -69,16 +69,22 @@ event. Property values are closed sets (listed here) or numbers.
 
 | Event | When | Properties |
 |---|---|---|
-| `pokemon_added` | A Pokémon lands in a comparison or a team. Editing an existing one does not count. | `tool`: `compare` / `team_analysis`; `source`: `new` (MemberForm), `box` (picked with "My Pokémon"), `box_compare` (the Box's "Compare" action), `clone` (cloned card); `slot`: `single` / `split` (Team Analysis only); `species` |
+| `pokemon_added` | A Pokémon lands in a comparison or a team. Editing an existing one does not count. | `tool`: `compare` / `team_analysis`; `source`: `new` (MemberForm), `screenshots` (MemberForm opened by a screenshot import), `box` (picked with "My Pokémon"), `box_compare` (the Box's "Compare" action), `clone` (cloned card); `slot`: `single` / `split` (Team Analysis only); `species` |
 
 Opening a saved team does **not** emit `pokemon_added` for its members — that is
 `team_opened`.
+
+**Screenshot import** ([0019](0019-screenshot-import.md))
+
+| Event | When | Properties |
+|---|---|---|
+| `screenshots_read` | An import finishes or is refused. | `result`: `full` / `partial` / `not_recognized` / `limit_reached` / `failed`; `images` (1–3); `unread_fields` (number, for `partial`) |
 
 **The Box**
 
 | Event | When | Properties |
 |---|---|---|
-| `box_pokemon_saved` | A Pokémon is written to the Box (one event per Pokémon). | `origin`: `box` / `compare` / `team_analysis` / `team_save`; `action`: `create` / `update`; `species` |
+| `box_pokemon_saved` | A Pokémon is written to the Box (one event per Pokémon). | `origin`: `box` / `compare` / `team_analysis` / `team_save`; `action`: `create` / `update`; `from_screenshots` (a create whose form came from an import); `species` |
 | `box_pokemon_deleted` | A Box Pokémon is deleted. | `teams_affected`: number of saved teams it was in |
 | `list_filtered` | A filter is turned on in a list. Clearing does not count. | `list`: `box` / `teams`; `filter`: `type` / `ingredient` / `skill` / `specialty` (Box) or `map` / `dish_type` / `pokemon` (Teams) |
 | `list_sorted` | The Box's sort key or direction changes. | `list`: `box`; `key`: `dex` / `level` / `berries` / `strength` / `ingredients`; `direction`: `asc` / `desc` |
@@ -108,7 +114,7 @@ Opening a saved team does **not** emit `pokemon_added` for its members — that 
 
 | Event | When | Properties |
 |---|---|---|
-| `sign_in_prompted` | The sign-in prompt appears. | `reason`: `page_gate` (Box or Teams signed out) / `my_pokemon` / `save_to_box` |
+| `sign_in_prompted` | The sign-in prompt appears. | `reason`: `page_gate` (Box or Teams signed out) / `my_pokemon` / `save_to_box` / `import_screenshots` |
 | `sign_in_completed` | Sign-in succeeds. | `reason`: the prompt's reason, or `app_bar` when started from the menu |
 | `sign_in_abandoned` | The sign-in dialog is closed without signing in. | `reason` |
 | `sign_in_failed` | Google sign-in fails. | — |

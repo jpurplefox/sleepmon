@@ -1,9 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { LanguageProvider } from "../i18n";
-import type { Catalog, MemberInput, Species } from "../types";
+import type { Catalog, ImportField, MemberInput, Species } from "../types";
 import { MemberForm } from "./MemberForm";
 
 const pikachu: Species = {
@@ -242,5 +242,45 @@ describe("MemberForm with Mew", () => {
     await pickSpecies(user, /Pikachu/);
     await user.click(screen.getByRole("button", { name: "Add to my box" }));
     expect(onSubmit.mock.calls[0][0]).not.toHaveProperty("versatile_skill");
+  });
+});
+
+describe("MemberForm imported", () => {
+  const imported = {
+    values: {
+      species: "Pikachu",
+      level: 25,
+      nature: "",
+      ingredients: ["Fancy Apple", "Warming Ginger", "Fancy Apple"],
+      sub_skills: [],
+      ribbon: "",
+      skill_level: 3,
+    } as MemberInput,
+    unread: ["nature", "ribbon"] as ImportField[],
+    images: 2,
+  };
+
+  it("opens with the read values, the summary and a mark per unread field", () => {
+    renderForm({ imported });
+    expect(screen.getByRole("spinbutton", { name: /level/i })).toHaveValue(25);
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Read from 2 screenshots · check Nature and Ribbon",
+    );
+    expect(screen.getAllByText("Not read")).toHaveLength(2);
+  });
+
+  it("clears a field's mark once it changes, and the summary stops naming it", async () => {
+    renderForm({ imported });
+    await userEvent.click(screen.getByRole("button", { name: /next ribbon/i }));
+    // The mark outlives the change by its exit animation.
+    await waitFor(() => expect(screen.getAllByText("Not read")).toHaveLength(1));
+    expect(screen.getByRole("status")).toHaveTextContent("check Nature");
+    expect(screen.getByRole("status")).not.toHaveTextContent("Ribbon");
+  });
+
+  it("is dirty from the start", () => {
+    const onDirtyChange = vi.fn();
+    renderForm({ imported, onDirtyChange });
+    expect(onDirtyChange).toHaveBeenLastCalledWith(true);
   });
 });

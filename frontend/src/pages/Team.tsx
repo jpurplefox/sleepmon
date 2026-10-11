@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { api } from "../api/client";
 import { BoxEntry } from "../components/BoxEntry";
@@ -23,6 +23,7 @@ import { deletionImpact } from "../savedTeams";
 import { SPECIALTIES, matchesSpecialty } from "../specialties";
 import { VERSATILE, effectiveSkill } from "../versatile";
 import { SAVED_TEAMS_KEY, useSavedTeamsQuery } from "../useSavedTeams";
+import { useScreenshotImport } from "../useScreenshotImport";
 
 // Orden + filtros del overview, en el cliente (la producción ya viene en /team).
 function sortAndFilter(
@@ -112,6 +113,7 @@ export function Team({ onCompare }: TeamProps) {
 
   const catalog = useQuery({ queryKey: ["catalog"], queryFn: api.getCatalog });
   const members = useQuery({ queryKey: ["members"], queryFn: api.listMembers });
+  const shots = useScreenshotImport(catalog.data);
   // Deleting a Box Pokémon also takes it out of the saved teams it is in (PRD 0016).
   const savedTeams = useSavedTeamsQuery();
 
@@ -120,11 +122,21 @@ export function Team({ onCompare }: TeamProps) {
   };
 
   const create = useMutation({
-    mutationFn: (data: MemberInput) => api.createMember(data),
-    onSuccess: (member) => {
-      track({ name: "box_pokemon_saved", props: { origin: "box", action: "create", species: member.species } });
+    mutationFn: ({ data }: { data: MemberInput; fromScreenshots: boolean }) =>
+      api.createMember(data),
+    onSuccess: (member, { fromScreenshots }) => {
+      track({
+        name: "box_pokemon_saved",
+        props: {
+          origin: "box",
+          action: "create",
+          species: member.species,
+          ...(fromScreenshots ? { from_screenshots: true } : {}),
+        },
+      });
       setFormError(null);
       setFormOpen(false);
+      shots.clear();
       invalidate();
     },
     onError: (err: Error) => setFormError(err.message),
@@ -162,6 +174,11 @@ export function Team({ onCompare }: TeamProps) {
     setDeleteError(null);
     setFormOpen(true);
   };
+
+  // An import arrived: open the add form pre-filled with it.
+  useEffect(() => {
+    if (shots.imported) openForm();
+  }, [shots.imported]);
 
   const openEdit = (member: Member) => {
     setFormError(null);
@@ -231,9 +248,14 @@ export function Team({ onCompare }: TeamProps) {
             </>
           }
           action={
-            <button className="btn btn--primary" onClick={openForm}>
-              {t("team.add")}
-            </button>
+            <div className="tool-head__actions">
+              <button className="btn btn--primary" onClick={openForm}>
+                {t("team.add")}
+              </button>
+              <button type="button" className="btn btn--ghost" onClick={shots.start}>
+                {t("import.button")}
+              </button>
+            </div>
           }
         >
           {/* With a single Pokémon, sorting and filtering add nothing: no bar. */}
@@ -318,16 +340,26 @@ export function Team({ onCompare }: TeamProps) {
       {allMembers.length > 0 && <BoxCoverage members={allMembers} catalog={catalog.data} />}
 
       {formOpen && (
-        <Modal title={t("team.modalAdd")} onClose={() => setFormOpen(false)} dirty={formDirty}>
+        <Modal
+          title={t("team.modalAdd")}
+          onClose={() => {
+            setFormOpen(false);
+            shots.clear();
+          }}
+          dirty={formDirty}
+        >
           <MemberForm
             catalog={catalog.data}
             onDirtyChange={setFormDirty}
-            onSubmit={(data) => create.mutate(data)}
+            imported={shots.imported ?? undefined}
+            onSubmit={(data) => create.mutate({ data, fromScreenshots: shots.imported !== null })}
             pending={create.isPending}
             error={formError}
           />
         </Modal>
       )}
+
+      {shots.dialog}
 
       {editing && (
         <Modal title={t("team.modalEdit")} onClose={() => setEditing(null)} dirty={formDirty}>

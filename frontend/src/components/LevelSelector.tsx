@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import type { ReactNode } from "react";
 
 import { LEVEL_SHORTCUTS, MAX_LEVEL } from "../constants";
 import { useI18n } from "../i18n";
@@ -8,13 +9,15 @@ interface Props {
   onChange: (level: number) => void;
   min?: number;
   max?: number;
+  /** Rendered right after the label text (e.g. a status mark). */
+  labelAddon?: ReactNode;
 }
 
 function clamp(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));
 }
 
-export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL }: Props) {
+export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL, labelAddon }: Props) {
   const { t } = useI18n();
   const inputId = useId();
   // Draft local para permitir escribir libremente (incluido borrar el campo).
@@ -60,6 +63,7 @@ export function LevelSelector({ value, onChange, min = 1, max = MAX_LEVEL }: Pro
       <div className="level-stepper">
         <label className="level-stepper__label" htmlFor={inputId}>
           {t("levelSel.label")}
+          {labelAddon}
         </label>
         <button
           type="button"
