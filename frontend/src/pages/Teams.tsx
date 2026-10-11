@@ -28,6 +28,7 @@ import { Modal } from "../components/Modal";
 import { Placeholder } from "../components/Placeholder";
 import { SwipePager } from "../components/SwipePager";
 import { TeamSlotCard } from "../components/TeamSlotCard";
+import { useScreenshotImport } from "../useScreenshotImport";
 import { StrengthValue } from "../components/StrengthValue";
 import { SnorlaxRatingBadge } from "../components/SnorlaxRatingBadge";
 // Aliased: Recharts already brings a `Tooltip` into this file.
@@ -214,6 +215,9 @@ export function Teams() {
   } = useTeamSession();
   const [intent, setIntent] = useState<Intent | null>(null);
   const [modal, setModal] = useState<"form" | "box" | null>(null);
+  const shots = useScreenshotImport(catalog.data);
+  // Where the imported Pokémon goes: set when the import starts, used when it arrives.
+  const importIntent = useRef<Intent>({ kind: "add" });
   // Whether the open add/edit form holds unsaved input: leaving it then asks first.
   const [formDirty, setFormDirty] = useState(false);
   // Which Settings tab is open, or null: the context bar and the Cooking card each open theirs.
@@ -389,7 +393,17 @@ export function Teams() {
     setIntent(next);
     setModal("box");
   };
+  const startImport = (next: Intent) => {
+    importIntent.current = next;
+    shots.start();
+  };
+  // An import arrived: open the add form pre-filled with it.
+  useEffect(() => {
+    if (shots.imported) openForm(importIntent.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shots.imported]);
   const closeModal = () => {
+    shots.clear();
     setNotice(null);
     setModal(null);
     setIntent(null);
@@ -400,7 +414,7 @@ export function Teams() {
     if (!intent) return;
     // Only count a Pokémon that actually lands (the same rule addSlot/splitSlot apply).
     if (intent.kind !== "edit" && canAdd(slots, intent))
-      track(teamAddedEvent(intent.kind, sourceId, config.species));
+      track(teamAddedEvent(intent.kind, sourceId, config.species, shots.imported !== null));
     if (intent.kind === "edit") {
       // Editing replaces the config but not the id, so a stale save status
       // (saved or errored) would otherwise survive describing a config that
@@ -544,6 +558,7 @@ export function Teams() {
                 teamHasSplit={teamHasSplit}
                 saveStatus={statusOf}
                 onAddNew={(idx) => openForm({ kind: "split", slotIndex: idx })}
+                onAddFromScreenshots={(idx) => startImport({ kind: "split", slotIndex: idx })}
                 onAddFromBox={(idx) => guard(() => openBox({ kind: "split", slotIndex: idx }), "my_pokemon")}
                 onEdit={(si, ei) => openForm({ kind: "edit", slotIndex: si, entryIndex: ei })}
                 onSaveToBox={(si, ei) => guard(() => saveEntryToBox(si, ei), "save_to_box")}
@@ -574,6 +589,13 @@ export function Teams() {
                     onClick={() => openForm({ kind: "add" })}
                   >
                     {t("prod.new")}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={() => startImport({ kind: "add" })}
+                  >
+                    {t("import.button")}
                   </button>
                   <button
                     type="button"
@@ -1342,6 +1364,7 @@ export function Teams() {
               error={null}
               submitLabel={intent.kind === "edit" ? t("prod.save") : t("teams.addToTeam")}
               initial={intent.kind === "edit" ? editingEntry?.config : undefined}
+              imported={intent.kind !== "edit" ? (shots.imported ?? undefined) : undefined}
               onSubmit={(config) => applyConfig(config)}
               footer={
                 intent.kind !== "edit" ? (
@@ -1379,6 +1402,7 @@ export function Teams() {
       )}
 
       {saver.dialog}
+      {shots.dialog}
 
       {dialog === "map" && (
         <MapModal

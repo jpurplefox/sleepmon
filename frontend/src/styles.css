@@ -6212,6 +6212,16 @@ button.prod-card__base-tag--action {
   margin-top: 0;
 }
 
+.tool-head__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tool-head__actions .btn {
+  margin-top: 0;
+}
+
 .tool-head > .error {
   margin: 0.75rem 0 0;
 }

@@ -22,6 +22,7 @@ interface TeamSlotCardProps {
   teamHasSplit?: boolean;
   saveStatus: (entryId: string) => SaveStatus;
   onAddNew: (slotIndex: number) => void;
+  onAddFromScreenshots: (slotIndex: number) => void;
   onAddFromBox: (slotIndex: number) => void;
   onEdit: (slotIndex: number, entryIndex: number) => void;
   onSaveToBox: (slotIndex: number, entryIndex: number) => void;
@@ -42,6 +43,7 @@ export function TeamSlotCard({
   teamHasSplit,
   saveStatus,
   onAddNew,
+  onAddFromScreenshots,
   onAddFromBox,
   onEdit,
   onSaveToBox,
@@ -177,6 +179,17 @@ export function TeamSlotCard({
               }}
             >
               {t("prod.new")}
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              className="filter-list__item"
+              onClick={() => {
+                setMenuOpen(false);
+                onAddFromScreenshots(slotIndex);
+              }}
+            >
+              {t("import.button")}
             </button>
             <button
               type="button"

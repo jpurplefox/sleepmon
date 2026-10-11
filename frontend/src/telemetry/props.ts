@@ -9,12 +9,13 @@ export function teamAddedEvent(
   intent: "add" | "split",
   sourceId: string | undefined,
   species: string,
+  fromScreenshots = false,
 ): AnalyticsEvent {
   return {
     name: "pokemon_added",
     props: {
       tool: "team_analysis",
-      source: sourceId ? "box" : "new",
+      source: fromScreenshots ? "screenshots" : sourceId ? "box" : "new",
       slot: intent === "split" ? "split" : "single",
       species,
     },

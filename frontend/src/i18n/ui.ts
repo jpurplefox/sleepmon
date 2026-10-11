@@ -647,6 +647,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "privacy.metricsTitle": "Métricas de uso y reportes de errores",
     "privacy.metricsBody":
       "Medimos cómo se usan las herramientas (PostHog) y recibimos reportes técnicos de errores (Sentry). Van asociados a un identificador interno, nunca a tu email ni a tu nombre, y esas herramientas no guardan tu dirección IP. Si borrás tu cuenta, las métricas y los reportes ya enviados quedan en esas herramientas, asociados a un identificador que ya no corresponde a nadie.",
+    "privacy.screenshots":
+      "Importar desde imágenes: las capturas que importás se envían a un modelo de IA (Claude, de Anthropic, a través de Amazon Web Services) solo para leerlas, y se descartan enseguida: ni sleepmon ni el proveedor las guardan.",
     "privacy.deleteTitle": "Cómo borrar tus datos",
     "privacy.deleteBody":
       "Entrá a {link} (menú de la cuenta → Cuenta y privacidad) y elegí Borrar mi cuenta: se borra todo al instante.",
@@ -1310,6 +1312,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "privacy.metricsTitle": "Usage metrics and error reports",
     "privacy.metricsBody":
       "We measure how the tools are used (PostHog) and receive technical error reports (Sentry). They are tied to an internal id, never to your email or name, and these tools do not store your IP address. If you delete your account, metrics and reports already sent stay with those providers, tied to an id that no longer belongs to anyone.",
+    "privacy.screenshots":
+      "Import from screenshots: screenshots you import are sent to an AI model (Anthropic's Claude, through Amazon Web Services) only to be read, and discarded right after — neither sleepmon nor the provider keeps them.",
     "privacy.deleteTitle": "How to delete your data",
     "privacy.deleteBody":
       "Open {link} (account menu → Account & privacy) and choose Delete my account: everything is deleted at once.",
