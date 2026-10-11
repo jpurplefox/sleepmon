@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Builds the evolution-line data and reference sheets the screenshot reader uses.
 
-    python3 backend/scripts/evolution_lines.py <nitoyon pokemon.json> <sprite cache dir>
+    python3 backend/scripts/evolution_lines.py <pokemon.json> <sprites dir>
 
-- Lines come from nitoyon/pokesleep-tool's src/data/pokemon.json (``ancestor`` = the
-  dex number of the line's first stage, whose name is on the game's candy label).
-- Sprites are Pokémon Sleep's own art from nerolis-lab/nerolis-lab
-  (frontend/public/images/pokemon, Apache-2.0); missing ones are downloaded into the
-  cache dir.
+- <pokemon.json>: species data with each one's ``ancestor`` (the dex number of the
+  line's first stage, whose name is on the game's candy label), in nitoyon/pokesleep-tool's
+  format.
+- <sprites dir>: a local folder with each species' Pokémon Sleep sprite as
+  ``<slug>.png`` (see ``SPRITE_FILES`` for the exceptions). This script never fetches
+  anything; a missing sprite stops it.
 
 Writes backend/src/sleepmon/adapters/outbound/bedrock/evolution_lines.json and one WebP
 sheet per line under …/bedrock/lines/. Re-run after adding species; never hand-edit the
@@ -19,7 +20,6 @@ from __future__ import annotations
 import json
 import re
 import sys
-import urllib.request
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -30,10 +30,6 @@ sys.path.insert(0, str(ROOT / "backend" / "src"))
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog  # noqa: E402
 
 OUT = ROOT / "backend/src/sleepmon/adapters/outbound/bedrock"
-SPRITE_URL = (
-    "https://raw.githubusercontent.com/nerolis-lab/nerolis-lab/main/"
-    "frontend/public/images/pokemon/{}"
-)
 # Catalog names whose sprite file doesn't follow the plain slug.
 SPRITE_FILES = {
     "Vulpix (Alola)": "vulpix_alolan.png",
@@ -56,22 +52,21 @@ def slug(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
 
 
-def sprite(cache: Path, name: str) -> Image.Image:
-    path = cache / sprite_file(name)
+def sprite(sprites: Path, name: str) -> Image.Image:
+    path = sprites / sprite_file(name)
     if not path.exists():
-        with urllib.request.urlopen(SPRITE_URL.format(path.name), timeout=30) as response:
-            path.write_bytes(response.read())
+        sys.exit(f"missing sprite for {name}: {path}")
     return Image.open(path).convert("RGBA")
 
 
-def sheet(cache: Path, names: list[str]) -> Image.Image:
+def sheet(sprites: Path, names: list[str]) -> Image.Image:
     columns = min(len(names), COLUMNS)
     rows = -(-len(names) // columns)
     image = Image.new("RGB", (CELL_W * columns, CELL_H * rows), "white")
     draw = ImageDraw.Draw(image)
     font = ImageFont.load_default(size=LABEL_SIZE)
     for index, name in enumerate(names):
-        art = sprite(cache, name)
+        art = sprite(sprites, name)
         art.thumbnail((SPRITE, SPRITE))
         x0, y0 = (index % columns) * CELL_W, (index // columns) * CELL_H
         image.paste(
@@ -83,8 +78,7 @@ def sheet(cache: Path, names: list[str]) -> Image.Image:
     return image
 
 
-def main(nitoyon_json: Path, cache: Path) -> None:
-    cache.mkdir(parents=True, exist_ok=True)
+def main(nitoyon_json: Path, sprites: Path) -> None:
     entries = json.loads(nitoyon_json.read_text())
     by_name = {e["name"]: e for e in entries}
     # The candy label names the first stage's base form (no regional/costume suffix).
@@ -106,7 +100,7 @@ def main(nitoyon_json: Path, cache: Path) -> None:
     for old in sheets.glob("*.webp"):
         old.unlink()
     for candy, names in lines.items():
-        sheet(cache, names).save(sheets / f"{slug(candy)}.webp", "WEBP", quality=80)
+        sheet(sprites, names).save(sheets / f"{slug(candy)}.webp", "WEBP", quality=80)
     data = json.dumps(lines, indent=1, ensure_ascii=False)
     (OUT / "evolution_lines.json").write_text(data + "\n")
     print(f"wrote {len(lines)} lines for {sum(map(len, lines.values()))} species")
