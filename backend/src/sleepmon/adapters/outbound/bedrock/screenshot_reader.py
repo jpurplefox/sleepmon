@@ -9,6 +9,7 @@ from __future__ import annotations
 import base64
 import logging
 from collections.abc import Sequence
+from importlib.resources import files
 from typing import Any, Protocol
 
 import anthropic
@@ -23,6 +24,8 @@ from sleepmon.domain.versatile import VERSATILE_SKILLS
 log = logging.getLogger(__name__)
 
 TOOL_NAME = "report_pokemon"
+# Every ingredient's game icon with its name (regenerate with backend/scripts/ingredient_sheet.py).
+INGREDIENT_SHEET = "ingredient_reference.png"
 MAX_TOKENS = 4096
 
 SYSTEM_PROMPT = """\
@@ -37,7 +40,9 @@ allowed by the tool's schema.
 Rules:
 - Report only what is visible. Use null for anything you can't see; never guess.
 - ingredients has exactly 3 entries, one per slot in order (unlocked at levels 1, 30 \
-and 60). A slot shown locked, as "?", or not visible is null.
+and 60). A slot shown locked, as "?", or not visible is null. The game shows \
+ingredients as icons only: identify each one by matching it against the reference \
+sheet that comes first in the message, which is not a screenshot of the Pokémon.
 - sub_skills lists every sub skill shown, in the game's order (slots unlocked at \
 levels 10, 25, 50, 70 and 80), including locked ones. Use null if no screenshot shows \
 the sub skills.
@@ -104,6 +109,7 @@ class BedrockScreenshotReader(ScreenshotReader):
         self._model = model
         # Built once: an identical schema and system prompt keep the prompt cache warm.
         self._tool = build_tool(catalog)
+        self._sheet = _reference_sheet()
 
     def read(self, images: Sequence[Screenshot]) -> ScreenshotReading:
         try:
@@ -115,7 +121,7 @@ class BedrockScreenshotReader(ScreenshotReader):
                 ],
                 tools=[self._tool],
                 tool_choice={"type": "auto"},
-                messages=[{"role": "user", "content": _content(images)}],
+                messages=[{"role": "user", "content": [*self._sheet, *_content(images)]}],
             )
         except (anthropic.APIError, BotoCoreError, ClientError, RuntimeError) as exc:
             # Never log the request or images; the error type and HTTP status are enough.
@@ -123,6 +129,23 @@ class BedrockScreenshotReader(ScreenshotReader):
             log.warning("Screenshot reading failed: %s (status %s)", type(exc).__name__, status)
             raise ScreenshotReaderUnavailableError(str(exc)) from exc
         return _parse(response)
+
+
+def _reference_sheet() -> list[dict[str, Any]]:
+    """The ingredient sheet, cached with the tool and system prompt ahead of the screenshots."""
+    data = files(__package__).joinpath(INGREDIENT_SHEET).read_bytes()
+    return [
+        {"type": "text", "text": "Reference sheet (not a screenshot): ingredient icons and names."},
+        {
+            "type": "image",
+            "source": {
+                "type": "base64",
+                "media_type": "image/png",
+                "data": base64.standard_b64encode(data).decode("ascii"),
+            },
+            "cache_control": {"type": "ephemeral"},
+        },
+    ]
 
 
 def _content(images: Sequence[Screenshot]) -> list[dict[str, Any]]:

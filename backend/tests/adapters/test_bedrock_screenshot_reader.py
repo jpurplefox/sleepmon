@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 from types import SimpleNamespace
 from typing import Any
 
@@ -53,7 +54,12 @@ def test_sends_the_images_and_a_tool_with_catalog_enums() -> None:
     assert kw["system"][0]["cache_control"] == {"type": "ephemeral"}
     content = kw["messages"][0]["content"]
     images = [c for c in content if c["type"] == "image"]
-    assert [i["source"]["media_type"] for i in images] == ["image/jpeg", "image/png"]
+    # The ingredient reference sheet goes first, cached; then the user's screenshots.
+    sheet, *shots = images
+    assert sheet["source"]["media_type"] == "image/png"
+    assert sheet["cache_control"] == {"type": "ephemeral"}
+    assert base64.b64decode(sheet["source"]["data"]).startswith(b"\x89PNG")
+    assert [i["source"]["media_type"] for i in shots] == ["image/jpeg", "image/png"]
     assert all(i["source"]["type"] == "base64" for i in images)
     schema = kw["tools"][0]["input_schema"]
     assert "Pikachu" in schema["properties"]["species"]["enum"]

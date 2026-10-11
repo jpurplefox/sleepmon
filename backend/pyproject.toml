@@ -40,6 +40,8 @@ where = ["src"]
 [tool.setuptools.package-data]
 # setuptools ships only .py by default; without this the wheel has no migrations.
 "sleepmon.adapters.outbound.postgres" = ["migrations/*.sql"]
+# The ingredient reference sheet the screenshot reader sends to the model.
+"sleepmon.adapters.outbound.bedrock" = ["*.png"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
