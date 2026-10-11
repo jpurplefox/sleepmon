@@ -7030,4 +7030,4 @@ button.prod-card__base-tag--action {
 .label-row { display: inline-flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
 .form legend .unread-mark { margin-left: 0.35rem; vertical-align: 1px; }
 .unread-mark { padding: 0.1rem 0.45rem; }
-.unread-mark--static { animation: none; }
+.unread-mark--static:not(.progress-diff--leaving) { animation: none; }

@@ -181,9 +181,9 @@ export function MemberForm({
       {selectedSpecies && (
         <fieldset>
           <legend>
-          {t("form.ingredients")}
-          <UnreadMark unread={unread.includes("ingredients")} />
-        </legend>
+            {t("form.ingredients")}
+            <UnreadMark unread={unread.includes("ingredients")} />
+          </legend>
           <IngredientSlots
             species={selectedSpecies}
             level={level}
