@@ -11,10 +11,9 @@ import httpx2
 import pytest
 from botocore.exceptions import ClientError, NoCredentialsError
 
-from sleepmon.adapters.outbound.bedrock.screenshot_reader import (
-    BedrockScreenshotReader,
-    system_prompt,
-)
+from sleepmon.adapters.outbound.bedrock.lines import find_line
+from sleepmon.adapters.outbound.bedrock.prompt import system_prompt
+from sleepmon.adapters.outbound.bedrock.screenshot_reader import BedrockScreenshotReader
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.domain.errors import ScreenshotReaderUnavailableError
 from sleepmon.domain.screenshot_import import Screenshot, ScreenshotReading
@@ -67,7 +66,8 @@ def test_sends_the_images_and_a_tool_with_catalog_enums() -> None:
     schema = kw["tools"][0]["input_schema"]
     assert "Pikachu" in schema["properties"]["species"]["enum"]
     assert "Jolly" in schema["properties"]["nature"]["enum"]
-    assert "" in schema["properties"]["ribbon"]["enum"]
+    assert schema["properties"]["sleep_hours"] == {"type": ["integer", "null"]}
+    assert "ribbon" not in schema["properties"]
     assert "Helping Bonus" in schema["properties"]["sub_skills"]["items"]["enum"]
 
 
@@ -77,26 +77,40 @@ def test_system_prompt_uses_the_real_sub_skill_unlock_levels() -> None:
     assert "10, 25, 50, 70 and 80" in messages.kwargs["system"][0]["text"]
 
 
-def test_system_prompt_derives_the_ribbon_from_sleeping_time_shared() -> None:
+def test_system_prompt_asks_for_the_shared_sleep_hours_not_the_ribbon() -> None:
     messages = FakeMessages(tool_response({}))
     reader(messages).read(IMAGES)
     prompt = messages.kwargs["system"][0]["text"]
     assert "Sleeping Time Shared" in prompt
-    # Every ribbon value the schema allows is named in the threshold rule.
-    for value in ('"200h"', '"500h"', '"1000h"', '"2000h"'):
-        assert value in prompt
+    assert "sleep_hours" in prompt
+    assert "ribbon is" not in prompt
+
+
+def test_within_a_line_the_sheet_goes_along_and_species_is_limited_to_it() -> None:
+    line = find_line("Dwebble")
+    assert line is not None
+    messages = FakeMessages(tool_response({}))
+    reader(messages).read_in_line(IMAGES, line)
+    kw = messages.kwargs
+    images = [c for c in kw["messages"][0]["content"] if c["type"] == "image"]
+    assert [i["source"]["media_type"] for i in images] == [
+        "image/png", "image/webp", "image/jpeg", "image/png"
+    ]
+    species = kw["tools"][0]["input_schema"]["properties"]["species"]["enum"]
+    assert species == ["Dwebble", "Crustle", None]
+    assert "evolution-line reference sheet" in kw["system"][0]["text"]
 
 
 def test_parses_a_full_tool_call() -> None:
     payload = {
         "species": "Pikachu", "level": 25, "nature": "Jolly",
         "ingredients": ["Fancy Apple", None, None], "sub_skills": ["Helping Bonus"],
-        "skill_level": 3, "ribbon": "", "versatile_skill": None,
+        "skill_level": 3, "sleep_hours": 81, "versatile_skill": None,
     }
     reading = reader(FakeMessages(tool_response(payload))).read(IMAGES)
     assert reading == ScreenshotReading(
         species="Pikachu", level=25, nature="Jolly", ingredients=("Fancy Apple", None, None),
-        sub_skills=("Helping Bonus",), skill_level=3, ribbon="", versatile_skill=None,
+        sub_skills=("Helping Bonus",), skill_level=3, sleep_hours=81, versatile_skill=None,
     )
 
 

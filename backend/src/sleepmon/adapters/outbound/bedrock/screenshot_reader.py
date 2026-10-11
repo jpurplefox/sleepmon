@@ -9,104 +9,29 @@ from __future__ import annotations
 import base64
 import logging
 from collections.abc import Sequence
-from importlib.resources import files
 from typing import Any, Protocol
 
 import anthropic
 from botocore.exceptions import BotoCoreError, ClientError
 
-from sleepmon.adapters.outbound.bedrock.game_terms_es import (
-    NATURE_STATS_ES,
-    NATURES_ES,
-    SUB_SKILLS_ES,
+from sleepmon.adapters.outbound.bedrock.lines import EvolutionLine
+from sleepmon.adapters.outbound.bedrock.prompt import (
+    INGREDIENT_CAPTION,
+    USER_TEXT,
+    build_schema,
+    ingredient_sheet_png,
+    line_caption,
+    reading_from,
+    system_prompt,
 )
-from sleepmon.domain.catalog_data import NATURE_EFFECTS
 from sleepmon.domain.errors import ScreenshotReaderUnavailableError
 from sleepmon.domain.ports import ScreenshotReader, SpeciesCatalog
 from sleepmon.domain.screenshot_import import Screenshot, ScreenshotReading
-from sleepmon.domain.value_objects import Ingredient, Nature, Ribbon, SubSkill
-from sleepmon.domain.versatile import VERSATILE_SKILLS
 
 log = logging.getLogger(__name__)
 
 TOOL_NAME = "report_pokemon"
-# Every ingredient's game icon with its name (regenerate with backend/scripts/ingredient_sheet.py).
-INGREDIENT_SHEET = "ingredient_reference.png"
-SHEET_CAPTION = "Reference sheet (not a screenshot): ingredient icons and names."
-USER_TEXT = "Report the Pokémon in these screenshots."
 MAX_TOKENS = 4096
-
-_PROMPT_TEMPLATE = """\
-You read screenshots of the mobile game Pokémon Sleep and report one Pokémon's \
-configuration {report}.
-
-All screenshots show the same Pokémon, usually its summary screen (name, level, \
-main skill and its level, ingredients, ribbon) and its sub skills / nature screen. \
-The game may be in any language: always map what you see to the English names \
-allowed by the schema.
-
-Rules:
-- Report only what is visible. Use null for anything you can't see; never guess.
-- species is the Pokémon shown in the artwork. The "<Name> Candies" label names the \
-first stage of its evolution line, and the name next to the level is a nickname: \
-neither is the species.
-- nature: when its name isn't in English, identify it by the stats it raises (▲) \
-and lowers (▼), as listed in the nature table below. A nature with no effect must \
-be told apart by its name.
-- ingredients has exactly 3 entries, one per slot in order (unlocked at levels 1, 30 \
-and 60). A locked slot still shows its ingredient, dimmed: report it. Only a slot \
-shown as "?" or not visible is null. The game shows \
-ingredients as icons only: identify each one by matching it against the reference \
-sheet that comes first in the message, which is not a screenshot of the Pokémon.
-- sub_skills lists every sub skill shown, in the game's order (slots unlocked at \
-levels 10, 25, 50, 70 and 80), including locked ones. Use null if no screenshot shows \
-the sub skills.
-- skill_level is the main skill's level ("Lv. N" next to the main skill).
-- ribbon comes from "Sleeping Time Shared" (or its translation), shown in hours: pick \
-the closest threshold at or below it — under 200 hrs is "", then "200h", "500h", \
-"1000h", "2000h" (e.g. 1521 hrs 17 mins is "1000h"). Use null only if neither the \
-ribbon nor the sleeping time is visible.
-- versatile_skill is only for Mew: the skill currently shown for its Versatile main skill.
-- If no screenshot shows a Pokémon Sleep Pokémon, {empty} with species null.
-
-Nature table (raised / lowered):
-{natures}
-
-Spanish game names (map them to the English name before the "="):
-{spanish}
-"""
-
-
-def system_prompt(report: str, empty: str) -> str:
-    """The shared reading rules; ``report`` and ``empty`` say how the model answers."""
-    return _PROMPT_TEMPLATE.format(
-        report=report, empty=empty, natures=_nature_table(), spanish=_spanish_names()
-    )
-
-
-def _nature_table() -> str:
-    """One line per nature, from the catalog's own effects so the prompt never drifts."""
-    lines = []
-    for nature, effect in NATURE_EFFECTS.items():
-        if effect.is_neutral:
-            lines.append(f"- {nature.value}: no effect")
-        else:
-            lines.append(f"- {nature.value}: ▲ {effect.increased} / ▼ {effect.decreased}")
-    return "\n".join(lines)
-
-
-def _spanish_names() -> str:
-    groups = (
-        ("Natures", NATURES_ES),
-        ("Nature stats", NATURE_STATS_ES),
-        ("Sub skills", SUB_SKILLS_ES),
-    )
-    return "\n".join(
-        f"- {title}: " + "; ".join(f"{en} = {es}" for en, es in names.items())
-        for title, names in groups
-    )
-
-
 SYSTEM_PROMPT = system_prompt("by calling the report_pokemon tool exactly once", "call the tool")
 
 
@@ -121,44 +46,11 @@ class MessagesClient(Protocol):
     def messages(self) -> _Messages: ...
 
 
-def _nullable_enum(values: Sequence[str]) -> dict[str, Any]:
-    return {"type": ["string", "null"], "enum": [*values, None]}
-
-
-def build_tool(catalog: SpeciesCatalog) -> dict[str, Any]:
+def build_tool(catalog: SpeciesCatalog, line: EvolutionLine | None = None) -> dict[str, Any]:
     return {
         "name": TOOL_NAME,
         "description": "Report the Pokémon shown in the screenshots.",
-        "input_schema": build_schema(catalog),
-    }
-
-
-def build_schema(catalog: SpeciesCatalog) -> dict[str, Any]:
-    """The reading's JSON schema, its enums taken from the catalog."""
-    nullable_int: dict[str, Any] = {"type": ["integer", "null"]}
-    return {
-        "type": "object",
-        "properties": {
-            "species": _nullable_enum(sorted(s.name for s in catalog.all())),
-            "level": nullable_int,
-            "nature": _nullable_enum([n.value for n in Nature]),
-            "ingredients": {
-                "type": "array",
-                "items": _nullable_enum([i.value for i in Ingredient]),
-            },
-            "sub_skills": {
-                "type": ["array", "null"],
-                "items": {"type": "string", "enum": [s.value for s in SubSkill]},
-            },
-            "skill_level": nullable_int,
-            "ribbon": _nullable_enum([r.value for r in Ribbon]),
-            "versatile_skill": _nullable_enum(list(VERSATILE_SKILLS)),
-        },
-        "required": [
-            "species", "level", "nature", "ingredients",
-            "sub_skills", "skill_level", "ribbon", "versatile_skill",
-        ],
-        "additionalProperties": False,
+        "input_schema": build_schema(catalog, line),
     }
 
 
@@ -166,21 +58,38 @@ class BedrockScreenshotReader(ScreenshotReader):
     def __init__(self, client: MessagesClient, model: str, catalog: SpeciesCatalog) -> None:
         self._client = client
         self._model = model
-        # Built once: an identical schema and system prompt keep the prompt cache warm.
-        self._tool = build_tool(catalog)
-        self._sheet = _reference_sheet()
+        self._catalog = catalog
+        self._ingredients = _image_block(ingredient_sheet_png(), "image/png")
 
     def read(self, images: Sequence[Screenshot]) -> ScreenshotReading:
+        return self.read_in_line(images, None)
+
+    def read_in_line(
+        self, images: Sequence[Screenshot], line: EvolutionLine | None
+    ) -> ScreenshotReading:
+        system = SYSTEM_PROMPT if line is None else system_prompt(
+            "by calling the report_pokemon tool exactly once", "call the tool", line
+        )
+        # The ingredient sheet closes the cached prefix (tool + system + sheet).
+        content: list[dict[str, Any]] = [
+            {"type": "text", "text": INGREDIENT_CAPTION},
+            {**self._ingredients, "cache_control": {"type": "ephemeral"}},
+        ]
+        if line is not None:
+            content += [
+                {"type": "text", "text": line_caption(line)},
+                _image_block(line.sheet_webp, "image/webp"),
+            ]
+        content += [_image_block(i.data, i.media_type) for i in images]
+        content.append({"type": "text", "text": USER_TEXT})
         try:
             response = self._client.messages.create(
                 model=self._model,
                 max_tokens=MAX_TOKENS,
-                system=[
-                    {"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}
-                ],
-                tools=[self._tool],
+                system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
+                tools=[build_tool(self._catalog, line)],
                 tool_choice={"type": "auto"},
-                messages=[{"role": "user", "content": [*self._sheet, *_content(images)]}],
+                messages=[{"role": "user", "content": content}],
             )
         except (anthropic.APIError, BotoCoreError, ClientError, RuntimeError) as exc:
             # Never log the request or images; the error type and HTTP status are enough.
@@ -199,41 +108,15 @@ class BedrockScreenshotReader(ScreenshotReader):
         return _parse(response)
 
 
-def reference_sheet_png() -> bytes:
-    return files(__package__).joinpath(INGREDIENT_SHEET).read_bytes()
-
-
-def _reference_sheet() -> list[dict[str, Any]]:
-    """The ingredient sheet, cached with the tool and system prompt ahead of the screenshots."""
-    data = reference_sheet_png()
-    return [
-        {"type": "text", "text": SHEET_CAPTION},
-        {
-            "type": "image",
-            "source": {
-                "type": "base64",
-                "media_type": "image/png",
-                "data": base64.standard_b64encode(data).decode("ascii"),
-            },
-            "cache_control": {"type": "ephemeral"},
+def _image_block(data: bytes, media_type: str) -> dict[str, Any]:
+    return {
+        "type": "image",
+        "source": {
+            "type": "base64",
+            "media_type": media_type,
+            "data": base64.standard_b64encode(data).decode("ascii"),
         },
-    ]
-
-
-def _content(images: Sequence[Screenshot]) -> list[dict[str, Any]]:
-    blocks: list[dict[str, Any]] = [
-        {
-            "type": "image",
-            "source": {
-                "type": "base64",
-                "media_type": image.media_type,
-                "data": base64.standard_b64encode(image.data).decode("ascii"),
-            },
-        }
-        for image in images
-    ]
-    blocks.append({"type": "text", "text": USER_TEXT})
-    return blocks
+    }
 
 
 def _parse(response: Any) -> ScreenshotReading:
@@ -244,37 +127,3 @@ def _parse(response: Any) -> ScreenshotReading:
             data = block.input if isinstance(block.input, dict) else {}
             return reading_from(data)
     return ScreenshotReading()
-
-
-def _str(value: object) -> str | None:
-    return value if isinstance(value, str) else None
-
-
-def _int(value: object) -> int | None:
-    return value if isinstance(value, int) and not isinstance(value, bool) else None
-
-
-def reading_from(data: dict[str, Any]) -> ScreenshotReading:
-    """Coerces the model's answer into a reading; wrong types become ``None``."""
-    raw_ingredients = data.get("ingredients")
-    ingredients = (
-        tuple(_str(v) for v in raw_ingredients[:3])
-        if isinstance(raw_ingredients, list)
-        else ()
-    )
-    raw_sub_skills = data.get("sub_skills")
-    sub_skills = (
-        tuple(v for v in raw_sub_skills if isinstance(v, str))
-        if isinstance(raw_sub_skills, list)
-        else None
-    )
-    return ScreenshotReading(
-        species=_str(data.get("species")),
-        level=_int(data.get("level")),
-        nature=_str(data.get("nature")),
-        ingredients=(ingredients + (None, None, None))[:3],
-        sub_skills=sub_skills,
-        skill_level=_int(data.get("skill_level")),
-        ribbon=_str(data.get("ribbon")),
-        versatile_skill=_str(data.get("versatile_skill")),
-    )

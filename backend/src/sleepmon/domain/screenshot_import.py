@@ -8,7 +8,12 @@ from datetime import UTC, datetime, time, timedelta
 from enum import StrEnum
 from typing import Final, TypeVar
 
-from sleepmon.domain.catalog_data import MAX_LEVEL, MAX_SKILL_LEVEL_ABSOLUTE, MAX_SUB_SKILLS
+from sleepmon.domain.catalog_data import (
+    MAX_LEVEL,
+    MAX_SKILL_LEVEL_ABSOLUTE,
+    MAX_SUB_SKILLS,
+    RIBBON_HOURS,
+)
 from sleepmon.domain.errors import PokemonNotRecognizedError, ValidationError
 from sleepmon.domain.species import Species
 from sleepmon.domain.value_objects import Ingredient, Nature, Ribbon, SubSkill
@@ -63,8 +68,8 @@ class ScreenshotReading:
     ingredients: tuple[str | None, ...] = (None, None, None)
     sub_skills: tuple[str, ...] | None = None
     skill_level: int | None = None
-    # "" = the ribbon area is visible and empty; None = not visible.
-    ribbon: str | None = None
+    # Whole hours of "Sleeping Time Shared"; the ribbon is derived from them.
+    sleep_hours: int | None = None
     versatile_skill: str | None = None
 
 
@@ -111,7 +116,7 @@ def resolve_reading(
     if skill_level is None:
         unread.add(ImportField.SKILL_LEVEL)
 
-    ribbon = _enum(Ribbon, reading.ribbon)
+    ribbon = ribbon_for_hours(reading.sleep_hours)
     if ribbon is None:
         unread.add(ImportField.RIBBON)
 
@@ -132,6 +137,13 @@ def resolve_reading(
         versatile_skill=versatile,
         unread=frozenset(unread),
     )
+
+
+def ribbon_for_hours(hours: int | None) -> Ribbon | None:
+    """The ribbon earned after ``hours`` of shared sleep: the highest threshold reached."""
+    if isinstance(hours, bool) or not isinstance(hours, int) or hours < 0:
+        return None
+    return max((r for r, h in RIBBON_HOURS.items() if h <= hours), key=RIBBON_HOURS.__getitem__)
 
 
 def next_reset(now: datetime) -> datetime:

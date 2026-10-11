@@ -35,7 +35,7 @@ def full_reading(**overrides: object) -> ScreenshotReading:
         "ingredients": (SLOT0, SLOT1, SLOT2),
         "sub_skills": ("Helping Bonus", "Ingredient Finder M"),
         "skill_level": 3,
-        "ribbon": "",
+        "sleep_hours": 81,
         "versatile_skill": None,
     }
     base.update(overrides)
@@ -122,12 +122,22 @@ def test_a_missing_or_out_of_range_skill_level_is_unread(skill_level: int | None
     assert ImportField.SKILL_LEVEL in cfg.unread
 
 
-def test_an_empty_ribbon_is_a_read_none_but_a_missing_one_is_unread() -> None:
-    assert resolve_reading(full_reading(ribbon=""), CATALOG.get).ribbon is Ribbon.NONE
-    cfg = resolve_reading(full_reading(ribbon=None), CATALOG.get)
+@pytest.mark.parametrize(
+    "hours,ribbon",
+    [(0, Ribbon.NONE), (199, Ribbon.NONE), (200, Ribbon.SLEEP_200), (499, Ribbon.SLEEP_200),
+     (1521, Ribbon.SLEEP_1000), (2000, Ribbon.SLEEP_2000), (5000, Ribbon.SLEEP_2000)],
+)
+def test_the_ribbon_is_the_highest_threshold_the_shared_hours_reach(
+    hours: int, ribbon: Ribbon
+) -> None:
+    assert resolve_reading(full_reading(sleep_hours=hours), CATALOG.get).ribbon is ribbon
+
+
+@pytest.mark.parametrize("hours", [None, -1])
+def test_missing_or_negative_hours_leave_the_ribbon_unread(hours: int | None) -> None:
+    cfg = resolve_reading(full_reading(sleep_hours=hours), CATALOG.get)
     assert cfg.ribbon is None
     assert ImportField.RIBBON in cfg.unread
-    assert resolve_reading(full_reading(ribbon="500h"), CATALOG.get).ribbon is Ribbon.SLEEP_500
 
 
 def test_versatile_skill_only_sticks_to_a_versatile_species() -> None:

@@ -1,4 +1,4 @@
-"""Picks the screenshot reader for the configured Bedrock model (ADR 0011)."""
+"""Wires the two-pass screenshot reader for the configured Bedrock models (ADR 0011)."""
 
 from __future__ import annotations
 
@@ -16,24 +16,49 @@ from sleepmon.adapters.outbound.bedrock.screenshot_reader import (
     BedrockScreenshotReader,
     MessagesClient,
 )
+from sleepmon.adapters.outbound.bedrock.two_pass_reader import (
+    LineAwareReader,
+    TwoPassScreenshotReader,
+)
 from sleepmon.domain.ports import ScreenshotReader, SpeciesCatalog
 
 TIMEOUT_SECONDS = 45
 
 
 def uses_anthropic_api(model: str) -> bool:
-    """Claude ids (``anthropic.…``, ``global.anthropic.…``) go through the Anthropic SDK."""
+    """Claude ids (``anthropic.…``, ``us.anthropic.…``) go through the Anthropic SDK."""
     return "anthropic." in model
 
 
-def build_screenshot_reader(model: str, region: str, catalog: SpeciesCatalog) -> ScreenshotReader:
+def _reader(
+    model: str, region: str, runtime: ConverseClient, catalog: SpeciesCatalog
+) -> LineAwareReader:
     if uses_anthropic_api(model):
         claude = AnthropicBedrock(aws_region=region, timeout=TIMEOUT_SECONDS, max_retries=1)
         # The SDK's typed ``create`` is narrower than the adapter's protocol.
         return BedrockScreenshotReader(cast(MessagesClient, claude), model, catalog)
-    runtime = boto3.client(
-        "bedrock-runtime",
-        region_name=region,
-        config=Config(read_timeout=TIMEOUT_SECONDS, retries={"max_attempts": 2}),
+    return ConverseScreenshotReader(runtime, model, catalog)
+
+
+def build_screenshot_reader(
+    *,
+    triage_model: str,
+    model: str,
+    other_languages_model: str,
+    region: str,
+    catalog: SpeciesCatalog,
+) -> ScreenshotReader:
+    runtime = cast(
+        ConverseClient,
+        boto3.client(
+            "bedrock-runtime",
+            region_name=region,
+            config=Config(read_timeout=TIMEOUT_SECONDS, retries={"max_attempts": 2}),
+        ),
     )
-    return ConverseScreenshotReader(cast(ConverseClient, runtime), model, catalog)
+    return TwoPassScreenshotReader(
+        runtime,
+        triage_model,
+        english=_reader(model, region, runtime, catalog),
+        other_languages=_reader(other_languages_model, region, runtime, catalog),
+    )

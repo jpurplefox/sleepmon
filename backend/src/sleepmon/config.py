@@ -8,8 +8,12 @@ from datetime import timedelta
 from typing import Literal
 
 DEFAULT_DSN = "postgresql://sleepmon:sleepmon@localhost:5432/sleepmon"
-# Qwen3-VL on Bedrock, the best reader per cost on real screenshots (ADR 0011).
-DEFAULT_SCREENSHOT_MODEL = "qwen.qwen3-vl-235b-a22b"
+# Screenshot import (ADR 0011): Nova 2 Lite triages and reads English screens; any other
+# language goes to Qwen3-VL. Nova 2 Lite is only served in us-east-1.
+DEFAULT_SCREENSHOT_TRIAGE_MODEL = "us.amazon.nova-2-lite-v1:0"
+DEFAULT_SCREENSHOT_MODEL = "us.amazon.nova-2-lite-v1:0"
+DEFAULT_SCREENSHOT_MODEL_OTHER_LANGUAGES = "qwen.qwen3-vl-235b-a22b"
+DEFAULT_BEDROCK_REGION = "us-east-1"
 DEFAULT_CORS_ORIGINS = "http://localhost:5173,http://localhost:3000"
 
 SameSite = Literal["lax", "strict", "none"]
@@ -59,8 +63,10 @@ class Settings:
     # time, so the Lambda entry point lowers it to 1 (connections = instances).
     db_pool_size: int = 4
     # Screenshot import (PRD 0019, ADR 0011).
+    screenshot_triage_model: str = DEFAULT_SCREENSHOT_TRIAGE_MODEL
     screenshot_model: str = DEFAULT_SCREENSHOT_MODEL
-    bedrock_region: str = "sa-east-1"
+    screenshot_model_other_languages: str = DEFAULT_SCREENSHOT_MODEL_OTHER_LANGUAGES
+    bedrock_region: str = DEFAULT_BEDROCK_REGION
     screenshot_daily_limit: int = 50
 
     @classmethod
@@ -84,9 +90,13 @@ class Settings:
                 os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0")
             ),
             sentry_release=os.environ.get("SENTRY_RELEASE") or None,
-            screenshot_model=os.environ.get("SCREENSHOT_MODEL", DEFAULT_SCREENSHOT_MODEL),
-            bedrock_region=(
-                os.environ.get("BEDROCK_REGION") or os.environ.get("AWS_REGION") or "sa-east-1"
+            screenshot_triage_model=os.environ.get(
+                "SCREENSHOT_TRIAGE_MODEL", DEFAULT_SCREENSHOT_TRIAGE_MODEL
             ),
+            screenshot_model=os.environ.get("SCREENSHOT_MODEL", DEFAULT_SCREENSHOT_MODEL),
+            screenshot_model_other_languages=os.environ.get(
+                "SCREENSHOT_MODEL_OTHER_LANGUAGES", DEFAULT_SCREENSHOT_MODEL_OTHER_LANGUAGES
+            ),
+            bedrock_region=os.environ.get("BEDROCK_REGION") or DEFAULT_BEDROCK_REGION,
             screenshot_daily_limit=int(os.environ.get("SCREENSHOT_DAILY_LIMIT", "50")),
         )

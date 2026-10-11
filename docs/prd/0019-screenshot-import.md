@@ -63,13 +63,13 @@ doesn't stays in the dialog with its error, so the user can change the images.
 
 | Field | Read from the screenshots |
 |---|---|
-| Species | The Pokémon's name / sprite |
+| Species | The Pokémon's artwork, within the evolution line named on its candies (the candies always carry the line's first stage, so they narrow the choice but never decide it) |
 | Level | The level shown |
 | Nature | The nature name |
 | Ingredients | Each slot's ingredient, in slot order (Lv 1 / 30 / 60) — **locked slots too**: the game shows them dimmed, and the form already holds not-yet-unlocked slots |
 | Sub skills | Each visible sub skill, in slot order (Lv 10 / 25 / 50 / 70 / 80) |
 | Main skill level | The skill's level |
-| Ribbon | The ribbon, when one is shown |
+| Ribbon | Derived from the hours of **Sleeping Time Shared**: the highest ribbon threshold reached (200 / 500 / 1000 / 2000 h) |
 | Mew's skill | The *Versatile* skill currently shown, for Mew only |
 
 Every value is mapped to the **catalog**: the reading can only produce species,

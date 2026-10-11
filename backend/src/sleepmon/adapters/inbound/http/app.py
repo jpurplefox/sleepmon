@@ -256,7 +256,11 @@ def create_app(
             settings = settings or Settings.from_env()
             screenshot_import_service = DefaultScreenshotImportService(
                 build_screenshot_reader(
-                    settings.screenshot_model, settings.bedrock_region, catalog
+                    triage_model=settings.screenshot_triage_model,
+                    model=settings.screenshot_model,
+                    other_languages_model=settings.screenshot_model_other_languages,
+                    region=settings.bedrock_region,
+                    catalog=catalog,
                 ),
                 PostgresImportQuotaRepository(pool),
                 catalog,

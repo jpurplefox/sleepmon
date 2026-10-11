@@ -54,11 +54,12 @@ def test_sends_the_sheet_then_the_screenshots_and_asks_for_json() -> None:
 
 
 def test_parses_json_even_inside_a_code_fence() -> None:
-    text = '```json\n{"species": "Pikachu", "level": 25, "ribbon": "", "sub_skills": null}\n```'
+    answer = '{"species": "Pikachu", "level": 25, "sleep_hours": 81, "sub_skills": null}'
+    text = f"```json\n{answer}\n```"
     reading = read(FakeClient(text))
     assert reading.species == "Pikachu"
     assert reading.level == 25
-    assert reading.ribbon == ""
+    assert reading.sleep_hours == 81
     assert reading.sub_skills is None
 
 
