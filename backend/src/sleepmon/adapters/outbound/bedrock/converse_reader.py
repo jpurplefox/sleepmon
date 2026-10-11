@@ -1,4 +1,4 @@
-"""Reads screenshots with any vision model through Bedrock's Converse API (ADR 0011).
+"""Reads screenshots with any vision model through Bedrock's Converse API.
 
 Not every provider supports tools, so the model answers with one JSON object in text;
 the same reading rules, reference sheets and domain validation apply as for Claude.

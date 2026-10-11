@@ -1,4 +1,4 @@
-"""Wires the two-pass screenshot reader for the configured Bedrock models (ADR 0011)."""
+"""Wires the two-pass screenshot reader for the configured Bedrock models."""
 
 from __future__ import annotations
 

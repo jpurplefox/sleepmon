@@ -8,7 +8,7 @@ from datetime import timedelta
 from typing import Literal
 
 DEFAULT_DSN = "postgresql://sleepmon:sleepmon@localhost:5432/sleepmon"
-# Screenshot import (ADR 0011): Nova 2 Lite triages and reads English screens; any other
+# Screenshot import: Nova 2 Lite triages and reads English screens; any other
 # language goes to Qwen3-VL. Nova 2 Lite is only served in us-east-1.
 DEFAULT_SCREENSHOT_TRIAGE_MODEL = "us.amazon.nova-2-lite-v1:0"
 DEFAULT_SCREENSHOT_MODEL = "us.amazon.nova-2-lite-v1:0"
@@ -62,7 +62,7 @@ class Settings:
     # Connections each process keeps open. A Lambda instance serves one request at a
     # time, so the Lambda entry point lowers it to 1 (connections = instances).
     db_pool_size: int = 4
-    # Screenshot import (PRD 0019, ADR 0011).
+    # Screenshot import (PRD 0019).
     screenshot_triage_model: str = DEFAULT_SCREENSHOT_TRIAGE_MODEL
     screenshot_model: str = DEFAULT_SCREENSHOT_MODEL
     screenshot_model_other_languages: str = DEFAULT_SCREENSHOT_MODEL_OTHER_LANGUAGES

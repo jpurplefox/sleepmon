@@ -1,6 +1,6 @@
 import type { ShotPayload } from "./types";
 
-// Lambda's request cap is 6 MB, so screenshots go up shrunk (ADR 0011).
+// Lambda's request cap is 6 MB, so screenshots go up shrunk.
 const MAX_SIDE = 1568;
 const QUALITY = 0.85;
 

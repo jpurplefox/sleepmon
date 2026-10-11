@@ -1,4 +1,4 @@
-"""Two passes per import (ADR 0011): a cheap triage, then the full reading in context.
+"""Two passes per import: a cheap triage, then the full reading in context.
 
 1. Triage: the level button's text (English or not) and the Pokémon named on the candy
    label, which picks the evolution line.

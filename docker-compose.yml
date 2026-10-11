@@ -28,7 +28,7 @@ services:
       SENTRY_DSN: ${SENTRY_DSN:-}
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
       SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0}
-      # Screenshot import (ADR-0011): a Bedrock bearer token to try it locally; empty = 503.
+      # Screenshot import (PRD 0019): a Bedrock bearer token to try it locally; empty = 503.
       AWS_BEARER_TOKEN_BEDROCK: ${AWS_BEARER_TOKEN_BEDROCK:-}
       BEDROCK_REGION: ${BEDROCK_REGION:-us-east-1}
       SCREENSHOT_TRIAGE_MODEL: ${SCREENSHOT_TRIAGE_MODEL:-us.amazon.nova-2-lite-v1:0}

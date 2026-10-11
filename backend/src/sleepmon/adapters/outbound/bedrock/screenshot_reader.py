@@ -1,4 +1,4 @@
-"""Reads Pokémon Sleep screenshots with Claude on Amazon Bedrock (ADR 0011).
+"""Reads Pokémon Sleep screenshots with Claude on Amazon Bedrock.
 
 The model reports through a tool whose schema carries the catalog's enums; the domain
 re-validates every value. Only parameters every Claude model on Bedrock accepts are sent.

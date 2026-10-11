@@ -1,6 +1,6 @@
 """What every screenshot reader tells the model, and how its answer is read back.
 
-Shared by the Claude and the Converse readers (ADR 0011): the reading rules, the JSON
+Shared by the Claude and the Converse readers: the reading rules, the JSON
 schema with the catalog's enums, the reference sheets and the tolerant parsing.
 """
 
