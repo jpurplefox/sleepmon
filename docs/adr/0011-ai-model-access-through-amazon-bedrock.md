@@ -38,20 +38,33 @@ Forces at play:
   Claude Haiku 4.5 profile works.
 - **Forced tool choice** is rejected by the current models, so a JSON-returning call
   can't rely on it.
+- **Measured on real screenshots** (3 Pokémon, one captured in Spanish, 2026-10-11):
+  Qwen3-VL 235B read all three right (~USD 3.90 per 1,000 reads, ~3 s each, served
+  in `sa-east-1`); Claude Haiku 4.5 got two species wrong and missed a locked
+  ingredient (~USD 10 per 1,000, ~6 s); Gemma 3, Ministral 3 and Mistral Large 3 were
+  cheaper but missed ingredients, sub skills or the species.
 
 ## Decision
 
-We will call Claude through **Amazon Bedrock's `InvokeModel` API**, using the official
-Anthropic Python SDK's `AnthropicBedrock` client (`anthropic[bedrock]`).
+We will read screenshots with a vision model on **Amazon Bedrock**, chosen by
+configuration, behind one domain port:
+
+- **Default: Qwen3-VL 235B through Bedrock's Converse API** (`boto3`), which serves any
+  provider. Not every provider supports tools, so the model answers with one JSON
+  object in text.
+- **Claude ids keep their own adapter** (the Anthropic SDK's `AnthropicBedrock`
+  client over `InvokeModel`, with a tool whose schema carries the catalog's enums and
+  `tool_choice: auto`), so a Claude model the account gains access to is a
+  configuration change.
 
 - **In production, auth is the Lambda's execution role** (SigV4, permission
-  `bedrock:InvokeModel`); no long-lived key exists there. **For local development**,
+  `bedrock:InvokeModel`, which also covers Converse); no long-lived key exists there. **For local development**,
   a short-lived Bedrock bearer token in `AWS_BEARER_TOKEN_BEDROCK` (which the SDK picks
   up on its own) lets a developer try the feature without AWS credentials on the
   machine. The token is never set on the Lambda.
-- **The model is configuration** (`SCREENSHOT_MODEL`, default the global Claude Haiku
-  4.5 profile `global.anthropic.claude-haiku-4-5-20251001-v1:0` — reading labelled
-  values off a screenshot doesn't need a larger model), and so is the region
+- **The model is configuration** (`SCREENSHOT_MODEL`, default
+  `qwen.qwen3-vl-235b-a22b`; ids containing `anthropic.` take the Claude adapter), and so
+  is the region
   (`BEDROCK_REGION`, falling back to the Lambda's own `AWS_REGION`). Moving to a newer
   model the account gains access to is an environment change, not a code change.
 - **Every model call sits behind a domain port.** Adapters live under
@@ -60,24 +73,26 @@ Anthropic Python SDK's `AnthropicBedrock` client (`anthropic[bedrock]`).
 - **Model output is untrusted input.** It reaches the domain as raw values, and a pure
   domain function validates each one against the catalog. Anything it can't match is
   treated as "not read", never shown as read.
-- **Structured data comes back through a tool** whose JSON schema carries the
-  catalog's enums, with `tool_choice: auto` and a system prompt that requires the call.
-  The domain validation above is the guarantee; the enums only steer the model.
-- **The request uses only parameters every Claude model on Bedrock accepts** (no
-  `effort`, which Haiku 4.5 rejects), so swapping the model id stays safe.
+- **Both adapters share the reading rules**: the system prompt (with the catalog's
+  nature table and the game's official Spanish names), the JSON schema with the
+  catalog's enums, and an ingredient reference sheet sent ahead of the screenshots.
+  The domain validation above is the guarantee; the schema only steers the model.
+- **The Claude request uses only parameters every Claude model on Bedrock accepts**
+  (no `effort`, which Haiku 4.5 rejects), so swapping its model id stays safe.
 - **User content is sent for one request and never stored or logged** by sleepmon.
 
 ## Consequences
 
 - No new secret to manage in production, and the cost lands on the same AWS bill.
   Access is granted with IAM, and CloudTrail/CloudWatch already see it.
-- The Lambda image gains the `anthropic` SDK and its Bedrock extra (with `botocore`).
+- The Lambda image gains the `anthropic` SDK and its Bedrock extra (with `boto3`).
+- Each read logs its token counts, so the cost can be checked against real traffic.
 - One-time setup outside the repo: the IAM permission on the execution role and a
   Lambda timeout long enough for a model call (≥ 60 s). Model access turns itself on
   at the first invocation (Anthropic may ask once for use-case details).
   [ADR-0009](0009-aws-deployment-and-ci-cd.md)'s runbook grows by these steps.
-- The global inference profile may route a request to any commercial region; the
-  screenshots are still not stored anywhere.
+- The default model runs in `sa-east-1` itself; a global profile (as the Claude ids
+  use) may route a request to any commercial region. Screenshots are never stored.
 - The Lambda Function URL's 6 MB request limit applies to anything sent to a model
   through the API; image features shrink images in the browser before upload.
 - Local development needs a Bedrock bearer token (or AWS credentials) to reach the

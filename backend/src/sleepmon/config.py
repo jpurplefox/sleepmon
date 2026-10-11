@@ -8,8 +8,8 @@ from datetime import timedelta
 from typing import Literal
 
 DEFAULT_DSN = "postgresql://sleepmon:sleepmon@localhost:5432/sleepmon"
-# Claude Haiku 4.5 through Bedrock's global inference profile (ADR 0011).
-DEFAULT_SCREENSHOT_MODEL = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
+# Qwen3-VL on Bedrock, the best reader per cost on real screenshots (ADR 0011).
+DEFAULT_SCREENSHOT_MODEL = "qwen.qwen3-vl-235b-a22b"
 DEFAULT_CORS_ORIGINS = "http://localhost:5173,http://localhost:3000"
 
 SameSite = Literal["lax", "strict", "none"]

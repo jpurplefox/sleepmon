@@ -66,7 +66,7 @@ doesn't stays in the dialog with its error, so the user can change the images.
 | Species | The Pokémon's name / sprite |
 | Level | The level shown |
 | Nature | The nature name |
-| Ingredients | Each **unlocked** slot's ingredient, in slot order (Lv 1 / 30 / 60) |
+| Ingredients | Each slot's ingredient, in slot order (Lv 1 / 30 / 60) — **locked slots too**: the game shows them dimmed, and the form already holds not-yet-unlocked slots |
 | Sub skills | Each visible sub skill, in slot order (Lv 10 / 25 / 50 / 70 / 80) |
 | Main skill level | The skill's level |
 | Ribbon | The ribbon, when one is shown |
@@ -115,11 +115,12 @@ the provider does not keep them or train on them. The
 
 ## Acceptance criteria
 
-- **Happy path:** screenshots of a Lv 25 Pikachu with a nature, 2 sub skills, skill
-  level 3 and its Lv 1 ingredient visible → the form opens with species Pikachu, level
-  25, that nature, those 2 sub skills in slot order, skill level 3 and the Lv 1
-  ingredient; Ingredients carries *Not read* (its Lv 30 and Lv 60 slots aren't
-  visible yet in the game) and the top line says *"check Ingredients"*.
+- **Happy path:** screenshots of a Lv 57 Magnezone with its nature, 5 sub skills, skill
+  level 7 and its three ingredients (the Lv 60 one shown locked) → the form opens with
+  species Magnezone, level 57, that nature, the 5 sub skills in slot order, skill level
+  7 and all three ingredients, the locked one included; nothing is marked *Not read*.
+- **Evolution line:** a Sceptile whose screen reads "Treecko Candies" is read as
+  Sceptile, not Treecko.
 - **Any language:** the same Pokémon captured with the game in Spanish and in English
   fills the form with the same values.
 - **Nothing is saved** until the user submits; dismissing the form after an import

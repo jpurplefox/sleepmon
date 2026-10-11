@@ -11,7 +11,10 @@ import httpx2
 import pytest
 from botocore.exceptions import ClientError, NoCredentialsError
 
-from sleepmon.adapters.outbound.bedrock.screenshot_reader import BedrockScreenshotReader
+from sleepmon.adapters.outbound.bedrock.screenshot_reader import (
+    BedrockScreenshotReader,
+    system_prompt,
+)
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.domain.errors import ScreenshotReaderUnavailableError
 from sleepmon.domain.screenshot_import import Screenshot, ScreenshotReading
@@ -126,3 +129,11 @@ def test_no_tool_call_or_a_refusal_reads_nothing() -> None:
 def test_transport_failures_are_unavailable(error: Exception) -> None:
     with pytest.raises(ScreenshotReaderUnavailableError):
         reader(FakeMessages(error=error)).read(IMAGES)
+
+
+def test_system_prompt_carries_the_nature_table_and_spanish_names() -> None:
+    prompt = system_prompt("report", "answer")
+    assert "Sassy: ▲ Main Skill Chance / ▼ EXP Gains" in prompt
+    assert "Sassy = Grosera" in prompt
+    assert "Skill Trigger M = Activación M" in prompt
+    assert "Candies" in prompt  # the species rule against reading the candy label

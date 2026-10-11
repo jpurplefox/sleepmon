@@ -15,6 +15,12 @@ from typing import Any, Protocol
 import anthropic
 from botocore.exceptions import BotoCoreError, ClientError
 
+from sleepmon.adapters.outbound.bedrock.game_terms_es import (
+    NATURE_STATS_ES,
+    NATURES_ES,
+    SUB_SKILLS_ES,
+)
+from sleepmon.domain.catalog_data import NATURE_EFFECTS
 from sleepmon.domain.errors import ScreenshotReaderUnavailableError
 from sleepmon.domain.ports import ScreenshotReader, SpeciesCatalog
 from sleepmon.domain.screenshot_import import Screenshot, ScreenshotReading
@@ -41,8 +47,15 @@ allowed by the schema.
 
 Rules:
 - Report only what is visible. Use null for anything you can't see; never guess.
+- species is the Pokémon shown in the artwork. The "<Name> Candies" label names the \
+first stage of its evolution line, and the name next to the level is a nickname: \
+neither is the species.
+- nature: when its name isn't in English, identify it by the stats it raises (▲) \
+and lowers (▼), as listed in the nature table below. A nature with no effect must \
+be told apart by its name.
 - ingredients has exactly 3 entries, one per slot in order (unlocked at levels 1, 30 \
-and 60). A slot shown locked, as "?", or not visible is null. The game shows \
+and 60). A locked slot still shows its ingredient, dimmed: report it. Only a slot \
+shown as "?" or not visible is null. The game shows \
 ingredients as icons only: identify each one by matching it against the reference \
 sheet that comes first in the message, which is not a screenshot of the Pokémon.
 - sub_skills lists every sub skill shown, in the game's order (slots unlocked at \
@@ -55,12 +68,43 @@ the closest threshold at or below it — under 200 hrs is "", then "200h", "500h
 ribbon nor the sleeping time is visible.
 - versatile_skill is only for Mew: the skill currently shown for its Versatile main skill.
 - If no screenshot shows a Pokémon Sleep Pokémon, {empty} with species null.
+
+Nature table (raised / lowered):
+{natures}
+
+Spanish game names (map them to the English name before the "="):
+{spanish}
 """
 
 
 def system_prompt(report: str, empty: str) -> str:
     """The shared reading rules; ``report`` and ``empty`` say how the model answers."""
-    return _PROMPT_TEMPLATE.format(report=report, empty=empty)
+    return _PROMPT_TEMPLATE.format(
+        report=report, empty=empty, natures=_nature_table(), spanish=_spanish_names()
+    )
+
+
+def _nature_table() -> str:
+    """One line per nature, from the catalog's own effects so the prompt never drifts."""
+    lines = []
+    for nature, effect in NATURE_EFFECTS.items():
+        if effect.is_neutral:
+            lines.append(f"- {nature.value}: no effect")
+        else:
+            lines.append(f"- {nature.value}: ▲ {effect.increased} / ▼ {effect.decreased}")
+    return "\n".join(lines)
+
+
+def _spanish_names() -> str:
+    groups = (
+        ("Natures", NATURES_ES),
+        ("Nature stats", NATURE_STATS_ES),
+        ("Sub skills", SUB_SKILLS_ES),
+    )
+    return "\n".join(
+        f"- {title}: " + "; ".join(f"{en} = {es}" for en, es in names.items())
+        for title, names in groups
+    )
 
 
 SYSTEM_PROMPT = system_prompt("by calling the report_pokemon tool exactly once", "call the tool")

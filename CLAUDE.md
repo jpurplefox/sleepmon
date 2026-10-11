@@ -32,7 +32,7 @@ python3 scripts/icons.py       # regenerate stat/sub-skill icons into public/
 
 # Telemetry (ADR-0010) — all optional; empty = off
 #   backend:  SENTRY_DSN, SENTRY_ENVIRONMENT, SENTRY_TRACES_SAMPLE_RATE, SENTRY_RELEASE
-# Screenshot import (ADR-0011): SCREENSHOT_MODEL (default global.anthropic.claude-haiku-4-5-20251001-v1:0),
+# Screenshot import (ADR-0011): SCREENSHOT_MODEL (default qwen.qwen3-vl-235b-a22b),
 #   BEDROCK_REGION (falls back to AWS_REGION), SCREENSHOT_DAILY_LIMIT (default 50).
 #   Auth: AWS_BEARER_TOKEN_BEDROCK (local dev) or AWS credentials / the Lambda role with
 #   bedrock:InvokeModel (prod); with neither, the endpoint answers 503
