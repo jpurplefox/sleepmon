@@ -23,7 +23,7 @@ the game's rules?"*.
    rules — while letting you **plan ahead** by setting not-yet-unlocked slots.
 3. **Two modes** — create (blank defaults) and edit (pre-filled).
 4. **Hands the result to its caller** — it does not decide persistence itself.
-5. **Can fill itself from game screenshots** in create mode — see
+5. **Can open pre-filled from game screenshots**, marking what wasn't read — see
    [Screenshot import](0019-screenshot-import.md).
 
 ## How it works

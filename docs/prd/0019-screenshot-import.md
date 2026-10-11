@@ -11,18 +11,18 @@ a sub skill picked from a long list, an ingredient in the wrong slot. The game a
 shows all of it on the Pokémon's summary screens.
 
 **Screenshot import** reads those screens for you: you upload screenshots of one
-Pokémon and the [Pokémon form](0003-pokemon-form.md) fills itself in, ready for you to
-check and confirm. It answers *"how do I get this Pokémon from the game into sleepmon
+Pokémon and the [Pokémon form](0003-pokemon-form.md) opens already filled in, ready for
+you to check and confirm. It answers *"how do I get this Pokémon from the game into sleepmon
 without tedium or typos?"* — and makes a first load of a whole Box realistic.
 
 ## What it does (scope)
 
-1. **An import action inside the Pokémon form** (create mode): *Import from
-   screenshots*. Because the form is shared, the action is available wherever the form
-   opens to create — the Box, Comparison and Team Analysis.
+1. **A third way to add a Pokémon** — **+ From screenshots** (ES: **+ Desde
+   imágenes**) — next to the ones that exist today, wherever a Pokémon is added: the
+   Box, Comparison and Team Analysis.
 2. **Reads 1 to 3 screenshots of the same Pokémon**, taken in any of the game's
    languages.
-3. **Fills the form** with what it read — species, level, nature, ingredients per slot,
+3. **Opens the Pokémon form filled** with what it read — species, level, nature, ingredients per slot,
    sub skills in slot order, main skill level, ribbon, and Mew's skill — and **marks
    what it could not read**.
 4. **Never saves on its own.** The filled form is an ordinary unsaved form; the user
@@ -32,16 +32,32 @@ without tedium or typos?"* — and makes a first load of a whole Box realistic.
 
 ## How it works
 
-### Starting an import
+### Where it lives
 
-In a create form, *Import from screenshots* opens a small picker where the user adds
-**1 to 3 images** (PNG, JPEG or WebP, up to 5 MB each) — typically the summary screen
-and the sub-skills screen, since the game spreads the data over several screens. All
-images must show the **same Pokémon**. Images are checked before reading: none, more
-than 3, a wrong format or an oversized file is reported inline and nothing is read.
+**+ From screenshots** sits with the other ways to add, always **second**: first what
+you create (by hand, or from screenshots), last what you already saved.
 
-While reading, the picker shows progress and the form stays untouched; reading takes
-a few seconds.
+- **Comparison** and **Team Analysis** — the add cell offers *+ New*, *+ From
+  screenshots*, *+ My Pokémon*; Team Analysis's **Split** menu offers the same three,
+  in the same order, for a slot's second Pokémon.
+- **Box** — next to *+ Add Pokémon* in the header.
+
+The Spanish label avoids *captura*, which in Pokémon means catching one: the button
+says *Desde imágenes*, and *capturas de pantalla* appears only inside the dialog,
+where the context is clear.
+
+### Reading
+
+The button opens an **Import from screenshots** dialog where the user adds **1 to 3
+images** (PNG, JPEG or WebP, up to 5 MB each) — typically the summary screen and the
+sub-skills screen, since the game spreads the data over several screens. All images
+must show the **same Pokémon**. Images are checked before reading: none, a wrong
+format or an oversized file is reported in the dialog and nothing is read; a 4th
+can't be added.
+
+While reading, the dialog shows progress; reading takes a few seconds. A reading
+that recognizes the species replaces the dialog with the filled form; one that
+doesn't stays in the dialog with its error, so the user can change the images.
 
 ### What gets read
 
@@ -61,33 +77,34 @@ natures, ingredients and sub skills sleepmon knows, whatever the screenshot's
 language. A value that doesn't match the catalog — or that the species can't have
 (e.g. an ingredient outside its pool) — is treated as **not read**, never invented.
 
-### Filling the form
+### The filled form
 
-- **Read fields** replace the form's current values.
+- It is the regular **Add Pokémon** form, opened with the **read values**.
 - **Unread fields** keep the create defaults (level 30, no nature, no sub skills, no
   ribbon, skill level 1; ingredients at each slot's first valid option) and carry a
-  **"Not read — check it"** mark that clears as soon as the user edits that field.
-- A short line at the top of the form says how the reading went: *"Read from 2
-  screenshots — check the marked fields"*, or *"Read from 2 screenshots"* when
-  nothing is marked.
-- If the **species** can't be recognized, nothing is filled and the picker says
-  *"We couldn't recognize a Pokémon in these screenshots"*.
+  **Not read** mark next to their name, which clears as soon as the user edits that
+  field.
+- A line at the top of the form says how the reading went and **names** what to
+  check: *"Read from 2 screenshots · check Nature, Ingredients and Ribbon"*. It
+  updates as marks clear, and reads *"Read from 2 screenshots"* when none is left.
+- If the **species** can't be recognized, no form opens and the dialog says *"We
+  couldn't recognize a Pokémon in these screenshots"*.
 
-From there it is the regular form: plan-ahead slots, validation and submit work as in
-[the Pokémon form](0003-pokemon-form.md). The user can import again; a new import
-replaces the previous one's values and marks.
+From there, plan-ahead slots, validation and submit work as in
+[the Pokémon form](0003-pokemon-form.md). **One reading per import:** the form offers
+no way to import again — to retry, the user closes it and starts a new import.
 
 ### Access and the daily cap
 
 - Importing is a **reserved** action ([Authentication](0010-authentication.md)):
-  without a session, *Import from screenshots* shows the contextual sign-in prompt and,
-  after signing in, returns to the open form.
+  without a session, *+ From screenshots* shows the contextual sign-in prompt and,
+  after signing in, opens the import dialog.
 - Each account gets **50 reads per day**, reset at 00:00 UTC. A read counts when it
   reaches the model, whatever its outcome (including *not recognized*); images
   rejected before reading do not count.
-- When the cap is reached, the action says *"You've used today's 50 imports — they
-  reset at <local time>"* and stays unavailable until then; the form keeps working by
-  hand.
+- When the cap is reached, the button stays available and the dialog says *"You've
+  used today's 50 imports. They reset at <local time>"* and points to *+ New*;
+  adding by hand keeps working.
 
 ### Privacy
 
@@ -101,28 +118,33 @@ the provider does not keep them or train on them. The
 - **Happy path:** screenshots of a Lv 25 Pikachu with a nature, 2 sub skills, skill
   level 3 and its Lv 1 ingredient visible → the form opens with species Pikachu, level
   25, that nature, those 2 sub skills in slot order, skill level 3 and the Lv 1
-  ingredient; the Lv 30 and Lv 60 ingredient slots carry *"Not read — check it"*.
+  ingredient; Ingredients carries *Not read* (its Lv 30 and Lv 60 slots aren't
+  visible yet in the game) and the top line says *"check Ingredients"*.
 - **Any language:** the same Pokémon captured with the game in Spanish and in English
   fills the form with the same values.
 - **Nothing is saved** until the user submits; dismissing the form after an import
   makes no changes anywhere.
 - **Catalog only:** a value that isn't in the catalog or isn't valid for the species
-  is never filled; its field is marked *"Not read — check it"*.
-- **Unread mark** disappears from a field once the user changes it.
+  is never filled; its field is marked *Not read*.
+- **Unread mark** disappears from a field once the user changes it, and the top line
+  stops naming it.
 - **Not a Pokémon:** screenshots without a recognizable Pokémon Sleep species → *"We
-  couldn't recognize a Pokémon in these screenshots"*; the form is unchanged; the read
-  counts toward the cap.
-- **Invalid images:** 0 images → the import can't be sent; 4+ images, a non
-  PNG/JPEG/WebP file or a file over 5 MB → an inline error before reading; nothing
-  counts toward the cap.
-- **Signed out:** *Import from screenshots* shows the sign-in prompt; after signing in
-  the user is back on the same form with what they had entered.
-- **Daily cap:** the 51st read of the day is refused without reading, with the reset
-  time in the user's local time; manual entry still works.
-- **Service failure** (timeout, provider error) → *"We couldn't read the screenshots
-  — try again"*; the form keeps whatever the user had entered.
-- **Re-import** replaces the previous import's values and marks.
-- **Edit mode** does not offer the import.
+  couldn't recognize a Pokémon in these screenshots"* in the dialog; no form opens; the
+  read counts toward the cap.
+- **Invalid images:** 0 images → *Read* is disabled; a 4th image can't be added; a
+  non PNG/JPEG/WebP file or a file over 5 MB → an error in the dialog before reading;
+  nothing counts toward the cap.
+- **Button order:** in every add cell and the Split menu → *+ New*, *+ From
+  screenshots*, *+ My Pokémon*; in the Box header → *+ Add Pokémon*, *+ From
+  screenshots*.
+- **Signed out:** *+ From screenshots* shows the sign-in prompt; after signing in the
+  import dialog opens.
+- **Daily cap:** the 51st read of the day is refused without reading; the dialog shows
+  the reset time in the user's local time; *+ New* still works.
+- **Service failure** (timeout, provider error) → *"We couldn't read the screenshots.
+  Try again"* in the dialog, with the images still there.
+- **One reading per import:** the filled form has no re-import action.
+- **Editing** an existing Pokémon offers no import.
 
 ## Guidelines
 
@@ -130,8 +152,9 @@ the provider does not keep them or train on them. The
   reviews and submits, and the domain validates it like any other config.
 - **The catalog rules here too.** The reading can only produce values the catalog
   knows; when in doubt it leaves a field unread rather than guessing.
-- **One form, still agnostic of its caller.** Import lives in the shared form, so
-  every tool that creates a Pokémon gets it, and none of them handles it specially.
+- **One more way to add, the same form after it.** Import sits wherever adding does
+  and ends in the shared form, so every tool gets it the same way and persistence
+  stays the caller's.
 - **No image is kept.** Screenshots exist only for the duration of one read.
 - **The cap protects the service, not the user's flow.** Hitting it never blocks
   manual entry.

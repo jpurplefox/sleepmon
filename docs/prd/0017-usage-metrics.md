@@ -69,7 +69,7 @@ event. Property values are closed sets (listed here) or numbers.
 
 | Event | When | Properties |
 |---|---|---|
-| `pokemon_added` | A Pokémon lands in a comparison or a team. Editing an existing one does not count. | `tool`: `compare` / `team_analysis`; `source`: `new` (MemberForm), `box` (picked with "My Pokémon"), `box_compare` (the Box's "Compare" action), `clone` (cloned card); `slot`: `single` / `split` (Team Analysis only); `species` |
+| `pokemon_added` | A Pokémon lands in a comparison or a team. Editing an existing one does not count. | `tool`: `compare` / `team_analysis`; `source`: `new` (MemberForm), `screenshots` (MemberForm opened by a screenshot import), `box` (picked with "My Pokémon"), `box_compare` (the Box's "Compare" action), `clone` (cloned card); `slot`: `single` / `split` (Team Analysis only); `species` |
 
 Opening a saved team does **not** emit `pokemon_added` for its members — that is
 `team_opened`.
@@ -84,7 +84,7 @@ Opening a saved team does **not** emit `pokemon_added` for its members — that 
 
 | Event | When | Properties |
 |---|---|---|
-| `box_pokemon_saved` | A Pokémon is written to the Box (one event per Pokémon). | `origin`: `box` / `compare` / `team_analysis` / `team_save`; `action`: `create` / `update`; `species` |
+| `box_pokemon_saved` | A Pokémon is written to the Box (one event per Pokémon). | `origin`: `box` / `compare` / `team_analysis` / `team_save`; `action`: `create` / `update`; `from_screenshots` (a create whose form came from an import); `species` |
 | `box_pokemon_deleted` | A Box Pokémon is deleted. | `teams_affected`: number of saved teams it was in |
 | `list_filtered` | A filter is turned on in a list. Clearing does not count. | `list`: `box` / `teams`; `filter`: `type` / `ingredient` / `skill` / `specialty` (Box) or `map` / `dish_type` / `pokemon` (Teams) |
 | `list_sorted` | The Box's sort key or direction changes. | `list`: `box`; `key`: `dex` / `level` / `berries` / `strength` / `ingredients`; `direction`: `asc` / `desc` |

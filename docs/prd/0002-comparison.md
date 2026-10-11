@@ -35,6 +35,8 @@ is the comparison.
 - **New** — an ad-hoc configuration built with the [Pokémon
   form](0003-pokemon-form.md). Ephemeral to this comparison; it is not saved
   anywhere until you ask.
+- **From screenshots** — the same form, opened pre-filled from game screenshots
+  ([Screenshot import](0019-screenshot-import.md)).
 - **My Pokémon** — brings a saved config **from the Box** through the searchable
   [Box picker](0004-box-picker.md), which **excludes** members already in the
   comparison. The config is **copied** in.
@@ -134,8 +136,8 @@ for the rest.
 
 ## Acceptance criteria
 
-- **Empty comparison** → a hint to add a Pokémon, with **"+ New"** and **"+ My
-  Pokémon"** buttons — not an error.
+- **Empty comparison** → a hint to add a Pokémon, with **"+ New"**, **"+ From
+  screenshots"** and **"+ My Pokémon"** buttons — not an error.
 - **Catalog loading** → "Loading catalog…"; **catalog error** → a message with a
   **retry** option.
 - **Per-card computing** → "Calculating…"; a **per-card error** (e.g. a species not

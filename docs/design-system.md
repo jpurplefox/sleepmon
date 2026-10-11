@@ -523,6 +523,18 @@ states · where it lives. Feature one-offs are intentionally not here.
   dropdown grouped by raised stat; the trigger and each option show a `NaturePill`.
   **`SubSkillSelect`** — uses `.ss-icon`.
 - **`RibbonIcon`** — ribbon sprite with `--empty` variant.
+- **Screenshot slots** (`ShotSlots`, `.shot-slots` / `.shot`) — the images a user
+  uploads for one job (first use: the screenshot import, PRD 0019): a row of **3**
+  portrait tiles (`gap 0.6rem`), each **88px** wide at `aspect-ratio 9/16`, `--r-md`,
+  the image `object-fit: cover` on `--surface-2`. An **empty** tile is the add control
+  itself: a `<button>` with a `1px dashed --border` outline and a `--muted` `+` that opens
+  the file picker (on desktop the row also takes dropped files) — there is no separate
+  drop zone, and with every tile filled there is no add control. A filled tile carries a
+  20px round **remove** badge at its top-right (`--overlay` fill, 10px `IconClose` in
+  `--text`). **Invalid**: a `2px --error` outline inset on the tile, the reason in the
+  `.error` line under the row. **Busy** (the images are being read): tiles at 0.45
+  opacity, remove badges hidden. Not a `.team-slot-mini` variant — those hold sprites in
+  a fixed box; these hold the user's own images.
 - **Base inputs** — global `input, select` styles with the unified focus outline.
   `button, input, select, textarea` inherit the page's font family (one global rule),
   so no component re-declares it.
@@ -623,6 +635,13 @@ states · where it lives. Feature one-offs are intentionally not here.
   `animationend`, which never arrives when the animation is suppressed or its clock
   is frozen in a hidden tab. Under `prefers-reduced-motion` the exit is skipped
   outright, not silenced — a silenced animation would strand the piece on screen.
+- **Form summary line** (`.form-summary`) — the first row of a form that was filled
+  **for** the user (first use: a form opened from a screenshot import), saying how it
+  was filled and what is left to check: "Leído de 2 imágenes · revisá Naturaleza y
+  Listón". A wrapping flex row on `--surface-2`, `--r-md`, `0.55rem 0.75rem`, `--text-sm`
+  `--text`, led by a 16px `IconCheck` in `--accent-text`; `role="status"`, so it is
+  announced as it updates (it drops a field's name as that field is edited, and keeps
+  only the first part once none is left). It carries **no action**.
 - **Error feedback** — `.error` (red text) + `ErrorBoundary` app fallback
   (`role="alert"`, title + "reload" `.btn--primary`).
 - **`.gate-card`** — the anonymous gate that replaces a **reserved page's** content
@@ -948,3 +967,12 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   filled four-point sparkle, so the card has five filled metric glyphs. The comparison
   deltas keep their own up/down color. *Why:* one icon voice per card: every glyph
   that names a figure reads at the same weight and color.
+- **"Check this" is the unsaved mark's label.** *Question:* a screenshot import fills a
+  form but can't read every field; how does a field say "check me" without inventing a
+  new mark or a color? *Resolution:* the **label-only `.progress-diff`** (as in
+  `SavedTeamBar`) with "No leído" / "Not read", in the field's label or legend text row,
+  entering and leaving like `UnsavedMark`; the control under it is **never** tinted, and
+  a [form summary line](#shared-patterns) names the fields. *Why:* both marks say "this
+  value still needs you" — one to save it, one to confirm it — so they share an indigo
+  state mark; leaving the controls alone keeps the locked-by-level dimming the only
+  change a control's look carries, and several tinted blocks in one modal read as noise.
