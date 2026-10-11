@@ -96,8 +96,7 @@ especially:
 
 - [RaenonX Pokémon Sleep Wiki](https://pks.raenonx.cc/)
 - [nitoyon/pokesleep-tool](https://github.com/nitoyon/pokesleep-tool)
-- [Neroli's Lab](https://github.com/nerolis-lab/nerolis-lab) — also the Pokémon Sleep sprites
-  in the screenshot import's evolution-line reference sheets (Apache-2.0)
+- [Neroli's Lab](https://github.com/nerolis-lab/nerolis-lab)
 - [PokeAPI sprites](https://github.com/PokeAPI/sprites)
 
 sleepmon is a fan project, not affiliated with Nintendo, Creatures, GAME FREAK or The

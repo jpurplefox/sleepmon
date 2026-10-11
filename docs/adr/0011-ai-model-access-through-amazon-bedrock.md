@@ -83,8 +83,7 @@ We will read screenshots on **Amazon Bedrock in `us-east-1`** (`BEDROCK_REGION`)
 - **Reference data is generated, not hand-edited.** `backend/scripts/ingredient_sheet.py`
   and `backend/scripts/evolution_lines.py` write committed files, to re-run after
   catalog changes. Lines come from nitoyon/pokesleep-tool's data; the sprites are
-  Pokémon Sleep art from Neroli's Lab (Apache-2.0, credited in the README), supplied by
-  hand as a local folder: the scripts never fetch anything.
+  Pokémon Sleep art from Neroli's Lab (Apache-2.0), supplied by hand as a local folder: the scripts never fetch anything.
 - **The Claude request uses only parameters every Claude model on Bedrock accepts.**
   It sends no `effort`, which Haiku 4.5 rejects, so swapping its model id stays safe.
 - **User content is sent for the request and never stored or logged** by sleepmon.
