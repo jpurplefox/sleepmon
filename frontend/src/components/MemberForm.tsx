@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { useI18n } from "../i18n";
-import type { Catalog, MemberInput } from "../types";
+import { unreadAfterChange } from "../screenshotImport";
+import type { Catalog, ImportField, ImportedForm, MemberInput } from "../types";
 import { VERSATILE, effectiveSkill } from "../versatile";
+import { FormSummary } from "./FormSummary";
 import { IngredientSlots } from "./IngredientSlots";
 import { LevelSelector } from "./LevelSelector";
 import { NatureSelect } from "./NatureSelect";
@@ -11,6 +13,7 @@ import { RibbonSelect } from "./RibbonSelect";
 import { SkillLevelSelector } from "./SkillLevelSelector";
 import { SpeciesSelect } from "./SpeciesSelect";
 import { SubSkillSelect } from "./SubSkillSelect";
+import { UnreadMark } from "./UnreadMark";
 
 interface Props {
   catalog: Catalog;
@@ -20,6 +23,8 @@ interface Props {
   submitLabel?: string;
   // Valores iniciales para editar un Pokémon ya elegido.
   initial?: MemberInput;
+  /** Opens pre-filled from a screenshot import; exclusive with `initial`. */
+  imported?: ImportedForm;
   // Nota al pie del form, justo antes del botón de submit.
   footer?: ReactNode;
   /** Reports whether the form differs from what it opened with (so leaving can ask). */
@@ -32,11 +37,13 @@ export function MemberForm({
   pending,
   error,
   submitLabel,
-  initial,
+  initial: editing,
+  imported,
   footer,
   onDirtyChange,
 }: Props) {
   const { t } = useI18n();
+  const initial = imported?.values ?? editing;
   const label = submitLabel ?? t("form.addToTeam");
   // La especie arranca vacía (sin preselección): así nadie agrega por error la
   // primera del catálogo creyendo que eligió. El submit queda bloqueado hasta
@@ -52,6 +59,26 @@ export function MemberForm({
   const [skillLevel, setSkillLevel] = useState(initial?.skill_level ?? 1);
   // Mew's chosen skill; "" until picked (it then reads as Metronome).
   const [versatileSkill, setVersatileSkill] = useState(initial?.versatile_skill ?? "");
+
+  const [unread, setUnread] = useState<ImportField[]>(imported?.unread ?? []);
+  const current: MemberInput = {
+    species,
+    level,
+    nature,
+    ingredients,
+    sub_skills: subSkills,
+    ribbon,
+    skill_level: skillLevel,
+  };
+  // A mark clears when its field changes; the ref starts at the opening values.
+  const previous = useRef(current);
+  const currentKey = JSON.stringify(current);
+  useEffect(() => {
+    const before = previous.current;
+    previous.current = current;
+    setUnread((u) => (u.length ? unreadAfterChange(u, before, current) : u));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentKey]);
 
   const selectedSpecies = useMemo(
     () => catalog.species.find((s) => s.name === species),
@@ -86,6 +113,7 @@ export function MemberForm({
   // fills in are part of picking that species, so a new form only gets dirty once
   // something is chosen, and an untouched edit stays clean.
   const dirty =
+    imported !== undefined ||
     species !== (initial?.species ?? "") ||
     level !== (initial?.level ?? 30) ||
     nature !== (initial?.nature ?? "") ||
@@ -117,6 +145,7 @@ export function MemberForm({
 
   return (
     <form className="form" onSubmit={handleSubmit}>
+      {imported && <FormSummary images={imported.images} unread={unread} />}
       <div className="form__row">
         <label>
           {t("form.species")}
@@ -129,7 +158,10 @@ export function MemberForm({
         </label>
 
         <label>
-          {t("form.nature")}
+          <span className="label-row">
+            {t("form.nature")}
+            <UnreadMark unread={unread.includes("nature")} />
+          </span>
           <NatureSelect
             natures={catalog.natures}
             value={nature}
@@ -140,11 +172,18 @@ export function MemberForm({
         </label>
       </div>
 
-      <LevelSelector value={level} onChange={setLevel} />
+      <LevelSelector
+        value={level}
+        onChange={setLevel}
+        labelAddon={<UnreadMark unread={unread.includes("level")} />}
+      />
 
       {selectedSpecies && (
         <fieldset>
-          <legend>{t("form.ingredients")}</legend>
+          <legend>
+          {t("form.ingredients")}
+          <UnreadMark unread={unread.includes("ingredients")} />
+        </legend>
           <IngredientSlots
             species={selectedSpecies}
             level={level}
@@ -155,7 +194,10 @@ export function MemberForm({
       )}
 
       <fieldset>
-        <legend>{t("form.subSkills")}</legend>
+        <legend>
+          {t("form.subSkills")}
+          <UnreadMark unread={unread.includes("sub_skills")} />
+        </legend>
         <SubSkillSelect
           subSkills={catalog.sub_skills}
           value={subSkills}
@@ -166,7 +208,10 @@ export function MemberForm({
       </fieldset>
 
       <fieldset>
-        <legend>{t("form.skillLevel")}</legend>
+        <legend>
+          {t("form.skillLevel")}
+          <UnreadMark unread={unread.includes("skill_level")} />
+        </legend>
         <SkillLevelSelector
           value={skillLevel}
           onChange={setSkillLevel}
@@ -178,7 +223,10 @@ export function MemberForm({
       </fieldset>
 
       <fieldset>
-        <legend>{t("form.ribbon")}</legend>
+        <legend>
+          {t("form.ribbon")}
+          <UnreadMark unread={unread.includes("ribbon")} />
+        </legend>
         <RibbonSelect value={ribbon} onChange={setRibbon} />
       </fieldset>
 

@@ -7010,3 +7010,24 @@ button.prod-card__base-tag--action {
 .delete-account-form .error {
   margin: 0.5rem 0 0;
 }
+
+/* Form summary line (design-system: Shared patterns) */
+.form-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
+  margin-bottom: 1rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+.form-summary svg { width: 16px; height: 16px; flex: none; color: var(--accent-text); }
+
+/* "No leído" — label-only .progress-diff beside a field's name */
+.label-row { display: inline-flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+.form legend .unread-mark { margin-left: 0.35rem; vertical-align: 1px; }
+.unread-mark { padding: 0.1rem 0.45rem; }
+.unread-mark--static { animation: none; }
