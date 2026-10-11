@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { forgetImportLimit, futureReset, rememberImportLimit } from "./ImportDialog";
+import { forgetImportLimit, futureReset, rememberImportLimit } from "./screenshotImport";
 
 describe("remembered import limit", () => {
   afterEach(forgetImportLimit);

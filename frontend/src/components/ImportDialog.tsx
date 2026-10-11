@@ -2,28 +2,12 @@ import { useEffect, useRef, useState } from "react";
 
 import { api, ApiError } from "../api/client";
 import { useI18n } from "../i18n";
-import { checkFile, MAX_SHOTS, toImportedForm } from "../screenshotImport";
+import { checkFile, futureReset, MAX_SHOTS, rememberImportLimit, toImportedForm } from "../screenshotImport";
 import { shrinkImage } from "../shrinkImage";
 import { track } from "../telemetry/analytics";
 import type { Catalog, ImportedForm } from "../types";
 import { Modal } from "./Modal";
 import { ShotSlots } from "./ShotSlots";
-
-// The daily-cap reset time, remembered for the session so a reopened dialog skips the round trip.
-let knownResetAt: string | null = null;
-
-/** Drops the remembered reset time (the signed-in account changed). */
-export function forgetImportLimit(): void {
-  knownResetAt = null;
-}
-
-export function rememberImportLimit(resetsAt: string | null): void {
-  knownResetAt = resetsAt;
-}
-
-export function futureReset(): string | null {
-  return knownResetAt && new Date(knownResetAt).getTime() > Date.now() ? knownResetAt : null;
-}
 
 interface Props {
   catalog: Catalog;

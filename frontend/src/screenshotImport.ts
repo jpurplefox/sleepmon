@@ -50,3 +50,19 @@ const COVERS: Record<ImportField, (v: MemberInput) => string> = {
 export function unreadAfterChange(unread: ImportField[], before: MemberInput, after: MemberInput): ImportField[] {
   return unread.filter((f) => COVERS[f](before) === COVERS[f](after));
 }
+
+// The daily-cap reset time, remembered for the session so a reopened dialog skips the round trip.
+let knownResetAt: string | null = null;
+
+/** Drops the remembered reset time (the signed-in account changed). */
+export function forgetImportLimit(): void {
+  knownResetAt = null;
+}
+
+export function rememberImportLimit(resetsAt: string | null): void {
+  knownResetAt = resetsAt;
+}
+
+export function futureReset(): string | null {
+  return knownResetAt && new Date(knownResetAt).getTime() > Date.now() ? knownResetAt : null;
+}

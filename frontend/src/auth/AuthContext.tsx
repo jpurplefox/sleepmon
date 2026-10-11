@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { __setRefreshHandler } from "../api/client";
 import { postGoogle, postLogout, postRefresh, type AuthUser } from "./authApi";
-import { forgetImportLimit } from "../components/ImportDialog";
+import { forgetImportLimit } from "../screenshotImport";
 import { sessionHint, tokenStore } from "./tokenStore";
 
 type Status = "checking" | "anonymous" | "authenticated";
