@@ -70,7 +70,7 @@ def test_screenshot_settings_default_and_fall_back_to_aws_region(monkeypatch) ->
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("AWS_REGION", "us-east-1")
     s = Settings.from_env()
-    assert s.screenshot_model == "anthropic.claude-opus-5-5"
+    assert s.screenshot_model == "anthropic.claude-haiku-5-5"
     assert s.bedrock_region == "us-east-1"
     assert s.screenshot_daily_limit == 50
     monkeypatch.setenv("BEDROCK_REGION", "sa-east-1")

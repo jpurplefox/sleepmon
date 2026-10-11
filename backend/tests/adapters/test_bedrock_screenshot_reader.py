@@ -38,7 +38,7 @@ def tool_response(payload: dict[str, Any], stop_reason: str = "tool_use") -> Any
 
 def reader(messages: FakeMessages) -> BedrockScreenshotReader:
     return BedrockScreenshotReader(
-        SimpleNamespace(messages=messages), "anthropic.claude-opus-5-5", StaticSpeciesCatalog()
+        SimpleNamespace(messages=messages), "anthropic.claude-haiku-5-5", StaticSpeciesCatalog()
     )
 
 
@@ -46,7 +46,7 @@ def test_sends_the_images_and_a_tool_with_catalog_enums() -> None:
     messages = FakeMessages(tool_response({"species": "Pikachu"}))
     reader(messages).read(IMAGES)
     kw = messages.kwargs
-    assert kw["model"] == "anthropic.claude-opus-5-5"
+    assert kw["model"] == "anthropic.claude-haiku-5-5"
     assert kw["tool_choice"] == {"type": "auto"}
     assert kw["system"][0]["cache_control"] == {"type": "ephemeral"}
     content = kw["messages"][0]["content"]

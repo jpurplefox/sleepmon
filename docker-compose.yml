@@ -28,6 +28,11 @@ services:
       SENTRY_DSN: ${SENTRY_DSN:-}
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-development}
       SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0}
+      # Screenshot import (ADR-0011): a Bedrock bearer token to try it locally; empty = 503.
+      AWS_BEARER_TOKEN_BEDROCK: ${AWS_BEARER_TOKEN_BEDROCK:-}
+      BEDROCK_REGION: ${BEDROCK_REGION:-sa-east-1}
+      SCREENSHOT_MODEL: ${SCREENSHOT_MODEL:-anthropic.claude-haiku-5-5}
+      SCREENSHOT_DAILY_LIMIT: ${SCREENSHOT_DAILY_LIMIT:-50}
     ports:
       - "8000:8000"
     depends_on:

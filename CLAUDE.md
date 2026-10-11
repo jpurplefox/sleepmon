@@ -32,9 +32,10 @@ python3 scripts/icons.py       # regenerate stat/sub-skill icons into public/
 
 # Telemetry (ADR-0010) — all optional; empty = off
 #   backend:  SENTRY_DSN, SENTRY_ENVIRONMENT, SENTRY_TRACES_SAMPLE_RATE, SENTRY_RELEASE
-# Screenshot import (ADR-0011): SCREENSHOT_MODEL (default anthropic.claude-opus-5-5),
-#   BEDROCK_REGION (falls back to AWS_REGION), SCREENSHOT_DAILY_LIMIT (default 50);
-#   needs AWS credentials with bedrock-mantle:CreateInference, else the endpoint answers 503
+# Screenshot import (ADR-0011): SCREENSHOT_MODEL (default anthropic.claude-haiku-5-5),
+#   BEDROCK_REGION (falls back to AWS_REGION), SCREENSHOT_DAILY_LIMIT (default 50).
+#   Auth: AWS_BEARER_TOKEN_BEDROCK (local dev) or AWS credentials / the Lambda role with
+#   bedrock-mantle:CreateInference (prod); with neither, the endpoint answers 503
 #   frontend: VITE_SENTRY_DSN, VITE_SENTRY_ENVIRONMENT, VITE_SENTRY_TRACES_SAMPLE_RATE,
 #             VITE_POSTHOG_KEY, VITE_POSTHOG_HOST, VITE_RELEASE,
 #             VITE_CONTACT_EMAIL (privacy page + footer; empty = hidden)

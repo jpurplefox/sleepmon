@@ -42,10 +42,14 @@ Forces at play:
 We will call Claude through **Claude in Amazon Bedrock**, using the official Anthropic
 Python SDK's `AnthropicBedrockMantle` client (`anthropic[bedrock]`).
 
-- **Auth is the Lambda's execution role** (SigV4, permission
-  `bedrock-mantle:CreateInference`). No API key exists for this.
+- **In production, auth is the Lambda's execution role** (SigV4, permission
+  `bedrock-mantle:CreateInference`); no long-lived key exists there. **For local
+  development**, a short-lived Bedrock bearer token in `AWS_BEARER_TOKEN_BEDROCK`
+  (which the SDK picks up on its own) lets a developer try the feature without AWS
+  credentials on the machine. The token is never set on the Lambda.
 - **The model is configuration** (`SCREENSHOT_MODEL`, default
-  `anthropic.claude-opus-5-5`), and so is the region (`BEDROCK_REGION`, falling back
+  `anthropic.claude-haiku-5-5`, the fastest and cheapest current Claude — reading labelled values off a
+  screenshot doesn't need a larger model), and so is the region (`BEDROCK_REGION`, falling back
   to the Lambda's own `AWS_REGION`).
 - **Every model call sits behind a domain port.** Adapters live under
   `adapters/outbound/bedrock/`, and the rest of the app sees only the port and its
@@ -73,7 +77,8 @@ Python SDK's `AnthropicBedrockMantle` client (`anthropic[bedrock]`).
 - New Claude API features arrive on Bedrock later than on Claude Platform on AWS.
   Structured outputs is the visible example; when it lands, the tool can be replaced
   by `output_config.format` without touching the port.
-- Local development without AWS credentials can't reach the model; the feature
-  answers "unavailable" (503) there, and tests use the port's fakes.
+- Local development needs a Bedrock bearer token (or AWS credentials) to reach the
+  model; without either the feature answers "unavailable" (503), and tests use the
+  port's fakes.
 - Swapping providers (first-party API, Claude Platform on AWS) means a new adapter
   behind the same port, plus a superseding ADR.
