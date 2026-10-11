@@ -26,16 +26,18 @@ log = logging.getLogger(__name__)
 TOOL_NAME = "report_pokemon"
 # Every ingredient's game icon with its name (regenerate with backend/scripts/ingredient_sheet.py).
 INGREDIENT_SHEET = "ingredient_reference.png"
+SHEET_CAPTION = "Reference sheet (not a screenshot): ingredient icons and names."
+USER_TEXT = "Report the Pokémon in these screenshots."
 MAX_TOKENS = 4096
 
-SYSTEM_PROMPT = """\
+_PROMPT_TEMPLATE = """\
 You read screenshots of the mobile game Pokémon Sleep and report one Pokémon's \
-configuration by calling the report_pokemon tool exactly once.
+configuration {report}.
 
 All screenshots show the same Pokémon, usually its summary screen (name, level, \
 main skill and its level, ingredients, ribbon) and its sub skills / nature screen. \
 The game may be in any language: always map what you see to the English names \
-allowed by the tool's schema.
+allowed by the schema.
 
 Rules:
 - Report only what is visible. Use null for anything you can't see; never guess.
@@ -52,8 +54,16 @@ the closest threshold at or below it — under 200 hrs is "", then "200h", "500h
 "1000h", "2000h" (e.g. 1521 hrs 17 mins is "1000h"). Use null only if neither the \
 ribbon nor the sleeping time is visible.
 - versatile_skill is only for Mew: the skill currently shown for its Versatile main skill.
-- If no screenshot shows a Pokémon Sleep Pokémon, call the tool with species null.
+- If no screenshot shows a Pokémon Sleep Pokémon, {empty} with species null.
 """
+
+
+def system_prompt(report: str, empty: str) -> str:
+    """The shared reading rules; ``report`` and ``empty`` say how the model answers."""
+    return _PROMPT_TEMPLATE.format(report=report, empty=empty)
+
+
+SYSTEM_PROMPT = system_prompt("by calling the report_pokemon tool exactly once", "call the tool")
 
 
 class _Messages(Protocol):
@@ -72,34 +82,39 @@ def _nullable_enum(values: Sequence[str]) -> dict[str, Any]:
 
 
 def build_tool(catalog: SpeciesCatalog) -> dict[str, Any]:
-    nullable_int: dict[str, Any] = {"type": ["integer", "null"]}
     return {
         "name": TOOL_NAME,
         "description": "Report the Pokémon shown in the screenshots.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "species": _nullable_enum(sorted(s.name for s in catalog.all())),
-                "level": nullable_int,
-                "nature": _nullable_enum([n.value for n in Nature]),
-                "ingredients": {
-                    "type": "array",
-                    "items": _nullable_enum([i.value for i in Ingredient]),
-                },
-                "sub_skills": {
-                    "type": ["array", "null"],
-                    "items": {"type": "string", "enum": [s.value for s in SubSkill]},
-                },
-                "skill_level": nullable_int,
-                "ribbon": _nullable_enum([r.value for r in Ribbon]),
-                "versatile_skill": _nullable_enum(list(VERSATILE_SKILLS)),
+        "input_schema": build_schema(catalog),
+    }
+
+
+def build_schema(catalog: SpeciesCatalog) -> dict[str, Any]:
+    """The reading's JSON schema, its enums taken from the catalog."""
+    nullable_int: dict[str, Any] = {"type": ["integer", "null"]}
+    return {
+        "type": "object",
+        "properties": {
+            "species": _nullable_enum(sorted(s.name for s in catalog.all())),
+            "level": nullable_int,
+            "nature": _nullable_enum([n.value for n in Nature]),
+            "ingredients": {
+                "type": "array",
+                "items": _nullable_enum([i.value for i in Ingredient]),
             },
-            "required": [
-                "species", "level", "nature", "ingredients",
-                "sub_skills", "skill_level", "ribbon", "versatile_skill",
-            ],
-            "additionalProperties": False,
+            "sub_skills": {
+                "type": ["array", "null"],
+                "items": {"type": "string", "enum": [s.value for s in SubSkill]},
+            },
+            "skill_level": nullable_int,
+            "ribbon": _nullable_enum([r.value for r in Ribbon]),
+            "versatile_skill": _nullable_enum(list(VERSATILE_SKILLS)),
         },
+        "required": [
+            "species", "level", "nature", "ingredients",
+            "sub_skills", "skill_level", "ribbon", "versatile_skill",
+        ],
+        "additionalProperties": False,
     }
 
 
@@ -128,14 +143,27 @@ class BedrockScreenshotReader(ScreenshotReader):
             status = getattr(exc, "status_code", None)
             log.warning("Screenshot reading failed: %s (status %s)", type(exc).__name__, status)
             raise ScreenshotReaderUnavailableError(str(exc)) from exc
+        usage = getattr(response, "usage", None)
+        log.info(
+            "Screenshot read: model=%s input=%s cache_write=%s cache_read=%s output=%s",
+            self._model,
+            getattr(usage, "input_tokens", None),
+            getattr(usage, "cache_creation_input_tokens", None),
+            getattr(usage, "cache_read_input_tokens", None),
+            getattr(usage, "output_tokens", None),
+        )
         return _parse(response)
+
+
+def reference_sheet_png() -> bytes:
+    return files(__package__).joinpath(INGREDIENT_SHEET).read_bytes()
 
 
 def _reference_sheet() -> list[dict[str, Any]]:
     """The ingredient sheet, cached with the tool and system prompt ahead of the screenshots."""
-    data = files(__package__).joinpath(INGREDIENT_SHEET).read_bytes()
+    data = reference_sheet_png()
     return [
-        {"type": "text", "text": "Reference sheet (not a screenshot): ingredient icons and names."},
+        {"type": "text", "text": SHEET_CAPTION},
         {
             "type": "image",
             "source": {
@@ -160,7 +188,7 @@ def _content(images: Sequence[Screenshot]) -> list[dict[str, Any]]:
         }
         for image in images
     ]
-    blocks.append({"type": "text", "text": "Report the Pokémon in these screenshots."})
+    blocks.append({"type": "text", "text": USER_TEXT})
     return blocks
 
 
@@ -170,7 +198,7 @@ def _parse(response: Any) -> ScreenshotReading:
     for block in getattr(response, "content", []):
         if getattr(block, "type", None) == "tool_use" and getattr(block, "name", None) == TOOL_NAME:
             data = block.input if isinstance(block.input, dict) else {}
-            return _reading(data)
+            return reading_from(data)
     return ScreenshotReading()
 
 
@@ -182,7 +210,8 @@ def _int(value: object) -> int | None:
     return value if isinstance(value, int) and not isinstance(value, bool) else None
 
 
-def _reading(data: dict[str, Any]) -> ScreenshotReading:
+def reading_from(data: dict[str, Any]) -> ScreenshotReading:
+    """Coerces the model's answer into a reading; wrong types become ``None``."""
     raw_ingredients = data.get("ingredients")
     ingredients = (
         tuple(_str(v) for v in raw_ingredients[:3])

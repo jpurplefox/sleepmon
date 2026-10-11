@@ -73,6 +73,6 @@ module = "yoyo.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-# botocore ships no stubs or py.typed marker.
-module = "botocore.*"
+# boto3/botocore ship no stubs or py.typed marker.
+module = ["botocore.*", "boto3.*"]
 ignore_missing_imports = true

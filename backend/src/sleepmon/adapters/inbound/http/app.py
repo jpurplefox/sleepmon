@@ -9,9 +9,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
-from typing import Any, cast
+from typing import Any
 
-from anthropic import AnthropicBedrock
 from litestar import Litestar, Request, Response
 from litestar.config.compression import CompressionConfig
 from litestar.config.cors import CORSConfig
@@ -45,10 +44,7 @@ from sleepmon.adapters.inbound.http.schemas import ErrorOut, ImportLimitOut
 from sleepmon.adapters.outbound.auth.google_identity import GoogleIdentityProvider
 from sleepmon.adapters.outbound.auth.jwt_access_token import JwtAccessTokenService
 from sleepmon.adapters.outbound.auth.refresh_token import SecretsRefreshTokenCodec
-from sleepmon.adapters.outbound.bedrock.screenshot_reader import (
-    BedrockScreenshotReader,
-    MessagesClient,
-)
+from sleepmon.adapters.outbound.bedrock.factory import build_screenshot_reader
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.adapters.outbound.postgres.pool import create_pool
@@ -258,15 +254,9 @@ def create_app(
     if screenshot_import_service is None:
         if pool is not None:
             settings = settings or Settings.from_env()
-            bedrock = AnthropicBedrock(
-                aws_region=settings.bedrock_region, timeout=45.0, max_retries=1
-            )
             screenshot_import_service = DefaultScreenshotImportService(
-                BedrockScreenshotReader(
-                    # The SDK's typed ``create`` is narrower than the adapter's protocol.
-                    cast(MessagesClient, bedrock),
-                    settings.screenshot_model,
-                    catalog,
+                build_screenshot_reader(
+                    settings.screenshot_model, settings.bedrock_region, catalog
                 ),
                 PostgresImportQuotaRepository(pool),
                 catalog,
