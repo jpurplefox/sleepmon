@@ -1,7 +1,7 @@
-"""Reads Pokémon Sleep screenshots with Claude in Amazon Bedrock (ADR 0011).
+"""Reads Pokémon Sleep screenshots with Claude on Amazon Bedrock (ADR 0011).
 
-Bedrock's Messages endpoint has no structured outputs, so the model reports through a
-tool whose schema carries the catalog's enums; the domain re-validates every value.
+The model reports through a tool whose schema carries the catalog's enums; the domain
+re-validates every value. Only parameters every Claude model on Bedrock accepts are sent.
 """
 
 from __future__ import annotations
@@ -107,7 +107,6 @@ class BedrockScreenshotReader(ScreenshotReader):
             response = self._client.messages.create(
                 model=self._model,
                 max_tokens=MAX_TOKENS,
-                output_config={"effort": "low"},
                 system=[
                     {"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}
                 ],

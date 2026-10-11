@@ -15,6 +15,7 @@ from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatal
 from sleepmon.domain.errors import ScreenshotReaderUnavailableError
 from sleepmon.domain.screenshot_import import Screenshot, ScreenshotReading
 
+MODEL = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
 IMAGES = [Screenshot("image/jpeg", b"\xff\xd8jpeg"), Screenshot("image/png", b"\x89PNG")]
 
 
@@ -38,7 +39,7 @@ def tool_response(payload: dict[str, Any], stop_reason: str = "tool_use") -> Any
 
 def reader(messages: FakeMessages) -> BedrockScreenshotReader:
     return BedrockScreenshotReader(
-        SimpleNamespace(messages=messages), "anthropic.claude-haiku-5-5", StaticSpeciesCatalog()
+        SimpleNamespace(messages=messages), MODEL, StaticSpeciesCatalog()
     )
 
 
@@ -46,7 +47,8 @@ def test_sends_the_images_and_a_tool_with_catalog_enums() -> None:
     messages = FakeMessages(tool_response({"species": "Pikachu"}))
     reader(messages).read(IMAGES)
     kw = messages.kwargs
-    assert kw["model"] == "anthropic.claude-haiku-5-5"
+    assert kw["model"] == MODEL
+    assert "output_config" not in kw
     assert kw["tool_choice"] == {"type": "auto"}
     assert kw["system"][0]["cache_control"] == {"type": "ephemeral"}
     content = kw["messages"][0]["content"]

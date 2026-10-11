@@ -11,7 +11,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from typing import Any, cast
 
-from anthropic import AnthropicBedrockMantle
+from anthropic import AnthropicBedrock
 from litestar import Litestar, Request, Response
 from litestar.config.compression import CompressionConfig
 from litestar.config.cors import CORSConfig
@@ -258,7 +258,7 @@ def create_app(
     if screenshot_import_service is None:
         if pool is not None:
             settings = settings or Settings.from_env()
-            bedrock = AnthropicBedrockMantle(
+            bedrock = AnthropicBedrock(
                 aws_region=settings.bedrock_region, timeout=45.0, max_retries=1
             )
             screenshot_import_service = DefaultScreenshotImportService(

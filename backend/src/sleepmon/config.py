@@ -8,6 +8,8 @@ from datetime import timedelta
 from typing import Literal
 
 DEFAULT_DSN = "postgresql://sleepmon:sleepmon@localhost:5432/sleepmon"
+# Claude Haiku 4.5 through Bedrock's global inference profile (ADR 0011).
+DEFAULT_SCREENSHOT_MODEL = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
 DEFAULT_CORS_ORIGINS = "http://localhost:5173,http://localhost:3000"
 
 SameSite = Literal["lax", "strict", "none"]
@@ -57,7 +59,7 @@ class Settings:
     # time, so the Lambda entry point lowers it to 1 (connections = instances).
     db_pool_size: int = 4
     # Screenshot import (PRD 0019, ADR 0011).
-    screenshot_model: str = "anthropic.claude-haiku-5-5"
+    screenshot_model: str = DEFAULT_SCREENSHOT_MODEL
     bedrock_region: str = "sa-east-1"
     screenshot_daily_limit: int = 50
 
@@ -82,7 +84,7 @@ class Settings:
                 os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0")
             ),
             sentry_release=os.environ.get("SENTRY_RELEASE") or None,
-            screenshot_model=os.environ.get("SCREENSHOT_MODEL", "anthropic.claude-haiku-5-5"),
+            screenshot_model=os.environ.get("SCREENSHOT_MODEL", DEFAULT_SCREENSHOT_MODEL),
             bedrock_region=(
                 os.environ.get("BEDROCK_REGION") or os.environ.get("AWS_REGION") or "sa-east-1"
             ),
