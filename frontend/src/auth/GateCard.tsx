@@ -10,7 +10,12 @@ import { GoogleSignInButton } from "./GoogleSignInButton";
 // la página, no hay nada que preservar detrás (a diferencia del diálogo). Un
 // único acento gold (el roundel de luna) por card, per "one gold accent" del
 // design system; el resto es neutro.
-export function GateCard() {
+const COPY = {
+  box: { title: "auth.gateTitle", body: "auth.gateBody" },
+  savedTeams: { title: "auth.gateTitleSavedTeams", body: "auth.gateBodySavedTeams" },
+} as const;
+
+export function GateCard({ topic = "box" }: { topic?: keyof typeof COPY }) {
   const { t } = useI18n();
   // The page itself is the prompt: record it each time it is shown.
   useEffect(() => {
@@ -22,8 +27,8 @@ export function GateCard() {
         <div className="gate-card__moon">
           <IconMoon width={20} height={20} />
         </div>
-        <p className="gate-card__title">{t("auth.gateTitle")}</p>
-        <p className="gate-card__body">{t("auth.gateBody")}</p>
+        <p className="gate-card__title">{t(COPY[topic].title)}</p>
+        <p className="gate-card__body">{t(COPY[topic].body)}</p>
         <GoogleSignInButton reason="page_gate" />
       </div>
     </div>

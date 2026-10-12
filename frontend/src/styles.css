@@ -3244,7 +3244,8 @@ button.shot--empty:focus-visible,
   min-height: 26px;
   padding: 0 0.25rem;
   background: var(--surface);
-  border: 1px solid var(--border);
+  /* Transparent like the card's own: --border is never a card edge. */
+  border: 1px solid transparent;
   border-bottom: none;
   border-radius: var(--r-lg) var(--r-lg) 0 0;
 }
@@ -3278,10 +3279,12 @@ button.shot--empty:focus-visible,
 
 .prod-card {
   --prod-card-pad: 0.9rem;
+  --prod-card-pad-top: var(--prod-card-pad);
   background: var(--surface);
   border: 1px solid transparent;
   border-radius: var(--r-lg);
   padding: var(--prod-card-pad);
+  padding-top: var(--prod-card-pad-top);
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
@@ -3313,8 +3316,8 @@ button.shot--empty:focus-visible,
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  margin: calc(-1 * var(--prod-card-pad)) calc(-1 * var(--prod-card-pad)) 0;
-  padding: var(--prod-card-pad) var(--prod-card-pad) 0;
+  margin: calc(-1 * var(--prod-card-pad-top)) calc(-1 * var(--prod-card-pad)) 0;
+  padding: var(--prod-card-pad-top) var(--prod-card-pad) 0;
   border-top-left-radius: inherit;
   border-top-right-radius: inherit;
 }
@@ -4006,6 +4009,11 @@ button.prod-card__base-tag--action {
   padding: 0.35rem 0.5rem;
 }
 
+/* The slot header already pads its bottom: the card doesn't add its full top pad. */
+.prod-card__toolbar--slot + .prod-card {
+  --prod-card-pad-top: 0.35rem;
+}
+
 @media (pointer: coarse) {
   .prod-card__toolbar--slot {
     --slot-tab-h: 34px; /* the 32px tab plus its border */
@@ -4058,6 +4066,34 @@ button.prod-card__base-tag--action {
 .team-slot__tab-wrap--active .team-slot__tab {
   color: var(--text);
   font-weight: 600;
+}
+.team-slot__sprites {
+  display: flex;
+  justify-content: center;
+  align-self: center;
+  gap: 0.25rem;
+}
+.team-slot__sprite {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  cursor: pointer;
+  opacity: 0.4;
+  filter: grayscale(0.7);
+  transition: opacity 0.15s ease, filter 0.15s ease;
+}
+.team-slot__sprite:hover,
+.team-slot__sprite:focus-visible {
+  opacity: 0.75;
+  filter: grayscale(0.3);
+}
+.team-slot__sprite--active,
+.team-slot__sprite--active:hover {
+  opacity: 1;
+  filter: none;
+  cursor: default;
 }
 .team-slot__tab-pct {
   opacity: 0.75;

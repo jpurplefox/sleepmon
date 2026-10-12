@@ -130,6 +130,22 @@ describe("Team Analysis analytics", () => {
     ]);
   });
 
+  it("shows the other half of a split when its sprite is clicked", async () => {
+    const user = userEvent.setup();
+    renderTeams();
+    await user.click(await screen.findByRole("button", { name: "+ My Pokémon" }));
+    await user.click(await screen.findByRole("option", { name: /Raichu/ }));
+    await user.click(screen.getByRole("button", { name: "Split" }));
+    await user.click(screen.getByRole("menuitem", { name: "+ New" }));
+    await user.click(screen.getByRole("button", { name: "submit-form" }));
+    await user.click(screen.getByRole("button", { name: "Show Raichu" }));
+    expect(screen.getByRole("tab", { name: /Raichu/ })).toHaveAttribute("aria-selected", "true");
+    await user.click(screen.getByRole("button", { name: "Show Pikachu" }));
+    expect(screen.getByRole("tab", { name: /Pikachu/ })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("button", { name: "Show Pikachu" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Show Raichu" })).toHaveAttribute("aria-pressed", "false");
+  });
+
   it("records meals_set only when the meals dialog closes with a change", async () => {
     const user = userEvent.setup();
     renderTeams();

@@ -52,6 +52,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "auth.gateTitle": "Tu caja es donde viven tus Pokémon",
     "auth.gateBody":
       "Iniciá sesión con Google para empezar tu caja, registrar tu equipo y encontrarlo en cada visita.",
+    "auth.gateTitleSavedTeams": "Tus equipos te esperan en cada visita",
+    "auth.gateBodySavedTeams":
+      "Iniciá sesión con Google para guardar los equipos que armes en Análisis de equipo y volver a abrirlos cuando quieras.",
     // Página Equipo
     "team.box": "Mi caja",
     "team.updating": "Actualizando…",
@@ -243,8 +246,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.skillTitle": "Por la main skill",
     "card.skill": "Skill",
     "card.triggersTitle": "Activaciones de skill por día",
-    "card.energyEach": "a cada compañero",
-    "card.energyDrain": "menos a cada compañero no Siniestro",
+    "card.energyEach": "de energía para todos",
+    "card.energyDrain": "de energía menos a cada compañero no Siniestro",
     "card.energyDrainTitle":
       "Energía que la skill le saca por día a cada compañero que no es de tipo Siniestro",
     "card.energyEachTitle":
@@ -277,10 +280,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.helpMultTeam": "de ayuda · a cada Pokémon",
     "card.helpMultTitle":
       "Ayudas por día que la skill le da a cada Pokémon que alcanza (disparos × ×N del nivel)",
-    "card.selfEnergy": "de energía a sí mismo",
+    "card.selfEnergy": "de energía para sí mismo",
     "card.selfEnergyTitle":
       "Energía que la skill recupera por día al propio Pokémon",
-    "card.randomEnergy": "de energía a un compañero al azar",
+    "card.randomEnergy": "de energía para compañeros al azar",
     "card.candy": "caramelos",
     "card.unmodeledSkill": "La producción de esta skill no se está calculando.",
     "card.unmodeledBerryZone":
@@ -484,6 +487,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.split": "Dividir",
     "teams.splitRemove": "Quitar del slot",
     "teams.splitShare": "Reparto del slot",
+    "teams.showPokemon": "Ver {name}",
     "teams.pickSplitPartner": "Elegí el segundo Pokémon del slot",
     // Expert mode
     "teams.weeklyBonus": "Bonus semanal",
@@ -727,6 +731,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "auth.gateTitle": "Your box is where your Pokémon live",
     "auth.gateBody":
       "Sign in with Google to start your box, register your team, and find it again on every visit.",
+    "auth.gateTitleSavedTeams": "Your teams, waiting on every visit",
+    "auth.gateBodySavedTeams":
+      "Sign in with Google to save the teams you build in Team analysis and open them again whenever you like.",
     // Team page
     "team.box": "My box",
     "team.updating": "Updating…",
@@ -916,8 +923,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.skillTitle": "From the main skill",
     "card.skill": "Skill",
     "card.triggersTitle": "Skill activations per day",
-    "card.energyEach": "to each teammate",
-    "card.energyDrain": "off each non-Dark teammate",
+    "card.energyEach": "Energy for everyone",
+    "card.energyDrain": "Energy off each non-Dark teammate",
     "card.energyDrainTitle": "Energy the skill takes per day from each non-Dark-type teammate",
     "card.energyEachTitle":
       "Energy the skill restores per day to each teammate",
@@ -950,10 +957,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "card.helpMultTeam": "help · to each Pokémon",
     "card.helpMultTitle":
       "Helps per day the skill gives each Pokémon it reaches (triggers × ×N of the level)",
-    "card.selfEnergy": "Energy to itself",
+    "card.selfEnergy": "Energy for itself",
     "card.selfEnergyTitle":
       "Energy the skill restores per day to the Pokémon itself",
-    "card.randomEnergy": "Energy to a random teammate",
+    "card.randomEnergy": "Energy for random teammates",
     "card.candy": "candies",
     "card.unmodeledSkill": "This skill's production isn't being calculated.",
     "card.unmodeledBerryZone":
@@ -1155,6 +1162,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "teams.split": "Split",
     "teams.splitRemove": "Remove from slot",
     "teams.splitShare": "Slot share",
+    "teams.showPokemon": "Show {name}",
     "teams.pickSplitPartner": "Pick the slot's second Pokémon",
     // Expert mode
     "teams.weeklyBonus": "Weekly bonus",

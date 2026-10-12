@@ -69,8 +69,14 @@ function AppShell() {
 
   // Reserved tools render a login prompt in place (no redirect), matching the
   // previous per-panel gating.
-  const gated = (node: React.ReactNode) =>
-    checking ? <Placeholder loading>{t("auth.checkingSession")}</Placeholder> : authenticated ? node : <GateCard />;
+  const gated = (node: React.ReactNode, topic?: React.ComponentProps<typeof GateCard>["topic"]) =>
+    checking ? (
+      <Placeholder loading>{t("auth.checkingSession")}</Placeholder>
+    ) : authenticated ? (
+      node
+    ) : (
+      <GateCard topic={topic} />
+    );
 
   return (
     <>
@@ -88,7 +94,7 @@ function AppShell() {
                 "My Pokémon" and saving ask for a session, in place. */}
             <Teams />
           </Route>
-          <Route path={ROUTES.savedTeams}>{gated(<SavedTeams />)}</Route>
+          <Route path={ROUTES.savedTeams}>{gated(<SavedTeams />, "savedTeams")}</Route>
           <Route path={ROUTES.account}>
             {gated(
               <Account

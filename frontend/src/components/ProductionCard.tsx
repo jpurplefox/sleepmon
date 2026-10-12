@@ -71,19 +71,24 @@ const TIER_CLASS: Record<string, string> = { Gold: "gold", Blue: "blue", Regular
 // un valor base comparable (p. ej. un ingrediente que la base no produce).
 // `digits` should match the value's own: the delta is the gap between the values as
 // shown, and one that rounds to zero reads as no change.
+// `relative` shows the gap as a percentage of the base instead.
 function Delta({
   value,
   base,
   digits = 2,
+  relative = false,
 }: {
   value: number;
   base: number | null | undefined;
   digits?: 0 | 2;
+  relative?: boolean;
 }) {
   if (base == null) return null;
-  const format = digits === 0 ? fmtInt : fmt;
   const round = (n: number) => Number(n.toFixed(digits));
-  const diff = round(value) - round(base);
+  const asPct = relative && round(base) !== 0;
+  const format = asPct ? pct : digits === 0 ? fmtInt : fmt;
+  const gap = round(value) - round(base);
+  const diff = asPct ? (gap / round(base)) * 100 : gap;
   if (format(Math.abs(diff)) === format(0)) return <span className="prod-delta prod-delta--same">≈</span>;
   const cls = diff > 0 ? "prod-delta--up" : "prod-delta--down";
   // Shape (▲/▼) carries the direction too, so it doesn't rest on color alone.
@@ -116,6 +121,8 @@ interface Props {
   slotHeader?: ReactNode;
   /** Inline message shown at the top of the card body (e.g. a failed save). */
   notice?: ReactNode;
+  /** Replaces the centered sprite (a split slot shows both of its Pokémon). */
+  sprite?: ReactNode;
   onEdit: () => void;
   onClone: () => void;
   onRemove: () => void;
@@ -146,6 +153,7 @@ export function ProductionCard({
   comparing,
   readOnly = false,
   slotHeader,
+  sprite,
   notice,
   onEdit,
   onClone,
@@ -467,9 +475,10 @@ export function ProductionCard({
                 ))}
             </div>
             {/* Sprite centrado: foco visual de la card. */}
-            {species && (
-              <img className="prod-card__sprite" src={spriteUrl(species.dex)} alt="" loading="lazy" />
-            )}
+            {sprite ??
+              (species && (
+                <img className="prod-card__sprite" src={spriteUrl(species.dex)} alt="" loading="lazy" />
+              ))}
           </header>
 
           <div className="prod-card__tags">
@@ -542,7 +551,7 @@ export function ProductionCard({
               {markFor("cadence")}
             </span>
             <Tooltip content={t("card.helpsPerDay")} className="tooltip--inline">
-              <IconHelp className="prod-card__icon--help" /> {fmt(d.helps_per_day)} <Delta value={d.helps_per_day} base={base?.helps_per_day} />
+              <IconHelp className="prod-card__icon--help" /> {fmt(d.helps_per_day)} <Delta value={d.helps_per_day} base={base?.helps_per_day} relative />
             </Tooltip>
           </div>
 
