@@ -11,18 +11,9 @@ export interface PresetEvent {
   effects: Omit<EventEffect, "id">[];
 }
 
-// Packed Portions Cooking Week Part 3: Oct 5 (Mon) 4:00 a.m. – Oct 12 (Mon) 3:59 a.m.
-export const CURRENT_EVENT: PresetEvent | null = {
-  name: "Packed Portions Cooking Week Part 3",
-  start: new Date(2026, 9, 5, 4, 0),
-  end: new Date(2026, 9, 12, 4, 0),
-  effects: [
-    { kind: "extra_ingredients", value: 1, scope: { kind: "specialty", specialty: "Ingredients" } },
-    { kind: "skill_ingredients", value: 1.5, scope: { kind: "team" } },
-    { kind: "dish_strength", value: 1.25, scope: { kind: "team" } },
-    { kind: "pot_size", value: 2, scope: { kind: "team" } },
-  ],
-};
+// No production-affecting event is running: Pokémon Growth Week Vol. 6 (Oct 12–19) only
+// boosts sleep EXP and candies, and New Moon Day only raises mythical spawn rates.
+export const CURRENT_EVENT: PresetEvent | null = null;
 
 /** The preset's effects if it is running at `now`; otherwise none. */
 export function presetEffects(
