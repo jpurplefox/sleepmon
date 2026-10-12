@@ -3683,6 +3683,11 @@ button.prod-card__base-tag--action {
   border-bottom: 1px solid var(--border);
 }
 
+/* The nature pill is a different piece from the two icon rows above: more room. */
+.prod-card__tags .prod-card__nature {
+  margin-top: 0.35rem;
+}
+
 /* Ingredientes seleccionados, sub skills y naturaleza: centrados bajo el nombre.
    Alto fijo por fila para que la sección mida lo mismo aunque una card diga
    "sin sub skills" o "Sin naturaleza" y otra tenga íconos. */
@@ -3691,7 +3696,7 @@ button.prod-card__base-tag--action {
   min-height: 26px;
 }
 
-/* Ingredients at 28px; the sub skills below keep the form's 36px. */
+/* Ingredients at the sub skills' 36px, so the two icon rows read at one size. */
 /* Sub skills at the form's 36px; in a card too narrow for five (a team card under
    ~230px) they shrink together instead of wrapping to a second row. */
 .icon-row.prod-card__subskills {
@@ -3713,7 +3718,7 @@ button.prod-card__base-tag--action {
   height: 75%;
 }
 .prod-card__ingredients .mini-icon {
-  height: 28px;
+  height: 36px;
 }
 
 .icon-row {
