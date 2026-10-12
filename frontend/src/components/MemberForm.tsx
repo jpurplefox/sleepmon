@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
+import { carryIngredients, devolvedSkillLevel, evolvedSkillLevel } from "../evolution";
 import { useI18n } from "../i18n";
 import { unreadAfterChange } from "../screenshotImport";
 import type { Catalog, ImportField, ImportedForm, MemberInput } from "../types";
 import { VERSATILE, effectiveSkill } from "../versatile";
+import { EvolveControl } from "./EvolveControl";
 import { FormSummary } from "./FormSummary";
 import { IngredientSlots } from "./IngredientSlots";
 import { LevelSelector } from "./LevelSelector";
@@ -85,8 +87,8 @@ export function MemberForm({
     [catalog.species, species],
   );
 
-  // Al cambiar de especie, default cada slot de ingrediente a su primera opción
-  // válida. En el primer render conservamos los ingredientes iniciales (edición).
+  // On a species change, carry the ingredients over (see carryIngredients). The first
+  // render keeps the initial ones as they are (edit).
   // Usamos un ref con la especie ya aplicada (robusto al doble efecto de StrictMode).
   const appliedSpecies = useRef<string | null>(null);
   useEffect(() => {
@@ -95,7 +97,7 @@ export function MemberForm({
     const isFirst = appliedSpecies.current === null;
     appliedSpecies.current = species;
     if (isFirst && initial?.ingredients?.length) return; // conservar lo inicial
-    setIngredients(selectedSpecies.ingredient_slots.map((opts) => opts[0] ?? ""));
+    setIngredients((prev) => carryIngredients(prev, selectedSpecies));
   }, [selectedSpecies, species, initial]);
 
   // El contrato del backend exige exactamente 3 ingredientes (uno por slot). El
@@ -125,6 +127,20 @@ export function MemberForm({
   useEffect(() => onDirtyChange?.(dirty), [dirty, onDirtyChange]);
 
   const versatile = selectedSpecies?.main_skill === VERSATILE;
+
+  // A stage step changes the species and moves the skill one level (see evolution.ts).
+  function evolve(target: string) {
+    const skill = catalog.species.find((s) => s.name === target)?.main_skill;
+    setSpecies(target);
+    setSkillLevel((l) => evolvedSkillLevel(l, skill));
+  }
+
+  function devolve() {
+    const previous = selectedSpecies?.previous_stage;
+    if (!previous) return;
+    setSpecies(previous);
+    setSkillLevel(devolvedSkillLevel);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -172,11 +188,21 @@ export function MemberForm({
         </label>
       </div>
 
-      <LevelSelector
-        value={level}
-        onChange={setLevel}
-        labelAddon={<UnreadMark unread={unread.includes("level")} />}
-      />
+      <div className="level-evolve">
+        <LevelSelector
+          value={level}
+          onChange={setLevel}
+          labelAddon={<UnreadMark unread={unread.includes("level")} />}
+        />
+        {selectedSpecies && (
+          <EvolveControl
+            species={selectedSpecies}
+            catalog={catalog.species}
+            onEvolve={evolve}
+            onBack={devolve}
+          />
+        )}
+      </div>
 
       {selectedSpecies && (
         <fieldset>
