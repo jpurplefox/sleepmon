@@ -367,9 +367,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
             imported={editIndex === null ? (shots.imported ?? undefined) : undefined}
             onSubmit={upsert}
             footer={
-              editIndex === null ? (
-                <p className="muted">{t("prod.noteNew")}</p>
-              ) : entries[editIndex]?.sourceId !== undefined ? (
+              editIndex === null ? null : entries[editIndex]?.sourceId !== undefined ? (
                 <p className="muted">{t("prod.noteEditInBox")}</p>
               ) : (
                 <p className="muted">{t("prod.noteEditLocal")}</p>

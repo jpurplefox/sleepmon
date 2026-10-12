@@ -152,7 +152,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.myPokemon": "+ Mis Pokémon",
     "prod.addToComparison": "Agregar a la comparación",
     "prod.save": "Guardar",
-    "prod.noteNew": "No se guarda en tu caja.",
     "prod.noteEditInBox":
       "Editás la copia de comparación; tu caja no cambia. Para actualizarla, usá el ícono de guardar en la card.",
     "prod.noteEditLocal": "Los cambios son solo para la comparación.",
@@ -829,7 +828,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.myPokemon": "+ My Pokémon",
     "prod.addToComparison": "Add to comparison",
     "prod.save": "Save",
-    "prod.noteNew": "It won't be saved to your box.",
     "prod.noteEditInBox":
       "You're editing the comparison copy; your box doesn't change. To update it, use the save icon on the card.",
     "prod.noteEditLocal": "Changes are for the comparison only.",
