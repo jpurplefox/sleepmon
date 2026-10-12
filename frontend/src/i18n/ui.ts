@@ -47,6 +47,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "auth.dialogTitle": "Iniciá sesión para continuar",
     "auth.dialogBody":
       "Tu caja guarda tus Pokémon entre visitas. Iniciá sesión con Google para continuar.",
+    "auth.dialogBodyImport":
+      "Leer capturas del juego está reservado para usuarios registrados. Iniciá sesión con Google para continuar.",
     "auth.gateTitle": "Tu caja es donde viven tus Pokémon",
     "auth.gateBody":
       "Iniciá sesión con Google para empezar tu caja, registrar tu equipo y encontrarlo en cada visita.",
@@ -658,7 +660,7 @@ export const UI: Record<Lang, Record<string, string>> = {
       "sleepmon es un proyecto de fans, sin afiliación con Nintendo, Creatures, GAME FREAK ni The Pokémon Company. Pokémon y sus nombres son marcas de sus respectivos dueños.",
     "import.button": "+ Desde imágenes",
     "import.title": "Importar desde imágenes",
-    "import.help": "Subí hasta 3 capturas de pantalla del juego, todas del mismo Pokémon: su resumen y la pantalla de sub skills. PNG, JPEG o WebP, hasta 5 MB cada una. Se leen y se descartan.",
+    "import.help": "Subí hasta 3 imágenes del mismo Pokémon donde se vean su nivel, naturaleza, ingredientes y sub skills. Revisá los datos que se completen: la lectura puede tener errores.",
     "import.add": "Agregar imagen",
     "import.remove": "Quitar imagen {i}",
     "import.read": "Leer imágenes",
@@ -716,6 +718,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "auth.dialogTitle": "Sign in to continue",
     "auth.dialogBody":
       "Your box keeps your Pokémon across visits. Sign in with Google to continue.",
+    "auth.dialogBodyImport":
+      "Reading game screenshots is reserved for registered users. Sign in with Google to continue.",
     "auth.gateTitle": "Your box is where your Pokémon live",
     "auth.gateBody":
       "Sign in with Google to start your box, register your team, and find it again on every visit.",
@@ -1323,7 +1327,7 @@ export const UI: Record<Lang, Record<string, string>> = {
       "sleepmon is a fan project, not affiliated with Nintendo, Creatures, GAME FREAK or The Pokémon Company. Pokémon and its names are trademarks of their respective owners.",
     "import.button": "+ From screenshots",
     "import.title": "Import from screenshots",
-    "import.help": "Add up to 3 screenshots of the game, all of the same Pokémon: its summary and its sub skills screen. PNG, JPEG or WebP, up to 5 MB each. They're read and discarded.",
+    "import.help": "Add up to 3 screenshots of the same Pokémon showing its level, nature, ingredients and sub skills. Double-check the filled-in details — the reading can make mistakes.",
     "import.add": "Add screenshot",
     "import.remove": "Remove screenshot {i}",
     "import.read": "Read screenshots",
