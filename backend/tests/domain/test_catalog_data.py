@@ -15,7 +15,13 @@ from sleepmon.domain.catalog_data import (
     ribbon_inventory_bonus,
     ribbon_speed_bonus,
 )
-from sleepmon.domain.species import SEED_SPECIES, Species
+from sleepmon.domain.species import (
+    PRE_EVOLUTIONS,
+    SEED_SPECIES,
+    Species,
+    evolutions_of,
+    previous_stage_of,
+)
 from sleepmon.domain.value_objects import (
     Berry,
     Ingredient,
@@ -355,6 +361,41 @@ def test_evolution_stage_matches_known_lines() -> None:
     assert _by_name("Farfetch'd").evolution_stage == 0
 
 
+def test_evolutions_go_one_stage_at_a_time() -> None:
+    assert evolutions_of("Bulbasaur") == ("Ivysaur",)
+    assert evolutions_of("Ivysaur") == ("Venusaur",)
+    assert evolutions_of("Venusaur") == ()
+    assert evolutions_of("Ditto") == ()
+    assert evolutions_of("Pichu") == ("Pikachu",)  # the baby comes first
+
+
+def test_branching_lines_list_every_evolution() -> None:
+    assert evolutions_of("Kirlia") == ("Gardevoir", "Gallade")
+    assert len(evolutions_of("Eevee")) == 8
+    assert evolutions_of("Slowpoke") == ("Slowbro", "Slowking")
+
+
+def test_regional_forms_evolve_into_their_own_form() -> None:
+    assert evolutions_of("Vulpix (Alola)") == ("Ninetales (Alola)",)
+    assert evolutions_of("Wooper (Paldea)") == ("Clodsire",)
+    assert evolutions_of("Pumpkaboo (Jumbo)") == ("Gourgeist (Jumbo)",)
+
+
+def test_every_evolution_is_the_next_stage_of_the_same_line() -> None:
+    by_name = {sp.name: sp for sp in SEED_SPECIES}
+    for child, parent in PRE_EVOLUTIONS.items():
+        evolved, base = by_name[child], by_name[parent]
+        assert evolved.evolution_stage == base.evolution_stage + 1, child
+        assert evolved.line_evolutions == base.line_evolutions, child
+        # Evolving keeps the ingredients, so the form can carry them over.
+        assert evolved.ingredients == base.ingredients, child
+
+
+def test_every_species_that_can_evolve_has_an_evolution() -> None:
+    for sp in SEED_SPECIES:
+        assert bool(evolutions_of(sp.name)) == (sp.evolutions_remaining > 0), sp.name
+
+
 def test_evolutions_remaining_is_line_minus_stage() -> None:
     # Lo que define el bonus de velocidad del listón: cuántas evoluciones le quedan.
     assert _by_name("Bulbasaur").evolutions_remaining == 2  # puede evolucionar 2 veces
@@ -527,3 +568,21 @@ def test_pot_ladder_is_strictly_increasing() -> None:
 def test_progress_defaults() -> None:
     assert DEFAULT_POT_SIZE == 21
     assert MAX_AREA_BONUS_PCT == 85
+
+
+def test_previous_stage_is_the_stage_it_evolves_from() -> None:
+    assert previous_stage_of("Ivysaur") == "Bulbasaur"
+    assert previous_stage_of("Gallade") == "Kirlia"
+    assert previous_stage_of("Clodsire") == "Wooper (Paldea)"
+    assert previous_stage_of("Ninetales (Alola)") == "Vulpix (Alola)"
+    assert previous_stage_of("Bulbasaur") is None
+    assert previous_stage_of("Ditto") is None
+
+
+def test_previous_stage_and_evolutions_agree() -> None:
+    names = {sp.name for sp in SEED_SPECIES}
+    for sp in SEED_SPECIES:
+        previous = previous_stage_of(sp.name)
+        if previous is not None:
+            assert previous in names, sp.name
+            assert sp.name in evolutions_of(previous), sp.name
