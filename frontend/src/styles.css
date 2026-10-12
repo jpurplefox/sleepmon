@@ -1046,18 +1046,13 @@ button.shot--empty:focus-visible,
   font-weight: 600;
 }
 
-.species-trigger__meta {
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
 .species-trigger__chevron {
   margin-left: auto;
   color: var(--muted);
 }
 
-/* Wider than its trigger, which is half the form on a phone: a name plus its
-   specialty must fit. Never wider than the screen. */
+/* Wider than its trigger, which is half the form on a phone: a long name must
+   fit. Never wider than the screen. */
 .species-dropdown {
   position: absolute;
   top: calc(100% + 4px);
@@ -1132,13 +1127,6 @@ button.shot--empty:focus-visible,
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.species-option__meta {
-  margin-left: auto;
-  color: var(--muted);
-  font-size: var(--text-sm);
   white-space: nowrap;
 }
 

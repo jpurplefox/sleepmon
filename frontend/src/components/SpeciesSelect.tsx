@@ -14,7 +14,7 @@ interface Props {
 }
 
 export function SpeciesSelect({ species, value, onChange, ariaLabel }: Props) {
-  const { t, specialty } = useI18n();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   // Opción resaltada para la navegación con flechas dentro del dropdown.
@@ -83,7 +83,6 @@ export function SpeciesSelect({ species, value, onChange, ariaLabel }: Props) {
           <>
             <img className="sprite" src={spriteUrl(selected.dex)} alt="" loading="lazy" />
             <span className="species-trigger__name">{selected.name}</span>
-            <span className="species-trigger__meta">{specialty(selected.specialty)}</span>
           </>
         ) : (
           <span className="muted">{t("speciesSel.placeholder")}</span>
@@ -129,7 +128,6 @@ export function SpeciesSelect({ species, value, onChange, ariaLabel }: Props) {
                 >
                   <img className="sprite" src={spriteUrl(s.dex)} alt="" loading="lazy" />
                   <span className="species-option__name">{s.name}</span>
-                  <span className="species-option__meta">{specialty(s.specialty)}</span>
                 </button>
               </li>
             ))}

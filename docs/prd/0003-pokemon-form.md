@@ -31,7 +31,7 @@ the game's rules?"*.
 
 ### Fields
 
-- **Species** (required) — a searchable picker with sprites and specialty. Changing
+- **Species** (required) — a searchable picker with sprites. Changing
   to a species of the **same evolution line keeps** the ingredients (the line shares
   them); changing to **another line resets** each slot to its first valid option, even
   when the new species offers the same ingredient.
