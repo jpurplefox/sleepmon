@@ -74,6 +74,12 @@ describe("App shell", () => {
     expect(within(footer()).getByRole("link", { name: "Privacy" })).toBeInTheDocument();
   });
 
+  it("shows a My teams sign-in prompt on /saved-teams signed out", async () => {
+    renderAt(ROUTES.savedTeams);
+    expect(await screen.findByText("Your teams, waiting on every visit")).toBeInTheDocument();
+    expect(screen.queryByText("Your box is where your Pokémon live")).not.toBeInTheDocument();
+  });
+
   it("shows the sign-in prompt instead of Your account when signed out", async () => {
     renderAt(ROUTES.account);
     expect(await screen.findByText("Your box is where your Pokémon live")).toBeInTheDocument();

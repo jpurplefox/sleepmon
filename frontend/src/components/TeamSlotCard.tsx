@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent } from "react";
 
 import { useI18n } from "../i18n";
+import { spriteUrl } from "../sprites";
 import type { Slot } from "../teamRoster";
 import { weightsOf } from "../teamRoster";
 import type { BerryRole, Catalog, ExpertSpeed, TeamProduction, WeeklyBonus } from "../types";
@@ -290,6 +291,31 @@ export function TeamSlotCard({
     </div>
   );
 
+  // Both Pokémon of a split, side by side: the inactive one dimmed, and a click on
+  // it shows its card (same as its tab).
+  const sprites = split ? (
+    <div className="team-slot__sprites">
+      {slot.entries.map((e, i) => {
+        const dex = catalog.species.find((s) => s.name === e.config.species)?.dex;
+        return (
+          <button
+            key={e.id}
+            type="button"
+            className={"team-slot__sprite" + (i === safeTab ? " team-slot__sprite--active" : "")}
+            aria-pressed={i === safeTab}
+            aria-label={t("teams.showPokemon", { name: e.config.species })}
+            title={t("teams.showPokemon", { name: e.config.species })}
+            onClick={() => setActiveTab(i)}
+          >
+            {dex !== undefined && (
+              <img className="prod-card__sprite" src={spriteUrl(dex)} alt="" loading="lazy" />
+            )}
+          </button>
+        );
+      })}
+    </div>
+  ) : undefined;
+
   return (
     <ProductionCard
       config={active.config}
@@ -302,6 +328,7 @@ export function TeamSlotCard({
       expertSpeed={expertSpeed}
       weeklyBonus={weeklyBonus}
       slotHeader={header}
+      sprite={sprites}
       notice={
         status.state === "error" ? (
           <p className="error" role="alert">

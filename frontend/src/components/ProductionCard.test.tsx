@@ -249,6 +249,14 @@ describe("ProductionCard deltas", () => {
     expect(deltas).toContain("+4,422");
   });
 
+  it("shows a helps-per-day delta as a percentage of the base", () => {
+    const base = { ...PRODUCTION, helps_per_day: 100 } as Production;
+    const shown = { ...PRODUCTION, helps_per_day: 112.34 } as Production;
+    const { container } = renderCard(shown, {}, base);
+    const deltas = [...container.querySelectorAll(".prod-delta")].map((d) => d.textContent);
+    expect(deltas).toContain("+12.3%");
+  });
+
   it("shows no change when both strengths read the same", () => {
     // 10,577.72 and 10,577.6 both show as 10,578.
     const close = { ...PRODUCTION, berry_strength: 10577.6 } as Production;
