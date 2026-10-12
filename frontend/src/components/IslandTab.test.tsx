@@ -17,6 +17,8 @@ const pikachu: Species = {
   ingredient_slots: [["Fancy Apple"], ["Warming Ginger"], ["Fancy Apple", "Warming Ginger"]],
   ingredient_amounts: [[1], [2], [5, 8]],
   base_inventory: 20,
+  evolutions: [],
+  previous_stage: null,
 };
 
 const oranMon: Species = { ...pikachu, name: "Squirtle", dex: 7, berry: "Oran" };

@@ -28,6 +28,10 @@ export interface Species {
   // ingredient_amounts[slot][j] = cantidad de ingredient_slots[slot][j].
   ingredient_amounts: number[][];
   base_inventory: number;
+  // What it evolves into next: one, several when the line branches, or none.
+  evolutions: string[];
+  // The stage it evolves from; null for a base form or one that doesn't evolve.
+  previous_stage: string | null;
 }
 
 export type RatingTier = "basic" | "great" | "ultra" | "master";

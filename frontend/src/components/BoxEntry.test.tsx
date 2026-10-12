@@ -37,6 +37,8 @@ const VENUSAUR: Species = {
   ingredient_slots: [["Honey"], ["Honey"], ["Soft Potato"]],
   ingredient_amounts: [[2], [5], [6]],
   base_inventory: 17,
+  evolutions: [],
+  previous_stage: null,
 };
 
 const MEMBER: Member = {

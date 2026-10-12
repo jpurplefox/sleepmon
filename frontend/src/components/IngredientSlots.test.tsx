@@ -18,6 +18,8 @@ const species: Species = {
   ingredient_slots: [["Fancy Apple"], ["Warming Ginger"], ["Honey", "Soft Potato"]],
   ingredient_amounts: [[1], [2], [5, 8]],
   base_inventory: 20,
+  evolutions: [],
+  previous_stage: null,
 };
 
 beforeEach(() => {
