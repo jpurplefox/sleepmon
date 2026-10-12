@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { carryIngredients, devolvedSkillLevel, evolvedSkillLevel } from "./evolution";
+import {
+  carryIngredients,
+  devolvedSkillLevel,
+  evolvedSkillLevel,
+  ingredientsAfterChange,
+  lineBase,
+} from "./evolution";
 import type { Species } from "./types";
 
 const ivysaur: Species = {
@@ -72,3 +78,36 @@ describe("carryIngredients", () => {
     ]);
   });
 });
+
+// A line (Bulbasaur → Ivysaur → Venusaur) and an unrelated species with the same kit.
+const bulbasaur: Species = { ...ivysaur, name: "Bulbasaur", evolutions: ["Ivysaur"], previous_stage: null };
+const venusaur: Species = { ...ivysaur, name: "Venusaur", evolutions: [], previous_stage: "Ivysaur" };
+const lookalike: Species = { ...ivysaur, name: "Lookalike", evolutions: [], previous_stage: null };
+const catalog = [bulbasaur, ivysaur, venusaur, lookalike];
+
+describe("lineBase", () => {
+  it("follows the previous stages back to the base form", () => {
+    expect(lineBase("Venusaur", catalog)).toBe("Bulbasaur");
+    expect(lineBase("Bulbasaur", catalog)).toBe("Bulbasaur");
+    expect(lineBase("Lookalike", catalog)).toBe("Lookalike");
+  });
+});
+
+describe("ingredientsAfterChange", () => {
+  const kit = ["Honey", "Snoozy Tomato", "Soft Potato"];
+  const firstOptions = ["Honey", "Honey", "Honey"];
+
+  it("keeps the kit within one evolution line", () => {
+    expect(ingredientsAfterChange(kit, "Bulbasaur", venusaur, catalog)).toEqual(kit);
+    expect(ingredientsAfterChange(kit, "Venusaur", ivysaur, catalog)).toEqual(kit);
+  });
+
+  it("resets to each slot's first option for another line, even with the same options", () => {
+    expect(ingredientsAfterChange(kit, "Ivysaur", lookalike, catalog)).toEqual(firstOptions);
+  });
+
+  it("fills the first options when there was no species", () => {
+    expect(ingredientsAfterChange([], null, ivysaur, catalog)).toEqual(firstOptions);
+  });
+});
+

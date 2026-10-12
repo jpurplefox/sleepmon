@@ -20,3 +20,26 @@ export function carryIngredients(previous: string[], species: Species): string[]
     return opts.includes(prev) ? prev : (opts[0] ?? "");
   });
 }
+
+/** The base form of `name`'s evolution line, following `previous_stage` back. */
+export function lineBase(name: string, catalog: Species[]): string {
+  let base = name;
+  // A line has at most three stages; the bound also guards a malformed catalog.
+  for (let i = 0; i < 3; i++) {
+    const previous = catalog.find((s) => s.name === base)?.previous_stage;
+    if (!previous) break;
+    base = previous;
+  }
+  return base;
+}
+
+/** The kit after a species change: kept within one evolution line, else each slot's first option. */
+export function ingredientsAfterChange(
+  previous: string[],
+  from: string | null,
+  to: Species,
+  catalog: Species[],
+): string[] {
+  const sameLine = from !== null && lineBase(from, catalog) === lineBase(to.name, catalog);
+  return carryIngredients(sameLine ? previous : [], to);
+}

@@ -418,7 +418,7 @@ describe("MemberForm evolution", () => {
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 
-  it("keeps the ingredients the new species also offers when picked by hand", async () => {
+  it("keeps the ingredients when a species of the same line is picked by hand", async () => {
     const user = userEvent.setup();
     const { onSubmit } = renderForm({ initial: caught });
 
@@ -427,6 +427,19 @@ describe("MemberForm evolution", () => {
     await user.click(screen.getByRole("button", { name: "Add to my box" }));
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({ species: "Venusaur", ingredients: caught.ingredients }),
+    );
+  });
+
+  it("resets the ingredients when another line is picked, even if it offers them", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderForm({ initial: caught });
+
+    // Kirlia's fixture shares Bulbasaur's slots but is another line.
+    await pickSpecies(user, /Kirlia/);
+
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ species: "Kirlia", ingredients: ["Honey", "Snoozy Tomato", "Honey"] }),
     );
   });
 

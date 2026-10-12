@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
-import { carryIngredients, devolvedSkillLevel, evolvedSkillLevel } from "../evolution";
+import { devolvedSkillLevel, evolvedSkillLevel, ingredientsAfterChange } from "../evolution";
 import { useI18n } from "../i18n";
 import { unreadAfterChange } from "../screenshotImport";
 import type { Catalog, ImportField, ImportedForm, MemberInput } from "../types";
@@ -87,18 +87,19 @@ export function MemberForm({
     [catalog.species, species],
   );
 
-  // On a species change, carry the ingredients over (see carryIngredients). The first
-  // render keeps the initial ones as they are (edit).
-  // Usamos un ref con la especie ya aplicada (robusto al doble efecto de StrictMode).
+  // On a species change, keep the kit within the same evolution line, else reset each
+  // slot to its first option (see ingredientsAfterChange). The first render keeps the
+  // initial ones as they are (edit). The ref holds the applied species (StrictMode-safe).
   const appliedSpecies = useRef<string | null>(null);
   useEffect(() => {
     if (!selectedSpecies) return;
     if (appliedSpecies.current === species) return;
-    const isFirst = appliedSpecies.current === null;
+    const from = appliedSpecies.current;
+    const isFirst = from === null;
     appliedSpecies.current = species;
     if (isFirst && initial?.ingredients?.length) return; // conservar lo inicial
-    setIngredients((prev) => carryIngredients(prev, selectedSpecies));
-  }, [selectedSpecies, species, initial]);
+    setIngredients((prev) => ingredientsAfterChange(prev, from, selectedSpecies, catalog.species));
+  }, [selectedSpecies, species, initial, catalog.species]);
 
   // El contrato del backend exige exactamente 3 ingredientes (uno por slot). El
   // useEffect que puebla los slots corre tras el paint, así que durante esa

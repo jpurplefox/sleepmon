@@ -32,8 +32,9 @@ the game's rules?"*.
 ### Fields
 
 - **Species** (required) — a searchable picker with sprites and specialty. Changing
-  species **keeps** each ingredient the new species offers in that slot; any other slot
-  falls back to its first valid option.
+  to a species of the **same evolution line keeps** the ingredients (the line shares
+  them); changing to **another line resets** each slot to its first valid option, even
+  when the new species offers the same ingredient.
 - **Level** — 1–100, with **quick-access buttons** to the unlock levels: ingredients
   at 1 / 30 / 60 and sub skills at 10 / 25 / 50 / 70 / 80.
 - **Nature** (optional, default none) — shows each nature's effect (the stat it
@@ -108,9 +109,10 @@ entered values.
   slots** are filled.
 - Choosing a species **not in the loaded catalog** shows an inline error and blocks
   submit.
-- **Changing the species** keeps each ingredient the new species offers in that slot
-  and sets the rest to the slot's first valid option; first opening in **edit** keeps
-  the saved ingredients as they are.
+- **Changing the species** within the same evolution line (by hand or by a step) keeps
+  the ingredients; changing to another line resets each slot to its first valid
+  option, even if the new species offers the same ingredient; first opening in
+  **edit** keeps the saved ingredients as they are.
 - **Evolving** a Bulbasaur twice gives a Venusaur with the same level, nature,
   ingredients, sub skills and ribbon, and a main skill **two levels** higher (capped at
   the skill's max); a final form can't evolve further.
