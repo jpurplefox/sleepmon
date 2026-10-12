@@ -1051,14 +1051,11 @@ button.shot--empty:focus-visible,
   color: var(--muted);
 }
 
-/* Wider than its trigger, which is half the form on a phone: a long name must
-   fit. Never wider than the screen. */
 .species-dropdown {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  width: max(100%, 18rem);
-  max-width: calc(100vw - 2rem);
+  right: 0;
   z-index: 20;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1122,12 +1119,10 @@ button.shot--empty:focus-visible,
   background: var(--accent-dim);
 }
 
+/* The list is as wide as its field: a long name wraps rather than hiding its form. */
 .species-option__name {
   font-weight: 600;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .species-empty {
