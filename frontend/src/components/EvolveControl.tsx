@@ -5,7 +5,8 @@ import { spriteUrl } from "../sprites";
 import type { Species } from "../types";
 
 interface Props {
-  species: Species;
+  /** Undefined before a species is picked: both steps show disabled. */
+  species: Species | undefined;
   catalog: Species[];
   onEvolve: (target: string) => void;
   onBack: () => void;
@@ -20,11 +21,11 @@ export function EvolveControl({ species, catalog, onEvolve, onBack }: Props) {
   const fwdRef = useRef<HTMLButtonElement>(null);
   // Button that should keep focus after the next step; falls back to the other if disabled.
   const settle = useRef<"back" | "forward" | null>(null);
-  const previous = species.previous_stage;
-  const targets = species.evolutions;
+  const previous = species?.previous_stage;
+  const targets = species?.evolutions ?? [];
 
   // A new species brings its own options: never leave the previous grid open.
-  useEffect(() => setOpen(false), [species.name]);
+  useEffect(() => setOpen(false), [species?.name]);
 
   // After a step, focus never drops to <body> when the clicked button became disabled.
   useEffect(() => {
@@ -33,7 +34,7 @@ export function EvolveControl({ species, catalog, onEvolve, onBack }: Props) {
     settle.current = null;
     const [first, second] = want === "back" ? [backRef, fwdRef] : [fwdRef, backRef];
     (first.current?.disabled ? second : first).current?.focus();
-  }, [species.name]);
+  }, [species?.name]);
 
   useEffect(() => {
     if (!open) return;

@@ -194,30 +194,26 @@ export function MemberForm({
           onChange={setLevel}
           labelAddon={<UnreadMark unread={unread.includes("level")} />}
         />
-        {selectedSpecies && (
-          <EvolveControl
-            species={selectedSpecies}
-            catalog={catalog.species}
-            onEvolve={evolve}
-            onBack={devolve}
-          />
-        )}
+        <EvolveControl
+          species={selectedSpecies}
+          catalog={catalog.species}
+          onEvolve={evolve}
+          onBack={devolve}
+        />
       </div>
 
-      {selectedSpecies && (
-        <fieldset>
-          <legend>
-            {t("form.ingredients")}
-            <UnreadMark unread={unread.includes("ingredients")} />
-          </legend>
-          <IngredientSlots
-            species={selectedSpecies}
-            level={level}
-            value={ingredients}
-            onChange={setIngredients}
-          />
-        </fieldset>
-      )}
+      <fieldset>
+        <legend>
+          {t("form.ingredients")}
+          <UnreadMark unread={unread.includes("ingredients")} />
+        </legend>
+        <IngredientSlots
+          species={selectedSpecies}
+          level={level}
+          value={ingredients}
+          onChange={setIngredients}
+        />
+      </fieldset>
 
       <fieldset>
         <legend>

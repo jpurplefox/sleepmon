@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -383,6 +383,16 @@ describe("MemberForm evolution", () => {
 
     await user.click(screen.getByRole("button", { name: "Add to my box" }));
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ skill_level: 1 }));
+  });
+
+  it("shows both steps and the ingredient slots disabled before a species is picked", () => {
+    renderForm();
+
+    expect(screen.getByRole("button", { name: "Back to the previous stage" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Evolve" })).toBeDisabled();
+    const slots = screen.getByRole("group", { name: "Ingredients" });
+    expect(within(slots).getAllByText(/^Lv \d+$/)).toHaveLength(3);
+    expect(within(slots).queryAllByRole("button")).toHaveLength(0);
   });
 
   it("disables the steps a species doesn't have", () => {

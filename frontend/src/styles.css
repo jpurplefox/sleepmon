@@ -742,6 +742,8 @@ button.shot--empty:focus-visible,
   justify-content: space-between;
   gap: 0.6rem;
   width: 100%;
+  /* Same height with "No nature" as with a nature pill. */
+  min-height: 46px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
@@ -1022,6 +1024,8 @@ button.shot--empty:focus-visible,
   align-items: center;
   gap: 0.5rem;
   width: 100%;
+  /* Same height empty or chosen (and as the nature trigger beside it). */
+  min-height: 46px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
@@ -1195,6 +1199,17 @@ button.shot--empty:focus-visible,
   .ingredient-icon:hover {
     border-color: var(--accent);
   }
+}
+
+/* No species yet: the slots hold dashed placeholders, dimmed like a disabled control. */
+.ingredient-slots--empty .ingredient-slot {
+  opacity: 0.35;
+}
+
+.ingredient-icon--placeholder {
+  border: 1px dashed var(--divider);
+  background: none;
+  cursor: default;
 }
 
 .ingredient-icon--active {

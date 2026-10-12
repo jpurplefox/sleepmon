@@ -533,7 +533,8 @@ states · where it lives. Feature one-offs are intentionally not here.
   button. Not a `.level-stepper__btn` variant: those are square glyph buttons.
   - **Disabled** (no stage that way): `opacity 0.35` with a **placeholder** — a 26px
     `1px dashed --divider` square, `--r-sm` (the inert empty-slot language). The
-    control is always shown once a species is chosen, even for one that doesn't evolve.
+    control is always shown: before a species is picked, and for one that doesn't
+    evolve, both steps are disabled with placeholders.
   - **Several evolutions**: the first two sprites **stacked** (26px overlap); more than
     two adds a **`+N` badge** pinned to the button's top-right corner (`--text-xs` bold,
     `--surface-2` pill, `1px --divider`), absolute so it adds no width.
@@ -548,6 +549,12 @@ states · where it lives. Feature one-offs are intentionally not here.
   `ActionMenu`.
 - **`SpeciesSelect`** — searchable dropdown with sprite. **`NatureSelect`** —
   dropdown grouped by raised stat; the trigger and each option show a `NaturePill`.
+  Both triggers keep a **46px min height**, so they don't grow when a sprite or a
+  `NaturePill` replaces the placeholder text, and match side by side.
+- **Ingredient slots, no species yet** (`.ingredient-slots--empty`) — the three slots
+  (Lv 1 / 30 / 60) still show, each with one dashed `--divider` placeholder per option
+  it will hold (1 / 2 / 3), dimmed to `0.35` and inert, so the form keeps its shape
+  before and after a species is picked.
   **`SubSkillSelect`** — uses `.ss-icon`.
 - **`RibbonIcon`** — ribbon sprite with `--empty` variant.
 - **Screenshot slots** (`ShotSlots`, `.shot-slots` / `.shot`) — the images a user
