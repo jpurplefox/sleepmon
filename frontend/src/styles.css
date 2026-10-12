@@ -239,10 +239,12 @@ html {
 }
 
 /* Form */
+/* Species and nature share a row, half each at every width — same columns as
+   the level + evolution row below. */
 .form__row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 1rem;
 }
 
 .form label {
@@ -760,6 +762,24 @@ button.shot--empty:focus-visible,
 
 .nature-trigger__name {
   font-weight: 600;
+  /* Last resort on the narrowest phones: the name gives way, the pill never does. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Half a 360px phone's form: a tighter trigger and pill (and the narrower column
+   gap set with .level-evolve) keep "Adamant ▲▼" whole. */
+@media (max-width: 400px) {
+  .form__row .nature-trigger {
+    gap: 0.3rem;
+    padding-inline: 0.35rem;
+  }
+  .form__row .nature-pill {
+    gap: 0.3rem;
+    padding: 0 0.3rem;
+  }
 }
 
 /* A nature as one pill: ▲ raised stat, ▼ lowered stat, then the name after a
@@ -863,11 +883,11 @@ button.shot--empty:focus-visible,
   gap: 0.7rem;
 }
 
-/* On a phone the field is already the modal's width: a wider panel would stick out
-   past the modal's left edge and be clipped. Match the field (one column). */
+/* On a phone 384px would stick out past the modal's left edge and be clipped: span
+   the whole species + nature row instead (the field, the gap and its neighbor). */
 @media (max-width: 640px) {
   .nature-dropdown {
-    width: 100%;
+    width: calc(200% + 1rem);
   }
 }
 
@@ -1046,24 +1066,16 @@ button.shot--empty:focus-visible,
   font-weight: 600;
 }
 
-.species-trigger__meta {
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
 .species-trigger__chevron {
   margin-left: auto;
   color: var(--muted);
 }
 
-/* Wider than its trigger, which is half the form on a phone: a name plus its
-   specialty must fit. Never wider than the screen. */
 .species-dropdown {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  width: max(100%, 18rem);
-  max-width: calc(100vw - 2rem);
+  right: 0;
   z-index: 20;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1127,19 +1139,10 @@ button.shot--empty:focus-visible,
   background: var(--accent-dim);
 }
 
+/* The list is as wide as its field: a long name wraps rather than hiding its form. */
 .species-option__name {
   font-weight: 600;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.species-option__meta {
-  margin-left: auto;
-  color: var(--muted);
-  font-size: var(--text-sm);
-  white-space: nowrap;
 }
 
 .species-empty {
@@ -7137,6 +7140,14 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   column-gap: 1rem;
   row-gap: 0.6rem;
   margin: 0.75rem 0;
+}
+
+/* Both half-and-half rows of the form narrow their gap together, so they stay aligned. */
+@media (max-width: 400px) {
+  .form__row,
+  .level-evolve {
+    column-gap: 0.6rem;
+  }
 }
 
 .level-evolve .level-selector {
