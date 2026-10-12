@@ -25,13 +25,15 @@ the game's rules?"*.
 4. **Hands the result to its caller** — it does not decide persistence itself.
 5. **Can open pre-filled from game screenshots**, marking what wasn't read — see
    [Screenshot import](0019-screenshot-import.md).
+6. **Moves the Pokémon along its evolution line**, one stage forward or back.
 
 ## How it works
 
 ### Fields
 
 - **Species** (required) — a searchable picker with sprites and specialty. Changing
-  species **resets** the ingredient slots to each slot's first valid option.
+  species **keeps** each ingredient the new species offers in that slot; any other slot
+  falls back to its first valid option.
 - **Level** — 1–100, with **quick-access buttons** to the unlock levels: ingredients
   at 1 / 30 / 60 and sub skills at 10 / 25 / 50 / 70 / 80.
 - **Nature** (optional, default none) — shows each nature's effect (the stat it
@@ -48,6 +50,26 @@ the game's rules?"*.
   description shows the chosen skill at its own maximum when that is lower.
 - **Ribbon** (optional, default none) — steps through the research thresholds
   (200 / 500 / 1000 / 2000 h), each showing its bonus.
+
+### Evolving
+
+A screenshot is often of a Pokémon that hasn't evolved yet, while the comparison you
+want is at its full potential. The form moves the Pokémon along its evolution line the
+way the game would, instead of re-picking the species by hand:
+
+- **One stage per action**, forward or back: Bulbasaur → Ivysaur → Venusaur takes two
+  steps, and going back from Venusaur reaches Ivysaur, then Bulbasaur.
+- **Back always reaches the previous stage**, whether the Pokémon was evolved in the
+  form or opened already evolved. It also fixes a wrong branch or a misclick.
+- A stage with nowhere to go — no evolution, or no previous stage — shows that step as
+  unavailable rather than hiding it.
+- **Branching lines** (Eevee, Kirlia, Slowpoke, Toxel…) ask **which evolution**; a
+  regional form or size evolves into its own (Alolan Vulpix → Alolan Ninetales,
+  Paldean Wooper → Clodsire, Jumbo Pumpkaboo → Jumbo Gourgeist).
+- What the game keeps, the form keeps: **level, nature, ingredients, sub skills and
+  ribbon**.
+- The **main skill moves one level per stage**, as evolving does in the game: **up** on
+  evolving (to the skill's maximum) and **down** on going back (never below 1).
 
 ### Plan-ahead rule (locked but editable)
 
@@ -86,8 +108,17 @@ entered values.
   slots** are filled.
 - Choosing a species **not in the loaded catalog** shows an inline error and blocks
   submit.
-- **Changing the species** resets the 3 ingredient slots to each slot's first valid
-  option — except when first opening in **edit**, which keeps the saved ingredients.
+- **Changing the species** keeps each ingredient the new species offers in that slot
+  and sets the rest to the slot's first valid option; first opening in **edit** keeps
+  the saved ingredients as they are.
+- **Evolving** a Bulbasaur twice gives a Venusaur with the same level, nature,
+  ingredients, sub skills and ribbon, and a main skill **two levels** higher (capped at
+  the skill's max); a final form can't evolve further.
+- Evolving a **Kirlia** asks between Gardevoir and Gallade; an **Alolan Vulpix** evolves
+  only into Alolan Ninetales.
+- **Going back** from a Venusaur opened as is gives an Ivysaur with the main skill one
+  level lower; at skill level 1 it stays at 1. A base form (Bulbasaur) or a Pokémon
+  that doesn't evolve can't go back.
 - A slot or sub skill **above the current level** can still be set; it appears
   **dimmed but interactive** (never disabled by level).
 - **Sub skills** are capped at **5** and must be **unique**; a 6th cannot be added.

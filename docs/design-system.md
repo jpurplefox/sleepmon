@@ -519,6 +519,33 @@ states · where it lives. Feature one-offs are intentionally not here.
   prev/next.
 - **`LevelStepperInput`** — headless stepper (buttons + input, no container) to
   embed in another layout.
+- **Level + evolution row** (`.level-evolve`) — in the Pokémon form, the level stepper
+  and the `EvolveControl` share one row, **half each** (`minmax(0,1fr)` × 2, `column-gap
+  1rem` like `.form__row`); the level shortcut chips span both halves below. Inside it
+  the stepper is tighter (`gap 0.35rem`, `padding-inline 0.5rem`) so `Level ‹ 30 ›`
+  fits half of a 360px phone's form.
+- **`EvolveControl`** (`.evolve`) — back / forward along a Pokémon's evolution line:
+  two buttons that split their half (`flex: 1 1 72px`, the row's height, min 40px), in
+  the stepper's box language (`--surface-2`, `1px --border`, `--r-md`, hover
+  `border-color: --accent`). Back is `‹` + the previous stage's sprite; forward is the
+  next stage's sprite + `›` (chevrons in `--muted`). Sprites draw at **48px with a
+  negative margin**, so the art's transparent margin overlaps instead of growing the
+  button. Not a `.level-stepper__btn` variant: those are square glyph buttons.
+  - **Disabled** (no stage that way): `opacity 0.35` with a **placeholder** — a 26px
+    `1px dashed --divider` square, `--r-sm` (the inert empty-slot language). The
+    control is always shown once a species is chosen, even for one that doesn't evolve.
+  - **Several evolutions**: the first two sprites **stacked** (26px overlap); more than
+    two adds a **`+N` badge** pinned to the button's top-right corner (`--text-xs` bold,
+    `--surface-2` pill, `1px --divider`), absolute so it adds no width.
+  - **Open**: `border-color --accent`, fill `--accent-dim`.
+- **Sprite grid popover** (`.evolve__grid` / `.evolve__option`, `role="menu"`) — picks
+  one Pokémon among a few by its artwork: a grid of tiles (40px sprite over the name in
+  `--text-xs`, `--r-sm`, hover `--surface`), **2 columns for two options, 4 otherwise**
+  (64px each), on the dropdown surface (`--surface-2`, `1px --border`, `--r-md`,
+  `--shadow-dropdown`, `z-index 30`), opening below its trigger from the **right** edge.
+  Closes on pick, Escape, a click outside, or when the options' owner changes. First
+  use: the branch of an evolution (Kirlia, Eevee). A list of actions stays an
+  `ActionMenu`.
 - **`SpeciesSelect`** — searchable dropdown with sprite. **`NatureSelect`** —
   dropdown grouped by raised stat; the trigger and each option show a `NaturePill`.
   **`SubSkillSelect`** — uses `.ss-icon`.
@@ -977,3 +1004,13 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   value still needs you" — one to save it, one to confirm it — so they share an indigo
   state mark; leaving the controls alone keeps the locked-by-level dimming the only
   change a control's look carries, and several tinted blocks in one modal read as noise.
+- **Evolving lives beside the level, and never reshapes the row.** *Question:* a
+  screenshot is often of an unevolved Pokémon; where do evolve / go back go in the form,
+  and how does a branching line (2 options, or Eevee's 8) show without the control
+  changing size from one species to the next? *Resolution:* the level row splits in
+  half — stepper left, `EvolveControl` right — with two fixed-share sprite buttons; a
+  missing stage is a disabled button with a dashed placeholder, not a hidden one; a
+  branch shows two stacked sprites plus a `+N` corner badge and opens a sprite grid.
+  *Why:* the row keeps one shape for every species (measured: halves of 169px at 412px
+  and 143px at 360px both fit), the sprite says where a step leads without a label,
+  and the badge carries the count without widening the button.
