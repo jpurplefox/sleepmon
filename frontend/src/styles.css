@@ -3253,8 +3253,11 @@ button.shot--empty:focus-visible,
   display: flex;
   align-items: center;
   gap: 0;
-  min-height: 26px;
-  padding: 0 0.25rem;
+  /* The add card's empty placeholder has no buttons: the inset is part of the
+     height it reserves, so both card bodies still start at the same line. */
+  min-height: calc(26px + 0.35rem);
+  /* Same inset as a team slot's header, so the icons don't hug the corner. */
+  padding: 0.35rem 0.5rem 0;
   background: var(--surface);
   /* Transparent like the card's own: --border is never a card edge. */
   border: 1px solid transparent;
