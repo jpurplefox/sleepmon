@@ -1079,9 +1079,12 @@ button.shot--empty:focus-visible,
   color: var(--text);
 }
 
+/* Flush against the dropdown's rounded top: an inset outline would be clipped at the
+   corners, so focus is a 2px accent underline instead. */
 .species-search:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
+  outline: none;
+  border-bottom-color: var(--accent);
+  box-shadow: inset 0 -1px 0 var(--accent);
 }
 
 .species-options {
