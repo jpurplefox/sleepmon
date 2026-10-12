@@ -3038,8 +3038,7 @@ button.shot--empty:focus-visible,
   white-space: nowrap;
 }
 
-/* Sub skills at the prod-cards' compact scale (28px, 1.5px border), so the
-   config row keeps one height. */
+/* Sub skills at a compact 28px (1.5px border), so the config row keeps one height. */
 .prod-box-item .ss-icon {
   width: 28px;
   height: 28px;
@@ -3692,7 +3691,27 @@ button.prod-card__base-tag--action {
   min-height: 26px;
 }
 
-/* Ingredients at the sub skills' 28px, so the two identity rows read at one size. */
+/* Ingredients at 28px; the sub skills below keep the form's 36px. */
+/* Sub skills at the form's 36px; in a card too narrow for five (a team card under
+   ~230px) they shrink together instead of wrapping to a second row. */
+.icon-row.prod-card__subskills {
+  flex-wrap: nowrap;
+}
+/* Each icon sits in its tooltip's wrapper: that's the flex item that shrinks. */
+.prod-card__subskills > .tooltip {
+  flex: 0 1 36px;
+  min-width: 0;
+}
+.prod-card__subskills .ss-icon {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+/* 24px at full size, as in the form. */
+.prod-card__subskills .ss-icon img {
+  width: 75%;
+  height: 75%;
+}
 .prod-card__ingredients .mini-icon {
   height: 28px;
 }
@@ -3734,20 +3753,6 @@ button.prod-card__base-tag--action {
 .mini-icon--locked {
   opacity: 0.3;
   filter: grayscale(0.6);
-}
-
-/* Sub skills en la card de producción: marco coloreado por tier, tamaño compacto */
-/* 28px with a 1.5px border: the selector's 36/2px proportions at card size. */
-.prod-card .ss-icon {
-  width: 28px;
-  height: 28px;
-  border-width: 1.5px;
-  border-radius: var(--r-sm);
-}
-
-.prod-card .ss-icon img {
-  width: 18px;
-  height: 18px;
 }
 
 .prod-card__line {

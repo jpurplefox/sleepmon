@@ -503,7 +503,7 @@ export function ProductionCard({
                 );
               })}
             </div>
-            <div className="icon-row">
+            <div className="icon-row prod-card__subskills">
               {config.sub_skills.length === 0 && <span className="muted">{t("card.noSubSkills")}</span>}
               {config.sub_skills.map((s, i) => {
                 const unlock = SUB_SKILL_UNLOCK_LEVELS[i] ?? SUB_SKILL_NEVER_UNLOCKS;
