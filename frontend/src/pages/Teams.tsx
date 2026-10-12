@@ -1367,9 +1367,7 @@ export function Teams() {
               imported={intent.kind !== "edit" ? (shots.imported ?? undefined) : undefined}
               onSubmit={(config) => applyConfig(config)}
               footer={
-                intent.kind !== "edit" ? (
-                  <p className="muted">{t("prod.noteNew")}</p>
-                ) : editingEntry?.sourceId !== undefined ? (
+                intent.kind !== "edit" ? null : editingEntry?.sourceId !== undefined ? (
                   <p className="muted">{t("teams.noteEditInBox")}</p>
                 ) : (
                   <p className="muted">{t("teams.noteEditLocal")}</p>
