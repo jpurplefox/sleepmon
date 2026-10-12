@@ -1056,11 +1056,14 @@ button.shot--empty:focus-visible,
   color: var(--muted);
 }
 
+/* Wider than its trigger, which is half the form on a phone: a name plus its
+   specialty must fit. Never wider than the screen. */
 .species-dropdown {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  right: 0;
+  width: max(100%, 18rem);
+  max-width: calc(100vw - 2rem);
   z-index: 20;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1126,12 +1129,17 @@ button.shot--empty:focus-visible,
 
 .species-option__name {
   font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .species-option__meta {
   margin-left: auto;
   color: var(--muted);
   font-size: var(--text-sm);
+  white-space: nowrap;
 }
 
 .species-empty {
