@@ -521,7 +521,8 @@ states · where it lives. Feature one-offs are intentionally not here.
   embed in another layout.
 - **Level + evolution row** (`.level-evolve`) — in the Pokémon form, the level stepper
   and the `EvolveControl` share one row, **half each** (`minmax(0,1fr)` × 2, `column-gap
-  1rem` like `.form__row`); the level shortcut chips span both halves below. Inside it
+  1rem`, 0.6rem under 400px), the same columns as species + nature above (`.form__row`,
+  half each at every width); the level shortcut chips span both halves below. Inside it
   the stepper is tighter (`gap 0.35rem`, `padding-inline 0.5rem`) so `Level ‹ 30 ›`
   fits half of a 360px phone's form.
 - **`EvolveControl`** (`.evolve`) — back / forward along a Pokémon's evolution line:
