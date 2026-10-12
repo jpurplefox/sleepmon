@@ -33,6 +33,8 @@ const species = (name: string, dex: number): Species => ({
   ingredient_slots: [["Fancy Apple"], ["Fancy Apple"], ["Fancy Apple"]],
   ingredient_amounts: [[1], [2], [3]],
   base_inventory: 20,
+  evolutions: [],
+  previous_stage: null,
 });
 
 const catalog = {

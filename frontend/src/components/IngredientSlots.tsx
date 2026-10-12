@@ -12,7 +12,7 @@ interface Props {
 
 export function IngredientSlots({ species, level, value, onChange }: Props) {
   const { t, ingredient } = useI18n();
-  if (!species) return null;
+  if (!species) return <EmptySlots />;
 
   const setSlot = (slot: number, ingredient: string) => {
     const next = [...value];
@@ -65,6 +65,25 @@ export function IngredientSlots({ species, level, value, onChange }: Props) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// Before a species is picked: the three slots, disabled, with a placeholder per option.
+function EmptySlots() {
+  const { t } = useI18n();
+  return (
+    <div className="ingredient-slots ingredient-slots--empty">
+      {INGREDIENT_UNLOCK_LEVELS.map((unlock, i) => (
+        <div key={unlock} className="ingredient-slot">
+          <span className="ingredient-slot__label">{t("ingSlots.slot", { unlock })}</span>
+          <div className="ingredient-slot__options">
+            {Array.from({ length: i + 1 }, (_, j) => (
+              <span key={j} className="ingredient-icon ingredient-icon--placeholder" />
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

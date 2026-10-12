@@ -92,6 +92,7 @@ from sleepmon.domain.ports import SpeciesCatalog
 from sleepmon.domain.progress import PlayerProgress
 from sleepmon.domain.saved_team import SavedTeam
 from sleepmon.domain.screenshot_import import ImportedConfig, ImportField, Screenshot
+from sleepmon.domain.species import evolutions_of, previous_stage_of
 from sleepmon.domain.value_objects import Ingredient, Island, Nature, SubSkill
 from sleepmon.domain.versatile import VERSATILE_SKILLS
 
@@ -351,6 +352,8 @@ class CatalogController(Controller):
                     ],
                     ingredient_amounts=[list(slot) for slot in sp.ingredient_amounts],
                     base_inventory=sp.base_inventory,
+                    evolutions=list(evolutions_of(sp.name)),
+                    previous_stage=previous_stage_of(sp.name),
                 )
                 for sp in catalog.all()
             ],

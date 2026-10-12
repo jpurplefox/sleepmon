@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
+import { devolvedSkillLevel, evolvedSkillLevel, ingredientsAfterChange } from "../evolution";
 import { useI18n } from "../i18n";
 import { unreadAfterChange } from "../screenshotImport";
 import type { Catalog, ImportField, ImportedForm, MemberInput } from "../types";
 import { VERSATILE, effectiveSkill } from "../versatile";
+import { EvolveControl } from "./EvolveControl";
 import { FormSummary } from "./FormSummary";
 import { IngredientSlots } from "./IngredientSlots";
 import { LevelSelector } from "./LevelSelector";
@@ -85,18 +87,19 @@ export function MemberForm({
     [catalog.species, species],
   );
 
-  // Al cambiar de especie, default cada slot de ingrediente a su primera opción
-  // válida. En el primer render conservamos los ingredientes iniciales (edición).
-  // Usamos un ref con la especie ya aplicada (robusto al doble efecto de StrictMode).
+  // On a species change, keep the kit within the same evolution line, else reset each
+  // slot to its first option (see ingredientsAfterChange). The first render keeps the
+  // initial ones as they are (edit). The ref holds the applied species (StrictMode-safe).
   const appliedSpecies = useRef<string | null>(null);
   useEffect(() => {
     if (!selectedSpecies) return;
     if (appliedSpecies.current === species) return;
-    const isFirst = appliedSpecies.current === null;
+    const from = appliedSpecies.current;
+    const isFirst = from === null;
     appliedSpecies.current = species;
     if (isFirst && initial?.ingredients?.length) return; // conservar lo inicial
-    setIngredients(selectedSpecies.ingredient_slots.map((opts) => opts[0] ?? ""));
-  }, [selectedSpecies, species, initial]);
+    setIngredients((prev) => ingredientsAfterChange(prev, from, selectedSpecies, catalog.species));
+  }, [selectedSpecies, species, initial, catalog.species]);
 
   // El contrato del backend exige exactamente 3 ingredientes (uno por slot). El
   // useEffect que puebla los slots corre tras el paint, así que durante esa
@@ -125,6 +128,20 @@ export function MemberForm({
   useEffect(() => onDirtyChange?.(dirty), [dirty, onDirtyChange]);
 
   const versatile = selectedSpecies?.main_skill === VERSATILE;
+
+  // A stage step changes the species and moves the skill one level (see evolution.ts).
+  function evolve(target: string) {
+    const skill = catalog.species.find((s) => s.name === target)?.main_skill;
+    setSpecies(target);
+    setSkillLevel((l) => evolvedSkillLevel(l, skill));
+  }
+
+  function devolve() {
+    const previous = selectedSpecies?.previous_stage;
+    if (!previous) return;
+    setSpecies(previous);
+    setSkillLevel(devolvedSkillLevel);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -172,26 +189,32 @@ export function MemberForm({
         </label>
       </div>
 
-      <LevelSelector
-        value={level}
-        onChange={setLevel}
-        labelAddon={<UnreadMark unread={unread.includes("level")} />}
-      />
+      <div className="level-evolve">
+        <LevelSelector
+          value={level}
+          onChange={setLevel}
+          labelAddon={<UnreadMark unread={unread.includes("level")} />}
+        />
+        <EvolveControl
+          species={selectedSpecies}
+          catalog={catalog.species}
+          onEvolve={evolve}
+          onBack={devolve}
+        />
+      </div>
 
-      {selectedSpecies && (
-        <fieldset>
-          <legend>
-            {t("form.ingredients")}
-            <UnreadMark unread={unread.includes("ingredients")} />
-          </legend>
-          <IngredientSlots
-            species={selectedSpecies}
-            level={level}
-            value={ingredients}
-            onChange={setIngredients}
-          />
-        </fieldset>
-      )}
+      <fieldset>
+        <legend>
+          {t("form.ingredients")}
+          <UnreadMark unread={unread.includes("ingredients")} />
+        </legend>
+        <IngredientSlots
+          species={selectedSpecies}
+          level={level}
+          value={ingredients}
+          onChange={setIngredients}
+        />
+      </fieldset>
 
       <fieldset>
         <legend>

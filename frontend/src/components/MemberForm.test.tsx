@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -17,6 +17,8 @@ const pikachu: Species = {
   ingredient_slots: [["Fancy Apple"], ["Warming Ginger"], ["Fancy Apple", "Warming Ginger"]],
   ingredient_amounts: [[1], [2], [5, 8]],
   base_inventory: 20,
+  evolutions: [],
+  previous_stage: null,
 };
 
 const bulbasaur: Species = {
@@ -30,6 +32,46 @@ const bulbasaur: Species = {
   ingredient_slots: [["Honey"], ["Snoozy Tomato"], ["Honey", "Soft Potato"]],
   ingredient_amounts: [[1], [2], [5, 8]],
   base_inventory: 20,
+  evolutions: ["Ivysaur"],
+  previous_stage: null,
+};
+
+const ivysaur: Species = {
+  ...bulbasaur,
+  name: "Ivysaur",
+  dex: 2,
+  evolutions: ["Venusaur"],
+  previous_stage: "Bulbasaur",
+};
+const venusaur: Species = {
+  ...bulbasaur,
+  name: "Venusaur",
+  dex: 3,
+  evolutions: [],
+  previous_stage: "Ivysaur",
+};
+
+const kirlia: Species = {
+  ...bulbasaur,
+  name: "Kirlia",
+  dex: 281,
+  main_skill: "Energy for Everyone S",
+  evolutions: ["Gardevoir", "Gallade"],
+  previous_stage: null,
+};
+const gardevoir: Species = {
+  ...kirlia,
+  name: "Gardevoir",
+  dex: 282,
+  evolutions: [],
+  previous_stage: "Kirlia",
+};
+const gallade: Species = {
+  ...kirlia,
+  name: "Gallade",
+  dex: 475,
+  evolutions: [],
+  previous_stage: "Kirlia",
 };
 
 const mew: Species = {
@@ -43,13 +85,15 @@ const mew: Species = {
   ingredient_slots: [["Fancy Egg"], ["Fancy Egg"], ["Fancy Egg"]],
   ingredient_amounts: [[2], [4], [6]],
   base_inventory: 26,
+  evolutions: [],
+  previous_stage: null,
 };
 
 const catalog: Catalog = {
   natures: [{ name: "Bashful", neutral: true, increased: null, decreased: null }],
   sub_skills: [{ name: "Helping Speed M", tier: "Blue" }],
   ingredients: ["Fancy Apple", "Warming Ginger", "Honey", "Snoozy Tomato", "Soft Potato"],
-  species: [pikachu, bulbasaur, mew],
+  species: [pikachu, bulbasaur, ivysaur, venusaur, kirlia, gardevoir, gallade, mew],
   versatile_skills: ["Charge Strength M", "Metronome", "Berry Burst"],
   recipe_level_bonus: [1.0],
   ingredient_strengths: { "Fancy Apple": 90 },
@@ -282,5 +326,168 @@ describe("MemberForm imported", () => {
     const onDirtyChange = vi.fn();
     renderForm({ imported, onDirtyChange });
     expect(onDirtyChange).toHaveBeenLastCalledWith(true);
+  });
+});
+
+describe("MemberForm evolution", () => {
+  const caught: MemberInput = {
+    species: "Bulbasaur",
+    level: 12,
+    nature: "Bashful",
+    ingredients: ["Honey", "Snoozy Tomato", "Soft Potato"],
+    sub_skills: ["Helping Speed M"],
+    ribbon: "",
+    skill_level: 2,
+  };
+
+  it("evolves one stage per click, keeping the kit and raising the skill", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderForm({ initial: caught });
+
+    await user.click(screen.getByRole("button", { name: "Evolve to Ivysaur" }));
+    await user.click(screen.getByRole("button", { name: "Evolve to Venusaur" }));
+    expect(screen.getByRole("button", { name: "Evolve" })).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
+    expect(onSubmit).toHaveBeenCalledWith({ ...caught, species: "Venusaur", skill_level: 4 });
+  });
+
+  it("picks the evolution from a grid when the line branches", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderForm({ initial: { ...caught, species: "Kirlia" } });
+
+    await user.click(screen.getByRole("button", { name: "Evolve" }));
+    await user.click(screen.getByRole("menuitem", { name: "Gallade" }));
+
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ species: "Gallade", skill_level: 3 }),
+    );
+  });
+
+  it("goes back a stage from a Pokémon opened already evolved, lowering the skill", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderForm({ initial: { ...caught, species: "Venusaur", skill_level: 3 } });
+
+    await user.click(screen.getByRole("button", { name: "Back to Ivysaur" }));
+
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
+    expect(onSubmit).toHaveBeenCalledWith({ ...caught, species: "Ivysaur", skill_level: 2 });
+  });
+
+  it("never takes the skill below 1 when going back", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderForm({ initial: { ...caught, species: "Ivysaur", skill_level: 1 } });
+
+    await user.click(screen.getByRole("button", { name: "Back to Bulbasaur" }));
+
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ skill_level: 1 }));
+  });
+
+  it("shows both steps and the ingredient slots disabled before a species is picked", () => {
+    renderForm();
+
+    expect(screen.getByRole("button", { name: "Back to the previous stage" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Evolve" })).toBeDisabled();
+    const slots = screen.getByRole("group", { name: "Ingredients" });
+    expect(within(slots).getAllByText(/^Lv \d+$/)).toHaveLength(3);
+    expect(within(slots).queryAllByRole("button")).toHaveLength(0);
+  });
+
+  it("disables the steps a species doesn't have", () => {
+    renderForm({
+      initial: {
+        ...caught,
+        species: "Pikachu",
+        ingredients: ["Fancy Apple", "Warming Ginger", "Fancy Apple"],
+      },
+    });
+
+    expect(screen.getByRole("button", { name: "Back to the previous stage" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Evolve" })).toBeDisabled();
+  });
+
+  it("closes the grid when the species is picked by hand", async () => {
+    const user = userEvent.setup();
+    renderForm({ initial: { ...caught, species: "Kirlia" } });
+
+    await user.click(screen.getByRole("button", { name: "Evolve" }));
+    await pickSpecies(user, /Pikachu/);
+
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("keeps the ingredients when a species of the same line is picked by hand", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderForm({ initial: caught });
+
+    await pickSpecies(user, /Venusaur/);
+
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ species: "Venusaur", ingredients: caught.ingredients }),
+    );
+  });
+
+  it("resets the ingredients when another line is picked, even if it offers them", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderForm({ initial: caught });
+
+    // Kirlia's fixture shares Bulbasaur's slots but is another line.
+    await pickSpecies(user, /Kirlia/);
+
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ species: "Kirlia", ingredients: ["Honey", "Snoozy Tomato", "Honey"] }),
+    );
+  });
+
+  it("disables Back on a base form", () => {
+    renderForm({ initial: caught });
+
+    expect(screen.getByRole("button", { name: "Back to the previous stage" })).toBeDisabled();
+  });
+
+  it("closes the grid on Escape and returns focus to Evolve", async () => {
+    const user = userEvent.setup();
+    renderForm({ initial: { ...caught, species: "Kirlia" } });
+
+    await user.click(screen.getByRole("button", { name: "Evolve" }));
+    expect(screen.getByRole("menuitem", { name: "Gardevoir" })).toHaveFocus();
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Evolve" })).toHaveFocus();
+  });
+
+  it("closes the grid on an outside click", async () => {
+    const user = userEvent.setup();
+    renderForm({ initial: { ...caught, species: "Kirlia" } });
+
+    await user.click(screen.getByRole("button", { name: "Evolve" }));
+    await user.click(document.body);
+
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("moves focus between grid items with the arrow keys", async () => {
+    const user = userEvent.setup();
+    renderForm({ initial: { ...caught, species: "Kirlia" } });
+
+    await user.click(screen.getByRole("button", { name: "Evolve" }));
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getByRole("menuitem", { name: "Gallade" })).toHaveFocus();
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getByRole("menuitem", { name: "Gardevoir" })).toHaveFocus();
+  });
+
+  it("moves focus to Back after the last forward step", async () => {
+    const user = userEvent.setup();
+    renderForm({ initial: { ...caught, species: "Ivysaur", skill_level: 3 } });
+
+    await user.click(screen.getByRole("button", { name: "Evolve to Venusaur" }));
+
+    expect(screen.getByRole("button", { name: "Back to Ivysaur" })).toHaveFocus();
   });
 });

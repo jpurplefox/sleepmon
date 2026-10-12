@@ -109,6 +109,8 @@ class SpeciesOut(msgspec.Struct):
     ingredient_slots: list[list[str]]
     ingredient_amounts: list[list[int]]
     base_inventory: int
+    evolutions: list[str]
+    previous_stage: str | None
 
 
 class RatingOut(msgspec.Struct):

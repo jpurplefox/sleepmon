@@ -148,6 +148,15 @@ def test_catalog_endpoint_lists_reference_data(client: TestClient) -> None:
     assert ing_str["Fancy Apple"] == 90
 
 
+def test_catalog_species_list_their_evolutions(client: TestClient) -> None:
+    species = {sp["name"]: sp for sp in client.get("/catalog").json()["species"]}
+    assert species["Bulbasaur"]["evolutions"] == ["Ivysaur"]
+    assert species["Kirlia"]["evolutions"] == ["Gardevoir", "Gallade"]
+    assert species["Venusaur"]["evolutions"] == []
+    assert species["Ivysaur"]["previous_stage"] == "Bulbasaur"
+    assert species["Bulbasaur"]["previous_stage"] is None
+
+
 def test_catalog_islands_expose_ratings(client: TestClient) -> None:
     body = client.get("/catalog").json()
     islands = {i["name"]: i for i in body["islands"]}

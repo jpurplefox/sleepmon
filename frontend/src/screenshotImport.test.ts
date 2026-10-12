@@ -7,7 +7,7 @@ const pikachu: Species = {
   name: "Pikachu", dex: 25, specialty: "Berries", berry: "Grepa", type: "Electric",
   sleep_type: "Dozing", main_skill: "Charge Strength S",
   ingredient_slots: [["Fancy Apple"], ["Fancy Apple", "Warming Ginger"], ["Fancy Apple", "Warming Ginger", "Fancy Egg"]],
-  ingredient_amounts: [[1], [2, 2], [4, 3, 3]], base_inventory: 17,
+  ingredient_amounts: [[1], [2, 2], [4, 3, 3]], base_inventory: 17, evolutions: [], previous_stage: null,
 };
 
 const read: ScreenshotImport = {

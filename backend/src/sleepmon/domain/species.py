@@ -19,6 +19,7 @@ per-member choice, resolved in ``domain/versatile.py``.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 from sleepmon.domain.catalog_data import (
@@ -1698,3 +1699,160 @@ SEED_SPECIES: tuple[Species, ...] = (
         pool_slots=(_MEW_EARLY_POOL, _MEW_EARLY_POOL, _MEW_POOL),
     ),
 )
+
+
+# Each evolved form's direct pre-evolution (from nitoyon's ``ancestor`` and
+# ``evolutionCount``; regional forms and sizes evolve into their own form).
+PRE_EVOLUTIONS: Mapping[str, str] = {
+    "Ivysaur": "Bulbasaur",
+    "Venusaur": "Ivysaur",
+    "Charmeleon": "Charmander",
+    "Charizard": "Charmeleon",
+    "Wartortle": "Squirtle",
+    "Blastoise": "Wartortle",
+    "Metapod": "Caterpie",
+    "Butterfree": "Metapod",
+    "Raticate": "Rattata",
+    "Arbok": "Ekans",
+    "Sandslash": "Sandshrew",
+    "Ninetales": "Vulpix",
+    "Ninetales (Alola)": "Vulpix (Alola)",
+    "Dugtrio": "Diglett",
+    "Persian": "Meowth",
+    "Golduck": "Psyduck",
+    "Primeape": "Mankey",
+    "Arcanine": "Growlithe",
+    "Weepinbell": "Bellsprout",
+    "Victreebel": "Weepinbell",
+    "Graveler": "Geodude",
+    "Golem": "Graveler",
+    "Slowbro": "Slowpoke",
+    "Slowking": "Slowpoke",
+    "Magneton": "Magnemite",
+    "Magnezone": "Magneton",
+    "Dodrio": "Doduo",
+    "Haunter": "Gastly",
+    "Gengar": "Haunter",
+    "Steelix": "Onix",
+    "Marowak": "Cubone",
+    "Vaporeon": "Eevee",
+    "Jolteon": "Eevee",
+    "Flareon": "Eevee",
+    "Espeon": "Eevee",
+    "Umbreon": "Eevee",
+    "Leafeon": "Eevee",
+    "Glaceon": "Eevee",
+    "Sylveon": "Eevee",
+    "Dragonair": "Dratini",
+    "Dragonite": "Dragonair",
+    "Bayleef": "Chikorita",
+    "Meganium": "Bayleef",
+    "Quilava": "Cyndaquil",
+    "Typhlosion": "Quilava",
+    "Croconaw": "Totodile",
+    "Feraligatr": "Croconaw",
+    "Pikachu": "Pichu",
+    "Raichu": "Pikachu",
+    "Clefairy": "Cleffa",
+    "Clefable": "Clefairy",
+    "Jigglypuff": "Igglybuff",
+    "Wigglytuff": "Jigglypuff",
+    "Togetic": "Togepi",
+    "Togekiss": "Togetic",
+    "Xatu": "Natu",
+    "Flaaffy": "Mareep",
+    "Ampharos": "Flaaffy",
+    "Quagsire": "Wooper",
+    "Clodsire": "Wooper (Paldea)",
+    "Honchkrow": "Murkrow",
+    "Weavile": "Sneasel",
+    "Houndoom": "Houndour",
+    "Pupitar": "Larvitar",
+    "Tyranitar": "Pupitar",
+    "Grovyle": "Treecko",
+    "Sceptile": "Grovyle",
+    "Combusken": "Torchic",
+    "Blaziken": "Combusken",
+    "Marshtomp": "Mudkip",
+    "Swampert": "Marshtomp",
+    "Kirlia": "Ralts",
+    "Gardevoir": "Kirlia",
+    "Gallade": "Kirlia",
+    "Vigoroth": "Slakoth",
+    "Slaking": "Vigoroth",
+    "Lairon": "Aron",
+    "Aggron": "Lairon",
+    "Swalot": "Gulpin",
+    "Vibrava": "Trapinch",
+    "Flygon": "Vibrava",
+    "Altaria": "Swablu",
+    "Banette": "Shuppet",
+    "Wobbuffet": "Wynaut",
+    "Sealeo": "Spheal",
+    "Walrein": "Sealeo",
+    "Shelgon": "Bagon",
+    "Salamence": "Shelgon",
+    "Grotle": "Turtwig",
+    "Torterra": "Grotle",
+    "Monferno": "Chimchar",
+    "Infernape": "Monferno",
+    "Prinplup": "Piplup",
+    "Empoleon": "Prinplup",
+    "Luxio": "Shinx",
+    "Luxray": "Luxio",
+    "Drifblim": "Drifloon",
+    "Sudowoodo": "Bonsly",
+    "Mr. Mime": "Mime Jr.",
+    "Chansey": "Happiny",
+    "Blissey": "Chansey",
+    "Lucario": "Riolu",
+    "Toxicroak": "Croagunk",
+    "Abomasnow": "Snover",
+    "Musharna": "Munna",
+    "Crustle": "Dwebble",
+    "Amoonguss": "Foongus",
+    "Braviary": "Rufflet",
+    "Tyrantrum": "Tyrunt",
+    "Gourgeist (Small)": "Pumpkaboo (Small)",
+    "Gourgeist (Medium)": "Pumpkaboo (Medium)",
+    "Gourgeist (Large)": "Pumpkaboo (Large)",
+    "Gourgeist (Jumbo)": "Pumpkaboo (Jumbo)",
+    "Noivern": "Noibat",
+    "Charjabug": "Grubbin",
+    "Vikavolt": "Charjabug",
+    "Ribombee": "Cutiefly",
+    "Bewear": "Stufful",
+    "Toxtricity (Amped)": "Toxel",
+    "Toxtricity (Low Key)": "Toxel",
+    "Floragato": "Sprigatito",
+    "Meowscarada": "Floragato",
+    "Crocalor": "Fuecoco",
+    "Skeledirge": "Crocalor",
+    "Quaxwell": "Quaxly",
+    "Quaquaval": "Quaxwell",
+    "Pawmo": "Pawmi",
+    "Pawmot": "Pawmo",
+    "Tinkatuff": "Tinkatink",
+    "Tinkaton": "Tinkatuff",
+    "Cetitan": "Cetoddle",
+}
+
+
+def _evolutions() -> dict[str, tuple[str, ...]]:
+    by_parent: dict[str, tuple[str, ...]] = {}
+    for child, parent in PRE_EVOLUTIONS.items():
+        by_parent[parent] = (*by_parent.get(parent, ()), child)
+    return by_parent
+
+
+_EVOLUTIONS = _evolutions()
+
+
+def evolutions_of(name: str) -> tuple[str, ...]:
+    """The species ``name`` evolves into next (several when the line branches)."""
+    return _EVOLUTIONS.get(name, ())
+
+
+def previous_stage_of(name: str) -> str | None:
+    """The stage ``name`` evolves from; ``None`` for a base form or one that doesn't evolve."""
+    return PRE_EVOLUTIONS.get(name)

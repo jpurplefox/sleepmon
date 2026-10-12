@@ -170,6 +170,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     // Formulario
     "form.addToTeam": "Agregar a mi caja",
     "form.species": "Especie",
+    "form.evolve": "Evolucionar",
+    "form.evolveTo": "Evolucionar a {species}",
+    "form.devolve": "Volver a la etapa anterior",
+    "form.devolveTo": "Volver a {species}",
     "form.nature": "Naturaleza",
     "form.level": "Nivel",
     "import.unread": "No leído",
@@ -838,6 +842,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     // Form
     "form.addToTeam": "Add to my box",
     "form.species": "Species",
+    "form.evolve": "Evolve",
+    "form.evolveTo": "Evolve to {species}",
+    "form.devolve": "Back to the previous stage",
+    "form.devolveTo": "Back to {species}",
     "form.nature": "Nature",
     "form.level": "Level",
     "import.unread": "Not read",
