@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 
 import { useI18n } from "../i18n";
 import { spriteUrl } from "../sprites";
@@ -16,19 +16,43 @@ export function EvolveControl({ species, catalog, onEvolve, onBack }: Props) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLButtonElement>(null);
+  const fwdRef = useRef<HTMLButtonElement>(null);
+  // Button that should keep focus after the next step; falls back to the other if disabled.
+  const settle = useRef<"back" | "forward" | null>(null);
   const previous = species.previous_stage;
   const targets = species.evolutions;
 
   // A new species brings its own options: never leave the previous grid open.
   useEffect(() => setOpen(false), [species.name]);
 
+  // After a step, focus never drops to <body> when the clicked button became disabled.
+  useEffect(() => {
+    const want = settle.current;
+    if (!want) return;
+    settle.current = null;
+    const [first, second] = want === "back" ? [backRef, fwdRef] : [fwdRef, backRef];
+    (first.current?.disabled ? second : first).current?.focus();
+  }, [species.name]);
+
   useEffect(() => {
     if (!open) return;
+    ref.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
     const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+        // Another control takes focus itself; elsewhere it would fall to <body>.
+        const target = e.target as HTMLElement;
+        if (!target.closest("a, button, input, select, textarea, [tabindex]")) {
+          fwdRef.current?.focus();
+        }
+      }
     };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        fwdRef.current?.focus();
+      }
     };
     document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
@@ -37,6 +61,25 @@ export function EvolveControl({ species, catalog, onEvolve, onBack }: Props) {
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
+
+  const onMenuKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const els = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]'));
+    if (els.length === 0) return;
+    const idx = els.indexOf(document.activeElement as HTMLElement);
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const delta = e.key === "ArrowDown" ? 1 : -1;
+      els[(idx + delta + els.length) % els.length]?.focus();
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      els[0]?.focus();
+    } else if (e.key === "End") {
+      e.preventDefault();
+      els[els.length - 1]?.focus();
+    } else if (e.key === "Tab") {
+      setOpen(false);
+    }
+  };
 
   const sprite = (name: string) => {
     const dex = catalog.find((s) => s.name === name)?.dex;
@@ -48,9 +91,13 @@ export function EvolveControl({ species, catalog, onEvolve, onBack }: Props) {
     <div className="evolve" ref={ref}>
       <button
         type="button"
+        ref={backRef}
         className="evolve__btn"
         disabled={!previous}
-        onClick={onBack}
+        onClick={() => {
+          settle.current = "back";
+          onBack();
+        }}
         aria-label={previous ? t("form.devolveTo", { species: previous }) : t("form.devolve")}
       >
         <span className="evolve__chev" aria-hidden="true">
@@ -60,9 +107,14 @@ export function EvolveControl({ species, catalog, onEvolve, onBack }: Props) {
       </button>
       <button
         type="button"
-        className={"evolve__btn" + (open ? " evolve__btn--open" : "")}
+        ref={fwdRef}
+        className={"evolve__btn evolve__btn--forward" + (open ? " evolve__btn--open" : "")}
         disabled={targets.length === 0}
-        onClick={() => (targets.length === 1 ? onEvolve(targets[0]) : setOpen((o) => !o))}
+        onClick={() => {
+          if (targets.length !== 1) return setOpen((o) => !o);
+          settle.current = "forward";
+          onEvolve(targets[0]);
+        }}
         aria-haspopup={targets.length > 1 ? "menu" : undefined}
         aria-expanded={targets.length > 1 ? open : undefined}
         aria-label={
@@ -78,7 +130,7 @@ export function EvolveControl({ species, catalog, onEvolve, onBack }: Props) {
         {targets.length > 2 && <span className="evolve__more">+{targets.length - 2}</span>}
       </button>
       {open && (
-        <div className="evolve__grid" role="menu">
+        <div className="evolve__grid" role="menu" onKeyDown={onMenuKeyDown}>
           {targets.map((name) => (
             <button
               key={name}
@@ -87,6 +139,7 @@ export function EvolveControl({ species, catalog, onEvolve, onBack }: Props) {
               className="evolve__option"
               onClick={() => {
                 setOpen(false);
+                settle.current = "forward";
                 onEvolve(name);
               }}
             >

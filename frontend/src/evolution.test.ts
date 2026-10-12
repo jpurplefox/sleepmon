@@ -50,4 +50,25 @@ describe("carryIngredients", () => {
     ]);
     expect(carryIngredients([], ivysaur)).toEqual(["Honey", "Honey", "Honey"]);
   });
+
+  it("handles pool slots: keeps a repeated valid pick, else the slot's first option", () => {
+    const mew: Species = {
+      ...ivysaur,
+      ingredient_slots: [
+        ["Fancy Egg", "Large Leek"],
+        ["Fancy Egg", "Large Leek"],
+        ["Fancy Egg", "Large Leek", "Slowpoke Tail"],
+      ],
+    };
+    expect(carryIngredients(["Large Leek", "Large Leek", "Slowpoke Tail"], mew)).toEqual([
+      "Large Leek",
+      "Large Leek",
+      "Slowpoke Tail",
+    ]);
+    expect(carryIngredients(["Slowpoke Tail", "Fancy Egg", "Honey"], mew)).toEqual([
+      "Fancy Egg",
+      "Fancy Egg",
+      "Fancy Egg",
+    ]);
+  });
 });

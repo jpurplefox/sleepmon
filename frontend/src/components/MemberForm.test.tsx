@@ -419,4 +419,52 @@ describe("MemberForm evolution", () => {
       expect.objectContaining({ species: "Venusaur", ingredients: caught.ingredients }),
     );
   });
+
+  it("disables Back on a base form", () => {
+    renderForm({ initial: caught });
+
+    expect(screen.getByRole("button", { name: "Back to the previous stage" })).toBeDisabled();
+  });
+
+  it("closes the grid on Escape and returns focus to Evolve", async () => {
+    const user = userEvent.setup();
+    renderForm({ initial: { ...caught, species: "Kirlia" } });
+
+    await user.click(screen.getByRole("button", { name: "Evolve" }));
+    expect(screen.getByRole("menuitem", { name: "Gardevoir" })).toHaveFocus();
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Evolve" })).toHaveFocus();
+  });
+
+  it("closes the grid on an outside click", async () => {
+    const user = userEvent.setup();
+    renderForm({ initial: { ...caught, species: "Kirlia" } });
+
+    await user.click(screen.getByRole("button", { name: "Evolve" }));
+    await user.click(document.body);
+
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("moves focus between grid items with the arrow keys", async () => {
+    const user = userEvent.setup();
+    renderForm({ initial: { ...caught, species: "Kirlia" } });
+
+    await user.click(screen.getByRole("button", { name: "Evolve" }));
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getByRole("menuitem", { name: "Gallade" })).toHaveFocus();
+    await user.keyboard("{ArrowDown}");
+    expect(screen.getByRole("menuitem", { name: "Gardevoir" })).toHaveFocus();
+  });
+
+  it("moves focus to Back after the last forward step", async () => {
+    const user = userEvent.setup();
+    renderForm({ initial: { ...caught, species: "Ivysaur", skill_level: 3 } });
+
+    await user.click(screen.getByRole("button", { name: "Evolve to Venusaur" }));
+
+    expect(screen.getByRole("button", { name: "Back to Ivysaur" })).toHaveFocus();
+  });
 });

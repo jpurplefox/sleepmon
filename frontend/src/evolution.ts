@@ -15,7 +15,8 @@ export function devolvedSkillLevel(level: number): number {
 
 /** Keeps each slot's ingredient when `species` offers it there; else the slot's first option. */
 export function carryIngredients(previous: string[], species: Species): string[] {
-  return species.ingredient_slots.map((opts, i) =>
-    opts.includes(previous[i] ?? "") ? previous[i] : (opts[0] ?? ""),
-  );
+  return species.ingredient_slots.map((opts, i) => {
+    const prev = previous[i] ?? "";
+    return opts.includes(prev) ? prev : (opts[0] ?? "");
+  });
 }

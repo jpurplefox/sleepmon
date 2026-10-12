@@ -7125,7 +7125,7 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   cursor: pointer;
 }
 
-.evolve__btn:last-of-type .evolve__body {
+.evolve__btn--forward .evolve__body {
   grid-column: 2;
 }
 
