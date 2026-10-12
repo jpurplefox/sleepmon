@@ -4939,11 +4939,8 @@ button.prod-card__base-tag--action {
   border: 0;
 }
 
-/* Cards de equipo en modo readonly: más densas, sin reserva de alto para alinear comparativas. */
-.prod-card--readonly .prod-card__sprite {
-  width: 60px;
-  height: 60px;
-}
+/* Team cards (readonly): denser, no height reserved to line up comparisons. The
+   sprite keeps the comparison card's size. */
 .prod-card--readonly .prod-card__block--ing .prod-card__ings {
   min-height: 0;
 }
