@@ -2,23 +2,27 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
 from sleepmon.domain.comparison_share import (
     MAX_SHARE_IMAGE_BYTES,
+    SHARE_TTL,
     SharedComparison,
     SharedMap,
     ShareImage,
     ShareLanguage,
+    is_expired,
 )
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.errors import ValidationError
+from sleepmon.domain.sleep import SleepSchedule
 from sleepmon.domain.value_objects import Berry, Ingredient, Island
 
 JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 16
 PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 16
+OPENED = datetime(2026, 10, 1, tzinfo=UTC)
 
 
 def _pikachu() -> TeamMember:
@@ -35,9 +39,35 @@ def _share(members: tuple[TeamMember, ...]) -> SharedComparison:
         id="abc123def456",
         members=members,
         map=SharedMap(),
+        sleep=SleepSchedule(),
         language=ShareLanguage.ES,
-        created_at=datetime(2026, 10, 1, tzinfo=UTC),
+        created_at=OPENED,
+        last_opened_at=OPENED,
     )
+
+
+def test_ttl_is_ninety_days() -> None:
+    assert timedelta(days=90) == SHARE_TTL
+
+
+def test_a_share_lives_ninety_days_after_its_last_opening() -> None:
+    share = _share((_pikachu(),))
+    assert not is_expired(share, OPENED + timedelta(days=89))
+    assert not is_expired(share, OPENED + SHARE_TTL)
+    assert is_expired(share, OPENED + SHARE_TTL + timedelta(seconds=1))
+
+
+def test_share_keeps_the_sharers_sleep() -> None:
+    share = SharedComparison(
+        id="abc123def456",
+        members=(_pikachu(),),
+        map=SharedMap(),
+        sleep=SleepSchedule(night_minutes=420, nap_minutes=120),
+        language=ShareLanguage.ES,
+        created_at=OPENED,
+        last_opened_at=OPENED,
+    )
+    assert (share.sleep.night_minutes, share.sleep.nap_minutes) == (420, 120)
 
 
 @pytest.mark.parametrize(("media_type", "data"), [("image/jpeg", JPEG), ("image/png", PNG)])

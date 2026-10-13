@@ -29,6 +29,18 @@ class ComparisonShareNotFoundError(DomainError):
     """No shared comparison exists with that id."""
 
 
+class HumanVerificationError(DomainError):
+    """A signed-out write failed the anti-bot check (ADR 0012)."""
+
+
+class HumanVerifierUnavailableError(DomainError):
+    """The anti-bot provider couldn't be reached or answered garbage."""
+
+
+class AnonymousSharingUnavailableError(DomainError):
+    """Signed-out sharing is off: no human check is configured."""
+
+
 class PokemonNotRecognizedError(DomainError):
     """The screenshots show no Pokémon species the catalog knows."""
 
