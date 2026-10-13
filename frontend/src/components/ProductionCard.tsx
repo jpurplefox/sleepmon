@@ -116,6 +116,9 @@ interface Props {
   // Modo solo lectura: oculta la barra de acciones (editar/clonar/guardar/mover/arrastre)
   // y los deltas/chip "Base". Conserva el botón × (onRemove) para poder quitar la card.
   readOnly?: boolean;
+  /** A picture of the card (a shared comparison's image): no actions at all, but the
+   *  deltas and the "Base" chip stay, since they are what the comparison says. */
+  snapshot?: boolean;
   /** Cabecera de slot (página de Equipos): reemplaza la toolbar readOnly por este
    *  nodo (pestañas de split + slider). Sin efecto fuera de readOnly. */
   slotHeader?: ReactNode;
@@ -152,6 +155,7 @@ export function ProductionCard({
   isBase,
   comparing,
   readOnly = false,
+  snapshot = false,
   slotHeader,
   sprite,
   notice,
@@ -176,7 +180,8 @@ export function ProductionCard({
   // reordenar/intercambiar, el navegador reinicia las animaciones CSS de los nodos
   // movidos aunque React no los desmonte; por eso la clase de entrada se quita al
   // terminar, y los reordenamientos posteriores ya no la reinician.
-  const [entering, setEntering] = useState(true);
+  // A snapshot is drawn the moment it mounts: it must not start mid-fade.
+  const [entering, setEntering] = useState(!snapshot);
 
   // Fallback para bajar la clase de entrada aunque onAnimationEnd no dispare:
   // bajo prefers-reduced-motion la animación es `none` y el evento nunca llega,
@@ -316,7 +321,7 @@ export function ProductionCard({
       {/* Acciones fuera del cuerpo de la card, en una barra arriba: liberan la
           primera fila de la card para el nombre / nivel / listón.
           En modo readOnly solo se muestra el botón × (quitar). */}
-      {readOnly ? (
+      {snapshot ? null : readOnly ? (
         slotHeader !== undefined ? (
           <div className="prod-card__toolbar prod-card__toolbar--readonly prod-card__toolbar--slot">
             {slotHeader}
@@ -400,6 +405,7 @@ export function ProductionCard({
           "prod-card" +
           (entering ? " prod-card--enter" : "") +
           (readOnly ? " prod-card--readonly" : "") +
+          (snapshot ? " prod-card--snapshot" : "") +
           (berryRole !== "none" ? " prod-card--favorite-berry" : "") +
           (berryRole === "main" ? " prod-card--main-favorite" : "") +
           (expert && berryRole === "none" ? " prod-card--no-favorite" : "")
@@ -417,7 +423,7 @@ export function ProductionCard({
           <header className="prod-card__head">
             {/* Row 1: reorder ‹ › + name / level / ribbon + base. No reorder when readOnly. */}
             <div className="prod-card__topline">
-              {!readOnly && (
+              {!readOnly && !snapshot && (
                 <>
                   <button
                     type="button"
@@ -463,7 +469,7 @@ export function ProductionCard({
                   <span className="prod-card__base-tag" title={t("card.baseTitle")}>
                     {t("card.base")}
                   </span>
-                ) : (
+                ) : snapshot ? null : (
                   <button
                     type="button"
                     className="prod-card__base-tag prod-card__base-tag--action"
@@ -477,7 +483,13 @@ export function ProductionCard({
             {/* Sprite centrado: foco visual de la card. */}
             {sprite ??
               (species && (
-                <img className="prod-card__sprite" src={spriteUrl(species.dex)} alt="" loading="lazy" />
+                <img
+                  className="prod-card__sprite"
+                  src={spriteUrl(species.dex)}
+                  alt=""
+                  // Off screen, a lazy image never loads, and the picture would miss it.
+                  loading={snapshot ? "eager" : "lazy"}
+                />
               ))}
           </header>
 

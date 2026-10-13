@@ -510,3 +510,29 @@ export interface ImportedForm {
   unread: ImportField[];
   images: number;
 }
+
+/** A comparison to share (PRD 0020): the cards, the map terms and the rendered image. */
+export interface ComparisonShareInput {
+  members: MemberInput[];
+  /** Positional favorite slots, "" for an open one. */
+  favorites: string[];
+  island: string | null;
+  weekly_bonus: WeeklyBonus;
+  language: "es" | "en";
+  /** The sharer's sleep schedule, shown on the shared comparison. */
+  sleep: SleepSchedule;
+  image: { media_type: "image/jpeg" | "image/png"; data: string };
+  /** Turnstile token: required for anonymous creation, null when signed in. */
+  verification_token: string | null;
+}
+
+export interface ComparisonShare {
+  id: string;
+  /** The link to share: its page carries the image for link previews. */
+  url: string;
+  members: MemberInput[];
+  island: string | null;
+  favorites: string[];
+  weekly_bonus: WeeklyBonus;
+  sleep: SleepSchedule;
+}

@@ -44,11 +44,14 @@ export function SwipePager({
   items,
   label,
   hidden = false,
+  action,
 }: {
   track: RefObject<HTMLElement>;
   items: SwipePagerItem[];
   label: string;
   hidden?: boolean;
+  /** One tool action docked after the slides, behind a hairline (design system: action slot). */
+  action?: ReactNode;
 }) {
   const [active, setActive] = useState(0);
   const keys = items.map((item) => item.key);
@@ -99,6 +102,7 @@ export function SwipePager({
           {item.icon}
         </button>
       ))}
+      {action && <div className="swipe-pager__action">{action}</div>}
     </nav>
   );
 }

@@ -1,26 +1,32 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
+import { useLocation, useSearch } from "wouter";
 
 import { api } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useGate } from "../auth/useGate";
 import { BoxPicker } from "../components/BoxPicker";
 import { ComparisonMapBar } from "../components/ComparisonMapBar";
+import { IconMoon, IconShare } from "../components/icons";
+import { InfoNotice } from "../components/InfoNotice";
 import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
 import { Placeholder } from "../components/Placeholder";
 import { ProductionCard } from "../components/ProductionCard";
+import { ShareDialog } from "../components/ShareDialog";
 import { SwipePager } from "../components/SwipePager";
 import { ContextBar, ToolHeader } from "../components/ToolHeader";
 import { berryRoleOf, mapRequestFields } from "../comparisonMap";
 import { useComparisonSession } from "../comparisonSession";
+import { sessionFromShare, shareIdFrom, sleepDiffers, sleepNoticeParts } from "../comparisonShare";
 import { useI18n } from "../i18n";
 import { configFromMember, linkEntryToBox, newEntry } from "../roster";
+import { ROUTES } from "../routes";
 import { spriteUrl } from "../sprites";
 import { track } from "../telemetry/analytics";
 import type { AddSource } from "../telemetry/events";
 import { mapSetEvent } from "../telemetry/props";
-import type { Member, MemberInput } from "../types";
+import type { Member, MemberInput, SleepSchedule } from "../types";
 import { useSaveToBox } from "../useSaveToBox";
 import { useScreenshotImport } from "../useScreenshotImport";
 import { useStickyData } from "../useStickyData";
@@ -34,6 +40,13 @@ interface ProductionProps {
   // base); then cleared through onBaseConsumed.
   baseMemberId?: string | null;
   onBaseConsumed?: () => void;
+}
+
+// The notice's two schedules in bold: split the template on its placeholders.
+function renderNotice(template: string, theirs: string, yours: string) {
+  return template.split(/(\{theirs\}|\{yours\})/).map((part, i) =>
+    part === "{theirs}" ? <strong key={i}>{theirs}</strong> : part === "{yours}" ? <strong key={i}>{yours}</strong> : part,
+  );
 }
 
 export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {}) {
@@ -62,7 +75,8 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   const mapFields = mapRequestFields(map, expert);
   const shots = useScreenshotImport(catalog.data);
   const berryOf = (species: string) => catalog.data?.species.find((s) => s.name === species)?.berry ?? "";
-  const [modal, setModal] = useState<"form" | "box" | null>(null);
+  const [sharerSleep, setSharerSleep] = useState<SleepSchedule | null>(null);
+  const [modal, setModal] = useState<"form" | "box" | "share" | null>(null);
   // Whether the open add/edit form holds unsaved input: leaving it then asks first.
   const [formDirty, setFormDirty] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -212,6 +226,46 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseMemberId, members.data, catalog.data]);
 
+  // A shared link (`/compare?share=<id>`) opens that comparison: like "Compare" from
+  // the box, it replaces whatever the session held. The query is dropped once read,
+  // so a reload or going back doesn't reopen it over later changes.
+  const shareId = shareIdFrom(useSearch());
+  const [, navigate] = useLocation();
+  const shared = useQuery({
+    queryKey: ["comparison-share", shareId],
+    queryFn: () => api.getComparisonShare(shareId as string),
+    enabled: shareId !== null,
+    retry: false,
+    staleTime: Infinity,
+  });
+  useEffect(() => {
+    if (!shareId) return;
+    if (shared.data) {
+      const next = sessionFromShare(shared.data);
+      setEntries(next.entries);
+      setMap(next.map);
+      setSharerSleep(next.sleep);
+      setNotice(null);
+      track({ name: "shared_comparison_opened", props: { cards: next.entries.length } });
+    } else if (shared.isError) {
+      setNotice(t("share.notFound"));
+    } else {
+      return;
+    }
+    navigate(ROUTES.compare, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shareId, shared.data, shared.isError]);
+
+  // The picture needs every card's numbers, and only the current ones: while any card
+  // recomputes (a map change, an edit) the picture would mix new settings with old numbers.
+  const shareDisabled = productions.some((q) => !q.data || q.isFetching);
+
+  // No cards left: the sharer's sleep note has nothing to compare against.
+  useEffect(() => {
+    if (entries.length === 0) setSharerSleep(null);
+  }, [entries.length]);
+  const openShare = () => setModal("share");
+
   const handleMapChange = (next: typeof map) => {
     if (next.island !== map.island)
       track(mapSetEvent("compare", next.island, catalog.data?.islands ?? []));
@@ -236,6 +290,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   };
 
   if (catalog.isLoading) return <Placeholder loading>{t("common.loadingCatalog")}</Placeholder>;
+  if (shareId && shared.isLoading) return <Placeholder loading>{t("share.loading")}</Placeholder>;
   if (catalog.isError || !catalog.data)
     return (
       <p className="error" role="alert">
@@ -248,13 +303,35 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
 
   return (
     <div className="layout layout--wide">
-      <ToolHeader title={t("prod.title")} notice={notice}>
+      <ToolHeader
+        title={t("prod.title")}
+        notice={notice}
+        action={
+          entries.length > 0 && (
+            <div className="tool-head__action--wide">
+              <button type="button" className="btn btn--ghost btn--icon-lead" disabled={shareDisabled} onClick={openShare}>
+                <IconShare />
+                {t("share.button")}
+              </button>
+            </div>
+          )
+        }
+      >
         {entries.length > 0 && (
           <ContextBar>
             <ComparisonMapBar catalog={catalog.data} value={map} onChange={handleMapChange} />
           </ContextBar>
         )}
       </ToolHeader>
+
+      {sleepReady && sharerSleep && sleepDiffers(sharerSleep, progress.sleep) && (
+        <InfoNotice icon={<IconMoon />} onDismiss={() => setSharerSleep(null)} dismissLabel={t("share.dismissNotice")}>
+          {(() => {
+            const parts = sleepNoticeParts(sharerSleep, progress.sleep, t);
+            return renderNotice(t("share.sleepNotice"), parts.theirs, parts.yours);
+          })()}
+        </InfoNotice>
+      )}
 
       {/* The pager docks only while the cards are on screen: the deck bounds its sticky. */}
       <div className="swipe-deck">
@@ -263,6 +340,17 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
           track={cardsRef}
           hidden={entries.length === 0}
           label={t("pager.aria")}
+          action={
+            <button
+              type="button"
+              className="swipe-pager__action-btn"
+              aria-label={t("share.button")}
+              disabled={shareDisabled}
+              onClick={openShare}
+            >
+              <IconShare />
+            </button>
+          }
           items={[
             ...entries.map((e) => {
               const dex = dexOf(e.config.species);
@@ -378,6 +466,18 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
       )}
 
       {shots.dialog}
+
+      {modal === "share" && (
+        <ShareDialog
+          catalog={catalog.data}
+          entries={entries}
+          productions={shownProductions}
+          map={map}
+          island={island}
+          sleep={progress.sleep}
+          onClose={() => setModal(null)}
+        />
+      )}
 
       {modal === "box" && (
         <Modal

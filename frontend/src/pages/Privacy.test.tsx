@@ -18,7 +18,7 @@ describe("Privacy", () => {
   it("renders the title, the date and five sections in English", () => {
     renderPage("hi@example.com");
     expect(screen.getByRole("heading", { level: 1, name: "Privacy" })).toBeInTheDocument();
-    expect(screen.getByText("Last updated: October 9, 2026")).toBeInTheDocument();
+    expect(screen.getByText("Last updated: October 13, 2026")).toBeInTheDocument();
     expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(5);
   });
 
@@ -26,7 +26,7 @@ describe("Privacy", () => {
     localStorage.setItem("sleepmon.lang", "es");
     renderPage("hi@example.com");
     expect(screen.getByRole("heading", { level: 1, name: "Privacidad" })).toBeInTheDocument();
-    expect(screen.getByText("Última actualización: 9 de octubre de 2026")).toBeInTheDocument();
+    expect(screen.getByText("Última actualización: 13 de octubre de 2026")).toBeInTheDocument();
   });
 
   it("shows the email when given and links to the account page", () => {

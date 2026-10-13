@@ -12,6 +12,7 @@ from datetime import date, datetime
 from uuid import UUID
 
 from sleepmon.domain.auth import ExternalIdentity, RefreshToken, User
+from sleepmon.domain.comparison_share import SharedComparison, ShareImage
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.progress import PlayerProgress
 from sleepmon.domain.recipes import Recipe
@@ -107,6 +108,37 @@ class SavedTeamRepository(ABC):
     @abstractmethod
     def delete(self, team_id: UUID, user_id: UUID) -> bool:
         """Delete a team. Returns ``False`` if it did not exist."""
+
+
+class ComparisonShareRepository(ABC):
+    """Persistence of shared comparisons. Reads are public: the id is the capability."""
+
+    @abstractmethod
+    def add(self, share: SharedComparison, image: ShareImage, owner: UUID | None) -> None:
+        """``owner`` is None for a share created signed out (it belongs to no one)."""
+
+    @abstractmethod
+    def get(self, share_id: str) -> SharedComparison | None: ...
+
+    @abstractmethod
+    def get_image(self, share_id: str) -> ShareImage | None: ...
+
+    @abstractmethod
+    def touch(self, share_id: str, opened_at: datetime) -> None:
+        """Record an opening: the share's 90 days start over."""
+
+    @abstractmethod
+    def delete_expired(self, opened_before: datetime) -> int:
+        """Delete every share last opened before ``opened_before``; return how many."""
+
+
+class HumanVerifier(ABC):
+    """The anti-bot check for signed-out writes (ADR 0012)."""
+
+    @abstractmethod
+    def verify(self, token: str) -> bool:
+        """True if the token proves a human. Raises HumanVerifierUnavailableError when
+        the provider can't be reached."""
 
 
 class AccessTokenService(ABC):

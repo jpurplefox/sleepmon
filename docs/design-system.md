@@ -167,7 +167,10 @@ contents — random ingredients), `IconPot`, `IconMagnifier`, `IconMoon`,
 `IconProgress` (rising bars — what you have unlocked and levelled; the account menu's
 "Perfil de jugador"), `IconSun` (the nap — the daytime sleep, beside `IconMoon`'s
 night), `IconGlobe` (language, on the signed-out `.lang-btn`), `IconUser` (the account — the
-account menu's "Account & privacy"), `IconTrash` (deleting what is saved). A new UI icon is added here following the same stroke — no ad-hoc icons
+account menu's "Account & privacy"), `IconTrash` (deleting what is saved), `IconShare` (sharing — the
+three-node glyph most people know as "share": three circles joined by two lines),
+`IconDownload` (saving a file — an arrow dropping into a tray), `IconLink` (a link — two
+chain links joined; leads the share dialog's link field). A new UI icon is added here following the same stroke — no ad-hoc icons
 in components.
 
 **Metric display.** A metric reads as **its own icon + the number** — the icon marks
@@ -281,7 +284,10 @@ states · where it lives. Feature one-offs are intentionally not here.
   `border-color: --error` — red at rest per §4, while the solid `--danger` stays for the
   confirmation it opens), `--google` (neutral `--surface-2` surface + `--border`, `--text` label,
   hover `border-color: --accent`; leads with the Google "G" mark — the one place a
-  brand color is allowed, treated as artwork, not a voiced color). States: hover per
+  brand color is allowed, treated as artwork, not a voiced color). Any variant may
+  **lead with a 16px line icon** (`inline-flex`, `gap: 0.4rem`, the icon in the label's
+  color) when the icon names the action better than the word alone — Comparison's
+  `--ghost` **Share** with `IconShare`; that is a use, not a new variant. States: hover per
   variant, `:disabled`, unified focus.
 - **`.icon-btn`** — icon-only button (grip, move, remove, save). Variants:
   `--inbox` (tints to accent = "already in the box"), `--saving` (pulse while
@@ -305,6 +311,13 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **`.card`** — generic surface (`--surface`, transparent 1px border, `--r-lg`,
   ~1.25rem padding). Separated from the page by tone, not an outline. A **state** the rules impose on
   a card is told by a tint, never a border (see `.prod-card` below). The base surface across pages.
+- **Info notice** (`.info-notice`) — a dismissible note that **informs** about the
+  numbers on screen, never an error: a `--surface` panel (`--r-md`, `0.65rem 0.75rem`
+  padding) with a leading 16px line icon in `--accent-text`, `--text-sm` `--text` prose
+  (key figures in **bold**), and a trailing `.icon-btn` × that closes it for good on that
+  screen. The icon names the subject — `IconMoon`, the night's ink, when it's about sleep.
+  No red and no `role="alert"`: errors keep `.error`. First use: Comparison, when an
+  opened shared link's sleep schedule differs from yours (PRD 0020).
 - **`.prod-card` berry header** — the card's relation to the map's favorite berries
   tints its **identity zone** (`.prod-card__identity`: name, sprite, ingredients, sub
   skills, nature — bleeding to the card edges), while the figures below stay on
@@ -644,7 +657,13 @@ states · where it lives. Feature one-offs are intentionally not here.
   follows the swipe, a tap slides to that card, a new card slides into view, and a
   reorder (Make base, ‹ ›) follows the card that was showing. A slider inside a card
   (`touch-action: pan-y`) keeps its sideways drag. Above 640px the grid is
-  unchanged and the pager hidden; also hidden with no cards.
+  unchanged and the pager hidden; also hidden with no cards. **Action slot**
+  (`.swipe-pager__action`): the pager may end with **one** tool action, after a `--border`
+  hairline — a 38px round button (the sprite buttons' size), `--border` outline, the 16px
+  line icon in `--text`, at full opacity against the inactive sprite buttons (0.55) and
+  never `aria-current`; like any button it dims to 0.5 when disabled (Comparison's Share is
+  disabled while a card is calculating). Comparison puts
+  **Share** there; on wider screens the same action lives in the tool header.
 - **Entrance (`appear-in`)** — the app's single entrance animation: `0.15s ease-out`,
   `opacity 0→1` + `scale(0.97)→none`, fired by the element being inserted. One
   keyframe shared by everything that shows up mid-interaction — `.prod-card--enter`
@@ -1022,3 +1041,12 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   *Why:* the row keeps one shape for every species (measured: halves of 169px at 412px
   and 143px at 360px both fit), the sprite says where a step leads without a label,
   and the badge carries the count without widening the button.
+- **A tool action rides the sticky pager on a phone.** *Question:* Comparison's Share
+  button sat in the tool header's action slot, which under 640px wraps to a row of its own
+  between the title and the context bar — where should it go on a phone? An icon-only
+  round button kept in the title row was the other candidate. *Resolution:* on a phone it
+  is an icon at the end of the swipe deck's pager (its action slot), docked under the app
+  bar; above 640px it stays a labelled `.btn--ghost` in the header's action slot. *Why:* on
+  a phone the cards are a long scroll and the title scrolls away with them, while the
+  pager is always on screen — the action is at hand wherever you are on a card. On a wide
+  screen the header is always visible, so the label can stay.

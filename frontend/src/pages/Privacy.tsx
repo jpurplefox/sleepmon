@@ -6,7 +6,7 @@ import { useI18n } from "../i18n";
 import { ROUTES } from "../routes";
 
 /** Date of the last change to the privacy copy; bump it whenever the text changes. */
-export const PRIVACY_UPDATED = "2026-10-09";
+export const PRIVACY_UPDATED = "2026-10-13";
 
 /** Public privacy page (PRD 0018): what is kept, metrics, and how to delete. */
 export function Privacy({ email = CONTACT_EMAIL }: { email?: string | null }) {

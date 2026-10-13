@@ -5,7 +5,7 @@ import type { Lang } from "../i18n";
 export type Tool = "compare" | "team_analysis" | "box" | "teams";
 export type AddSource = "new" | "box" | "box_compare" | "clone" | "screenshots";
 export type BoxOrigin = "box" | "compare" | "team_analysis" | "team_save";
-export type SignInReason = "page_gate" | "my_pokemon" | "save_to_box" | "import_screenshots";
+export type SignInReason = "page_gate" | "my_pokemon" | "save_to_box" | "import_screenshots" | "share_link";
 export type ProfileSection = "kitchen" | "recipes" | "areas" | "sleep";
 export type BoxFilter = "type" | "ingredient" | "skill" | "specialty";
 export type TeamsFilter = "map" | "dish_type" | "pokemon";
@@ -53,6 +53,8 @@ export type AnalyticsEvent =
   | { name: "account_deleted"; props: { box_size: number; saved_teams: number } }
   | { name: "species_missing"; props: { species: string; tool: "compare" | "team_analysis" } }
   | { name: "compare_limit_reached"; props: NoProps }
+  | { name: "comparison_shared"; props: { kind: "image" | "link"; cards: number } }
+  | { name: "shared_comparison_opened"; props: { cards: number } }
   | {
       name: "screenshots_read";
       props: {
@@ -93,5 +95,7 @@ export const EVENT_NAMES = [
   "account_deleted",
   "species_missing",
   "compare_limit_reached",
+  "comparison_shared",
+  "shared_comparison_opened",
   "screenshots_read",
 ] as const satisfies readonly AnalyticsEvent["name"][];

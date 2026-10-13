@@ -335,6 +335,41 @@ def _map_bonuses(
     )
 
 
+def build_member(
+    catalog: SpeciesCatalog, data: TeamMemberInput, member_id: UUID | None = None
+) -> TeamMember:
+    """Parse a config against the catalog into a ``TeamMember`` (raises on invalid input)."""
+    species = catalog.get(data.species)
+    if species is None:
+        raise SpeciesNotFoundError(f"Especie desconocida: {data.species!r}.")
+
+    ingredients = tuple(parse_enum(Ingredient, i, "ingredient") for i in data.ingredients)
+    nature = parse_enum(Nature, data.nature, "nature") if data.nature else None
+    sub_skills = tuple(parse_enum(SubSkill, s, "sub_skill") for s in data.sub_skills)
+    ribbon = parse_enum(Ribbon, data.ribbon, "ribbon")
+
+    _validate_ingredients(species, ingredients)
+    resolved = resolve_versatile(species, data.versatile_skill)
+    versatile_skill = resolved.main_skill if species.main_skill == VERSATILE else None
+
+    # El constructor de TeamMember aplica las invariantes absolutas (rango de
+    # nivel, topes MAX_INGREDIENTS/MAX_SUB_SKILLS, sub skills sin repetir). NO
+    # acota por nivel: un miembro lleva todos sus ingredientes/sub skills ya
+    # definidos desde nivel 1 (en el juego quedan inactivos hasta su nivel de
+    # desbloqueo, pero el dato se guarda completo).
+    member = TeamMember(
+        species=species.name,
+        level=data.level,
+        nature=nature,
+        ingredients=ingredients,
+        sub_skills=sub_skills,
+        ribbon=ribbon,
+        skill_level=data.skill_level,
+        versatile_skill=versatile_skill,
+    )
+    return member if member_id is None else replace(member, id=member_id)
+
+
 class TeamService(ABC):
     """Puerto primario: lo que el borde HTTP puede pedirle a la caja del usuario.
 
@@ -494,46 +529,7 @@ class DefaultTeamService(TeamService):
         )
 
     def _build_member(self, data: TeamMemberInput, member_id: UUID | None = None) -> TeamMember:
-        species = self._catalog.get(data.species)
-        if species is None:
-            raise SpeciesNotFoundError(f"Especie desconocida: {data.species!r}.")
-
-        ingredients = tuple(parse_enum(Ingredient, i, "ingredient") for i in data.ingredients)
-        nature = parse_enum(Nature, data.nature, "nature") if data.nature else None
-        sub_skills = tuple(parse_enum(SubSkill, s, "sub_skill") for s in data.sub_skills)
-        ribbon = parse_enum(Ribbon, data.ribbon, "ribbon")
-
-        _validate_ingredients(species, ingredients)
-        resolved = resolve_versatile(species, data.versatile_skill)
-        versatile_skill = resolved.main_skill if species.main_skill == VERSATILE else None
-
-        # El constructor de TeamMember aplica las invariantes absolutas (rango de
-        # nivel, topes MAX_INGREDIENTS/MAX_SUB_SKILLS, sub skills sin repetir). NO
-        # acota por nivel: un miembro lleva todos sus ingredientes/sub skills ya
-        # definidos desde nivel 1 (en el juego quedan inactivos hasta su nivel de
-        # desbloqueo, pero el dato se guarda completo).
-        if member_id is None:
-            return TeamMember(
-                species=species.name,
-                level=data.level,
-                nature=nature,
-                ingredients=ingredients,
-                sub_skills=sub_skills,
-                ribbon=ribbon,
-                skill_level=data.skill_level,
-                versatile_skill=versatile_skill,
-            )
-        return TeamMember(
-            id=member_id,
-            species=species.name,
-            level=data.level,
-            nature=nature,
-            ingredients=ingredients,
-            sub_skills=sub_skills,
-            ribbon=ribbon,
-            skill_level=data.skill_level,
-            versatile_skill=versatile_skill,
-        )
+        return build_member(self._catalog, data, member_id)
 
 
 class DefaultProductionService(ProductionService):

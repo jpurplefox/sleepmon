@@ -495,3 +495,44 @@ class ScreenshotImportOut(msgspec.Struct):
 class ImportLimitOut(msgspec.Struct):
     detail: str
     resets_at: str
+
+
+class ComparisonShareIn(msgspec.Struct, forbid_unknown_fields=True):
+    """A comparison to share: its cards, its map terms and the rendered image."""
+
+    members: list[MemberIn]
+    image: ScreenshotIn
+    island: str | None = None
+    # Positional favorite slots, "" for an open one.
+    favorites: list[str] = msgspec.field(default_factory=list)
+    weekly_bonus: str = "berry_strength"
+    language: str = "es"
+    sleep: SleepIn | None = None
+    verification_token: str | None = None
+
+
+class SharedSleepOut(msgspec.Struct):
+    night_minutes: int
+    nap_minutes: int | None
+
+
+class SharedMemberOut(msgspec.Struct):
+    species: str
+    level: int
+    nature: str
+    ingredients: list[str]
+    sub_skills: list[str]
+    ribbon: str
+    skill_level: int
+    versatile_skill: str | None
+
+
+class ComparisonShareOut(msgspec.Struct):
+    id: str
+    # The link to share: its page carries the image for link previews.
+    url: str
+    members: list[SharedMemberOut]
+    island: str | None
+    favorites: list[str]
+    weekly_bonus: str
+    sleep: SharedSleepOut

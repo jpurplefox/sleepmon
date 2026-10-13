@@ -49,6 +49,8 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Tu caja guarda tus Pokémon entre visitas. Iniciá sesión con Google para continuar.",
     "auth.dialogBodyImport":
       "Leer capturas del juego está reservado para usuarios registrados. Iniciá sesión con Google para continuar.",
+    "auth.dialogBodyShareLink":
+      "Iniciá sesión con Google para crear un link. La imagen la podés compartir sin cuenta.",
     "auth.gateTitle": "Tu caja es donde viven tus Pokémon",
     "auth.gateBody":
       "Iniciá sesión con Google para empezar tu caja, registrar tu equipo y encontrarlo en cada visita.",
@@ -151,6 +153,36 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.new": "+ Nuevo",
     "prod.myPokemon": "+ Mis Pokémon",
     "prod.addToComparison": "Agregar a la comparación",
+    // Compartir (PRD 0020)
+    "share.button": "Compartir",
+    "share.title": "Compartir comparación",
+    "share.drawing": "Armando la imagen…",
+    "share.drawError": "No se pudo armar la imagen. Probá de nuevo.",
+    "share.previewAlt": "Todas las cards de la comparación, una al lado de la otra",
+    "share.imageSection": "Imagen",
+    "share.download": "Descargar",
+    "share.imageCopied": "¡Copiada!",
+    "share.linkSection": "Link",
+    "share.linkValue":
+      "Quien lo abra ve la comparación en sleepmon y puede cambiar niveles, naturalezas o el mapa para probar sus propias variantes.",
+    "share.creatingLink": "Creando link…",
+    "share.linkError": "No se pudo crear el link.",
+    "share.retry": "Reintentar",
+    "share.signInForLink": "Iniciá sesión para crear el link",
+    "share.linkLabel": "Link de la comparación",
+    "share.copy": "Copiar",
+    "share.copied": "¡Copiado!",
+    "share.loading": "Abriendo la comparación compartida…",
+    "share.notFound": "Esta comparación compartida no existe o venció.",
+    "share.verifyError": "No pudimos verificar que no seas un bot.",
+    "share.sleepLabel": "Sueño: {sleep}",
+    "share.sleepNotice":
+      "Quien te compartió esta comparación duerme en {theirs} y vos en {yours}, así que los valores mostrados pueden no coincidir con los suyos.",
+    "share.oneSession": "una sesión de {night}",
+    "share.oneSessionShort": "una de {night}",
+    "share.twoSessions": "dos sesiones (noche {night} y siesta {nap})",
+    "share.twoSessionsShort": "dos (noche {night} y siesta {nap})",
+    "share.dismissNotice": "Cerrar aviso",
     "prod.save": "Guardar",
     "prod.noteEditInBox":
       "Editás la copia de comparación; tu caja no cambia. Para actualizarla, usá el ícono de guardar en la card.",
@@ -649,7 +681,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "privacy.whoContact": "Para cualquier consulta sobre tus datos escribí a {email}.",
     "privacy.dataTitle": "Qué guardamos de tu cuenta",
     "privacy.dataBody":
-      "Al iniciar sesión con Google guardamos tu id de Google, tu email, tu nombre y tu foto, y lo que cargues: tu caja, tus equipos guardados y tu perfil de jugador. Se conserva hasta que borres tu cuenta.",
+      "Al iniciar sesión con Google guardamos tu id de Google, tu email, tu nombre y tu foto, y lo que cargues: tu caja, tus equipos guardados, tu perfil de jugador y los links de comparaciones que compartas con la sesión iniciada. Se conserva hasta que borres tu cuenta. Un link compartido (con o sin cuenta) guarda la comparación, su imagen y tu horario de sueño, lo ve cualquiera que tenga el link, y se borra solo si nadie lo abre en 90 días. Si compartís un link sin iniciar sesión, Cloudflare verifica que no seas un bot.",
     "privacy.browserTitle": "En tu navegador",
     "privacy.browserBody":
       "Para mantenerte con la sesión iniciada usamos una cookie de inicio de sesión y un token guardado en tu navegador; ahí también se guarda el idioma que elegiste. No usamos cookies de publicidad ni de analítica, y las métricas de uso no guardan nada en tu navegador.",
@@ -727,6 +759,8 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Your box keeps your Pokémon across visits. Sign in with Google to continue.",
     "auth.dialogBodyImport":
       "Reading game screenshots is reserved for registered users. Sign in with Google to continue.",
+    "auth.dialogBodyShareLink":
+      "Sign in with Google to create a link. The image can be shared without an account.",
     "auth.gateTitle": "Your box is where your Pokémon live",
     "auth.gateBody":
       "Sign in with Google to start your box, register your team, and find it again on every visit.",
@@ -827,6 +861,36 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.new": "+ New",
     "prod.myPokemon": "+ My Pokémon",
     "prod.addToComparison": "Add to comparison",
+    // Sharing (PRD 0020)
+    "share.button": "Share",
+    "share.title": "Share comparison",
+    "share.drawing": "Putting the image together…",
+    "share.drawError": "Couldn't put the image together. Try again.",
+    "share.previewAlt": "Every card in the comparison, side by side",
+    "share.imageSection": "Image",
+    "share.download": "Download",
+    "share.imageCopied": "Copied!",
+    "share.linkSection": "Link",
+    "share.linkValue":
+      "Anyone who opens it sees the comparison in sleepmon and can change levels, natures or the map to try their own variants.",
+    "share.creatingLink": "Creating link…",
+    "share.linkError": "Couldn't create the link.",
+    "share.retry": "Try again",
+    "share.signInForLink": "Sign in to create the link",
+    "share.linkLabel": "Comparison link",
+    "share.copy": "Copy",
+    "share.copied": "Copied!",
+    "share.loading": "Opening the shared comparison…",
+    "share.notFound": "That shared comparison doesn't exist or has expired.",
+    "share.verifyError": "We couldn't verify you're not a bot.",
+    "share.sleepLabel": "Sleep: {sleep}",
+    "share.sleepNotice":
+      "The person who shared this comparison sleeps in {theirs} and you in {yours}, so the values shown may not match theirs.",
+    "share.oneSession": "one session of {night}",
+    "share.oneSessionShort": "one of {night}",
+    "share.twoSessions": "two sessions (night {night} and nap {nap})",
+    "share.twoSessionsShort": "two (night {night} and nap {nap})",
+    "share.dismissNotice": "Dismiss",
     "prod.save": "Save",
     "prod.noteEditInBox":
       "You're editing the comparison copy; your box doesn't change. To update it, use the save icon on the card.",
@@ -1323,7 +1387,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "privacy.whoContact": "For any question about your data, write to {email}.",
     "privacy.dataTitle": "What we keep with your account",
     "privacy.dataBody":
-      "When you sign in with Google we keep your Google id, email, name and photo, plus what you save: your Box, saved teams and Player profile. It is kept until you delete your account.",
+      "When you sign in with Google we keep your Google id, email, name and photo, plus what you save: your Box, saved teams, Player profile and the comparison links you share while signed in. It is kept until you delete your account. A shared link (with or without an account) keeps the comparison, its image and your sleep schedule, anyone with the link can see it, and it is deleted on its own when nobody opens it for 90 days. If you share a link without signing in, Cloudflare checks that you're not a bot.",
     "privacy.browserTitle": "In your browser",
     "privacy.browserBody":
       "To keep you signed in we use a sign-in cookie and a token stored in your browser; your language choice is stored there too. No advertising or analytics cookies, and usage metrics store nothing in your browser.",

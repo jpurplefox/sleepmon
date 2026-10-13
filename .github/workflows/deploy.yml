@@ -139,6 +139,8 @@ jobs:
           # el Client ID de Google. Se hornean en el bundle en build time.
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+          # Cloudflare Turnstile site key (public; ADR-0012). Empty = signed-out share asks to sign in.
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
           # Telemetry (ADR-0010). Missing secrets leave the matching service off.
           VITE_RELEASE: ${{ github.sha }}
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}

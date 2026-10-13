@@ -1,5 +1,7 @@
 import type {
   Catalog,
+  ComparisonShare,
+  ComparisonShareInput,
   Member,
   MemberInput,
   PlayerProgress,
@@ -116,4 +118,8 @@ export const api = {
   deleteAccount: () => request<void>("/auth/account", { method: "DELETE" }),
   importScreenshots: (images: ShotPayload[]) =>
     request<ScreenshotImport>("/screenshot-import", { method: "POST", body: JSON.stringify({ images }) }),
+  createComparisonShare: (data: ComparisonShareInput) =>
+    request<ComparisonShare>("/comparison-shares", { method: "POST", body: JSON.stringify(data) }),
+  getComparisonShare: (id: string) =>
+    request<ComparisonShare>(`/comparison-shares/${encodeURIComponent(id)}`),
 };

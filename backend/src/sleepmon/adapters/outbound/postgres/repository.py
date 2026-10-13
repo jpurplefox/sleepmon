@@ -16,9 +16,16 @@ from psycopg_pool import ConnectionPool
 
 from sleepmon.adapters.outbound.postgres import queries
 from sleepmon.domain.auth import RefreshToken, User
+from sleepmon.domain.comparison_share import (
+    SharedComparison,
+    SharedMap,
+    ShareImage,
+    ShareLanguage,
+)
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.errors import ValidationError
 from sleepmon.domain.ports import (
+    ComparisonShareRepository,
     ImportQuotaRepository,
     PlayerProgressRepository,
     RefreshTokenRepository,
@@ -551,3 +558,124 @@ class PostgresImportQuotaRepository(ImportQuotaRepository):
     def release(self, user_id: UUID, day: date) -> None:
         with self._pool.connection() as conn, conn.cursor() as cur:
             cur.execute(queries.RELEASE_IMPORT, (user_id, day))
+
+
+@dataclass(frozen=True, slots=True)
+class _ComparisonShareRow:
+    id: str
+    members: list[dict[str, object]]
+    island: str | None
+    favorites: list[str | None]
+    weekly_bonus: str
+    language: str
+    night_minutes: int
+    nap_minutes: int | None
+    created_at: datetime
+    last_opened_at: datetime
+
+
+def _encode_shared_member(m: TeamMember) -> dict[str, object]:
+    return {
+        "species": m.species,
+        "level": m.level,
+        "nature": None if m.nature is None else m.nature.value,
+        "ingredients": [i.value for i in m.ingredients],
+        "sub_skills": [s.value for s in m.sub_skills],
+        "ribbon": m.ribbon.value,
+        "skill_level": m.skill_level,
+        "versatile_skill": m.versatile_skill,
+    }
+
+
+def _decode_shared_member(raw: dict[str, object]) -> TeamMember:
+    try:
+        nature = raw.get("nature")
+        versatile = raw.get("versatile_skill")
+        return TeamMember(
+            species=str(raw["species"]),
+            level=int(str(raw["level"])),
+            nature=None if nature is None else _decode(Nature, str(nature)),
+            ingredients=tuple(_decode(Ingredient, str(i)) for i in _as_list(raw["ingredients"])),
+            sub_skills=tuple(_decode(SubSkill, str(s)) for s in _as_list(raw["sub_skills"])),
+            ribbon=_decode(Ribbon, str(raw["ribbon"])),
+            skill_level=int(str(raw["skill_level"])),
+            versatile_skill=None if versatile is None else str(versatile),
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValidationError(f"Pokémon compartido inválido en la base: {raw!r}.") from exc
+
+
+def _as_list(value: object) -> list[object]:
+    if not isinstance(value, list):
+        raise TypeError(f"expected a list, got {value!r}")
+    return value
+
+
+def _to_shared_comparison(row: _ComparisonShareRow) -> SharedComparison:
+    """Decode a row. Like a saved team's, an unknown map or berry reads as none."""
+    return SharedComparison(
+        id=row.id,
+        members=tuple(_decode_shared_member(m) for m in row.members),
+        map=SharedMap(
+            island=None if row.island is None else _decode_optional(Island, row.island),
+            favorites=tuple(
+                None if b is None else _decode_optional(Berry, b) for b in row.favorites
+            ),
+            weekly_bonus=_decode_optional(WeeklyBonus, row.weekly_bonus)
+            or WeeklyBonus.BERRY_STRENGTH,
+        ),
+        language=_decode_optional(ShareLanguage, row.language) or ShareLanguage.ES,
+        sleep=SleepSchedule(night_minutes=row.night_minutes, nap_minutes=row.nap_minutes),
+        created_at=row.created_at,
+        last_opened_at=row.last_opened_at,
+    )
+
+
+class PostgresComparisonShareRepository(ComparisonShareRepository):
+    def __init__(self, pool: ConnectionPool) -> None:
+        self._pool = pool
+
+    def add(self, share: SharedComparison, image: ShareImage, owner: UUID | None) -> None:
+        with self._pool.connection() as conn, conn.cursor() as cur:
+            cur.execute(
+                queries.INSERT_COMPARISON_SHARE,
+                (
+                    share.id,
+                    Jsonb([_encode_shared_member(m) for m in share.members]),
+                    None if share.map.island is None else share.map.island.value,
+                    Jsonb([None if b is None else b.value for b in share.map.favorites]),
+                    share.map.weekly_bonus.value,
+                    share.language.value,
+                    share.sleep.night_minutes,
+                    share.sleep.nap_minutes,
+                    image.media_type,
+                    image.data,
+                    share.created_at,
+                    share.last_opened_at,
+                    owner,
+                ),
+            )
+
+    def touch(self, share_id: str, opened_at: datetime) -> None:
+        with self._pool.connection() as conn, conn.cursor() as cur:
+            cur.execute(queries.TOUCH_COMPARISON_SHARE, (opened_at, share_id))
+
+    def delete_expired(self, opened_before: datetime) -> int:
+        with self._pool.connection() as conn, conn.cursor() as cur:
+            cur.execute(queries.DELETE_EXPIRED_COMPARISON_SHARES, (opened_before,))
+            return cur.rowcount
+
+    def get(self, share_id: str) -> SharedComparison | None:
+        with (
+            self._pool.connection() as conn,
+            conn.cursor(row_factory=class_row(_ComparisonShareRow)) as cur,
+        ):
+            cur.execute(queries.SELECT_COMPARISON_SHARE, (share_id,))
+            row = cur.fetchone()
+        return None if row is None else _to_shared_comparison(row)
+
+    def get_image(self, share_id: str) -> ShareImage | None:
+        with self._pool.connection() as conn, conn.cursor() as cur:
+            cur.execute(queries.SELECT_COMPARISON_SHARE_IMAGE, (share_id,))
+            row = cur.fetchone()
+        return None if row is None else ShareImage(media_type=row[0], data=bytes(row[1]))

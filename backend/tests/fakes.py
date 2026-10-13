@@ -8,8 +8,11 @@ from datetime import date, datetime
 from uuid import UUID
 
 from sleepmon.domain.auth import ExternalIdentity, RefreshToken, User
+from sleepmon.domain.comparison_share import SharedComparison, ShareImage
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.ports import (
+    ComparisonShareRepository,
+    HumanVerifier,
     IdentityProvider,
     ImportQuotaRepository,
     PlayerProgressRepository,
@@ -213,3 +216,45 @@ class InMemoryImportQuota(ImportQuotaRepository):
         key = (user_id, day)
         if self.counts.get(key, 0) > 0:
             self.counts[key] -= 1
+
+
+class InMemoryComparisonShareRepository(ComparisonShareRepository):
+    """Shares by id, each with its owner (None when shared signed out) and image."""
+
+    def __init__(self) -> None:
+        self.shares: dict[str, tuple[UUID | None, SharedComparison, ShareImage]] = {}
+
+    def add(self, share: SharedComparison, image: ShareImage, owner: UUID | None) -> None:
+        self.shares[share.id] = (owner, share, image)
+
+    def get(self, share_id: str) -> SharedComparison | None:
+        entry = self.shares.get(share_id)
+        return None if entry is None else entry[1]
+
+    def get_image(self, share_id: str) -> ShareImage | None:
+        entry = self.shares.get(share_id)
+        return None if entry is None else entry[2]
+
+    def touch(self, share_id: str, opened_at: datetime) -> None:
+        owner, share, image = self.shares[share_id]
+        self.shares[share_id] = (owner, replace(share, last_opened_at=opened_at), image)
+
+    def delete_expired(self, opened_before: datetime) -> int:
+        gone = [k for k, (_, s, _) in self.shares.items() if s.last_opened_at < opened_before]
+        for k in gone:
+            del self.shares[k]
+        return len(gone)
+
+
+class FakeHumanVerifier(HumanVerifier):
+    """Answers ``result`` (or raises it), and remembers the tokens it saw."""
+
+    def __init__(self, result: bool | Exception = True) -> None:
+        self.result = result
+        self.tokens: list[str] = []
+
+    def verify(self, token: str) -> bool:
+        self.tokens.append(token)
+        if isinstance(self.result, Exception):
+            raise self.result
+        return self.result

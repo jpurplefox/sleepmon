@@ -16,7 +16,15 @@ export function SignInDialog() {
 
   return (
     <Modal title={t("auth.dialogTitle")} onClose={closeDialog}>
-      <p>{t(reason === "import_screenshots" ? "auth.dialogBodyImport" : "auth.dialogBody")}</p>
+      <p>
+        {t(
+          reason === "import_screenshots"
+            ? "auth.dialogBodyImport"
+            : reason === "share_link"
+              ? "auth.dialogBodyShareLink"
+              : "auth.dialogBody",
+        )}
+      </p>
       <div className="modal-actions modal-actions--center">
         <GoogleSignInButton reason={reason ?? "my_pokemon"} />
       </div>

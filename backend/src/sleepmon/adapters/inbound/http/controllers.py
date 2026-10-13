@@ -4,18 +4,22 @@ from __future__ import annotations
 
 import base64
 import binascii
+import urllib.parse
+from typing import Any
 from uuid import UUID
 
-from litestar import Controller, delete, get, patch, post, put
+from litestar import Controller, Request, Response, delete, get, patch, post, put
 from litestar.di import NamedDependency
 from litestar.params import FromPath
-from litestar.status_codes import HTTP_200_OK, HTTP_201_CREATED
+from litestar.status_codes import HTTP_200_OK, HTTP_201_CREATED, HTTP_404_NOT_FOUND
 
 from sleepmon.adapters.inbound.http.guards import require_user
 from sleepmon.adapters.inbound.http.schemas import (
     BerrySourceOut,
     BerryYieldOut,
     CatalogOut,
+    ComparisonShareIn,
+    ComparisonShareOut,
     DistributionsOut,
     ExpertSpeedOut,
     FillerOut,
@@ -43,6 +47,8 @@ from sleepmon.adapters.inbound.http.schemas import (
     ScreenshotImportIn,
     ScreenshotImportOut,
     ScreenshotIn,
+    SharedMemberOut,
+    SharedSleepOut,
     SkillEffectAggOut,
     SleepIn,
     SleepOut,
@@ -55,7 +61,13 @@ from sleepmon.adapters.inbound.http.schemas import (
     TeamProductionIn,
     TeamProductionOut,
 )
+from sleepmon.adapters.inbound.http.share_page import (
+    render_missing_share_page,
+    render_share_page,
+)
+from sleepmon.application.comparison_share_service import ComparisonShareService
 from sleepmon.application.dto import (
+    ComparisonShareInput,
     EventEffectInput,
     MealSelectionInput,
     MemberProduction,
@@ -86,8 +98,9 @@ from sleepmon.domain.catalog_data import (
     RECIPE_LEVEL_BONUS,
     SUB_SKILL_TIERS,
 )
+from sleepmon.domain.comparison_share import SharedComparison
 from sleepmon.domain.entities import TeamMember
-from sleepmon.domain.errors import ValidationError
+from sleepmon.domain.errors import ComparisonShareNotFoundError, ValidationError
 from sleepmon.domain.ports import SpeciesCatalog
 from sleepmon.domain.progress import PlayerProgress
 from sleepmon.domain.saved_team import SavedTeam
@@ -731,10 +744,7 @@ class ScreenshotImportController(Controller):
 
 
 def _screenshot(image: ScreenshotIn) -> Screenshot:
-    try:
-        raw = base64.b64decode(image.data, validate=True)
-    except (binascii.Error, ValueError) as exc:
-        raise ValidationError("Una de las imágenes no se pudo leer.") from exc
+    raw = _decode_base64(image.data, "Una de las imágenes no se pudo leer.")
     return Screenshot(media_type=image.media_type, data=raw)
 
 
@@ -750,3 +760,132 @@ def _to_import_out(cfg: ImportedConfig) -> ScreenshotImportOut:
         versatile_skill=cfg.versatile_skill,
         unread=[f.value for f in ImportField if f in cfg.unread],
     )
+
+
+def _decode_base64(data: str, message: str) -> bytes:
+    try:
+        return base64.b64decode(data, validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise ValidationError(message) from exc
+
+
+def _share_base(request: Request[Any, Any, Any]) -> str:
+    """Where share links point: configured (the app's own domain routes /s/* here),
+    or else this API's own address."""
+    configured: str = request.app.state.share_base_url
+    return (configured or str(request.base_url)).rstrip("/")
+
+
+def _share_out(share: SharedComparison, base: str) -> ComparisonShareOut:
+    return ComparisonShareOut(
+        id=share.id,
+        url=f"{base}/s/{share.id}",
+        members=[
+            SharedMemberOut(
+                species=m.species,
+                level=m.level,
+                nature="" if m.nature is None else m.nature.value,
+                ingredients=[i.value for i in m.ingredients],
+                sub_skills=[s.value for s in m.sub_skills],
+                ribbon=m.ribbon.value,
+                skill_level=m.skill_level,
+                versatile_skill=m.versatile_skill,
+            )
+            for m in share.members
+        ],
+        island=None if share.map.island is None else share.map.island.value,
+        favorites=["" if b is None else b.value for b in share.map.favorites],
+        weekly_bonus=share.map.weekly_bonus.value,
+        sleep=SharedSleepOut(share.sleep.night_minutes, share.sleep.nap_minutes),
+    )
+
+
+class ComparisonShareController(Controller):
+    """Create a share (signed in, or signed out with a human check) and read it back."""
+
+    path = "/comparison-shares"
+
+    @post("/", status_code=HTTP_201_CREATED, sync_to_thread=True)
+    def create_share(
+        self,
+        request: Request[Any, Any, Any],
+        comparison_shares: NamedDependency[ComparisonShareService],
+        optional_user_id: NamedDependency[UUID | None],
+        data: ComparisonShareIn,
+    ) -> ComparisonShareOut:
+        share = comparison_shares.create(
+            optional_user_id,
+            ComparisonShareInput(
+                members=[_to_input(m) for m in data.members],
+                image_media_type=data.image.media_type,
+                image_data=_decode_base64(data.image.data, "La imagen no se pudo leer."),
+                island=data.island,
+                favorites=list(data.favorites),
+                weekly_bonus=data.weekly_bonus,
+                language=data.language,
+                sleep=_sleep_input(data.sleep),
+                verification_token=data.verification_token,
+            ),
+        )
+        return _share_out(share, _share_base(request))
+
+    @get("/{share_id:str}", sync_to_thread=True)
+    def get_share(
+        self,
+        request: Request[Any, Any, Any],
+        comparison_shares: NamedDependency[ComparisonShareService],
+        share_id: FromPath[str],
+    ) -> ComparisonShareOut:
+        return _share_out(comparison_shares.open(share_id), _share_base(request))
+
+
+class SharePageController(Controller):
+    """The link itself: a page whose Open Graph tags carry the comparison's image."""
+
+    path = "/s"
+
+    @get("/{share_id:str}", sync_to_thread=True)
+    def share_page(
+        self,
+        request: Request[Any, Any, Any],
+        comparison_shares: NamedDependency[ComparisonShareService],
+        share_id: FromPath[str],
+    ) -> Response[str]:
+        app_url: str = request.app.state.app_url
+        try:
+            share = comparison_shares.peek(share_id)
+        except ComparisonShareNotFoundError:
+            # Raw path input: quote it. The app shows the "gone or expired" copy.
+            target = f"{app_url.rstrip('/')}/compare?share={urllib.parse.quote(share_id, safe='')}"
+            return Response(
+                render_missing_share_page(target),
+                status_code=HTTP_404_NOT_FOUND,
+                media_type="text/html",
+            )
+        base = _share_base(request)
+        html = render_share_page(
+            share,
+            share_url=f"{base}/s/{share.id}",
+            image_url=f"{base}/s/{share.id}/image",
+            app_url=f"{app_url.rstrip('/')}/compare?share={share.id}",
+        )
+        # A share never changes; a short cache still lets a deleted account's go away.
+        return Response(
+            html, media_type="text/html", headers={"Cache-Control": "public, max-age=3600"}
+        )
+
+    @get("/{share_id:str}/image", sync_to_thread=True)
+    def share_image(
+        self,
+        comparison_shares: NamedDependency[ComparisonShareService],
+        share_id: FromPath[str],
+    ) -> Response[bytes]:
+        image = comparison_shares.image(share_id)
+        return Response(
+            image.data,
+            media_type=image.media_type,
+            headers={
+                "Cache-Control": "public, max-age=3600",
+                "X-Content-Type-Options": "nosniff",
+            },
+        )

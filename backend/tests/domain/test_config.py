@@ -82,3 +82,30 @@ def test_screenshot_settings_default_to_nova_and_qwen_in_us_east_1(monkeypatch) 
     assert s.screenshot_daily_limit == 50
     monkeypatch.setenv("BEDROCK_REGION", "us-west-2")
     assert Settings.from_env().bedrock_region == "us-west-2"
+
+
+def test_turnstile_secret_defaults_to_off(monkeypatch) -> None:
+    monkeypatch.delenv("TURNSTILE_SECRET_KEY", raising=False)
+    assert Settings.from_env().turnstile_secret_key == ""
+    monkeypatch.setenv("TURNSTILE_SECRET_KEY", "k")
+    assert Settings.from_env().turnstile_secret_key == "k"
+
+
+def test_warns_when_a_deployed_setup_leaves_app_url_unset(monkeypatch, caplog) -> None:
+    monkeypatch.delenv("APP_URL", raising=False)
+    monkeypatch.setenv("COOKIE_SECURE", "true")
+    with caplog.at_level("WARNING", logger="sleepmon.config"):
+        Settings.from_env()
+    assert any("APP_URL" in r.message for r in caplog.records)
+
+
+def test_no_app_url_warning_when_set_or_local(monkeypatch, caplog) -> None:
+    monkeypatch.setenv("APP_URL", "https://sleepmon.app")
+    monkeypatch.setenv("COOKIE_SECURE", "true")
+    with caplog.at_level("WARNING", logger="sleepmon.config"):
+        Settings.from_env()
+    monkeypatch.delenv("APP_URL")
+    monkeypatch.setenv("COOKIE_SECURE", "false")
+    with caplog.at_level("WARNING", logger="sleepmon.config"):
+        Settings.from_env()
+    assert not [r for r in caplog.records if "APP_URL" in r.message]

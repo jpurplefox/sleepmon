@@ -35,6 +35,9 @@ services:
       SCREENSHOT_MODEL: ${SCREENSHOT_MODEL:-us.amazon.nova-2-lite-v1:0}
       SCREENSHOT_MODEL_OTHER_LANGUAGES: ${SCREENSHOT_MODEL_OTHER_LANGUAGES:-qwen.qwen3-vl-235b-a22b}
       SCREENSHOT_DAILY_LIMIT: ${SCREENSHOT_DAILY_LIMIT:-50}
+      # Human check for signed-out share links (ADR-0012). Default is Cloudflare's
+      # always-pass test secret, for local dev only; empty = signed-out links refused.
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY-1x0000000000000000000000000000000AA}
     ports:
       - "8000:8000"
     depends_on:
@@ -53,6 +56,8 @@ services:
       VITE_POSTHOG_KEY: ${VITE_POSTHOG_KEY:-}
       VITE_POSTHOG_HOST: ${VITE_POSTHOG_HOST:-}
       VITE_CONTACT_EMAIL: ${VITE_CONTACT_EMAIL:-}
+      # Cloudflare's always-pass test site key, local dev only (pairs with the secret above).
+      VITE_TURNSTILE_SITE_KEY: ${VITE_TURNSTILE_SITE_KEY-1x00000000000000000000AA}
     ports:
       - "5173:5173"
     depends_on:
