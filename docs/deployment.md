@@ -148,10 +148,9 @@ Set these in the repo (Settings → Secrets and variables → Actions):
 | `VITE_GOOGLE_CLIENT_ID` | Google OAuth Web client ID |
 | `CLOUDFRONT_DISTRIBUTION_ID` | CloudFront distribution ID (step 5) |
 
-`GOOGLE_CLIENT_ID`, `JWT_SECRET`, `COOKIE_SAMESITE`, `CORS_ORIGINS` and
-`COOKIE_SECURE`, `APP_URL`, `SHARE_BASE_URL` and `TURNSTILE_SECRET_KEY` live on the
-**Lambda function** (step 4), not in GitHub — the
-backend reads them from its own environment at runtime.
+`GOOGLE_CLIENT_ID`, `JWT_SECRET`, `COOKIE_SAMESITE`, `CORS_ORIGINS`, `COOKIE_SECURE`,
+`APP_URL`, `SHARE_BASE_URL` and `TURNSTILE_SECRET_KEY` live on the **Lambda function**
+(step 4), not in GitHub — the backend reads them from its own environment at runtime.
 
 ## GitHub variables
 
