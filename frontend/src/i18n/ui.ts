@@ -176,7 +176,11 @@ export const UI: Record<Lang, Record<string, string>> = {
     "share.sleepLabel": "Sueño {sleep}",
     "share.nap": "siesta",
     "share.sleepNotice":
-      "Quien te compartió esta comparación duerme {theirs}; los números usan tu horario ({yours}) y pueden no coincidir con los suyos.",
+      "Quien te compartió esta comparación duerme en {theirs} y vos en {yours}, así que los valores mostrados pueden no coincidir con los suyos.",
+    "share.oneSession": "una sesión de {night}",
+    "share.oneSessionShort": "una de {night}",
+    "share.twoSessions": "dos sesiones (noche {night} y siesta {nap})",
+    "share.twoSessionsShort": "dos (noche {night} y siesta {nap})",
     "share.dismissNotice": "Cerrar aviso",
     "prod.save": "Guardar",
     "prod.noteEditInBox":
@@ -879,7 +883,11 @@ export const UI: Record<Lang, Record<string, string>> = {
     "share.sleepLabel": "Sleep {sleep}",
     "share.nap": "nap",
     "share.sleepNotice":
-      "Whoever shared this comparison sleeps {theirs}; the numbers use your schedule ({yours}) and may not match theirs.",
+      "The person who shared this comparison sleeps in {theirs} and you in {yours}, so the values shown may not match theirs.",
+    "share.oneSession": "one session of {night}",
+    "share.oneSessionShort": "one of {night}",
+    "share.twoSessions": "two sessions (night {night} and nap {nap})",
+    "share.twoSessionsShort": "two (night {night} and nap {nap})",
     "share.dismissNotice": "Dismiss",
     "prod.save": "Save",
     "prod.noteEditInBox":

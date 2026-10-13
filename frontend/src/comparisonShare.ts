@@ -57,3 +57,18 @@ export function formatSleep(s: SleepSchedule, napWord: string): string {
   const night = formatHm(s.night_minutes);
   return s.nap_minutes == null ? night : `${night} + ${napWord} ${formatHm(s.nap_minutes)}`;
 }
+
+type Translate = (key: string, vars?: Record<string, string>) => string;
+
+/** "one session of 8:30" / "two sessions (night 7:00 and nap 2:00)"; `short` drops the repeated noun. */
+export function describeSessions(s: SleepSchedule, short: boolean, t: Translate): string {
+  const night = formatHm(s.night_minutes);
+  if (s.nap_minutes == null) return t(short ? "share.oneSessionShort" : "share.oneSession", { night });
+  return t(short ? "share.twoSessionsShort" : "share.twoSessions", { night, nap: formatHm(s.nap_minutes) });
+}
+
+/** Both sides' sessions for the notice; yours is shortened when both have the same count. */
+export function sleepNoticeParts(theirs: SleepSchedule, yours: SleepSchedule, t: Translate): { theirs: string; yours: string } {
+  const sameCount = (theirs.nap_minutes == null) === (yours.nap_minutes == null);
+  return { theirs: describeSessions(theirs, false, t), yours: describeSessions(yours, sameCount, t) };
+}

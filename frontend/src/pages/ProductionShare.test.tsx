@@ -247,23 +247,24 @@ describe("Share placements and the sleep notice", () => {
   it("drops the sleep notice when every card is removed", async () => {
     vi.spyOn(api, "getComparisonShare").mockResolvedValue(share);
     renderAt("/compare?share=abc123def456");
-    await screen.findByText(/Whoever shared this comparison sleeps/);
+    await screen.findByText(/The person who shared this comparison sleeps/);
 
     while (screen.queryAllByRole("button", { name: "Remove" }).length > 0) {
       await userEvent.click(screen.getAllByRole("button", { name: "Remove" })[0]);
     }
 
-    expect(screen.queryByText(/Whoever shared this comparison sleeps/)).toBeNull();
+    expect(screen.queryByText(/The person who shared this comparison sleeps/)).toBeNull();
   });
 
   it("points out a different sleep schedule, and x closes it", async () => {
     vi.spyOn(api, "getComparisonShare").mockResolvedValue(share);
     renderAt("/compare?share=abc123def456");
-    const notice = await screen.findByText(/Whoever shared this comparison sleeps/);
-    expect(notice.textContent).toContain("7:00 + nap 2:00");
-    expect(notice.textContent).toContain("8:30");
+    const notice = await screen.findByText(/The person who shared this comparison sleeps/);
+    expect(notice.textContent).toBe(
+      "The person who shared this comparison sleeps in two sessions (night 7:00 and nap 2:00) and you in one session of 8:30, so the values shown may not match theirs.",
+    );
     await userEvent.click(screen.getByRole("button", { name: "Dismiss" }));
-    expect(screen.queryByText(/Whoever shared this comparison sleeps/)).toBeNull();
+    expect(screen.queryByText(/The person who shared this comparison sleeps/)).toBeNull();
   });
 
   it("signed in: waits for the profile's schedule before comparing", async () => {
@@ -273,17 +274,17 @@ describe("Share placements and the sleep notice", () => {
     vi.spyOn(api, "getComparisonShare").mockResolvedValue(share);
     renderAt("/compare?share=abc123def456");
     await waitFor(() => expect(screen.getAllByText("Raichu").length).toBeGreaterThan(0));
-    expect(screen.queryByText(/Whoever shared this comparison sleeps/)).toBeNull();
+    expect(screen.queryByText(/The person who shared this comparison sleeps/)).toBeNull();
     resolve({ sleep: { night_minutes: 600, nap_minutes: null } } as never);
-    const notice = await screen.findByText(/Whoever shared this comparison sleeps/);
-    expect(notice.textContent).toContain("10:00");
+    const notice = await screen.findByText(/The person who shared this comparison sleeps/);
+    expect(notice.textContent).toContain("you in one session of 10:00");
   });
 
   it("says nothing when the schedules match", async () => {
     vi.spyOn(api, "getComparisonShare").mockResolvedValue({ ...share, sleep: { night_minutes: 510, nap_minutes: null } });
     renderAt("/compare?share=abc123def456");
     await waitFor(() => expect(screen.getAllByText("Raichu").length).toBeGreaterThan(0));
-    expect(screen.queryByText(/Whoever shared this comparison sleeps/)).toBeNull();
+    expect(screen.queryByText(/The person who shared this comparison sleeps/)).toBeNull();
   });
 });
 

@@ -18,7 +18,7 @@ import { SwipePager } from "../components/SwipePager";
 import { ContextBar, ToolHeader } from "../components/ToolHeader";
 import { berryRoleOf, mapRequestFields } from "../comparisonMap";
 import { useComparisonSession } from "../comparisonSession";
-import { formatSleep, sessionFromShare, shareIdFrom, sleepDiffers } from "../comparisonShare";
+import { sessionFromShare, shareIdFrom, sleepDiffers, sleepNoticeParts } from "../comparisonShare";
 import { useI18n } from "../i18n";
 import { configFromMember, linkEntryToBox, newEntry } from "../roster";
 import { ROUTES } from "../routes";
@@ -326,7 +326,10 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
 
       {sleepReady && sharerSleep && sleepDiffers(sharerSleep, progress.sleep) && (
         <InfoNotice icon={<IconMoon />} onDismiss={() => setSharerSleep(null)} dismissLabel={t("share.dismissNotice")}>
-          {renderNotice(t("share.sleepNotice"), formatSleep(sharerSleep, t("share.nap")), formatSleep(progress.sleep, t("share.nap")))}
+          {(() => {
+            const parts = sleepNoticeParts(sharerSleep, progress.sleep, t);
+            return renderNotice(t("share.sleepNotice"), parts.theirs, parts.yours);
+          })()}
         </InfoNotice>
       )}
 
