@@ -158,7 +158,7 @@ swipes one card per screen, but the picture always shows **every card side by si
 - The notice, by case (es / en), × closes it in all of them:
   - sharer night 7:00 + nap 2:00, recipient 8:30 → *"Quien te compartió esta comparación
     duerme en dos sesiones (noche 7:00 y siesta 2:00) y vos en una sesión de 8:30, así que
-    los valores mostrados pueden no coincidir con los suyos."* / *"Whoever shared this
+    los valores mostrados pueden no coincidir con los suyos."* / *"The person who shared this
     comparison sleeps in two sessions (night 7:00 and nap 2:00) and you in one session of
     8:30, so the values shown may not match theirs."*
   - sharer 8:30, recipient night 7:00 + nap 2:00 → *"…duerme en una sesión de 8:30 y vos
