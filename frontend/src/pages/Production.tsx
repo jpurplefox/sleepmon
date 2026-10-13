@@ -256,8 +256,14 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shareId, shared.data, shared.isError]);
 
-  // The picture needs every card's numbers.
-  const shareDisabled = shownProductions.some((p) => !p);
+  // The picture needs every card's numbers, and only the current ones: while any card
+  // recomputes (a map change, an edit) the picture would mix new settings with old numbers.
+  const shareDisabled = productions.some((q) => !q.data || q.isFetching);
+
+  // No cards left: the sharer's sleep note has nothing to compare against.
+  useEffect(() => {
+    if (entries.length === 0) setSharerSleep(null);
+  }, [entries.length]);
   const openShare = () => setModal("share");
 
   const handleMapChange = (next: typeof map) => {

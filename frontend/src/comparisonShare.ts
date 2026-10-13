@@ -55,5 +55,5 @@ export function sleepDiffers(a: SleepSchedule, b: SleepSchedule): boolean {
 /** "8:30", or "7:00 + siesta 2:00" with a nap (napWord is the language's word for it). */
 export function formatSleep(s: SleepSchedule, napWord: string): string {
   const night = formatHm(s.night_minutes);
-  return s.nap_minutes === null ? night : `${night} + ${napWord} ${formatHm(s.nap_minutes)}`;
+  return s.nap_minutes == null ? night : `${night} + ${napWord} ${formatHm(s.nap_minutes)}`;
 }

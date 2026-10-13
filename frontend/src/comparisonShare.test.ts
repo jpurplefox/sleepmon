@@ -82,6 +82,7 @@ describe("sleepDiffers", () => {
 describe("formatSleep", () => {
   it("reads the night, plus the nap when there is one", () => {
     expect(formatSleep({ night_minutes: 510, nap_minutes: null }, "siesta")).toBe("8:30");
+    expect(formatSleep({ night_minutes: 510, nap_minutes: undefined as unknown as null }, "siesta")).toBe("8:30");
     expect(formatSleep({ night_minutes: 420, nap_minutes: 120 }, "siesta")).toBe("7:00 + siesta 2:00");
     expect(formatSleep({ night_minutes: 420, nap_minutes: 120 }, "nap")).toBe("7:00 + nap 2:00");
   });

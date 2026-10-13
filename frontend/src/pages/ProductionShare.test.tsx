@@ -222,6 +222,40 @@ describe("Share placements and the sleep notice", () => {
     for (const b of screen.getAllByRole("button", { name: "Share" })) expect(b).toBeDisabled();
   });
 
+  it("disables Share while a map change recomputes the numbers, then enables it", async () => {
+    vi.spyOn(api, "getComparisonShare").mockResolvedValue(share);
+    renderAt("/compare?share=abc123def456");
+    await waitFor(() => {
+      for (const b of screen.getAllByRole("button", { name: "Share" })) expect(b).toBeEnabled();
+    });
+
+    let finish!: (p: ProductionData) => void;
+    vi.spyOn(api, "computeProduction").mockReturnValue(new Promise((r) => (finish = r)));
+    // Dropping the shared favorite berry changes the map the numbers depend on.
+    await userEvent.click(screen.getByRole("button", { name: /Favorite berries/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Grepa" }));
+
+    await waitFor(() => {
+      for (const b of screen.getAllByRole("button", { name: "Share" })) expect(b).toBeDisabled();
+    });
+    finish(production);
+    await waitFor(() => {
+      for (const b of screen.getAllByRole("button", { name: "Share" })) expect(b).toBeEnabled();
+    });
+  });
+
+  it("drops the sleep notice when every card is removed", async () => {
+    vi.spyOn(api, "getComparisonShare").mockResolvedValue(share);
+    renderAt("/compare?share=abc123def456");
+    await screen.findByText(/Whoever shared this comparison sleeps/);
+
+    while (screen.queryAllByRole("button", { name: "Remove" }).length > 0) {
+      await userEvent.click(screen.getAllByRole("button", { name: "Remove" })[0]);
+    }
+
+    expect(screen.queryByText(/Whoever shared this comparison sleeps/)).toBeNull();
+  });
+
   it("points out a different sleep schedule, and x closes it", async () => {
     vi.spyOn(api, "getComparisonShare").mockResolvedValue(share);
     renderAt("/compare?share=abc123def456");

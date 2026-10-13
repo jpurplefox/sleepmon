@@ -16,7 +16,7 @@ export function InfoNotice({
 }) {
   return (
     <div className="info-notice">
-      <span className="info-notice__icon">{icon}</span>
+      <span className="info-notice__icon" aria-hidden="true">{icon}</span>
       <p>{children}</p>
       <button type="button" className="icon-btn" onClick={onDismiss} aria-label={dismissLabel} title={dismissLabel}>
         <IconClose />
