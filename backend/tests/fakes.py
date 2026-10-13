@@ -8,8 +8,10 @@ from datetime import date, datetime
 from uuid import UUID
 
 from sleepmon.domain.auth import ExternalIdentity, RefreshToken, User
+from sleepmon.domain.comparison_share import SharedComparison, ShareImage
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.ports import (
+    ComparisonShareRepository,
     IdentityProvider,
     ImportQuotaRepository,
     PlayerProgressRepository,
@@ -213,3 +215,21 @@ class InMemoryImportQuota(ImportQuotaRepository):
         key = (user_id, day)
         if self.counts.get(key, 0) > 0:
             self.counts[key] -= 1
+
+
+class InMemoryComparisonShareRepository(ComparisonShareRepository):
+    """Shares by id, each with its owner and image."""
+
+    def __init__(self) -> None:
+        self.shares: dict[str, tuple[UUID, SharedComparison, ShareImage]] = {}
+
+    def add(self, share: SharedComparison, image: ShareImage, user_id: UUID) -> None:
+        self.shares[share.id] = (user_id, share, image)
+
+    def get(self, share_id: str) -> SharedComparison | None:
+        entry = self.shares.get(share_id)
+        return None if entry is None else entry[1]
+
+    def get_image(self, share_id: str) -> ShareImage | None:
+        entry = self.shares.get(share_id)
+        return None if entry is None else entry[2]

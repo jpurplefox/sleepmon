@@ -431,3 +431,19 @@ class SavedTeamInput:
     favorite_berries: Sequence[str] = ()
     main_favorite: str | None = None
     dish_type: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ComparisonShareInput:
+    """A comparison to share, as the client sends it (enum values as raw strings).
+
+    ``favorites`` are the positional slots, ``""`` for an open one.
+    """
+
+    members: Sequence[TeamMemberInput]
+    image_media_type: str
+    image_data: bytes = field(repr=False)
+    island: str | None = None
+    favorites: Sequence[str] = ()
+    weekly_bonus: str = "berry_strength"
+    language: str = "es"

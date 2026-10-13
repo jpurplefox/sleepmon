@@ -49,6 +49,8 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Tu caja guarda tus Pokémon entre visitas. Iniciá sesión con Google para continuar.",
     "auth.dialogBodyImport":
       "Leer capturas del juego está reservado para usuarios registrados. Iniciá sesión con Google para continuar.",
+    "auth.dialogBodyShareLink":
+      "Los links compartidos quedan guardados en tu cuenta. Iniciá sesión con Google para crear uno; la imagen la podés compartir sin cuenta.",
     "auth.gateTitle": "Tu caja es donde viven tus Pokémon",
     "auth.gateBody":
       "Iniciá sesión con Google para empezar tu caja, registrar tu equipo y encontrarlo en cada visita.",
@@ -151,6 +153,25 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.new": "+ Nuevo",
     "prod.myPokemon": "+ Mis Pokémon",
     "prod.addToComparison": "Agregar a la comparación",
+    // Compartir (PRD 0020)
+    "share.button": "Compartir",
+    "share.title": "Compartir comparación",
+    "share.drawing": "Armando la imagen…",
+    "share.drawError": "No se pudo armar la imagen. Probá de nuevo.",
+    "share.previewAlt": "Todas las cards de la comparación, una al lado de la otra",
+    "share.shareImage": "Compartir imagen",
+    "share.downloadImage": "Descargar imagen",
+    "share.shareLink": "Compartir link",
+    "share.shareLinkAgain": "Compartir",
+    "share.creatingLink": "Creando link…",
+    "share.linkError": "No se pudo crear el link. Probá de nuevo.",
+    "share.linkLabel": "Link de la comparación",
+    "share.copy": "Copiar",
+    "share.copied": "¡Copiado!",
+    "share.note": "El link muestra esta imagen al compartirlo y abre la comparación en sleepmon.",
+    "share.fileTitle": "Comparación: {names}",
+    "share.loading": "Abriendo la comparación compartida…",
+    "share.notFound": "Esa comparación compartida no existe o ya no está disponible.",
     "prod.save": "Guardar",
     "prod.noteEditInBox":
       "Editás la copia de comparación; tu caja no cambia. Para actualizarla, usá el ícono de guardar en la card.",
@@ -649,7 +670,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "privacy.whoContact": "Para cualquier consulta sobre tus datos escribí a {email}.",
     "privacy.dataTitle": "Qué guardamos de tu cuenta",
     "privacy.dataBody":
-      "Al iniciar sesión con Google guardamos tu id de Google, tu email, tu nombre y tu foto, y lo que cargues: tu caja, tus equipos guardados y tu perfil de jugador. Se conserva hasta que borres tu cuenta.",
+      "Al iniciar sesión con Google guardamos tu id de Google, tu email, tu nombre y tu foto, y lo que cargues: tu caja, tus equipos guardados, tu perfil de jugador y las comparaciones que compartas por link (los Pokémon y la imagen; las ve cualquiera que tenga el link). Se conserva hasta que borres tu cuenta.",
     "privacy.browserTitle": "En tu navegador",
     "privacy.browserBody":
       "Para mantenerte con la sesión iniciada usamos una cookie de inicio de sesión y un token guardado en tu navegador; ahí también se guarda el idioma que elegiste. No usamos cookies de publicidad ni de analítica, y las métricas de uso no guardan nada en tu navegador.",
@@ -727,6 +748,8 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Your box keeps your Pokémon across visits. Sign in with Google to continue.",
     "auth.dialogBodyImport":
       "Reading game screenshots is reserved for registered users. Sign in with Google to continue.",
+    "auth.dialogBodyShareLink":
+      "Shared links are kept under your account. Sign in with Google to create one; the image can be shared without an account.",
     "auth.gateTitle": "Your box is where your Pokémon live",
     "auth.gateBody":
       "Sign in with Google to start your box, register your team, and find it again on every visit.",
@@ -827,6 +850,25 @@ export const UI: Record<Lang, Record<string, string>> = {
     "prod.new": "+ New",
     "prod.myPokemon": "+ My Pokémon",
     "prod.addToComparison": "Add to comparison",
+    // Sharing (PRD 0020)
+    "share.button": "Share",
+    "share.title": "Share comparison",
+    "share.drawing": "Putting the image together…",
+    "share.drawError": "Couldn't put the image together. Try again.",
+    "share.previewAlt": "Every card in the comparison, side by side",
+    "share.shareImage": "Share image",
+    "share.downloadImage": "Download image",
+    "share.shareLink": "Share link",
+    "share.shareLinkAgain": "Share",
+    "share.creatingLink": "Creating link…",
+    "share.linkError": "Couldn't create the link. Try again.",
+    "share.linkLabel": "Comparison link",
+    "share.copy": "Copy",
+    "share.copied": "Copied!",
+    "share.note": "The link shows this image when shared and opens the comparison in sleepmon.",
+    "share.fileTitle": "Comparison: {names}",
+    "share.loading": "Opening the shared comparison…",
+    "share.notFound": "That shared comparison doesn't exist or is no longer available.",
     "prod.save": "Save",
     "prod.noteEditInBox":
       "You're editing the comparison copy; your box doesn't change. To update it, use the save icon on the card.",
@@ -1323,7 +1365,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "privacy.whoContact": "For any question about your data, write to {email}.",
     "privacy.dataTitle": "What we keep with your account",
     "privacy.dataBody":
-      "When you sign in with Google we keep your Google id, email, name and photo, plus what you save: your Box, saved teams and Player profile. It is kept until you delete your account.",
+      "When you sign in with Google we keep your Google id, email, name and photo, plus what you save: your Box, saved teams, Player profile and the comparisons you share by link (the Pokémon and the image; anyone with the link can see them). It is kept until you delete your account.",
     "privacy.browserTitle": "In your browser",
     "privacy.browserBody":
       "To keep you signed in we use a sign-in cookie and a token stored in your browser; your language choice is stored there too. No advertising or analytics cookies, and usage metrics store nothing in your browser.",

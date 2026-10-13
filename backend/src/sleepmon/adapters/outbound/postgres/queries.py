@@ -353,3 +353,46 @@ RELEASE_IMPORT = (
     .where((import_usage.user_id == _P) & (import_usage.day == _P) & (import_usage.reads > 0))
     .get_sql()
 )
+
+comparison_share = Table("comparison_share")
+
+INSERT_COMPARISON_SHARE = (
+    Query.into(comparison_share)
+    .columns(
+        "id",
+        "members",
+        "island",
+        "favorites",
+        "weekly_bonus",
+        "language",
+        "image_type",
+        "image",
+        "created_at",
+        "user_id",
+    )
+    .insert(_P, _P, _P, _P, _P, _P, _P, _P, _P, _P)
+    .get_sql()
+)
+
+# Everything but the image: the comparison is read far more often than the preview.
+SELECT_COMPARISON_SHARE = (
+    Query.from_(comparison_share)
+    .select(
+        comparison_share.id,
+        comparison_share.members,
+        comparison_share.island,
+        comparison_share.favorites,
+        comparison_share.weekly_bonus,
+        comparison_share.language,
+        comparison_share.created_at,
+    )
+    .where(comparison_share.id == _P)
+    .get_sql()
+)
+
+SELECT_COMPARISON_SHARE_IMAGE = (
+    Query.from_(comparison_share)
+    .select(comparison_share.image_type, comparison_share.image)
+    .where(comparison_share.id == _P)
+    .get_sql()
+)

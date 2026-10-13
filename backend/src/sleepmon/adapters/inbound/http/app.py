@@ -30,11 +30,13 @@ from psycopg_pool import ConnectionPool
 from sleepmon.adapters.inbound.http.auth_controller import AuthController
 from sleepmon.adapters.inbound.http.controllers import (
     CatalogController,
+    ComparisonShareController,
     ProductionController,
     ProgressController,
     RecipeController,
     SavedTeamController,
     ScreenshotImportController,
+    SharePageController,
     TeamController,
     TeamProductionController,
 )
@@ -49,6 +51,7 @@ from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatal
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
 from sleepmon.adapters.outbound.postgres.pool import create_pool
 from sleepmon.adapters.outbound.postgres.repository import (
+    PostgresComparisonShareRepository,
     PostgresImportQuotaRepository,
     PostgresPlayerProgressRepository,
     PostgresRefreshTokenRepository,
@@ -57,6 +60,11 @@ from sleepmon.adapters.outbound.postgres.repository import (
     PostgresUserRepository,
 )
 from sleepmon.application.auth_service import AuthService, DefaultAuthService
+from sleepmon.application.comparison_share_service import (
+    ComparisonShareService,
+    DefaultComparisonShareService,
+    UnavailableComparisonShareService,
+)
 from sleepmon.application.progress_service import (
     DefaultPlayerProgressService,
     PlayerProgressService,
@@ -76,9 +84,10 @@ from sleepmon.application.services import (
     ProductionService,
     TeamService,
 )
-from sleepmon.config import Settings
+from sleepmon.config import DEFAULT_APP_URL, Settings
 from sleepmon.domain.auth import InvalidCredentialError, InvalidRefreshError, InvalidTokenError
 from sleepmon.domain.errors import (
+    ComparisonShareNotFoundError,
     DailyImportLimitError,
     PokemonNotRecognizedError,
     SavedTeamNotFoundError,
@@ -103,6 +112,14 @@ def _saved_team_not_found_handler(
     _: Request[Any, Any, Any], exc: SavedTeamNotFoundError
 ) -> Response[ErrorOut]:
     return Response(ErrorOut(detail=f"No existe el equipo {exc}."), status_code=HTTP_404_NOT_FOUND)
+
+
+def _share_not_found_handler(
+    _: Request[Any, Any, Any], __: ComparisonShareNotFoundError
+) -> Response[ErrorOut]:
+    return Response(
+        ErrorOut(detail="Esta comparación compartida no existe."), status_code=HTTP_404_NOT_FOUND
+    )
 
 
 def _unauthorized_handler(_: Request[Any, Any, Any], exc: Exception) -> Response[ErrorOut]:
@@ -154,6 +171,7 @@ def create_app(
     progress_service: PlayerProgressService | None = None,
     saved_team_service: SavedTeamService | None = None,
     screenshot_import_service: ScreenshotImportService | None = None,
+    comparison_share_service: ComparisonShareService | None = None,
 ) -> Litestar:
     # ``object`` y no ``Any``: el valor de retorno de los hooks se descarta, pero
     # ``Any`` apagaría el chequeo de tipos sobre el cuerpo de cada callback.
@@ -271,6 +289,17 @@ def create_app(
             # Every test-injection path: no pool, so no real reader.
             screenshot_import_service = UnavailableScreenshotImportService()
 
+    if comparison_share_service is None:
+        if pool is not None:
+            comparison_share_service = DefaultComparisonShareService(
+                PostgresComparisonShareRepository(pool),
+                catalog,
+                clock=lambda: datetime.now(UTC),
+            )
+        else:
+            # Every test-injection path: no pool, so nowhere to keep a share.
+            comparison_share_service = UnavailableComparisonShareService()
+
     # Singletons inyectados por DI (sync_to_thread=False: solo devuelven la instancia).
     bound_service = service
     bound_production_service = production_service
@@ -279,6 +308,7 @@ def create_app(
     bound_progress_service = progress_service
     bound_saved_team_service = saved_team_service
     bound_screenshot_import = screenshot_import_service
+    bound_comparison_shares = comparison_share_service
 
     cookie_secure = settings.cookie_secure if settings is not None else True
     cookie_samesite = settings.cookie_samesite if settings is not None else "strict"
@@ -287,6 +317,8 @@ def create_app(
         if settings is not None
         else ["http://localhost:5173", "http://localhost:3000"]
     )
+    app_url = settings.app_url if settings is not None else DEFAULT_APP_URL
+    share_base_url = settings.share_base_url if settings is not None else ""
     refresh_max_age = int(
         (settings.refresh_ttl if settings is not None else timedelta(days=30)).total_seconds()
     )
@@ -302,6 +334,8 @@ def create_app(
             ProgressController,
             SavedTeamController,
             ScreenshotImportController,
+            ComparisonShareController,
+            SharePageController,
         ],
         state=State(
             {
@@ -309,6 +343,8 @@ def create_app(
                 "cookie_secure": cookie_secure,
                 "cookie_samesite": cookie_samesite,
                 "refresh_max_age": refresh_max_age,
+                "app_url": app_url,
+                "share_base_url": share_base_url,
             }
         ),
         dependencies={
@@ -322,11 +358,13 @@ def create_app(
             "progress": Provide(lambda: bound_progress_service, sync_to_thread=False),
             "saved_teams": Provide(lambda: bound_saved_team_service, sync_to_thread=False),
             "screenshot_import": Provide(lambda: bound_screenshot_import, sync_to_thread=False),
+            "comparison_shares": Provide(lambda: bound_comparison_shares, sync_to_thread=False),
         },
         exception_handlers={
             ValidationError: _validation_handler,
             TeamMemberNotFoundError: _not_found_handler,
             SavedTeamNotFoundError: _saved_team_not_found_handler,
+            ComparisonShareNotFoundError: _share_not_found_handler,
             InvalidCredentialError: _unauthorized_handler,
             InvalidTokenError: _unauthorized_handler,
             InvalidRefreshError: _unauthorized_handler,

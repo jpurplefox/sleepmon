@@ -27,6 +27,8 @@ is the comparison.
    every card alike.
 6. **Persist by explicit action only** — save a config to the Box (as new, or
    updating the origin Pokémon a card came from).
+7. **Share** — the whole comparison as a picture or a link
+   ([Sharing a comparison](0020-share-comparison.md)).
 
 ## How it works
 

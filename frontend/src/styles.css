@@ -7325,3 +7325,106 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
     background: var(--surface);
   }
 }
+
+/* Sharing a comparison (PRD 0020). The sheet is the picture: every card side by
+   side at a fixed width, whatever the screen, drawn off screen into an image. */
+.share-sheet-host {
+  position: fixed;
+  top: 0;
+  left: -100000px;
+  pointer-events: none;
+}
+
+.share-sheet {
+  --share-card-w: 340px;
+  width: max-content;
+  padding: 1rem;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.share-sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.share-sheet__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.share-sheet__terms {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.share-sheet__berries {
+  display: inline-flex;
+  gap: 0.2rem;
+}
+
+.share-sheet__cards {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--share-card-w);
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+/* No action bar above it: the card keeps all four corners. */
+.prod-card-cell > .prod-card.prod-card--snapshot {
+  border-radius: var(--r-lg);
+}
+
+.share-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.share-dialog__preview {
+  display: grid;
+  place-items: center;
+  min-height: 8rem;
+  max-height: 50vh;
+  overflow: auto;
+  background: var(--bg);
+  border-radius: var(--r-md);
+}
+
+.share-dialog__preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.share-dialog__actions,
+.share-dialog__link {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.share-dialog__actions .btn,
+.share-dialog__link .btn {
+  margin-top: 0;
+}
+
+.share-dialog__link input {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.share-dialog__note {
+  margin: 0;
+  font-size: var(--text-sm);
+}

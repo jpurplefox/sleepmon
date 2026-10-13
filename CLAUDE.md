@@ -35,6 +35,7 @@ python3 scripts/icons.py       # regenerate stat/sub-skill icons into public/
 #   frontend: VITE_SENTRY_DSN, VITE_SENTRY_ENVIRONMENT, VITE_SENTRY_TRACES_SAMPLE_RATE,
 #             VITE_POSTHOG_KEY, VITE_POSTHOG_HOST, VITE_RELEASE,
 #             VITE_CONTACT_EMAIL (privacy page + footer; empty = hidden)
+# Share links (ADR-0011): APP_URL (frontend a link opens), SHARE_BASE_URL (empty = API's own)
 ```
 
 ## Structure

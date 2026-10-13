@@ -12,6 +12,7 @@ from datetime import date, datetime
 from uuid import UUID
 
 from sleepmon.domain.auth import ExternalIdentity, RefreshToken, User
+from sleepmon.domain.comparison_share import SharedComparison, ShareImage
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.progress import PlayerProgress
 from sleepmon.domain.recipes import Recipe
@@ -107,6 +108,19 @@ class SavedTeamRepository(ABC):
     @abstractmethod
     def delete(self, team_id: UUID, user_id: UUID) -> bool:
         """Delete a team. Returns ``False`` if it did not exist."""
+
+
+class ComparisonShareRepository(ABC):
+    """Persistence of shared comparisons. Reads are public: the id is the capability."""
+
+    @abstractmethod
+    def add(self, share: SharedComparison, image: ShareImage, user_id: UUID) -> None: ...
+
+    @abstractmethod
+    def get(self, share_id: str) -> SharedComparison | None: ...
+
+    @abstractmethod
+    def get_image(self, share_id: str) -> ShareImage | None: ...
 
 
 class AccessTokenService(ABC):

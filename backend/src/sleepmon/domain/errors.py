@@ -25,6 +25,10 @@ class SavedTeamNotFoundError(DomainError):
     """No saved team with that id exists for the user."""
 
 
+class ComparisonShareNotFoundError(DomainError):
+    """No shared comparison exists with that id."""
+
+
 class PokemonNotRecognizedError(DomainError):
     """The screenshots show no Pokémon species the catalog knows."""
 

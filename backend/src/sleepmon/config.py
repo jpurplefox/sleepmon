@@ -15,6 +15,7 @@ DEFAULT_SCREENSHOT_MODEL = "us.amazon.nova-2-lite-v1:0"
 DEFAULT_SCREENSHOT_MODEL_OTHER_LANGUAGES = "qwen.qwen3-vl-235b-a22b"
 DEFAULT_BEDROCK_REGION = "us-east-1"
 DEFAULT_CORS_ORIGINS = "http://localhost:5173,http://localhost:3000"
+DEFAULT_APP_URL = "http://localhost:5173"
 
 SameSite = Literal["lax", "strict", "none"]
 
@@ -68,6 +69,12 @@ class Settings:
     screenshot_model_other_languages: str = DEFAULT_SCREENSHOT_MODEL_OTHER_LANGUAGES
     bedrock_region: str = DEFAULT_BEDROCK_REGION
     screenshot_daily_limit: int = 50
+    # Shared comparisons (PRD 0020). ``app_url`` is the frontend a share link sends
+    # people on to. ``share_base_url`` is where share links point: the frontend's own
+    # domain when it routes ``/s/*`` to this API, so links read as the app's; empty
+    # uses the API's own address.
+    app_url: str = DEFAULT_APP_URL
+    share_base_url: str = ""
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -99,4 +106,6 @@ class Settings:
             ),
             bedrock_region=os.environ.get("BEDROCK_REGION") or DEFAULT_BEDROCK_REGION,
             screenshot_daily_limit=int(os.environ.get("SCREENSHOT_DAILY_LIMIT", "50")),
+            app_url=os.environ.get("APP_URL") or DEFAULT_APP_URL,
+            share_base_url=os.environ.get("SHARE_BASE_URL", ""),
         )

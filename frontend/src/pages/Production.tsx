@@ -1,5 +1,6 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
+import { useLocation, useSearch } from "wouter";
 
 import { api } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
@@ -10,12 +11,15 @@ import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
 import { Placeholder } from "../components/Placeholder";
 import { ProductionCard } from "../components/ProductionCard";
+import { ShareDialog } from "../components/ShareDialog";
 import { SwipePager } from "../components/SwipePager";
 import { ContextBar, ToolHeader } from "../components/ToolHeader";
 import { berryRoleOf, mapRequestFields } from "../comparisonMap";
 import { useComparisonSession } from "../comparisonSession";
+import { sessionFromShare, shareIdFrom } from "../comparisonShare";
 import { useI18n } from "../i18n";
 import { configFromMember, linkEntryToBox, newEntry } from "../roster";
+import { ROUTES } from "../routes";
 import { spriteUrl } from "../sprites";
 import { track } from "../telemetry/analytics";
 import type { AddSource } from "../telemetry/events";
@@ -62,7 +66,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   const mapFields = mapRequestFields(map, expert);
   const shots = useScreenshotImport(catalog.data);
   const berryOf = (species: string) => catalog.data?.species.find((s) => s.name === species)?.berry ?? "";
-  const [modal, setModal] = useState<"form" | "box" | null>(null);
+  const [modal, setModal] = useState<"form" | "box" | "share" | null>(null);
   // Whether the open add/edit form holds unsaved input: leaving it then asks first.
   const [formDirty, setFormDirty] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -212,6 +216,35 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseMemberId, members.data, catalog.data]);
 
+  // A shared link (`/compare?share=<id>`) opens that comparison: like "Compare" from
+  // the box, it replaces whatever the session held. The query is dropped once read,
+  // so a reload or going back doesn't reopen it over later changes.
+  const shareId = shareIdFrom(useSearch());
+  const [, navigate] = useLocation();
+  const shared = useQuery({
+    queryKey: ["comparison-share", shareId],
+    queryFn: () => api.getComparisonShare(shareId as string),
+    enabled: shareId !== null,
+    retry: false,
+    staleTime: Infinity,
+  });
+  useEffect(() => {
+    if (!shareId) return;
+    if (shared.data) {
+      const next = sessionFromShare(shared.data);
+      setEntries(next.entries);
+      setMap(next.map);
+      setNotice(null);
+      track({ name: "shared_comparison_opened", props: { cards: next.entries.length } });
+    } else if (shared.isError) {
+      setNotice(t("share.notFound"));
+    } else {
+      return;
+    }
+    navigate(ROUTES.compare, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shareId, shared.data, shared.isError]);
+
   const handleMapChange = (next: typeof map) => {
     if (next.island !== map.island)
       track(mapSetEvent("compare", next.island, catalog.data?.islands ?? []));
@@ -236,6 +269,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   };
 
   if (catalog.isLoading) return <Placeholder loading>{t("common.loadingCatalog")}</Placeholder>;
+  if (shareId && shared.isLoading) return <Placeholder loading>{t("share.loading")}</Placeholder>;
   if (catalog.isError || !catalog.data)
     return (
       <p className="error" role="alert">
@@ -248,7 +282,23 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
 
   return (
     <div className="layout layout--wide">
-      <ToolHeader title={t("prod.title")} notice={notice}>
+      <ToolHeader
+        title={t("prod.title")}
+        notice={notice}
+        action={
+          entries.length > 0 && (
+            <button
+              type="button"
+              className="btn btn--ghost"
+              // The picture needs every card's numbers.
+              disabled={shownProductions.some((p) => !p)}
+              onClick={() => setModal("share")}
+            >
+              {t("share.button")}
+            </button>
+          )
+        }
+      >
         {entries.length > 0 && (
           <ContextBar>
             <ComparisonMapBar catalog={catalog.data} value={map} onChange={handleMapChange} />
@@ -378,6 +428,17 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
       )}
 
       {shots.dialog}
+
+      {modal === "share" && (
+        <ShareDialog
+          catalog={catalog.data}
+          entries={entries}
+          productions={shownProductions}
+          map={map}
+          island={island}
+          onClose={() => setModal(null)}
+        />
+      )}
 
       {modal === "box" && (
         <Modal
