@@ -393,7 +393,7 @@ describe("Sharing the comparison", () => {
     const create = vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
     const dialog = await openDialog();
 
-    expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
+    expect(await linkField(dialog)).toHaveValue("sleepmon.app/s/new");
     expect(gate.guard).not.toHaveBeenCalled();
     expect(ts.token).toHaveBeenCalledOnce();
     expect(create).toHaveBeenCalledOnce();
@@ -411,7 +411,7 @@ describe("Sharing the comparison", () => {
   it("creates the link only once, even under StrictMode", async () => {
     const create = vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
     const dialog = await openDialog(true, true);
-    expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
+    expect(await linkField(dialog)).toHaveValue("sleepmon.app/s/new");
     expect(create).toHaveBeenCalledOnce();
     expect(ts.token).toHaveBeenCalledOnce();
   });
@@ -425,7 +425,7 @@ describe("Sharing the comparison", () => {
     expect(await within(link).findByText("Creating link…")).toBeInTheDocument();
     expect(within(link).getByRole("button", { name: "Copy" })).toBeDisabled();
     finish(created);
-    expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
+    expect(await linkField(dialog)).toHaveValue("sleepmon.app/s/new");
     expect(within(link).getByRole("button", { name: "Copy" })).toBeEnabled();
   });
 
@@ -435,7 +435,7 @@ describe("Sharing the comparison", () => {
     const create = vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
     const dialog = await openDialog();
 
-    expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
+    expect(await linkField(dialog)).toHaveValue("sleepmon.app/s/new");
     expect(ts.token).not.toHaveBeenCalled();
     expect(create).toHaveBeenCalledOnce();
     expect(create.mock.calls[0][0].verification_token).toBeNull();
@@ -446,6 +446,8 @@ describe("Sharing the comparison", () => {
     const dialog = await openDialog();
     await linkField(dialog);
     const link = section(dialog, "Link");
+
+    expect(await linkField(dialog)).toHaveValue("sleepmon.app/s/new");
 
     await userEvent.click(within(link).getByRole("button", { name: "Copy" }));
     expect(clipboard.writeText).toHaveBeenCalledWith("https://sleepmon.app/s/new");
@@ -467,7 +469,7 @@ describe("Sharing the comparison", () => {
 
     dialog = await openDialog(false);
 
-    expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
+    expect(await linkField(dialog)).toHaveValue("sleepmon.app/s/new");
     expect(create).toHaveBeenCalledOnce();
     expect(ts.token).toHaveBeenCalledOnce();
   });
@@ -484,7 +486,7 @@ describe("Sharing the comparison", () => {
     expect(await within(section(dialog, "Link")).findByText("Creating link…")).toBeInTheDocument();
     finish(created);
 
-    expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
+    expect(await linkField(dialog)).toHaveValue("sleepmon.app/s/new");
     expect(create).toHaveBeenCalledOnce();
     expect(ts.token).toHaveBeenCalledOnce();
   });
@@ -497,7 +499,7 @@ describe("Sharing the comparison", () => {
 
     expect(within(section(dialog, "Link")).getByText("Creating link…")).toBeInTheDocument();
     draw({} as HTMLCanvasElement);
-    expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
+    expect(await linkField(dialog)).toHaveValue("sleepmon.app/s/new");
   });
 
   it("hides the Link section when the picture can't be drawn", async () => {
@@ -544,7 +546,7 @@ describe("Sharing the comparison", () => {
     await userEvent.click(screen.getByRole("button", { name: "Grepa" }));
     dialog = await openDialog(false);
 
-    await waitFor(async () => expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/newer"));
+    await waitFor(async () => expect(await linkField(dialog)).toHaveValue("sleepmon.app/s/newer"));
     expect(create).toHaveBeenCalledTimes(2);
     expect(create.mock.calls[1][0].favorites).toEqual([]);
   });
@@ -560,7 +562,7 @@ describe("Sharing the comparison", () => {
 
     await userEvent.click(within(link).getByRole("button", { name: "Try again" }));
 
-    expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
+    expect(await linkField(dialog)).toHaveValue("sleepmon.app/s/new");
     expect(ts.token).toHaveBeenCalledTimes(2);
     expect(create).toHaveBeenCalledOnce();
   });
@@ -599,7 +601,7 @@ describe("Sharing the comparison", () => {
     auth.status = "authenticated";
     pending!();
 
-    expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
+    expect(await linkField(dialog)).toHaveValue("sleepmon.app/s/new");
     expect(ts.token).not.toHaveBeenCalled();
     expect(create).toHaveBeenCalledOnce();
     expect(create.mock.calls[0][0].verification_token).toBeNull();

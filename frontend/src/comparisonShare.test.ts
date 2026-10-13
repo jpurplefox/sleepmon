@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   __resetShareCacheForTests,
   cachedShareUrl,
+  displayUrl,
   formatSleep,
   pendingShare,
   rememberShareUrl,
@@ -202,5 +203,19 @@ describe("pending shares", () => {
     await p.catch(() => {});
     await Promise.resolve();
     expect(pendingShare("k")).toBeUndefined();
+  });
+});
+
+describe("displayUrl", () => {
+  it("drops an https scheme", () => {
+    expect(displayUrl("https://sleepmon.app/s/abc123")).toBe("sleepmon.app/s/abc123");
+  });
+
+  it("drops an http scheme", () => {
+    expect(displayUrl("http://localhost:8000/s/abc123")).toBe("localhost:8000/s/abc123");
+  });
+
+  it("leaves a URL without a scheme unchanged", () => {
+    expect(displayUrl("sleepmon.app/s/abc123")).toBe("sleepmon.app/s/abc123");
   });
 });

@@ -7,6 +7,7 @@ import { useGate } from "../auth/useGate";
 import type { ComparisonMap } from "../comparisonMap";
 import {
   cachedShareUrl,
+  displayUrl,
   pendingShare,
   rememberShareUrl,
   shareCacheKey,
@@ -276,7 +277,7 @@ export function ShareDialog({ catalog, entries, productions, map, island, sleep,
                     <input
                       type="text"
                       readOnly
-                      value={link.url}
+                      value={displayUrl(link.url)}
                       aria-label={t("share.linkLabel")}
                       onFocus={(e) => e.currentTarget.select()}
                     />

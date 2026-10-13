@@ -14,6 +14,11 @@ export function shareIdFrom(search: string): string | null {
   return id && id.trim() ? id.trim() : null;
 }
 
+/** The link as shown in the dialog: its scheme dropped so it fits a phone; copying keeps the full URL. */
+export function displayUrl(url: string): string {
+  return url.replace(/^https?:\/\//i, "");
+}
+
 /** A share copies the cards' configs, never their tie to the sharer's Box. */
 export function shareRequest(
   entries: RosterEntry[],
