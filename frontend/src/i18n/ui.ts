@@ -175,8 +175,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "share.loading": "Abriendo la comparación compartida…",
     "share.notFound": "Esta comparación compartida no existe o venció.",
     "share.verifyError": "No pudimos verificar que no seas un bot.",
-    "share.sleepLabel": "Sueño {sleep}",
-    "share.nap": "siesta",
+    "share.sleepLabel": "Sueño: {sleep}",
     "share.sleepNotice":
       "Quien te compartió esta comparación duerme en {theirs} y vos en {yours}, así que los valores mostrados pueden no coincidir con los suyos.",
     "share.oneSession": "una sesión de {night}",
@@ -884,8 +883,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "share.loading": "Opening the shared comparison…",
     "share.notFound": "That shared comparison doesn't exist or has expired.",
     "share.verifyError": "We couldn't verify you're not a bot.",
-    "share.sleepLabel": "Sleep {sleep}",
-    "share.nap": "nap",
+    "share.sleepLabel": "Sleep: {sleep}",
     "share.sleepNotice":
       "The person who shared this comparison sleeps in {theirs} and you in {yours}, so the values shown may not match theirs.",
     "share.oneSession": "one session of {night}",

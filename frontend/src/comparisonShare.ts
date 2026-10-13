@@ -61,12 +61,6 @@ export function sleepDiffers(a: SleepSchedule, b: SleepSchedule): boolean {
   return a.night_minutes !== b.night_minutes || (a.nap_minutes ?? null) !== (b.nap_minutes ?? null);
 }
 
-/** "8:30", or "7:00 + siesta 2:00" with a nap (napWord is the language's word for it). */
-export function formatSleep(s: SleepSchedule, napWord: string): string {
-  const night = formatHm(s.night_minutes);
-  return s.nap_minutes == null ? night : `${night} + ${napWord} ${formatHm(s.nap_minutes)}`;
-}
-
 type Translate = (key: string, vars?: Record<string, string>) => string;
 
 /** "one session of 8:30" / "two sessions (night 7:00 and nap 2:00)"; `short` drops the repeated noun. */

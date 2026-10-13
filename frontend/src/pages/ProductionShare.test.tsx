@@ -612,7 +612,16 @@ describe("Sharing the comparison", () => {
     vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
     await openDialog();
     const sheet = document.querySelector(".share-sheet") as HTMLElement;
-    expect(within(sheet).getByText("Sleep 8:30")).toBeInTheDocument();
+    expect(within(sheet).getByText("Sleep: one session of 8:30")).toBeInTheDocument();
     expect(within(sheet).getByText("sleepmon.app")).toBeInTheDocument();
+  });
+
+  it("the picture's strip names two sleep sessions", async () => {
+    auth.status = "authenticated";
+    vi.spyOn(api, "getProgress").mockResolvedValue({ sleep: { night_minutes: 420, nap_minutes: 120 } } as never);
+    vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
+    await openDialog();
+    const sheet = document.querySelector(".share-sheet") as HTMLElement;
+    expect(within(sheet).getByText("Sleep: two sessions (night 7:00 and nap 2:00)")).toBeInTheDocument();
   });
 });

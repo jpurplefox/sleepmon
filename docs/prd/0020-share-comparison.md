@@ -50,8 +50,9 @@ swipes one card per screen, but the picture always shows **every card side by si
   - the map — the expert map's name, or "Normal";
   - the favorite berries, each in its slot (only when there are favorites);
   - the weekly bonus, only on an expert map;
-  - the sharer's sleep schedule — the night, plus the nap when there is one (e.g.
-    "8:30", "7:00 + nap 2:00"); signed out, the default night;
+  - the sharer's sleep schedule — named in sessions like the notice
+    ("Sleep: one session of 8:30"; "Sleep: two sessions (night 7:00 and nap 2:00)" with a
+    nap); signed out, the default night;
   - the address `sleepmon.app`, so the picture leads back to sleepmon even when it
     travels without the link.
 - All text follows the sharer's language.
@@ -126,8 +127,9 @@ swipes one card per screen, but the picture always shows **every card side by si
   buttons.
 - The strip shows "Normal" on the normal map; the favorite berries in their slots; the
   weekly bonus only on an expert map.
-- The strip shows the sharer's sleep schedule — "8:30" signed out, "7:00 + nap 2:00"
-  for a profile with a nap — and `sleepmon.app`.
+- The strip shows the sharer's sleep schedule — "Sleep: one session of 8:30" signed out
+  (default night), "Sleep: two sessions (night 7:00 and nap 2:00)" for a profile with a nap,
+  same wording as the notice — and `sleepmon.app`.
 - **Download** saves the picture as a PNG. **Copy** puts it on the clipboard; on a
   browser that can't copy images, **Copy** isn't shown.
 - The picture can't be drawn → *"Couldn't put the image together. Try again."*; the

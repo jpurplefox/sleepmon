@@ -2,7 +2,7 @@ import { forwardRef } from "react";
 
 import { berryIcon } from "../berries";
 import { berryRoleOf, MAX_FAVORITES, type ComparisonMap } from "../comparisonMap";
-import { formatSleep } from "../comparisonShare";
+import { describeSessions } from "../comparisonShare";
 import { pickedFavorites } from "../favoriteSlots";
 import { useI18n } from "../i18n";
 import type { RosterEntry } from "../roster";
@@ -64,7 +64,7 @@ export const ComparisonShareSheet = forwardRef<HTMLDivElement, Props>(function C
           <span className="share-sheet__sep" aria-hidden="true">
             ·
           </span>
-          <span>{t("share.sleepLabel", { sleep: formatSleep(sleep, t("share.nap")) })}</span>
+          <span>{t("share.sleepLabel", { sleep: describeSessions(sleep, false, t) })}</span>
         </span>
         <span className="share-sheet__url">sleepmon.app</span>
       </header>
