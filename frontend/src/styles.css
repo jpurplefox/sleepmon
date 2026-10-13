@@ -3531,9 +3531,10 @@ button.prod-card__base-tag--action {
 }
 
 /* El sprite es el foco visual de la card: centrado bajo el nombre, generoso. */
+/* The sprites' native 96px: 1:1 keeps the pixel art crisp. */
 .prod-card__sprite {
-  width: 88px;
-  height: 88px;
+  width: 96px;
+  height: 96px;
   image-rendering: pixelated;
   flex-shrink: 0;
   align-self: center;
