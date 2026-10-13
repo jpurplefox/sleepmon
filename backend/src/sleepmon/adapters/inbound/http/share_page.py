@@ -83,6 +83,27 @@ def render_share_page(
 """
 
 
+def render_missing_share_page(app_url: str) -> str:
+    """The page for an unknown or expired link: the app explains it (and says so in
+    the person's language), so this only sends them on. No preview image."""
+    app_u = escape(app_url)
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sleepmon</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0e1220">
+<script>location.replace({_js_string(app_url)});</script>
+</head>
+<body style="{_BODY_STYLE}">
+<p><a href="{app_u}" style="color:#8f95ff">sleepmon</a></p>
+</body>
+</html>
+"""
+
+
 def _js_string(value: str) -> str:
     """A JavaScript string literal that can't close the surrounding <script>."""
     escaped = (

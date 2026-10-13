@@ -1,9 +1,12 @@
-"""Cloudflare Turnstile as the human check (ADR 0012). Standard library only."""
+"""Cloudflare Turnstile as the human check (ADR 0012). Standard library only.
+
+URLError and TimeoutError are OSErrors; a body that isn't JSON is a ValueError.
+"""
 
 from __future__ import annotations
 
+import http.client
 import json
-import urllib.error
 import urllib.parse
 import urllib.request
 from typing import Final
@@ -25,7 +28,7 @@ class TurnstileVerifier(HumanVerifier):
         try:
             with urllib.request.urlopen(request, timeout=self._timeout) as response:
                 answer = json.loads(response.read())
-        except (urllib.error.URLError, TimeoutError, ValueError) as exc:
+        except (OSError, http.client.HTTPException, ValueError) as exc:
             raise HumanVerifierUnavailableError() from exc
         if not isinstance(answer, dict):
             raise HumanVerifierUnavailableError()

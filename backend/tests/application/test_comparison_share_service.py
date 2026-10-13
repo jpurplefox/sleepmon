@@ -191,6 +191,17 @@ def test_a_share_opened_89_days_ago_opens_and_renews(
     assert repo.shares[share.id][1].last_opened_at == clock.now
 
 
+def test_a_share_opens_exactly_at_the_ttl_and_not_a_second_later(
+    service: DefaultComparisonShareService, clock: Clock
+) -> None:
+    share = service.create(USER, _input())
+    clock.now = START + SHARE_TTL
+    assert service.peek(share.id).id == share.id
+    clock.now = START + SHARE_TTL + timedelta(seconds=1)
+    with pytest.raises(ComparisonShareNotFoundError):
+        service.peek(share.id)
+
+
 def test_past_ninety_days_unopened_it_is_gone_everywhere(
     service: DefaultComparisonShareService, clock: Clock
 ) -> None:

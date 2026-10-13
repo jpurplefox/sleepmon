@@ -86,8 +86,10 @@ def test_image_is_checked_by_its_bytes_not_the_claimed_type() -> None:
 
 
 def test_image_has_a_size_cap() -> None:
+    assert MAX_SHARE_IMAGE_BYTES == 500_000
+    assert ShareImage("image/jpeg", JPEG + b"\x00" * (MAX_SHARE_IMAGE_BYTES - len(JPEG)))
     with pytest.raises(ValidationError):
-        ShareImage("image/jpeg", JPEG + b"\x00" * MAX_SHARE_IMAGE_BYTES)
+        ShareImage("image/jpeg", JPEG + b"\x00" * (MAX_SHARE_IMAGE_BYTES - len(JPEG) + 1))
 
 
 def test_share_holds_one_to_five_cards() -> None:

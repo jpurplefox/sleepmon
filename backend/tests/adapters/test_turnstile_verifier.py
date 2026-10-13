@@ -65,3 +65,39 @@ def test_network_failure_is_unavailable(monkeypatch: pytest.MonkeyPatch) -> None
     monkeypatch.setattr(module.urllib.request, "urlopen", boom)
     with pytest.raises(HumanVerifierUnavailableError):
         TurnstileVerifier("s").verify("tok")
+
+
+def test_a_non_object_answer_is_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:
+    _answer(monkeypatch, b"[]", [])
+    with pytest.raises(HumanVerifierUnavailableError):
+        TurnstileVerifier("s").verify("tok")
+
+
+def test_a_timeout_is_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:
+    def boom(*_: Any, **__: Any) -> None:
+        raise TimeoutError("timed out")
+
+    monkeypatch.setattr(module.urllib.request, "urlopen", boom)
+    with pytest.raises(HumanVerifierUnavailableError):
+        TurnstileVerifier("s").verify("tok")
+
+
+def test_a_connection_reset_while_reading_is_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:
+    class Broken(_Response):
+        def read(self, *_: Any) -> bytes:
+            raise ConnectionResetError("reset")
+
+    monkeypatch.setattr(module.urllib.request, "urlopen", lambda *_, **__: Broken())
+    with pytest.raises(HumanVerifierUnavailableError):
+        TurnstileVerifier("s").verify("tok")
+
+
+def test_a_truncated_http_response_is_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:
+    import http.client
+
+    def boom(*_: Any, **__: Any) -> None:
+        raise http.client.IncompleteRead(b"")
+
+    monkeypatch.setattr(module.urllib.request, "urlopen", boom)
+    with pytest.raises(HumanVerifierUnavailableError):
+        TurnstileVerifier("s").verify("tok")

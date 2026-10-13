@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass
 from datetime import timedelta
@@ -16,6 +17,8 @@ DEFAULT_SCREENSHOT_MODEL_OTHER_LANGUAGES = "qwen.qwen3-vl-235b-a22b"
 DEFAULT_BEDROCK_REGION = "us-east-1"
 DEFAULT_CORS_ORIGINS = "http://localhost:5173,http://localhost:3000"
 DEFAULT_APP_URL = "http://localhost:5173"
+
+_log = logging.getLogger(__name__)
 
 SameSite = Literal["lax", "strict", "none"]
 
@@ -80,6 +83,17 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> Settings:
+        settings = cls._read_env()
+        if not os.environ.get("APP_URL") and settings.cookie_secure:
+            _log.warning(
+                "APP_URL is not set: share links will redirect to %s. "
+                "Set APP_URL to the frontend's origin.",
+                DEFAULT_APP_URL,
+            )
+        return settings
+
+    @classmethod
+    def _read_env(cls) -> Settings:
         return cls(
             database_url=os.environ.get("DATABASE_URL", DEFAULT_DSN),
             google_client_id=os.environ.get("GOOGLE_CLIENT_ID", ""),

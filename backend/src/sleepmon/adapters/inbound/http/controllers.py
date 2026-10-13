@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import base64
 import binascii
+import urllib.parse
 from typing import Any
 from uuid import UUID
 
 from litestar import Controller, Request, Response, delete, get, patch, post, put
 from litestar.di import NamedDependency
 from litestar.params import FromPath
-from litestar.status_codes import HTTP_200_OK, HTTP_201_CREATED
+from litestar.status_codes import HTTP_200_OK, HTTP_201_CREATED, HTTP_404_NOT_FOUND
 
 from sleepmon.adapters.inbound.http.guards import require_user
 from sleepmon.adapters.inbound.http.schemas import (
@@ -60,7 +61,10 @@ from sleepmon.adapters.inbound.http.schemas import (
     TeamProductionIn,
     TeamProductionOut,
 )
-from sleepmon.adapters.inbound.http.share_page import render_share_page
+from sleepmon.adapters.inbound.http.share_page import (
+    render_missing_share_page,
+    render_share_page,
+)
 from sleepmon.application.comparison_share_service import ComparisonShareService
 from sleepmon.application.dto import (
     ComparisonShareInput,
@@ -96,7 +100,7 @@ from sleepmon.domain.catalog_data import (
 )
 from sleepmon.domain.comparison_share import SharedComparison
 from sleepmon.domain.entities import TeamMember
-from sleepmon.domain.errors import ValidationError
+from sleepmon.domain.errors import ComparisonShareNotFoundError, ValidationError
 from sleepmon.domain.ports import SpeciesCatalog
 from sleepmon.domain.progress import PlayerProgress
 from sleepmon.domain.saved_team import SavedTeam
@@ -847,9 +851,18 @@ class SharePageController(Controller):
         comparison_shares: NamedDependency[ComparisonShareService],
         share_id: FromPath[str],
     ) -> Response[str]:
-        share = comparison_shares.peek(share_id)
-        base = _share_base(request)
         app_url: str = request.app.state.app_url
+        try:
+            share = comparison_shares.peek(share_id)
+        except ComparisonShareNotFoundError:
+            # Raw path input: quote it. The app shows the "gone or expired" copy.
+            target = f"{app_url.rstrip('/')}/compare?share={urllib.parse.quote(share_id, safe='')}"
+            return Response(
+                render_missing_share_page(target),
+                status_code=HTTP_404_NOT_FOUND,
+                media_type="text/html",
+            )
+        base = _share_base(request)
         html = render_share_page(
             share,
             share_url=f"{base}/s/{share.id}",
@@ -871,5 +884,8 @@ class SharePageController(Controller):
         return Response(
             image.data,
             media_type=image.media_type,
-            headers={"Cache-Control": "public, max-age=86400"},
+            headers={
+                "Cache-Control": "public, max-age=3600",
+                "X-Content-Type-Options": "nosniff",
+            },
         )

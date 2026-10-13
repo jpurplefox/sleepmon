@@ -6,6 +6,7 @@ Run against the dedicated test database (see ``conftest.py``). Marked ``integrat
 from __future__ import annotations
 
 from collections.abc import Iterator
+from dataclasses import replace
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
@@ -149,6 +150,19 @@ def test_a_share_made_signed_out_has_no_owner(pool: ConnectionPool) -> None:
     repo.add(_share(), JPEG, None)
     stored = repo.get("share0000001")
     assert stored is not None and stored.sleep == SleepSchedule(night_minutes=420, nap_minutes=120)
+    with pool.connection() as conn:
+        row = conn.execute(
+            "SELECT user_id FROM comparison_share WHERE id = %s", ("share0000001",)
+        ).fetchone()
+    assert row is not None and row[0] is None
+
+
+def test_a_share_without_a_nap_round_trips(pool: ConnectionPool) -> None:
+    repo = PostgresComparisonShareRepository(pool)
+    napless = replace(_share(), sleep=SleepSchedule(night_minutes=420, nap_minutes=None))
+    repo.add(napless, JPEG, None)
+    stored = repo.get("share0000001")
+    assert stored is not None and stored.sleep == SleepSchedule(night_minutes=420, nap_minutes=None)
 
 
 def test_touch_moves_the_last_opening(pool: ConnectionPool) -> None:

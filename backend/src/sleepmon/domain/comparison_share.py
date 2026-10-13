@@ -22,7 +22,7 @@ from sleepmon.domain.sleep import SleepSchedule
 from sleepmon.domain.value_objects import Berry, Island, WeeklyBonus
 
 MAX_SHARED_CARDS: Final[int] = 5
-MAX_SHARE_IMAGE_BYTES: Final[int] = 1_000_000
+MAX_SHARE_IMAGE_BYTES: Final[int] = 500_000
 # A share stays reachable while people keep opening it: 90 days after the last opening.
 SHARE_TTL: Final[timedelta] = timedelta(days=90)
 # Formats every link-preview crawler renders; checked by signature, not by the

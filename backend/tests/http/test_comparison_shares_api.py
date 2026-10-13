@@ -50,6 +50,7 @@ def _client(
     settings: Settings | None = None,
     verifier: FakeHumanVerifier | None = None,
     clock: Clock | None = None,
+    no_verifier: bool = False,
 ) -> TestClient[Any]:
     members = InMemoryTeamRepository()
     saved = InMemorySavedTeamRepository()
@@ -81,7 +82,7 @@ def _client(
         comparison_share_service=DefaultComparisonShareService(
             InMemoryComparisonShareRepository(),
             StaticSpeciesCatalog(),
-            verifier if verifier is not None else FakeHumanVerifier(True),
+            None if no_verifier else verifier or FakeHumanVerifier(True),
             clock or Clock(),
         ),
     )
@@ -147,6 +148,13 @@ def test_an_unreachable_verifier_is_503() -> None:
     with _client(verifier=FakeHumanVerifier(HumanVerifierUnavailableError())) as client:
         response = client.post("/comparison-shares", json=payload(verification_token="tok"))
     assert response.status_code == 503
+
+
+def test_anonymous_create_without_a_verifier_is_401() -> None:
+    with _client(no_verifier=True) as client:
+        response = client.post("/comparison-shares", json=payload(verification_token="tok"))
+    assert response.status_code == 401
+    assert response.json() == {"detail": "sign in to share a link"}
 
 
 def test_the_sleep_round_trips(client: TestClient[Any]) -> None:
@@ -254,6 +262,26 @@ def test_the_image_is_served_as_uploaded(client: TestClient[Any]) -> None:
     assert response.status_code == 200
     assert response.headers["content-type"] == "image/jpeg"
     assert response.content == JPEG
+    assert response.headers["cache-control"] == "public, max-age=3600"
+    assert response.headers["x-content-type-options"] == "nosniff"
+
+
+def test_an_unknown_link_page_is_html_that_sends_on_to_the_app(client: TestClient[Any]) -> None:
+    response = client.get("/s/nope")
+
+    assert response.status_code == 404
+    assert response.headers["content-type"].startswith("text/html")
+    assert "http://localhost:5173/compare?share=nope" in response.text
+    assert "og:image" not in response.text
+
+
+def test_an_unknown_link_id_cannot_break_out_of_the_page(client: TestClient[Any]) -> None:
+    response = client.get("/s/%22%3E%3Cscript%3Ealert(1)%3C")
+
+    assert response.status_code == 404
+    assert "<script>alert" not in response.text
+    assert '"><script' not in response.text
+    assert "compare?share=%22%3E%3Cscript%3Ealert%281%29%3C" in response.text
 
 
 def test_configured_urls_shape_the_link_and_the_redirect() -> None:
