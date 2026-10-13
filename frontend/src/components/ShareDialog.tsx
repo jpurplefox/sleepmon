@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { api } from "../api/client";
+import { api, ApiError } from "../api/client";
+import { useAuth } from "../auth/AuthContext";
 import { useGate } from "../auth/useGate";
 import type { ComparisonMap } from "../comparisonMap";
 import { shareRequest } from "../comparisonShare";
@@ -9,7 +10,8 @@ import { useI18n } from "../i18n";
 import type { RosterEntry } from "../roster";
 import { canShareFiles, drawSheet, previewJpegBase64, shareOrDownload, sheetPng } from "../shareImage";
 import { track } from "../telemetry/analytics";
-import type { Catalog, Island, Production } from "../types";
+import { renderTurnstile, TURNSTILE_SITE_KEY } from "../turnstile";
+import type { Catalog, Island, Production, SleepSchedule } from "../types";
 import { ComparisonShareSheet } from "./ComparisonShareSheet";
 import { Modal } from "./Modal";
 
@@ -19,6 +21,7 @@ interface Props {
   productions: (Production | null | undefined)[];
   map: ComparisonMap;
   island: Island | null;
+  sleep: SleepSchedule;
   onClose: () => void;
 }
 
@@ -31,16 +34,18 @@ type Link =
   | { state: "idle" }
   | { state: "creating" }
   | { state: "ready"; url: string; copied: boolean }
-  | { state: "error" };
+  | { state: "error"; reason: "verify" | "other" };
 
 /**
  * Share the comparison (PRD 0020) as a picture of every card side by side, or as a
  * link whose preview is that same picture. The picture is drawn as the dialog opens,
  * so sharing it is instant (a phone only opens its share sheet straight from a tap).
  */
-export function ShareDialog({ catalog, entries, productions, map, island, onClose }: Props) {
+export function ShareDialog({ catalog, entries, productions, map, island, sleep, onClose }: Props) {
   const { t, lang } = useI18n();
   const { guard } = useGate();
+  const { status } = useAuth();
+  const verifyRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const [picture, setPicture] = useState<Picture>({ state: "drawing" });
   const [link, setLink] = useState<Link>({ state: "idle" });
@@ -101,18 +106,32 @@ export function ShareDialog({ catalog, entries, productions, map, island, onClos
     const current = pictureRef.current;
     if (current.state !== "ready") return;
     setLink({ state: "creating" });
+    let token: string | null = null;
+    try {
+      if (status !== "authenticated") {
+        if (!verifyRef.current) throw new Error("verification");
+        token = await renderTurnstile(verifyRef.current, TURNSTILE_SITE_KEY);
+      }
+    } catch {
+      setLink({ state: "error", reason: "verify" });
+      return;
+    }
     try {
       const data = await previewJpegBase64(current.canvas);
       const share = await api.createComparisonShare(
-        shareRequest(entries, map, lang, { media_type: "image/jpeg", data }),
+        shareRequest(entries, map, sleep, lang, { media_type: "image/jpeg", data }, token),
       );
       track({ name: "comparison_shared", props: { kind: "link", cards: entries.length } });
       setLink({ state: "ready", url: share.url, copied: false });
       await offerLink(share.url);
-    } catch {
-      setLink({ state: "error" });
+    } catch (err) {
+      setLink({ state: "error", reason: err instanceof ApiError && err.status === 403 ? "verify" : "other" });
     }
   };
+
+  // Signed out without a configured human check (local dev): ask to sign in instead.
+  const onShareLink = () =>
+    status === "authenticated" || TURNSTILE_SITE_KEY ? createLink() : guard(createLink, "share_link");
 
   const ready = picture.state === "ready";
 
@@ -142,16 +161,17 @@ export function ShareDialog({ catalog, entries, productions, map, island, onClos
               type="button"
               className="btn btn--ghost"
               disabled={!ready || link.state === "creating"}
-              onClick={() => guard(createLink, "share_link")}
+              onClick={onShareLink}
             >
               {link.state === "creating" ? t("share.creatingLink") : t("share.shareLink")}
             </button>
           )}
         </div>
 
+        <div ref={verifyRef} className="share-dialog__verify" />
         {link.state === "error" && (
           <p className="error" role="alert">
-            {t("share.linkError")}
+            {t(link.reason === "verify" ? "share.verifyError" : "share.linkError")}
           </p>
         )}
         {link.state === "ready" && (
@@ -163,14 +183,16 @@ export function ShareDialog({ catalog, entries, productions, map, island, onClos
               aria-label={t("share.linkLabel")}
               onFocus={(e) => e.currentTarget.select()}
             />
-            <button type="button" className="btn btn--ghost" onClick={() => copy(link.url)}>
-              {link.copied ? t("share.copied") : t("share.copy")}
-            </button>
-            {typeof navigator.share === "function" && (
-              <button type="button" className="btn btn--ghost" onClick={() => offerLink(link.url)}>
-                {t("share.shareLinkAgain")}
+            <div className="share-dialog__link-actions">
+              <button type="button" className="btn btn--ghost" onClick={() => copy(link.url)}>
+                {link.copied ? t("share.copied") : t("share.copy")}
               </button>
-            )}
+              {typeof navigator.share === "function" && (
+                <button type="button" className="btn btn--ghost" onClick={() => offerLink(link.url)}>
+                  {t("share.shareLinkAgain")}
+                </button>
+              )}
+            </div>
           </div>
         )}
         <p className="muted share-dialog__note">{t("share.note")}</p>
@@ -186,6 +208,7 @@ export function ShareDialog({ catalog, entries, productions, map, island, onClos
             productions={productions}
             map={map}
             island={island}
+            sleep={sleep}
           />
         </div>,
         document.body,

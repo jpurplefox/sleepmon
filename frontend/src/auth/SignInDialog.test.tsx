@@ -42,7 +42,7 @@ describe("SignInDialog", () => {
 
   it("explains shared links, and that the image needs no account, when a link asks for a session", () => {
     openFor("share_link");
-    expect(screen.getByText(/Shared links are kept under your account/)).toBeInTheDocument();
+    expect(screen.getByText(/Sign in with Google to create a link/)).toBeInTheDocument();
     expect(screen.queryByText(/Your box/)).not.toBeInTheDocument();
   });
 });

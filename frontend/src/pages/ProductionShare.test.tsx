@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 
-import { api } from "../api/client";
+import { api, ApiError } from "../api/client";
 import { ComparisonSessionProvider } from "../comparisonSession";
 import { LanguageProvider } from "../i18n";
 import { recordEvents } from "../telemetry/testing";
@@ -15,6 +15,8 @@ const auth = vi.hoisted(() => ({ status: "authenticated" as "authenticated" | "a
 const gate = vi.hoisted(() => ({ guard: vi.fn((f: () => void) => f()) }));
 vi.mock("../auth/AuthContext", () => ({ useAuth: () => ({ status: auth.status }) }));
 vi.mock("../auth/useGate", () => ({ useGate: () => gate }));
+const ts = vi.hoisted(() => ({ token: vi.fn(async () => "tok") }));
+vi.mock("../turnstile", () => ({ TURNSTILE_SITE_KEY: "site", renderTurnstile: ts.token }));
 // Drawing needs a real browser: here the picture is a stand-in.
 const image = vi.hoisted(() => ({
   shareOrDownload: vi.fn(async () => "shared" as const),
@@ -72,6 +74,7 @@ const share: ComparisonShare = {
   island: null,
   favorites: ["Grepa"],
   weekly_bonus: "berry_strength",
+  sleep: { night_minutes: 420, nap_minutes: 120 },
 };
 
 // A real /production response (the one ProductionCard.test uses).
@@ -172,6 +175,7 @@ afterEach(() => {
   recorder.restore();
   vi.restoreAllMocks();
   gate.guard.mockClear();
+  ts.token.mockClear();
   image.shareOrDownload.mockClear();
 });
 
@@ -191,7 +195,7 @@ describe("Opening a shared link", () => {
     vi.spyOn(api, "getComparisonShare").mockRejectedValue(new Error("404"));
     renderAt("/compare?share=missing");
 
-    expect(await screen.findByText(/doesn't exist or is no longer available/)).toBeInTheDocument();
+    expect(await screen.findByText(/doesn't exist or has expired/)).toBeInTheDocument();
   });
 });
 
@@ -199,7 +203,7 @@ describe("Sharing the comparison", () => {
   async function openDialog() {
     vi.spyOn(api, "getComparisonShare").mockResolvedValue(share);
     renderAt("/compare?share=abc123def456");
-    const button = await screen.findByRole("button", { name: "Share" });
+    const button = await screen.findAllByRole("button", { name: "Share" }).then((b) => b[0]);
     await waitFor(() => expect(button).toBeEnabled());
     await userEvent.click(button);
     return screen.getByRole("dialog");
@@ -227,7 +231,7 @@ describe("Sharing the comparison", () => {
     expect(recorder.events).toContainEqual({ name: "comparison_shared", props: { kind: "image", cards: 2 } });
   });
 
-  it("creates a link behind a sign-in, with the cards and the preview", async () => {
+  it("signed out: creates the link after the human check, without signing in", async () => {
     const create = vi.spyOn(api, "createComparisonShare").mockResolvedValue({ ...share, id: "new", url: "https://sleepmon.app/s/new" });
     const dialog = await openDialog();
     const shareLink = within(dialog).getByRole("button", { name: "Share link" });
@@ -235,13 +239,58 @@ describe("Sharing the comparison", () => {
 
     await userEvent.click(shareLink);
 
-    expect(gate.guard).toHaveBeenCalledWith(expect.any(Function), "share_link");
     await waitFor(() => expect(within(dialog).getByRole("textbox")).toHaveValue("https://sleepmon.app/s/new"));
+    expect(gate.guard).not.toHaveBeenCalled();
+    expect(ts.token).toHaveBeenCalledOnce();
     const body = create.mock.calls[0][0];
+    expect(body.verification_token).toBe("tok");
+    expect(body.sleep).toEqual({ night_minutes: 510, nap_minutes: null });
     expect(body.members.map((m) => m.species)).toEqual(["Pikachu", "Raichu"]);
     expect(body.favorites).toEqual(["Grepa"]);
     expect(body.language).toBe("en");
     expect(body.image).toEqual({ media_type: "image/jpeg", data: "SlBFRw==" });
     expect(recorder.events).toContainEqual({ name: "comparison_shared", props: { kind: "link", cards: 2 } });
+  });
+
+  it("signed in: creates the link without a human check", async () => {
+    auth.status = "authenticated";
+    vi.spyOn(api, "getProgress").mockResolvedValue({ sleep: { night_minutes: 510, nap_minutes: null } } as never);
+    const create = vi.spyOn(api, "createComparisonShare").mockResolvedValue({ ...share, id: "new", url: "https://sleepmon.app/s/new" });
+    const dialog = await openDialog();
+    const shareLink = within(dialog).getByRole("button", { name: "Share link" });
+    await waitFor(() => expect(shareLink).toBeEnabled());
+
+    await userEvent.click(shareLink);
+
+    await waitFor(() => expect(create).toHaveBeenCalled());
+    expect(ts.token).not.toHaveBeenCalled();
+    expect(create.mock.calls[0][0].verification_token).toBeNull();
+  });
+
+  it("signed out: a failed check says so and creates nothing", async () => {
+    ts.token.mockRejectedValueOnce(new Error("verification"));
+    const create = vi.spyOn(api, "createComparisonShare");
+    const dialog = await openDialog();
+    const shareLink = within(dialog).getByRole("button", { name: "Share link" });
+    await waitFor(() => expect(shareLink).toBeEnabled());
+    await userEvent.click(shareLink);
+    expect(await within(dialog).findByText("We couldn't verify you're not a bot. Try again.")).toBeInTheDocument();
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("a 403 from the server reads as a failed check", async () => {
+    vi.spyOn(api, "createComparisonShare").mockRejectedValue(new ApiError("verification failed", 403, null));
+    const dialog = await openDialog();
+    const shareLink = within(dialog).getByRole("button", { name: "Share link" });
+    await waitFor(() => expect(shareLink).toBeEnabled());
+    await userEvent.click(shareLink);
+    expect(await within(dialog).findByText("We couldn't verify you're not a bot. Try again.")).toBeInTheDocument();
+  });
+
+  it("the picture's strip names the sleep and sleepmon.app", async () => {
+    await openDialog();
+    const sheet = document.querySelector(".share-sheet") as HTMLElement;
+    expect(within(sheet).getByText("Sleep 8:30")).toBeInTheDocument();
+    expect(within(sheet).getByText("sleepmon.app")).toBeInTheDocument();
   });
 });

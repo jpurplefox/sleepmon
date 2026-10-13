@@ -5,7 +5,8 @@ import { berryRoleOf, MAX_FAVORITES, type ComparisonMap } from "../comparisonMap
 import { pickedFavorites } from "../favoriteSlots";
 import { useI18n } from "../i18n";
 import type { RosterEntry } from "../roster";
-import type { Catalog, Island, Production } from "../types";
+import { formatSleep } from "../comparisonShare";
+import type { Catalog, Island, Production, SleepSchedule } from "../types";
 import { ProductionCard } from "./ProductionCard";
 
 const WEEKLY_KEY = {
@@ -22,6 +23,7 @@ interface Props {
   productions: (Production | null | undefined)[];
   map: ComparisonMap;
   island: Island | null;
+  sleep: SleepSchedule;
 }
 
 /**
@@ -30,7 +32,7 @@ interface Props {
  * screen and drawn to an image; never shown as it is.
  */
 export const ComparisonShareSheet = forwardRef<HTMLDivElement, Props>(function ComparisonShareSheet(
-  { catalog, entries, productions, map, island },
+  { catalog, entries, productions, map, island, sleep },
   ref,
 ) {
   const { t, berry: berryName } = useI18n();
@@ -59,7 +61,12 @@ export const ComparisonShareSheet = forwardRef<HTMLDivElement, Props>(function C
             </span>
           )}
           {expert && <span>{t(WEEKLY_KEY[map.weeklyBonus])}</span>}
+          <span className="share-sheet__sep" aria-hidden="true">
+            ·
+          </span>
+          <span>{t("share.sleepLabel", { sleep: formatSleep(sleep, t("share.nap")) })}</span>
         </span>
+        <span className="share-sheet__url">sleepmon.app</span>
       </header>
       <div className="share-sheet__cards">
         {entries.map((e, i) => (

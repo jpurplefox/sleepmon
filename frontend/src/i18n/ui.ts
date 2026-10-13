@@ -50,7 +50,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "auth.dialogBodyImport":
       "Leer capturas del juego está reservado para usuarios registrados. Iniciá sesión con Google para continuar.",
     "auth.dialogBodyShareLink":
-      "Los links compartidos quedan guardados en tu cuenta. Iniciá sesión con Google para crear uno; la imagen la podés compartir sin cuenta.",
+      "Iniciá sesión con Google para crear un link. La imagen la podés compartir sin cuenta.",
     "auth.gateTitle": "Tu caja es donde viven tus Pokémon",
     "auth.gateBody":
       "Iniciá sesión con Google para empezar tu caja, registrar tu equipo y encontrarlo en cada visita.",
@@ -171,7 +171,13 @@ export const UI: Record<Lang, Record<string, string>> = {
     "share.note": "El link muestra esta imagen al compartirlo y abre la comparación en sleepmon.",
     "share.fileTitle": "Comparación: {names}",
     "share.loading": "Abriendo la comparación compartida…",
-    "share.notFound": "Esa comparación compartida no existe o ya no está disponible.",
+    "share.notFound": "Esta comparación compartida no existe o venció.",
+    "share.verifyError": "No pudimos verificar que no seas un bot. Probá de nuevo.",
+    "share.sleepLabel": "Sueño {sleep}",
+    "share.nap": "siesta",
+    "share.sleepNotice":
+      "Quien te compartió esta comparación duerme {theirs}; los números usan tu horario ({yours}) y pueden no coincidir con los suyos.",
+    "share.dismissNotice": "Cerrar aviso",
     "prod.save": "Guardar",
     "prod.noteEditInBox":
       "Editás la copia de comparación; tu caja no cambia. Para actualizarla, usá el ícono de guardar en la card.",
@@ -749,7 +755,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "auth.dialogBodyImport":
       "Reading game screenshots is reserved for registered users. Sign in with Google to continue.",
     "auth.dialogBodyShareLink":
-      "Shared links are kept under your account. Sign in with Google to create one; the image can be shared without an account.",
+      "Sign in with Google to create a link. The image can be shared without an account.",
     "auth.gateTitle": "Your box is where your Pokémon live",
     "auth.gateBody":
       "Sign in with Google to start your box, register your team, and find it again on every visit.",
@@ -868,7 +874,13 @@ export const UI: Record<Lang, Record<string, string>> = {
     "share.note": "The link shows this image when shared and opens the comparison in sleepmon.",
     "share.fileTitle": "Comparison: {names}",
     "share.loading": "Opening the shared comparison…",
-    "share.notFound": "That shared comparison doesn't exist or is no longer available.",
+    "share.notFound": "That shared comparison doesn't exist or has expired.",
+    "share.verifyError": "We couldn't verify you're not a bot. Try again.",
+    "share.sleepLabel": "Sleep {sleep}",
+    "share.nap": "nap",
+    "share.sleepNotice":
+      "Whoever shared this comparison sleeps {theirs}; the numbers use your schedule ({yours}) and may not match theirs.",
+    "share.dismissNotice": "Dismiss",
     "prod.save": "Save",
     "prod.noteEditInBox":
       "You're editing the comparison copy; your box doesn't change. To update it, use the save icon on the card.",

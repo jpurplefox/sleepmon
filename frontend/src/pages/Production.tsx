@@ -436,6 +436,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
           productions={shownProductions}
           map={map}
           island={island}
+          sleep={progress.sleep}
           onClose={() => setModal(null)}
         />
       )}

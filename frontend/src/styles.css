@@ -7481,3 +7481,11 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 @media (max-width: 640px) {
   .tool-head__action--wide { display: none; }
 }
+
+.share-sheet__sep { opacity: 0.6; }
+.share-sheet__url { color: var(--muted); font-weight: 600; letter-spacing: 0.02em; }
+.share-dialog__verify:empty { display: none; }
+.share-dialog__link-actions { display: flex; gap: 0.5rem; }
+@media (max-width: 640px) {
+  .share-dialog__link input { flex-basis: 100%; }
+}
