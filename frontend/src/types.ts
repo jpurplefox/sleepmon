@@ -519,7 +519,11 @@ export interface ComparisonShareInput {
   island: string | null;
   weekly_bonus: WeeklyBonus;
   language: "es" | "en";
+  /** The sharer's sleep schedule, shown on the shared comparison. */
+  sleep: SleepSchedule;
   image: { media_type: "image/jpeg" | "image/png"; data: string };
+  /** Turnstile token: required for anonymous creation, null when signed in. */
+  verification_token: string | null;
 }
 
 export interface ComparisonShare {
@@ -530,4 +534,5 @@ export interface ComparisonShare {
   island: string | null;
   favorites: string[];
   weekly_bonus: WeeklyBonus;
+  sleep: SleepSchedule;
 }

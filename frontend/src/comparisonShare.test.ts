@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { sessionFromShare, shareIdFrom, shareRequest } from "./comparisonShare";
+import { formatSleep, sessionFromShare, shareIdFrom, shareRequest, sleepDiffers } from "./comparisonShare";
 import { newEntry } from "./roster";
 import type { ComparisonShare, MemberInput } from "./types";
 
@@ -32,8 +32,10 @@ describe("shareRequest", () => {
     const req = shareRequest(
       [newEntry(pikachu, "box-member-1")],
       { island: "Cyan Beach (Expert)", favorites: ["", "Oran"], weeklyBonus: "ingredient" },
+      { night_minutes: 420, nap_minutes: 120 },
       "en",
       image,
+      "tok",
     );
     expect(req).toEqual({
       members: [pikachu],
@@ -41,14 +43,16 @@ describe("shareRequest", () => {
       favorites: ["", "Oran"],
       weekly_bonus: "ingredient",
       language: "en",
+      sleep: { night_minutes: 420, nap_minutes: 120 },
       image,
+      verification_token: "tok",
     });
     expect(JSON.stringify(req)).not.toContain("box-member-1");
   });
 });
 
 describe("sessionFromShare", () => {
-  it("opens the share as fresh unlinked cards with its map terms", () => {
+  it("opens the share as fresh unlinked cards with its map terms and sleep", () => {
     const share: ComparisonShare = {
       id: "abc",
       url: "https://sleepmon.app/s/abc",
@@ -56,11 +60,29 @@ describe("sessionFromShare", () => {
       island: null,
       favorites: ["Grepa"],
       weekly_bonus: "berry_strength",
+      sleep: { night_minutes: 420, nap_minutes: 120 },
     };
-    const { entries, map } = sessionFromShare(share);
-    expect(entries.map((e) => e.config.level)).toEqual([30, 50]);
-    expect(entries.every((e) => e.sourceId === undefined)).toBe(true);
-    expect(new Set(entries.map((e) => e.id)).size).toBe(2);
-    expect(map).toEqual({ island: null, favorites: ["Grepa"], weeklyBonus: "berry_strength" });
+    const result = sessionFromShare(share);
+    expect(result.entries.map((e) => e.config.level)).toEqual([30, 50]);
+    expect(result.entries.every((e) => e.sourceId === undefined)).toBe(true);
+    expect(new Set(result.entries.map((e) => e.id)).size).toBe(2);
+    expect(result.map).toEqual({ island: null, favorites: ["Grepa"], weeklyBonus: "berry_strength" });
+    expect(result.sleep).toEqual({ night_minutes: 420, nap_minutes: 120 });
+  });
+});
+
+describe("sleepDiffers", () => {
+  it("compares night and nap, no nap equal to no nap", () => {
+    expect(sleepDiffers({ night_minutes: 510, nap_minutes: null }, { night_minutes: 510, nap_minutes: null })).toBe(false);
+    expect(sleepDiffers({ night_minutes: 420, nap_minutes: 120 }, { night_minutes: 510, nap_minutes: null })).toBe(true);
+    expect(sleepDiffers({ night_minutes: 510, nap_minutes: 120 }, { night_minutes: 510, nap_minutes: null })).toBe(true);
+  });
+});
+
+describe("formatSleep", () => {
+  it("reads the night, plus the nap when there is one", () => {
+    expect(formatSleep({ night_minutes: 510, nap_minutes: null }, "siesta")).toBe("8:30");
+    expect(formatSleep({ night_minutes: 420, nap_minutes: 120 }, "siesta")).toBe("7:00 + siesta 2:00");
+    expect(formatSleep({ night_minutes: 420, nap_minutes: 120 }, "nap")).toBe("7:00 + nap 2:00");
   });
 });
