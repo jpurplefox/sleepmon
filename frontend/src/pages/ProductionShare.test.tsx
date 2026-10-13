@@ -15,8 +15,13 @@ const auth = vi.hoisted(() => ({ status: "authenticated" as "authenticated" | "a
 const gate = vi.hoisted(() => ({ guard: vi.fn((f: () => void) => f()) }));
 vi.mock("../auth/AuthContext", () => ({ useAuth: () => ({ status: auth.status }) }));
 vi.mock("../auth/useGate", () => ({ useGate: () => gate }));
-const ts = vi.hoisted(() => ({ token: vi.fn(async () => "tok") }));
-vi.mock("../turnstile", () => ({ TURNSTILE_SITE_KEY: "site", renderTurnstile: ts.token }));
+const ts = vi.hoisted(() => ({ token: vi.fn(async () => "tok"), key: "site" }));
+vi.mock("../turnstile", () => ({
+  get TURNSTILE_SITE_KEY() {
+    return ts.key;
+  },
+  renderTurnstile: ts.token,
+}));
 // Drawing needs a real browser: here the picture is a stand-in.
 const image = vi.hoisted(() => ({
   shareOrDownload: vi.fn(async () => "shared" as const),
@@ -160,6 +165,7 @@ beforeEach(() => {
   localStorage.setItem("sleepmon.lang", "en");
   // Anonymous: the cards compute with the default night, no profile to wait for.
   auth.status = "anonymous";
+  ts.key = "site";
   HTMLElement.prototype.scrollTo = () => {};
   HTMLElement.prototype.scrollIntoView = () => {};
   URL.createObjectURL = () => "blob:picture";
@@ -265,6 +271,31 @@ describe("Sharing the comparison", () => {
     await waitFor(() => expect(create).toHaveBeenCalled());
     expect(ts.token).not.toHaveBeenCalled();
     expect(create.mock.calls[0][0].verification_token).toBeNull();
+  });
+
+  it("no site key: signs in first, then creates the link without any human check", async () => {
+    ts.key = "";
+    const create = vi.spyOn(api, "createComparisonShare").mockResolvedValue({ ...share, id: "new", url: "https://sleepmon.app/s/new" });
+    const dialog = await openDialog();
+    const shareLink = within(dialog).getByRole("button", { name: "Share link" });
+    await waitFor(() => expect(shareLink).toBeEnabled());
+
+    // The gate holds the action while the user signs in; it runs afterwards.
+    let pending: (() => void) | undefined;
+    gate.guard.mockImplementationOnce((f: () => void) => {
+      pending = f;
+    });
+    await userEvent.click(shareLink);
+    expect(gate.guard).toHaveBeenCalledWith(expect.any(Function), "share_link");
+    expect(create).not.toHaveBeenCalled();
+
+    auth.status = "authenticated";
+    pending!();
+
+    await waitFor(() => expect(within(dialog).getByRole("textbox")).toHaveValue("https://sleepmon.app/s/new"));
+    expect(ts.token).not.toHaveBeenCalled();
+    expect(create.mock.calls[0][0].verification_token).toBeNull();
+    expect(within(dialog).queryByText(/verify/)).toBeNull();
   });
 
   it("signed out: a failed check says so and creates nothing", async () => {

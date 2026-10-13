@@ -102,13 +102,13 @@ export function ShareDialog({ catalog, entries, productions, map, island, sleep,
     }
   };
 
-  const createLink = async () => {
+  const createLink = async (verify: boolean) => {
     const current = pictureRef.current;
     if (current.state !== "ready") return;
     setLink({ state: "creating" });
     let token: string | null = null;
     try {
-      if (status !== "authenticated") {
+      if (verify) {
         if (!verifyRef.current) throw new Error("verification");
         token = await renderTurnstile(verifyRef.current, TURNSTILE_SITE_KEY);
       }
@@ -130,8 +130,12 @@ export function ShareDialog({ catalog, entries, productions, map, island, sleep,
   };
 
   // Signed out without a configured human check (local dev): ask to sign in instead.
-  const onShareLink = () =>
-    status === "authenticated" || TURNSTILE_SITE_KEY ? createLink() : guard(createLink, "share_link");
+  // The guarded call runs after sign-in from this render's closure, so it never verifies.
+  const onShareLink = () => {
+    if (status === "authenticated") return createLink(false);
+    if (TURNSTILE_SITE_KEY) return createLink(true);
+    return guard(() => createLink(false), "share_link");
+  };
 
   const ready = picture.state === "ready";
 

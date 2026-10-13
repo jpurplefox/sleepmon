@@ -2,10 +2,10 @@ import { forwardRef } from "react";
 
 import { berryIcon } from "../berries";
 import { berryRoleOf, MAX_FAVORITES, type ComparisonMap } from "../comparisonMap";
+import { formatSleep } from "../comparisonShare";
 import { pickedFavorites } from "../favoriteSlots";
 import { useI18n } from "../i18n";
 import type { RosterEntry } from "../roster";
-import { formatSleep } from "../comparisonShare";
 import type { Catalog, Island, Production, SleepSchedule } from "../types";
 import { ProductionCard } from "./ProductionCard";
 
