@@ -7376,6 +7376,8 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: var(--share-card-w);
+  /* The strip can be wider than a lone card: keep the card(s) centered under it. */
+  justify-content: center;
   gap: 0.75rem;
   align-items: stretch;
 }
