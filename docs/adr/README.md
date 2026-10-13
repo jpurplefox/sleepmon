@@ -33,3 +33,4 @@ format: **Title / Status / Context / Decision / Consequences**.
 | [0009](0009-aws-deployment-and-ci-cd.md) | AWS deployment and CI/CD | Accepted |
 | [0010](0010-observability-error-monitoring-and-product-analytics.md) | Observability: error monitoring and product analytics | Accepted |
 | [0011](0011-shareable-links-with-previews.md) | Shareable links with link previews | Accepted |
+| [0012](0012-human-check-for-anonymous-writes.md) | Cloudflare Turnstile as the human check for anonymous writes | Accepted |
