@@ -568,7 +568,10 @@ class _ComparisonShareRow:
     favorites: list[str | None]
     weekly_bonus: str
     language: str
+    night_minutes: int
+    nap_minutes: int | None
     created_at: datetime
+    last_opened_at: datetime
 
 
 def _encode_shared_member(m: TeamMember) -> dict[str, object]:
@@ -622,7 +625,9 @@ def _to_shared_comparison(row: _ComparisonShareRow) -> SharedComparison:
             or WeeklyBonus.BERRY_STRENGTH,
         ),
         language=_decode_optional(ShareLanguage, row.language) or ShareLanguage.ES,
+        sleep=SleepSchedule(night_minutes=row.night_minutes, nap_minutes=row.nap_minutes),
         created_at=row.created_at,
+        last_opened_at=row.last_opened_at,
     )
 
 
@@ -630,7 +635,7 @@ class PostgresComparisonShareRepository(ComparisonShareRepository):
     def __init__(self, pool: ConnectionPool) -> None:
         self._pool = pool
 
-    def add(self, share: SharedComparison, image: ShareImage, user_id: UUID) -> None:
+    def add(self, share: SharedComparison, image: ShareImage, owner: UUID | None) -> None:
         with self._pool.connection() as conn, conn.cursor() as cur:
             cur.execute(
                 queries.INSERT_COMPARISON_SHARE,
@@ -641,12 +646,24 @@ class PostgresComparisonShareRepository(ComparisonShareRepository):
                     Jsonb([None if b is None else b.value for b in share.map.favorites]),
                     share.map.weekly_bonus.value,
                     share.language.value,
+                    share.sleep.night_minutes,
+                    share.sleep.nap_minutes,
                     image.media_type,
                     image.data,
                     share.created_at,
-                    user_id,
+                    share.last_opened_at,
+                    owner,
                 ),
             )
+
+    def touch(self, share_id: str, opened_at: datetime) -> None:
+        with self._pool.connection() as conn, conn.cursor() as cur:
+            cur.execute(queries.TOUCH_COMPARISON_SHARE, (opened_at, share_id))
+
+    def delete_expired(self, opened_before: datetime) -> int:
+        with self._pool.connection() as conn, conn.cursor() as cur:
+            cur.execute(queries.DELETE_EXPIRED_COMPARISON_SHARES, (opened_before,))
+            return cur.rowcount
 
     def get(self, share_id: str) -> SharedComparison | None:
         with (

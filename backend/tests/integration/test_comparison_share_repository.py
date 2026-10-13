@@ -25,6 +25,7 @@ from sleepmon.domain.comparison_share import (
     ShareLanguage,
 )
 from sleepmon.domain.entities import TeamMember
+from sleepmon.domain.sleep import SleepSchedule
 from sleepmon.domain.value_objects import (
     Berry,
     Ingredient,
@@ -44,7 +45,7 @@ JPEG = ShareImage("image/jpeg", b"\xff\xd8\xff\xe0" + bytes(range(256)))
 def pool(test_dsn: str) -> Iterator[ConnectionPool]:
     pool = create_pool(test_dsn)
     with pool.connection() as conn:
-        conn.execute("TRUNCATE app_user CASCADE")  # cascades to comparison_share
+        conn.execute("TRUNCATE app_user, comparison_share CASCADE")
     yield pool
     pool.close()
 
@@ -96,7 +97,9 @@ def _share(share_id: str = "share0000001") -> SharedComparison:
             weekly_bonus=WeeklyBonus.SKILL_TRIGGER,
         ),
         language=ShareLanguage.EN,
+        sleep=SleepSchedule(night_minutes=420, nap_minutes=120),
         created_at=datetime(2026, 10, 1, 12, 0, tzinfo=UTC),
+        last_opened_at=datetime(2026, 10, 1, 12, 0, tzinfo=UTC),
     )
 
 
@@ -104,12 +107,14 @@ def _same(a: SharedComparison, b: SharedComparison) -> bool:
     """Equal but for the members' ids, which a share doesn't keep."""
     strip = [(m.species, m.level, m.nature, m.ingredients, m.sub_skills) for m in a.members]
     other = [(m.species, m.level, m.nature, m.ingredients, m.sub_skills) for m in b.members]
-    return strip == other and (a.id, a.map, a.language, a.created_at) == (
-        b.id,
-        b.map,
-        b.language,
-        b.created_at,
-    )
+    return strip == other and (
+        a.id,
+        a.map,
+        a.language,
+        a.sleep,
+        a.created_at,
+        a.last_opened_at,
+    ) == (b.id, b.map, b.language, b.sleep, b.created_at, b.last_opened_at)
 
 
 def test_round_trips_a_share_and_its_image(pool: ConnectionPool) -> None:
@@ -137,3 +142,42 @@ def test_deleting_the_account_deletes_its_shares(pool: ConnectionPool) -> None:
     PostgresUserRepository(pool).delete(user)
 
     assert repo.get("share0000001") is None
+
+
+def test_a_share_made_signed_out_has_no_owner(pool: ConnectionPool) -> None:
+    repo = PostgresComparisonShareRepository(pool)
+    repo.add(_share(), JPEG, None)
+    stored = repo.get("share0000001")
+    assert stored is not None and stored.sleep == SleepSchedule(night_minutes=420, nap_minutes=120)
+
+
+def test_touch_moves_the_last_opening(pool: ConnectionPool) -> None:
+    repo = PostgresComparisonShareRepository(pool)
+    repo.add(_share(), JPEG, None)
+    later = datetime(2026, 11, 1, 9, 0, tzinfo=UTC)
+    repo.touch("share0000001", later)
+    stored = repo.get("share0000001")
+    assert stored is not None and stored.last_opened_at == later
+
+
+def test_delete_expired_drops_only_old_shares(pool: ConnectionPool) -> None:
+    repo = PostgresComparisonShareRepository(pool)
+    repo.add(_share("share0000001"), JPEG, None)
+    repo.add(_share("share0000002"), JPEG, None)
+    repo.touch("share0000002", datetime(2027, 1, 1, tzinfo=UTC))
+
+    assert repo.delete_expired(datetime(2026, 12, 1, tzinfo=UTC)) == 1
+    assert repo.get("share0000001") is None
+    assert repo.get("share0000002") is not None
+
+
+def test_deleting_an_account_keeps_shares_made_signed_out(pool: ConnectionPool) -> None:
+    repo = PostgresComparisonShareRepository(pool)
+    user = _user(pool)
+    repo.add(_share("share0000001"), JPEG, user)
+    repo.add(_share("share0000002"), JPEG, None)
+
+    PostgresUserRepository(pool).delete(user)
+
+    assert repo.get("share0000001") is None
+    assert repo.get("share0000002") is not None

@@ -365,12 +365,15 @@ INSERT_COMPARISON_SHARE = (
         "favorites",
         "weekly_bonus",
         "language",
+        "night_minutes",
+        "nap_minutes",
         "image_type",
         "image",
         "created_at",
+        "last_opened_at",
         "user_id",
     )
-    .insert(_P, _P, _P, _P, _P, _P, _P, _P, _P, _P)
+    .insert(_P, _P, _P, _P, _P, _P, _P, _P, _P, _P, _P, _P, _P)
     .get_sql()
 )
 
@@ -384,7 +387,10 @@ SELECT_COMPARISON_SHARE = (
         comparison_share.favorites,
         comparison_share.weekly_bonus,
         comparison_share.language,
+        comparison_share.night_minutes,
+        comparison_share.nap_minutes,
         comparison_share.created_at,
+        comparison_share.last_opened_at,
     )
     .where(comparison_share.id == _P)
     .get_sql()
@@ -394,5 +400,19 @@ SELECT_COMPARISON_SHARE_IMAGE = (
     Query.from_(comparison_share)
     .select(comparison_share.image_type, comparison_share.image)
     .where(comparison_share.id == _P)
+    .get_sql()
+)
+
+TOUCH_COMPARISON_SHARE = (
+    Query.update(comparison_share)
+    .set(comparison_share.last_opened_at, _P)
+    .where(comparison_share.id == _P)
+    .get_sql()
+)
+
+DELETE_EXPIRED_COMPARISON_SHARES = (
+    Query.from_(comparison_share)
+    .where(comparison_share.last_opened_at < _P)
+    .delete()
     .get_sql()
 )
