@@ -84,7 +84,7 @@ Opening a saved team does **not** emit `pokemon_added` for its members — that 
 
 | Event | When | Properties |
 |---|---|---|
-| `comparison_shared` | A comparison is shared ([PRD 0020](0020-share-comparison.md)): its image shared or saved, or its link created. | `kind`: `image` / `link`; `cards` |
+| `comparison_shared` | A comparison is shared ([PRD 0020](0020-share-comparison.md)): its image copied or downloaded, or its link copied. | `kind`: `image` / `link`; `cards` |
 | `shared_comparison_opened` | A shared link opens its comparison. | `cards` |
 
 **The Box**

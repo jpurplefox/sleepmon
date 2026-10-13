@@ -99,13 +99,14 @@ swipes one card per screen, but the picture always shows **every card side by si
   are the ones the sharer left.
 - The numbers are computed with the **recipient's** sleep schedule (their Player
   profile, or the default night signed out), like every number they see.
-- When the two sleep schedules differ, a notice shows above the cards, naming the
-  difference in total sleep (night + nap): *"Whoever shared this comparison sleeps 1:30 h
-  more than you, so the values shown may not match theirs."* (or *"…less than you…"*).
-  When the total is the same but split differently (a nap on one side), it reads
-  *"Whoever shared this comparison sleeps the same hours as you, split differently, so
-  the values shown may not match theirs."* It can be closed with ×, and goes away on
-  moving to another tool or reloading. When the schedules match, there is no notice.
+- When the two sleep schedules differ, a notice shows above the cards, naming both
+  sides' **sleep sessions** in one sentence: *"Whoever shared this comparison sleeps in
+  **{theirs}** and you in **{yours}**, so the values shown may not match theirs."* Each
+  side reads *"one session of 8:30"* or *"two sessions (night 7:00 and nap 2:00)"*; when
+  both have the same number of sessions, the second side is shortened (*"you in one of
+  8:30"*, *"you in two (night 8:00 and nap 1:30)"*). The sessions are in bold. It can be
+  closed with ×, and goes away on moving to another tool or reloading. When the schedules
+  match, there is no notice.
 - Once opened, the address goes back to `/compare`, so a reload doesn't reopen the link
   over later changes.
 - **An expired or unknown link** → *"That shared comparison doesn't exist or has
@@ -154,10 +155,18 @@ swipes one card per screen, but the picture always shows **every card side by si
   address becomes `/compare`.
 - The opened cards are tied to no Box: "Save to Box" creates a new Pokémon in the
   recipient's Box.
-- Sharer sleeps 7:00 + nap 2:00 (9:00 in total), recipient 8:30 → *"…sleeps 0:30 h more
-  than you, so the values shown may not match theirs."*; × closes it. Sharer 7:00 + nap
-  1:30, recipient 8:30 → *"…sleeps the same hours as you, split differently…"*.
-  Schedules match → no notice.
+- The notice, by case (es / en), × closes it in all of them:
+  - sharer night 7:00 + nap 2:00, recipient 8:30 → *"Quien te compartió esta comparación
+    duerme en dos sesiones (noche 7:00 y siesta 2:00) y vos en una sesión de 8:30, así que
+    los valores mostrados pueden no coincidir con los suyos."* / *"Whoever shared this
+    comparison sleeps in two sessions (night 7:00 and nap 2:00) and you in one session of
+    8:30, so the values shown may not match theirs."*
+  - sharer 8:30, recipient night 7:00 + nap 2:00 → *"…duerme en una sesión de 8:30 y vos
+    en dos sesiones (noche 7:00 y siesta 2:00)…"*
+  - sharer 7:00, recipient 8:30 → *"…duerme en una sesión de 7:00 y vos en una de 8:30…"*
+  - sharer night 7:00 + nap 2:00, recipient night 8:00 + nap 1:30 → *"…duerme en dos
+    sesiones (noche 7:00 y siesta 2:00) y vos en dos (noche 8:00 y siesta 1:30)…"*
+  - schedules match → no notice.
 - A link last opened 89 days ago still opens, and its 90 days start over. A link not
   opened in more than 90 days → *"That shared comparison doesn't exist or has
   expired."*, the same as a link that never existed; the recipient's comparison stays
@@ -181,8 +190,8 @@ swipes one card per screen, but the picture always shows **every card side by si
   sleep schedule, like everything else they see; a different schedule is pointed out,
   never applied.
 - **Only what's needed is kept**: the cards, the map terms, the sleep schedule, the
-  language and the picture. The recipient sees nothing about the sharer beyond how much
-  they sleep compared with them, in the notice.
+  language and the picture. The recipient sees nothing about the sharer beyond their
+  sleep sessions, in the notice.
 
 ## Out of scope
 
