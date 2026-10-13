@@ -62,7 +62,7 @@ swipes one card per screen, but the picture always shows **every card side by si
 ### The link
 
 - Below the image actions, labelled **Link**, with one line saying what the link adds
-  over the picture: *"Whoever opens it sees the comparison in sleepmon and can change
+  over the picture: *"Anyone who opens it sees the comparison in sleepmon and can change
   levels, natures or the map to try their own variants."*
 - **Created as the dialog opens**, once the picture is drawn, so the link is shown
   complete before anyone copies it (*"Creating link…"* for that moment):
@@ -100,7 +100,7 @@ swipes one card per screen, but the picture always shows **every card side by si
 - The numbers are computed with the **recipient's** sleep schedule (their Player
   profile, or the default night signed out), like every number they see.
 - When the two sleep schedules differ, a notice shows above the cards, naming both
-  sides' **sleep sessions** in one sentence: *"Whoever shared this comparison sleeps in
+  sides' **sleep sessions** in one sentence: *"The person who shared this comparison sleeps in
   **{theirs}** and you in **{yours}**, so the values shown may not match theirs."* Each
   side reads *"one session of 8:30"* or *"two sessions (night 7:00 and nap 2:00)"*; when
   both have the same number of sessions, the second side is shortened (*"you in one of
