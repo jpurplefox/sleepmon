@@ -38,6 +38,7 @@ vi.mock("../shareImage", () => ({
   canCopyImage: () => image.canCopy,
 }));
 
+import * as shareImage from "../shareImage";
 import { Production } from "./Production";
 
 const species = (name: string, dex: number): Species => ({
@@ -469,6 +470,65 @@ describe("Sharing the comparison", () => {
     expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
     expect(create).toHaveBeenCalledOnce();
     expect(ts.token).toHaveBeenCalledOnce();
+  });
+
+  it("closing and reopening mid-creation awaits the same request instead of creating a second link", async () => {
+    let finish!: (s: ComparisonShare) => void;
+    const create = vi.spyOn(api, "createComparisonShare").mockReturnValue(new Promise((r) => (finish = r)));
+    let dialog = await openDialog();
+    await waitFor(() => expect(create).toHaveBeenCalledOnce());
+    await userEvent.click(within(dialog).getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    dialog = await openDialog(false);
+    expect(await within(section(dialog, "Link")).findByText("Creating link…")).toBeInTheDocument();
+    finish(created);
+
+    expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
+    expect(create).toHaveBeenCalledOnce();
+    expect(ts.token).toHaveBeenCalledOnce();
+  });
+
+  it("says it's creating the link even before the picture is drawn", async () => {
+    let draw!: (c: HTMLCanvasElement) => void;
+    vi.mocked(shareImage.drawSheet).mockReturnValueOnce(new Promise((r) => (draw = r)));
+    vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
+    const dialog = await openDialog();
+
+    expect(within(section(dialog, "Link")).getByText("Creating link…")).toBeInTheDocument();
+    draw({} as HTMLCanvasElement);
+    expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
+  });
+
+  it("hides the Link section when the picture can't be drawn", async () => {
+    vi.mocked(shareImage.drawSheet).mockRejectedValueOnce(new Error("draw"));
+    const create = vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
+    const dialog = await openDialog();
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(/draw|picture|image/i);
+    expect(within(dialog).queryByRole("group", { name: "Link" })).toBeNull();
+    expect(within(dialog).queryByRole("textbox")).toBeNull();
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("announces the creating text and the copies to assistive tech", async () => {
+    let finish!: (s: ComparisonShare) => void;
+    vi.spyOn(api, "createComparisonShare").mockReturnValue(new Promise((r) => (finish = r)));
+    const dialog = await openDialog();
+    const link = section(dialog, "Link");
+    expect(await within(link).findByText("Creating link…")).toHaveAttribute("role", "status");
+
+    finish(created);
+    await linkField(dialog);
+    const live = link.querySelector(".sr-only[role='status']") as HTMLElement;
+    expect(live).toHaveTextContent("");
+    await userEvent.click(within(link).getByRole("button", { name: "Copy" }));
+    await waitFor(() => expect(live).toHaveTextContent("Copied!"));
+    expect(live).toHaveAttribute("aria-live", "polite");
+
+    const imageLive = section(dialog, "Image").querySelector(".sr-only[role='status']") as HTMLElement;
+    await userEvent.click(within(section(dialog, "Image")).getByRole("button", { name: "Copy" }));
+    await waitFor(() => expect(imageLive).toHaveTextContent("Copied!"));
   });
 
   it("changing the map terms makes the next dialog create a new link", async () => {

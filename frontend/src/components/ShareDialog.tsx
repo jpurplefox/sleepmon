@@ -5,7 +5,14 @@ import { api, ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useGate } from "../auth/useGate";
 import type { ComparisonMap } from "../comparisonMap";
-import { cachedShareUrl, rememberShareUrl, shareCacheKey, shareRequest } from "../comparisonShare";
+import {
+  cachedShareUrl,
+  pendingShare,
+  rememberShareUrl,
+  shareCacheKey,
+  shareRequest,
+  trackPendingShare,
+} from "../comparisonShare";
 import { useI18n } from "../i18n";
 import type { RosterEntry } from "../roster";
 import { canCopyImage, downloadBlob, drawSheet, previewJpegBase64, sheetPng } from "../shareImage";
@@ -116,14 +123,21 @@ export function ShareDialog({ catalog, entries, productions, map, island, sleep,
       return;
     }
     try {
-      const data = await previewJpegBase64(current.canvas);
-      const share = await api.createComparisonShare(
-        shareRequest(entries, map, sleep, lang, { media_type: "image/jpeg", data }, token),
-      );
-      rememberShareUrl(cacheKey, share.url);
-      setLink({ state: "ready", url: share.url });
+      const creation = (async () => {
+        const data = await previewJpegBase64(current.canvas);
+        const share = await api.createComparisonShare(
+          shareRequest(entries, map, sleep, lang, { media_type: "image/jpeg", data }, token),
+        );
+        rememberShareUrl(cacheKey, share.url);
+        return share.url;
+      })();
+      trackPendingShare(cacheKey, creation);
+      setLink({ state: "ready", url: await creation });
     } catch (err) {
-      setLink({ state: "error", reason: err instanceof ApiError && err.status === 403 ? "verify" : "other" });
+      setLink({
+        state: "error",
+        reason: err instanceof ApiError && err.status === 403 ? "verify" : "other",
+      });
     }
   };
 
@@ -145,6 +159,16 @@ export function ShareDialog({ catalog, entries, productions, map, island, sleep,
     const cached = cachedShareUrl(cacheKey);
     if (cached) {
       setLink({ state: "ready", url: cached });
+      return;
+    }
+    // Closed and reopened while the first dialog's creation is still running: wait for it.
+    const pending = pendingShare(cacheKey);
+    if (pending) {
+      setLink({ state: "creating" });
+      pending.then(
+        (url) => setLink({ state: "ready", url }),
+        () => setLink({ state: "error", reason: "other" }),
+      );
       return;
     }
     if (!needsSignIn) void startLink();
@@ -208,12 +232,7 @@ export function ShareDialog({ catalog, entries, productions, map, island, sleep,
           </span>
           <div className="share-dialog__actions">
             {canCopyImage() && (
-              <button
-                type="button"
-                className="btn btn--ghost btn--icon-lead"
-                disabled={!ready}
-                onClick={copyImage}
-              >
+              <button type="button" className="btn btn--ghost btn--icon-lead" disabled={!ready} onClick={copyImage}>
                 {imageCopied ? <IconCheck /> : <IconCopy />}
                 {imageCopied ? t("share.imageCopied") : t("share.copy")}
               </button>
@@ -223,58 +242,68 @@ export function ShareDialog({ catalog, entries, productions, map, island, sleep,
               {t("share.download")}
             </button>
           </div>
+          <span role="status" aria-live="polite" className="sr-only">
+            {imageCopied ? t("share.imageCopied") : ""}
+          </span>
         </div>
 
-        <div className="share-dialog__section" role="group" aria-labelledby={linkLabelId}>
-          <span id={linkLabelId} className="share-dialog__label">
-            {t("share.linkSection")}
-          </span>
-          <p className="share-dialog__value">{t("share.linkValue")}</p>
-          {link.state === "error" ? (
-            <div className="share-dialog__link share-dialog__link--error">
-              <p className="error" role="alert">
-                {t(link.reason === "verify" ? "share.verifyError" : "share.linkError")}
-              </p>
-              <button type="button" className="btn btn--ghost" onClick={startLink}>
-                {t("share.retry")}
-              </button>
-            </div>
-          ) : link.state === "idle" && needsSignIn && ready ? (
-            <div className="share-dialog__link">
-              <button type="button" className="btn btn--ghost" onClick={startLink}>
-                {t("share.signInForLink")}
-              </button>
-            </div>
-          ) : (
-            <div className="share-dialog__link">
-              <div className="share-dialog__field">
-                <IconLink />
-                {link.state === "ready" ? (
-                  <input
-                    type="text"
-                    readOnly
-                    value={link.url}
-                    aria-label={t("share.linkLabel")}
-                    onFocus={(e) => e.currentTarget.select()}
-                  />
-                ) : (
-                  <span className="muted">{ready ? t("share.creatingLink") : " "}</span>
-                )}
+        {picture.state !== "error" && (
+          <div className="share-dialog__section" role="group" aria-labelledby={linkLabelId}>
+            <span id={linkLabelId} className="share-dialog__label">
+              {t("share.linkSection")}
+            </span>
+            <p className="share-dialog__value">{t("share.linkValue")}</p>
+            {link.state === "error" ? (
+              <div className="share-dialog__link share-dialog__link--error">
+                <p className="error" role="alert">
+                  {t(link.reason === "verify" ? "share.verifyError" : "share.linkError")}
+                </p>
+                <button type="button" className="btn btn--ghost" onClick={startLink}>
+                  {t("share.retry")}
+                </button>
               </div>
-              <button
-                type="button"
-                className={`btn btn--primary btn--icon-lead${linkCopied ? " share-dialog__copied" : ""}`}
-                disabled={link.state !== "ready"}
-                onClick={copyLink}
-              >
-                {linkCopied ? <IconCheck /> : <IconCopy />}
-                {linkCopied ? t("share.copied") : t("share.copy")}
-              </button>
-            </div>
-          )}
-          {/* Where Cloudflare shows a challenge, if it asks for one. */}
-          <div ref={verifyRef} className="share-dialog__verify" />
-        </div>
+            ) : link.state === "idle" && needsSignIn && ready ? (
+              <div className="share-dialog__link">
+                <button type="button" className="btn btn--ghost" onClick={startLink}>
+                  {t("share.signInForLink")}
+                </button>
+              </div>
+            ) : (
+              <div className="share-dialog__link">
+                <div className="share-dialog__field">
+                  <IconLink />
+                  {link.state === "ready" ? (
+                    <input
+                      type="text"
+                      readOnly
+                      value={link.url}
+                      aria-label={t("share.linkLabel")}
+                      onFocus={(e) => e.currentTarget.select()}
+                    />
+                  ) : (
+                    <span className="muted" role="status">
+                      {t("share.creatingLink")}
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className={`btn btn--primary btn--icon-lead${linkCopied ? " share-dialog__copied" : ""}`}
+                  disabled={link.state !== "ready"}
+                  onClick={copyLink}
+                >
+                  {linkCopied ? <IconCheck /> : <IconCopy />}
+                  {linkCopied ? t("share.copied") : t("share.copy")}
+                </button>
+              </div>
+            )}
+            {/* Where Cloudflare shows a challenge, if it asks for one. */}
+            <div ref={verifyRef} className="share-dialog__verify" />
+            <span role="status" aria-live="polite" className="sr-only">
+              {linkCopied ? t("share.copied") : ""}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Off screen, outside the modal: the picture is drawn from here. */}

@@ -43,7 +43,11 @@ export function sessionFromShare(share: ComparisonShare): {
 } {
   return {
     entries: share.members.map((m) => newEntry(m)),
-    map: { island: share.island, favorites: share.favorites, weeklyBonus: share.weekly_bonus },
+    map: {
+      island: share.island,
+      favorites: share.favorites,
+      weeklyBonus: share.weekly_bonus,
+    },
     sleep: share.sleep,
   };
 }
@@ -64,13 +68,23 @@ type Translate = (key: string, vars?: Record<string, string>) => string;
 export function describeSessions(s: SleepSchedule, short: boolean, t: Translate): string {
   const night = formatHm(s.night_minutes);
   if (s.nap_minutes == null) return t(short ? "share.oneSessionShort" : "share.oneSession", { night });
-  return t(short ? "share.twoSessionsShort" : "share.twoSessions", { night, nap: formatHm(s.nap_minutes) });
+  return t(short ? "share.twoSessionsShort" : "share.twoSessions", {
+    night,
+    nap: formatHm(s.nap_minutes),
+  });
 }
 
 /** Both sides' sessions for the notice; yours is shortened when both have the same count. */
-export function sleepNoticeParts(theirs: SleepSchedule, yours: SleepSchedule, t: Translate): { theirs: string; yours: string } {
+export function sleepNoticeParts(
+  theirs: SleepSchedule,
+  yours: SleepSchedule,
+  t: Translate,
+): { theirs: string; yours: string } {
   const sameCount = (theirs.nap_minutes == null) === (yours.nap_minutes == null);
-  return { theirs: describeSessions(theirs, false, t), yours: describeSessions(yours, sameCount, t) };
+  return {
+    theirs: describeSessions(theirs, false, t),
+    yours: describeSessions(yours, sameCount, t),
+  };
 }
 
 /**
@@ -83,7 +97,10 @@ export function shareCacheKey(entries: RosterEntry[], map: ComparisonMap, sleep:
     island: map.island,
     favorites: map.favorites,
     weekly_bonus: map.weeklyBonus,
-    sleep: { night_minutes: sleep.night_minutes, nap_minutes: sleep.nap_minutes ?? null },
+    sleep: {
+      night_minutes: sleep.night_minutes,
+      nap_minutes: sleep.nap_minutes ?? null,
+    },
     language: lang,
   });
 }
@@ -100,6 +117,24 @@ export function rememberShareUrl(key: string, url: string): void {
   shareUrls.set(key, url);
 }
 
+// Creations still in flight, by shareCacheKey: a dialog reopened on the same comparison
+// mid-creation awaits the same request instead of creating a second link. A rejected
+// creation is not kept, so the next dialog (or Try again) starts a fresh one.
+const pendingShares = new Map<string, Promise<string>>();
+
+export function pendingShare(key: string): Promise<string> | undefined {
+  return pendingShares.get(key);
+}
+
+export function trackPendingShare(key: string, promise: Promise<string>): void {
+  pendingShares.set(key, promise);
+  const clear = () => {
+    if (pendingShares.get(key) === promise) pendingShares.delete(key);
+  };
+  promise.then(clear, clear);
+}
+
 export function __resetShareCacheForTests(): void {
   shareUrls.clear();
+  pendingShares.clear();
 }

@@ -4,11 +4,13 @@ import {
   __resetShareCacheForTests,
   cachedShareUrl,
   formatSleep,
+  pendingShare,
   rememberShareUrl,
   sessionFromShare,
   shareCacheKey,
   shareIdFrom,
   shareRequest,
+  trackPendingShare,
   sleepDiffers,
   sleepNoticeParts,
 } from "./comparisonShare";
@@ -177,5 +179,28 @@ describe("the link cache", () => {
     rememberShareUrl("k", "https://sleepmon.app/s/1");
     expect(cachedShareUrl("k")).toBe("https://sleepmon.app/s/1");
     expect(cachedShareUrl("other")).toBeUndefined();
+  });
+});
+
+describe("pending shares", () => {
+  beforeEach(() => __resetShareCacheForTests());
+
+  it("keeps an in-flight creation until it settles", async () => {
+    let done!: (u: string) => void;
+    const p = new Promise<string>((r) => (done = r));
+    trackPendingShare("k", p);
+    expect(pendingShare("k")).toBe(p);
+    done("u");
+    await p;
+    await Promise.resolve();
+    expect(pendingShare("k")).toBeUndefined();
+  });
+
+  it("does not keep a rejected creation", async () => {
+    const p = Promise.reject(new Error("x"));
+    trackPendingShare("k", p);
+    await p.catch(() => {});
+    await Promise.resolve();
+    expect(pendingShare("k")).toBeUndefined();
   });
 });
