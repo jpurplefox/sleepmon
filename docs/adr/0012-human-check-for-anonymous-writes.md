@@ -61,3 +61,6 @@ We will use **Cloudflare Turnstile** as the human check for anonymous writes.
   published test keys, or leaves them empty and signs in.
 - Turnstile's verdict is all we keep: no score, no per-IP limits of our own. If abuse
   gets past it, a per-IP or daily cap is the next step.
+- Signed-in writes have no per-account cap yet. Images (at most 500 KB) and the 90-day
+  expiry bound storage; a per-account daily cap (like the screenshot-import quota) is
+  the next step if abuse appears.

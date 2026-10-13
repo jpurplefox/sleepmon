@@ -85,10 +85,25 @@ aws ecr create-repository --repository-name sleepmon-lambda --region sa-east-1
   - `COOKIE_SAMESITE=none` — **required** when the frontend and API are on different
     domains (CloudFront vs. Function URL); the refresh cookie is cross-site.
     Use `strict` only if you serve the API under the same domain as the frontend.
+  - `APP_URL` — the frontend's public origin (e.g. `https://sleepmon.app`). **Required
+    for share links**: the link page sends people on to `{APP_URL}/compare?share=<id>`.
+    Unset, it falls back to `http://localhost:5173` and the backend logs a warning at
+    startup.
+  - `SHARE_BASE_URL` — the domain share links are built on. Set it to the app's own
+    domain (e.g. `https://sleepmon.app`) once CloudFront routes `/s/*` to the API
+    (step 5), so links read `https://sleepmon.app/s/<id>`. Empty uses the API's own
+    address. See [ADR-0011](adr/0011-shareable-links-with-previews.md).
+  - `TURNSTILE_SECRET_KEY` — Cloudflare Turnstile secret for the human check on
+    signed-out sharing ([ADR-0012](adr/0012-human-check-for-anonymous-writes.md)).
+    Empty turns signed-out sharing off (people are asked to sign in).
 - Set **reserved concurrency** (Configuration → Concurrency) to **5**. The Function
   URL has no rate limiting, so this caps both the cost of abuse and the connections
   sleepmon can open on the shared RDS; requests beyond it get `429`. Setting it to
   `0` is the emergency off switch.
+- The function needs **outbound HTTPS** to `challenges.cloudflare.com` (Turnstile's
+  `siteverify`). A function outside a VPC has it; one attached to a VPC (e.g. to
+  reach RDS privately) needs a NAT gateway or equivalent. If it can't reach it,
+  signed-out sharing answers `503` (signed-in sharing is unaffected).
 - Give the function enough memory/timeout for a cold start opening the DB pool
   (256–512 MB, ~10 s timeout is a safe start).
 
@@ -97,8 +112,24 @@ aws ecr create-repository --repository-name sleepmon-lambda --region sa-east-1
 - Create the bucket `sleepmon-frontend`.
 - Put a **CloudFront** distribution in front of it (origin = the bucket). Set the
   default root object to `index.html` and add an error-response mapping 403/404 →
-  `/index.html` (200) so client-side routes deep-link correctly (see ADR-0008).
+  `/index.html` (200) so client-side routes deep-link correctly (see ADR-0008); if you
+  add the `/s/*` behavior below, use the S3-only fallback described there instead.
 - The distribution ID goes into the `CLOUDFRONT_DISTRIBUTION_ID` secret.
+- **Share links (`/s/*`)**: add a second origin (the Lambda Function URL domain) and a
+  behavior with path pattern `/s/*` pointing at it, allowing `GET`/`HEAD`. Use a cache
+  policy with a **short TTL** (the pages and images are immutable, but a deleted
+  account's shares must go away; the API sends `Cache-Control: max-age=3600`) and an
+  origin request policy that **does not forward the `Host` header**: a Lambda Function
+  URL rejects requests whose `Host` isn't its own. Then set `SHARE_BASE_URL` (step 4).
+- **SPA fallback vs. `/s/*`**: custom error responses (the 403/404 → `/index.html`
+  mapping above) are **distribution-wide**, so CloudFront would also rewrite the API's
+  `404` for an unknown or expired share (an HTML page that sends people on to the app)
+  and a missing preview image into the SPA's `index.html` with `200`. Previews and the
+  "doesn't exist or has expired" redirect would break. So, when adding `/s/*`, **drop
+  the distribution-level error mapping** and do the SPA fallback on the S3 behavior
+  only: a CloudFront Function (viewer-request) that rewrites URIs without a file
+  extension to `/index.html`. Responses from `/s/*` then pass through untouched. (Do
+  not "fix" this by having the API answer `200` for a missing share.)
 
 ### 6. Google OAuth
 
@@ -118,7 +149,8 @@ Set these in the repo (Settings → Secrets and variables → Actions):
 | `CLOUDFRONT_DISTRIBUTION_ID` | CloudFront distribution ID (step 5) |
 
 `GOOGLE_CLIENT_ID`, `JWT_SECRET`, `COOKIE_SAMESITE`, `CORS_ORIGINS` and
-`COOKIE_SECURE` live on the **Lambda function** (step 4), not in GitHub — the
+`COOKIE_SECURE`, `APP_URL`, `SHARE_BASE_URL` and `TURNSTILE_SECRET_KEY` live on the
+**Lambda function** (step 4), not in GitHub — the
 backend reads them from its own environment at runtime.
 
 ## GitHub variables
@@ -131,6 +163,7 @@ build bakes them into the bundle; an unset variable never fails the build.
 | `CONTACT_EMAIL` | Contact email shown in the footer and on the privacy page (passed to the build as `VITE_CONTACT_EMAIL`). Unset or empty hides the email in both places. See [PRD-0018](prd/0018-account-and-privacy.md). |
 | `POSTHOG_HOST` | PostHog ingest host (`VITE_POSTHOG_HOST`); empty uses the default US cloud ([ADR-0010](adr/0010-observability-error-monitoring-and-product-analytics.md)). |
 | `SENTRY_TRACES_SAMPLE_RATE` | Browser trace sample rate (`VITE_SENTRY_TRACES_SAMPLE_RATE`). |
+| `TURNSTILE_SITE_KEY` | Cloudflare Turnstile **site** key (`VITE_TURNSTILE_SITE_KEY`, read by `deploy.yml`); the matching secret is the Lambda's `TURNSTILE_SECRET_KEY`. Empty: the human check is off and signed-out people are asked to sign in to share a link ([ADR-0012](adr/0012-human-check-for-anonymous-writes.md)). |
 
 Locally, `docker compose` passes `VITE_CONTACT_EMAIL` through from your shell or `.env`.
 
