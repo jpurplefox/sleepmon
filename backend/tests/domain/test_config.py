@@ -82,3 +82,10 @@ def test_screenshot_settings_default_to_nova_and_qwen_in_us_east_1(monkeypatch) 
     assert s.screenshot_daily_limit == 50
     monkeypatch.setenv("BEDROCK_REGION", "us-west-2")
     assert Settings.from_env().bedrock_region == "us-west-2"
+
+
+def test_turnstile_secret_defaults_to_off(monkeypatch) -> None:
+    monkeypatch.delenv("TURNSTILE_SECRET_KEY", raising=False)
+    assert Settings.from_env().turnstile_secret_key == ""
+    monkeypatch.setenv("TURNSTILE_SECRET_KEY", "k")
+    assert Settings.from_env().turnstile_secret_key == "k"

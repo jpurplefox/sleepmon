@@ -75,6 +75,8 @@ class Settings:
     # uses the API's own address.
     app_url: str = DEFAULT_APP_URL
     share_base_url: str = ""
+    # Human check for signed-out sharing (ADR 0012). Empty: signed-out sharing is off.
+    turnstile_secret_key: str = ""
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -108,4 +110,5 @@ class Settings:
             screenshot_daily_limit=int(os.environ.get("SCREENSHOT_DAILY_LIMIT", "50")),
             app_url=os.environ.get("APP_URL") or DEFAULT_APP_URL,
             share_base_url=os.environ.get("SHARE_BASE_URL", ""),
+            turnstile_secret_key=os.environ.get("TURNSTILE_SECRET_KEY", ""),
         )
