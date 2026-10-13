@@ -7382,6 +7382,14 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   align-items: stretch;
 }
 
+/* A lone card keeps the picture's card width: the app's only-child rule (meant
+   for the empty state) would shrink it to its content. */
+.share-sheet__cards > .prod-card-cell:only-child {
+  grid-column: auto;
+  max-width: none;
+  justify-self: stretch;
+}
+
 /* No action bar above it: the card keeps all four corners. */
 .prod-card-cell > .prod-card.prod-card--snapshot {
   border-radius: var(--r-lg);
