@@ -7428,3 +7428,56 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   margin: 0;
   font-size: var(--text-sm);
 }
+
+/* Info notice (design system §5): informs about the numbers, never an error. */
+.info-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  padding: 0.65rem 0.75rem;
+  background: var(--surface);
+  border-radius: var(--r-md);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: var(--text);
+  animation: appear-in 0.15s ease-out;
+}
+.info-notice__icon { color: var(--accent-text); flex-shrink: 0; display: inline-flex; margin-top: 1px; }
+.info-notice__icon svg { width: 16px; height: 16px; }
+.info-notice p { margin: 0; flex: 1; min-width: 0; }
+.info-notice .icon-btn { flex-shrink: 0; margin: -2px -2px 0 0; }
+@media (prefers-reduced-motion: reduce) { .info-notice { animation: none; } }
+
+/* Swipe deck pager: one tool action at its end, after a hairline. */
+.swipe-pager__action {
+  display: flex;
+  align-items: center;
+  margin-left: 0.35rem;
+  padding-left: 0.5rem;
+  border-left: 1px solid var(--border);
+}
+.swipe-pager__action-btn {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+.swipe-pager__action-btn svg { width: 16px; height: 16px; }
+.swipe-pager__action-btn:disabled { opacity: 0.5; cursor: default; }
+.swipe-pager__action-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* A button may lead with a 16px line icon (design system §5 Buttons). */
+.btn--icon-lead { display: inline-flex; align-items: center; gap: 0.4rem; }
+.btn--icon-lead svg { width: 16px; height: 16px; }
+
+/* The header's copy of a pager action: hidden under 640px, where the pager shows it instead. */
+@media (max-width: 640px) {
+  .tool-head__action--wide { display: none; }
+}

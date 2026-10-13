@@ -342,6 +342,18 @@ export function IconUser(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Sharing: the three-node glyph most people know as "share". */
+export function IconShare(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" />
+    </svg>
+  );
+}
+
 // ▲/▼ drawn, not typed: a text glyph sits wherever each device's font puts it.
 // Each triangle is placed in its 10×10 box so the middle between its box and its
 // centroid lands on the box's center — a triangle's weight is at its base, so

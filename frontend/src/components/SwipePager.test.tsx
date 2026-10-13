@@ -86,4 +86,19 @@ describe("SwipePager", () => {
     expect(scroll).toBe(0);
     expect(current()).toHaveAccessibleName("Show c");
   });
+
+  it("ends with the action slot when given one", () => {
+    const track = { current: document.createElement("div") };
+    render(
+      <SwipePager
+        track={track}
+        label="Cards"
+        items={[]}
+        action={<button type="button">Share</button>}
+      />,
+    );
+    const slot = document.querySelector(".swipe-pager__action");
+    expect(slot).not.toBeNull();
+    expect(slot?.textContent).toBe("Share");
+  });
 });
