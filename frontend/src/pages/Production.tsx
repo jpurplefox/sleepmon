@@ -6,6 +6,8 @@ import { api } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useGate } from "../auth/useGate";
 import { BoxPicker } from "../components/BoxPicker";
+import { IconMoon, IconShare } from "../components/icons";
+import { InfoNotice } from "../components/InfoNotice";
 import { ComparisonMapBar } from "../components/ComparisonMapBar";
 import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
@@ -16,7 +18,7 @@ import { SwipePager } from "../components/SwipePager";
 import { ContextBar, ToolHeader } from "../components/ToolHeader";
 import { berryRoleOf, mapRequestFields } from "../comparisonMap";
 import { useComparisonSession } from "../comparisonSession";
-import { sessionFromShare, shareIdFrom } from "../comparisonShare";
+import { formatSleep, sessionFromShare, shareIdFrom, sleepDiffers } from "../comparisonShare";
 import { useI18n } from "../i18n";
 import { configFromMember, linkEntryToBox, newEntry } from "../roster";
 import { ROUTES } from "../routes";
@@ -24,7 +26,7 @@ import { spriteUrl } from "../sprites";
 import { track } from "../telemetry/analytics";
 import type { AddSource } from "../telemetry/events";
 import { mapSetEvent } from "../telemetry/props";
-import type { Member, MemberInput } from "../types";
+import type { Member, MemberInput, SleepSchedule } from "../types";
 import { useSaveToBox } from "../useSaveToBox";
 import { useScreenshotImport } from "../useScreenshotImport";
 import { useStickyData } from "../useStickyData";
@@ -38,6 +40,13 @@ interface ProductionProps {
   // base); then cleared through onBaseConsumed.
   baseMemberId?: string | null;
   onBaseConsumed?: () => void;
+}
+
+// The notice's two schedules in bold: split the template on its placeholders.
+function renderNotice(template: string, theirs: string, yours: string) {
+  return template.split(/(\{theirs\}|\{yours\})/).map((part, i) =>
+    part === "{theirs}" ? <strong key={i}>{theirs}</strong> : part === "{yours}" ? <strong key={i}>{yours}</strong> : part,
+  );
 }
 
 export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {}) {
@@ -66,6 +75,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   const mapFields = mapRequestFields(map, expert);
   const shots = useScreenshotImport(catalog.data);
   const berryOf = (species: string) => catalog.data?.species.find((s) => s.name === species)?.berry ?? "";
+  const [sharerSleep, setSharerSleep] = useState<SleepSchedule | null>(null);
   const [modal, setModal] = useState<"form" | "box" | "share" | null>(null);
   // Whether the open add/edit form holds unsaved input: leaving it then asks first.
   const [formDirty, setFormDirty] = useState(false);
@@ -234,6 +244,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
       const next = sessionFromShare(shared.data);
       setEntries(next.entries);
       setMap(next.map);
+      setSharerSleep(next.sleep);
       setNotice(null);
       track({ name: "shared_comparison_opened", props: { cards: next.entries.length } });
     } else if (shared.isError) {
@@ -244,6 +255,10 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
     navigate(ROUTES.compare, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shareId, shared.data, shared.isError]);
+
+  // The picture needs every card's numbers.
+  const shareDisabled = shownProductions.some((p) => !p);
+  const openShare = () => setModal("share");
 
   const handleMapChange = (next: typeof map) => {
     if (next.island !== map.island)
@@ -287,15 +302,12 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
         notice={notice}
         action={
           entries.length > 0 && (
-            <button
-              type="button"
-              className="btn btn--ghost"
-              // The picture needs every card's numbers.
-              disabled={shownProductions.some((p) => !p)}
-              onClick={() => setModal("share")}
-            >
-              {t("share.button")}
-            </button>
+            <div className="tool-head__action--wide">
+              <button type="button" className="btn btn--ghost btn--icon-lead" disabled={shareDisabled} onClick={openShare}>
+                <IconShare />
+                {t("share.button")}
+              </button>
+            </div>
           )
         }
       >
@@ -306,6 +318,12 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
         )}
       </ToolHeader>
 
+      {sharerSleep && sleepDiffers(sharerSleep, progress.sleep) && (
+        <InfoNotice icon={<IconMoon />} onDismiss={() => setSharerSleep(null)} dismissLabel={t("share.dismissNotice")}>
+          {renderNotice(t("share.sleepNotice"), formatSleep(sharerSleep, t("share.nap")), formatSleep(progress.sleep, t("share.nap")))}
+        </InfoNotice>
+      )}
+
       {/* The pager docks only while the cards are on screen: the deck bounds its sticky. */}
       <div className="swipe-deck">
         {/* Mounted even with no cards, so it sees the first one arrive. */}
@@ -313,6 +331,17 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
           track={cardsRef}
           hidden={entries.length === 0}
           label={t("pager.aria")}
+          action={
+            <button
+              type="button"
+              className="swipe-pager__action-btn"
+              aria-label={t("share.button")}
+              disabled={shareDisabled}
+              onClick={openShare}
+            >
+              <IconShare />
+            </button>
+          }
           items={[
             ...entries.map((e) => {
               const dex = dexOf(e.config.species);

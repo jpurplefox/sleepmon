@@ -205,6 +205,41 @@ describe("Opening a shared link", () => {
   });
 });
 
+describe("Share placements and the sleep notice", () => {
+  it("offers Share in the header and in the pager", async () => {
+    vi.spyOn(api, "getComparisonShare").mockResolvedValue(share);
+    renderAt("/compare?share=abc123def456");
+    await waitFor(() => expect(screen.getAllByRole("button", { name: "Share" })).toHaveLength(2));
+    expect(document.querySelector(".tool-head__action--wide button")).not.toBeNull();
+    expect(document.querySelector(".swipe-pager__action button")).not.toBeNull();
+  });
+
+  it("disables Share while a card is calculating", async () => {
+    vi.spyOn(api, "computeProduction").mockReturnValue(new Promise(() => {}));
+    vi.spyOn(api, "getComparisonShare").mockResolvedValue(share);
+    renderAt("/compare?share=abc123def456");
+    await waitFor(() => expect(screen.getAllByRole("button", { name: "Share" })).toHaveLength(2));
+    for (const b of screen.getAllByRole("button", { name: "Share" })) expect(b).toBeDisabled();
+  });
+
+  it("points out a different sleep schedule, and x closes it", async () => {
+    vi.spyOn(api, "getComparisonShare").mockResolvedValue(share);
+    renderAt("/compare?share=abc123def456");
+    const notice = await screen.findByText(/Whoever shared this comparison sleeps/);
+    expect(notice.textContent).toContain("7:00 + nap 2:00");
+    expect(notice.textContent).toContain("8:30");
+    await userEvent.click(screen.getByRole("button", { name: "Dismiss" }));
+    expect(screen.queryByText(/Whoever shared this comparison sleeps/)).toBeNull();
+  });
+
+  it("says nothing when the schedules match", async () => {
+    vi.spyOn(api, "getComparisonShare").mockResolvedValue({ ...share, sleep: { night_minutes: 510, nap_minutes: null } });
+    renderAt("/compare?share=abc123def456");
+    await waitFor(() => expect(screen.getAllByText("Raichu").length).toBeGreaterThan(0));
+    expect(screen.queryByText(/Whoever shared this comparison sleeps/)).toBeNull();
+  });
+});
+
 describe("Sharing the comparison", () => {
   async function openDialog() {
     vi.spyOn(api, "getComparisonShare").mockResolvedValue(share);
