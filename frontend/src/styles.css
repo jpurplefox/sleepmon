@@ -7395,15 +7395,17 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   display: grid;
   place-items: center;
   min-height: 8rem;
-  max-height: 50vh;
-  overflow: auto;
   background: var(--bg);
   border-radius: var(--r-md);
 }
 
+/* The whole picture always fits, whatever its shape: a wide one (many cards) by
+   width, a tall one (one or two cards) by height, so the preview never scrolls. */
 .share-dialog__preview img {
   display: block;
-  width: 100%;
+  max-width: 100%;
+  max-height: 50vh;
+  width: auto;
   height: auto;
 }
 
