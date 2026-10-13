@@ -19,14 +19,15 @@ swipes one card per screen, but the picture always shows **every card side by si
 ## What it does (scope)
 
 1. **Share button** in Comparison, once there is at least one card.
-2. **Share dialog** — a preview of the picture, and two actions: **Share image** and
-   **Share link**.
+2. **Share dialog** — a preview of the picture with its two actions (**Copy**,
+   **Download**), and below it the **link**, complete and ready to copy.
 3. **The picture** — every card side by side, under a strip with the context they were
    compared in: sleepmon's logo, the map, the favorite berries, the weekly bonus (expert
    map only), the sharer's sleep schedule, and the address `sleepmon.app`.
-4. **The link** — created only when asked for. Anyone can create one, with or without
-   an account (signed out, behind an anti-bot check that is usually invisible). It is a
-   frozen copy of the comparison and expires after **90 days without being opened**.
+4. **The link** — created as the dialog opens, so it shows complete, and reused while
+   the comparison doesn't change. Anyone can create one, with or without an account
+   (signed out, behind an anti-bot check that is usually invisible). It is a frozen copy
+   of the comparison and expires after **90 days without being opened**.
 5. **Opening a link** — the shared comparison replaces the recipient's, as cards of
    their own; the numbers use the recipient's sleep schedule, with a notice when it
    differs from the sharer's.
@@ -54,26 +55,33 @@ swipes one card per screen, but the picture always shows **every card side by si
   - the address `sleepmon.app`, so the picture leads back to sleepmon even when it
     travels without the link.
 - All text follows the sharer's language.
-- **Share image** opens the phone's share sheet with the picture. Where the device
-  can't share files (most desktops) the button reads **Download image** and saves it.
-- The picture never leaves the device unless the user shares it.
+- Under the picture, labelled **Image**: **Copy** puts the picture on the clipboard
+  (shown only where the browser can copy images) and **Download** saves it as a file.
+- The picture never leaves the device unless the user copies, downloads or links it.
 
 ### The link
 
-- **Share link**:
-  - signed out, first passes an anti-bot check — usually invisible; only suspicious
-    traffic gets a challenge to tap. Signed in, there is no check;
-  - keeps a copy of the cards, the map terms, the sharer's sleep schedule, the sharer's
-    language and the picture;
-  - then opens the phone's share sheet with the link; on a desktop, copies it to the
-    clipboard.
-- The link stays visible in the dialog with **Copy** (and **Share**, on a phone), in
-  case the first attempt didn't go through.
+- Below the image actions, labelled **Link**, with one line saying what the link adds
+  over the picture: *"Whoever opens it sees the comparison in sleepmon and can change
+  levels, natures or the map to try their own variants."*
+- **Created as the dialog opens**, once the picture is drawn, so the link is shown
+  complete before anyone copies it (*"Creating link…"* for that moment):
+  - signed out, it first passes an anti-bot check — usually invisible; if Cloudflare asks
+    for a challenge, it shows right there. Signed in, there is no check;
+  - it keeps a copy of the cards, the map terms, the sharer's sleep schedule, the
+    sharer's language and the picture.
+- **Reused** while the comparison doesn't change: reopening the dialog on the same cards
+  and map terms shows the same link instead of creating another. Any change to the cards
+  or the map terms makes the next dialog create a new one.
+- **Copy** puts the link on the clipboard and reads *"Copied!"* for a moment; the link
+  itself doesn't change.
+- A link that couldn't be created shows its error in place of the link, with **Try
+  again**; the image actions keep working.
 - **The preview** — pasted in WhatsApp, Telegram, Discord, X…, the link shows the
   picture, the title *"Comparación: Pikachu vs Raichu"* (*"Comparison: …"* when the
   sharer used English) and a one-line description.
 - **A frozen copy** — editing the comparison or the Box Pokémon afterwards doesn't
-  change the link. Sharing again makes a new link.
+  change the link; the next dialog makes a new one.
 - Links are random and unguessable, and never listed anywhere.
 - **Expiry** — every time someone opens the link its 90 days start over; after 90 days
   without anyone opening it, it expires.
@@ -91,10 +99,13 @@ swipes one card per screen, but the picture always shows **every card side by si
   are the ones the sharer left.
 - The numbers are computed with the **recipient's** sleep schedule (their Player
   profile, or the default night signed out), like every number they see.
-- When the two schedules differ, a notice shows above the cards: *"Whoever shared this
-  comparison sleeps 7:00 + nap 2:00; the numbers use your schedule (8:30) and may not
-  match theirs."* It can be closed with ×, and goes away on moving to another tool or
-  reloading. When the schedules match, there is no notice.
+- When the two sleep schedules differ, a notice shows above the cards, naming the
+  difference in total sleep (night + nap): *"Whoever shared this comparison sleeps 1:30 h
+  more than you, so the values shown may not match theirs."* (or *"…less than you…"*).
+  When the total is the same but split differently (a nap on one side), it reads
+  *"Whoever shared this comparison sleeps the same hours as you, split differently, so
+  the values shown may not match theirs."* It can be closed with ×, and goes away on
+  moving to another tool or reloading. When the schedules match, there is no notice.
 - Once opened, the address goes back to `/compare`, so a reload doesn't reopen the link
   over later changes.
 - **An expired or unknown link** → *"That shared comparison doesn't exist or has
@@ -116,18 +127,22 @@ swipes one card per screen, but the picture always shows **every card side by si
   weekly bonus only on an expert map.
 - The strip shows the sharer's sleep schedule — "8:30" signed out, "7:00 + nap 2:00"
   for a profile with a nap — and `sleepmon.app`.
-- On a device that can't share files → the button reads "Download image" and saves the
-  picture.
-- The picture can't be drawn → *"Couldn't put the image together. Try again."*; both
-  actions stay disabled.
+- **Download** saves the picture as a PNG. **Copy** puts it on the clipboard; on a
+  browser that can't copy images, **Copy** isn't shown.
+- The picture can't be drawn → *"Couldn't put the image together. Try again."*; the
+  image actions and the link stay unavailable.
 
 **The link**
 
-- Signed out, "Share link" creates the link without asking to sign in. Failing the
-  anti-bot check → *"We couldn't verify you're not a bot. Try again."*; nothing is
-  created.
+- Opening the dialog shows the link complete (after a brief *"Creating link…"*), before
+  anything is copied; **Copy** copies it and reads *"Copied!"*.
+- Closing and reopening the dialog without changing the comparison → the same link.
+  Changing a card or the map terms, then opening it → a new link.
+- Signed out, the link is created without asking to sign in. Failing the anti-bot check
+  → *"We couldn't verify you're not a bot."* with **Try again**; nothing is created.
 - Signed in, the link is created with no check.
-- Creating the link fails → *"Couldn't create the link. Try again."*
+- Creating the link fails → *"Couldn't create the link."* with **Try again**; the image
+  actions still work.
 - A created link previews with the picture and the title *"Comparación: Pikachu vs
   Raichu"*; shared from the app in English, *"Comparison: Pikachu vs Raichu"*.
 - Changing the comparison after creating the link → the link still opens the original.
@@ -139,7 +154,9 @@ swipes one card per screen, but the picture always shows **every card side by si
   address becomes `/compare`.
 - The opened cards are tied to no Box: "Save to Box" creates a new Pokémon in the
   recipient's Box.
-- Schedules differ (sharer 7:00, recipient 8:30) → the notice shows; × closes it.
+- Sharer sleeps 7:00 + nap 2:00 (9:00 in total), recipient 8:30 → *"…sleeps 0:30 h more
+  than you, so the values shown may not match theirs."*; × closes it. Sharer 7:00 + nap
+  1:30, recipient 8:30 → *"…sleeps the same hours as you, split differently…"*.
   Schedules match → no notice.
 - A link last opened 89 days ago still opens, and its 90 days start over. A link not
   opened in more than 90 days → *"That shared comparison doesn't exist or has
@@ -152,8 +169,10 @@ swipes one card per screen, but the picture always shows **every card side by si
 
 - **The picture is the comparison.** Every card side by side, never the phone's
   carousel; the base and the deltas stay, since they are the point.
-- **Phone first.** The share sheet is the main path; download and copy are the
-  fallbacks.
+- **The link comes first.** It is what lets the recipient play with the comparison, so
+  it is ready to copy the moment the dialog opens; the picture is for when only a
+  picture will do.
+- **Phone first.** Everything fits and works one-handed on a phone.
 - **Copy without coupling**, as everywhere in Comparison: sharing copies the cards, and
   opening a link copies them again; nothing stays tied to anyone's Box.
 - **No account needed** to open a link, nor to share. A session only skips the anti-bot
@@ -162,8 +181,8 @@ swipes one card per screen, but the picture always shows **every card side by si
   sleep schedule, like everything else they see; a different schedule is pointed out,
   never applied.
 - **Only what's needed is kept**: the cards, the map terms, the sleep schedule, the
-  language and the picture. The recipient sees nothing about the sharer beyond their
-  sleep schedule in the notice.
+  language and the picture. The recipient sees nothing about the sharer beyond how much
+  they sleep compared with them, in the notice.
 
 ## Out of scope
 
