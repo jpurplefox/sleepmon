@@ -1,5 +1,5 @@
 // The picture of a comparison (PRD 0020): drawn from the off-screen sheet that lays
-// every card side by side, then shared as a file or uploaded as a link's preview.
+// every card side by side, then copied, downloaded or uploaded as a link's preview.
 import { toCanvas } from "html-to-image";
 
 /** Sharp on a phone's screen without making a five-card picture huge. */
@@ -90,34 +90,19 @@ export async function previewJpegBase64(canvas: HTMLCanvasElement): Promise<stri
   return btoa(binary);
 }
 
-/** Shares the picture where the device can (a phone's share sheet); else downloads it. */
-export async function shareOrDownload(file: File, title: string): Promise<"shared" | "downloaded" | "cancelled"> {
-  if (typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file], title });
-      return "shared";
-    } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return "cancelled";
-      // Not allowed here (e.g. a lost user gesture): saving it still works.
-    }
-  }
-  const url = URL.createObjectURL(file);
+/** Saves the blob as a file named `name`. */
+export function downloadBlob(blob: Blob, name: string): void {
+  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = file.name;
+  a.download = name;
   document.body.appendChild(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  return "downloaded";
 }
 
-/** Whether this device can hand a picture to other apps (else the button downloads). */
-export function canShareFiles(): boolean {
-  if (typeof navigator.canShare !== "function" || typeof File === "undefined") return false;
-  try {
-    return navigator.canShare({ files: [new File([""], "x.png", { type: "image/png" })] });
-  } catch {
-    return false;
-  }
+/** Whether this browser can put a picture on the clipboard (else Copy isn't offered). */
+export function canCopyImage(): boolean {
+  return typeof ClipboardItem !== "undefined" && !!navigator.clipboard?.write;
 }

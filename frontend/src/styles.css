@@ -7388,7 +7388,7 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 .share-dialog {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 1.1rem;
 }
 
 .share-dialog__preview {
@@ -7407,11 +7407,36 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   height: auto;
 }
 
+.share-dialog__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.share-dialog__label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.share-dialog__value {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text);
+  line-height: 1.4;
+}
+
 .share-dialog__actions,
 .share-dialog__link {
   display: flex;
-  flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.share-dialog__actions .btn {
+  flex: 1 1 0;
+  justify-content: center;
 }
 
 .share-dialog__actions .btn,
@@ -7419,14 +7444,52 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   margin-top: 0;
 }
 
-.share-dialog__link input {
-  flex: 1 1 12rem;
-  min-width: 0;
+.share-dialog__link--error {
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
 }
+.share-dialog__link--error .error { margin: 0; }
 
-.share-dialog__note {
-  margin: 0;
+/* The link, read-only: one line with an ellipsis, led by a muted link icon. */
+.share-dialog__field {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
   font-size: var(--text-sm);
+}
+.share-dialog__field svg { flex-shrink: 0; width: 16px; height: 16px; color: var(--muted); }
+.share-dialog__field input,
+.share-dialog__field span {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.share-dialog__field span.muted { color: var(--muted); }
+.share-dialog__field input:focus { outline: none; }
+.share-dialog__field:focus-within { border-color: var(--muted); }
+
+.share-dialog__link .btn { flex-shrink: 0; }
+
+/* The link was just copied: an outlined --up button for a moment. */
+.btn--primary.share-dialog__copied,
+.btn--primary.share-dialog__copied:hover {
+  background: transparent;
+  border-color: var(--up);
+  color: var(--up);
 }
 
 /* Info notice (design system §5): informs about the numbers, never an error. */
@@ -7485,7 +7548,3 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 .share-sheet__sep { opacity: 0.6; }
 .share-sheet__url { color: var(--muted); font-weight: 600; letter-spacing: 0.02em; }
 .share-dialog__verify:empty { display: none; }
-.share-dialog__link-actions { display: flex; gap: 0.5rem; }
-@media (max-width: 640px) {
-  .share-dialog__link input { flex-basis: 100%; }
-}

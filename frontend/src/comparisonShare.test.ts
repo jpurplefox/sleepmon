@@ -1,6 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import { formatSleep, sessionFromShare, shareIdFrom, shareRequest, sleepDiffers, sleepNoticeParts } from "./comparisonShare";
+import {
+  __resetShareCacheForTests,
+  cachedShareUrl,
+  formatSleep,
+  rememberShareUrl,
+  sessionFromShare,
+  shareCacheKey,
+  shareIdFrom,
+  shareRequest,
+  sleepDiffers,
+  sleepNoticeParts,
+} from "./comparisonShare";
+import type { ComparisonMap } from "./comparisonMap";
 import { UI } from "./i18n/ui";
 import type { Lang } from "./i18n/terms";
 import { newEntry } from "./roster";
@@ -131,5 +143,39 @@ describe("sleepNoticeParts", () => {
     expect(UI.en["share.sleepNotice"]).toBe(
       "The person who shared this comparison sleeps in {theirs} and you in {yours}, so the values shown may not match theirs.",
     );
+  });
+});
+
+describe("shareCacheKey", () => {
+  const map: ComparisonMap = { island: null, favorites: ["Grepa"], weeklyBonus: "berry_strength" };
+  const sleep = { night_minutes: 510, nap_minutes: null };
+  const key = (overrides: Partial<{ level: number; favorites: string[]; night: number; lang: Lang }> = {}) =>
+    shareCacheKey(
+      [newEntry({ ...pikachu, level: overrides.level ?? 30 }), newEntry(pikachu)],
+      { ...map, favorites: overrides.favorites ?? map.favorites },
+      { ...sleep, night_minutes: overrides.night ?? sleep.night_minutes },
+      overrides.lang ?? "es",
+    );
+
+  it("is the same for the same comparison, whatever the cards' ids", () => {
+    expect(key()).toBe(key());
+  });
+
+  it("changes with the cards, the map terms, the sleep and the language", () => {
+    expect(key({ level: 31 })).not.toBe(key());
+    expect(key({ favorites: [] })).not.toBe(key());
+    expect(key({ night: 480 })).not.toBe(key());
+    expect(key({ lang: "en" })).not.toBe(key());
+  });
+});
+
+describe("the link cache", () => {
+  beforeEach(() => __resetShareCacheForTests());
+
+  it("remembers a link by its key for the session", () => {
+    expect(cachedShareUrl("k")).toBeUndefined();
+    rememberShareUrl("k", "https://sleepmon.app/s/1");
+    expect(cachedShareUrl("k")).toBe("https://sleepmon.app/s/1");
+    expect(cachedShareUrl("other")).toBeUndefined();
   });
 });

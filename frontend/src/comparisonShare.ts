@@ -72,3 +72,34 @@ export function sleepNoticeParts(theirs: SleepSchedule, yours: SleepSchedule, t:
   const sameCount = (theirs.nap_minutes == null) === (yours.nap_minutes == null);
   return { theirs: describeSessions(theirs, false, t), yours: describeSessions(yours, sameCount, t) };
 }
+
+/**
+ * What makes two shares the same: the cards' configs (in order), the map terms, the
+ * sharer's sleep and language. The cards' ids and Box ties don't count.
+ */
+export function shareCacheKey(entries: RosterEntry[], map: ComparisonMap, sleep: SleepSchedule, lang: Lang): string {
+  return JSON.stringify({
+    members: entries.map((e) => e.config),
+    island: map.island,
+    favorites: map.favorites,
+    weekly_bonus: map.weeklyBonus,
+    sleep: { night_minutes: sleep.night_minutes, nap_minutes: sleep.nap_minutes ?? null },
+    language: lang,
+  });
+}
+
+// Links created in this session, by shareCacheKey: reopening the dialog on an unchanged
+// comparison reuses its link. Session-only by design (lost on reload).
+const shareUrls = new Map<string, string>();
+
+export function cachedShareUrl(key: string): string | undefined {
+  return shareUrls.get(key);
+}
+
+export function rememberShareUrl(key: string, url: string): void {
+  shareUrls.set(key, url);
+}
+
+export function __resetShareCacheForTests(): void {
+  shareUrls.clear();
+}

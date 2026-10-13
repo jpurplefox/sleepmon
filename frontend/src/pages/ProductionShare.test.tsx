@@ -1,12 +1,14 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Fragment, StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 
 import { api, ApiError } from "../api/client";
 import { ComparisonSessionProvider } from "../comparisonSession";
+import { __resetShareCacheForTests } from "../comparisonShare";
 import { LanguageProvider } from "../i18n";
 import { recordEvents } from "../telemetry/testing";
 import type { Catalog, ComparisonShare, MemberInput, Production as ProductionData, Species } from "../types";
@@ -24,14 +26,16 @@ vi.mock("../turnstile", () => ({
 }));
 // Drawing needs a real browser: here the picture is a stand-in.
 const image = vi.hoisted(() => ({
-  shareOrDownload: vi.fn(async () => "shared" as const),
+  png: new Blob(["png"], { type: "image/png" }),
+  download: vi.fn(),
+  canCopy: true,
 }));
 vi.mock("../shareImage", () => ({
   drawSheet: vi.fn(async () => ({}) as HTMLCanvasElement),
-  sheetPng: vi.fn(async () => new Blob(["png"], { type: "image/png" })),
+  sheetPng: vi.fn(async () => image.png),
   previewJpegBase64: vi.fn(async () => "SlBFRw=="),
-  shareOrDownload: image.shareOrDownload,
-  canShareFiles: () => true,
+  downloadBlob: image.download,
+  canCopyImage: () => image.canCopy,
 }));
 
 import { Production } from "./Production";
@@ -144,18 +148,21 @@ const production = {
   "teammate_ingredients": null
 } as unknown as ProductionData;
 
-function renderAt(path: string) {
+function renderAt(path: string, strict = false) {
   const location = memoryLocation({ path, record: true });
+  const Wrap = strict ? StrictMode : Fragment;
   render(
-    <QueryClientProvider client={new QueryClient()}>
-      <LanguageProvider>
-        <ComparisonSessionProvider>
-          <Router hook={location.hook} searchHook={location.searchHook}>
-            <Production />
-          </Router>
-        </ComparisonSessionProvider>
-      </LanguageProvider>
-    </QueryClientProvider>,
+    <Wrap>
+      <QueryClientProvider client={new QueryClient()}>
+        <LanguageProvider>
+          <ComparisonSessionProvider>
+            <Router hook={location.hook} searchHook={location.searchHook}>
+              <Production />
+            </Router>
+          </ComparisonSessionProvider>
+        </LanguageProvider>
+      </QueryClientProvider>
+    </Wrap>,
   );
   return location;
 }
@@ -182,7 +189,8 @@ afterEach(() => {
   vi.restoreAllMocks();
   gate.guard.mockClear();
   ts.token.mockClear();
-  image.shareOrDownload.mockClear();
+  image.download.mockClear();
+  image.canCopy = true;
 });
 
 describe("Opening a shared link", () => {
@@ -289,16 +297,35 @@ describe("Share placements and the sleep notice", () => {
 });
 
 describe("Sharing the comparison", () => {
-  async function openDialog() {
-    vi.spyOn(api, "getComparisonShare").mockResolvedValue(share);
-    renderAt("/compare?share=abc123def456");
+  const created = { ...share, id: "new", url: "https://sleepmon.app/s/new" };
+  let clipboard: { writeText: ReturnType<typeof vi.fn>; write: ReturnType<typeof vi.fn> };
+  class FakeClipboardItem {
+    constructor(readonly items: Record<string, Blob>) {}
+  }
+
+  beforeEach(() => {
+    __resetShareCacheForTests();
+    clipboard = { writeText: vi.fn(async () => {}), write: vi.fn(async () => {}) };
+    Object.defineProperty(navigator, "clipboard", { value: clipboard, configurable: true });
+    vi.stubGlobal("ClipboardItem", FakeClipboardItem);
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  async function openDialog(opened = true, strict = false) {
+    if (opened) {
+      vi.spyOn(api, "getComparisonShare").mockResolvedValue(share);
+      renderAt("/compare?share=abc123def456", strict);
+    }
     const button = await screen.findAllByRole("button", { name: "Share" }).then((b) => b[0]);
     await waitFor(() => expect(button).toBeEnabled());
     await userEvent.click(button);
     return screen.getByRole("dialog");
   }
+  const section = (dialog: HTMLElement, name: "Image" | "Link") => within(dialog).getByRole("group", { name });
+  const linkField = (dialog: HTMLElement) => within(section(dialog, "Link")).findByRole("textbox");
 
   it("draws every card side by side, whatever the screen", async () => {
+    vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
     await openDialog();
 
     const sheet = document.querySelector(".share-sheet") as HTMLElement;
@@ -309,28 +336,66 @@ describe("Sharing the comparison", () => {
     expect(within(sheet).getByText("Base")).toBeInTheDocument();
   });
 
-  it("shares the picture", async () => {
+  it("orders the dialog: preview, then the image, then the link, with no note", async () => {
+    vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
     const dialog = await openDialog();
-    const shareImage = within(dialog).getByRole("button", { name: "Share image" });
-    await waitFor(() => expect(shareImage).toBeEnabled());
+    const image = section(dialog, "Image");
+    const link = section(dialog, "Link");
+    const preview = dialog.querySelector(".share-dialog__preview")!;
+    expect(preview.compareDocumentPosition(image) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(image.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      within(link).getByText(
+        "Anyone who opens it sees the comparison in sleepmon and can change levels, natures or the map to try their own variants.",
+      ),
+    ).toBeInTheDocument();
+    expect(within(dialog).queryByText(/shows this image when shared/)).toBeNull();
+  });
 
-    await userEvent.click(shareImage);
+  it("copies the picture to the clipboard", async () => {
+    vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
+    const dialog = await openDialog();
+    const copy = within(section(dialog, "Image")).getByRole("button", { name: "Copy" });
+    await waitFor(() => expect(copy).toBeEnabled());
 
-    expect(image.shareOrDownload).toHaveBeenCalledOnce();
+    await userEvent.click(copy);
+
+    expect(clipboard.write).toHaveBeenCalledOnce();
+    const [items] = clipboard.write.mock.calls[0] as [FakeClipboardItem[]];
+    expect(items[0]).toBeInstanceOf(FakeClipboardItem);
+    expect(items[0].items).toEqual({ "image/png": image.png });
+    expect(await within(section(dialog, "Image")).findByRole("button", { name: "Copied!" })).toBeInTheDocument();
     expect(recorder.events).toContainEqual({ name: "comparison_shared", props: { kind: "image", cards: 2 } });
   });
 
-  it("signed out: creates the link after the human check, without signing in", async () => {
-    const create = vi.spyOn(api, "createComparisonShare").mockResolvedValue({ ...share, id: "new", url: "https://sleepmon.app/s/new" });
+  it("offers no image Copy where the browser can't copy images", async () => {
+    image.canCopy = false;
+    vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
     const dialog = await openDialog();
-    const shareLink = within(dialog).getByRole("button", { name: "Share link" });
-    await waitFor(() => expect(shareLink).toBeEnabled());
+    expect(within(section(dialog, "Image")).queryByRole("button", { name: "Copy" })).toBeNull();
+    expect(within(section(dialog, "Image")).getByRole("button", { name: "Download" })).toBeInTheDocument();
+  });
 
-    await userEvent.click(shareLink);
+  it("downloads the picture", async () => {
+    vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
+    const dialog = await openDialog();
+    const download = within(section(dialog, "Image")).getByRole("button", { name: "Download" });
+    await waitFor(() => expect(download).toBeEnabled());
 
-    await waitFor(() => expect(within(dialog).getByRole("textbox")).toHaveValue("https://sleepmon.app/s/new"));
+    await userEvent.click(download);
+
+    expect(image.download).toHaveBeenCalledWith(image.png, "sleepmon-comparison.png");
+    expect(recorder.events).toContainEqual({ name: "comparison_shared", props: { kind: "image", cards: 2 } });
+  });
+
+  it("signed out: the link is ready when the dialog opens, after the human check", async () => {
+    const create = vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
+    const dialog = await openDialog();
+
+    expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
     expect(gate.guard).not.toHaveBeenCalled();
     expect(ts.token).toHaveBeenCalledOnce();
+    expect(create).toHaveBeenCalledOnce();
     const body = create.mock.calls[0][0];
     expect(body.verification_token).toBe("tok");
     expect(body.sleep).toEqual({ night_minutes: 510, nap_minutes: null });
@@ -338,70 +403,151 @@ describe("Sharing the comparison", () => {
     expect(body.favorites).toEqual(["Grepa"]);
     expect(body.language).toBe("en");
     expect(body.image).toEqual({ media_type: "image/jpeg", data: "SlBFRw==" });
-    expect(recorder.events).toContainEqual({ name: "comparison_shared", props: { kind: "link", cards: 2 } });
+    // Nothing is tracked until the link is actually copied.
+    expect(recorder.events.filter((e) => e.name === "comparison_shared")).toEqual([]);
+  });
+
+  it("creates the link only once, even under StrictMode", async () => {
+    const create = vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
+    const dialog = await openDialog(true, true);
+    expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
+    expect(create).toHaveBeenCalledOnce();
+    expect(ts.token).toHaveBeenCalledOnce();
+  });
+
+  it("says it's creating the link meanwhile, with Copy disabled", async () => {
+    let finish!: (s: ComparisonShare) => void;
+    vi.spyOn(api, "createComparisonShare").mockReturnValue(new Promise((r) => (finish = r)));
+    const dialog = await openDialog();
+    const link = section(dialog, "Link");
+
+    expect(await within(link).findByText("Creating link…")).toBeInTheDocument();
+    expect(within(link).getByRole("button", { name: "Copy" })).toBeDisabled();
+    finish(created);
+    expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
+    expect(within(link).getByRole("button", { name: "Copy" })).toBeEnabled();
   });
 
   it("signed in: creates the link without a human check", async () => {
     auth.status = "authenticated";
     vi.spyOn(api, "getProgress").mockResolvedValue({ sleep: { night_minutes: 510, nap_minutes: null } } as never);
-    const create = vi.spyOn(api, "createComparisonShare").mockResolvedValue({ ...share, id: "new", url: "https://sleepmon.app/s/new" });
+    const create = vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
     const dialog = await openDialog();
-    const shareLink = within(dialog).getByRole("button", { name: "Share link" });
-    await waitFor(() => expect(shareLink).toBeEnabled());
 
-    await userEvent.click(shareLink);
-
-    await waitFor(() => expect(create).toHaveBeenCalled());
+    expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
     expect(ts.token).not.toHaveBeenCalled();
+    expect(create).toHaveBeenCalledOnce();
     expect(create.mock.calls[0][0].verification_token).toBeNull();
   });
 
-  it("no site key: signs in first, then creates the link without any human check", async () => {
-    ts.key = "";
-    const create = vi.spyOn(api, "createComparisonShare").mockResolvedValue({ ...share, id: "new", url: "https://sleepmon.app/s/new" });
+  it("Copy copies the link and says so; the link is tracked once", async () => {
+    vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
     const dialog = await openDialog();
-    const shareLink = within(dialog).getByRole("button", { name: "Share link" });
-    await waitFor(() => expect(shareLink).toBeEnabled());
+    await linkField(dialog);
+    const link = section(dialog, "Link");
+
+    await userEvent.click(within(link).getByRole("button", { name: "Copy" }));
+    expect(clipboard.writeText).toHaveBeenCalledWith("https://sleepmon.app/s/new");
+    expect(await within(link).findByRole("button", { name: "Copied!" })).toBeInTheDocument();
+
+    await userEvent.click(within(link).getByRole("button", { name: "Copied!" }));
+    expect(clipboard.writeText).toHaveBeenCalledTimes(2);
+    expect(
+      recorder.events.filter((e) => e.name === "comparison_shared" && e.props.kind === "link"),
+    ).toEqual([{ name: "comparison_shared", props: { kind: "link", cards: 2 } }]);
+  });
+
+  it("reopening on the same comparison shows the same link without creating another", async () => {
+    const create = vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
+    let dialog = await openDialog();
+    await linkField(dialog);
+    await userEvent.click(within(dialog).getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    dialog = await openDialog(false);
+
+    expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
+    expect(create).toHaveBeenCalledOnce();
+    expect(ts.token).toHaveBeenCalledOnce();
+  });
+
+  it("changing the map terms makes the next dialog create a new link", async () => {
+    const create = vi
+      .spyOn(api, "createComparisonShare")
+      .mockResolvedValueOnce(created)
+      .mockResolvedValueOnce({ ...share, id: "newer", url: "https://sleepmon.app/s/newer" });
+    let dialog = await openDialog();
+    await linkField(dialog);
+    await userEvent.click(within(dialog).getByRole("button", { name: "Close" }));
+
+    await userEvent.click(screen.getByRole("button", { name: /Favorite berries/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Grepa" }));
+    dialog = await openDialog(false);
+
+    await waitFor(async () => expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/newer"));
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(create.mock.calls[1][0].favorites).toEqual([]);
+  });
+
+  it("a failed human check says so with Try again, which retries", async () => {
+    ts.token.mockRejectedValueOnce(new Error("verification"));
+    const create = vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
+    const dialog = await openDialog();
+    const link = section(dialog, "Link");
+
+    expect(await within(link).findByText("We couldn't verify you're not a bot.")).toBeInTheDocument();
+    expect(create).not.toHaveBeenCalled();
+
+    await userEvent.click(within(link).getByRole("button", { name: "Try again" }));
+
+    expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
+    expect(ts.token).toHaveBeenCalledTimes(2);
+    expect(create).toHaveBeenCalledOnce();
+  });
+
+  it("a 403 from the server reads as a failed check", async () => {
+    vi.spyOn(api, "createComparisonShare").mockRejectedValue(new ApiError("verification failed", 403, null));
+    const dialog = await openDialog();
+    expect(await within(section(dialog, "Link")).findByText("We couldn't verify you're not a bot.")).toBeInTheDocument();
+  });
+
+  it("any other failure says the link couldn't be created; the image still works", async () => {
+    vi.spyOn(api, "createComparisonShare").mockRejectedValue(new Error("500"));
+    const dialog = await openDialog();
+    const link = section(dialog, "Link");
+    expect(await within(link).findByText("Couldn't create the link.")).toBeInTheDocument();
+    expect(within(link).getByRole("button", { name: "Try again" })).toBeInTheDocument();
+    expect(within(section(dialog, "Image")).getByRole("button", { name: "Download" })).toBeEnabled();
+  });
+
+  it("no site key: asks to sign in, then creates the link without any human check", async () => {
+    ts.key = "";
+    const create = vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
+    const dialog = await openDialog();
+    const signIn = await within(section(dialog, "Link")).findByRole("button", { name: "Sign in to create the link" });
+    expect(create).not.toHaveBeenCalled();
 
     // The gate holds the action while the user signs in; it runs afterwards.
     let pending: (() => void) | undefined;
     gate.guard.mockImplementationOnce((f: () => void) => {
       pending = f;
     });
-    await userEvent.click(shareLink);
+    await userEvent.click(signIn);
     expect(gate.guard).toHaveBeenCalledWith(expect.any(Function), "share_link");
     expect(create).not.toHaveBeenCalled();
 
     auth.status = "authenticated";
     pending!();
 
-    await waitFor(() => expect(within(dialog).getByRole("textbox")).toHaveValue("https://sleepmon.app/s/new"));
+    expect(await linkField(dialog)).toHaveValue("https://sleepmon.app/s/new");
     expect(ts.token).not.toHaveBeenCalled();
+    expect(create).toHaveBeenCalledOnce();
     expect(create.mock.calls[0][0].verification_token).toBeNull();
     expect(within(dialog).queryByText(/verify/)).toBeNull();
   });
 
-  it("signed out: a failed check says so and creates nothing", async () => {
-    ts.token.mockRejectedValueOnce(new Error("verification"));
-    const create = vi.spyOn(api, "createComparisonShare");
-    const dialog = await openDialog();
-    const shareLink = within(dialog).getByRole("button", { name: "Share link" });
-    await waitFor(() => expect(shareLink).toBeEnabled());
-    await userEvent.click(shareLink);
-    expect(await within(dialog).findByText("We couldn't verify you're not a bot. Try again.")).toBeInTheDocument();
-    expect(create).not.toHaveBeenCalled();
-  });
-
-  it("a 403 from the server reads as a failed check", async () => {
-    vi.spyOn(api, "createComparisonShare").mockRejectedValue(new ApiError("verification failed", 403, null));
-    const dialog = await openDialog();
-    const shareLink = within(dialog).getByRole("button", { name: "Share link" });
-    await waitFor(() => expect(shareLink).toBeEnabled());
-    await userEvent.click(shareLink);
-    expect(await within(dialog).findByText("We couldn't verify you're not a bot. Try again.")).toBeInTheDocument();
-  });
-
   it("the picture's strip names the sleep and sleepmon.app", async () => {
+    vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
     await openDialog();
     const sheet = document.querySelector(".share-sheet") as HTMLElement;
     expect(within(sheet).getByText("Sleep 8:30")).toBeInTheDocument();

@@ -168,7 +168,9 @@ contents — random ingredients), `IconPot`, `IconMagnifier`, `IconMoon`,
 "Perfil de jugador"), `IconSun` (the nap — the daytime sleep, beside `IconMoon`'s
 night), `IconGlobe` (language, on the signed-out `.lang-btn`), `IconUser` (the account — the
 account menu's "Account & privacy"), `IconTrash` (deleting what is saved), `IconShare` (sharing — the
-three-node glyph most people know as "share": three circles joined by two lines). A new UI icon is added here following the same stroke — no ad-hoc icons
+three-node glyph most people know as "share": three circles joined by two lines),
+`IconDownload` (saving a file — an arrow dropping into a tray), `IconLink` (a link — two
+chain links joined; leads the share dialog's link field). A new UI icon is added here following the same stroke — no ad-hoc icons
 in components.
 
 **Metric display.** A metric reads as **its own icon + the number** — the icon marks

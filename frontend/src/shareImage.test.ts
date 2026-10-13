@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { MAX_PREVIEW_BYTES, previewAttempts, previewJpegBase64 } from "./shareImage";
+import { canCopyImage, downloadBlob, MAX_PREVIEW_BYTES, previewAttempts, previewJpegBase64 } from "./shareImage";
 
 describe("previewAttempts", () => {
   it("steps down in quality at full width, then to a smaller picture", () => {
@@ -43,5 +43,42 @@ describe("previewJpegBase64", () => {
   it("gives up with an error when nothing fits", async () => {
     encodeSizes([MAX_PREVIEW_BYTES + 1, MAX_PREVIEW_BYTES + 1, MAX_PREVIEW_BYTES + 1, MAX_PREVIEW_BYTES + 1]);
     await expect(previewJpegBase64(source())).rejects.toThrow("preview too large");
+  });
+});
+
+describe("downloadBlob", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("saves the blob under the given name", () => {
+    URL.createObjectURL = vi.fn(() => "blob:x");
+    URL.revokeObjectURL = vi.fn();
+    const clicked: { href: string; download: string }[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
+      clicked.push({ href: this.href, download: this.download });
+    });
+    downloadBlob(new Blob(["png"]), "sleepmon-comparison.png");
+    expect(clicked).toEqual([{ href: "blob:x", download: "sleepmon-comparison.png" }]);
+    expect(document.querySelector("a[download]")).toBeNull();
+  });
+});
+
+describe("canCopyImage", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    Reflect.deleteProperty(navigator, "clipboard");
+  });
+
+  it("is false without ClipboardItem or clipboard.write", () => {
+    vi.stubGlobal("ClipboardItem", undefined);
+    expect(canCopyImage()).toBe(false);
+    vi.stubGlobal("ClipboardItem", class {});
+    Object.defineProperty(navigator, "clipboard", { value: {}, configurable: true });
+    expect(canCopyImage()).toBe(false);
+  });
+
+  it("is true when the browser can write images to the clipboard", () => {
+    vi.stubGlobal("ClipboardItem", class {});
+    Object.defineProperty(navigator, "clipboard", { value: { write: async () => {} }, configurable: true });
+    expect(canCopyImage()).toBe(true);
   });
 });

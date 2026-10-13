@@ -354,6 +354,26 @@ export function IconShare(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Download: an arrow dropping into a tray. */
+export function IconDownload(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 3v12M7 10l5 5 5-5" />
+      <path d="M4 15v4c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4" />
+    </svg>
+  );
+}
+
+/** A link: two chain links joined. */
+export function IconLink(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  );
+}
+
 // ▲/▼ drawn, not typed: a text glyph sits wherever each device's font puts it.
 // Each triangle is placed in its 10×10 box so the middle between its box and its
 // centroid lands on the box's center — a triangle's weight is at its base, so
