@@ -56,7 +56,8 @@ a short privacy page, and one footer line. Nothing more than that.
   permanently** stays disabled until the typed text matches — ignoring letter case and
   surrounding spaces.
 - **On success:** the account and everything saved on it (Box, saved teams, shared
-  comparisons, Player profile, sessions) are deleted immediately; the user is signed out, lands on the first
+  comparisons created while signed in, Player profile, sessions) are deleted immediately; links created signed out belong to no one and expire on their
+  own; the user is signed out, lands on the first
   tool, and sees *"Your account was deleted."* What was on screen in Comparison or Team
   Analysis stays, exactly as after signing out, just no longer linked to a Box.
 - **On failure:** an error message in the dialog; nothing is deleted; the dialog stays
@@ -74,9 +75,12 @@ a short privacy page, and one footer line. Nothing more than that.
 - Short, plain language, in this order:
   1. **Who runs sleepmon** — a personal fan project — and the **contact email**.
   2. **What is kept with your account:** your Google id, email, name and photo, and what
-     you save: Box, saved teams, Player profile, and the comparisons you share by link
-     ([Sharing a comparison](0020-share-comparison.md) — anyone with the link sees them).
-     Kept until you delete the account.
+     you save: Box, saved teams, Player profile, and the comparison links you share while signed in. Kept until you
+     delete the account. A shared link, with or without an account
+     ([Sharing a comparison](0020-share-comparison.md)), keeps the comparison, its image and
+     your sleep schedule; anyone with the link sees it, and it is deleted on its own when
+     nobody opens it for 90 days. Sharing a link signed out is checked by Cloudflare
+     Turnstile, which verifies you are not a bot.
   3. **In your browser:** a sign-in cookie and a token stored in your
      browser keep you signed in, and your language choice is stored there too. No
      advertising or analytics cookies, and usage metrics store nothing in your browser.

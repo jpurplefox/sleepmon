@@ -676,7 +676,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "privacy.whoContact": "Para cualquier consulta sobre tus datos escribí a {email}.",
     "privacy.dataTitle": "Qué guardamos de tu cuenta",
     "privacy.dataBody":
-      "Al iniciar sesión con Google guardamos tu id de Google, tu email, tu nombre y tu foto, y lo que cargues: tu caja, tus equipos guardados, tu perfil de jugador y las comparaciones que compartas por link (los Pokémon y la imagen; las ve cualquiera que tenga el link). Se conserva hasta que borres tu cuenta.",
+      "Al iniciar sesión con Google guardamos tu id de Google, tu email, tu nombre y tu foto, y lo que cargues: tu caja, tus equipos guardados, tu perfil de jugador y los links de comparaciones que compartas con la sesión iniciada. Se conserva hasta que borres tu cuenta. Un link compartido (con o sin cuenta) guarda la comparación, su imagen y tu horario de sueño, lo ve cualquiera que tenga el link, y se borra solo si nadie lo abre en 90 días. Si compartís un link sin iniciar sesión, Cloudflare verifica que no seas un bot.",
     "privacy.browserTitle": "En tu navegador",
     "privacy.browserBody":
       "Para mantenerte con la sesión iniciada usamos una cookie de inicio de sesión y un token guardado en tu navegador; ahí también se guarda el idioma que elegiste. No usamos cookies de publicidad ni de analítica, y las métricas de uso no guardan nada en tu navegador.",
@@ -1377,7 +1377,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "privacy.whoContact": "For any question about your data, write to {email}.",
     "privacy.dataTitle": "What we keep with your account",
     "privacy.dataBody":
-      "When you sign in with Google we keep your Google id, email, name and photo, plus what you save: your Box, saved teams, Player profile and the comparisons you share by link (the Pokémon and the image; anyone with the link can see them). It is kept until you delete your account.",
+      "When you sign in with Google we keep your Google id, email, name and photo, plus what you save: your Box, saved teams, Player profile and the comparison links you share while signed in. It is kept until you delete your account. A shared link (with or without an account) keeps the comparison, its image and your sleep schedule, anyone with the link can see it, and it is deleted on its own when nobody opens it for 90 days. If you share a link without signing in, Cloudflare checks that you're not a bot.",
     "privacy.browserTitle": "In your browser",
     "privacy.browserBody":
       "To keep you signed in we use a sign-in cookie and a token stored in your browser; your language choice is stored there too. No advertising or analytics cookies, and usage metrics store nothing in your browser.",

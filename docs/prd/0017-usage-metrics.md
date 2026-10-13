@@ -121,7 +121,7 @@ Opening a saved team does **not** emit `pokemon_added` for its members — that 
 
 | Event | When | Properties |
 |---|---|---|
-| `sign_in_prompted` | The sign-in prompt appears. | `reason`: `page_gate` (Box or Teams signed out) / `my_pokemon` / `save_to_box` / `import_screenshots` / `share_link` |
+| `sign_in_prompted` | The sign-in prompt appears. | `reason`: `page_gate` (Box or Teams signed out) / `my_pokemon` / `save_to_box` / `import_screenshots` / `share_link` (only where no human check is configured) |
 | `sign_in_completed` | Sign-in succeeds. | `reason`: the prompt's reason, or `app_bar` when started from the menu |
 | `sign_in_abandoned` | The sign-in dialog is closed without signing in. | `reason` |
 | `sign_in_failed` | Google sign-in fails. | — |

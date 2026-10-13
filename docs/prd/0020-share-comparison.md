@@ -50,7 +50,7 @@ swipes one card per screen, but the picture always shows **every card side by si
   - the favorite berries, each in its slot (only when there are favorites);
   - the weekly bonus, only on an expert map;
   - the sharer's sleep schedule — the night, plus the nap when there is one (e.g.
-    "8:30", "7:00 + nap 1:00"); signed out, the default night;
+    "8:30", "7:00 + nap 2:00"); signed out, the default night;
   - the address `sleepmon.app`, so the picture leads back to sleepmon even when it
     travels without the link.
 - All text follows the sharer's language.
@@ -92,7 +92,7 @@ swipes one card per screen, but the picture always shows **every card side by si
 - The numbers are computed with the **recipient's** sleep schedule (their Player
   profile, or the default night signed out), like every number they see.
 - When the two schedules differ, a notice shows above the cards: *"Whoever shared this
-  comparison sleeps 7:00 + nap 1:00; the numbers use your schedule (8:30) and may not
+  comparison sleeps 7:00 + nap 2:00; the numbers use your schedule (8:30) and may not
   match theirs."* It can be closed with ×, and goes away on moving to another tool or
   reloading. When the schedules match, there is no notice.
 - Once opened, the address goes back to `/compare`, so a reload doesn't reopen the link
@@ -114,7 +114,7 @@ swipes one card per screen, but the picture always shows **every card side by si
   buttons.
 - The strip shows "Normal" on the normal map; the favorite berries in their slots; the
   weekly bonus only on an expert map.
-- The strip shows the sharer's sleep schedule — "8:30" signed out, "7:00 + nap 1:00"
+- The strip shows the sharer's sleep schedule — "8:30" signed out, "7:00 + nap 2:00"
   for a profile with a nap — and `sleepmon.app`.
 - On a device that can't share files → the button reads "Download image" and saves the
   picture.

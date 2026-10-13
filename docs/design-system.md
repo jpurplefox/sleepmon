@@ -658,7 +658,9 @@ states · where it lives. Feature one-offs are intentionally not here.
   unchanged and the pager hidden; also hidden with no cards. **Action slot**
   (`.swipe-pager__action`): the pager may end with **one** tool action, after a `--border`
   hairline — a 38px round button (the sprite buttons' size), `--border` outline, the 16px
-  line icon in `--text`, always at full opacity and never `aria-current`. Comparison puts
+  line icon in `--text`, at full opacity against the inactive sprite buttons (0.55) and
+  never `aria-current`; like any button it dims to 0.5 when disabled (Comparison's Share is
+  disabled while a card is calculating). Comparison puts
   **Share** there; on wider screens the same action lives in the tool header.
 - **Entrance (`appear-in`)** — the app's single entrance animation: `0.15s ease-out`,
   `opacity 0→1` + `scale(0.97)→none`, fired by the element being inserted. One

@@ -4,7 +4,7 @@ Date: 2026-10-13
 
 ## Status
 
-Accepted
+Accepted (amended 2026-10-13: anonymous shares behind ADR 0012's human check; expiry on read)
 
 ## Context
 
@@ -60,3 +60,16 @@ We will serve share links from the **API**, and draw the preview image on the **
   address, just less legibly.
 - A future shareable thing reuses the pattern: its own table and `/s/…` page, the same
   client-side drawing.
+
+## Amendment (2026-10-13)
+
+- A share may be created **signed out**, after the human check of
+  [ADR 0012](0012-human-check-for-anonymous-writes.md); such a share has no owner
+  (`user_id` NULL) and is not deleted with any account.
+- Every share **expires 90 days after it was last opened**. `last_opened_at` is renewed
+  only when the app reads the share (`GET /comparison-shares/{id}`); the `/s/{id}` page
+  and image don't renew it, so link-preview crawlers can't keep a share alive. Expiry is
+  checked on read and expired rows are deleted when a new share is created — no
+  scheduler.
+- The share also stores the sharer's **sleep schedule**, shown on the picture and
+  compared with the recipient's when it is opened.
