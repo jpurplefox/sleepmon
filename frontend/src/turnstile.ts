@@ -33,30 +33,69 @@ function loadTurnstile(): Promise<TurnstileApi> {
       const script = document.createElement("script");
       script.src = SCRIPT_SRC;
       script.async = true;
-      script.addEventListener("load", () =>
-        window.turnstile ? resolve(window.turnstile) : reject(new Error("verification")),
-      );
-      script.addEventListener("error", () => {
+      const fail = () => {
         loading = null;
+        script.remove();
         reject(new Error("verification"));
-      });
+      };
+      script.addEventListener("load", () => (window.turnstile ? resolve(window.turnstile) : fail()));
+      script.addEventListener("error", fail);
       document.head.appendChild(script);
     });
   }
   return loading;
 }
 
-/** Renders the widget in `container` and resolves with a single-use token. */
-export async function renderTurnstile(container: HTMLElement, siteKey: string): Promise<string> {
+/**
+ * Renders the widget in `container` and resolves with a single-use token. The widget is
+ * removed once the promise settles; with no answer within `timeoutMs` it rejects.
+ */
+export async function renderTurnstile(
+  container: HTMLElement,
+  siteKey: string,
+  timeoutMs = 60_000,
+): Promise<string> {
   const api = await loadTurnstile();
+  container.replaceChildren();
   return new Promise((resolve, reject) => {
-    api.render(container, {
+    let widgetId: string | null = null;
+    let settled = false;
+    const cleanup = () => {
+      settled = true;
+      clearTimeout(timer);
+      if (widgetId !== null) {
+        try {
+          api.remove(widgetId);
+        } catch {
+          // The widget is already gone; nothing to clean up.
+        }
+      }
+    };
+    const fail = () => {
+      if (settled) return;
+      cleanup();
+      reject(new Error("verification"));
+    };
+    const timer = setTimeout(fail, timeoutMs);
+    widgetId = api.render(container, {
       sitekey: siteKey,
       appearance: "interaction-only",
-      callback: resolve,
-      "error-callback": () => reject(new Error("verification")),
-      "expired-callback": () => reject(new Error("verification")),
+      callback: (token) => {
+        if (settled) return;
+        cleanup();
+        resolve(token);
+      },
+      "error-callback": fail,
+      "expired-callback": fail,
     });
+    // A callback that fired synchronously inside render() settled before we had the id.
+    if (settled) {
+      try {
+        api.remove(widgetId);
+      } catch {
+        // Ignore: see above.
+      }
+    }
   });
 }
 
