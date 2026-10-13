@@ -507,6 +507,13 @@ class ComparisonShareIn(msgspec.Struct, forbid_unknown_fields=True):
     favorites: list[str] = msgspec.field(default_factory=list)
     weekly_bonus: str = "berry_strength"
     language: str = "es"
+    sleep: SleepIn | None = None
+    verification_token: str | None = None
+
+
+class SharedSleepOut(msgspec.Struct):
+    night_minutes: int
+    nap_minutes: int | None
 
 
 class SharedMemberOut(msgspec.Struct):
@@ -528,3 +535,4 @@ class ComparisonShareOut(msgspec.Struct):
     island: str | None
     favorites: list[str]
     weekly_bonus: str
+    sleep: SharedSleepOut

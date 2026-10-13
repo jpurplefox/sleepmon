@@ -47,6 +47,7 @@ from sleepmon.adapters.inbound.http.schemas import (
     ScreenshotImportOut,
     ScreenshotIn,
     SharedMemberOut,
+    SharedSleepOut,
     SkillEffectAggOut,
     SleepIn,
     SleepOut,
@@ -791,24 +792,25 @@ def _share_out(share: SharedComparison, base: str) -> ComparisonShareOut:
         island=None if share.map.island is None else share.map.island.value,
         favorites=["" if b is None else b.value for b in share.map.favorites],
         weekly_bonus=share.map.weekly_bonus.value,
+        sleep=SharedSleepOut(share.sleep.night_minutes, share.sleep.nap_minutes),
     )
 
 
 class ComparisonShareController(Controller):
-    """Create a share (signed in) and read it back (anyone holding the link)."""
+    """Create a share (signed in, or signed out with a human check) and read it back."""
 
     path = "/comparison-shares"
 
-    @post("/", status_code=HTTP_201_CREATED, guards=[require_user], sync_to_thread=True)
+    @post("/", status_code=HTTP_201_CREATED, sync_to_thread=True)
     def create_share(
         self,
         request: Request[Any, Any, Any],
         comparison_shares: NamedDependency[ComparisonShareService],
-        current_user_id: NamedDependency[UUID],
+        optional_user_id: NamedDependency[UUID | None],
         data: ComparisonShareIn,
     ) -> ComparisonShareOut:
         share = comparison_shares.create(
-            current_user_id,
+            optional_user_id,
             ComparisonShareInput(
                 members=[_to_input(m) for m in data.members],
                 image_media_type=data.image.media_type,
@@ -817,6 +819,8 @@ class ComparisonShareController(Controller):
                 favorites=list(data.favorites),
                 weekly_bonus=data.weekly_bonus,
                 language=data.language,
+                sleep=_sleep_input(data.sleep),
+                verification_token=data.verification_token,
             ),
         )
         return _share_out(share, _share_base(request))
@@ -828,7 +832,7 @@ class ComparisonShareController(Controller):
         comparison_shares: NamedDependency[ComparisonShareService],
         share_id: FromPath[str],
     ) -> ComparisonShareOut:
-        return _share_out(comparison_shares.get(share_id), _share_base(request))
+        return _share_out(comparison_shares.open(share_id), _share_base(request))
 
 
 class SharePageController(Controller):
@@ -843,7 +847,7 @@ class SharePageController(Controller):
         comparison_shares: NamedDependency[ComparisonShareService],
         share_id: FromPath[str],
     ) -> Response[str]:
-        share = comparison_shares.get(share_id)
+        share = comparison_shares.peek(share_id)
         base = _share_base(request)
         app_url: str = request.app.state.app_url
         html = render_share_page(

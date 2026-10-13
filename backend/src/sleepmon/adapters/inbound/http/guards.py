@@ -40,3 +40,14 @@ def current_user_id(request: Request[Any, Any, Any]) -> UUID:
     user_id = access.verify(_bearer(request))
     tag_request_user(user_id)
     return user_id
+
+
+def optional_user_id(request: Request[Any, Any, Any]) -> UUID | None:
+    """The signed-in user, or None without an Authorization header.
+
+    A header that is present but invalid still answers 401 (via ``current_user_id``),
+    so a stale session refreshes instead of silently sharing signed out.
+    """
+    if "Authorization" not in request.headers:
+        return None
+    return current_user_id(request)

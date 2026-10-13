@@ -19,6 +19,7 @@ from litestar.di import Provide
 from litestar.status_codes import (
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
+    HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
     HTTP_422_UNPROCESSABLE_ENTITY,
     HTTP_429_TOO_MANY_REQUESTS,
@@ -40,7 +41,7 @@ from sleepmon.adapters.inbound.http.controllers import (
     TeamController,
     TeamProductionController,
 )
-from sleepmon.adapters.inbound.http.guards import current_user_id
+from sleepmon.adapters.inbound.http.guards import current_user_id, optional_user_id
 from sleepmon.adapters.inbound.http.observability import init_sentry
 from sleepmon.adapters.inbound.http.schemas import ErrorOut, ImportLimitOut
 from sleepmon.adapters.outbound.auth.google_identity import GoogleIdentityProvider
@@ -59,6 +60,7 @@ from sleepmon.adapters.outbound.postgres.repository import (
     PostgresTeamRepository,
     PostgresUserRepository,
 )
+from sleepmon.adapters.outbound.turnstile.verifier import TurnstileVerifier
 from sleepmon.application.auth_service import AuthService, DefaultAuthService
 from sleepmon.application.comparison_share_service import (
     ComparisonShareService,
@@ -87,8 +89,11 @@ from sleepmon.application.services import (
 from sleepmon.config import DEFAULT_APP_URL, Settings
 from sleepmon.domain.auth import InvalidCredentialError, InvalidRefreshError, InvalidTokenError
 from sleepmon.domain.errors import (
+    AnonymousSharingUnavailableError,
     ComparisonShareNotFoundError,
     DailyImportLimitError,
+    HumanVerificationError,
+    HumanVerifierUnavailableError,
     PokemonNotRecognizedError,
     SavedTeamNotFoundError,
     ScreenshotReaderUnavailableError,
@@ -118,7 +123,30 @@ def _share_not_found_handler(
     _: Request[Any, Any, Any], __: ComparisonShareNotFoundError
 ) -> Response[ErrorOut]:
     return Response(
-        ErrorOut(detail="Esta comparación compartida no existe."), status_code=HTTP_404_NOT_FOUND
+        ErrorOut(detail="Esta comparación compartida no existe o venció."),
+        status_code=HTTP_404_NOT_FOUND,
+    )
+
+
+def _human_check_failed_handler(
+    _: Request[Any, Any, Any], __: HumanVerificationError
+) -> Response[ErrorOut]:
+    return Response(ErrorOut(detail="verification failed"), status_code=HTTP_403_FORBIDDEN)
+
+
+def _human_check_unavailable_handler(
+    _: Request[Any, Any, Any], __: HumanVerifierUnavailableError
+) -> Response[ErrorOut]:
+    return Response(
+        ErrorOut(detail="verification unavailable"), status_code=HTTP_503_SERVICE_UNAVAILABLE
+    )
+
+
+def _anonymous_sharing_off_handler(
+    _: Request[Any, Any, Any], __: AnonymousSharingUnavailableError
+) -> Response[ErrorOut]:
+    return Response(
+        ErrorOut(detail="sign in to share a link"), status_code=HTTP_401_UNAUTHORIZED
     )
 
 
@@ -291,9 +319,13 @@ def create_app(
 
     if comparison_share_service is None:
         if pool is not None:
+            settings = settings or Settings.from_env()
             comparison_share_service = DefaultComparisonShareService(
                 PostgresComparisonShareRepository(pool),
                 catalog,
+                TurnstileVerifier(settings.turnstile_secret_key)
+                if settings.turnstile_secret_key
+                else None,
                 clock=lambda: datetime.now(UTC),
             )
         else:
@@ -354,6 +386,7 @@ def create_app(
             ),
             "catalog": Provide(lambda: bound_catalog, sync_to_thread=False),
             "current_user_id": Provide(current_user_id, sync_to_thread=False),
+            "optional_user_id": Provide(optional_user_id, sync_to_thread=False),
             "auth_service": Provide(lambda: bound_auth_service, sync_to_thread=False),
             "progress": Provide(lambda: bound_progress_service, sync_to_thread=False),
             "saved_teams": Provide(lambda: bound_saved_team_service, sync_to_thread=False),
@@ -365,6 +398,9 @@ def create_app(
             TeamMemberNotFoundError: _not_found_handler,
             SavedTeamNotFoundError: _saved_team_not_found_handler,
             ComparisonShareNotFoundError: _share_not_found_handler,
+            HumanVerificationError: _human_check_failed_handler,
+            HumanVerifierUnavailableError: _human_check_unavailable_handler,
+            AnonymousSharingUnavailableError: _anonymous_sharing_off_handler,
             InvalidCredentialError: _unauthorized_handler,
             InvalidTokenError: _unauthorized_handler,
             InvalidRefreshError: _unauthorized_handler,

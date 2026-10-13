@@ -23,6 +23,7 @@ from sleepmon.application.saved_team_service import DefaultSavedTeamService
 from sleepmon.application.services import DefaultProductionService, DefaultTeamService
 from sleepmon.config import Settings
 from tests.fakes import (
+    FakeHumanVerifier,
     InMemoryComparisonShareRepository,
     InMemoryPlayerProgressRepository,
     InMemoryRefreshTokenRepository,
@@ -37,10 +38,22 @@ USER_ID = uuid4()
 JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 16
 
 
-def _client(settings: Settings | None = None) -> TestClient[Any]:
+class Clock:
+    def __init__(self) -> None:
+        self.now = datetime(2026, 10, 1, 12, 0, tzinfo=UTC)
+
+    def __call__(self) -> datetime:
+        return self.now
+
+
+def _client(
+    settings: Settings | None = None,
+    verifier: FakeHumanVerifier | None = None,
+    clock: Clock | None = None,
+) -> TestClient[Any]:
     members = InMemoryTeamRepository()
     saved = InMemorySavedTeamRepository()
-    clock = lambda: datetime.now(UTC)  # noqa: E731
+    auth_clock = lambda: datetime.now(UTC)  # noqa: E731
     app = create_app(
         service=DefaultTeamService(
             members, StaticSpeciesCatalog(), InMemoryPlayerProgressRepository(), saved
@@ -56,15 +69,20 @@ def _client(settings: Settings | None = None) -> TestClient[Any]:
             tokens=InMemoryRefreshTokenRepository(),
             access=ACCESS,
             refresh=SecretsRefreshTokenCodec(),
-            clock=clock,
+            clock=auth_clock,
             refresh_ttl=timedelta(days=30),
         ),
         progress_service=DefaultPlayerProgressService(
             InMemoryPlayerProgressRepository(), StaticRecipeCatalog()
         ),
-        saved_team_service=DefaultSavedTeamService(saved, members, StaticRecipeCatalog(), clock),
+        saved_team_service=DefaultSavedTeamService(
+            saved, members, StaticRecipeCatalog(), auth_clock
+        ),
         comparison_share_service=DefaultComparisonShareService(
-            InMemoryComparisonShareRepository(), StaticSpeciesCatalog(), clock
+            InMemoryComparisonShareRepository(),
+            StaticSpeciesCatalog(),
+            verifier if verifier is not None else FakeHumanVerifier(True),
+            clock or Clock(),
         ),
     )
     return TestClient(app=app)
@@ -105,8 +123,59 @@ def payload(**overrides: object) -> dict[str, object]:
     return body
 
 
-def test_creating_a_share_needs_a_session(client: TestClient[Any]) -> None:
-    assert client.post("/comparison-shares", json=payload()).status_code == 401
+def test_signed_out_with_a_token_creates_the_link(client: TestClient[Any]) -> None:
+    response = client.post("/comparison-shares", json=payload(verification_token="tok"))
+    assert response.status_code == 201
+
+
+def test_signed_out_without_a_token_is_403(client: TestClient[Any]) -> None:
+    response = client.post("/comparison-shares", json=payload())
+    assert response.status_code == 403
+    assert response.json()["detail"] == "verification failed"
+
+
+def test_an_invalid_session_is_401_not_anonymous(client: TestClient[Any]) -> None:
+    response = client.post(
+        "/comparison-shares", json=payload(), headers={"Authorization": "Bearer nope"}
+    )
+    assert response.status_code == 401
+
+
+def test_an_unreachable_verifier_is_503() -> None:
+    from sleepmon.domain.errors import HumanVerifierUnavailableError
+
+    with _client(verifier=FakeHumanVerifier(HumanVerifierUnavailableError())) as client:
+        response = client.post("/comparison-shares", json=payload(verification_token="tok"))
+    assert response.status_code == 503
+
+
+def test_the_sleep_round_trips(client: TestClient[Any]) -> None:
+    body = payload(sleep={"night_minutes": 420, "nap_minutes": 120})
+    created = client.post("/comparison-shares", json=body, headers=headers()).json()
+    assert created["sleep"] == {"night_minutes": 420, "nap_minutes": 120}
+    assert client.get(f"/comparison-shares/{created['id']}").json()["sleep"] == created["sleep"]
+
+
+def test_expired_shares_are_404_everywhere_and_previews_dont_renew() -> None:
+    clock = Clock()
+    with _client(clock=clock) as client:
+        share_id = client.post("/comparison-shares", json=payload(), headers=headers()).json()["id"]
+        clock.now += timedelta(days=60)
+        assert client.get(f"/s/{share_id}").status_code == 200
+        assert client.get(f"/s/{share_id}/image").status_code == 200
+        clock.now += timedelta(days=31)  # 91 days since the only real opening (creation)
+        for path in (f"/comparison-shares/{share_id}", f"/s/{share_id}", f"/s/{share_id}/image"):
+            assert client.get(path).status_code == 404
+
+
+def test_opening_in_the_app_renews() -> None:
+    clock = Clock()
+    with _client(clock=clock) as client:
+        share_id = client.post("/comparison-shares", json=payload(), headers=headers()).json()["id"]
+        clock.now += timedelta(days=60)
+        assert client.get(f"/comparison-shares/{share_id}").status_code == 200
+        clock.now += timedelta(days=60)
+        assert client.get(f"/comparison-shares/{share_id}").status_code == 200
 
 
 def test_create_returns_the_link_and_the_copied_comparison(client: TestClient[Any]) -> None:
