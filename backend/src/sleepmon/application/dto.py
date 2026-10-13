@@ -437,13 +437,17 @@ class SavedTeamInput:
 class ComparisonShareInput:
     """A comparison to share, as the client sends it (enum values as raw strings).
 
-    ``favorites`` are the positional slots, ``""`` for an open one.
+    ``favorites`` are the positional slots, ``""`` for an open one. ``sleep`` is the
+    sharer's schedule (None = the default night). ``verification_token`` is the human
+    check's token, needed only when sharing signed out.
     """
 
     members: Sequence[TeamMemberInput]
     image_media_type: str
     image_data: bytes = field(repr=False)
+    sleep: SleepInput | None = None
     island: str | None = None
     favorites: Sequence[str] = ()
     weekly_bonus: str = "berry_strength"
     language: str = "es"
+    verification_token: str | None = None
