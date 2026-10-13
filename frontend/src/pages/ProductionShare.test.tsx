@@ -232,6 +232,19 @@ describe("Share placements and the sleep notice", () => {
     expect(screen.queryByText(/Whoever shared this comparison sleeps/)).toBeNull();
   });
 
+  it("signed in: waits for the profile's schedule before comparing", async () => {
+    auth.status = "authenticated";
+    let resolve!: (v: never) => void;
+    vi.spyOn(api, "getProgress").mockReturnValue(new Promise((r) => (resolve = r as never)));
+    vi.spyOn(api, "getComparisonShare").mockResolvedValue(share);
+    renderAt("/compare?share=abc123def456");
+    await waitFor(() => expect(screen.getAllByText("Raichu").length).toBeGreaterThan(0));
+    expect(screen.queryByText(/Whoever shared this comparison sleeps/)).toBeNull();
+    resolve({ sleep: { night_minutes: 600, nap_minutes: null } } as never);
+    const notice = await screen.findByText(/Whoever shared this comparison sleeps/);
+    expect(notice.textContent).toContain("10:00");
+  });
+
   it("says nothing when the schedules match", async () => {
     vi.spyOn(api, "getComparisonShare").mockResolvedValue({ ...share, sleep: { night_minutes: 510, nap_minutes: null } });
     renderAt("/compare?share=abc123def456");

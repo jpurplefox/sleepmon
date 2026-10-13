@@ -6,9 +6,9 @@ import { api } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useGate } from "../auth/useGate";
 import { BoxPicker } from "../components/BoxPicker";
+import { ComparisonMapBar } from "../components/ComparisonMapBar";
 import { IconMoon, IconShare } from "../components/icons";
 import { InfoNotice } from "../components/InfoNotice";
-import { ComparisonMapBar } from "../components/ComparisonMapBar";
 import { MemberForm } from "../components/MemberForm";
 import { Modal } from "../components/Modal";
 import { Placeholder } from "../components/Placeholder";
@@ -318,7 +318,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
         )}
       </ToolHeader>
 
-      {sharerSleep && sleepDiffers(sharerSleep, progress.sleep) && (
+      {sleepReady && sharerSleep && sleepDiffers(sharerSleep, progress.sleep) && (
         <InfoNotice icon={<IconMoon />} onDismiss={() => setSharerSleep(null)} dismissLabel={t("share.dismissNotice")}>
           {renderNotice(t("share.sleepNotice"), formatSleep(sharerSleep, t("share.nap")), formatSleep(progress.sleep, t("share.nap")))}
         </InfoNotice>
