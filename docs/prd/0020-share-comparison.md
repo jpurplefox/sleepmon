@@ -47,7 +47,8 @@ swipes one card per screen, but the picture always shows **every card side by si
 - A picture has nothing to tap: no action bar, no reorder arrows, no "Make base".
 - **The strip** above the cards:
   - sleepmon's logo and name;
-  - the map — the expert map's name, or "Normal";
+  - the map, labelled like the sleep — "Map: <expert map's name>", or "Map: Normal"
+    (a bare "Normal" in a picture doesn't say what it refers to);
   - the favorite berries, each in its slot (only when there are favorites);
   - the weekly bonus, only on an expert map;
   - the sharer's sleep schedule — named in sessions like the notice
@@ -125,7 +126,7 @@ swipes one card per screen, but the picture always shows **every card side by si
 - A 4-card comparison shared from a phone → a picture with **the 4 cards in one row**:
   the first with the "Base" chip, the other 3 with their deltas against it, none with
   buttons.
-- The strip shows "Normal" on the normal map; the favorite berries in their slots; the
+- The strip shows "Map: Normal" on the normal map; the favorite berries in their slots; the
   weekly bonus only on an expert map.
 - The strip shows the sharer's sleep schedule — "Sleep: one session of 8:30" signed out
   (default night), "Sleep: two sessions (night 7:00 and nap 2:00)" for a profile with a nap,

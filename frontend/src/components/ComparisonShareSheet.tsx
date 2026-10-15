@@ -49,7 +49,7 @@ export const ComparisonShareSheet = forwardRef<HTMLDivElement, Props>(function C
           sleepmon
         </span>
         <span className="share-sheet__terms">
-          <span>{island?.name ?? t("prod.mapNormal")}</span>
+          <span>{t("share.mapLabel", { map: island?.name ?? t("prod.mapNormal") })}</span>
           {favorites && (
             <span className="share-sheet__berries">
               {Array.from({ length: MAX_FAVORITES }, (_, i) => {
