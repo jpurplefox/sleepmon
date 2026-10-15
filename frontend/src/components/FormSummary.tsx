@@ -4,6 +4,7 @@ import type { ImportField } from "../types";
 import { IconCheck } from "./icons";
 
 const LABEL: Record<ImportField, string> = {
+  species: "form.species",
   nature: "form.nature",
   level: "form.level",
   ingredients: "form.ingredients",

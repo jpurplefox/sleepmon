@@ -108,6 +108,15 @@ def test_not_recognized_is_a_422(make_client: MakeClient) -> None:
     assert post(make_client(FakeScreenshotReader(ScreenshotReading())), [JPEG]).status_code == 422
 
 
+def test_an_unrecognized_species_still_returns_the_rest(make_client: MakeClient) -> None:
+    res = post(make_client(FakeScreenshotReader(ScreenshotReading(level=40))), [JPEG])
+    assert res.status_code == 200
+    body = res.json()
+    assert body["species"] is None
+    assert body["level"] == 40
+    assert body["unread"][0] == "species"
+
+
 def test_the_cap_is_a_429_with_the_reset_time(make_client: MakeClient) -> None:
     client = make_client(FakeScreenshotReader(ScreenshotReading(species="Pikachu")), limit=1)
     assert post(client, [JPEG]).status_code == 200

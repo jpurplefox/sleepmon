@@ -38,6 +38,17 @@ describe("toImportedForm", () => {
     expect(form.unread).toEqual(["nature", "ingredients", "ribbon"]);
     expect(form.images).toBe(2);
   });
+  it("without a species keeps the read ingredients and marks the species", () => {
+    const form = toImportedForm({ ...read, species: null }, undefined, 1);
+    expect(form.values.species).toBe("");
+    expect(form.values.ingredients).toEqual(["Fancy Apple", "", ""]);
+    expect(form.unread).toEqual(["species", "nature", "ingredients", "ribbon"]);
+  });
+  it("treats a species missing from the catalog as unread", () => {
+    const form = toImportedForm({ ...read, species: "Agumon" }, undefined, 1);
+    expect(form.values.species).toBe("");
+    expect(form.unread[0]).toBe("species");
+  });
   it("keeps Mew's skill when read", () => {
     const form = toImportedForm({ ...read, versatile_skill: "Metronome" }, pikachu, 1);
     expect(form.values.versatile_skill).toBe("Metronome");

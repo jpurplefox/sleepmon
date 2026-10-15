@@ -59,8 +59,8 @@ export function ImportDialog({ catalog, onClose, onImported }: Props) {
       const shots = await Promise.all(files.map(shrinkImage));
       const result = await api.importScreenshots(shots);
       if (!alive.current) return;
+      // An unknown species still opens the form with the rest of the reading.
       const species = catalog.species.find((s) => s.name === result.species);
-      if (!species) throw new ApiError("unknown species", 422, null);
       const form = toImportedForm(result, species, files.length);
       track({
         name: "screenshots_read",

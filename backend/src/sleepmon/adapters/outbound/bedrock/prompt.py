@@ -40,7 +40,8 @@ Rules:
 - Report only what is visible. Use null for anything you can't see; never guess.
 - species is the Pokémon shown in the artwork. The "<Name> Candies" label names the \
 first stage of its evolution line, and the name next to the level is a nickname: \
-neither is the species.{line_rule}
+neither is the species. If you can't tell which Pokémon it is, use null for species \
+and still report everything else.{line_rule}
 - nature: when its name isn't in English, identify it by the stats it raises (▲) \
 and lowers (▼), as listed in the nature table below. A nature with no effect must \
 be told apart by its name.
