@@ -13,18 +13,21 @@ interface Props {
   favoriteBerries: string[];
   mainFavorite: string | null;
   weeklyBonus: WeeklyBonus;
-  islandBonus: number; // fracción 0.0–0.85
-  bonusDisabled: boolean;
+  /** False where a map is always set (Comparison): no "No map" option. */
+  allowNone?: boolean;
+  // The area bonus row shows only with `onIslandBonus` (Comparison has none: it moves no delta).
+  islandBonus?: number; // fracción 0.0–0.85
+  bonusDisabled?: boolean;
   /** True when the shown area bonus differs from what is saved in Player progress. */
-  bonusUnsaved: boolean;
+  bonusUnsaved?: boolean;
   /** The saved area bonus, in percentage points, shown in the unsaved mark's tooltip. */
-  savedBonusPct: number;
+  savedBonusPct?: number;
   onSelectIsland: (islandName: string | null) => void;
   onFavoriteBerries: (berries: string[]) => void;
   onMainFavorite: (berry: string | null) => void;
   onWeeklyBonus: (bonus: WeeklyBonus) => void;
-  onIslandBonus: (bonus: number) => void;
-  onSaveBonus: () => void;
+  onIslandBonus?: (bonus: number) => void;
+  onSaveBonus?: () => void;
 }
 
 // Derivar todas las bayas disponibles en el catálogo a partir de las especies.
@@ -43,10 +46,11 @@ export function IslandTab({
   favoriteBerries,
   mainFavorite,
   weeklyBonus,
-  islandBonus,
-  bonusDisabled,
-  bonusUnsaved,
-  savedBonusPct,
+  allowNone = true,
+  islandBonus = 0,
+  bonusDisabled = false,
+  bonusUnsaved = false,
+  savedBonusPct = 0,
   onSelectIsland,
   onFavoriteBerries,
   onMainFavorite,
@@ -120,7 +124,7 @@ export function IslandTab({
 
   const handleBonusChange = (pct: number) => {
     const clamped = Math.max(0, Math.min(85, pct));
-    onIslandBonus(clamped / 100);
+    onIslandBonus?.(clamped / 100);
   };
 
   // Handlers para la grilla de chips (solo cuando user_picks === true).
@@ -176,23 +180,25 @@ export function IslandTab({
             >
               <div className="filter-list">
                 {/* Opción "Sin isla" — Item 3: clase island-tab__island-none */}
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={selectedIsland === null}
-                  className={
-                    "filter-list__item island-tab__island-none" +
-                    (selectedIsland === null ? " is-selected" : "")
-                  }
-                  onClick={() => {
-                    handleIslandChange("");
-                    setIslandOpen(false);
-                  }}
-                >
-                  <span className="filter-list__label">
-                    {t("teams.noIsland")}
-                  </span>
-                </button>
+                {allowNone && (
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={selectedIsland === null}
+                    className={
+                      "filter-list__item island-tab__island-none" +
+                      (selectedIsland === null ? " is-selected" : "")
+                    }
+                    onClick={() => {
+                      handleIslandChange("");
+                      setIslandOpen(false);
+                    }}
+                  >
+                    <span className="filter-list__label">
+                      {t("teams.noIsland")}
+                    </span>
+                  </button>
+                )}
 
                 {/* Opciones de isla */}
                 {islands.map((isl) => (
@@ -330,47 +336,49 @@ export function IslandTab({
       )}
 
       {/* Bonus de zona */}
-      <div className="island-tab__row">
-        <label className="island-tab__label" htmlFor="area-bonus-range">
-          {t("teams.islandBonus")}
-        </label>
-        {/* The slider and its mark as one group, so the mark lands against the
-            slider's own left edge when it wraps — not the row's, under the label. */}
-        <div className="bonus-control">
-          <div className="bonus-slider" style={{ "--ratio": (bonusPct / 85).toFixed(4) } as React.CSSProperties}>
-            <div className="bonus-slider__row">
-              <div className="bonus-slider__track">
-                <div className="bonus-slider__fill" />
-                <div className="bonus-slider__thumb" />
-                <input
-                  id="area-bonus-range"
-                  type="range"
-                  className="bonus-slider__input"
-                  min={0} max={85} step={1}
-                  value={bonusPct}
-                  disabled={bonusDisabled}
-                  onChange={(e) => handleBonusChange(Number(e.target.value))}
-                  aria-label={t("teams.islandBonus")}
-                  aria-valuetext={`${bonusPct}%`}
-                />
+      {onIslandBonus && (
+        <div className="island-tab__row">
+          <label className="island-tab__label" htmlFor="area-bonus-range">
+            {t("teams.islandBonus")}
+          </label>
+          {/* The slider and its mark as one group, so the mark lands against the
+              slider's own left edge when it wraps — not the row's, under the label. */}
+          <div className="bonus-control">
+            <div className="bonus-slider" style={{ "--ratio": (bonusPct / 85).toFixed(4) } as React.CSSProperties}>
+              <div className="bonus-slider__row">
+                <div className="bonus-slider__track">
+                  <div className="bonus-slider__fill" />
+                  <div className="bonus-slider__thumb" />
+                  <input
+                    id="area-bonus-range"
+                    type="range"
+                    className="bonus-slider__input"
+                    min={0} max={85} step={1}
+                    value={bonusPct}
+                    disabled={bonusDisabled}
+                    onChange={(e) => handleBonusChange(Number(e.target.value))}
+                    aria-label={t("teams.islandBonus")}
+                    aria-valuetext={`${bonusPct}%`}
+                  />
+                </div>
+                <span className="bonus-slider__value" aria-hidden="true">
+                  {bonusPct}<span className="bonus-slider__unit">%</span>
+                </span>
               </div>
-              <span className="bonus-slider__value" aria-hidden="true">
-                {bonusPct}<span className="bonus-slider__unit">%</span>
-              </span>
+              <div className="bonus-slider__marks" aria-hidden="true">
+                <span>0%</span><span>85%</span>
+              </div>
             </div>
-            <div className="bonus-slider__marks" aria-hidden="true">
-              <span>0%</span><span>85%</span>
-            </div>
+            {/* Beside the slider where the group has room for it, directly under it
+                where it does not — the slider never gives up width (see styles.css). */}
+            <UnsavedMark
+              unsaved={bonusUnsaved}
+              savedLabel={`${savedBonusPct}%`}
+              onSave={onSaveBonus ?? (() => {})}
+            />
           </div>
-          {/* Beside the slider where the group has room for it, directly under it
-              where it does not — the slider never gives up width (see styles.css). */}
-          <UnsavedMark
-            unsaved={bonusUnsaved}
-            savedLabel={`${savedBonusPct}%`}
-            onSave={onSaveBonus}
-          />
         </div>
-      </div>
+      )}
     </div>
   );
 }

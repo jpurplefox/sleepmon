@@ -63,9 +63,19 @@ const catalog = {
   species: [species("Pikachu", 25), species("Raichu", 26)],
   recipe_level_bonus: [1],
   ingredient_strengths: {},
-  islands: [],
+  islands: [
+    { name: "Greengrass Isle", favorite_berries: [], user_picks: true, ratings: [], expert: false, expert_speed: null },
+  ],
   pot_ladder: [],
 } as unknown as Catalog;
+
+// Drops the shared favorite berry in the Map dialog, then closes it.
+async function dropGrepa() {
+  await userEvent.click(screen.getByRole("button", { name: /^Map Greengrass Isle/ }));
+  const map = screen.getByRole("dialog");
+  await userEvent.click(within(map).getByRole("button", { name: "Secondary berry" }));
+  await userEvent.click(within(map).getByRole("button", { name: "Close" }));
+}
 
 const config = (name: string, level: number): MemberInput => ({
   species: name,
@@ -241,8 +251,7 @@ describe("Share placements and the sleep notice", () => {
     let finish!: (p: ProductionData) => void;
     vi.spyOn(api, "computeProduction").mockReturnValue(new Promise((r) => (finish = r)));
     // Dropping the shared favorite berry changes the map the numbers depend on.
-    await userEvent.click(screen.getByRole("button", { name: /Favorite berries/ }));
-    await userEvent.click(screen.getByRole("button", { name: "Grepa" }));
+    await dropGrepa();
 
     await waitFor(() => {
       for (const b of screen.getAllByRole("button", { name: "Share" })) expect(b).toBeDisabled();
@@ -542,8 +551,7 @@ describe("Sharing the comparison", () => {
     await linkField(dialog);
     await userEvent.click(within(dialog).getByRole("button", { name: "Close" }));
 
-    await userEvent.click(screen.getByRole("button", { name: /Favorite berries/ }));
-    await userEvent.click(screen.getByRole("button", { name: "Grepa" }));
+    await dropGrepa();
     dialog = await openDialog(false);
 
     await waitFor(async () => expect(await linkField(dialog)).toHaveValue("sleepmon.app/s/newer"));

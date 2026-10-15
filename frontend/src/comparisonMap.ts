@@ -1,5 +1,5 @@
-import { MAX_FAVORITES, pickedFavorites, slotOne, toggleFavoriteSlot } from "./favoriteSlots";
-import type { BerryRole, Island, ProductionInput, WeeklyBonus } from "./types";
+import { MAX_FAVORITES, pickedFavorites, slotOne } from "./favoriteSlots";
+import type { BerryRole, ProductionInput, WeeklyBonus } from "./types";
 
 export { MAX_FAVORITES };
 
@@ -26,24 +26,9 @@ export const NEUTRAL_MAP: ComparisonMap = {
   weeklyBonus: "berry_strength",
 };
 
-/** A map whose favorites the game sets (Cyan Beach, Taupe Hollow…): you can't pick them. */
-export function fixedFavorites(island: Island | null): boolean {
-  return island !== null && !island.user_picks && island.favorite_berries.length > 0;
-}
-
-/** A map with its own favorites sets them; otherwise switching keeps yours, slots and all. */
-export function selectIsland(map: ComparisonMap, island: Island): ComparisonMap {
-  const favorites = fixedFavorites(island) ? [...island.favorite_berries] : map.favorites;
-  return { ...map, island: island.name, favorites };
-}
-
 /** The main favorite: slot 1, on an expert map only. */
 export function mainOf(map: ComparisonMap, expert: boolean): string | null {
   return expert ? slotOne(map.favorites) : null;
-}
-
-export function toggleFavorite(map: ComparisonMap, berry: string): ComparisonMap {
-  return { ...map, favorites: toggleFavoriteSlot(map.favorites, berry) };
 }
 
 export function berryRoleOf(map: ComparisonMap, expert: boolean, berry: string): BerryRole {

@@ -89,8 +89,9 @@ the base.
 ### Map scenario
 
 Comparison doesn't rate a map — that's [Team analysis](0007-map-bonuses-rating.md).
-It sets the **terms** the cards are compared under, with three controls shared by the
-whole comparison. It exists so that Pokémon the map treats differently can be read
+It sets the **terms** the cards are compared under, shared by the whole comparison,
+with Team analysis's own **Map** field and dialog — minus the area bonus and the "No
+map" option. It exists so that Pokémon the map treats differently can be read
 side by side — e.g. on Cyan Beach (Expert), one whose berry is the main favorite
 against one whose berry isn't a favorite at all.
 
@@ -124,10 +125,8 @@ Beach (Expert).
 - The terms reach **every card, the base included**, so the deltas keep comparing
   like with like, and each affected metric carries the same **mark** the team's cards
   use (`×2`, `×2.4`, `+1`, `×1.25`, `Skill +1`, and each map's cadence figures).
-- **Switching maps keeps the favorites**, slots and all — except onto a map whose
-  favorites the game sets, which brings its own. Going to a normal map turns the main
-  into one more favorite; going to an expert map makes slot 1 the main again (or
-  leaves the main open, if slot 1 is).
+- **Switching maps works as in Team analysis**: a map whose favorites the game sets
+  brings its own; any other starts with none to pick.
 - The other map effects — **area bonus** and **Snorlax rating** — stay in Team
   analysis: the area bonus multiplies every card alike, so it moves no delta.
 
@@ -186,10 +185,12 @@ for the rest.
 - At **three** favorites no more can be added until one is removed; a berry already
   chosen can't be chosen again.
 - The **weekly bonus** control shows **only on an expert map**.
-- **Switching maps keeps the favorites**: Greengrass Isle → expert makes the first one
-  the main; expert → Greengrass Isle drops every expert effect and leaves the ×2.
-- **Cyan Beach** → its favorites are **Oran, Pamtre and Pecha**, shown without a
-  picker; a card whose berry is one of them gets the ×2.
+- **Cyan Beach** → its favorites are **Oran, Pamtre and Pecha**, set by the game and
+  not pickable; a card whose berry is one of them gets the ×2. Switching to
+  **Greengrass Isle** clears them, ready to pick.
+- The **Map** field shows the map's name, its favorites in their slots and, on an
+  expert map, the weekly bonus mark; it opens the same dialog as in Team analysis,
+  with **no area bonus** and **no "No map"**.
 - The terms apply to **every card, the base included**, so the deltas keep comparing
   like with like.
 - The comparison **starts on Greengrass Isle with no favorites** on every visit — reloading

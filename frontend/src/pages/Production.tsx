@@ -266,12 +266,6 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   }, [entries.length]);
   const openShare = () => setModal("share");
 
-  const handleMapChange = (next: typeof map) => {
-    if (next.island !== map.island)
-      track(mapSetEvent("compare", next.island, catalog.data?.islands ?? []));
-    setMap(next);
-  };
-
   const openAdd = (which: "form" | "box") => {
     setEditIndex(null);
     setModal(which);
@@ -319,7 +313,12 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
       >
         {entries.length > 0 && (
           <ContextBar>
-            <ComparisonMapBar catalog={catalog.data} value={map} onChange={handleMapChange} />
+            <ComparisonMapBar
+              catalog={catalog.data}
+              value={map}
+              onChange={setMap}
+              onSelectIsland={(name) => track(mapSetEvent("compare", name, catalog.data?.islands ?? []))}
+            />
           </ContextBar>
         )}
       </ToolHeader>

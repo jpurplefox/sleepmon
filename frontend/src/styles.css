@@ -5321,16 +5321,6 @@ button.prod-card__base-tag--action {
 .island-tab__island-pop .filter-list__label {
   flex: 1;
 }
-/* Comparison's map terms: the map list fits its marks, the berry grid caps at the phone. */
-.cmp-map-pop {
-  width: 19rem;
-}
-.cmp-map-pop .filter-list__label {
-  flex: 1;
-}
-.cmp-fav-pop {
-  width: min(30rem, 86vw);
-}
 .island-tab__island-berries {
   display: inline-flex;
   gap: 0.2rem;
@@ -5423,12 +5413,6 @@ button.prod-card__base-tag--action {
 
 /* Phone: the popover spans the screen, and the dialog's picker drops under its label. */
 @media (max-width: 640px) {
-  /* The panel around it (.filter-pop) adds 0.5rem padding and a 1px border a side:
-     the whole panel spans the screen minus the page's 1rem gutters. */
-  .cmp-fav-pop {
-    width: calc(100vw - 3rem - 2px);
-  }
-
   /* A row of its own, under its label (Team Analysis's map dialog). */
   .island-tab__berry-picker {
     flex-basis: 100%;
@@ -6348,14 +6332,6 @@ button.prod-card__base-tag--action {
 
 .ctx-field .filter-btn {
   padding-block: 0;
-}
-
-/* A value the bar shows but can't change (a map's game-set favorites): the
-   controls' height, no box. */
-.ctx-field__static {
-  display: inline-flex;
-  align-items: center;
-  height: 30px;
 }
 
 
