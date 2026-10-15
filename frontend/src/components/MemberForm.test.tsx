@@ -329,6 +329,55 @@ describe("MemberForm imported", () => {
   });
 });
 
+describe("MemberForm imported without a species", () => {
+  const imported = (ingredients: string[], unread: ImportField[] = ["species"]) => ({
+    values: {
+      species: "",
+      level: 25,
+      nature: "Bashful",
+      ingredients,
+      sub_skills: ["Helping Speed M"],
+      ribbon: "",
+      skill_level: 3,
+    } as MemberInput,
+    unread,
+    images: 1,
+  });
+
+  it("opens with the rest of the reading and asks to check the species", () => {
+    renderForm({ imported: imported(["Fancy Apple", "Warming Ginger", "Warming Ginger"]) });
+    expect(screen.getByRole("spinbutton", { name: /level/i })).toHaveValue(25);
+    expect(screen.getByRole("status")).toHaveTextContent("Read from 1 screenshot · check Species");
+    expect(screen.getByRole("button", { name: "Add to my box" })).toBeDisabled();
+  });
+
+  it("keeps the read kit once a species that allows it is picked", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderForm({ imported: imported(["Fancy Apple", "Warming Ginger", "Warming Ginger"]) });
+    await pickSpecies(user, /Pikachu/);
+    await waitFor(() => expect(screen.queryByText("Not read")).toBeNull());
+    expect(screen.getByRole("status")).toHaveTextContent(/^Read from 1 screenshot$/);
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({
+      species: "Pikachu",
+      level: 25,
+      nature: "Bashful",
+      ingredients: ["Fancy Apple", "Warming Ginger", "Warming Ginger"],
+      sub_skills: ["Helping Speed M"],
+    });
+  });
+
+  it("marks the kit unread when the picked species can't hold a read ingredient", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderForm({ imported: imported(["Fancy Egg", "Warming Ginger", ""]) });
+    await pickSpecies(user, /Pikachu/);
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("check Ingredients"));
+    expect(screen.getByRole("status")).not.toHaveTextContent("Species");
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
+    expect(onSubmit.mock.calls[0][0].ingredients).toEqual(["Fancy Apple", "Warming Ginger", "Fancy Apple"]);
+  });
+});
+
 describe("MemberForm evolution", () => {
   const caught: MemberInput = {
     species: "Bulbasaur",

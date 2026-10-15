@@ -55,9 +55,33 @@ def test_a_full_reading_resolves_with_nothing_unread() -> None:
 
 
 @pytest.mark.parametrize("species", [None, "", "Agumon"])
-def test_an_unknown_species_is_not_recognized(species: str | None) -> None:
+def test_an_unknown_species_keeps_the_rest_of_the_reading(species: str | None) -> None:
+    cfg = resolve_reading(full_reading(species=species), CATALOG.get)
+    assert cfg.species is None
+    assert cfg.level == 25
+    assert cfg.nature is Nature.JOLLY
+    assert cfg.sub_skills == (SubSkill.HELPING_BONUS, SubSkill.INGREDIENT_FINDER_M)
+    assert cfg.unread == frozenset({ImportField.SPECIES})
+
+
+def test_without_a_species_any_catalog_ingredient_is_kept_in_its_slot() -> None:
+    # Pikachu's slot 0 never holds a Fancy Egg, but without a species nothing rules it out.
+    cfg = resolve_reading(
+        full_reading(species=None, ingredients=("Fancy Egg", "Tomato", None)), CATALOG.get
+    )
+    assert cfg.ingredients == (Ingredient.FANCY_EGG, None, None)
+    assert ImportField.INGREDIENTS in cfg.unread
+
+
+def test_without_a_species_mews_skill_is_dropped() -> None:
+    cfg = resolve_reading(full_reading(species=None, versatile_skill="Metronome"), CATALOG.get)
+    assert cfg.versatile_skill is None
+
+
+@pytest.mark.parametrize("sub_skills", [None, ()])
+def test_nothing_read_is_not_recognized(sub_skills: tuple[str, ...] | None) -> None:
     with pytest.raises(PokemonNotRecognizedError):
-        resolve_reading(full_reading(species=species), CATALOG.get)
+        resolve_reading(ScreenshotReading(sub_skills=sub_skills), CATALOG.get)
 
 
 @pytest.mark.parametrize("level", [None, 0, 101])
@@ -124,8 +148,15 @@ def test_a_missing_or_out_of_range_skill_level_is_unread(skill_level: int | None
 
 @pytest.mark.parametrize(
     "hours,ribbon",
-    [(0, Ribbon.NONE), (199, Ribbon.NONE), (200, Ribbon.SLEEP_200), (499, Ribbon.SLEEP_200),
-     (1521, Ribbon.SLEEP_1000), (2000, Ribbon.SLEEP_2000), (5000, Ribbon.SLEEP_2000)],
+    [
+        (0, Ribbon.NONE),
+        (199, Ribbon.NONE),
+        (200, Ribbon.SLEEP_200),
+        (499, Ribbon.SLEEP_200),
+        (1521, Ribbon.SLEEP_1000),
+        (2000, Ribbon.SLEEP_2000),
+        (5000, Ribbon.SLEEP_2000),
+    ],
 )
 def test_the_ribbon_is_the_highest_threshold_the_shared_hours_reach(
     hours: int, ribbon: Ribbon

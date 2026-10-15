@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
-import { devolvedSkillLevel, evolvedSkillLevel, ingredientsAfterChange } from "../evolution";
+import { carryIngredients, devolvedSkillLevel, evolvedSkillLevel, ingredientsAfterChange } from "../evolution";
 import { useI18n } from "../i18n";
 import { unreadAfterChange } from "../screenshotImport";
 import type { Catalog, ImportField, ImportedForm, MemberInput } from "../types";
@@ -97,9 +97,22 @@ export function MemberForm({
     const from = appliedSpecies.current;
     const isFirst = from === null;
     appliedSpecies.current = species;
-    if (isFirst && initial?.ingredients?.length) return; // conservar lo inicial
+    if (isFirst && initial?.species && initial.ingredients?.length) return; // conservar lo inicial
+    if (isFirst && imported) {
+      // An import without a species: keep each read ingredient the species allows there,
+      // and mark the kit unread if any slot had to fall back.
+      const read = imported.values.ingredients;
+      const kit = carryIngredients(read, selectedSpecies);
+      setIngredients(kit);
+      // The kit is part of picking the species, not a user edit: don't let it clear marks.
+      previous.current = { ...previous.current, ingredients: kit };
+      if (kit.some((ing, i) => ing !== read[i])) {
+        setUnread((u) => (u.includes("ingredients") ? u : [...u, "ingredients"]));
+      }
+      return;
+    }
     setIngredients((prev) => ingredientsAfterChange(prev, from, selectedSpecies, catalog.species));
-  }, [selectedSpecies, species, initial, catalog.species]);
+  }, [selectedSpecies, species, initial, imported, catalog.species]);
 
   // El contrato del backend exige exactamente 3 ingredientes (uno por slot). El
   // useEffect que puebla los slots corre tras el paint, así que durante esa
@@ -165,7 +178,10 @@ export function MemberForm({
       {imported && <FormSummary images={imported.images} unread={unread} />}
       <div className="form__row">
         <label>
-          {t("form.species")}
+          <span className="label-row">
+            {t("form.species")}
+            <UnreadMark unread={unread.includes("species")} />
+          </span>
           <SpeciesSelect
             species={catalog.species}
             value={species}

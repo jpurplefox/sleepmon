@@ -481,7 +481,7 @@ class ScreenshotImportIn(msgspec.Struct, forbid_unknown_fields=True):
 
 
 class ScreenshotImportOut(msgspec.Struct):
-    species: str
+    species: str | None
     level: int | None
     nature: str | None
     ingredients: list[str | None]

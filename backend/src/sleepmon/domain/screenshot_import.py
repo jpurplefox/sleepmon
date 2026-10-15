@@ -31,6 +31,7 @@ _E = TypeVar("_E", bound=StrEnum)
 class ImportField(StrEnum):
     """A form field a reading can leave unread, in the form's order."""
 
+    SPECIES = "species"
     NATURE = "nature"
     LEVEL = "level"
     INGREDIENTS = "ingredients"
@@ -75,7 +76,7 @@ class ScreenshotReading:
 
 @dataclass(frozen=True, slots=True)
 class ImportedConfig:
-    species: str
+    species: str | None
     level: int | None
     nature: Nature | None
     ingredients: tuple[Ingredient | None, ...]
@@ -89,12 +90,15 @@ class ImportedConfig:
 def resolve_reading(
     reading: ScreenshotReading, lookup: Callable[[str], Species | None]
 ) -> ImportedConfig:
-    """Keep only values the catalog accepts; everything else becomes an unread field."""
+    """Keep only values the catalog accepts; everything else becomes an unread field.
+
+    An unrecognized species still returns what was read, unless nothing was.
+    """
     species = lookup(reading.species) if reading.species else None
-    if species is None:
-        raise PokemonNotRecognizedError("No pudimos reconocer un Pokémon en estas imágenes.")
 
     unread: set[ImportField] = set()
+    if species is None:
+        unread.add(ImportField.SPECIES)
 
     level = _int_in(reading.level, 1, MAX_LEVEL)
     if level is None:
@@ -122,12 +126,19 @@ def resolve_reading(
 
     versatile = (
         reading.versatile_skill
-        if species.main_skill == VERSATILE and reading.versatile_skill in VERSATILE_SKILLS
+        if species is not None
+        and species.main_skill == VERSATILE
+        and reading.versatile_skill in VERSATILE_SKILLS
         else None
     )
 
+    if species is None and _nothing_read(
+        level, nature, ingredients, sub_skills, skill_level, ribbon
+    ):
+        raise PokemonNotRecognizedError("No pudimos reconocer un Pokémon en estas imágenes.")
+
     return ImportedConfig(
-        species=species.name,
+        species=species.name if species is not None else None,
         level=level,
         nature=nature,
         ingredients=ingredients,
@@ -167,12 +178,21 @@ def _enum(kind: type[_E], value: str | None) -> _E | None:
         return None
 
 
-def _ingredients(species: Species, raw: tuple[str | None, ...]) -> tuple[Ingredient | None, ...]:
+def _nothing_read(*values: object) -> bool:
+    return all(v is None or (isinstance(v, tuple) and all(x is None for x in v)) for v in values)
+
+
+def _ingredients(
+    species: Species | None, raw: tuple[str | None, ...]
+) -> tuple[Ingredient | None, ...]:
     padded = (tuple(raw) + (None,) * INGREDIENT_SLOTS)[:INGREDIENT_SLOTS]
     resolved: list[Ingredient | None] = []
     for slot, name in enumerate(padded):
         ingredient = _enum(Ingredient, name)
-        ok = ingredient is not None and species.allows_ingredient(slot, ingredient)
+        # Without a species the slot pool is unknown; the form checks it once one is picked.
+        ok = ingredient is not None and (
+            species is None or species.allows_ingredient(slot, ingredient)
+        )
         resolved.append(ingredient if ok else None)
     return tuple(resolved)
 

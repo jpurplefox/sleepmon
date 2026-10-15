@@ -56,8 +56,9 @@ format or an oversized file is reported in the dialog and nothing is read; a 4th
 can't be added.
 
 While reading, the dialog shows progress; reading takes a few seconds. A reading
-that recognizes the species replaces the dialog with the filled form; one that
-doesn't stays in the dialog with its error, so the user can change the images.
+that got anything out of the screenshots replaces the dialog with the filled form —
+even when the species itself wasn't recognized; one that read nothing at all stays in
+the dialog with its error, so the user can change the images.
 
 ### What gets read
 
@@ -87,7 +88,12 @@ language. A value that doesn't match the catalog — or that the species can't h
 - A line at the top of the form says how the reading went and **names** what to
   check: *"Read from 2 screenshots · check Nature, Ingredients and Ribbon"*. It
   updates as marks clear, and reads *"Read from 2 screenshots"* when none is left.
-- If the **species** can't be recognized, no form opens and the dialog says *"We
+- If the **species** can't be recognized, the form still opens with everything else
+  that was read, the species empty and marked *Not read*. Read ingredients are kept
+  as they are until a species is picked; then each one the species can't hold in its
+  slot falls back to the slot's first option, and Ingredients is marked *Not read* if
+  any did.
+- Only when **nothing** could be read does no form open: the dialog says *"We
   couldn't recognize a Pokémon in these screenshots"*.
 
 From there, plan-ahead slots, validation and submit work as in
@@ -129,9 +135,13 @@ the provider does not keep them or train on them. The
   is never filled; its field is marked *Not read*.
 - **Unread mark** disappears from a field once the user changes it, and the top line
   stops naming it.
-- **Not a Pokémon:** screenshots without a recognizable Pokémon Sleep species → *"We
-  couldn't recognize a Pokémon in these screenshots"* in the dialog; no form opens; the
-  read counts toward the cap.
+- **Species not recognized:** screenshots whose species can't be told but show its
+  level, nature, ingredients or sub skills → the form opens with those values and
+  Species marked *Not read*; picking a species keeps the read ingredients it allows in
+  each slot.
+- **Not a Pokémon:** screenshots from which nothing can be read → *"We couldn't
+  recognize a Pokémon in these screenshots"* in the dialog; no form opens; the read
+  counts toward the cap.
 - **Invalid images:** 0 images → *Read* is disabled; a 4th image can't be added; a
   non PNG/JPEG/WebP file or a file over 5 MB → an error in the dialog before reading;
   nothing counts toward the cap.

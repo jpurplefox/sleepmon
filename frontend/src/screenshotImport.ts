@@ -7,7 +7,7 @@ const FORMATS = new Set(["image/png", "image/jpeg", "image/webp"]);
 
 /** The form's order, which the summary line follows. */
 export const IMPORT_FIELD_ORDER: ImportField[] = [
-  "nature", "level", "ingredients", "sub_skills", "skill_level", "ribbon",
+  "species", "nature", "level", "ingredients", "sub_skills", "skill_level", "ribbon",
 ];
 
 export type FileProblem = "format" | "size";
@@ -18,12 +18,18 @@ export function checkFile(file: { type: string; size: number }): FileProblem | n
   return null;
 }
 
-/** The form's starting values: what was read, and the create defaults for the rest. */
-export function toImportedForm(r: ScreenshotImport, species: Species, images: number): ImportedForm {
-  const ingredients = species.ingredient_slots.map((options, i) => r.ingredients[i] ?? options[0] ?? "");
+/**
+ * The form's starting values: what was read, and the create defaults for the rest.
+ * Without a species the read ingredients stay as they are, checked once one is picked.
+ */
+export function toImportedForm(r: ScreenshotImport, species: Species | undefined, images: number): ImportedForm {
+  const ingredients = species
+    ? species.ingredient_slots.map((options, i) => r.ingredients[i] ?? options[0] ?? "")
+    : r.ingredients.map((i) => i ?? "");
+  const unread = species ? r.unread : [...new Set<ImportField>(["species", ...r.unread])];
   return {
     values: {
-      species: r.species,
+      species: species?.name ?? "",
       level: r.level ?? 30,
       nature: r.nature ?? "",
       ingredients,
@@ -32,12 +38,13 @@ export function toImportedForm(r: ScreenshotImport, species: Species, images: nu
       skill_level: r.skill_level ?? 1,
       ...(r.versatile_skill ? { versatile_skill: r.versatile_skill } : {}),
     },
-    unread: IMPORT_FIELD_ORDER.filter((f) => r.unread.includes(f)),
+    unread: IMPORT_FIELD_ORDER.filter((f) => unread.includes(f)),
     images,
   };
 }
 
 const COVERS: Record<ImportField, (v: MemberInput) => string> = {
+  species: (v) => v.species,
   nature: (v) => v.nature,
   level: (v) => String(v.level),
   ingredients: (v) => v.ingredients.join("|"),
