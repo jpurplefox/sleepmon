@@ -1,6 +1,6 @@
 // Sharing a comparison (PRD 0020): what a share carries, and how an opened one
 // becomes the comparison again.
-import type { ComparisonMap } from "./comparisonMap";
+import { DEFAULT_ISLAND, type ComparisonMap } from "./comparisonMap";
 import type { Lang } from "./i18n";
 import { newEntry, type RosterEntry } from "./roster";
 import { formatHm } from "./sleep";
@@ -49,7 +49,9 @@ export function sessionFromShare(share: ComparisonShare): {
   return {
     entries: share.members.map((m) => newEntry(m)),
     map: {
-      island: share.island,
+      // Links from before Comparison named every map have no island: their
+      // terms (pick your favorites, no expert effects) are Greengrass Isle's.
+      island: share.island ?? DEFAULT_ISLAND,
       favorites: share.favorites,
       weeklyBonus: share.weekly_bonus,
     },

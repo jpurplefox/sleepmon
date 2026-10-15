@@ -612,8 +612,8 @@ describe("Sharing the comparison", () => {
     vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
     await openDialog();
     const sheet = document.querySelector(".share-sheet") as HTMLElement;
-    // A bare "Normal" reads as nothing in a picture: the strip says it's the map.
-    expect(within(sheet).getByText("Map: Normal")).toBeInTheDocument();
+    // The strip names the map, labelled like the sleep.
+    expect(within(sheet).getByText("Map: Greengrass Isle")).toBeInTheDocument();
     expect(within(sheet).getByText("Sleep: one session of 8:30")).toBeInTheDocument();
     expect(within(sheet).getByText("sleepmon.app")).toBeInTheDocument();
   });

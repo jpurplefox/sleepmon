@@ -139,8 +139,8 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Sin especialistas en Ingredientes en la caja.",
     // Página Comparación
     "prod.title": "Comparación",
-    "prod.mapNormal": "Normal",
     "prod.favoritesNone": "Ninguna",
+    "prod.favoritesFixed": "Las favoritas de este mapa las fija el juego",
     "prod.atMax":
       "Ya hay 5 Pokémon: es el máximo del equipo en el juego. Quitá uno para agregar otro.",
     "prod.emptyLead": "Compará hasta 5 Pokémon lado a lado.",
@@ -848,8 +848,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.noIngredientSpecialists": "No Ingredient specialists in the box.",
     // Comparison page
     "prod.title": "Comparison",
-    "prod.mapNormal": "Normal",
     "prod.favoritesNone": "None",
+    "prod.favoritesFixed": "The game sets this map's favorites",
     "prod.atMax":
       "There are already 5 Pokémon: that's the in-game team maximum. Remove one to add another.",
     "prod.emptyLead": "Compare up to 5 Pokémon side by side.",

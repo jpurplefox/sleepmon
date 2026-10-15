@@ -5,11 +5,11 @@ export { MAX_FAVORITES };
 
 /** Comparison's map terms (PRD 0002): one set for every card, never persisted. */
 export interface ComparisonMap {
-  /** Null is Normal: favorites double, no expert effects. */
-  island: string | null;
+  /** The map's name, normal or expert: favorites double on both, expert effects only on an expert one. */
+  island: string;
   /** Positional slots ("" is open, see favoriteSlots); on an expert map slot 1 is the main. */
   favorites: string[];
-  /** Kept while hidden on Normal. */
+  /** Kept while hidden on a normal map. */
   weeklyBonus: WeeklyBonus;
 }
 
@@ -17,20 +17,24 @@ export type MapRequestFields = Required<
   Pick<ProductionInput, "island" | "favorite_berries" | "main_favorite" | "weekly_bonus">
 >;
 
+/** Where you pick the favorites yourself, without expert effects: the plainest terms. */
+export const DEFAULT_ISLAND = "Greengrass Isle";
+
 export const NEUTRAL_MAP: ComparisonMap = {
-  island: null,
+  island: DEFAULT_ISLAND,
   favorites: [],
   weeklyBonus: "berry_strength",
 };
 
-/** The maps Comparison offers besides Normal: the expert ones. */
-export function comparisonIslands(islands: Island[]): Island[] {
-  return islands.filter((i) => i.expert);
+/** A map whose favorites the game sets (Cyan Beach, Taupe Hollow…): you can't pick them. */
+export function fixedFavorites(island: Island | null): boolean {
+  return island !== null && !island.user_picks && island.favorite_berries.length > 0;
 }
 
-/** Switching maps keeps the favorites, slots and all. */
-export function selectIsland(map: ComparisonMap, island: Island | null): ComparisonMap {
-  return { ...map, island: island?.name ?? null };
+/** A map with its own favorites sets them; otherwise switching keeps yours, slots and all. */
+export function selectIsland(map: ComparisonMap, island: Island): ComparisonMap {
+  const favorites = fixedFavorites(island) ? [...island.favorite_berries] : map.favorites;
+  return { ...map, island: island.name, favorites };
 }
 
 /** The main favorite: slot 1, on an expert map only. */

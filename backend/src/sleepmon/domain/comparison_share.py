@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 from typing import Final
 
-from sleepmon.domain.catalog_data import ISLAND_EXPERT, MAX_FAVORITE_BERRIES
+from sleepmon.domain.catalog_data import MAX_FAVORITE_BERRIES
 from sleepmon.domain.entities import TeamMember
 from sleepmon.domain.errors import ValidationError
 from sleepmon.domain.sleep import SleepSchedule
@@ -57,7 +57,10 @@ class ShareImage:
 
 @dataclass(frozen=True, slots=True)
 class SharedMap:
-    """The comparison's map terms: Normal (no island) or an expert map.
+    """The comparison's map terms: any map, normal or expert.
+
+    ``island`` is ``None`` only on links made before Comparison named every map
+    (their old "Normal": your own favorites, no expert effects).
 
     ``favorites`` keeps the three positional slots as the sharer left them (``None``
     is an open slot): on an expert map slot 1 is the main favorite.
@@ -68,8 +71,6 @@ class SharedMap:
     weekly_bonus: WeeklyBonus = WeeklyBonus.BERRY_STRENGTH
 
     def __post_init__(self) -> None:
-        if self.island is not None and self.island not in ISLAND_EXPERT:
-            raise ValidationError("Comparación solo admite el mapa normal o uno experto.")
         if len(self.favorites) > MAX_FAVORITE_BERRIES:
             raise ValidationError(f"Hasta {MAX_FAVORITE_BERRIES} bayas favoritas.")
         picked = [b for b in self.favorites if b is not None]

@@ -22,7 +22,7 @@ is the comparison.
 3. **Compare with a base and deltas** — the first card is the base; the rest show
    the difference against it. The base can be reordered or changed.
 4. **Act on each card** — edit, clone, remove, reorder, and save to the Box.
-5. **Set the map scenario** — a map (normal or one of the two expert maps), up to
+5. **Set the map scenario** — a map (any of the game's, normal or expert), up to
    three favorite berries and, on an expert map, the weekly bonus — applied to
    every card alike.
 6. **Persist by explicit action only** — save a config to the Box (as new, or
@@ -94,21 +94,23 @@ whole comparison. It exists so that Pokémon the map treats differently can be r
 side by side — e.g. on Cyan Beach (Expert), one whose berry is the main favorite
 against one whose berry isn't a favorite at all.
 
-- **Map** — **Normal** (the default), **Greengrass Isle (Expert)** or **Cyan Beach
-  (Expert)**. Normal stands for any non-expert map: there the map only decides which
-  berries are favorites, and that is chosen below.
+- **Map** — every map in the game, by name: **Greengrass Isle** (the default), the
+  normal maps (Cyan Beach, Taupe Hollow, …) and the expert ones (**Greengrass Isle
+  (Expert)**, **Cyan Beach (Expert)**). On a normal map the map only decides which
+  berries are favorites: where the game sets them (Cyan Beach, Taupe Hollow, …) they
+  are shown, not picked; on Greengrass Isle and the expert maps they are chosen below.
 - **Favorite berries** — from **none** to **three**, any berry, no repeats. On an
   expert map the berry in **slot 1** is the **main favorite** and the others are
   **sub-favorites**. The three slots keep their places: removing any berry — the main
   or a sub — leaves its slot open (shown as "?" where it was), and the next berry
-  chosen fills the first open slot, as in Team analysis. On Normal there is no main:
-  they are all just favorites.
+  chosen fills the first open slot, as in Team analysis. On a normal map there is no
+  main: they are all just favorites.
 - **Weekly bonus** — only on an expert map: **berries ×2.4** (the default), **+1
   ingredient** per gather, or **skill ×1.25**.
 
 What each card gets depends on its own berry:
 
-| Card's berry | Normal | Expert map |
+| Card's berry | Normal map | Expert map |
 | --- | --- | --- |
 | **Main favorite** | — | Helps **faster** (map's figure), **Main Skill +1 level**, and the weekly bonus |
 | **Favorite / sub-favorite** | Berry strength **×2** | The weekly bonus (×2.4 replaces the ×2, doesn't stack; with the other two bonuses the ×2 stays) |
@@ -122,8 +124,9 @@ Beach (Expert).
 - The terms reach **every card, the base included**, so the deltas keep comparing
   like with like, and each affected metric carries the same **mark** the team's cards
   use (`×2`, `×2.4`, `+1`, `×1.25`, `Skill +1`, and each map's cadence figures).
-- **Switching maps keeps the favorites**, slots and all. Going back to Normal turns the
-  main into one more favorite; going to an expert map makes slot 1 the main again (or
+- **Switching maps keeps the favorites**, slots and all — except onto a map whose
+  favorites the game sets, which brings its own. Going to a normal map turns the main
+  into one more favorite; going to an expert map makes slot 1 the main again (or
   leaves the main open, if slot 1 is).
 - The other map effects — **area bonus** and **Snorlax rating** — stay in Team
   analysis: the area bonus multiplies every card alike, so it moves no delta.
@@ -162,10 +165,10 @@ for the rest.
   1) and P(2)); other Pokémon show a **single** P(at least 1).
 - **Berries, ingredients, and skill** are shown at **equal weight** — none is
   presented as the primary metric.
-- **Normal, Pikachu's berry (Grepa) as a favorite** → its berry strength **doubles**
+- **Greengrass Isle, Pikachu's berry (Grepa) as a favorite** → its berry strength **doubles**
   and nothing else moves (a Pikachu at level 60 with no nature or sub skills goes from
   **14,469** to **28,937**); a card whose berry isn't a favorite doesn't move at all.
-- **Normal never penalizes**: with any favorites, a non-favorite card's numbers are
+- **A normal map never penalizes**: with any favorites, a non-favorite card's numbers are
   identical to having no favorites.
 - **Cyan Beach (Expert)**, Quagsire's berry as the **main favorite**, weekly bonus
   **×2.4**, Amoonguss alongside → Quagsire helps at **×0.8** of its interval, its Main
@@ -183,11 +186,13 @@ for the rest.
 - At **three** favorites no more can be added until one is removed; a berry already
   chosen can't be chosen again.
 - The **weekly bonus** control shows **only on an expert map**.
-- **Switching maps keeps the favorites**: Normal → expert makes the first one the main;
-  expert → Normal drops every expert effect and leaves the ×2.
+- **Switching maps keeps the favorites**: Greengrass Isle → expert makes the first one
+  the main; expert → Greengrass Isle drops every expert effect and leaves the ×2.
+- **Cyan Beach** → its favorites are **Oran, Pamtre and Pecha**, shown without a
+  picker; a card whose berry is one of them gets the ×2.
 - The terms apply to **every card, the base included**, so the deltas keep comparing
   like with like.
-- The comparison **starts on Normal with no favorites** on every visit — reloading
+- The comparison **starts on Greengrass Isle with no favorites** on every visit — reloading
   resets it, and with those terms every card shows its plain production. Moving to
   another tool and back keeps the terms, like the cards.
 
@@ -220,8 +225,7 @@ for the rest.
   and compares.
 - **Being the team record** — that's the [Box](0001-box.md). Comparison touches the
   Box only by explicit save.
-- **The full map list** — normal maps with fixed favorites, the area bonus and the
-  Snorlax rating belong to [Team analysis](0007-map-bonuses-rating.md). Comparison
-  offers only what changes a delta: Normal and the two expert maps.
+- **The area bonus and the Snorlax rating** belong to [Team
+  analysis](0007-map-bonuses-rating.md): they move no delta.
 - **Restricting Cyan Beach (Expert)'s main favorite** to Oran, Pamtre or Pecha — as in
   Team analysis, any berry can be chosen.

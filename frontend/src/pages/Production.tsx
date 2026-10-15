@@ -70,8 +70,8 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
 
   // Cards and map terms live above the routes, so leaving the tool keeps them.
   const { entries, setEntries, map, setMap } = useComparisonSession();
-  const island = catalog.data?.islands.find((i) => i.name === map.island && i.expert) ?? null;
-  const expert = island !== null;
+  const island = catalog.data?.islands.find((i) => i.name === map.island) ?? null;
+  const expert = island?.expert ?? false;
   const mapFields = mapRequestFields(map, expert);
   const shots = useScreenshotImport(catalog.data);
   const berryOf = (species: string) => catalog.data?.species.find((s) => s.name === species)?.berry ?? "";

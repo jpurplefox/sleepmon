@@ -6350,6 +6350,14 @@ button.prod-card__base-tag--action {
   padding-block: 0;
 }
 
+/* A value the bar shows but can't change (a map's game-set favorites): the
+   controls' height, no box. */
+.ctx-field__static {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+}
+
 
 .ctx-marks {
   display: inline-flex;
