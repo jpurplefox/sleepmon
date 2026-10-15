@@ -16,7 +16,7 @@ from sleepmon.adapters.outbound.bedrock.game_terms_es import (
     SUB_SKILLS_ES,
 )
 from sleepmon.adapters.outbound.bedrock.lines import EvolutionLine
-from sleepmon.domain.catalog_data import NATURE_EFFECTS
+from sleepmon.domain.catalog_data import NATURE_EFFECTS, SUB_SKILL_UNLOCK_LEVELS
 from sleepmon.domain.ports import SpeciesCatalog
 from sleepmon.domain.screenshot_import import ScreenshotReading
 from sleepmon.domain.value_objects import Ingredient, Nature, SubSkill
@@ -50,9 +50,11 @@ and 60). A locked slot still shows its ingredient, dimmed: report it. Only a slo
 shown as "?" or not visible is null. The game shows ingredients as icons only: \
 identify each one by matching it against the ingredient reference sheet, which is not \
 a screenshot of the Pokémon.
-- sub_skills lists every sub skill shown, in the game's order (slots unlocked at \
-levels 10, 25, 50, 70 and 80), including locked ones. Use null if no screenshot shows \
-the sub skills.
+- sub_skills lists every sub skill shown, including locked ones, each with its slot: \
+the level that unlocks it (10, 25, 50, 70 and 80). The game lays them out in two \
+columns read row by row: 10 left and 25 right on the first row, 50 left and 70 right \
+on the second, 80 alone on the third. A locked slot also carries a "Lv. N" badge \
+naming its slot. Use null if no screenshot shows the sub skills.
 - skill_level is the main skill's level ("Lv. N" next to the main skill).
 - sleep_hours is the whole number of hours in "Sleeping Time Shared" (or its \
 translation), ignoring the minutes: "1521 hrs 17 mins" is 1521. Null if not shown.
@@ -124,7 +126,15 @@ def build_schema(catalog: SpeciesCatalog, line: EvolutionLine | None = None) -> 
             },
             "sub_skills": {
                 "type": ["array", "null"],
-                "items": {"type": "string", "enum": [s.value for s in SubSkill]},
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "slot": {"type": "integer", "enum": list(SUB_SKILL_UNLOCK_LEVELS)},
+                        "name": {"type": "string", "enum": [s.value for s in SubSkill]},
+                    },
+                    "required": ["slot", "name"],
+                    "additionalProperties": False,
+                },
             },
             "skill_level": nullable_int,
             "sleep_hours": nullable_int,
@@ -154,6 +164,15 @@ def _int(value: object) -> int | None:
     return value if isinstance(value, int) and not isinstance(value, bool) else None
 
 
+def _sub_skills(raw: list[Any]) -> tuple[str, ...]:
+    """The names in slot order; without one valid slot each, in the order given."""
+    entries = [e for e in raw if isinstance(e, dict) and isinstance(e.get("name"), str)]
+    slots = [e.get("slot") for e in entries]
+    if all(s in SUB_SKILL_UNLOCK_LEVELS for s in slots) and len(set(slots)) == len(slots):
+        entries.sort(key=lambda e: SUB_SKILL_UNLOCK_LEVELS.index(e["slot"]))
+    return tuple(e["name"] for e in entries)
+
+
 def reading_from(data: dict[str, Any]) -> ScreenshotReading:
     """Coerces the model's answer into a reading; wrong types become ``None``."""
     raw_ingredients = data.get("ingredients")
@@ -161,11 +180,7 @@ def reading_from(data: dict[str, Any]) -> ScreenshotReading:
         tuple(_str(v) for v in raw_ingredients[:3]) if isinstance(raw_ingredients, list) else ()
     )
     raw_sub_skills = data.get("sub_skills")
-    sub_skills = (
-        tuple(v for v in raw_sub_skills if isinstance(v, str))
-        if isinstance(raw_sub_skills, list)
-        else None
-    )
+    sub_skills = _sub_skills(raw_sub_skills) if isinstance(raw_sub_skills, list) else None
     return ScreenshotReading(
         species=_str(data.get("species")),
         level=_int(data.get("level")),
