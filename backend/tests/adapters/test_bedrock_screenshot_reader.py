@@ -68,13 +68,17 @@ def test_sends_the_images_and_a_tool_with_catalog_enums() -> None:
     assert "Jolly" in schema["properties"]["nature"]["enum"]
     assert schema["properties"]["sleep_hours"] == {"type": ["integer", "null"]}
     assert "ribbon" not in schema["properties"]
-    assert "Helping Bonus" in schema["properties"]["sub_skills"]["items"]["enum"]
+    sub_skill = schema["properties"]["sub_skills"]["items"]["properties"]
+    assert "Helping Bonus" in sub_skill["name"]["enum"]
+    assert sub_skill["slot"]["enum"] == [10, 25, 50, 70, 80]
 
 
 def test_system_prompt_uses_the_real_sub_skill_unlock_levels() -> None:
     messages = FakeMessages(tool_response({}))
     reader(messages).read(IMAGES)
-    assert "10, 25, 50, 70 and 80" in messages.kwargs["system"][0]["text"]
+    prompt = messages.kwargs["system"][0]["text"]
+    assert "10, 25, 50, 70 and 80" in prompt
+    assert "row by row" in prompt
 
 
 def test_system_prompt_asks_for_the_shared_sleep_hours_not_the_ribbon() -> None:
@@ -104,7 +108,8 @@ def test_within_a_line_the_sheet_goes_along_and_species_is_limited_to_it() -> No
 def test_parses_a_full_tool_call() -> None:
     payload = {
         "species": "Pikachu", "level": 25, "nature": "Jolly",
-        "ingredients": ["Fancy Apple", None, None], "sub_skills": ["Helping Bonus"],
+        "ingredients": ["Fancy Apple", None, None],
+        "sub_skills": [{"slot": 10, "name": "Helping Bonus"}],
         "skill_level": 3, "sleep_hours": 81, "versatile_skill": None,
     }
     reading = reader(FakeMessages(tool_response(payload))).read(IMAGES)
@@ -112,6 +117,29 @@ def test_parses_a_full_tool_call() -> None:
         species="Pikachu", level=25, nature="Jolly", ingredients=("Fancy Apple", None, None),
         sub_skills=("Helping Bonus",), skill_level=3, sleep_hours=81, versatile_skill=None,
     )
+
+
+def test_sub_skills_are_put_in_slot_order() -> None:
+    # A two-column grid read column by column: 10, 50, 80, 25, 70.
+    payload = {"sub_skills": [
+        {"slot": 10, "name": "Ingredient Finder S"}, {"slot": 50, "name": "Skill Trigger S"},
+        {"slot": 80, "name": "Inventory Up S"}, {"slot": 25, "name": "Helping Speed S"},
+        {"slot": 70, "name": "Skill Trigger M"},
+    ]}
+    reading = reader(FakeMessages(tool_response(payload))).read(IMAGES)
+    assert reading.sub_skills == (
+        "Ingredient Finder S", "Helping Speed S", "Skill Trigger S", "Skill Trigger M",
+        "Inventory Up S",
+    )
+
+
+def test_sub_skills_without_usable_slots_keep_the_order_given() -> None:
+    payload = {"sub_skills": [
+        {"slot": 25, "name": "Helping Bonus"}, {"slot": 25, "name": "Skill Trigger S"},
+        {"name": "Inventory Up S"}, "Helping Speed S", {"slot": 10, "name": 3},
+    ]}
+    reading = reader(FakeMessages(tool_response(payload))).read(IMAGES)
+    assert reading.sub_skills == ("Helping Bonus", "Skill Trigger S", "Inventory Up S")
 
 
 def test_wrong_types_become_none() -> None:
