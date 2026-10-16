@@ -8110,7 +8110,7 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   .landing-fan { height: 360px; }
   .landing-fan .landing-shot { width: 160px; }
   .landing-fan__center { width: 172px !important; }
-  .landing-fan__callout { top: 200px; left: calc(50% + 30px); }
+  .landing-fan__callout { top: 200px; left: auto; right: 8px; }
   .landing-bento { grid-template-columns: minmax(0, 1fr); padding-bottom: 2rem; }
   .landing-tile--catch, .landing-tile--share, .landing-tile--plan, .landing-tile--levelup { grid-column: auto; }
   .landing-tile--catch { min-height: 560px; }
