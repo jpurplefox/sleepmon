@@ -1,6 +1,7 @@
 // Route paths, one per top-level tool, so each is directly linkable.
 // Slugs are English and language-neutral; UI labels stay bilingual via i18n.
 export const ROUTES = {
+  home: "/",
   box: "/box",
   compare: "/compare",
   teamAnalysis: "/team-analysis",

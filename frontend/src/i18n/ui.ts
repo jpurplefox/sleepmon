@@ -717,6 +717,71 @@ export const UI: Record<Lang, Record<string, string>> = {
     "privacy.deleteBody":
       "Entrá a {link} (menú de la cuenta → Cuenta y privacidad) y elegí Borrar mi cuenta: se borra todo al instante.",
     "privacy.deleteMail": "También podés pedirlo por email a {email}.",
+    "footer.faq": "Preguntas frecuentes",
+    "landing.meta.title": "sleepmon — El número que querés, cuando lo necesitás",
+    "landing.meta.description":
+      "Más que una calculadora para Pokémon Sleep: compará Pokémon, mirá qué sube y qué baja, planificá la semana y sabé cuánto cuesta subirlos.",
+    "landing.eyebrow": "Para Pokémon Sleep",
+    "landing.title.lead": "El número que querés,",
+    "landing.title.accent": "cuando lo necesitás.",
+    "landing.lead":
+      "Más que una calculadora: sleepmon pone lado a lado lo que produce cada Pokémon y marca qué sube y qué baja, para que lo entiendas de un vistazo y decidas.",
+    "landing.cta.compare": "Empezar a comparar",
+    "landing.cta.box": "Ir a mi caja",
+    "landing.fact.noAccount": "Comparar y armar equipos, sin cuenta",
+    "landing.fact.sleep": "Con tu horario de sueño",
+    "landing.fact.languages": "Español e inglés",
+    "landing.callout.delta": "Lo que cambia, marcado",
+    "landing.callout.suggest": "Un toque y queda al lado",
+    "landing.cases.title": "Qué podés hacer",
+    "landing.cases.subtitle": "Cuatro cosas que vas a querer saber.",
+    "landing.withAccount": "con cuenta",
+    "landing.go.compare": "Ir a Comparación →",
+    "landing.go.teamAnalysis": "Ir a Análisis de equipo →",
+    "landing.go.box": "Ir a Mi caja →",
+    "landing.case.catch.title": "Atrapaste uno nuevo. ¿Vale la pena?",
+    "landing.case.catch.body":
+      "Cargalo desde una captura del juego y comparalo en un toque con los de tu caja que más se le parecen.",
+    "landing.case.catch.alt": "Una comparación con las sugerencias de tu caja",
+    "landing.case.share.title": "Compartí con un link",
+    "landing.case.share.body": "Tu amigo abre la misma comparación y la puede editar.",
+    "landing.case.share.alt": "El diálogo para compartir una comparación",
+    "landing.case.plan.title": "Planificá la semana",
+    "landing.case.plan.body":
+      "Armá el equipo para tu mapa, elegí las comidas y mirá cuánto produce y qué rating alcanza.",
+    "landing.case.plan.alt": "Un equipo en Análisis de equipo con su fuerza total y su rating",
+    "landing.case.levelup.title": "¿Cuánto cuesta subirlo?",
+    "landing.case.levelup.body":
+      "Los caramelos y polvos hasta el próximo nivel que desbloquea algo, y qué gana al llegar.",
+    "landing.case.levelup.alt": "El costo de subir de nivel y lo que gana un Pokémon de la caja",
+    "landing.faq.title": "Preguntas frecuentes",
+    "landing.faq.subtitle": "Cómo se calculan los números, qué tiene en cuenta el modelo y qué pasa con tu cuenta.",
+    "landing.faq.numbers.q": "¿De dónde salen los números?",
+    "landing.faq.numbers.a":
+      "Son una estimación de la producción diaria (ayudas, día y noche, inventario, habilidades), no valores leídos del juego.",
+    "landing.faq.energy.q": "¿Cómo se tiene en cuenta la energía?",
+    "landing.faq.energy.a":
+      "Como si estuviera siempre alta: el modelo aplica todo el día el bonus de velocidad de un Pokémon descansado, como pasa con un healer en el equipo que la mantiene arriba. La energía que dan las habilidades se muestra como su resultado, pero no cambia la velocidad de nadie.",
+    "landing.faq.expert.q": "¿Por qué los especialistas en ingredientes suman +1 y no +2 en mapas expertos?",
+    "landing.faq.expert.a":
+      "El juego les da una probabilidad de +2 pero no la publica; en vez de inventarla, todos suman +1.",
+    "landing.faq.sleep.q": "¿Los números siguen mi horario de sueño?",
+    "landing.faq.sleep.a":
+      "Sí: usan tu sueño nocturno y tu siesta, si dormís una, guardados en tu perfil de jugador. Sin cuenta, una noche de 8:30.",
+    "landing.faq.event.q": "¿Puedo tener en cuenta un evento?",
+    "landing.faq.event.a": "Sí: en Análisis de equipo cargás los bonus del evento activo y todo el equipo se recalcula.",
+    "landing.faq.meals.q": "¿Me alcanzan los ingredientes para mis comidas?",
+    "landing.faq.meals.a":
+      "Análisis de equipo compara las tres comidas que elegís con lo que junta el equipo, y suma la fuerza de cocina al total.",
+    "landing.faq.coverage.q": "¿Cómo sé qué le falta a mi caja?",
+    "landing.faq.coverage.a": "Mi caja muestra qué bayas, ingredientes y especialidades cubren tus Pokémon y cuáles no.",
+    "landing.faq.account.q": "¿Necesito cuenta? ¿Qué se guarda?",
+    "landing.faq.account.a":
+      "Comparación y Análisis de equipo funcionan sin cuenta. Con cuenta se guardan tu caja, tus equipos y tu perfil de jugador, y podés importar desde capturas. Más en la {link}.",
+    "landing.faq.account.link": "página de privacidad",
+    "landing.faq.screenshots.q": "¿Cómo funciona importar desde capturas?",
+    "landing.faq.screenshots.a":
+      "Un modelo de IA lee las capturas y completa el formulario del Pokémon para que lo revises. Las imágenes nunca se guardan y el modelo solo recibe las imágenes, nada que diga quién las subió. Necesita cuenta.",
     "footer.privacy": "Privacidad",
     "footer.notice":
       "sleepmon es un proyecto de fans, sin afiliación con Nintendo, Creatures, GAME FREAK ni The Pokémon Company. Pokémon y sus nombres son marcas de sus respectivos dueños.",
@@ -1446,6 +1511,71 @@ export const UI: Record<Lang, Record<string, string>> = {
     "privacy.deleteBody":
       "Open {link} (account menu → Account & privacy) and choose Delete my account: everything is deleted at once.",
     "privacy.deleteMail": "You can also ask by email at {email}.",
+    "footer.faq": "Frequently asked questions",
+    "landing.meta.title": "sleepmon — The number you want, when you need it",
+    "landing.meta.description":
+      "More than a calculator for Pokémon Sleep: compare Pokémon, see what goes up and what goes down, plan your week and know what leveling up costs.",
+    "landing.eyebrow": "For Pokémon Sleep",
+    "landing.title.lead": "The number you want,",
+    "landing.title.accent": "when you need it.",
+    "landing.lead":
+      "More than a calculator: sleepmon puts what each Pokémon produces side by side and marks what goes up and what goes down, so you get it at a glance and decide.",
+    "landing.cta.compare": "Start comparing",
+    "landing.cta.box": "Go to my box",
+    "landing.fact.noAccount": "Compare and build teams, no account needed",
+    "landing.fact.sleep": "With your sleep schedule",
+    "landing.fact.languages": "Spanish and English",
+    "landing.callout.delta": "What changes, marked",
+    "landing.callout.suggest": "One tap and it's side by side",
+    "landing.cases.title": "What you can do",
+    "landing.cases.subtitle": "Four things you'll want to know.",
+    "landing.withAccount": "with an account",
+    "landing.go.compare": "Go to Comparison →",
+    "landing.go.teamAnalysis": "Go to Team analysis →",
+    "landing.go.box": "Go to My box →",
+    "landing.case.catch.title": "Caught a new one. Is it worth it?",
+    "landing.case.catch.body":
+      "Load it from a game screenshot and compare it in one tap with the most similar ones in your box.",
+    "landing.case.catch.alt": "A comparison with suggestions from your box",
+    "landing.case.share.title": "Share it with a link",
+    "landing.case.share.body": "Your friend opens the same comparison and can edit it.",
+    "landing.case.share.alt": "The dialog to share a comparison",
+    "landing.case.plan.title": "Plan your week",
+    "landing.case.plan.body":
+      "Build the team for your map, choose the meals and see what it produces and the rating it reaches.",
+    "landing.case.plan.alt": "A team in Team analysis with its total strength and rating",
+    "landing.case.levelup.title": "What does it take to level it up?",
+    "landing.case.levelup.body":
+      "The candies and dream shards to the next level that unlocks something, and what it gains when it gets there.",
+    "landing.case.levelup.alt": "The level-up cost and gain of a Pokémon in the box",
+    "landing.faq.title": "Frequently asked questions",
+    "landing.faq.subtitle": "How the numbers are made, what the model takes into account and what happens with your account.",
+    "landing.faq.numbers.q": "Where do the numbers come from?",
+    "landing.faq.numbers.a":
+      "They are an estimate of daily production (helps, day and night, inventory, skills), not values read from the game.",
+    "landing.faq.energy.q": "How is energy taken into account?",
+    "landing.faq.energy.a":
+      "As if it were always high: the model applies the speed bonus of a well-rested Pokémon all day long, the way it plays out with a healer on the team that keeps energy topped up. Energy given by skills shows as the skill's output, but doesn't change anyone's speed.",
+    "landing.faq.expert.q": "Why do Ingredients specialists get +1 ingredient on expert maps, not +2?",
+    "landing.faq.expert.a":
+      "The game gives them a chance at +2 but doesn't publish it; rather than invent the number, every member gets +1.",
+    "landing.faq.sleep.q": "Do the numbers follow my sleep?",
+    "landing.faq.sleep.a":
+      "Yes: they use your night sleep and, if you take one, your nap, saved in your Player profile. Signed out, a night of 8:30.",
+    "landing.faq.event.q": "Can I account for an event?",
+    "landing.faq.event.a": "Yes: in Team analysis you add the active event's bonuses and the whole team recomputes.",
+    "landing.faq.meals.q": "Will my team's ingredients be enough for my meals?",
+    "landing.faq.meals.a":
+      "Team analysis checks the three meals you choose against what the team gathers, and adds the cooking strength to the total.",
+    "landing.faq.coverage.q": "How do I know what my box is missing?",
+    "landing.faq.coverage.a": "My box shows which berries, ingredients and specialties your Pokémon cover and which they don't.",
+    "landing.faq.account.q": "Do I need an account, and what is saved?",
+    "landing.faq.account.a":
+      "Comparison and Team analysis work without one. An account keeps your box, saved teams and Player profile, and unlocks screenshot import. More on the {link}.",
+    "landing.faq.account.link": "privacy page",
+    "landing.faq.screenshots.q": "How does screenshot import work?",
+    "landing.faq.screenshots.a":
+      "An AI model reads the screenshots and fills the Pokémon form for you to review. The images are never stored, and the model only receives the images, nothing that says who uploaded them. It needs an account.",
     "footer.privacy": "Privacy",
     "footer.notice":
       "sleepmon is a fan project, not affiliated with Nintendo, Creatures, GAME FREAK or The Pokémon Company. Pokémon and its names are trademarks of their respective owners.",
