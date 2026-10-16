@@ -326,8 +326,11 @@ export function BoxEntry({
         </>
       )}
 
-      {/* Columna 2 — Ingredientes equipados: su propia columna (antes vivían arriba
-          de la config). Atenuada igual que la config. */}
+      {/* Column 2 — the build, as the cards stack it: equipped ingredients, sub
+          skills, nature. On desktop the three rows share one column (the grid has no
+          width for two); the narrow layouts drop the wrapper (display: contents) and
+          place each part side by side, as before. Dimmed to recede behind the metrics. */}
+      <div className="box-entry__build">
       <div className="box-entry__ing-config">
         <IngredientLineup level={member.level} ingredients={member.ingredients} />
       </div>
@@ -349,6 +352,7 @@ export function BoxEntry({
           showSkillLevel={false}
           showIngredients={false}
         />
+      </div>
       </div>
 
       {/* Column 4 — berries + strength, two lines, neutral figures. */}

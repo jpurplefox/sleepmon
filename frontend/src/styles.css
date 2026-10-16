@@ -2027,17 +2027,14 @@ button.shot--empty:focus-visible,
      (space-between) en vez de acumularse en una sola, así en pantallas anchas no
      quedan todas amontonadas a la derecha. Centradas en vertical: cada columna
      tiene distinta cantidad de líneas y se centra en el alto de la fila.
-     The 7th track (before actions, the 8th) is the level-up cost (PRD 0021). */
-  /* Ingredient production gives up 0.75rem (icon + a two-digit amount + the skill
-     marker fit 5.25rem) so the menu can keep its own margin: at the 1100px layout
-     space-between has no slack left, and the level-up line would otherwise sit a
-     gap's width from the "···". Identity keeps 13rem: Meowscarada with a ribbon needs it. */
-  grid-template-columns: 13rem auto auto 5.5rem 5.25rem 7rem 9.5rem auto;
+     The build (equipped ingredients, sub skills, nature) is ONE track on desktop,
+     stacked in three rows like the cards; the 6th track (before actions, the 7th)
+     is the level-up cost (PRD 0021). Identity is 14rem so the longest names with a
+     ribbon (Meowscarada) read whole. */
+  grid-template-columns: 14rem auto 5.5rem 6rem 7rem 9.5rem auto;
   align-items: center;
   justify-content: space-between;
-  /* 0.8rem column gap (was 1.1rem): with the 9.5rem level-up track the eight
-     columns only fit the 1100px .layout with this tighter gap. */
-  gap: 1rem 0.8rem;
+  gap: 1rem 1.1rem;
 }
 
 /* The narrow layout (< 1100px) lives in a single block at the end of the section
@@ -2095,6 +2092,24 @@ button.shot--empty:focus-visible,
 
 /* Columna 2 — Ingredientes equipados: fila de íconos en una sola línea, atenuada
    igual que la config (es parte del "build", retrocede frente a las métricas). */
+.box-entry__build {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+/* Inside the build stack the nature goes last (ingredients · sub skills · nature,
+   the cards' order) and every row starts at the left edge. */
+.box-entry__build .box-entry__config.prod-box-item__config {
+  align-items: flex-start;
+}
+
+.box-entry__build .prod-box-item__nature {
+  order: 1;
+}
+
 .box-entry__ing-config {
   opacity: 0.85;
 }
@@ -2496,6 +2511,16 @@ button.shot--empty:focus-visible,
    Va al final de la sección para ganarle por orden a las reglas base (las media
    queries no suman especificidad: decide el orden en el archivo). */
 @media (max-width: 1099px) {
+  /* The build wrapper only exists for the desktop stack: here its parts go back to
+     their own grid cells (equipped ingredients | nature + sub skills), side by side. */
+  .box-entry__build {
+    display: contents;
+  }
+
+  .box-entry__build .prod-box-item__nature {
+    order: 0;
+  }
+
   .box-entry {
     position: relative;
     grid-template-columns: 1fr 1fr;

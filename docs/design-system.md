@@ -1060,8 +1060,10 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   screen the header is always visible, so the label can stay.
 - **What leveling costs gets its own column in the Box entry.** *Question:* the cost to
   the next unlock (candies, dream shards) and what it buys — under the level badge, in a
-  strip under each entry, or as a column? *Resolution:* a **7th grid track,
-  `levelup`**, between Skill and the `···` menu (`9.5rem`; the Box entry's column gap narrowed from `1.1rem` to `0.8rem` and the ingredient production track from `6rem` to `5.25rem` so eight columns fit the 1100px layout with a `0.75rem` margin before the `···` menu, and the narrow-layout breakpoint moved from 1024px to 1099px): the span `Nv. 25 → 30`
+  strip under each entry, or as a column? *Resolution:* its own grid track,
+  `levelup`, between Skill and the `···` menu (`9.5rem`, with a `0.75rem` margin before the
+  menu; the room comes from stacking the build, below, and the narrow-layout breakpoint
+  moved from 1024px to 1099px): the span `Nv. 25 → 30`
   (`--text-base`, 600, tabular, the tooltip cue opening the wide comparison `Tooltip`),
   and a gain pill (`.prod-delta` with the metric's icon; a strength gain abbreviated like
   the cost, `▲12.3K`; a new ingredient reads `+9.8` with no "new" word here, the phone
@@ -1078,3 +1080,13 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   the identity, and a strip made every entry taller. What each unlock brings stays in
   the build columns (locked slots already show) and the tooltip; the cost is neutral
   because it is information, not a penalty the rules impose.
+- **On desktop the Box entry's build is one stacked column, like the cards.** *Question:*
+  with the level-up track added, the desktop row had no slack — the sub skills sat cramped
+  and the cost line ran up to the `···`. *Resolution:* equipped ingredients, sub skills and
+  nature share **one** track (`.box-entry__build`), three rows in the cards' order; the
+  grid is `14rem auto 5.5rem 6rem 7rem 9.5rem auto` with its `1.1rem` gap back, and
+  identity widened to 14rem so the longest names with a ribbon read whole. Under 1100px
+  the wrapper is `display: contents` and the parts go back to their own cells, side by
+  side, as before. *Why:* the build is read as one block (it is what the cards show as
+  one), and stacking it is the cheapest width on the row — a full column — which pays for
+  the new track without shrinking any metric.
