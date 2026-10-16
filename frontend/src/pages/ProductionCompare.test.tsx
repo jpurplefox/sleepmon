@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "../api/client";
 import { ComparisonSessionProvider, useComparisonSession } from "../comparisonSession";
 import { LanguageProvider } from "../i18n";
+import { EMPTY_PROGRESS } from "../progress";
 import { newEntry } from "../roster";
 import { recordEvents } from "../telemetry/testing";
 import type { Catalog, Member, MemberInput, Species } from "../types";
@@ -192,5 +193,42 @@ describe("Comparison analytics", () => {
     await user.click(screen.getAllByRole("button", { name: "Clone" })[0]);
     expect(added()).toHaveLength(5);
     expect(rec.events.filter((e) => e.name === "compare_limit_reached")).toHaveLength(1);
+    // At 5/5 neither the add card nor the pager's add item is rendered.
+    expect(screen.queryByRole("button", { name: "+ New" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "+ My box" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Add a Pokémon" })).toBeNull();
+    // Removing a card brings the add card back.
+    await user.click(screen.getAllByRole("button", { name: "Remove" })[0]);
+    expect(await screen.findByRole("button", { name: "+ New" })).toBeTruthy();
+  });
+
+  it("suggests a comparable Box Pokémon, records the pick and stops suggesting it", async () => {
+    const user = userEvent.setup();
+    const bulbasaur = { ...species("Bulbasaur", 1), specialty: "Ingredients" } as Species;
+    vi.spyOn(api, "getCatalog").mockResolvedValue({
+      ...catalog,
+      species: [...catalog.species, bulbasaur],
+    } as Catalog);
+    vi.spyOn(api, "listMembers").mockResolvedValue([
+      raichu,
+      { ...raichu, id: "m-bulba", species: "Bulbasaur" } as Member,
+    ]);
+    // Computations wait for the saved sleep schedule (signed in).
+    vi.spyOn(api, "getProgress").mockResolvedValue(EMPTY_PROGRESS);
+    vi.spyOn(api, "computeProduction").mockResolvedValue({
+      helps_per_day: 0, seconds_per_help: 0, berry: "Grepa Berry", berry_amount: 0, berry_strength: 0,
+      berry_percentage: 0, ingredient_percentage: 0, skill_percentage: 0, effective_skill_percentage: 0,
+      ingredients: [], skill_triggers: 0, skill_ingredients: [], sleep_sessions: [], inventory: 0,
+      inventory_fill_hours: 0, effective_skill_level: 1, skill_level_bonus: 0,
+      main_ingredient_at_60: null,
+    } as unknown as Awaited<ReturnType<typeof api.computeProduction>>);
+    renderCompare();
+    await user.click(await screen.findByRole("button", { name: "+ New" }));
+    await user.click(screen.getByRole("button", { name: "submit-form" }));
+    const pick = await screen.findByRole("button", { name: "Add Raichu, Lv. 30" });
+    expect(screen.queryByRole("button", { name: /^Add Bulbasaur/ })).toBeNull();
+    await user.click(pick);
+    expect(added()).toContainEqual({ tool: "compare", source: "suggestion", species: "Raichu" });
+    expect(screen.queryByRole("button", { name: "Add Raichu, Lv. 30" })).toBeNull();
   });
 });

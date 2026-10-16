@@ -28,6 +28,7 @@ const CATALOG: Record<string, Species> = {
   Charmander: species("Charmander", 4, "Skills", "Leppa", "Cooking Power-Up S"),
   Wigglytuff: species("Wigglytuff", 40, "Skills", "Pecha", "Energy for Everyone S"),
   Darkrai: species("Darkrai", 491, "All", "Wiki", "Charge Strength M (Bad Dreams)"),
+  Houndour: species("Houndour", 228, "Berries", "Wiki", "Charge Strength M"),
   Mew: species("Mew", 151, "All", "Mago", "Versatile"),
 };
 
@@ -71,6 +72,11 @@ describe("comparableOf", () => {
 });
 
 describe("suggestComparables", () => {
+  it("files a mythical Berries base by its berry", () => {
+    const box = [member("hou", "Houndour"), member("sal", "Salamence")];
+    expect(suggest(base("Darkrai"), box)).toEqual(["hou"]);
+  });
+
   it("Berries: same role and berry only", () => {
     const box = [
       member("sal", "Salamence"), member("dra", "Dragonite"),
