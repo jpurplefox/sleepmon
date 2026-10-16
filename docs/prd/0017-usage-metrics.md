@@ -28,7 +28,7 @@ give up nothing personal.
    whether it filled a slot or a split.
 5. **Saved teams** — how many are created, overwritten, opened, renamed, deleted, and
    what they are made of.
-6. **What shapes the numbers** — map, dish type and meals, event effects, Good Camp
+6. **What shapes the numbers** — map, comparison level, dish type and meals, event effects, Good Camp
    Ticket, Player profile, language.
 7. **The way in** — how often the sign-in prompt appears, why, and how often it ends in
    a signed-in account.
@@ -110,6 +110,7 @@ Opening a saved team does **not** emit `pokemon_added` for its members — that 
 | Event | When | Properties |
 |---|---|---|
 | `map_set` | The map changes. | `tool`: `compare` / `team_analysis`; `island` (or `none`); `expert` |
+| `comparison_level_set` | The comparison level changes ([Comparison](0002-comparison.md#comparison-level)). | `level`: `off` / `10` / `25` / `30` / `50` / `60` / `70` |
 | `dish_type_set` | The dish type changes. | `dish_type` |
 | `meals_set` | The meals dialog closes with the meals changed. | `meals` (0–3) |
 | `event_effect_added` | An event effect is confirmed. | `effect` (its kind); `scope`: `team` / `type` / `specialty` |
@@ -181,6 +182,9 @@ The analytics service — not sleepmon — turns the events into:
   `{members_missing: 1}` and no `pokemon_added`.
 - Turning on the Teams list's map filter → `list_filtered` `{list: teams,
   filter: map}`; picking a Pokémon filter → `{filter: pokemon}`.
+- Setting Comparison's comparison level to 60 → `comparison_level_set` `{level: 60}`;
+  back to Off → `{level: off}`. A reload or opening a shared link turns it Off without
+  sending the event.
 - Signed out, pressing "My Pokémon" → `sign_in_prompted` `{reason: my_pokemon}`;
   closing the dialog → `sign_in_abandoned` `{reason: my_pokemon}`; signing in
   instead → `sign_in_completed` `{reason: my_pokemon}`, and the visit's earlier
