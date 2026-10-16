@@ -37,7 +37,7 @@ describe("landing content", () => {
   });
 
   it("walks the catch story in the player's order, each step with copy in both languages", () => {
-    expect(CATCH_STEPS.map((s) => s.id)).toEqual(["upload", "evolve", "pick", "compare"]);
+    expect(CATCH_STEPS.map((s) => s.id)).toEqual(["upload", "evolve", "pick", "settings", "compare"]);
     for (const lang of ["es", "en"] as const)
       for (const s of CATCH_STEPS) expect(UI[lang][`landing.catch.step.${s.id}`], `${lang}:${s.id}`).toBeTruthy();
   });

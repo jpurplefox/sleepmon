@@ -8064,36 +8064,34 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 .landing-tile__go { color: var(--accent-text); font-weight: 600; text-decoration: none; margin-top: 0.3rem; }
 .landing-account { display: inline-flex; gap: 0.3rem; align-items: center; font-size: 0.7rem; font-weight: 600; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px; background: var(--bg); }
 .landing-account svg { width: 11px; height: 11px; }
-/* Catch: full width; the copy and its numbered steps on the left, a stage that plays each
-   step's capture in turn on the right. One 14s cycle; an item lights up while its frame shows. */
+/* Catch: full width; the copy and its numbered steps on the left, a stage on the right that
+   shows the active step's captures. Steps advance on their own (CatchSteps) or on click. */
 .landing-tile--catch { grid-column: span 6; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.8fr); grid-template-areas: "copy stage" "steps stage"; gap: 1.2rem 2rem; align-items: start; }
 .landing-tile--catch .landing-tile__copy { grid-area: copy; }
-.landing-steps { grid-area: steps; list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; position: relative; z-index: 2; }
-.landing-steps__item { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0.6rem; border: 1px solid transparent; border-radius: var(--r-md); color: var(--muted); font-weight: 600; animation: landing-step 14s infinite; animation-delay: calc(var(--i) * 3.5s); }
+.landing-steps { grid-area: steps; list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; position: relative; z-index: 2; }
+.landing-steps__item { position: relative; overflow: hidden; width: 100%; display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.6rem; border: 1px solid transparent; border-radius: var(--r-md); background: transparent; color: var(--muted); font-family: inherit; font-size: var(--text-base); font-weight: 600; text-align: left; cursor: pointer; transition: background 0.15s ease-out, color 0.15s ease-out; }
+@media (hover: hover) { .landing-steps__item:hover { color: var(--text); background: var(--surface-2); } }
+.landing-steps__item[aria-current="step"] { color: var(--text); background: var(--accent-dim); border-color: var(--accent-border); }
 .landing-steps__num { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: var(--text-xs); font-weight: 800; background: var(--surface-2); color: var(--text); }
-.landing-stage { grid-area: stage; position: relative; height: 440px; }
-.landing-stage__frame { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 1rem; opacity: 0; animation: landing-frame 14s infinite; animation-delay: calc(var(--i) * 3.5s); }
+.landing-steps__item[aria-current="step"] .landing-steps__num { background: var(--accent-strong); color: #fff; }
+/* The active step's time, filling along its bottom edge (STEP_MS in CatchSteps). */
+.landing-steps__progress { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: var(--accent); transform-origin: left; animation: landing-step-time 5s linear forwards; }
+@keyframes landing-step-time { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.landing-stage { grid-area: stage; position: relative; height: 460px; }
+.landing-stage__frame { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 1rem; opacity: 0; transform: translateY(10px) scale(0.98); transition: opacity 0.35s ease-out, transform 0.35s ease-out; pointer-events: none; }
+.landing-stage__frame.is-active { opacity: 1; transform: none; }
 .landing-stage__shot { max-height: 100%; max-width: 100%; width: auto; border-radius: 14px; box-shadow: var(--shot-shadow); }
 .landing-stage__frame--upload .landing-stage__shot { max-height: 92%; max-width: 46%; }
 .landing-stage__shot--game-1 { transform: rotate(-5deg); }
 .landing-stage__shot--game-2 { transform: rotate(4deg) translateY(14px); }
-.landing-stage__frame--evolve { flex-direction: column; gap: 0.6rem; }
+.landing-stage__frame--evolve, .landing-stage__frame--settings { flex-direction: column; gap: 0.6rem; }
 .landing-stage__frame--evolve .landing-stage__shot { max-height: 42%; }
+.landing-stage__frame--settings .landing-stage__shot--catch-map { max-height: 72%; }
+.landing-stage__frame--settings .landing-stage__shot--catch-settings { max-height: 16%; border-radius: 12px; }
 .landing-stage__frame--pick .landing-stage__shot { width: 72%; height: auto; }
 .landing-stage__arrow { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--accent-strong); color: #fff; font-weight: 700; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
-@keyframes landing-frame {
-  0% { opacity: 0; transform: translateY(10px) scale(0.98); }
-  4%, 22% { opacity: 1; transform: none; }
-  25%, 100% { opacity: 0; transform: none; }
-}
-@keyframes landing-step {
-  0%, 22% { color: var(--text); background: var(--accent-dim); border-color: var(--accent-border); }
-  25%, 100% { color: var(--muted); background: transparent; border-color: transparent; }
-}
-/* Still: the outcome only, every step listed plainly. */
 @media (prefers-reduced-motion: reduce) {
-  .landing-steps__item, .landing-stage__frame { animation: none; }
-  .landing-stage__frame--compare { opacity: 1; }
+  .landing-stage__frame, .landing-steps__item { transition: none; }
 }
 .landing-tile--share { grid-column: span 2; background: linear-gradient(165deg, #2a2f6d 0%, var(--surface) 62%); }
 /* Below the copy, whole: its link row at the bottom is the point. */

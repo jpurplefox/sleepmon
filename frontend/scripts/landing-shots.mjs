@@ -31,7 +31,8 @@ const BOX = [
   ["Pikachu", 38, "Brave", ["Fancy Apple", "Warming Ginger", "Fancy Egg"], ["Berry Finding S", "Helping Speed M", "Skill Trigger S"], 3],
   ["Arcanine", 30, "Brave", ["Fiery Herb", "Bean Sausage", "Fiery Herb"], ["Skill Trigger M", "Ingredient Finder S"], 3],
   // The Box rival the imported Tyrunt is compared with (Charge Strength files it with Sitrus berries).
-  ["Sudowoodo", 60, "Brave", ["Snoozy Tomato", "Greengrass Soybeans", "Tasty Mushroom"], ["Berry Finding S", "Skill Trigger M", "Helping Speed M", "Helping Bonus", "Skill Level Up M"], 7, "1000h"],
+  // Decent but beatable: the evolved Tyrunt should come out ahead at level 60 on Taupe Hollow.
+  ["Sudowoodo", 60, "Bashful", ["Snoozy Tomato", "Greengrass Soybeans", "Tasty Mushroom"], ["Berry Finding S", "Skill Trigger S", "Helping Speed S", "Ingredient Finder S", "Inventory Up M"], 4, "200h"],
   // The hero's comparison: Venusaur as base, the two Honey rivals beside it.
   ["Venusaur", 62, "Modest", ["Honey", "Honey", "Honey"], ["Research EXP Bonus", "Dream Shard Bonus", "Ingredient Finder M", "Ingredient Finder S", "Inventory Up L"], 3, "500h"],
   ["Pinsir", 60, "Serious", ["Honey", "Honey", "Honey"], ["Inventory Up S", "Ingredient Finder M", "Skill Level Up M", "Helping Bonus", "Skill Level Up S"], 1],
@@ -108,7 +109,7 @@ async function capture(browser, dir, lang) {
       await page.setContent(`<body style="margin:0;background:#0e1220"><img id="g" style="display:block;width:291px" src="data:image/${file.endsWith(".png") ? "png" : "jpeg"};base64,${data}"></body>`);
       await shot(page.locator("#g"), `game-${i + 1}`);
     }
-    // Step by step, as the catch tile animates it: read the screenshots, evolve, raise to 60, compare.
+    // Step by step, as the catch tile plays it: read, evolve, pick a rival, set island and level, compare.
     await page.goto(`${APP}/compare`);
     await page.getByRole("button", { name: /Desde imágenes|From screenshots/ }).first().click();
     await page.locator('input[type="file"]').setInputFiles(GAME_SHOTS);
@@ -134,7 +135,6 @@ async function capture(browser, dir, lang) {
     await page.getByRole("button", { name: /Agregar a la comparación|Add to comparison/ }).click();
     const cards = page.locator(".prod-cards .prod-card:not(.prod-card--add)");
     await cards.first().waitFor();
-    await page.locator(".ctx-levels .level-chip", { hasText: /^60$/ }).click();
     await page.locator(".sug-row", { hasText: "Sudowoodo" }).waitFor();
     await page.waitForTimeout(1500);
     // From the context bar down to the card row's bottom, across the given cards.
@@ -142,7 +142,7 @@ async function capture(browser, dir, lang) {
       const bar = await page.locator(".ctx-bar").first().boundingBox();
       const boxes = await Promise.all(els.map((e) => e.boundingBox()));
       const x = Math.min(bar.x, ...boxes.map((b) => b.x));
-      // Keep the active level chip in frame: it is what step 3 is about.
+      // Keep the active level chip in frame: the level is part of what is compared.
       const chip = await page.locator(".ctx-levels .level-chip--active").boundingBox();
       const right = Math.max(chip.x + chip.width + 8, ...boxes.map((b) => b.x + b.width));
       const bottom = Math.max(...boxes.map((b) => b.y + b.height));
@@ -162,11 +162,20 @@ async function capture(browser, dir, lang) {
     const mapDialog = page.getByRole("dialog");
     await mapDialog.getByRole("button", { name: "Greengrass Isle" }).click();
     await mapDialog.getByRole("option", { name: /^Taupe Hollow/ }).click();
+    await page.waitForTimeout(600);
+    await shot(mapDialog, "catch-map");
     await page.keyboard.press("Escape");
     await mapDialog.waitFor({ state: "hidden" });
-    // Closing hands focus back to the map trigger; its ring doesn't belong in the picture.
+    await page.locator(".ctx-levels .level-chip", { hasText: /^60$/ }).click();
+    // Focus rings (map trigger, level chip) don't belong in the pictures.
     await page.evaluate(() => document.activeElement?.blur());
     await page.waitForTimeout(1500);
+    const bar = await page.locator(".ctx-bar").first().boundingBox();
+    const chip60 = await page.locator(".ctx-levels .level-chip--active").boundingBox();
+    await page.screenshot({
+      path: join(dir, "catch-settings.jpg"), ...JPEG,
+      clip: { x: bar.x - 8, y: bar.y - 8, width: chip60.x + chip60.width + 16 - bar.x, height: bar.height + 16 },
+    });
     await page.screenshot({ path: join(dir, "catch-compare.jpg"), ...JPEG, clip: await clipTo([cards.first(), cards.nth(1)]) });
   });
 
