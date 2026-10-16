@@ -1087,15 +1087,16 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   nature share **one** track (`.box-entry__build`), three rows in the cards' order and
   centered like the cards (no labels beside them), the nature as the named pill; the
   grid is `14rem auto 5.5rem 6rem 7rem 9.5rem auto` with its `1.1rem` gap back, and
-  identity widened to 14rem so the longest names with a ribbon read whole. Under 1100px
-  the wrapper is `display: contents` and the parts go back to their own cells, side by
-  side, as before. *Why:* the build is read as one block (it is what the cards show as
+  identity widened to 14rem so the longest names with a ribbon read whole. On tablet
+  (641–1099px) the same centered stack spans the card's full width (split into two
+  half-columns it read as two unrelated pieces); only the phone, with a label beside
+  each row, turns the wrapper into `display: contents` cells. *Why:* the build is read as one block (it is what the cards show as
   one), and stacking it is the cheapest width on the row — a full column — which pays for
   the new track without shrinking any metric.
 - **The build reads in one order everywhere: ingredients, sub skills, nature.** *Question:*
   the Box showed nature before the sub skills (the picker's order) while the cards show it
   last; and the cards dropped empty sub skill slots while the Box drew placeholders.
-  *Resolution:* the cards' order wins in every Box layout — stacked on desktop, side by side
+  *Resolution:* the cards' order wins in every Box layout — stacked on desktop and tablet
   on tablet, labelled rows on the phone (left-aligned there, since the labels set the
   edge). The order lives in the DOM, not in CSS `order`, so it also reads that way. Both
   the Box and the cards always draw the five sub skill slots; an empty one is the dashed

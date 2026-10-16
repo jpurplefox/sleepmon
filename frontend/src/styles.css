@@ -2497,18 +2497,12 @@ button.shot--empty:focus-visible,
    afinidad. Acá NO importa la alineación entre cards (cada card es más alta y la info
    queda lejos igual), así que priorizamos densidad y agrupación:
      fila 1: identidad             | menú "···"
-     fila 2: ingredientes equip.   | config (naturaleza + sub skills)   ← build
+     fila 2: build stacked and centered (ingredients · sub skills · nature) ← full width
      fila 3: bayas + fuerza        | skill                              ← producción
      fila 4: ingredientes producidos (ancho completo, en fila que envuelve)
    Va al final de la sección para ganarle por orden a las reglas base (las media
    queries no suman especificidad: decide el orden en el archivo). */
 @media (max-width: 1099px) {
-  /* The build wrapper only exists for the desktop stack: here its parts go back to
-     their own grid cells (equipped ingredients | nature + sub skills), side by side. */
-  .box-entry__build {
-    display: contents;
-  }
-
   .box-entry {
     position: relative;
     grid-template-columns: 1fr 1fr;
@@ -2533,16 +2527,12 @@ button.shot--empty:focus-visible,
     right: 1.25rem;
   }
 
-  .box-entry__ing-config {
-    grid-column: 1;
+  /* The build keeps the desktop stack (ingredients · sub skills · nature, centered)
+     across the card's full width: split into two half-columns it read as two
+     unrelated pieces. */
+  .box-entry__build {
+    grid-column: 1 / -1;
     grid-row: 2;
-  }
-
-  .box-entry__config.prod-box-item__config {
-    grid-column: 2;
-    grid-row: 2;
-    /* A la izquierda: centrada se vería flotando en su media columna. */
-    align-items: flex-start;
   }
 
   /* Sub skills un toque más chicos para que los 5 entren en media columna a ~375px
@@ -2600,6 +2590,11 @@ button.shot--empty:focus-visible,
    (build y producción). Las etiquetas solo existen acá: en pantalla ancha, la
    posición de cada columna ya cumple ese papel. */
 @media (max-width: 640px) {
+  /* With labels beside each row, the build's parts become cells of their own. */
+  .box-entry__build {
+    display: contents;
+  }
+
   .box-entry {
     /* etiqueta | valor. Las filas se numeran explícitamente más abajo, así el
        orden visual no depende del orden del DOM. */
