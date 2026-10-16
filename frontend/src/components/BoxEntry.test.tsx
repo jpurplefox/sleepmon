@@ -71,12 +71,12 @@ const MEMBER: Member = {
   },
 };
 
-function renderEntry(member: Member = MEMBER) {
+function renderEntry(member: Member = MEMBER, species: Species = VENUSAUR) {
   return render(
     <LanguageProvider>
       <BoxEntry
         member={member}
-        species={VENUSAUR}
+        species={species}
         tierBySubSkill={() => "Blue"}
         onEdit={() => {}}
         onDelete={() => {}}
@@ -202,8 +202,37 @@ describe("level-up cost", () => {
     const { container } = renderEntry(LEVELED);
     const pill = container.querySelector(".levelup-gain") as HTMLElement;
     expect(pill).toHaveClass("prod-delta--up");
-    expect(pill).toHaveTextContent("+30.0 new");
+    expect(pill).toHaveTextContent("+30.0");
     expect(pill.querySelector(".prod-delta__arrow")).toBeNull();
+    // The desktop row drops the visible "new" word to stay compact.
+    expect(pill.querySelector(".levelup-gain__new")).toBeNull();
+  });
+
+  it("puts the span and the gain on one line, the cost on the next", () => {
+    useEnglish();
+    setViewport(false);
+    const { container } = renderEntry(LEVELED);
+    const head = container.querySelector(".box-entry__levelup-head") as HTMLElement;
+    expect(within(head).getByText("Lv. 55 → 60")).toBeInTheDocument();
+    expect(head.querySelector(".levelup-gain")).not.toBeNull();
+    expect(head.querySelector(".levelup-cost")).toBeNull();
+  });
+
+  it("abbreviates a large strength gain", () => {
+    useEnglish();
+    setViewport(false);
+    const berry: Member = {
+      ...LEVELED,
+      production: {
+        ...LEVELED.production!,
+        level_up: {
+          ...LEVELED.production!.level_up!,
+          at_target: { ...AT_TARGET, berry_strength: 12215 },
+        },
+      },
+    };
+    const { container } = renderEntry(berry, { ...VENUSAUR, specialty: "Berries" });
+    expect(container.querySelector(".levelup-gain")).toHaveTextContent("2.05K");
   });
 
   it("shows the main ingredient's delta when the span unlocks no ingredient", () => {
@@ -278,6 +307,7 @@ describe("level-up cost", () => {
     expect(screen.getByText("Next level")).toBeInTheDocument();
     expect(screen.getByText("Cost")).toBeInTheDocument();
     expect(screen.getByText("1.23K")).toBeInTheDocument();
+    expect(container.querySelector(".levelup-gain__new")).toHaveTextContent("new");
     // The desktop cell isn't rendered on a phone.
     expect(container.querySelector(".box-entry__levelup")).toBeNull();
   });

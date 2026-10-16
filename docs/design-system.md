@@ -1063,7 +1063,9 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   strip under each entry, or as a column? *Resolution:* a **7th grid track,
   `levelup`**, between Skill and the `···` menu (`9.5rem`; the Box entry's column gap narrowed from `1.1rem` to `0.8rem` so eight columns fit the 1100px layout, and the narrow-layout breakpoint moved from 1024px to 1099px): the span `Nv. 25 → 30`
   (`--text-base`, 600, tabular, the tooltip cue opening the wide comparison `Tooltip`),
-  a gain pill (`.prod-delta` with the metric's icon) and the candy + shard figures at
+  and a gain pill (`.prod-delta` with the metric's icon; a strength gain abbreviated like
+  the cost, `▲2.05K`; a new ingredient reads `+9.8` with no "new" word here, the phone
+  section and the tooltip spell it out) share the first line; under them, the candy + shard figures at
   `--text-sm`, neutral, **abbreviated** from 1,000 up (three significant digits: `1.23K`,
   `535K`, `1.14M`) so the column never grows past its track — the exact figures head the
   comparison tooltip. Rendered empty at level 70+ so the track stays aligned. The

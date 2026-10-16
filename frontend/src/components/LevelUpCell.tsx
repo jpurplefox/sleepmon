@@ -24,8 +24,12 @@ type Dir = "up" | "down" | "same";
 
 // The direction and magnitude of a change, rounded the way it's shown: a change
 // that rounds to zero reads as "same" (≈), as Comparison's deltas do.
-function deltaParts(now: number, then: number, digits: Digits): { dir: Dir; text: string } {
-  const f = digits === 0 ? fmtInt : fmt;
+function deltaParts(
+  now: number,
+  then: number,
+  digits: Digits,
+  f: (n: number) => string = digits === 0 ? fmtInt : fmt,
+): { dir: Dir; text: string } {
   const diff = Number(then.toFixed(digits)) - Number(now.toFixed(digits));
   const text = f(Math.abs(diff));
   if (text === f(0)) return { dir: "same", text: "≈" };
@@ -54,7 +58,9 @@ function Delta({ now, then, digits }: { now: number; then: number; digits: Digit
   );
 }
 
-function GainPill({ gain }: { gain: Gain }) {
+// `showNew`: the phone section spells out "new"; the desktop row keeps only "+N" to
+// stay compact (the tooltip still marks the ingredient as new).
+function GainPill({ gain, showNew }: { gain: Gain; showNew: boolean }) {
   const { t, ingredient } = useI18n();
   let icon: React.ReactNode;
   let name: string;
@@ -73,10 +79,19 @@ function GainPill({ gain }: { gain: Gain }) {
     return (
       <span className="prod-delta prod-delta--up levelup-gain" title={name}>
         {icon}
-        {label}+{fmt(gain.then)} {t("levelUp.new")}
+        {label}+{fmt(gain.then)}
+        {showNew ? (
+          <span className="levelup-gain__new"> {t("levelUp.new")}</span>
+        ) : (
+          <span className="sr-only"> {t("levelUp.new")}</span>
+        )}
       </span>
     );
-  const parts = deltaParts(gain.now, gain.then, gain.kind === "strength" ? 0 : 1);
+  // Strength runs to thousands: abbreviate it (2.05K) so the pill stays short.
+  const parts =
+    gain.kind === "strength"
+      ? deltaParts(gain.now, gain.then, 0, fcompact)
+      : deltaParts(gain.now, gain.then, 1);
   return (
     <span className={`prod-delta prod-delta--${parts.dir} levelup-gain`} title={name}>
       {icon}
@@ -258,7 +273,7 @@ export function LevelUpCell({ member, specialty, skill, production, layout, tier
         <span className="box-entry__label box-entry__label--next">{t("box.labelNextLevel")}</span>
         <span className="box-entry__levelup-next">
           {span}
-          <GainPill gain={gain} />
+          <GainPill gain={gain} showNew />
         </span>
         <span className="box-entry__label box-entry__label--cost">{t("box.labelCost")}</span>
         <span className="box-entry__levelup-cost">{cost}</span>
@@ -266,8 +281,10 @@ export function LevelUpCell({ member, specialty, skill, production, layout, tier
     );
   return (
     <div className="box-entry__levelup">
-      {span}
-      <GainPill gain={gain} />
+      <span className="box-entry__levelup-head">
+        {span}
+        <GainPill gain={gain} showNew={false} />
+      </span>
       {cost}
     </div>
   );

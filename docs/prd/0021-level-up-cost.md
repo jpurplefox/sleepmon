@@ -168,8 +168,10 @@ All costs below are for species candies, with no boost.
   Charge Strength shows its strength gain too; a Skills specialist with Energy for Everyone
   shows its skill-trigger gain; an Ingredients specialist shows its main ingredient's gain.
 - **Gain on an ingredient unlock:** an Ingredients specialist at level 25 targeting 30 shows
-  the ingredient that unlocks at 30 as **new**, with its amount at 30 — not a fall in its
-  main ingredient.
+  the ingredient that unlocks at 30 with its amount at 30 — not a fall in its main
+  ingredient. The phone section and the comparison call it **new**; the desktop row keeps
+  just the ingredient's icon and **+amount** to stay compact.
+- **Abbreviated strength gain:** a strength gain of 2,048 reads **▲2.05K** in the entry.
 - **Several unlocks:** with the minimum at **60**, a level 15 Pokémon's comparison lists the
   unlocks at **25, 30, 50 and 60**, in that order, and its rows add up all of them.
 - **Comparison:** a level 25 Pokémon with three recorded ingredients targets 30; its

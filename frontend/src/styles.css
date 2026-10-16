@@ -2324,6 +2324,15 @@ button.shot--empty:focus-visible,
   min-width: 0;
 }
 
+/* Span and gain share the cell's first line (as in the phone section); the cost
+   sits under them. */
+.box-entry__levelup-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
+
 .levelup-span {
   font-size: var(--text-base);
   font-weight: 600;
