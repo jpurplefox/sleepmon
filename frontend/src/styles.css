@@ -8064,14 +8064,33 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 .landing-tile__go { color: var(--accent-text); font-weight: 600; text-decoration: none; margin-top: 0.3rem; }
 .landing-account { display: inline-flex; gap: 0.3rem; align-items: center; font-size: 0.7rem; font-weight: 600; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px; background: var(--bg); }
 .landing-account svg { width: 11px; height: 11px; }
-/* Full width: screenshots, then the card they become beside a Box rival. */
-.landing-tile--catch { grid-column: span 6; min-height: 480px; }
-.landing-tile--catch .landing-tile__copy { max-width: 30%; }
-/* Two game screenshots, an arrow, and the card they become. */
-.landing-shot--game-1 { width: 112px; right: calc(46% + 110px); top: 70px; transform: rotate(-7deg); border-radius: 12px; }
-.landing-shot--game-2 { width: 112px; right: calc(46% + 44px); top: 116px; transform: rotate(5deg); border-radius: 12px; }
-.landing-shot--import-compare { width: 43%; right: 2.5%; top: 28px; z-index: 1; }
-.landing-tile__arrow { position: absolute; right: calc(46% - 4px); top: 220px; z-index: 2; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--accent-strong); color: #fff; font-size: 1.2rem; font-weight: 700; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
+/* Catch: full width; the copy and its numbered steps on the left, a stage that plays each
+   step's capture in turn on the right. One 14s cycle; an item lights up while its frame shows. */
+.landing-tile--catch { grid-column: span 6; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.8fr); grid-template-areas: "copy stage" "steps stage"; gap: 1.2rem 2rem; align-items: start; }
+.landing-tile--catch .landing-tile__copy { grid-area: copy; }
+.landing-steps { grid-area: steps; list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; position: relative; z-index: 2; }
+.landing-steps__item { display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0.6rem; border: 1px solid transparent; border-radius: var(--r-md); color: var(--muted); font-weight: 600; animation: landing-step 14s infinite; animation-delay: calc(var(--i) * 3.5s); }
+.landing-steps__num { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: var(--text-xs); font-weight: 800; background: var(--surface-2); color: var(--text); }
+.landing-stage { grid-area: stage; position: relative; height: 440px; }
+.landing-stage__frame { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 1rem; opacity: 0; animation: landing-frame 14s infinite; animation-delay: calc(var(--i) * 3.5s); }
+.landing-stage__shot { max-height: 100%; max-width: 100%; width: auto; border-radius: 14px; box-shadow: var(--shot-shadow); }
+.landing-stage__frame--upload .landing-stage__shot { max-height: 92%; max-width: 46%; }
+.landing-stage__shot--game-1 { transform: rotate(-5deg); }
+.landing-stage__shot--game-2 { transform: rotate(4deg) translateY(14px); }
+@keyframes landing-frame {
+  0% { opacity: 0; transform: translateY(10px) scale(0.98); }
+  4%, 22% { opacity: 1; transform: none; }
+  25%, 100% { opacity: 0; transform: none; }
+}
+@keyframes landing-step {
+  0%, 22% { color: var(--text); background: var(--accent-dim); border-color: var(--accent-border); }
+  25%, 100% { color: var(--muted); background: transparent; border-color: transparent; }
+}
+/* Still: the outcome only, every step listed plainly. */
+@media (prefers-reduced-motion: reduce) {
+  .landing-steps__item, .landing-stage__frame { animation: none; }
+  .landing-stage__frame--compare { opacity: 1; }
+}
 .landing-tile--share { grid-column: span 2; background: linear-gradient(165deg, #2a2f6d 0%, var(--surface) 62%); }
 /* Below the copy, whole: its link row at the bottom is the point. */
 .landing-shot--share-dialog { width: 280px; left: 50%; top: 152px; transform: translateX(-50%) rotate(-3deg); }
@@ -8109,12 +8128,8 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   .landing-fan__center { width: 172px !important; }
   .landing-bento { grid-template-columns: minmax(0, 1fr); padding-bottom: 2rem; }
   .landing-tile--catch, .landing-tile--share, .landing-tile--plan, .landing-tile--levelup { grid-column: auto; }
-  .landing-tile--catch { min-height: 850px; }
-  .landing-tile--catch .landing-tile__copy { max-width: none; }
-  .landing-shot--game-1 { top: 300px; right: auto; left: 18%; width: 84px; }
-  .landing-shot--game-2 { top: 320px; right: auto; left: 42%; width: 84px; }
-  .landing-shot--import-compare { top: auto; bottom: 16px; right: 4%; width: 92%; }
-  .landing-tile__arrow { top: auto; bottom: 318px; right: 46%; transform: rotate(90deg); }
+  .landing-tile--catch { grid-template-columns: minmax(0, 1fr); grid-template-areas: "copy" "steps" "stage"; }
+  .landing-stage { height: 400px; }
   .landing-tile--share { min-height: 540px; }
   .landing-shot--share-dialog { width: 290px; top: 170px; }
   .landing-shot--team-card-1, .landing-shot--team-card-2, .landing-shot--team-card-3 { width: 110px; }

@@ -108,25 +108,37 @@ async function capture(browser, dir, lang) {
       await page.setContent(`<body style="margin:0;background:#0e1220"><img id="g" style="display:block;width:291px" src="data:image/${file.endsWith(".png") ? "png" : "jpeg"};base64,${data}"></body>`);
       await shot(page.locator("#g"), `game-${i + 1}`);
     }
-    // Upload them through "+ From screenshots"; the mocked reading fills the form; add the card.
+    // Step by step, as the catch tile animates it: read the screenshots, evolve, raise to 60, compare.
     await page.goto(`${APP}/compare`);
     await page.getByRole("button", { name: /Desde imágenes|From screenshots/ }).first().click();
     await page.locator('input[type="file"]').setInputFiles(GAME_SHOTS);
     await page.getByRole("button", { name: /Leer imágenes|Read screenshots/ }).click();
     await page.locator(".form-summary").waitFor();
+    await page.getByRole("button", { name: /Evolucionar a|Evolve to/ }).first().click();
+    await page.waitForTimeout(600);
+    await shot(page.getByRole("dialog"), "catch-form");
     await page.getByRole("button", { name: /Agregar a la comparación|Add to comparison/ }).click();
     const cards = page.locator(".prod-cards .prod-card:not(.prod-card--add)");
     await cards.first().waitFor();
-    // One tap on the suggestion puts the Box rival beside it.
+    await page.locator(".ctx-levels .level-chip", { hasText: /^60$/ }).click();
+    await page.locator(".sug-row", { hasText: "Sudowoodo" }).waitFor();
+    await page.waitForTimeout(1500);
+    // From the context bar down to the card row's bottom, across the given cards.
+    const clipTo = async (els) => {
+      const bar = await page.locator(".ctx-bar").first().boundingBox();
+      const boxes = await Promise.all(els.map((e) => e.boundingBox()));
+      const x = Math.min(bar.x, ...boxes.map((b) => b.x));
+      // Keep the active level chip in frame: it is what step 3 is about.
+      const chip = await page.locator(".ctx-levels .level-chip--active").boundingBox();
+      const right = Math.max(chip.x + chip.width + 8, ...boxes.map((b) => b.x + b.width));
+      const bottom = Math.max(...boxes.map((b) => b.y + b.height));
+      return { x, y: bar.y - 12, width: right - x, height: bottom - bar.y + 12 };
+    };
+    await page.screenshot({ path: join(dir, "catch-level.jpg"), ...JPEG, clip: await clipTo([cards.first(), page.locator(".prod-card--add")]) });
     await page.locator(".sug-row", { hasText: "Sudowoodo" }).click();
     await cards.nth(1).waitFor();
     await page.waitForTimeout(1500);
-    const a = await cards.nth(0).boundingBox();
-    const b = await cards.nth(1).boundingBox();
-    await page.screenshot({
-      path: join(dir, "import-compare.jpg"), ...JPEG,
-      clip: { x: a.x, y: Math.min(a.y, b.y), width: b.x + b.width - a.x, height: Math.max(a.y + a.height, b.y + b.height) - Math.min(a.y, b.y) },
-    });
+    await page.screenshot({ path: join(dir, "catch-compare.jpg"), ...JPEG, clip: await clipTo([cards.first(), cards.nth(1)]) });
   });
 
   await scene(browser, lang, async (page) => {

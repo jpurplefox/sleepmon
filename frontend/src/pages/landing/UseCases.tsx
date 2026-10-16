@@ -2,11 +2,13 @@ import { Link } from "wouter";
 
 import { IconUser } from "../../components/icons";
 import { useI18n } from "../../i18n";
+import { CatchSteps } from "./CatchSteps";
 import { USE_CASES, shotUrl, type ShotName, type UseCaseId } from "./content";
 
 // Each tile's captures: the first carries the case's alt text, the rest are decoration.
+// The catch tile plays its own step-by-step story instead.
 const SHOTS: Record<UseCaseId, readonly ShotName[]> = {
-  catch: ["import-compare", "game-1", "game-2"],
+  catch: [],
   share: ["share-dialog"],
   plan: ["team-totals", "team-card-1", "team-card-2", "team-card-3"],
   levelup: ["levelup-tip", "box-entry"],
@@ -47,7 +49,7 @@ export function UseCases() {
                 decoding="async"
               />
             ))}
-            {c.id === "catch" && <span className="landing-tile__arrow" aria-hidden="true">→</span>}
+            {c.id === "catch" && <CatchSteps />}
           </article>
         ))}
       </div>

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { UI } from "../../i18n/ui";
 import { ROUTES } from "../../routes";
-import { FAQ_HREF, FAQ_ITEMS, USE_CASES, shotUrl } from "./content";
+import { CATCH_STEPS, FAQ_HREF, FAQ_ITEMS, USE_CASES, shotUrl } from "./content";
 
 const routeValues = new Set<string>(Object.values(ROUTES));
 
@@ -34,6 +34,12 @@ describe("landing content", () => {
       ...FAQ_ITEMS.flatMap((i) => [`landing.faq.${i.id}.q`, `landing.faq.${i.id}.a`, ...(i.link ? [i.link.labelKey] : [])]),
     ];
     for (const lang of ["es", "en"] as const) for (const k of keys) expect(UI[lang][k], `${lang}:${k}`).toBeTruthy();
+  });
+
+  it("walks the catch story in the player's order, each step with copy in both languages", () => {
+    expect(CATCH_STEPS.map((s) => s.id)).toEqual(["upload", "evolve", "level", "compare"]);
+    for (const lang of ["es", "en"] as const)
+      for (const s of CATCH_STEPS) expect(UI[lang][`landing.catch.step.${s.id}`], `${lang}:${s.id}`).toBeTruthy();
   });
 
   it("marks where each FAQ link goes in its answer", () => {
