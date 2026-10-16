@@ -447,8 +447,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
           {/* The add card lives in the grid while there is room; at 5 it is gone. */}
           {!atMax && (
             <div className="prod-card-cell">
-              {/* Placeholder for the toolbar, so this card's body aligns with the others. */}
-              <div className="prod-card__toolbar prod-card__toolbar--empty" aria-hidden="true" />
+              {/* No toolbar placeholder: the card spans the whole cell, as tall as a card plus its toolbar. */}
               <article className="prod-card prod-card--add">
                 {entries.length === 0 ? (
                   <div className="prod-add__hint">
