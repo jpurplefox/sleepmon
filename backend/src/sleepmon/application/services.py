@@ -16,6 +16,7 @@ from uuid import UUID
 from sleepmon.application.dto import (
     BerrySourceDTO,
     BerryYieldDTO,
+    ComparisonRaise,
     Distributions,
     EventEffectInput,
     FillerDTO,
@@ -71,7 +72,7 @@ from sleepmon.domain.event_bonus import (
     EventScope,
     value_allowed,
 )
-from sleepmon.domain.leveling import exp_modifier, level_up_cost, target_level
+from sleepmon.domain.leveling import comparison_raise, exp_modifier, level_up_cost, target_level
 from sleepmon.domain.map_bonuses import MapBonuses
 from sleepmon.domain.ports import (
     PlayerProgressRepository,
@@ -539,10 +540,16 @@ class DefaultProductionService(ProductionService):
     def compute_production(self, data: ProductionInput) -> ProductionResult:
         # Stateless: no repo access, so it serves a Box Pokémon and an ad-hoc one alike.
         cfg = _resolve_config(self._catalog, data)
+        raised = comparison_raise(
+            cfg.level,
+            data.comparison_level,
+            curve=cfg.species.growth,
+            nature=exp_modifier(cfg.nature),
+        )
         result = daily_production(
             cfg.species,
             cfg.ingredients,
-            cfg.level,
+            raised.target_level if raised else cfg.level,
             cfg.nature,
             cfg.sub_skills,
             cfg.ribbon,
@@ -555,7 +562,15 @@ class DefaultProductionService(ProductionService):
             ),
             sleep=parse_sleep(data.sleep),
         )
-        return _production_result(result)
+        production = _production_result(result)
+        if raised is None:
+            return production
+        return replace(
+            production,
+            comparison_raise=ComparisonRaise(
+                raised.current_level, raised.target_level, raised.candies, raised.dream_shards
+            ),
+        )
 
     def list_recipes(self) -> list[RecipeDTO]:
         return [

@@ -45,6 +45,9 @@ swipes one card per screen, but the picture always shows **every card side by si
 - Drawn as the dialog opens, from the cards exactly as they are on screen: the same
   numbers, the deltas against the base, the "Base" chip and the map's marks.
 - A picture has nothing to tap: no action bar, no reorder arrows, no "Make base".
+- **Comparison level** ([Comparison](0002-comparison.md#comparison-level)): a raised
+  card shows its **target level as its level** — no arrow, no cost — computed exactly
+  as on screen. The strip doesn't mention the comparison level.
 - **The strip** above the cards:
   - sleepmon's logo and name;
   - the map by its name, labelled like the sleep — "Map: Cyan Beach";
@@ -70,10 +73,12 @@ swipes one card per screen, but the picture always shows **every card side by si
   - signed out, it first passes an anti-bot check — usually invisible; if Cloudflare asks
     for a challenge, it shows right there. Signed in, there is no check;
   - it keeps a copy of the cards, the map terms, the sharer's sleep schedule, the
-    sharer's language and the picture.
+    sharer's language and the picture. A card raised by the comparison level is kept
+    **at its target level, as its own level**; the comparison level itself is not kept.
 - **Reused** while the comparison doesn't change: reopening the dialog on the same cards
-  and map terms shows the same link instead of creating another. Any change to the cards
-  or the map terms makes the next dialog create a new one.
+  and map terms shows the same link instead of creating another. A change to the cards,
+  the map terms or **the levels the comparison level gives the cards** makes the next
+  dialog create a new one.
 - **Copy** puts the link on the clipboard and reads *"Copied!"* for a moment; the link
   itself doesn't change.
 - A link that couldn't be created shows its error in place of the link, with **Try
@@ -97,7 +102,8 @@ swipes one card per screen, but the picture always shows **every card side by si
   "Compare" from the Box does.
 - The cards arrive unlinked from any Box, as fresh cards: they can be edited, cloned,
   reordered or saved to the recipient's Box. The map, favorite berries and weekly bonus
-  are the ones the sharer left. A link made back when Comparison offered a plain "Normal"
+  are the ones the sharer left. The comparison level is **Off**: a card the sharer had
+  raised arrives at that target level as its own, with no arrow. A link made back when Comparison offered a plain "Normal"
   map opens on **Greengrass Isle**, which has the same terms.
 - The numbers are computed with the **recipient's** sleep schedule (their Player
   profile, or the default night signed out), like every number they see.
@@ -150,6 +156,9 @@ swipes one card per screen, but the picture always shows **every card side by si
 - A created link previews with the picture and the title *"Comparación: Pikachu vs
   Raichu"*; shared from the app in English, *"Comparison: Pikachu vs Raichu"*.
 - Changing the comparison after creating the link → the link still opens the original.
+- Comparison level **60**, a level **45** card → the picture shows it at **Lv. 60**, with
+  no arrow; changing the comparison level so a card's level changes, then opening the
+  dialog → a new link.
 
 **Opening a link**
 
@@ -158,6 +167,9 @@ swipes one card per screen, but the picture always shows **every card side by si
   address becomes `/compare`.
 - The opened cards are tied to no Box: "Save to Box" creates a new Pokémon in the
   recipient's Box.
+- A link shared with the comparison level at **60** and a level **45** card → the
+  recipient gets that card at **level 60** as its own (no arrow; **Edit** opens at 60;
+  **Save to Box** saves 60) and their comparison level is **Off**.
 - The notice, by case (es / en), × closes it in all of them:
   - sharer night 7:00 + nap 2:00, recipient 8:30 → *"Quien te compartió esta comparación
     duerme en dos sesiones (noche 7:00 y siesta 2:00) y vos en una sesión de 8:30, así que
@@ -192,6 +204,8 @@ swipes one card per screen, but the picture always shows **every card side by si
 - **The numbers are always yours.** An opened comparison computes with the recipient's
   sleep schedule, like everything else they see; a different schedule is pointed out,
   never applied.
+- **The recipient gets the hypothesis, not the switch.** What the sharer compared at a
+  comparison level travels as plain levels, so the cards read the same on both sides.
 - **Only what's needed is kept**: the cards, the map terms, the sleep schedule, the
   language and the picture. The recipient sees nothing about the sharer beyond their
   sleep sessions, in the notice.

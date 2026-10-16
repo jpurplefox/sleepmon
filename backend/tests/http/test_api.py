@@ -1172,3 +1172,23 @@ def test_team_listing_carries_the_level_up(
     assert up["at_target"]["helps_per_day"] > rows[15]["production"]["helps_per_day"]
     assert up["at_target"]["level_up"] is None
     assert rows[75]["production"]["level_up"] is None
+
+
+def test_production_reports_comparison_raise(client: TestClient) -> None:
+    body = client.post(
+        "/production", json=valid_payload(level=15, nature="", comparison_level=60)
+    ).json()
+    assert body["comparison_raise"] == {
+        "from_level": 15,
+        "to_level": 60,
+        "candies": 1803,
+        "dream_shards": 535149,
+    }
+
+
+def test_production_without_comparison_level_has_no_raise(client: TestClient) -> None:
+    assert client.post("/production", json=valid_payload()).json()["comparison_raise"] is None
+
+
+def test_production_rejects_comparison_level_off_the_list(client: TestClient) -> None:
+    assert client.post("/production", json=valid_payload(comparison_level=40)).status_code == 400

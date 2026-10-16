@@ -4076,14 +4076,37 @@ button.prod-card__base-tag--action {
   color: var(--text);
 }
 
-/* Raised by a bonus: "Lv. 3 → 4" — the level set steps back, the one used reads as good. */
-.prod-card__skill-lv-set {
+/* Raised by a rule: "Lv. 3 → 4" — the level set steps back, the one used reads as good. */
+.prod-card__skill-lv-set,
+.raised-lv__set {
   color: var(--muted);
   font-weight: 500;
 }
 
-.prod-card__skill-lv-boost {
+.prod-card__skill-lv-boost,
+.raised-lv__used {
   color: var(--up);
+  font-weight: 600;
+}
+
+.raised-lv {
+  white-space: nowrap;
+}
+
+/* In the name line the raise keeps the plain level's size and weight: only color moves. */
+.prod-card__title .raised-lv {
+  font-size: var(--text-sm);
+}
+
+.prod-card__title .raised-lv__set,
+.prod-card__title .raised-lv__used {
+  font-weight: 400;
+}
+
+/* Comparison's raise tooltip has only the head: no divider under it. */
+.levelup-tip__head--bare {
+  padding-bottom: 0;
+  border-bottom: 0;
 }
 
 /* The bonus overflows the skill's max: a small caps note after the level used. */
@@ -6615,6 +6638,16 @@ button.prod-card__base-tag--action {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Comparison's level chips: one row that wraps as a whole under its label. */
+.ctx-field:has(.ctx-levels) {
+  flex-wrap: wrap;
+}
+
+.ctx-levels {
+  display: inline-flex;
+  gap: 0.3rem;
 }
 
 .ctx-map .filter-btn__icons,

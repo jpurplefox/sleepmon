@@ -9,6 +9,7 @@ import { ComparisonSessionProvider, useComparisonSession } from "../comparisonSe
 import { LanguageProvider } from "../i18n";
 import { newEntry } from "../roster";
 import { recordEvents } from "../telemetry/testing";
+import { production } from "../test/productionFixture";
 import type { Catalog, Member, MemberInput, Species } from "../types";
 
 const pikachuForm = vi.hoisted(() => ({
@@ -192,5 +193,57 @@ describe("Comparison analytics", () => {
     await user.click(screen.getAllByRole("button", { name: "Clone" })[0]);
     expect(added()).toHaveLength(5);
     expect(rec.events.filter((e) => e.name === "compare_limit_reached")).toHaveLength(1);
+  });
+});
+
+describe("Comparison level", () => {
+  it("sends the level with every card and records it; save keeps the real level", async () => {
+    const rec = recordEvents();
+    // Signed in: the cards only compute once the profile's sleep schedule is known.
+    vi.spyOn(api, "getProgress").mockResolvedValue({ sleep: { night_minutes: 510, nap_minutes: null } } as never);
+    const raised = { ...production, comparison_raise: { from_level: 30, to_level: 60, candies: 1, dream_shards: 2 } };
+    const compute = vi.spyOn(api, "computeProduction").mockResolvedValue(raised as never);
+    const create = vi.spyOn(api, "createMember").mockResolvedValue(raichu);
+    const user = userEvent.setup();
+    renderCompare();
+    await user.click(await screen.findByRole("button", { name: "+ New" }));
+    await user.click(screen.getByRole("button", { name: "submit-form" }));
+
+    await user.click(await screen.findByRole("radio", { name: "Level 60" }));
+
+    await waitFor(() =>
+      expect(compute).toHaveBeenLastCalledWith(expect.objectContaining({ level: 30, comparison_level: 60 })),
+    );
+    expect(rec.events).toContainEqual({ name: "comparison_level_set", props: { level: "60" } });
+
+    // Save and Clone use the card's real level, not the raised one.
+    await user.click(await screen.findByRole("button", { name: "Save as new to your box" }));
+    await waitFor(() => expect(create).toHaveBeenCalledWith(expect.objectContaining({ level: 30 })));
+    create.mockClear();
+    await user.click(screen.getAllByRole("button", { name: "Clone" })[0]);
+    // The saved original now offers "update"; the clone is the only unsaved card.
+    await user.click(await screen.findByRole("button", { name: "Save as new to your box" }));
+    await waitFor(() => expect(create).toHaveBeenCalledWith(expect.objectContaining({ level: 30 })));
+    rec.restore();
+  });
+
+  it("keeps the level when Compare brings a Box Pokémon", async () => {
+    function SeedLevel({ children }: { children: React.ReactNode }) {
+      const { setComparisonLevel } = useComparisonSession();
+      useEffect(() => setComparisonLevel(50), [setComparisonLevel]);
+      return <>{children}</>;
+    }
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <LanguageProvider>
+          <ComparisonSessionProvider>
+            <SeedLevel>
+              <Production baseMemberId="m-raichu" onBaseConsumed={() => {}} />
+            </SeedLevel>
+          </ComparisonSessionProvider>
+        </LanguageProvider>
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByRole("radio", { name: "Level 50" })).toHaveAttribute("aria-checked", "true");
   });
 });

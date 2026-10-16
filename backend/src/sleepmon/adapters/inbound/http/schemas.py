@@ -187,6 +187,7 @@ class ProductionIn(msgspec.Struct, forbid_unknown_fields=True):
     main_favorite: str | None = None
     weekly_bonus: str | None = None
     sleep: SleepIn | None = None
+    comparison_level: int | None = None  # 10/25/30/50/60/70; None = off
 
 
 class SlotProductionOut(msgspec.Struct):
@@ -199,6 +200,13 @@ class SleepSessionOut(msgspec.Struct):
     hours: float
     overflow_hours: float
     skill_chances: list[float]
+
+
+class ComparisonRaiseOut(msgspec.Struct):
+    from_level: int
+    to_level: int
+    candies: int
+    dream_shards: int
 
 
 class ProductionOut(msgspec.Struct):
@@ -237,6 +245,7 @@ class ProductionOut(msgspec.Struct):
     skill_energy_drain: float | None = None
     teammate_berries: list[BerryYieldOut] | None = None
     teammate_ingredients: list[SlotProductionOut] | None = None
+    comparison_raise: ComparisonRaiseOut | None = None
 
 
 class IngredientCountOut(msgspec.Struct):
