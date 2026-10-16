@@ -15,7 +15,8 @@ is the comparison.
 ## What it does (scope)
 
 1. **Add Pokémon to compare**, in three ways — a **new** ad-hoc config, one brought
-   from the [Box](0001-box.md), or a **clone** of a card already present.
+   from the [Box](0001-box.md), or a **clone** of a card already present — with
+   **suggestions** of the Box Pokémon most comparable to the base, one tap away.
 2. **Estimate and show** each card's daily production: help cadence, helps/day,
    inventory and fill time, and three equal-weight blocks — **berries, ingredients,
    and skill** — including the chance of triggering the skill **while asleep**.
@@ -46,8 +47,41 @@ is the comparison.
   Meant for comparing **variants** of a similar Pokémon (bump the level, swap a sub
   skill or an ingredient, and read the effect).
 
+While there is room (fewer than 5 cards), the ways to add live in an **add card** after
+the last card; at 5 cards the add card is not shown.
+
 Entering Comparison from the Box's **Compare** action starts a comparison about that
 Pokémon: it becomes the only card (the base), replacing whatever the comparison held.
+
+### Suggestions
+
+Once the comparison holds a card, the add card opens with **up to 3 shortcuts** to Box
+Pokémon comparable to the **base**, before the other ways to add. One tap adds that
+Pokémon as a card, exactly as if it had been picked in the Box picker. They are only
+shortcuts: they add nothing on their own, rank nothing and change no delta.
+
+**Comparable** means the same [role](0022-pokemon-role.md) as the base, of the same
+species or not, and the same thing produced:
+
+| Base's role | Comparable Box Pokémon |
+|---|---|
+| **Berries** | role Berries, **same berry** — so a Charge Strength base brings in the Berries specialists of its berry, and the other way round |
+| **Ingredients** | role Ingredients, **same main ingredient** — so an Ingredient Draw base brings in the Ingredients specialists of its main ingredient, and the other way round |
+| **Skills** | role Skills, **same main skill**, its variants counting as one (Cooking Power-Up S and Cooking Power-Up S (Minus)) |
+
+- Here a mythical takes the single role its main skill gives it (see the role).
+- The **main ingredient** is the one with the highest combined production (normal +
+  skill), taken **at level 60** — every ingredient unlocked — for the base and for each
+  candidate alike, so a low-level Pokémon is matched by what it will produce, not by a
+  slot it hasn't unlocked yet.
+- **Order** — strongest first, by the metric that defines the role, at each Pokémon's
+  own level: **strength / day** for Berries, its **main ingredient / day** for
+  Ingredients, **skill triggers / day** for Skills. Ties go by Pokédex order.
+- They **follow the base**: making another card the base changes them; adding one
+  recomputes the list, so the next comparable takes its place.
+- Box Pokémon **already in the comparison** never appear, the base included when it
+  came from the Box.
+- Anyone not in the top 3 is still one step away through **My Pokémon**.
 
 ### What each card shows
 
@@ -141,14 +175,33 @@ for the rest.
 ## Acceptance criteria
 
 - **Empty comparison** → a hint to add a Pokémon, with **"+ New"**, **"+ From
-  screenshots"** and **"+ My Pokémon"** buttons — not an error.
+  screenshots"** and **"+ My Pokémon"** buttons, and no suggestions — not an error.
 - **Catalog loading** → "Loading catalog…"; **catalog error** → a message with a
   **retry** option.
 - **Per-card computing** → "Calculating…"; a **per-card error** (e.g. a species not
   in the catalog) shows on that card and **does not break the others**.
-- **Max 5 Pokémon**: at 5, the add buttons are replaced by a hint ("Already 5
-  Pokémon: that's the team max in the game. Remove one to add another."), and
-  **Clone is disabled**.
+- **Max 5 Pokémon**: at 5, the add card (suggestions and add buttons) is **not shown**,
+  and **Clone is disabled**. Removing a card brings it back.
+- **Suggestions, Berries:** base a Noivern (Skills, Charge Strength M, Yache); the Box
+  holds a Salamence (Berries, Yache), a Dragonite (Ingredients, Yache), a Sceptile (Berry
+  Burst, Durin) and a Golem (Ingredients, Charge Strength S (Random)) → only the
+  Salamence is suggested.
+- **Suggestions, symmetric:** base a Salamence → a Box Noivern is suggested.
+- **Suggestions, Ingredients:** base a Crustle whose main ingredient at level 60 is
+  Glossy Avocado → Box Ingredients specialists and Ingredient Draw Pokémon whose main
+  ingredient at level 60 is Glossy Avocado are suggested; a Plusle (Ingredient Magnet) is
+  not.
+- **Suggestions, level 60:** a level 20 candidate whose main ingredient at 60 matches the
+  base is suggested, even if at 20 it produces more of another ingredient.
+- **Suggestions, Skills:** base a Minun (Cooking Power-Up S (Minus)) → Box Pokémon with
+  Cooking Power-Up S are suggested; ones with Energy for Everyone S are not.
+- **Suggestions, top 3:** with 5 comparable Box Pokémon, the 3 with the highest metric
+  for the role show, strongest first; adding one brings in the 4th.
+- **Suggestions follow the base:** "Make base" on another card replaces them with that
+  card's comparables.
+- **Suggestions exclude** Box Pokémon already in the comparison.
+- **No suggestions** when signed out, while the Box loads or if it fails to load, or
+  when the Box has no comparable Pokémon — the add card shows only its buttons.
 - The **first card is the base** and shows no deltas; every other card shows its
   metrics' **delta** against the base.
 - **"Make base"** on a non-base card promotes it to base; all deltas recompute
@@ -223,7 +276,9 @@ for the rest.
 ## Out of scope
 
 - **Optimization**: Comparison does not suggest the "best" config; it only estimates
-  and compares.
+  and compares. The suggestions pick **rivals** to compare against, never a winner.
+- **Suggesting Pokémon outside the Box**, or more than 3: the rest are chosen through
+  **My Pokémon**.
 - **Being the team record** — that's the [Box](0001-box.md). Comparison touches the
   Box only by explicit save.
 - **The area bonus and the Snorlax rating** belong to [Team
