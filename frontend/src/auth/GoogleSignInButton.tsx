@@ -40,7 +40,7 @@ function ensureGsiInitialized(clientId: string) {
 //
 // Si falta VITE_GOOGLE_CLIENT_ID, se muestra el `.btn--google` igual pero sin
 // inicializar GIS (no-op + warning en consola) — nunca rompe el render.
-export function GoogleSignInButton({ reason }: { reason: SignInReason | "app_bar" }) {
+export function GoogleSignInButton({ reason }: { reason: SignInReason | "app_bar" | "landing" }) {
   const { login } = useAuth();
   const { t } = useI18n();
   const overlayRef = useRef<HTMLDivElement>(null);
