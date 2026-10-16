@@ -16,6 +16,7 @@ from sleepmon.domain.catalog_data import (
     ribbon_speed_bonus,
 )
 from sleepmon.domain.species import (
+    _GROWTH,
     PRE_EVOLUTIONS,
     SEED_SPECIES,
     Species,
@@ -24,6 +25,7 @@ from sleepmon.domain.species import (
 )
 from sleepmon.domain.value_objects import (
     Berry,
+    GrowthCurve,
     Ingredient,
     Nature,
     Ribbon,
@@ -586,3 +588,38 @@ def test_previous_stage_and_evolutions_agree() -> None:
         if previous is not None:
             assert previous in names, sp.name
             assert sp.name in evolutions_of(previous), sp.name
+
+
+def _by_name(name: str) -> Species:
+    return next(s for s in SEED_SPECIES if s.name == name)
+
+
+@pytest.mark.parametrize(
+    ("name", "curve"),
+    [
+        ("Pikachu", GrowthCurve.NORMAL),
+        ("Larvitar", GrowthCurve.PSEUDO_LEGENDARY),
+        ("Tyranitar", GrowthCurve.PSEUDO_LEGENDARY),
+        ("Dragonite", GrowthCurve.PSEUDO_LEGENDARY),
+        ("Salamence", GrowthCurve.PSEUDO_LEGENDARY),
+        ("Raikou", GrowthCurve.LEGENDARY),
+        ("Cresselia", GrowthCurve.LEGENDARY),
+        ("Darkrai", GrowthCurve.MYTHICAL),
+        ("Mew", GrowthCurve.MYTHICAL),
+    ],
+)
+def test_species_growth_curve(name: str, curve: GrowthCurve) -> None:
+    assert _by_name(name).growth is curve
+
+
+def test_every_growth_entry_names_a_seeded_species() -> None:
+    names = {s.name for s in SEED_SPECIES}
+    assert set(_GROWTH) <= names
+
+
+def test_static_catalog_exposes_growth() -> None:
+    from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
+
+    found = StaticSpeciesCatalog().get("Tyranitar")
+    assert found is not None
+    assert found.growth is GrowthCurve.PSEUDO_LEGENDARY
