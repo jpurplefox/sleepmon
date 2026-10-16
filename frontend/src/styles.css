@@ -8051,10 +8051,11 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 .landing-facts li { display: inline-flex; gap: 0.4rem; align-items: center; }
 .landing-facts svg { width: 14px; height: 14px; color: var(--up); }
 .landing-fan { position: relative; height: 470px; }
-.landing-fan .landing-shot { width: 225px; top: 22px; left: 50%; }
-.landing-fan__left { transform: translateX(-118%) rotate(-8deg) translateY(34px); }
+/* Anchored left of center so the right card clears the base: its figures sit on its left side. */
+.landing-fan .landing-shot { width: 225px; top: 22px; left: 40%; }
+.landing-fan__left { transform: translateX(-98%) rotate(-8deg) translateY(34px); }
 .landing-fan__center { transform: translateX(-50%); z-index: 2; width: 240px !important; top: 6px !important; }
-.landing-fan__right { transform: translateX(18%) rotate(8deg) translateY(34px); }
+.landing-fan__right { transform: translateX(72%) rotate(8deg) translateY(34px); }
 
 /* Use cases (bento) */
 .landing-section-head { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; padding: 1.5rem 0 1rem; }
