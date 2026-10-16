@@ -395,34 +395,34 @@ describe("ProgressModal — Leveling tab", () => {
   async function openLeveling() {
     renderModal();
     await userEvent.click(await screen.findByRole("tab", { name: "Leveling" }));
-    return screen.getByRole("radiogroup", { name: "Minimum target level" });
+    return screen.getByRole("radiogroup", { name: "Desired level in Box" });
   }
 
-  it("offers exactly None and the unlock levels, and saves the minimum", async () => {
+  it("offers exactly Next unlock and the unlock levels, and saves the minimum", async () => {
     const group = await openLeveling();
     const options = within(group)
       .getAllByRole("radio")
       .map((r) => r.textContent);
-    expect(options).toEqual(["None", "10", "25", "30", "50", "60", "70"]);
+    expect(options).toEqual(["Next unlock", "10", "25", "30", "50", "60", "70"]);
     await userEvent.click(within(group).getByRole("radio", { name: "60" }));
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => expect(vi.mocked(api.patchProgress).mock.lastCall?.[0]).toEqual({ min_target_level: 60 }));
   });
 
-  it("checks None when no minimum is set and the saved level otherwise", async () => {
+  it("checks Next unlock when no minimum is set and the saved level otherwise", async () => {
     vi.spyOn(api, "getProgress").mockResolvedValue(makeProgress({ min_target_level: 30 }));
     const group = await openLeveling();
     expect(within(group).getByRole("radio", { name: "30" })).toHaveAttribute("aria-checked", "true");
-    expect(within(group).getByRole("radio", { name: "None" })).toHaveAttribute(
+    expect(within(group).getByRole("radio", { name: "Next unlock" })).toHaveAttribute(
       "aria-checked",
       "false",
     );
   });
 
-  it("clears the minimum by picking None", async () => {
+  it("clears the minimum by picking Next unlock", async () => {
     vi.spyOn(api, "getProgress").mockResolvedValue(makeProgress({ min_target_level: 30 }));
     const group = await openLeveling();
-    await userEvent.click(within(group).getByRole("radio", { name: "None" }));
+    await userEvent.click(within(group).getByRole("radio", { name: "Next unlock" }));
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => expect(vi.mocked(api.patchProgress).mock.lastCall?.[0]).toEqual({ min_target_level: 0 }));
   });
