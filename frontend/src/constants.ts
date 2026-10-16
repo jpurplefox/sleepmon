@@ -42,7 +42,3 @@ export const LEVEL_SHORTCUTS = [
 export function maxIngredientSlots(level: number): number {
   return INGREDIENT_UNLOCK_LEVELS.filter((l) => level >= l).length;
 }
-
-export function maxSubSkillSlots(level: number): number {
-  return SUB_SKILL_UNLOCK_LEVELS.filter((l) => level >= l).length;
-}

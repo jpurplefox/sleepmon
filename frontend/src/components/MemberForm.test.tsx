@@ -91,7 +91,12 @@ const mew: Species = {
 
 const catalog: Catalog = {
   natures: [{ name: "Bashful", neutral: true, increased: null, decreased: null }],
-  sub_skills: [{ name: "Helping Speed M", tier: "Blue" }],
+  sub_skills: [
+    { name: "Helping Speed M", tier: "Blue" },
+    { name: "Inventory Up S", tier: "Regular" },
+    { name: "Inventory Up M", tier: "Blue" },
+    { name: "Inventory Up L", tier: "Gold" },
+  ],
   ingredients: ["Fancy Apple", "Warming Ginger", "Honey", "Snoozy Tomato", "Soft Potato"],
   species: [pikachu, bulbasaur, ivysaur, venusaur, kirlia, gardevoir, gallade, mew],
   versatile_skills: ["Charge Strength M", "Metronome", "Berry Burst"],
@@ -538,5 +543,67 @@ describe("MemberForm evolution", () => {
     await user.click(screen.getByRole("button", { name: "Evolve to Venusaur" }));
 
     expect(screen.getByRole("button", { name: "Back to Ivysaur" })).toHaveFocus();
+  });
+});
+
+describe("MemberForm sub skill seeds", () => {
+  const initial: MemberInput = {
+    species: "Pikachu",
+    level: 30,
+    nature: "Bashful",
+    ingredients: ["Warming Ginger", "Fancy Apple", "Warming Ginger"],
+    sub_skills: ["Inventory Up S", "Inventory Up M"],
+    ribbon: "",
+    skill_level: 1,
+  };
+
+  it("applies the seeds in one click and saves the raised sub skills", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderForm({ initial });
+    await user.click(screen.getByRole("button", { name: /^Apply 1 seed:/ }));
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ sub_skills: ["Inventory Up L", "Inventory Up M"] }),
+    );
+  });
+
+  it("counts one seed per sub skill raised", () => {
+    renderForm({
+      initial: { ...initial, sub_skills: ["Inventory Up S", "Inventory Up M", "Skill Trigger S"] },
+    });
+    expect(screen.getByRole("button", { name: /^Apply 2 seeds:/ })).toBeInTheDocument();
+  });
+
+  it("undoes the seeds with the same button, back to what was there", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderForm({ initial });
+    await user.click(screen.getByRole("button", { name: /^Apply 1 seed:/ }));
+    await user.click(screen.getByRole("button", { name: /^Undo seeds/ }));
+    expect(screen.getByRole("button", { name: /^Apply 1 seed:/ })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ sub_skills: ["Inventory Up S", "Inventory Up M"] }),
+    );
+  });
+
+  it("drops the undo once a sub skill is edited by hand", async () => {
+    const user = userEvent.setup();
+    renderForm({ initial });
+    await user.click(screen.getByRole("button", { name: /^Apply 1 seed:/ }));
+    await user.click(screen.getByRole("button", { name: "Sub skills" }));
+    await user.click(screen.getByRole("option", { name: /Remove Inventory Up M/ }));
+    expect(screen.queryByRole("button", { name: /^Undo seeds/ })).not.toBeInTheDocument();
+  });
+
+  it("opens unavailable when the saved sub skills are already maxed", () => {
+    renderForm({ initial: { ...initial, sub_skills: ["Inventory Up L", "Inventory Up M"] } });
+    const maxed = screen.getByRole("button", { name: "No sub skills to raise with seeds" });
+    expect(maxed).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("is unavailable on an empty create form", () => {
+    renderForm();
+    const none = screen.getByRole("button", { name: "No sub skills to raise with seeds" });
+    expect(none).toHaveAttribute("aria-disabled", "true");
   });
 });

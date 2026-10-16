@@ -233,6 +233,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "import.summaryCheck": "{summary} · revisá {fields}",
     "form.ingredients": "Ingredientes",
     "form.subSkills": "Sub skills",
+    "seed.applyOne": "Aplicar 1 seed: sube cada sub skill al tier más alto libre",
+    "seed.apply": "Aplicar {n} seeds: sube cada sub skill al tier más alto libre",
+    "seed.none": "No hay sub skills para mejorar con seeds",
+    "seed.undo": "Deshacer seeds: vuelve a las sub skills de antes",
     "form.skillLevel": "Nivel de skill",
     "form.ribbon": "Listón",
     "form.speciesUnknown":
@@ -376,9 +380,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "subSel.family.skillTrigger": "Activación",
     "subSel.family.others": "Otros",
     "subSel.slotEmpty": "Slot de nivel {unlock}",
-    "subSel.hintActive":
-      "El kit guarda hasta 5; al nivel {level} {available} de 5 slots están activos, el resto se activa al subir de nivel",
-    "subSel.hintAllActive": "Los 5 slots están activos",
     "subSel.change": "{count}/5 · cambiar",
     "subSel.choose": "{count}/5 · elegir",
     "subSel.aria": "Elegir sub skills",
@@ -962,6 +963,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "import.summaryCheck": "{summary} · check {fields}",
     "form.ingredients": "Ingredients",
     "form.subSkills": "Sub skills",
+    "seed.applyOne": "Apply 1 seed: raises each sub skill to its highest free tier",
+    "seed.apply": "Apply {n} seeds: raises each sub skill to its highest free tier",
+    "seed.none": "No sub skills to raise with seeds",
+    "seed.undo": "Undo seeds: back to the sub skills you had before",
     "form.skillLevel": "Skill level",
     "form.ribbon": "Ribbon",
     "form.speciesUnknown":
@@ -1106,9 +1111,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "subSel.family.skillTrigger": "Skill Trigger",
     "subSel.family.others": "Others",
     "subSel.slotEmpty": "Level {unlock} slot",
-    "subSel.hintActive":
-      "The kit holds up to 5; at level {level} {available} of 5 slots are active, the rest unlock as you level up",
-    "subSel.hintAllActive": "All 5 slots are active",
     "subSel.change": "{count}/5 · change",
     "subSel.choose": "{count}/5 · choose",
     "subSel.aria": "Choose sub skills",

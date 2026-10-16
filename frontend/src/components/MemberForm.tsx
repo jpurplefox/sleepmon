@@ -5,6 +5,7 @@ import { carryIngredients, devolvedSkillLevel, evolvedSkillLevel, ingredientsAft
 import { useI18n } from "../i18n";
 import { unreadAfterChange } from "../screenshotImport";
 import type { Catalog, ImportField, ImportedForm, MemberInput } from "../types";
+import { useSeedShortcut } from "../useSeedShortcut";
 import { VERSATILE, effectiveSkill } from "../versatile";
 import { EvolveControl } from "./EvolveControl";
 import { FormSummary } from "./FormSummary";
@@ -14,6 +15,7 @@ import { NatureSelect } from "./NatureSelect";
 import { RibbonSelect } from "./RibbonSelect";
 import { SkillLevelSelector } from "./SkillLevelSelector";
 import { SpeciesSelect } from "./SpeciesSelect";
+import { SubSkillSeedButton } from "./SubSkillSeedButton";
 import { SubSkillSelect } from "./SubSkillSelect";
 import { UnreadMark } from "./UnreadMark";
 
@@ -59,6 +61,7 @@ export function MemberForm({
   const [subSkills, setSubSkills] = useState<string[]>(initial?.sub_skills ?? []);
   const [ribbon, setRibbon] = useState(initial?.ribbon ?? "");
   const [skillLevel, setSkillLevel] = useState(initial?.skill_level ?? 1);
+  const seed = useSeedShortcut(subSkills, setSubSkills);
   // Mew's chosen skill; "" until picked (it then reads as Metronome).
   const [versatileSkill, setVersatileSkill] = useState(initial?.versatile_skill ?? "");
 
@@ -237,13 +240,17 @@ export function MemberForm({
           {t("form.subSkills")}
           <UnreadMark unread={unread.includes("sub_skills")} />
         </legend>
-        <SubSkillSelect
-          subSkills={catalog.sub_skills}
-          value={subSkills}
-          level={level}
-          onChange={setSubSkills}
-          ariaLabel={t("form.subSkills")}
-        />
+        <div className="subskill-field">
+          <SubSkillSelect
+            subSkills={catalog.sub_skills}
+            value={subSkills}
+            level={level}
+            onChange={seed.onManualChange}
+            highlight={seed.highlight}
+            ariaLabel={t("form.subSkills")}
+          />
+          <SubSkillSeedButton mode={seed.mode} seeds={seed.seeds} onClick={seed.act} />
+        </div>
       </fieldset>
 
       <fieldset>
