@@ -70,8 +70,8 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
 
   // Cards and map terms live above the routes, so leaving the tool keeps them.
   const { entries, setEntries, map, setMap } = useComparisonSession();
-  const island = catalog.data?.islands.find((i) => i.name === map.island && i.expert) ?? null;
-  const expert = island !== null;
+  const island = catalog.data?.islands.find((i) => i.name === map.island) ?? null;
+  const expert = island?.expert ?? false;
   const mapFields = mapRequestFields(map, expert);
   const shots = useScreenshotImport(catalog.data);
   const berryOf = (species: string) => catalog.data?.species.find((s) => s.name === species)?.berry ?? "";
@@ -266,12 +266,6 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   }, [entries.length]);
   const openShare = () => setModal("share");
 
-  const handleMapChange = (next: typeof map) => {
-    if (next.island !== map.island)
-      track(mapSetEvent("compare", next.island, catalog.data?.islands ?? []));
-    setMap(next);
-  };
-
   const openAdd = (which: "form" | "box") => {
     setEditIndex(null);
     setModal(which);
@@ -319,7 +313,12 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
       >
         {entries.length > 0 && (
           <ContextBar>
-            <ComparisonMapBar catalog={catalog.data} value={map} onChange={handleMapChange} />
+            <ComparisonMapBar
+              catalog={catalog.data}
+              value={map}
+              onChange={setMap}
+              onSelectIsland={(name) => track(mapSetEvent("compare", name, catalog.data?.islands ?? []))}
+            />
           </ContextBar>
         )}
       </ToolHeader>

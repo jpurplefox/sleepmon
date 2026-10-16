@@ -82,8 +82,19 @@ describe("sessionFromShare", () => {
     expect(result.entries.map((e) => e.config.level)).toEqual([30, 50]);
     expect(result.entries.every((e) => e.sourceId === undefined)).toBe(true);
     expect(new Set(result.entries.map((e) => e.id)).size).toBe(2);
-    expect(result.map).toEqual({ island: null, favorites: ["Grepa"], weeklyBonus: "berry_strength" });
+    // A link from before every map was named has no island: its terms (your own
+    // favorites, no expert effects) are Greengrass Isle's.
+    expect(result.map).toEqual({ island: "Greengrass Isle", favorites: ["Grepa"], weeklyBonus: "berry_strength" });
     expect(result.sleep).toEqual({ night_minutes: 420, nap_minutes: 120 });
+  });
+
+  it("opens a named map as itself", () => {
+    const share = { island: "Cyan Beach", favorites: ["Oran", "Pamtre", "Pecha"] };
+    const result = sessionFromShare({
+      id: "abc", url: "", members: [pikachu], weekly_bonus: "berry_strength",
+      sleep: { night_minutes: 420, nap_minutes: null }, ...share,
+    });
+    expect(result.map.island).toBe("Cyan Beach");
   });
 });
 
@@ -140,7 +151,7 @@ describe("sleepNoticeParts", () => {
 });
 
 describe("shareCacheKey", () => {
-  const map: ComparisonMap = { island: null, favorites: ["Grepa"], weeklyBonus: "berry_strength" };
+  const map: ComparisonMap = { island: "Greengrass Isle", favorites: ["Grepa"], weeklyBonus: "berry_strength" };
   const sleep = { night_minutes: 510, nap_minutes: null };
   const key = (overrides: Partial<{ level: number; favorites: string[]; night: number; lang: Lang }> = {}) =>
     shareCacheKey(

@@ -36,7 +36,7 @@ export const ComparisonShareSheet = forwardRef<HTMLDivElement, Props>(function C
   ref,
 ) {
   const { t, berry: berryName } = useI18n();
-  const expert = island !== null;
+  const expert = island?.expert ?? false;
   const berryOf = (species: string) => catalog.species.find((s) => s.name === species)?.berry ?? "";
   const base = productions[0] ?? null;
   const favorites = pickedFavorites(map.favorites).length > 0;
@@ -49,7 +49,7 @@ export const ComparisonShareSheet = forwardRef<HTMLDivElement, Props>(function C
           sleepmon
         </span>
         <span className="share-sheet__terms">
-          <span>{island?.name ?? t("prod.mapNormal")}</span>
+          <span>{t("share.mapLabel", { map: map.island })}</span>
           {favorites && (
             <span className="share-sheet__berries">
               {Array.from({ length: MAX_FAVORITES }, (_, i) => {

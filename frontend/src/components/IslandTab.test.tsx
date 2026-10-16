@@ -121,6 +121,20 @@ describe("IslandTab bonus slider", () => {
   });
 });
 
+describe("IslandTab without the area bonus or a 'No map' (Comparison)", () => {
+  it("hides the area bonus without its handler", () => {
+    renderTab({ selectedIsland: "Cyan Beach", onIslandBonus: undefined });
+    expect(screen.queryByLabelText("Area bonus")).toBeNull();
+  });
+
+  it("offers only the maps with allowNone off", async () => {
+    renderTab({ selectedIsland: "Cyan Beach", allowNone: false });
+    await userEvent.click(screen.getByRole("button", { name: /Cyan Beach/ }));
+    const options = screen.getAllByRole("option").map((o) => o.textContent);
+    expect(options).toEqual(["Cyan Beach", "Cyan Beach (Expert)???"]);
+  });
+});
+
 describe("IslandTab favorite berries", () => {
   it("shows every berry chip, all disabled, with no map selected", () => {
     renderTab({ selectedIsland: null });

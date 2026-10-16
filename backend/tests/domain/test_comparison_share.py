@@ -100,10 +100,11 @@ def test_share_holds_one_to_five_cards() -> None:
         _share((_pikachu(),) * 6)
 
 
-def test_map_is_normal_or_expert() -> None:
+def test_map_is_any_island() -> None:
     assert SharedMap(island=Island.CYAN_BEACH_EXPERT).island is Island.CYAN_BEACH_EXPERT
-    with pytest.raises(ValidationError):
-        SharedMap(island=Island.CYAN_BEACH)
+    assert SharedMap(island=Island.CYAN_BEACH).island is Island.CYAN_BEACH
+    # Links made before Comparison named every map carry none.
+    assert SharedMap().island is None
 
 
 def test_map_keeps_open_favorite_slots() -> None:
