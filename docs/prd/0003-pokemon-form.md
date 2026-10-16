@@ -81,18 +81,26 @@ sub skills.
 
 ### Sub skill seeds
 
-A sub skill seed raises a sub skill one tier, but only to a tier the Pokémon doesn't
-already have. To picture a Pokémon fully seeded without editing each slot, a shortcut
-seeds all the sub skills in one action:
+A sub skill seed raises one sub skill to a tier the Pokémon doesn't already have. To
+picture a Pokémon fully seeded without editing each slot, a shortcut seeds all the sub
+skills in one action:
 
 - It walks the slots **in unlock order** (the level 10 slot first) and raises each
   tiered sub skill to the **highest tier no other slot holds**; if every higher tier is
   taken it stays as is, and it never lowers one. The earliest slot gets the best tier.
 - Tiered families: Helping Speed S/M, Ingredient Finder S/M, Skill Trigger S/M, Skill
   Level Up S/M, Inventory Up S/M/L. Every other sub skill is left as is.
-- It only changes the form's values: nothing is saved until the form is submitted.
-  It shows **how many seeds** it would apply (one per tier raised: Inventory Up S → L
-  is two) and is unavailable when seeding would change nothing.
+- It shows **how many seeds** it would apply: **one per sub skill raised**, however many
+  tiers it jumps (Inventory Up S → L is one).
+- Each sub skill it changes is **briefly highlighted**, then settles back, so the user
+  sees what it did; the ones it left alone are not.
+- Once applied, the same control **undoes** it: the sub skills go back to what they were
+  before seeding (highlighted the same way) and the control offers to seed again. Editing
+  a sub skill by hand after seeding drops the undo.
+- Undo only lives while the form is open. Reopening a saved Pokémon starts fresh: if
+  nothing can be seeded, the control is unavailable.
+- It only changes the form's values: nothing is saved until the form is submitted. It is
+  unavailable when there is nothing to seed and nothing to undo.
 
 ### Catalog-driven
 
@@ -142,6 +150,13 @@ entered values.
 - **Seeding** Inventory Up S, Inventory Up M (in that order) gives Inventory Up L,
   Inventory Up M; Inventory Up L, Inventory Up S gives Inventory Up L, Inventory Up M;
   Helping Speed S, Helping Speed M stays as is; untiered sub skills don't change.
+- **Seeding** Inventory Up S, Inventory Up M, Skill Trigger S counts **2 seeds**, gives
+  Inventory Up L, Inventory Up M, Skill Trigger M, and highlights the first and third
+  slots only.
+- **Undoing** right after seeding brings back Inventory Up S, Inventory Up M, Skill
+  Trigger S; editing a sub skill by hand after seeding leaves nothing to undo.
+- Seeding, saving and reopening the Pokémon shows the shortcut **unavailable** (nothing
+  to seed, nothing to undo).
 - **Level** accepts **1–100**; the quick buttons jump to 1 / 10 / 25 / 30 / 50 / 60
   / 70 / 80.
 - A **create** form opens with defaults: no species, **level 30**, no nature, no sub
