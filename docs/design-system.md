@@ -498,7 +498,8 @@ states · where it lives. Feature one-offs are intentionally not here.
   row must summarize more (the Box picker) — the effects-only pill always sits in a
   `Tooltip` with the nature's name. `NatureSelect` is the one place the name sits *outside* the pill:
   trigger and options read as a list of names, each with its effects-only pill. Fill
-  is `--surface-2`, or `--surface` on a `--surface-2` ground (`--pill-bg`).
+  is `--surface-2` lifted with 8% `--text` and a `--divider` outline (it reads on a card
+  and on a suggestion row), or `--surface` inside the selector and the Box picker (`--pill-bg`).
 - **State vocabulary** shared across selects/menus/toggles: `.is-active`,
   `.is-selected`, `.is-highlighted`, `.is-locked`, `.is-on`.
 

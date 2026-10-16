@@ -788,8 +788,9 @@ button.shot--empty:focus-visible,
   height: 28px;
   padding: 0 0.6rem;
   border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--pill-bg, var(--surface-2));
+  /* A solid fill a step above --surface-2, so the pill reads on a card and on a row. */
+  border: 1px solid var(--divider);
+  background: var(--pill-bg, color-mix(in srgb, var(--surface-2), var(--text) 8%));
   line-height: 1;
   flex-shrink: 0;
   white-space: nowrap;
