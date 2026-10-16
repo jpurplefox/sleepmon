@@ -35,3 +35,6 @@ frontend/vite.config.d.ts
 # Coverage
 .coverage
 htmlcov/
+
+# Leftover temp dir from an interrupted `npm run shots:landing`.
+frontend/public/.landing-shots-*

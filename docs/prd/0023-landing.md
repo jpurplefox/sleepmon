@@ -19,7 +19,8 @@ why you'd open them.
 1. **Header** — one line on what sleepmon is, the main action **Start comparing**, and a
    secondary action that depends on the session.
 2. **What you can do** — four use cases, each with a short title, one or two lines, and
-   a link that drops you where that use case starts.
+   a link that drops you where that use case starts, illustrated with real captures of
+   the app.
 3. **Frequently asked questions** — the model's assumptions and the usual doubts in plain
    language, as expandable questions, reachable at `/#faq`.
 4. **Ways back** — the **sleepmon** brand in the menu and a **Frequently asked
@@ -152,7 +153,7 @@ made, then what they can take into account, then the account:
 - An **"Is it official?"** answer: the footer and the privacy page already say it.
 - Shared links' **expiry** and other sharing detail beyond use case 2.
 - A **separate `/faq` page**.
-- **Screenshots, animations or interactive demos** of the tools.
+- **Animations or interactive demos** of the tools.
 - New **usage events** ([Usage metrics](0017-usage-metrics.md)).
 - **How** the page becomes readable by search engines — a technical decision for
   architecture.
