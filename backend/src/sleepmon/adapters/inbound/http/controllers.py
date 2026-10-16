@@ -18,6 +18,7 @@ from sleepmon.adapters.inbound.http.schemas import (
     BerrySourceOut,
     BerryYieldOut,
     CatalogOut,
+    ComparisonRaiseOut,
     ComparisonShareIn,
     ComparisonShareOut,
     DistributionsOut,
@@ -68,6 +69,7 @@ from sleepmon.adapters.inbound.http.share_page import (
 )
 from sleepmon.application.comparison_share_service import ComparisonShareService
 from sleepmon.application.dto import (
+    ComparisonRaise,
     ComparisonShareInput,
     EventEffectInput,
     LevelUpProjection,
@@ -110,6 +112,17 @@ from sleepmon.domain.screenshot_import import ImportedConfig, ImportField, Scree
 from sleepmon.domain.species import evolutions_of, previous_stage_of
 from sleepmon.domain.value_objects import Ingredient, Island, Nature, SubSkill
 from sleepmon.domain.versatile import VERSATILE_SKILLS
+
+
+def _comparison_raise_out(raised: ComparisonRaise | None) -> ComparisonRaiseOut | None:
+    if raised is None:
+        return None
+    return ComparisonRaiseOut(
+        from_level=raised.from_level,
+        to_level=raised.to_level,
+        candies=raised.candies,
+        dream_shards=raised.dream_shards,
+    )
 
 
 def _full_production_out(result: ProductionResult) -> ProductionOut:
@@ -178,6 +191,7 @@ def _full_production_out(result: ProductionResult) -> ProductionOut:
                 for s in result.teammate_ingredients
             ]
         ),
+        comparison_raise=_comparison_raise_out(result.comparison_raise),
     )
 
 
@@ -351,6 +365,7 @@ class ProductionController(Controller):
                 main_favorite=data.main_favorite,
                 weekly_bonus=data.weekly_bonus,
                 sleep=_sleep_input(data.sleep),
+                comparison_level=data.comparison_level,
             )
         )
         return _full_production_out(result)
