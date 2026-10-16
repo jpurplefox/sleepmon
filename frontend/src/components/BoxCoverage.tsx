@@ -29,8 +29,7 @@ export function BoxCoverage({ members, catalog }: Props) {
   const specialtyCount = (sp: string) =>
     members.filter((m) => matchesSpecialty(specialtyOf(m), sp)).length;
 
-  // Cobertura de BAYAS: Pokémon cuyo rol es Berries (PRD 0022), mitológicos incluidos.
-  // Golem (Charge Strength pero especialidad Ingredientes) NO cuenta.
+  // Berry coverage: Pokémon whose role is Berries (PRD 0022), mythicals included.
   const coversBerry = (m: Member): boolean => countsAs(specialtyOf(m), skillOf(m), "Berries");
   const allBerries = [...new Set(catalog.species.map((s) => s.berry))].sort();
   const coveredBerries = new Set(
@@ -40,10 +39,8 @@ export function BoxCoverage({ members, catalog }: Props) {
       .filter((b): b is string => !!b),
   );
 
-  // Cobertura de INGREDIENTES: cuenta su ingrediente PRINCIPAL (el de mayor
-  // producción combinada base+skill) si su rol es Ingredients (PRD 0022). Solo el
-  // principal: un ingrediente secundario de baja producción (la hierba de Dragonite)
-  // no cuenta.
+  // Ingredient coverage: only the MAIN ingredient (highest combined base + skill) of
+  // Pokémon whose role is Ingredients; a minor secondary one (Dragonite's herb) doesn't count.
   const coversIngredient = (m: Member): boolean =>
     countsAs(specialtyOf(m), skillOf(m), "Ingredients");
   const allIngredients = catalog.ingredients;
