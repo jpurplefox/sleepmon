@@ -1096,8 +1096,8 @@ a real doubt gets settled. The screen is the occasion, not the subject.
 - **The build reads in one order everywhere: ingredients, sub skills, nature.** *Question:*
   the Box showed nature before the sub skills (the picker's order) while the cards show it
   last; and the cards dropped empty sub skill slots while the Box drew placeholders.
-  *Resolution:* the cards' order wins in every Box layout — stacked on desktop and tablet
-  on tablet, labelled rows on the phone (left-aligned there, since the labels set the
+  *Resolution:* the cards' order wins in every Box layout — stacked on desktop and
+  tablet, labelled rows on the phone (left-aligned there, since the labels set the
   edge). The order lives in the DOM, not in CSS `order`, so it also reads that way. Both
   the Box and the cards always draw the five sub skill slots; an empty one is the dashed
   `.ss-icon--empty` square (the cards' "no sub skills" note is gone). *Why:* the same
