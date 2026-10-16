@@ -385,6 +385,27 @@ def test_box_production_uses_the_saved_sleep_schedule() -> None:
     assert nap_prod.skill_triggers != default_prod.skill_triggers
 
 
+def test_level_up_target_uses_the_saved_sleep_schedule() -> None:
+    progress = InMemoryPlayerProgressRepository()
+    team = InMemoryTeamRepository()
+    plain = DefaultTeamService(
+        team,
+        StaticSpeciesCatalog(),
+        InMemoryPlayerProgressRepository(),
+        InMemorySavedTeamRepository(),
+    )
+    with_nap = DefaultTeamService(
+        team, StaticSpeciesCatalog(), progress, InMemorySavedTeamRepository()
+    )
+    plain.add_member(UID, valid_input(level=15))
+    progress.transform(UID, lambda _: PlayerProgress(sleep=SleepSchedule(390, 120)))
+
+    default_up = _only(plain).level_up
+    nap_up = _only(with_nap).level_up
+    assert default_up is not None and nap_up is not None
+    assert nap_up.at_target.skill_triggers != default_up.at_target.skill_triggers
+
+
 def _only(service: DefaultTeamService):  # type: ignore[no-untyped-def]
     ((_, production),) = service.list_members_with_production(UID)
     assert production is not None

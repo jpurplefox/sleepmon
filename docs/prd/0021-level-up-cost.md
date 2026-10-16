@@ -100,9 +100,9 @@ little less than shown: the figure always suffices, never falls short.
 to the target. The Pokémon's **role** decides it — the same rule Box coverage uses, so a
 Skills specialist that is really a berry or ingredient Pokémon reads as one:
 
-- **Strength / day** — a Berries specialist, or one whose main skill adds strength or
+- **Strength / day** — a Berries specialist, or a Skills specialist whose main skill adds strength or
   berries (Charge Strength, Berry Burst). An "All" specialist (Darkrai, Mew) reads here too.
-- **Its main ingredient / day** — an Ingredients specialist, or one whose main skill yields
+- **Its main ingredient / day** — an Ingredients specialist, or a Skills specialist whose main skill yields
   ingredients. The main ingredient is the one it produces most at the target, skill
   included. When the span **unlocks an ingredient**, the gain is that **new** ingredient
   and its amount instead: a new slot splits the existing ones, so the main ingredient's own

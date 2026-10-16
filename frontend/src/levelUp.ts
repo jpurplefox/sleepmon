@@ -1,6 +1,7 @@
 import { INGREDIENT_UNLOCK_LEVELS, SUB_SKILL_UNLOCK_LEVELS } from "./constants";
 import { combinedIngredientTotals, mainIngredient } from "./ingredientProduction";
 import { contributesBerryRole, producesIngredients } from "./skills";
+import { matchesSpecialty } from "./specialties";
 import type { LevelUp, Member, MemberProduction } from "./types";
 
 // PRD 0021 — the Box's level-up cost, presented: which unlocks a span crosses, the
@@ -43,9 +44,11 @@ export function levelUpGain(
   levelUp: LevelUp,
 ): Gain {
   const then = levelUp.at_target;
-  if (specialty === "Berries" || specialty === "All" || contributesBerryRole(skill))
+  // Same rule as Box coverage: the skill override only applies to Skills specialists
+  // for berries; for ingredients Box coverage applies it to any specialty.
+  if (matchesSpecialty(specialty, "Berries") || (specialty === "Skills" && contributesBerryRole(skill)))
     return { kind: "strength", now: strengthOf(now), then: strengthOf(then) };
-  if (specialty === "Ingredients" || producesIngredients(skill)) {
+  if (matchesSpecialty(specialty, "Ingredients") || producesIngredients(skill)) {
     const thenTotals = combinedIngredientTotals(then);
     const nowTotals = combinedIngredientTotals(now);
     const unlocked = spanUnlocks(member, levelUp.target_level)

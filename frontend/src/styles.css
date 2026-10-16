@@ -2027,7 +2027,7 @@ button.shot--empty:focus-visible,
      (space-between) en vez de acumularse en una sola, así en pantallas anchas no
      quedan todas amontonadas a la derecha. Centradas en vertical: cada columna
      tiene distinta cantidad de líneas y se centra en el alto de la fila.
-     The 8th-from-left track (before actions) is the level-up cost (PRD 0021). */
+     The 7th track (before actions, the 8th) is the level-up cost (PRD 0021). */
   grid-template-columns: 13rem auto auto 5.5rem 6rem 7rem 9.5rem auto;
   align-items: center;
   justify-content: space-between;

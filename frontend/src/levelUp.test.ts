@@ -66,6 +66,22 @@ describe("levelUpGain", () => {
     const g = levelUpGain(member({ level: 25 }), "Ingredients", "Ingredient Magnet S", now, up(then, 30));
     expect(g).toEqual({ kind: "newIngredient", ingredient: "Warming Ginger", then: 1.8 });
   });
+  it("does not read strength for an Ingredients specialist with a berry-role skill", () => {
+    const then = prod({ ingredients: [{ ingredient: "Fancy Apple", amount: 3.9 }] });
+    const g = levelUpGain(member({ level: 42 }), "Ingredients", "Charge Strength S", now, up(then, 50));
+    expect(g).toEqual({ kind: "ingredient", ingredient: "Fancy Apple", now: 3.4, then: 3.9 });
+  });
+  it("reads the new ingredient for an Ingredients specialist with Charge Strength", () => {
+    const then = prod({ ingredients: [
+      { ingredient: "Fancy Apple", amount: 2.0 }, { ingredient: "Warming Ginger", amount: 1.8 } ] });
+    const g = levelUpGain(member({ level: 25 }), "Ingredients", "Charge Strength S", now, up(then, 30));
+    expect(g).toEqual({ kind: "newIngredient", ingredient: "Warming Ginger", then: 1.8 });
+  });
+  it("reads the ingredient for a Skills specialist whose skill magnets ingredients", () => {
+    const then = prod({ ingredients: [{ ingredient: "Fancy Apple", amount: 3.9 }] });
+    const g = levelUpGain(member({ level: 42 }), "Skills", "Ingredient Magnet S", now, up(then, 50));
+    expect(g).toEqual({ kind: "ingredient", ingredient: "Fancy Apple", now: 3.4, then: 3.9 });
+  });
   it("reads strength for an All specialist", () => {
     expect(levelUpGain(member(), "All", "Bad Dreams", now, up(prod())).kind).toBe("strength");
   });
