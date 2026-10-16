@@ -81,4 +81,22 @@ describe("useProgress", () => {
     await waitFor(() => expect(second).toHaveBeenCalledTimes(1));
     expect(first).toHaveBeenCalledTimes(1);
   });
+
+  it("refreshes the Box after saving what its numbers depend on", async () => {
+    authState.status = "authenticated";
+    getProgress.mockResolvedValue(EMPTY_PROGRESS);
+    patchProgress.mockResolvedValue({ ...EMPTY_PROGRESS, min_target_level: 60 });
+    const client = new QueryClient();
+    const spy = vi.spyOn(client, "invalidateQueries");
+    const { result } = renderHook(() => useProgress(), {
+      wrapper: ({ children }) => (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      ),
+    });
+    await act(() => result.current.saveAsync({ min_target_level: 60 }));
+    expect(spy).toHaveBeenCalledWith({ queryKey: ["members"] });
+    spy.mockClear();
+    await act(() => result.current.saveAsync({ pot_size: 33 }));
+    expect(spy).not.toHaveBeenCalled();
+  });
 });

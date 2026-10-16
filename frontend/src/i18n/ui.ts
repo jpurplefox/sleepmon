@@ -558,6 +558,11 @@ export const UI: Record<Lang, Record<string, string>> = {
     "progress.tabRecipes": "Recetas",
     "progress.tabAreas": "Áreas",
     "progress.tabSleep": "Sueño",
+    "progress.tabLeveling": "Niveles",
+    "progress.minTarget": "Nivel objetivo mínimo",
+    "progress.minTargetNone": "Ninguno",
+    "progress.minTargetHint":
+      "Un Pokémon por debajo de este nivel muestra en la Caja el costo directo hasta él; uno que ya lo pasó, el de su próximo desbloqueo.",
     "sleep.heading": "Horario de sueño",
     "sleep.night": "Noche",
     "sleep.napToggle": "Siesta",
@@ -1277,6 +1282,11 @@ export const UI: Record<Lang, Record<string, string>> = {
     "progress.tabRecipes": "Recipes",
     "progress.tabAreas": "Areas",
     "progress.tabSleep": "Sleep",
+    "progress.tabLeveling": "Leveling",
+    "progress.minTarget": "Minimum target level",
+    "progress.minTargetNone": "None",
+    "progress.minTargetHint":
+      "A Pokémon below this level shows in the Box the cost straight to it; one already past it, the cost to its next unlock.",
     "sleep.heading": "Sleep schedule",
     "sleep.night": "Night",
     "sleep.napToggle": "Nap",

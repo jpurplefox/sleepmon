@@ -6192,6 +6192,14 @@ button.prod-card__base-tag--action {
   margin: 0 0 0.75rem;
 }
 
+.progress-hint {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  max-width: 60ch;
+}
+
 .progress-section__head .muted {
   font-weight: 400;
   font-size: var(--text-sm);
