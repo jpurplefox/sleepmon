@@ -2415,8 +2415,16 @@ button.shot--empty:focus-visible,
   font-weight: 600;
 }
 .levelup-tip__cost {
-  color: var(--muted);
+  display: inline-flex;
+  gap: 0.75rem;
+  color: var(--text);
   font-variant-numeric: tabular-nums;
+}
+
+.levelup-tip__cost-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 .levelup-tip__unlock {

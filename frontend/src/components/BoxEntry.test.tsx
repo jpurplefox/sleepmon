@@ -173,8 +173,9 @@ describe("level-up cost", () => {
     const cell = container.querySelector(".box-entry__levelup") as HTMLElement;
     expect(within(cell).getByText("Lv. 55 → 60")).toBeInTheDocument();
     // Figures are abbreviated so the column stays narrow (PRD 0021).
-    expect(within(cell).getByText("1,227")).toBeInTheDocument();
-    expect(within(cell).getByText("1.14M")).toBeInTheDocument();
+    const costRow = cell.querySelector(".levelup-cost") as HTMLElement;
+    expect(within(costRow).getByText("1,227")).toBeInTheDocument();
+    expect(within(costRow).getByText("1.14M")).toBeInTheDocument();
   });
 
   it("keeps the exact cost in the comparison tooltip", () => {
@@ -182,7 +183,12 @@ describe("level-up cost", () => {
     setViewport(false);
     const { container } = renderEntry(LEVELED);
     const bubble = container.querySelector(".box-entry__levelup .tooltip__bubble") as HTMLElement;
-    expect(within(bubble).getByText("1,227 candies · 1,141,655 dream shards")).toBeInTheDocument();
+    const cost = bubble.querySelector(".levelup-tip__cost") as HTMLElement;
+    // Icons + exact figures, as in the column; the words stay for screen readers.
+    expect(cost.querySelectorAll("img")).toHaveLength(2);
+    expect(within(cost).getByText("1,227")).toBeInTheDocument();
+    expect(within(cost).getByText("1,141,655")).toBeInTheDocument();
+    expect(cost.querySelector(".sr-only")).toHaveTextContent("1,227 candies · 1,141,655 dream shards");
   });
 
   it("names the focusable span with the full level-up cost", () => {
@@ -307,7 +313,8 @@ describe("level-up cost", () => {
 
     expect(screen.getByText("Next level")).toBeInTheDocument();
     expect(screen.getByText("Cost")).toBeInTheDocument();
-    expect(screen.getByText("1,227")).toBeInTheDocument();
+    const costRow = container.querySelector(".box-entry__levelup-cost") as HTMLElement;
+    expect(within(costRow).getByText("1,227")).toBeInTheDocument();
     expect(container.querySelector(".levelup-gain__new")).toHaveTextContent("new");
     // The desktop cell isn't rendered on a phone.
     expect(container.querySelector(".box-entry__levelup")).toBeNull();

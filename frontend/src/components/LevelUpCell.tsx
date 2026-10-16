@@ -166,12 +166,23 @@ function LevelUpTooltip({
         <span className="levelup-tip__span">
           {t("levelUp.spanFull", { from: member.level, to: levelUp.target_level })}
         </span>
-        {/* The column abbreviates the cost; the exact figures live here. */}
+        {/* The column abbreviates the cost; the exact figures live here, with the
+            column's own icons (the words stay for screen readers). */}
         <span className="levelup-tip__cost">
-          {t("levelUp.costFull", {
-            candies: fmtInt(levelUp.candies),
-            shards: fmtInt(levelUp.dream_shards),
-          })}
+          <span className="levelup-tip__cost-item" aria-hidden="true">
+            <img className="levelup-tip__img" src={GENERIC_CANDY_ICON} alt="" />
+            <span>{fmtInt(levelUp.candies)}</span>
+          </span>
+          <span className="levelup-tip__cost-item" aria-hidden="true">
+            <img className="levelup-tip__img" src={SHARD_ICON} alt="" />
+            <span>{fmtInt(levelUp.dream_shards)}</span>
+          </span>
+          <span className="sr-only">
+            {t("levelUp.costFull", {
+              candies: fmtInt(levelUp.candies),
+              shards: fmtInt(levelUp.dream_shards),
+            })}
+          </span>
         </span>
         {unlocks.map((u) => (
           <span key={`${u.kind}-${u.level}`} className="levelup-tip__unlock">
