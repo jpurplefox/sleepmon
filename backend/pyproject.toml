@@ -27,6 +27,8 @@ dev = [
     "httpx>=0.27",
     # Lets the tests drive the Lambda adapter (gzip bodies must come back base64).
     "mangum>=0.18",
+    # Serves scripts/landing_demo_server.py.
+    "uvicorn>=0.30",
 ]
 # Solo para el empaquetado en AWS Lambda: adaptador ASGI→Lambda. No se instala en
 # el runtime local (docker compose corre Litestar directo con uvicorn).
