@@ -5,10 +5,8 @@ import { GoogleSignInButton } from "../../auth/GoogleSignInButton";
 import { IconCheck } from "../../components/icons";
 import { useI18n } from "../../i18n";
 import { ROUTES } from "../../routes";
-import { spriteUrl } from "../../sprites";
 import { shotUrl } from "./content";
 
-const SNORLAX_DEX = 143;
 const FACTS = ["landing.fact.noAccount", "landing.fact.sleep", "landing.fact.languages"];
 
 /** Pitch, the two ways in, and three Comparison cards fanned like a hand. */
@@ -18,10 +16,6 @@ export function LandingHero() {
   return (
     <section className="landing-hero">
       <div className="landing-hero__copy">
-        <span className="landing-eyebrow">
-          <img src={spriteUrl(SNORLAX_DEX)} alt="" width={22} height={22} />
-          {t("landing.eyebrow")}
-        </span>
         <h1 className="landing-hero__title">
           {t("landing.title.lead")} <span className="landing-hero__accent">{t("landing.title.accent")}</span>
         </h1>

@@ -721,7 +721,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.meta.title": "sleepmon — Compará tus Pokémon de Pokémon Sleep",
     "landing.meta.description":
       "Más que una calculadora para Pokémon Sleep: compará Pokémon, mirá qué sube y qué baja, planificá la semana y sabé cuánto cuesta subirlos.",
-    "landing.eyebrow": "Para Pokémon Sleep",
     "landing.title.lead": "Compará tus Pokémon de Pokémon Sleep",
     "landing.title.accent": "y mirá qué produce cada uno.",
     "landing.lead":
@@ -1515,7 +1514,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.meta.title": "sleepmon — Compare your Pokémon in Pokémon Sleep",
     "landing.meta.description":
       "More than a calculator for Pokémon Sleep: compare Pokémon, see what goes up and what goes down, plan your week and know what leveling up costs.",
-    "landing.eyebrow": "For Pokémon Sleep",
     "landing.title.lead": "Compare your Pokémon in Pokémon Sleep",
     "landing.title.accent": "and see what each one produces.",
     "landing.lead":
