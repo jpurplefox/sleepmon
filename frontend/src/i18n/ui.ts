@@ -731,7 +731,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.fact.teams": "Creá y analizá equipos",
     "landing.fact.screenshot": "Subí tus Pokémon con una captura",
     "landing.fact.candies": "Planificá en qué usás tus caramelos",
-    "landing.callout.suggest": "Un toque y queda al lado",
     "landing.cases.title": "Qué podés hacer",
     "landing.cases.subtitle": "Cuatro cosas que vas a querer saber.",
     "landing.withAccount": "con cuenta",
@@ -741,7 +740,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.case.catch.title": "Atrapaste uno nuevo. ¿Vale la pena?",
     "landing.case.catch.body":
       "Cargalo desde una captura del juego y comparalo en un toque con los de tu caja que más se le parecen.",
-    "landing.case.catch.alt": "Una comparación con las sugerencias de tu caja",
+    "landing.case.catch.alt": "Una card de Comparación armada a partir de dos capturas del juego",
     "landing.case.share.title": "Compartí con un link",
     "landing.case.share.body": "Tu amigo abre la misma comparación y la puede editar.",
     "landing.case.share.alt": "El diálogo para compartir una comparación",
@@ -1524,7 +1523,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.fact.teams": "Build and analyze teams",
     "landing.fact.screenshot": "Add your Pokémon from a screenshot",
     "landing.fact.candies": "Plan where your candies go",
-    "landing.callout.suggest": "One tap and it's side by side",
     "landing.cases.title": "What you can do",
     "landing.cases.subtitle": "Four things you'll want to know.",
     "landing.withAccount": "with an account",
@@ -1534,7 +1532,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.case.catch.title": "Caught a new one. Is it worth it?",
     "landing.case.catch.body":
       "Load it from a game screenshot and compare it in one tap with the most similar ones in your box.",
-    "landing.case.catch.alt": "A comparison with suggestions from your box",
+    "landing.case.catch.alt": "A Comparison card built from two game screenshots",
     "landing.case.share.title": "Share it with a link",
     "landing.case.share.body": "Your friend opens the same comparison and can edit it.",
     "landing.case.share.alt": "The dialog to share a comparison",

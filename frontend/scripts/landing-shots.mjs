@@ -2,7 +2,7 @@
 // Needs: the frontend dev server (--app, default http://localhost:5173) and the demo backend:
 //   cd backend && PYTHONPATH=. python scripts/landing_demo_server.py
 // Chrome: CHROME_PATH, default macOS Google Chrome.
-import { mkdtemp, mkdir, rename, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rename, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
@@ -13,9 +13,16 @@ const DEMO = "http://127.0.0.1:8010";
 const CHROME = process.env.CHROME_PATH ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const LANGS = ["es", "en"];
 const JPEG = { type: "jpeg", quality: 85 };
+// The game screenshots the "catch" scene uploads, and the reading the AI model would return for them.
+const INPUT = join(dirname(fileURLToPath(import.meta.url)), "landing-input");
+const GAME_SHOTS = ["tyrunt-1.jpg", "tyrunt-2.jpg"].map((f) => join(INPUT, f));
+const READING = {
+  species: "Tyrunt", level: 16, nature: "Modest", ingredients: ["Bean Sausage", "Fancy Apple", "Bean Sausage"],
+  sub_skills: ["Berry Finding S", "Ingredient Finder M", "Helping Speed S", "Inventory Up S", "Ingredient Finder S"],
+  skill_level: 1, ribbon: "", versatile_skill: null, unread: [],
+};
 
 const BOX = [
-  ["Sylveon", 22, "Calm", ["Moomoo Milk", "Soothing Cacao", "Bean Sausage"], ["Skill Trigger M", "Helping Speed M"], 3],
   ["Sylveon", 50, "Modest", ["Moomoo Milk", "Soothing Cacao", "Moomoo Milk"], ["Skill Trigger M", "Helping Speed S", "Energy Recovery Bonus", "Inventory Up M"], 4],
   ["Gardevoir", 25, "Bold", ["Fancy Apple", "Greengrass Corn", "Fancy Apple"], ["Skill Trigger M", "Helping Speed S"], 3],
   ["Magnezone", 57, "Adamant", ["Pure Oil", "Fiery Herb", "Pure Oil"], ["Helping Speed M", "Skill Trigger M", "Helping Bonus", "Inventory Up L", "Skill Level Up M"], 4],
@@ -62,6 +69,13 @@ async function scene(browser, lang, run) {
   await ctx.addInitScript((l) => { localStorage.setItem("sleepmon.session", "1"); localStorage.setItem("sleepmon.lang", l); }, lang);
   await ctx.route("http://localhost:8000/**", async (route) => {
     const req = route.request();
+    if (req.method() === "POST" && req.url().endsWith("/screenshot-import")) {
+      return route.fulfill({
+        status: 200, contentType: "application/json",
+        headers: { "Access-Control-Allow-Origin": new URL(APP).origin, "Access-Control-Allow-Credentials": "true" },
+        body: JSON.stringify(READING),
+      });
+    }
     if (req.method() === "POST" && req.url().endsWith("/comparison-shares")) {
       const body = JSON.parse(req.postData() ?? "{}");
       return route.fulfill({
@@ -86,18 +100,23 @@ async function capture(browser, dir, lang) {
   const shot = (loc, name, opts = {}) => loc.screenshot({ path: join(dir, `${name}.jpg`), ...JPEG, ...opts });
 
   await scene(browser, lang, async (page) => {
-    await page.goto(`${APP}/box`);
-    const entry = page.locator(".box-entry", { hasText: /(Nv|Lv)\. 22\b/ }).first();
-    await entry.locator("button").last().click();
-    await page.getByRole("menuitem").first().click();
-    await page.locator(".sug-row").first().waitFor();
-    const cards = page.locator(".prod-cards .prod-card:not(.prod-card--add)");
-    await shot(cards.nth(0), "compare-base");
-    const add = page.locator(".prod-card--add");
-    const top = (await page.locator(".sug-row").first().boundingBox()).y - 40;
-    const last = await add.locator("button").last().boundingBox();
-    const box = await add.boundingBox();
-    await page.screenshot({ path: join(dir, "compare-suggestions.jpg"), ...JPEG, clip: { x: box.x, y: top, width: box.width, height: last.y + last.height + 16 - top } });
+    // The uploaded screenshots themselves, as the tile shows them.
+    for (const [i, file] of GAME_SHOTS.entries()) {
+      const data = (await readFile(file)).toString("base64");
+      await page.setContent(`<body style="margin:0;background:#0e1220"><img id="g" style="display:block;width:291px" src="data:image/${file.endsWith(".png") ? "png" : "jpeg"};base64,${data}"></body>`);
+      await shot(page.locator("#g"), `game-${i + 1}`);
+    }
+    // Upload them through "+ From screenshots"; the mocked reading fills the form; add the card.
+    await page.goto(`${APP}/compare`);
+    await page.getByRole("button", { name: /Desde imágenes|From screenshots/ }).first().click();
+    await page.locator('input[type="file"]').setInputFiles(GAME_SHOTS);
+    await page.getByRole("button", { name: /Leer imágenes|Read screenshots/ }).click();
+    await page.locator(".form-summary").waitFor();
+    await page.getByRole("button", { name: /Agregar a la comparación|Add to comparison/ }).click();
+    const card = page.locator(".prod-cards .prod-card:not(.prod-card--add)").first();
+    await card.waitFor();
+    await page.waitForTimeout(1500);
+    await shot(card, "import-card");
   });
 
   await scene(browser, lang, async (page) => {

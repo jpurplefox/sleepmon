@@ -8033,11 +8033,6 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 .landing__inner { max-width: 1180px; margin: 0 auto; padding: 0 2.5rem 1rem; }
 .landing h1, .landing h2, .landing h3 { font-family: var(--font-display); }
 .landing-shot { position: absolute; border-radius: 16px; box-shadow: var(--shot-shadow); max-width: none; }
-.landing-callout {
-  position: absolute; z-index: 3; display: inline-flex; gap: 0.35rem; align-items: center;
-  background: var(--text); color: var(--bg); font-weight: 700; font-size: 0.78rem;
-  padding: 0.4rem 0.7rem; border-radius: 999px; white-space: nowrap; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
-}
 
 /* Hero */
 .landing-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 1.5rem; align-items: center; padding: 3.5rem 0 2.5rem; }
@@ -8062,7 +8057,7 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 .landing-section-head h2 { margin: 0; font-size: 1.9rem; font-weight: 800; letter-spacing: -0.035em; }
 .landing-section-head span { color: var(--muted); }
 .landing-bento { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1rem; padding-bottom: 3rem; }
-.landing-tile { position: relative; overflow: hidden; isolation: isolate; background: var(--surface); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 24px; padding: 1.6rem; min-height: 420px; }
+.landing-tile { position: relative; overflow: hidden; isolation: isolate; background: var(--surface); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 24px; padding: 1.6rem; min-height: 520px; }
 .landing-tile__copy { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 0.6rem; align-items: flex-start; }
 .landing-tile h3 { margin: 0; font-size: 1.4rem; font-weight: 800; letter-spacing: -0.025em; line-height: 1.12; max-width: 17ch; }
 .landing-tile p { margin: 0; color: var(--muted); line-height: 1.55; font-size: var(--text-base); max-width: 36ch; }
@@ -8070,12 +8065,15 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 .landing-account { display: inline-flex; gap: 0.3rem; align-items: center; font-size: 0.7rem; font-weight: 600; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px; background: var(--bg); }
 .landing-account svg { width: 11px; height: 11px; }
 .landing-tile--catch { grid-column: span 4; }
-.landing-tile--catch .landing-tile__copy { max-width: 42%; }
-.landing-shot--compare-base { width: 200px; right: 230px; top: 46px; transform: rotate(-5deg); }
-.landing-shot--compare-suggestions { width: 210px; right: 28px; top: 22px; transform: rotate(4deg); z-index: 1; }
-.landing-tile__callout { right: 150px; bottom: 34px; transform: rotate(-2deg); }
+.landing-tile--catch .landing-tile__copy { max-width: 38%; }
+/* Two game screenshots, an arrow, and the card they become. */
+.landing-shot--game-1 { width: 104px; right: 300px; top: 110px; transform: rotate(-7deg); border-radius: 12px; }
+.landing-shot--game-2 { width: 104px; right: 240px; top: 154px; transform: rotate(5deg); border-radius: 12px; }
+.landing-shot--import-card { width: 190px; right: 24px; top: 64px; z-index: 1; }
+.landing-tile__arrow { position: absolute; right: 198px; top: 250px; z-index: 2; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--accent-strong); color: #fff; font-size: 1.2rem; font-weight: 700; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
 .landing-tile--share { grid-column: span 2; background: linear-gradient(165deg, #2a2f6d 0%, var(--surface) 62%); }
-.landing-shot--share-dialog { width: 340px; left: 50%; bottom: -14px; transform: translateX(-42%) rotate(-4deg); }
+/* Below the copy, whole: its link row at the bottom is the point. */
+.landing-shot--share-dialog { width: 280px; left: 50%; top: 152px; transform: translateX(-50%) rotate(-3deg); }
 .landing-tile--plan { grid-column: span 3; min-height: 540px; }
 .landing-shot--team-card-1, .landing-shot--team-card-2, .landing-shot--team-card-3 { width: 150px; top: 200px; }
 .landing-shot--team-card-1 { left: 6%; transform: rotate(-7deg); }
@@ -8111,11 +8109,12 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   .landing-tile--catch, .landing-tile--share, .landing-tile--plan, .landing-tile--levelup { grid-column: auto; }
   .landing-tile--catch { min-height: 560px; }
   .landing-tile--catch .landing-tile__copy { max-width: none; }
-  .landing-shot--compare-base { top: auto; bottom: 30px; right: 46%; width: 160px; }
-  .landing-shot--compare-suggestions { top: auto; bottom: 10px; right: 6%; width: 170px; }
-  .landing-tile__callout { display: none; }
-  .landing-tile--share { min-height: 460px; }
-  .landing-shot--share-dialog { width: 290px; }
+  .landing-shot--game-1 { top: auto; bottom: 110px; right: auto; left: 3%; width: 80px; }
+  .landing-shot--game-2 { top: auto; bottom: 56px; right: auto; left: 19%; width: 80px; }
+  .landing-shot--import-card { top: auto; bottom: 16px; right: 4%; width: 140px; }
+  .landing-tile__arrow { top: auto; bottom: 160px; right: calc(4% + 146px); }
+  .landing-tile--share { min-height: 540px; }
+  .landing-shot--share-dialog { width: 290px; top: 170px; }
   .landing-shot--team-card-1, .landing-shot--team-card-2, .landing-shot--team-card-3 { width: 110px; }
   .landing-shot--box-entry { width: 260%; right: -4%; }
   .landing-shot--levelup-tip { width: 270px; right: 4%; top: 230px; }
