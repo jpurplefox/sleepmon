@@ -4,6 +4,7 @@ import { newEntry } from "../roster";
 import type { Slot } from "../teamRoster";
 import type { Island, MemberInput } from "../types";
 import {
+  comparisonLevelSetEvent,
   mapSetEvent,
   mealsCount,
   profileSections,
@@ -84,5 +85,12 @@ describe("teamSavedProps", () => {
       kind: "new", slots: 5, split_slots: 1, members_from_box: 4, members_created: 2,
       has_map: true, expert_map: true, meals: 2,
     });
+  });
+});
+
+describe("comparisonLevelSetEvent", () => {
+  it("names the level, or off", () => {
+    expect(comparisonLevelSetEvent(60)).toEqual({ name: "comparison_level_set", props: { level: "60" } });
+    expect(comparisonLevelSetEvent(null)).toEqual({ name: "comparison_level_set", props: { level: "off" } });
   });
 });
