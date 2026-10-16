@@ -76,8 +76,9 @@ swipes one card per screen, but the picture always shows **every card side by si
     sharer's language and the picture. A card raised by the comparison level is kept
     **at its target level, as its own level**; the comparison level itself is not kept.
 - **Reused** while the comparison doesn't change: reopening the dialog on the same cards
-  and map terms shows the same link instead of creating another. Any change to the cards,
-  the map terms or the comparison level makes the next dialog create a new one.
+  and map terms shows the same link instead of creating another. A change to the cards,
+  the map terms or **the levels the comparison level gives the cards** makes the next
+  dialog create a new one.
 - **Copy** puts the link on the clipboard and reads *"Copied!"* for a moment; the link
   itself doesn't change.
 - A link that couldn't be created shows its error in place of the link, with **Try
@@ -156,7 +157,8 @@ swipes one card per screen, but the picture always shows **every card side by si
   Raichu"*; shared from the app in English, *"Comparison: Pikachu vs Raichu"*.
 - Changing the comparison after creating the link → the link still opens the original.
 - Comparison level **60**, a level **45** card → the picture shows it at **Lv. 60**, with
-  no arrow; changing the comparison level, then opening the dialog → a new link.
+  no arrow; changing the comparison level so a card's level changes, then opening the
+  dialog → a new link.
 
 **Opening a link**
 
