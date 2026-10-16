@@ -22,6 +22,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "common.dash": "—",
     // Barra de contexto
     "ctx.map": "Mapa",
+    "ctx.compareLevel": "Comparar a nivel",
+    "ctx.compareLevelOff": "Sin nivel de comparación",
+    "ctx.compareLevelChip": "Nivel {level}",
     "ctx.noMap": "Sin mapa",
     "ctx.area": "Área +{pct}%",
     "ctx.event": "Evento",
@@ -750,6 +753,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "common.dash": "—",
     // Context bar
     "ctx.map": "Map",
+    "ctx.compareLevel": "Compare at level",
+    "ctx.compareLevelOff": "No comparison level",
+    "ctx.compareLevelChip": "Level {level}",
     "ctx.noMap": "No map",
     "ctx.area": "Area +{pct}%",
     "ctx.event": "Event",

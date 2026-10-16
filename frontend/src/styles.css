@@ -6617,6 +6617,16 @@ button.prod-card__base-tag--action {
   text-overflow: ellipsis;
 }
 
+/* Comparison's level chips: one row that wraps as a whole under its label. */
+.ctx-field:has(.ctx-levels) {
+  flex-wrap: wrap;
+}
+
+.ctx-levels {
+  display: inline-flex;
+  gap: 0.3rem;
+}
+
 .ctx-map .filter-btn__icons,
 .ctx-map .metric-mark {
   flex-shrink: 0;
