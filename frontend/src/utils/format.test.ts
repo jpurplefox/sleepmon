@@ -32,13 +32,13 @@ describe("fup", () => {
 });
 
 describe("fcompact", () => {
-  it("keeps small figures exact", () => {
+  it("keeps figures exact while abbreviating would save no room", () => {
     expect(fcompact(143)).toBe("143");
-    expect(fcompact(999)).toBe("999");
+    expect(fcompact(1227)).toBe("1,227");
+    expect(fcompact(9999)).toBe("9,999");
   });
 
-  it("shortens thousands and millions to three significant digits", () => {
-    expect(fcompact(1227)).toBe("1.23K");
+  it("shortens from 10,000 up to three significant digits", () => {
     expect(fcompact(15145)).toBe("15.1K");
     expect(fcompact(535149)).toBe("535K");
     expect(fcompact(1141655)).toBe("1.14M");

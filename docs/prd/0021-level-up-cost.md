@@ -49,8 +49,9 @@ The entry shows the span — **current level → target level** — and its cost
 unlock level brings is already visible in the entry's build (locked slots are shown,
 dimmed); the comparison lists it in full.
 
-Costs from 1,000 up read **abbreviated** in the entry (1.23K candies, 1.14M shards) so the
-row stays compact; the comparison opens with the **exact** figures.
+Figures from 10,000 up read **abbreviated** in the entry (535K, 1.14M shards) so the row
+stays compact; below that they read exact, since "1.23K" takes the room of "1,227". The
+comparison opens with the **exact** figures.
 
 ### How many candies
 
@@ -159,8 +160,8 @@ All costs below are for species candies, with no boost.
   targets **60** → **1,803 · 535,149**; one at level **60** targets **70** →
   **1,227 · 1,141,655**.
 - **Last span:** normal, neutral, **69 → 70** → **131 · 166,632**.
-- **Abbreviated cost:** 1,227 candies and 1,141,655 shards read **1.23K · 1.14M** in the
-  entry; the comparison shows **1,227 · 1,141,655**. Below 1,000 a figure reads exact (143).
+- **Abbreviated cost:** 1,227 candies and 1,141,655 shards read **1,227 · 1.14M** in the
+  entry; the comparison shows **1,227 · 1,141,655**. Below 10,000 a figure reads exact.
 - **Level 70 or above** → the entry shows **no cost** and no comparison, not an error.
 - **No minimum set** (a new account) → every entry targets its next unlock level.
 - **Span:** the entry reads its current and target level, e.g. **Lv. 15 → 25**.
@@ -171,7 +172,8 @@ All costs below are for species candies, with no boost.
   the ingredient that unlocks at 30 with its amount at 30 — not a fall in its main
   ingredient. The phone section and the comparison call it **new**; the desktop row keeps
   just the ingredient's icon and **+amount** to stay compact.
-- **Abbreviated strength gain:** a strength gain of 2,048 reads **▲2.05K** in the entry.
+- **Abbreviated strength gain:** a strength gain of 12,300 reads **▲12.3K** in the entry;
+  one of 2,048 reads **▲2,048**.
 - **Several unlocks:** with the minimum at **60**, a level 15 Pokémon's comparison lists the
   unlocks at **25, 30, 50 and 60**, in that order, and its rows add up all of them.
 - **Comparison:** a level 25 Pokémon with three recorded ingredients targets 30; its

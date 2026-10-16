@@ -173,7 +173,7 @@ describe("level-up cost", () => {
     const cell = container.querySelector(".box-entry__levelup") as HTMLElement;
     expect(within(cell).getByText("Lv. 55 → 60")).toBeInTheDocument();
     // Figures are abbreviated so the column stays narrow (PRD 0021).
-    expect(within(cell).getByText("1.23K")).toBeInTheDocument();
+    expect(within(cell).getByText("1,227")).toBeInTheDocument();
     expect(within(cell).getByText("1.14M")).toBeInTheDocument();
   });
 
@@ -218,7 +218,7 @@ describe("level-up cost", () => {
     expect(head.querySelector(".levelup-cost")).toBeNull();
   });
 
-  it("abbreviates a large strength gain", () => {
+  it("abbreviates a strength gain from 10,000 up", () => {
     useEnglish();
     setViewport(false);
     const berry: Member = {
@@ -227,12 +227,12 @@ describe("level-up cost", () => {
         ...LEVELED.production!,
         level_up: {
           ...LEVELED.production!.level_up!,
-          at_target: { ...AT_TARGET, berry_strength: 12215 },
+          at_target: { ...AT_TARGET, berry_strength: 22467 },
         },
       },
     };
     const { container } = renderEntry(berry, { ...VENUSAUR, specialty: "Berries" });
-    expect(container.querySelector(".levelup-gain")).toHaveTextContent("2.05K");
+    expect(container.querySelector(".levelup-gain")).toHaveTextContent("12.3K");
   });
 
   it("shows the main ingredient's delta when the span unlocks no ingredient", () => {
@@ -306,7 +306,7 @@ describe("level-up cost", () => {
 
     expect(screen.getByText("Next level")).toBeInTheDocument();
     expect(screen.getByText("Cost")).toBeInTheDocument();
-    expect(screen.getByText("1.23K")).toBeInTheDocument();
+    expect(screen.getByText("1,227")).toBeInTheDocument();
     expect(container.querySelector(".levelup-gain__new")).toHaveTextContent("new");
     // The desktop cell isn't rendered on a phone.
     expect(container.querySelector(".box-entry__levelup")).toBeNull();
