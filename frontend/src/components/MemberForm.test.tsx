@@ -557,31 +557,47 @@ describe("MemberForm sub skill seeds", () => {
     skill_level: 1,
   };
 
-  it("applies every seed in one click and saves the raised sub skills", async () => {
+  it("applies the seeds in one click and saves the raised sub skills", async () => {
     const user = userEvent.setup();
     const { onSubmit } = renderForm({ initial });
-    await user.click(screen.getByRole("button", { name: /Apply 2 seeds/ }));
+    await user.click(screen.getByRole("button", { name: /^Apply 1 seed:/ }));
     await user.click(screen.getByRole("button", { name: "Add to my box" }));
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({ sub_skills: ["Inventory Up L", "Inventory Up M"] }),
     );
   });
 
-  it("uses the singular copy when one seed is left", () => {
-    renderForm({ initial: { ...initial, sub_skills: ["Inventory Up L", "Inventory Up S"] } });
-    expect(screen.getByRole("button", { name: /^Apply 1 seed:/ })).toBeInTheDocument();
+  it("counts one seed per sub skill raised", () => {
+    renderForm({
+      initial: { ...initial, sub_skills: ["Inventory Up S", "Inventory Up M", "Skill Trigger S"] },
+    });
+    expect(screen.getByRole("button", { name: /^Apply 2 seeds:/ })).toBeInTheDocument();
   });
 
-  it("reads as maxed once seeded, and a second click changes nothing", async () => {
+  it("undoes the seeds with the same button, back to what was there", async () => {
     const user = userEvent.setup();
     const { onSubmit } = renderForm({ initial });
-    await user.click(screen.getByRole("button", { name: /Apply 2 seeds/ }));
+    await user.click(screen.getByRole("button", { name: /^Apply 1 seed:/ }));
+    await user.click(screen.getByRole("button", { name: /^Undo seeds/ }));
+    expect(screen.getByRole("button", { name: /^Apply 1 seed:/ })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ sub_skills: ["Inventory Up S", "Inventory Up M"] }),
+    );
+  });
+
+  it("drops the undo once a sub skill is edited by hand", async () => {
+    const user = userEvent.setup();
+    renderForm({ initial });
+    await user.click(screen.getByRole("button", { name: /^Apply 1 seed:/ }));
+    await user.click(screen.getByRole("button", { name: "Sub skills" }));
+    await user.click(screen.getByRole("option", { name: /Remove Inventory Up M/ }));
+    expect(screen.queryByRole("button", { name: /^Undo seeds/ })).not.toBeInTheDocument();
+  });
+
+  it("opens unavailable when the saved sub skills are already maxed", () => {
+    renderForm({ initial: { ...initial, sub_skills: ["Inventory Up L", "Inventory Up M"] } });
     const maxed = screen.getByRole("button", { name: "Sub skills are already maxed" });
     expect(maxed).toHaveAttribute("aria-disabled", "true");
-    await user.click(maxed);
-    await user.click(screen.getByRole("button", { name: "Add to my box" }));
-    expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({ sub_skills: ["Inventory Up L", "Inventory Up M"] }),
-    );
   });
 });

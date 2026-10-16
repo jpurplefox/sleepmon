@@ -4,6 +4,7 @@ import { SUB_SKILL_UNLOCK_LEVELS } from "../constants";
 import { useI18n } from "../i18n";
 import { subSkillIcon } from "../subskills";
 import type { SubSkill } from "../types";
+import type { SlotHighlight } from "../useSeedShortcut";
 import { Tooltip } from "./Tooltip";
 
 const MAX_SUB_SKILLS = 5;
@@ -26,9 +27,11 @@ interface Props {
   level: number;
   onChange: (next: string[]) => void;
   ariaLabel?: string;
+  /** Slots to light up after a seed apply/undo. */
+  highlight?: SlotHighlight | null;
 }
 
-export function SubSkillSelect({ subSkills, value, level, onChange, ariaLabel }: Props) {
+export function SubSkillSelect({ subSkills, value, level, onChange, ariaLabel, highlight }: Props) {
   const { t, subSkill } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -111,12 +114,18 @@ export function SubSkillSelect({ subSkills, value, level, onChange, ariaLabel }:
             const unlock = SUB_SKILL_UNLOCK_LEVELS[i];
             const locked = level < unlock;
             const tier = name ? TIER_CLASS[tierOf(name)] : "empty";
+            const flash = highlight?.slots.includes(i) ?? false;
             return (
               <Tooltip
                 key={i}
                 content={name ? subSkill(name) : t("subSel.slotEmpty", { unlock })}
               >
-                <span className={`ss-icon ss-icon--${tier}` + (locked ? " is-locked" : "")}>
+                <span
+                  key={flash ? `flash-${highlight?.key}` : "rest"}
+                  className={
+                    `ss-icon ss-icon--${tier}` + (locked ? " is-locked" : "") + (flash ? " ss-flash" : "")
+                  }
+                >
                   {name && <img src={subSkillIcon(name)} alt={name} />}
                   <span className="ss-icon__lv">{unlock}</span>
                 </span>
@@ -124,6 +133,9 @@ export function SubSkillSelect({ subSkills, value, level, onChange, ariaLabel }:
             );
           })}
         </div>
+        <span className="subskill-trigger__hint">
+          {count >= MAX_SUB_SKILLS ? t("subSel.change", { count }) : t("subSel.choose", { count })}
+        </span>
       </button>
 
       {open && (

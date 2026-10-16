@@ -1,21 +1,26 @@
 import { useI18n } from "../i18n";
+import type { SeedMode } from "../useSeedShortcut";
+import { IconUndo } from "./icons";
 import { Tooltip } from "./Tooltip";
 
 interface Props {
-  /** Seeds the shortcut would spend; 0 shows the maxed state. */
+  mode: SeedMode;
+  /** Seeds the next apply would spend. */
   seeds: number;
-  onSeed: () => void;
+  onClick: () => void;
 }
 
-// One click raises every sub skill to its highest free tier (PRD 0003).
-export function SubSkillSeedButton({ seeds, onSeed }: Props) {
+// Applies every seed in one click, then undoes it (PRD 0003).
+export function SubSkillSeedButton({ mode, seeds, onClick }: Props) {
   const { t } = useI18n();
   const label =
-    seeds === 0
-      ? t("seed.maxed")
-      : seeds === 1
-        ? t("seed.applyOne")
-        : t("seed.apply", { n: seeds });
+    mode === "undo"
+      ? t("seed.undo")
+      : mode === "none"
+        ? t("seed.maxed")
+        : seeds === 1
+          ? t("seed.applyOne")
+          : t("seed.apply", { n: seeds });
   return (
     <Tooltip content={label}>
       {/* aria-disabled, not disabled: a disabled button would swallow the tooltip's hover. */}
@@ -23,11 +28,16 @@ export function SubSkillSeedButton({ seeds, onSeed }: Props) {
         type="button"
         className="seed-btn"
         aria-label={label}
-        aria-disabled={seeds === 0 || undefined}
-        onClick={() => seeds > 0 && onSeed()}
+        aria-disabled={mode === "none" || undefined}
+        onClick={() => mode !== "none" && onClick()}
       >
         <img className="seed-btn__icon" src="/sub-skill-seed.png" alt="" />
-        {seeds > 0 && <span className="seed-btn__badge">{seeds}</span>}
+        {mode === "apply" && <span className="seed-btn__badge">{seeds}</span>}
+        {mode === "undo" && (
+          <span className="seed-btn__badge seed-btn__badge--undo">
+            <IconUndo width={11} height={11} strokeWidth={2.6} />
+          </span>
+        )}
       </button>
     </Tooltip>
   );

@@ -236,6 +236,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "seed.applyOne": "Aplicar 1 seed: sube cada sub skill al tier más alto libre",
     "seed.apply": "Aplicar {n} seeds: sube cada sub skill al tier más alto libre",
     "seed.maxed": "Las sub skills ya están al máximo",
+    "seed.undo": "Deshacer seeds: vuelve a las sub skills de antes",
     "form.skillLevel": "Nivel de skill",
     "form.ribbon": "Listón",
     "form.speciesUnknown":
@@ -379,6 +380,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "subSel.family.skillTrigger": "Activación",
     "subSel.family.others": "Otros",
     "subSel.slotEmpty": "Slot de nivel {unlock}",
+    "subSel.change": "{count}/5 · cambiar",
+    "subSel.choose": "{count}/5 · elegir",
     "subSel.aria": "Elegir sub skills",
     "subSel.remove": "Quitar {name}",
     // Ingredient slots
@@ -963,6 +966,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "seed.applyOne": "Apply 1 seed: raises each sub skill to its highest free tier",
     "seed.apply": "Apply {n} seeds: raises each sub skill to its highest free tier",
     "seed.maxed": "Sub skills are already maxed",
+    "seed.undo": "Undo seeds: back to the sub skills you had before",
     "form.skillLevel": "Skill level",
     "form.ribbon": "Ribbon",
     "form.speciesUnknown":
@@ -1107,6 +1111,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "subSel.family.skillTrigger": "Skill Trigger",
     "subSel.family.others": "Others",
     "subSel.slotEmpty": "Level {unlock} slot",
+    "subSel.change": "{count}/5 · change",
+    "subSel.choose": "{count}/5 · choose",
     "subSel.aria": "Choose sub skills",
     "subSel.remove": "Remove {name}",
     // Ingredient slots

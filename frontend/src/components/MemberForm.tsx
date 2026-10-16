@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 import { carryIngredients, devolvedSkillLevel, evolvedSkillLevel, ingredientsAfterChange } from "../evolution";
 import { useI18n } from "../i18n";
 import { unreadAfterChange } from "../screenshotImport";
-import { seedSubSkills } from "../subskills";
 import type { Catalog, ImportField, ImportedForm, MemberInput } from "../types";
+import { useSeedShortcut } from "../useSeedShortcut";
 import { VERSATILE, effectiveSkill } from "../versatile";
 import { EvolveControl } from "./EvolveControl";
 import { FormSummary } from "./FormSummary";
@@ -61,6 +61,7 @@ export function MemberForm({
   const [subSkills, setSubSkills] = useState<string[]>(initial?.sub_skills ?? []);
   const [ribbon, setRibbon] = useState(initial?.ribbon ?? "");
   const [skillLevel, setSkillLevel] = useState(initial?.skill_level ?? 1);
+  const seed = useSeedShortcut(subSkills, setSubSkills);
   // Mew's chosen skill; "" until picked (it then reads as Metronome).
   const [versatileSkill, setVersatileSkill] = useState(initial?.versatile_skill ?? "");
 
@@ -158,8 +159,6 @@ export function MemberForm({
     setSkillLevel(devolvedSkillLevel);
   }
 
-  const seed = seedSubSkills(subSkills);
-
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const chosen = effectiveSkill(selectedSpecies?.main_skill, versatileSkill);
@@ -246,10 +245,11 @@ export function MemberForm({
             subSkills={catalog.sub_skills}
             value={subSkills}
             level={level}
-            onChange={setSubSkills}
+            onChange={seed.onManualChange}
+            highlight={seed.highlight}
             ariaLabel={t("form.subSkills")}
           />
-          <SubSkillSeedButton seeds={seed.seeds} onSeed={() => setSubSkills(seed.slots)} />
+          <SubSkillSeedButton mode={seed.mode} seeds={seed.seeds} onClick={seed.act} />
         </div>
       </fieldset>
 

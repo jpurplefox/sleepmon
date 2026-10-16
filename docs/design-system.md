@@ -595,20 +595,30 @@ states · where it lives. Feature one-offs are intentionally not here.
   (Lv 1 / 30 / 60) still show, each with one dashed `--divider` placeholder per option
   it will hold (1 / 2 / 3), dimmed to `0.35` and inert, so the form keeps its shape
   before and after a species is picked.
-  **`SubSkillSelect`** — uses `.ss-icon`. Its trigger hugs its five slots (no count
-  hint); in the Pokémon form it shares a row with the seed button (`.subskill-field`,
-  flex, `gap 0.5rem`, `align-items: stretch`).
+  **`SubSkillSelect`** — uses `.ss-icon`. Its trigger fills the row and keeps its count
+  hint ("3/5 · elegir") while it fits; the trigger is a size container and the hint is
+  **hidden, never wrapped**, under 300px (a phone). In the Pokémon form it shares a row
+  with the seed button (`.subskill-field`, flex, `gap 0.5rem`, `align-items: stretch`,
+  `position: relative` so the dropdown spans the whole row).
 - **Sub skill seed button** (`.seed-btn`) — right after the `SubSkillSelect` trigger in
-  the Pokémon form: one click raises every sub skill to its highest free tier (PRD 0003).
-  `EvolveControl`'s box language (`--surface-2`, `1px --border`, `--r-md`, hover
-  `border-color: --accent`), **52px** wide and stretched to the trigger's height, the
-  game's **Sub Skill Seed** sprite (`public/sub-skill-seed.png`) at 30px. A **quantity
-  badge** — how many seeds it would apply — pinned top-right, absolute so it adds no
+  the Pokémon form: one click raises every sub skill to its highest free tier, and the
+  next click undoes it (PRD 0003). `EvolveControl`'s box language (`--surface-2`,
+  `1px --border`, `--r-md`, hover `border-color: --accent`), **52px** wide and stretched
+  to the trigger's height, the game's **Sub Skill Seed** sprite
+  (`public/sub-skill-seed.png`) at 30px. A badge pinned top-right, absolute so it adds no
   width, styled as `EvolveControl`'s `+N` badge (`--text-xs` bold, `--surface-2` pill,
-  `1px --divider`). Wrapped in `Tooltip`, which says what it does; the same text is its
-  `aria-label`.
-  - **At max** (nothing to seed): no badge, `opacity 0.35`, no hover. `aria-disabled`,
-    not `disabled`, so the tooltip still opens on hover and focus.
+  `1px --divider`). Wrapped in `Tooltip`, which says what the click will do; the same
+  text is its `aria-label`.
+  - **Apply**: the badge is the **seed count** (sub skills it would raise).
+  - **Undo** (just applied, untouched since): the badge is an 11px **↺** (`IconUndo`);
+    the button itself doesn't change color.
+  - **Unavailable** (nothing to seed or undo): no badge, `opacity 0.35`, no hover.
+    `aria-disabled`, not `disabled`, so the tooltip still opens on hover and focus.
+- **Slot highlight** (`.ss-icon` one-shot) — marks the sub skill slots an action just
+  changed (first use: applying or undoing seeds). The **whole tile** lights up — fill
+  `color-mix(in srgb, #fff 45%, var(--surface))`, border `#fff`, a white halo — and
+  fades back to its tier color in **600ms** `ease-out`. Only the changed slots play it;
+  under `prefers-reduced-motion` they just change.
 - **`RibbonIcon`** — ribbon sprite with `--empty` variant.
 - **Screenshot slots** (`ShotSlots`, `.shot-slots` / `.shot`) — the images a user
   uploads for one job (first use: the screenshot import, PRD 0019): a row of **3**
@@ -1145,6 +1155,13 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   sub skill seeds shortcut was first drafted as a `.level-chip` under the slots, right below
   the level chips. *Resolution:* a square button in the field's own row, showing the
   game item it stands for (the Sub Skill Seed) with a quantity badge, and a tooltip
-  naming the action; the field's count hint went to make room. *Why:* `.level-chip`
+  naming the action. The field keeps its count hint while it fits. *Why:* `.level-chip`
   picks a value from a short scale, so an action dressed as one reads as another level;
   the item sprite says what will be spent, and the badge says how much before the click.
+- **A change made for the user gets a highlight that lasts.** *Question:* applying seeds
+  changes several slots at once, and the user couldn't tell which; motion here is capped
+  at ~80–150ms. *Resolution:* each changed slot lights up whole in white and fades back
+  over **600ms**, on apply and on undo; reduced motion skips it. *Why:* this is state
+  feedback the eye has to catch after the click lands, not a hover cue — at 150ms it is
+  over before the user looks; white, not indigo or `--up`, because the slot's tier color
+  is game content and the highlight says "changed", not "better".
