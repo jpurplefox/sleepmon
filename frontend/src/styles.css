@@ -3022,9 +3022,10 @@ button.shot--empty:focus-visible,
   transition: border-color 0.12s;
 }
 
-/* La invitación a agregar responde al hover como cualquier elemento interactivo. */
+/* La invitación a agregar responde al hover como cualquier elemento interactivo.
+   Over a suggestion only the row lights up, not the card around it. */
 @media (hover: hover) {
-  .prod-card--add:hover {
+  .prod-card--add:hover:not(:has(.sug-row:hover)) {
     border-color: var(--accent);
   }
 }

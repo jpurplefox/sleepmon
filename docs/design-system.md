@@ -346,7 +346,8 @@ states · where it lives. Feature one-offs are intentionally not here.
   schedule has the same rows, so cards align without reserving space; the block keeps its
   40px floor.
 - **Comparison add card** (`.prod-card--add`) — the last cell of `.prod-cards`, a
-  dashed `.prod-card` holding the ways to add, vertically centered. With suggestions
+  dashed `.prod-card` holding the ways to add, vertically centered; its outline turns
+  `--accent` on hover, except over a `.sug-row`, where only the row lights up. With suggestions
   (PRD 0002): a label (`--text-xs`, uppercase, `letter-spacing .04em`, 600, `--muted`,
   "De tu caja, para comparar"), up to three `.sug-row`s (`gap .5rem`), a `--border`
   hairline, then `.prod-add__actions` (`+ Nuevo` primary, `+ Desde imágenes` and
