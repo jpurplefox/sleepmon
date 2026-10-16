@@ -31,6 +31,8 @@ from sleepmon.domain.value_objects import (
 # las sub skills pasaron a 10/25/50/70/80.
 SUB_SKILL_UNLOCK_LEVELS: Final[tuple[int, ...]] = (10, 25, 50, 70, 80)
 INGREDIENT_UNLOCK_LEVELS: Final[tuple[int, ...]] = (1, 30, 60)
+# The level where every ingredient slot is unlocked.
+ALL_INGREDIENTS_LEVEL: Final[int] = INGREDIENT_UNLOCK_LEVELS[-1]
 
 MAX_SUB_SKILLS: Final[int] = len(SUB_SKILL_UNLOCK_LEVELS)
 MAX_INGREDIENTS: Final[int] = len(INGREDIENT_UNLOCK_LEVELS)
