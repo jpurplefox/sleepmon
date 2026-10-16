@@ -176,6 +176,17 @@ describe("level-up cost", () => {
     expect(within(cell).getByText("1,141,655")).toBeInTheDocument();
   });
 
+  it("names the focusable span with the full level-up cost", () => {
+    useEnglish();
+    setViewport(false);
+    renderEntry(LEVELED);
+    const trigger = screen.getByLabelText(/Level 55 to 60: 1,227 candies/);
+    expect(trigger).toHaveAttribute("tabIndex", "0");
+    expect(trigger).toHaveAttribute("role", "img");
+    // The tooltip wrapper carries no competing label.
+    expect(trigger.closest(".tooltip")).not.toHaveAttribute("aria-label");
+  });
+
   it("shows the new ingredient as the gain when the span unlocks one", () => {
     useEnglish();
     setViewport(false);

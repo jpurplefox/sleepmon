@@ -148,7 +148,7 @@ function LevelUpTooltip({
     <span className="levelup-tip">
       <span className="levelup-tip__head">
         <span className="levelup-tip__span">
-          {`${t("common.level", { level: member.level })} → ${t("common.level", { level: levelUp.target_level })}`}
+          {t("levelUp.spanFull", { from: member.level, to: levelUp.target_level })}
         </span>
         {unlocks.map((u) => (
           <span key={`${u.kind}-${u.level}`} className="levelup-tip__unlock">
@@ -205,12 +205,6 @@ export function LevelUpCell({ member, specialty, skill, production, layout, tier
   const span = (
     <Tooltip
       wide
-      label={t("levelUp.spanAria", {
-        from: member.level,
-        to: levelUp.target_level,
-        candies: fmtInt(levelUp.candies),
-        shards: fmtInt(levelUp.dream_shards),
-      })}
       content={
         <LevelUpTooltip
           member={member}
@@ -220,7 +214,19 @@ export function LevelUpCell({ member, specialty, skill, production, layout, tier
         />
       }
     >
-      <span className="levelup-span strength-value__cue" tabIndex={0}>
+      {/* The trigger itself carries the spoken name (role="img" exposes it, as the
+          ProductionCard alert does); the Tooltip wrapper gets no label of its own. */}
+      <span
+        className="levelup-span strength-value__cue"
+        tabIndex={0}
+        role="img"
+        aria-label={t("levelUp.spanAria", {
+          from: member.level,
+          to: levelUp.target_level,
+          candies: fmtInt(levelUp.candies),
+          shards: fmtInt(levelUp.dream_shards),
+        })}
+      >
         {t("levelUp.span", { from: member.level, to: levelUp.target_level })}
       </span>
     </Tooltip>

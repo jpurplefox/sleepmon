@@ -418,7 +418,7 @@ class ProgressPatchInput:
     favorite_recipes: Mapping[str, str | None] | None = None
     area_bonuses: Mapping[str, int] | None = None
     sleep: SleepInput | None = None
-    min_target_level: int | None = None  # 0 borra
+    min_target_level: int | None = None  # 0 clears
 
 
 @dataclass(frozen=True, slots=True)

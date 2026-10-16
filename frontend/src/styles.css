@@ -2028,16 +2028,19 @@ button.shot--empty:focus-visible,
      quedan todas amontonadas a la derecha. Centradas en vertical: cada columna
      tiene distinta cantidad de líneas y se centra en el alto de la fila.
      The 8th-from-left track (before actions) is the level-up cost (PRD 0021). */
-  grid-template-columns: 13rem auto auto 5.5rem 6rem 7rem 8.5rem auto;
+  grid-template-columns: 13rem auto auto 5.5rem 6rem 7rem 9.5rem auto;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem 1.1rem;
+  /* 0.8rem column gap (was 1.1rem): with the 9.5rem level-up track the eight
+     columns only fit the 1100px .layout with this tighter gap. */
+  gap: 1rem 0.8rem;
 }
 
-/* El layout angosto (< 1024px) está consolidado en un único bloque al final de la
-   sección (busca "RESPONSIVE ANGOSTO"): se reorganiza en una grilla de 2 columnas en
-   vez de apilar las 7 zonas, así no se desperdicia el ancho. El salto se hace a
-   1024px porque desde ~980px las siete columnas ya se empiezan a superponer. */
+/* The narrow layout (< 1100px) lives in a single block at the end of the section
+   (search "RESPONSIVE ANGOSTO"): it regroups into a 2-column grid instead of
+   stacking every zone, so the width isn't wasted. The break is at 1100px (the
+   .layout max width) because with the level-up column the eight tracks start to
+   overlap below ~1090px. */
 
 /* Columna 1 — Identidad: sprite a la izquierda; a su derecha el nombre+listón en
    una línea y el badge de nivel debajo. */
@@ -2332,8 +2335,9 @@ button.shot--empty:focus-visible,
 /* A cost is information, not a penalty: neutral figures, no --down. */
 .levelup-cost {
   display: inline-flex;
-  flex-wrap: wrap;
   gap: 0.6rem;
+  /* Candies and shards stay on one line. */
+  white-space: nowrap;
 }
 
 .levelup-cost .box-entry__metric-value {
@@ -2458,9 +2462,10 @@ button.shot--empty:focus-visible,
   border-top: 1px solid var(--divider);
 }
 
-/* ── RESPONSIVE ANGOSTO (< 1024px) ───────────────────────────────────────────
-   Desde ~980px las 7 columnas se empiezan a superponer, así que el salto se hace
-   acá. En vez de apilar las 7 zonas en una sola columna (mucho ancho desperdiciado y
+/* ── RESPONSIVE ANGOSTO (< 1100px) ───────────────────────────────────────────
+   With the level-up column the 8 tracks start to overlap below ~1090px, and the
+   page container (.layout) caps at 1100px, so the break is at 1099px.
+   En vez de apilar las zonas en una sola columna (mucho ancho desperdiciado y
    cards larguísimas), se reorganiza en una grilla de 2 columnas, agrupando por
    afinidad. Acá NO importa la alineación entre cards (cada card es más alta y la info
    queda lejos igual), así que priorizamos densidad y agrupación:
@@ -2470,7 +2475,7 @@ button.shot--empty:focus-visible,
      fila 4: ingredientes producidos (ancho completo, en fila que envuelve)
    Va al final de la sección para ganarle por orden a las reglas base (las media
    queries no suman especificidad: decide el orden en el archivo). */
-@media (max-width: 1024px) {
+@media (max-width: 1099px) {
   .box-entry {
     position: relative;
     grid-template-columns: 1fr 1fr;
