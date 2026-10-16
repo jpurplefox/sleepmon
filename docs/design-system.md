@@ -1064,7 +1064,9 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   `levelup`**, between Skill and the `···` menu (`9.5rem`; the Box entry's column gap narrowed from `1.1rem` to `0.8rem` so eight columns fit the 1100px layout, and the narrow-layout breakpoint moved from 1024px to 1099px): the span `Nv. 25 → 30`
   (`--text-base`, 600, tabular, the tooltip cue opening the wide comparison `Tooltip`),
   a gain pill (`.prod-delta` with the metric's icon) and the candy + shard figures at
-  `--text-sm`, neutral. Rendered empty at level 70+ so the track stays aligned. The
+  `--text-sm`, neutral, **abbreviated** from 1,000 up (three significant digits: `1.23K`,
+  `535K`, `1.14M`) so the column never grows past its track — the exact figures head the
+  comparison tooltip. Rendered empty at level 70+ so the track stays aligned. The
   gain's metric follows the Pokémon's **role**, Box coverage's rule (strength for berry
   roles, its main ingredient — or the new one the span unlocks — for ingredient roles,
   skill triggers otherwise). Tablet: a full-width last row after a `--divider` hairline;

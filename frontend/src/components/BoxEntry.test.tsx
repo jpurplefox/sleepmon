@@ -172,8 +172,17 @@ describe("level-up cost", () => {
     const { container } = renderEntry(LEVELED);
     const cell = container.querySelector(".box-entry__levelup") as HTMLElement;
     expect(within(cell).getByText("Lv. 55 → 60")).toBeInTheDocument();
-    expect(within(cell).getByText("1,227")).toBeInTheDocument();
-    expect(within(cell).getByText("1,141,655")).toBeInTheDocument();
+    // Figures are abbreviated so the column stays narrow (PRD 0021).
+    expect(within(cell).getByText("1.23K")).toBeInTheDocument();
+    expect(within(cell).getByText("1.14M")).toBeInTheDocument();
+  });
+
+  it("keeps the exact cost in the comparison tooltip", () => {
+    useEnglish();
+    setViewport(false);
+    const { container } = renderEntry(LEVELED);
+    const bubble = container.querySelector(".box-entry__levelup .tooltip__bubble") as HTMLElement;
+    expect(within(bubble).getByText("1,227 candies · 1,141,655 dream shards")).toBeInTheDocument();
   });
 
   it("names the focusable span with the full level-up cost", () => {
@@ -268,7 +277,7 @@ describe("level-up cost", () => {
 
     expect(screen.getByText("Next level")).toBeInTheDocument();
     expect(screen.getByText("Cost")).toBeInTheDocument();
-    expect(screen.getByText("1,227")).toBeInTheDocument();
+    expect(screen.getByText("1.23K")).toBeInTheDocument();
     // The desktop cell isn't rendered on a phone.
     expect(container.querySelector(".box-entry__levelup")).toBeNull();
   });

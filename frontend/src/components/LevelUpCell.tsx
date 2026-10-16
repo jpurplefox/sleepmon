@@ -6,6 +6,7 @@ import { comparisonRows, levelUpGain, spanUnlocks, type ComparisonRow, type Gain
 import { CHARGE_STRENGTH_ICON, GENERIC_CANDY_ICON } from "../skillIcons";
 import { subSkillIcon } from "../subskills";
 import type { LevelUp, Member, MemberProduction } from "../types";
+import { fcompact } from "../utils/format";
 import { IconHelp, IconSparkle, IconTriangle } from "./icons";
 import { Tooltip } from "./Tooltip";
 
@@ -150,6 +151,13 @@ function LevelUpTooltip({
         <span className="levelup-tip__span">
           {t("levelUp.spanFull", { from: member.level, to: levelUp.target_level })}
         </span>
+        {/* The column abbreviates the cost; the exact figures live here. */}
+        <span className="levelup-tip__cost">
+          {t("levelUp.costFull", {
+            candies: fmtInt(levelUp.candies),
+            shards: fmtInt(levelUp.dream_shards),
+          })}
+        </span>
         {unlocks.map((u) => (
           <span key={`${u.kind}-${u.level}`} className="levelup-tip__unlock">
             <span className="levelup-tip__lv">{t("common.level", { level: u.level })}</span>
@@ -235,11 +243,11 @@ export function LevelUpCell({ member, specialty, skill, production, layout, tier
     <span className="levelup-cost">
       <span className="box-entry__metric" title={t("levelUp.candies")}>
         <img className="mini-icon mini-icon--candy" src={GENERIC_CANDY_ICON} alt="" aria-hidden="true" />
-        <span className="box-entry__metric-value">{fmtInt(levelUp.candies)}</span>
+        <span className="box-entry__metric-value">{fcompact(levelUp.candies)}</span>
       </span>
       <span className="box-entry__metric" title={t("levelUp.shards")}>
         <img className="mini-icon" src={SHARD_ICON} alt="" aria-hidden="true" />
-        <span className="box-entry__metric-value">{fmtInt(levelUp.dream_shards)}</span>
+        <span className="box-entry__metric-value">{fcompact(levelUp.dream_shards)}</span>
       </span>
     </span>
   );

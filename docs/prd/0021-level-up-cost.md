@@ -49,6 +49,9 @@ The entry shows the span — **current level → target level** — and its cost
 unlock level brings is already visible in the entry's build (locked slots are shown,
 dimmed); the comparison lists it in full.
 
+Costs from 1,000 up read **abbreviated** in the entry (1.23K candies, 1.14M shards) so the
+row stays compact; the comparison opens with the **exact** figures.
+
 ### How many candies
 
 A Pokémon needs a fixed amount of **EXP** to go from each level to the next, tabulated
@@ -156,6 +159,8 @@ All costs below are for species candies, with no boost.
   targets **60** → **1,803 · 535,149**; one at level **60** targets **70** →
   **1,227 · 1,141,655**.
 - **Last span:** normal, neutral, **69 → 70** → **131 · 166,632**.
+- **Abbreviated cost:** 1,227 candies and 1,141,655 shards read **1.23K · 1.14M** in the
+  entry; the comparison shows **1,227 · 1,141,655**. Below 1,000 a figure reads exact (143).
 - **Level 70 or above** → the entry shows **no cost** and no comparison, not an error.
 - **No minimum set** (a new account) → every entry targets its next unlock level.
 - **Span:** the entry reads its current and target level, e.g. **Lv. 15 → 25**.

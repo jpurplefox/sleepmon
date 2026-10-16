@@ -2386,6 +2386,10 @@ button.shot--empty:focus-visible,
   color: var(--text);
   font-weight: 600;
 }
+.levelup-tip__cost {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
 
 .levelup-tip__unlock {
   display: grid;

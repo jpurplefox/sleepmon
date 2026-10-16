@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { fdown, fup } from "./format";
+import { fcompact, fdown, fup } from "./format";
 
 describe("fdown", () => {
   it("floors instead of rounding", () => {
@@ -28,5 +28,19 @@ describe("fup", () => {
   it("leaves whole numbers untouched and adds separators", () => {
     expect(fup(0)).toBe("0");
     expect(fup(1234)).toBe("1,234");
+  });
+});
+
+describe("fcompact", () => {
+  it("keeps small figures exact", () => {
+    expect(fcompact(143)).toBe("143");
+    expect(fcompact(999)).toBe("999");
+  });
+
+  it("shortens thousands and millions to three significant digits", () => {
+    expect(fcompact(1227)).toBe("1.23K");
+    expect(fcompact(15145)).toBe("15.1K");
+    expect(fcompact(535149)).toBe("535K");
+    expect(fcompact(1141655)).toBe("1.14M");
   });
 });
