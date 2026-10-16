@@ -3112,10 +3112,30 @@ button.shot--empty:focus-visible,
   image-rendering: pixelated;
 }
 
-/* The Box build, left-aligned beside the sprite instead of centered. */
-.box-entry__build.sug-row__build,
-.sug-row__build .box-entry__config.prod-box-item__config {
+/* The build stacked and left-aligned beside the sprite, at every width. */
+.sug-row__build {
+  display: flex;
+  flex-direction: column;
   align-items: flex-start;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.sug-row__ings,
+.sug-row__config.prod-box-item__config {
+  opacity: 0.85;
+}
+
+.sug-row__config.prod-box-item__config {
+  flex-direction: column;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  gap: 0.3rem;
+}
+
+.sug-row__ings .ingredient-row,
+.sug-row__config .ingredient-row {
+  flex-wrap: nowrap;
 }
 
 .prod-member-select {

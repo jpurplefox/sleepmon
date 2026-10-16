@@ -35,11 +35,11 @@ export function SuggestionRow({ member: m, dex, mainSkillName, natureMeta, tierB
       </div>
       <div className="sug-row__body">
         <img className="sug-row__sprite" src={spriteUrl(dex)} alt="" loading="lazy" />
-        <div className="box-entry__build sug-row__build">
-          <div className="box-entry__ing-config">
+        <div className="sug-row__build">
+          <div className="sug-row__ings">
             <IngredientLineup level={m.level} ingredients={m.ingredients} />
           </div>
-          <div className="box-entry__config prod-box-item__config">
+          <div className="sug-row__config prod-box-item__config">
             <MemberConfig
               level={m.level}
               nature={m.nature}
