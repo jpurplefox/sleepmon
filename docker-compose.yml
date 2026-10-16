@@ -31,8 +31,8 @@ services:
       # Screenshot import (PRD 0019): a Bedrock bearer token to try it locally; empty = 503.
       AWS_BEARER_TOKEN_BEDROCK: ${AWS_BEARER_TOKEN_BEDROCK:-}
       BEDROCK_REGION: ${BEDROCK_REGION:-us-east-1}
-      SCREENSHOT_TRIAGE_MODEL: ${SCREENSHOT_TRIAGE_MODEL:-us.amazon.nova-2-lite-v1:0}
-      SCREENSHOT_MODEL: ${SCREENSHOT_MODEL:-us.amazon.nova-2-lite-v1:0}
+      SCREENSHOT_TRIAGE_MODEL: ${SCREENSHOT_TRIAGE_MODEL:-qwen.qwen3-vl-235b-a22b}
+      SCREENSHOT_MODEL: ${SCREENSHOT_MODEL:-qwen.qwen3-vl-235b-a22b}
       SCREENSHOT_MODEL_OTHER_LANGUAGES: ${SCREENSHOT_MODEL_OTHER_LANGUAGES:-qwen.qwen3-vl-235b-a22b}
       SCREENSHOT_DAILY_LIMIT: ${SCREENSHOT_DAILY_LIMIT:-50}
       # Human check for signed-out share links (ADR-0012). Default is Cloudflare's

@@ -9,10 +9,9 @@ from datetime import timedelta
 from typing import Literal
 
 DEFAULT_DSN = "postgresql://sleepmon:sleepmon@localhost:5432/sleepmon"
-# Screenshot import: Nova 2 Lite triages and reads English screens; any other
-# language goes to Qwen3-VL. Nova 2 Lite is only served in us-east-1.
-DEFAULT_SCREENSHOT_TRIAGE_MODEL = "us.amazon.nova-2-lite-v1:0"
-DEFAULT_SCREENSHOT_MODEL = "us.amazon.nova-2-lite-v1:0"
+# Screenshot import: Qwen3-VL 235B triages and reads screens in every language.
+DEFAULT_SCREENSHOT_TRIAGE_MODEL = "qwen.qwen3-vl-235b-a22b"
+DEFAULT_SCREENSHOT_MODEL = "qwen.qwen3-vl-235b-a22b"
 DEFAULT_SCREENSHOT_MODEL_OTHER_LANGUAGES = "qwen.qwen3-vl-235b-a22b"
 DEFAULT_BEDROCK_REGION = "us-east-1"
 DEFAULT_CORS_ORIGINS = "http://localhost:5173,http://localhost:3000"
