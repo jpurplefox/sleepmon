@@ -26,9 +26,12 @@ is the comparison.
 5. **Set the map scenario** — a map (any of the game's, normal or expert), up to
    three favorite berries and, on an expert map, the weekly bonus — applied to
    every card alike.
-6. **Persist by explicit action only** — save a config to the Box (as new, or
+6. **Set a comparison level** — an optional target level that raises every card
+   below it, so Pokémon at different levels compare on equal footing; each raised
+   card shows the candies and dream shards that stretch costs.
+7. **Persist by explicit action only** — save a config to the Box (as new, or
    updating the origin Pokémon a card came from).
-7. **Share** — the whole comparison as a picture or a link
+8. **Share** — the whole comparison as a picture or a link
    ([Sharing a comparison](0020-share-comparison.md)).
 
 ## How it works
@@ -164,6 +167,40 @@ Beach (Expert).
 - The other map effects — **area bonus** and **Snorlax rating** — stay in Team
   analysis: the area bonus multiplies every card alike, so it moves no delta.
 
+### Comparison level
+
+Comparing Pokémon at different levels is unfair — a level 12 one always loses to a
+level 55 one. The **comparison level** is a hypothesis on top of the terms: *"what if
+every card were at least at this level?"*, without touching any card's own level.
+
+- **Choices:** **Off** (the default) or one of the unlock levels **10, 25, 30, 50, 60,
+  70** — nothing in between; 70 is the highest the leveling data covers.
+- **It only raises.** Each card is computed at **the higher of its own level and the
+  comparison level**. With the comparison level at 60, a level 45 card is computed at
+  60, and a level 62 one stays at 62. It reaches **every card, the base included**, so
+  the deltas keep comparing like with like.
+- **What the level unlocks counts.** The ingredients (30, 60) and sub skills (10, 25,
+  50, 70) the card already has recorded as locked take part in the estimate once its
+  computed level reaches them, and the card shows them **unlocked**. An **empty** sub
+  skill slot adds nothing: the gain comes from the level alone.
+- **A raised card** shows its level as an arrow from its own level to the target —
+  **Lv. 45 → 60**. Hovering, focusing or tapping it shows the **candies and dream
+  shards** for that stretch, exact, from the [Level-up cost](0021-level-up-cost.md)
+  calculation (species category and nature included, species candies only, counted
+  from the start of the card's level).
+- **A card not raised** — already at the comparison level or above it — shows its
+  level as it does today, with no arrow and no cost.
+- **The card keeps its own level.** **Save to Box** saves the card's own level,
+  **Edit** opens the form on it, and **Clone** copies it; the clone follows the same
+  rule as any card, so it is raised too when below the comparison level. Editing a
+  card's level re-evaluates it against the comparison level.
+- **Ephemeral, like the map terms.** It is part of the comparison, not the account: a
+  reload turns it **Off**; moving to another tool and back, or bringing a Pokémon with
+  the Box's **Compare**, keeps it; opening a [shared link](0020-share-comparison.md)
+  turns it **Off** (the link's cards already come at their target level). It has
+  nothing to do with the Box's *minimum target level* in the Player profile and never
+  starts from it.
+
 ## Calculation assumptions
 
 The per-card estimate comes from the shared [Production model](0008-production-model.md)
@@ -250,6 +287,29 @@ for the rest.
   resets it, and with those terms every card shows its plain production. Moving to
   another tool and back keeps the terms, like the cards.
 
+**Comparison level**
+
+- The control offers exactly **Off, 10, 25, 30, 50, 60, 70**; it starts at **Off**, and
+  with it Off every card is computed and shown at its own level, as today.
+- **Comparison level 60** with cards at levels **45**, **60** and **62** → they are
+  computed at **60**, **60** and **62**; only the first shows **Lv. 45 → 60**, the
+  other two show their level with no arrow.
+- The raised card's cost: a normal species with a neutral nature, **Lv. 15 → 60** →
+  **1,803 candies · 535,149 dream shards**; with an EXP-up nature the figure is lower,
+  as in [Level-up cost](0021-level-up-cost.md).
+- A level **25** card with three ingredients recorded, comparison level **30** → its
+  second ingredient (the slot that unlocks at 30) joins the ingredients per day and shows unlocked; at comparison
+  level **Off** it is locked again and out of the estimate.
+- A level **40** card with no sub skill recorded for 50, comparison level **50** →
+  computed at 50 with no added sub skill.
+- Changing the comparison level recomputes **every metric and every delta**; when the
+  base is raised, the deltas are read against the raised base.
+- **Save to Box** on a level 45 card with the comparison level at 60 → the Box Pokémon
+  stays (or is created) at **45**. **Edit** opens the form at **45**. **Clone** → a
+  card at level 45, shown **Lv. 45 → 60**.
+- A reload → the comparison level is **Off**. Moving to Team analysis and back, or
+  using the Box's **Compare** → it stays as it was. Opening a shared link → **Off**.
+
 ## Guidelines
 
 - **Comparing is the goal.** Everything is arranged to put configurations in
@@ -269,6 +329,9 @@ for the rest.
 - **The same rules as Team analysis.** Favorites, the main favorite and the expert
   effects behave exactly as on the map there; Comparison only lets you set them
   without building a team.
+- **A hypothesis never overwrites the record.** The comparison level changes what a
+  card is computed at, never the card's own level: what is saved, edited or cloned is
+  always the real config.
 - **The computation lives in the domain.** The card only **presents** the shared
   [Production model](0008-production-model.md); it may **derive** values (e.g.
   P(exactly 1) = P(≥1) − P(≥2)) but does not reimplement the formula or invent numbers.
@@ -283,5 +346,9 @@ for the rest.
   Box only by explicit save.
 - **The area bonus and the Snorlax rating** belong to [Team
   analysis](0007-map-bonuses-rating.md): they move no delta.
+- **Lowering a card's level** or a **target level per card** — the comparison level
+  only raises, and applies to every card alike.
+- **Levels above 70**, Candy Boost and owned candies — the cost is the base one, as
+  in [Level-up cost](0021-level-up-cost.md).
 - **Restricting Cyan Beach (Expert)'s main favorite** to Oran, Pamtre or Pecha — as in
   Team analysis, any berry can be chosen.

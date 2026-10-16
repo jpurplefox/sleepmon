@@ -39,6 +39,7 @@ export type AnalyticsEvent =
   | { name: "team_renamed"; props: NoProps }
   | { name: "team_deleted"; props: NoProps }
   | { name: "map_set"; props: { tool: "compare" | "team_analysis"; island: string; expert: boolean } }
+  | { name: "comparison_level_set"; props: { level: "off" | "10" | "25" | "30" | "50" | "60" | "70" } }
   | { name: "dish_type_set"; props: { dish_type: string } }
   | { name: "meals_set"; props: { meals: number } }
   | { name: "event_effect_added"; props: { effect: string; scope: "team" | "type" | "specialty" } }
@@ -81,6 +82,7 @@ export const EVENT_NAMES = [
   "team_renamed",
   "team_deleted",
   "map_set",
+  "comparison_level_set",
   "dish_type_set",
   "meals_set",
   "event_effect_added",

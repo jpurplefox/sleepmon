@@ -8,6 +8,7 @@ from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecip
 from sleepmon.application import services
 from sleepmon.application.dto import (
     BerrySourceDTO,
+    ComparisonRaise,
     EventEffectInput,
     MealSelectionInput,
     ProductionInput,
@@ -1529,3 +1530,91 @@ def test_main_ingredient_at_60_ignores_map_terms(
     assert main_call[1] is not None and main_call[1] != MapBonuses()
     assert at_60_call[0] == 60
     assert at_60_call[1] is None or at_60_call[1] == MapBonuses()
+
+
+PIKA_INGS = ["Fancy Apple", "Warming Ginger", "Fancy Egg"]
+
+
+def test_comparison_level_off_changes_nothing(
+    production_service: DefaultProductionService,
+) -> None:
+    plain = production_service.compute_production(
+        ProductionInput(species="Pikachu", level=45, ingredients=PIKA_INGS)
+    )
+    off = production_service.compute_production(
+        ProductionInput(species="Pikachu", level=45, ingredients=PIKA_INGS, comparison_level=None)
+    )
+    assert off == plain
+    assert off.comparison_raise is None
+
+
+def test_comparison_level_raises_and_costs_the_card(
+    production_service: DefaultProductionService,
+) -> None:
+    raised = production_service.compute_production(
+        ProductionInput(species="Pikachu", level=15, ingredients=PIKA_INGS, comparison_level=60)
+    )
+    at_60 = production_service.compute_production(
+        ProductionInput(species="Pikachu", level=60, ingredients=PIKA_INGS)
+    )
+    assert raised.helps_per_day == at_60.helps_per_day
+    assert raised.ingredients == at_60.ingredients
+    assert raised.comparison_raise == ComparisonRaise(
+        from_level=15, to_level=60, candies=1803, dream_shards=535149
+    )
+
+
+def test_comparison_level_unlocks_the_slots_it_reaches(
+    production_service: DefaultProductionService,
+) -> None:
+    # Ingredient slots unlock at 1 / 30 / 60.
+    plain = production_service.compute_production(
+        ProductionInput(species="Pikachu", level=25, ingredients=PIKA_INGS)
+    )
+    assert [s.ingredient for s in plain.ingredients] == PIKA_INGS[:1]
+    result = production_service.compute_production(
+        ProductionInput(species="Pikachu", level=25, ingredients=PIKA_INGS, comparison_level=30)
+    )
+    assert [s.ingredient for s in result.ingredients] == PIKA_INGS[:2]
+    result_60 = production_service.compute_production(
+        ProductionInput(species="Pikachu", level=25, ingredients=PIKA_INGS, comparison_level=60)
+    )
+    assert [s.ingredient for s in result_60.ingredients] == PIKA_INGS
+
+
+def test_comparison_level_raises_with_sub_skills_recorded_for_earlier_slots(
+    production_service: DefaultProductionService,
+) -> None:
+    # Only the 10 / 25 slots are filled; the raise to 50 still computes like a plain level 50.
+    subs = ["Helping Speed S", "Ingredient Finder S"]
+    raised = production_service.compute_production(
+        ProductionInput(
+            species="Pikachu", level=40, ingredients=PIKA_INGS, sub_skills=subs, comparison_level=50
+        )
+    )
+    plain = production_service.compute_production(
+        ProductionInput(species="Pikachu", level=50, ingredients=PIKA_INGS, sub_skills=subs)
+    )
+    assert raised.helps_per_day == plain.helps_per_day
+    assert raised.ingredients == plain.ingredients
+    assert raised.comparison_raise is not None
+    assert (raised.comparison_raise.from_level, raised.comparison_raise.to_level) == (40, 50)
+
+
+def test_comparison_level_never_lowers(production_service: DefaultProductionService) -> None:
+    result = production_service.compute_production(
+        ProductionInput(species="Pikachu", level=62, ingredients=PIKA_INGS, comparison_level=60)
+    )
+    plain = production_service.compute_production(
+        ProductionInput(species="Pikachu", level=62, ingredients=PIKA_INGS)
+    )
+    assert result == plain
+
+
+def test_comparison_level_off_the_list_rejected(
+    production_service: DefaultProductionService,
+) -> None:
+    with pytest.raises(ValidationError):
+        production_service.compute_production(
+            ProductionInput(species="Pikachu", level=15, ingredients=PIKA_INGS, comparison_level=40)
+        )

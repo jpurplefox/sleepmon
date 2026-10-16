@@ -146,6 +146,14 @@ export interface MemberProduction {
   main_ingredient_at_60?: string | null;
 }
 
+/** A card raised by Comparison's level (PRD 0002): the stretch and its cost. */
+export interface ComparisonRaise {
+  from_level: number;
+  to_level: number;
+  candies: number;
+  dream_shards: number;
+}
+
 // Level-up cost to reach a target level, with the production at that level.
 export interface LevelUp {
   target_level: number;
@@ -231,6 +239,8 @@ export interface ProductionInput {
   main_favorite?: string | null;
   weekly_bonus?: WeeklyBonus | null;
   sleep?: SleepSchedule;
+  // Comparison's target level; omitted or null = off.
+  comparison_level?: number | null;
 }
 
 export interface SlotProduction {
@@ -384,6 +394,8 @@ export interface TeamProduction {
 }
 
 export interface Production {
+  // Set when Comparison's level raised this card; null otherwise.
+  comparison_raise?: ComparisonRaise | null;
   helps_per_day: number;
   seconds_per_help: number;
   berry: string;

@@ -6,6 +6,7 @@ import { api } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { useGate } from "../auth/useGate";
 import { BoxPicker } from "../components/BoxPicker";
+import { ComparisonLevelField } from "../components/ComparisonLevelField";
 import { ComparisonMapBar } from "../components/ComparisonMapBar";
 import { IconMoon, IconShare } from "../components/icons";
 import { InfoNotice } from "../components/InfoNotice";
@@ -19,6 +20,7 @@ import { SwipePager } from "../components/SwipePager";
 import { ContextBar, ToolHeader } from "../components/ToolHeader";
 import { comparableOf, suggestComparables } from "../comparisonSuggestions";
 import { berryRoleOf, mapRequestFields } from "../comparisonMap";
+import { bakeRaisedLevels } from "../comparisonLevel";
 import { useComparisonSession } from "../comparisonSession";
 import { sessionFromShare, shareIdFrom, sleepDiffers, sleepNoticeParts } from "../comparisonShare";
 import { useI18n } from "../i18n";
@@ -27,7 +29,7 @@ import { ROUTES } from "../routes";
 import { spriteUrl } from "../sprites";
 import { track } from "../telemetry/analytics";
 import type { AddSource } from "../telemetry/events";
-import { mapSetEvent } from "../telemetry/props";
+import { comparisonLevelSetEvent, mapSetEvent } from "../telemetry/props";
 import type { Member, MemberInput, SleepSchedule } from "../types";
 import { useSaveToBox } from "../useSaveToBox";
 import { useScreenshotImport } from "../useScreenshotImport";
@@ -72,7 +74,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   const sleepReady = status === "anonymous" || (status === "authenticated" && !progressLoading);
 
   // Cards and map terms live above the routes, so leaving the tool keeps them.
-  const { entries, setEntries, map, setMap } = useComparisonSession();
+  const { entries, setEntries, map, setMap, comparisonLevel, setComparisonLevel } = useComparisonSession();
   const island = catalog.data?.islands.find((i) => i.name === map.island) ?? null;
   const expert = island?.expert ?? false;
   const mapFields = mapRequestFields(map, expert);
@@ -93,7 +95,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
   const productions = useQueries({
     queries: entries.map((e) => ({
       enabled: sleepReady,
-      queryKey: ["production", e.config, mapFields, progress.sleep],
+      queryKey: ["production", e.config, mapFields, progress.sleep, comparisonLevel],
       queryFn: () =>
         api.computeProduction({
           species: e.config.species,
@@ -106,6 +108,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
           versatile_skill: e.config.versatile_skill,
           ...mapFields,
           sleep: progress.sleep,
+          ...(comparisonLevel !== null && { comparison_level: comparisonLevel }),
         }),
       // El resultado de una config es estable: no re-pedir ni reflashear
       // "Calculando…" al reordenar o revisitar una card ya calculada.
@@ -284,6 +287,8 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
       const next = sessionFromShare(shared.data);
       setEntries(next.entries);
       setMap(next.map);
+      // The link's cards already come at their target level.
+      setComparisonLevel(null);
       setSharerSleep(next.sleep);
       setNotice(null);
       track({ name: "shared_comparison_opened", props: { cards: next.entries.length } });
@@ -358,6 +363,13 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
               value={map}
               onChange={setMap}
               onSelectIsland={(name) => track(mapSetEvent("compare", name, catalog.data?.islands ?? []))}
+            />
+            <ComparisonLevelField
+              value={comparisonLevel}
+              onChange={(level) => {
+                setComparisonLevel(level);
+                track(comparisonLevelSetEvent(level));
+              }}
             />
           </ContextBar>
         )}
@@ -520,7 +532,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
       {modal === "share" && (
         <ShareDialog
           catalog={catalog.data}
-          entries={entries}
+          entries={bakeRaisedLevels(entries, shownProductions)}
           productions={shownProductions}
           map={map}
           island={island}

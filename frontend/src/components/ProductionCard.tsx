@@ -8,6 +8,7 @@ import {
   SUB_SKILL_NEVER_UNLOCKS,
   SUB_SKILL_UNLOCK_LEVELS,
 } from "../constants";
+import { shownLevel } from "../comparisonLevel";
 import { expertMarks, type MetricMark } from "../expertMarks";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
@@ -32,6 +33,7 @@ import type {
   Production,
   WeeklyBonus,
 } from "../types";
+import { RaisedLevel } from "./RaisedLevel";
 import { RibbonIcon } from "./RibbonIcon";
 import { FillTime } from "./FillTime";
 import { NaturePill } from "./NaturePill";
@@ -198,6 +200,9 @@ export function ProductionCard({
     TIER_CLASS[catalog.sub_skills.find((s) => s.name === name)?.tier ?? "Regular"];
 
   const d = production;
+  // Comparison's level may raise the card: it shows and unlocks at the level used.
+  const level = shownLevel(config, production);
+  const raise = !snapshot ? (production?.comparison_raise ?? null) : null;
   const ownSkillBerries = d?.skill_berry_amount ?? 0;
   const teammates = d?.teammate_berries ?? null; // null outside a team
   const teammateAmount = sumYields(teammates, "amount");
@@ -449,7 +454,11 @@ export function ProductionCard({
               )}
               <div className="prod-card__title">
                 <strong>{config.species}</strong>{" "}
-                <span className="muted">{t("common.level", { level: config.level })}</span>
+                {raise ? (
+                  <RaisedLevel raise={raise} />
+                ) : (
+                  <span className="muted">{t("common.level", { level })}</span>
+                )}
                 {(() => {
                   const idx = RIBBONS.findIndex((r) => r.name === config.ribbon);
                   return idx > 0 ? (
@@ -496,7 +505,7 @@ export function ProductionCard({
           <div className="prod-card__tags">
             <div className="icon-row prod-card__ingredients">
               {config.ingredients.map((ing, i) => {
-                const locked = config.level < (INGREDIENT_UNLOCK_LEVELS[i] ?? 1);
+                const locked = level < (INGREDIENT_UNLOCK_LEVELS[i] ?? 1);
                 return (
                   <img
                     key={i}
@@ -522,7 +531,7 @@ export function ProductionCard({
                 if (!s)
                   return <span key={i} className="ss-icon ss-icon--empty" aria-hidden="true" />;
                 const unlock = SUB_SKILL_UNLOCK_LEVELS[i] ?? SUB_SKILL_NEVER_UNLOCKS;
-                const locked = config.level < unlock;
+                const locked = level < unlock;
                 const title = !locked
                   ? subSkill(s)
                   : Number.isFinite(unlock)

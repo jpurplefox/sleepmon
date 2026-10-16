@@ -82,6 +82,7 @@ class ProductionInput:
     main_favorite: str | None = None
     weekly_bonus: str | None = None
     sleep: SleepInput | None = None  # None -> the default night
+    comparison_level: int | None = None  # Comparison's target level (PRD 0002); None = off
 
 
 @dataclass(frozen=True, slots=True)
@@ -162,6 +163,16 @@ class SleepSessionDTO:
 
 
 @dataclass(frozen=True, slots=True)
+class ComparisonRaise:
+    """A card raised by Comparison's level: the stretch and what it costs."""
+
+    from_level: int
+    to_level: int
+    candies: int
+    dream_shards: int
+
+
+@dataclass(frozen=True, slots=True)
 class ProductionResult:
     """Producción estimada de un Pokémon en un día."""
 
@@ -206,6 +217,8 @@ class ProductionResult:
     teammate_berries: list[BerryYieldDTO] | None = None
     # Ingredients obtained from teammates (Extra Helpful): only inside a team, else None.
     teammate_ingredients: list[SlotAmount] | None = None
+    # Set only when Comparison's level raised this card.
+    comparison_raise: ComparisonRaise | None = None
 
 
 @dataclass(frozen=True, slots=True)

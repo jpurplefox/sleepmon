@@ -1,5 +1,6 @@
 // Pure builders for analytics events whose properties need a little derivation,
 // so pages stay thin and the mapping is unit-tested.
+import type { ComparisonLevel } from "../comparisonLevel";
 import type { BoxWrite } from "../savedTeams";
 import type { Slot } from "../teamRoster";
 import type { Island, MealInput, ProgressPatch } from "../types";
@@ -29,6 +30,15 @@ export function mapSetEvent(
 ): Extract<AnalyticsEvent, { name: "map_set" }> {
   const found = island === null ? undefined : islands.find((i) => i.name === island);
   return { name: "map_set", props: { tool, island: island ?? "none", expert: found?.expert ?? false } };
+}
+
+export function comparisonLevelSetEvent(
+  level: ComparisonLevel | null,
+): Extract<AnalyticsEvent, { name: "comparison_level_set" }> {
+  const props: { level: "off" | `${ComparisonLevel}` } = {
+    level: level === null ? "off" : (String(level) as `${ComparisonLevel}`),
+  };
+  return { name: "comparison_level_set", props };
 }
 
 export const mealsCount = (meals: readonly (MealInput | null)[]): number =>

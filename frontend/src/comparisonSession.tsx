@@ -12,6 +12,7 @@ import {
   type SetStateAction,
 } from "react";
 
+import type { ComparisonLevel } from "./comparisonLevel";
 import { NEUTRAL_MAP, type ComparisonMap } from "./comparisonMap";
 import { unlinkEntries, type RosterEntry } from "./roster";
 
@@ -21,6 +22,9 @@ export interface ComparisonSession {
   /** The map terms apply to every card, the base included. */
   map: ComparisonMap;
   setMap: Dispatch<SetStateAction<ComparisonMap>>;
+  /** Comparison's target level; null = off. Like the map, a reload resets it. */
+  comparisonLevel: ComparisonLevel | null;
+  setComparisonLevel: (level: ComparisonLevel | null) => void;
   /** Keeps every card but forgets the Box member it came from. */
   unlinkFromBox: () => void;
 }
@@ -30,10 +34,19 @@ const ComparisonSessionContext = createContext<ComparisonSession | null>(null);
 export function ComparisonSessionProvider({ children }: { children: ReactNode }) {
   const [entries, setEntries] = useState<RosterEntry[]>([]);
   const [map, setMap] = useState<ComparisonMap>(NEUTRAL_MAP);
+  const [comparisonLevel, setComparisonLevel] = useState<ComparisonLevel | null>(null);
   const unlinkFromBox = useCallback(() => setEntries(unlinkEntries), []);
   const value = useMemo(
-    () => ({ entries, setEntries, map, setMap, unlinkFromBox }),
-    [entries, map, unlinkFromBox],
+    () => ({
+      entries,
+      setEntries,
+      map,
+      setMap,
+      comparisonLevel,
+      setComparisonLevel,
+      unlinkFromBox,
+    }),
+    [entries, map, comparisonLevel, unlinkFromBox],
   );
   return (
     <ComparisonSessionContext.Provider value={value}>{children}</ComparisonSessionContext.Provider>

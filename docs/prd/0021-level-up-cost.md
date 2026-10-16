@@ -217,5 +217,5 @@ All costs below are for species candies, with no boost.
 - **The inverse question** (*"I have N candies, how far do they take me?"*) and the
   candies or shards you own.
 - **Recommending which Pokémon to level** — it shows cost and gain, not the decision.
-- **A target level in Comparison** — tracked separately (#136); it reuses this
-  calculation.
+- **A target level in Comparison** — that's Comparison's [comparison
+  level](0002-comparison.md#comparison-level), which reuses this calculation.
