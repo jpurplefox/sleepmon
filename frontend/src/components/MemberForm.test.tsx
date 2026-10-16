@@ -597,7 +597,13 @@ describe("MemberForm sub skill seeds", () => {
 
   it("opens unavailable when the saved sub skills are already maxed", () => {
     renderForm({ initial: { ...initial, sub_skills: ["Inventory Up L", "Inventory Up M"] } });
-    const maxed = screen.getByRole("button", { name: "Sub skills are already maxed" });
+    const maxed = screen.getByRole("button", { name: "No sub skills to raise with seeds" });
     expect(maxed).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("is unavailable on an empty create form", () => {
+    renderForm();
+    const none = screen.getByRole("button", { name: "No sub skills to raise with seeds" });
+    expect(none).toHaveAttribute("aria-disabled", "true");
   });
 });

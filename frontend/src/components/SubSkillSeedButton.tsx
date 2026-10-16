@@ -10,17 +10,16 @@ interface Props {
   onClick: () => void;
 }
 
+function seedLabel(mode: SeedMode, seeds: number, t: ReturnType<typeof useI18n>["t"]): string {
+  if (mode === "undo") return t("seed.undo");
+  if (mode === "none") return t("seed.none");
+  return seeds === 1 ? t("seed.applyOne") : t("seed.apply", { n: seeds });
+}
+
 // Applies every seed in one click, then undoes it (PRD 0003).
 export function SubSkillSeedButton({ mode, seeds, onClick }: Props) {
   const { t } = useI18n();
-  const label =
-    mode === "undo"
-      ? t("seed.undo")
-      : mode === "none"
-        ? t("seed.maxed")
-        : seeds === 1
-          ? t("seed.applyOne")
-          : t("seed.apply", { n: seeds });
+  const label = seedLabel(mode, seeds, t);
   return (
     <Tooltip content={label}>
       {/* aria-disabled, not disabled: a disabled button would swallow the tooltip's hover. */}

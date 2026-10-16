@@ -597,13 +597,15 @@ states · where it lives. Feature one-offs are intentionally not here.
   before and after a species is picked.
   **`SubSkillSelect`** — uses `.ss-icon`. Its trigger fills the row and keeps its count
   hint ("3/5 · elegir") while it fits; the trigger is a size container and the hint is
-  **hidden, never wrapped**, under 300px (a phone). In the Pokémon form it shares a row
+  **hidden, never wrapped**, under 300px (a phone). The trigger never gets narrower than
+  its five slots; under 400px the slot gap is 0.35rem. In the Pokémon form it shares a row
   with the seed button (`.subskill-field`, flex, `gap 0.5rem`, `align-items: stretch`,
-  `position: relative` so the dropdown spans the whole row).
+  `position: relative` so the dropdown spans the whole row); on the narrowest phones the
+  button wraps to its own line, right-aligned.
 - **Sub skill seed button** (`.seed-btn`) — right after the `SubSkillSelect` trigger in
   the Pokémon form: one click raises every sub skill to its highest free tier, and the
   next click undoes it (PRD 0003). `EvolveControl`'s box language (`--surface-2`,
-  `1px --border`, `--r-md`, hover `border-color: --accent`), **52px** wide and stretched
+  `1px --border`, `--r-md`, hover `border-color: --accent`), **52px** wide (44px under 400px) and stretched
   to the trigger's height, the game's **Sub Skill Seed** sprite
   (`public/sub-skill-seed.png`) at 30px. A badge pinned top-right, absolute so it adds no
   width, styled as `EvolveControl`'s `+N` badge (`--text-xs` bold, `--surface-2` pill,
@@ -612,7 +614,7 @@ states · where it lives. Feature one-offs are intentionally not here.
   - **Apply**: the badge is the **seed count** (sub skills it would raise).
   - **Undo** (just applied, untouched since): the badge is an 11px **↺** (`IconUndo`);
     the button itself doesn't change color.
-  - **Unavailable** (nothing to seed or undo): no badge, `opacity 0.35`, no hover.
+  - **Unavailable** (nothing to seed or undo): no badge, `opacity 0.35`, no hover; the tooltip reads "nothing to raise".
     `aria-disabled`, not `disabled`, so the tooltip still opens on hover and focus.
 - **Slot highlight** (`.ss-icon` one-shot) — marks the sub skill slots an action just
   changed (first use: applying or undoing seeds). The **whole tile** lights up — fill

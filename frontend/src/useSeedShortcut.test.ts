@@ -49,6 +49,23 @@ describe("useSeedShortcut", () => {
     expect(result.current.seed.highlight).toBeNull();
   });
 
+  it("offers to apply again after a hand edit that leaves something to seed", () => {
+    const { result } = setup(BEFORE);
+    act(() => result.current.seed.act());
+    act(() => result.current.seed.onManualChange(["Inventory Up S", "Inventory Up M", "Skill Trigger M"]));
+    expect(result.current.seed.mode).toBe("apply");
+    expect(result.current.seed.seeds).toBe(1);
+  });
+
+  it("applies again after a hand edit and highlights the changed slot", () => {
+    const { result } = setup(BEFORE);
+    act(() => result.current.seed.act());
+    act(() => result.current.seed.onManualChange(["Inventory Up S", "Inventory Up M", "Skill Trigger M"]));
+    act(() => result.current.seed.act());
+    expect(result.current.subSkills).toEqual(AFTER);
+    expect(result.current.seed.highlight).toMatchObject({ slots: [0] });
+  });
+
   it("has nothing to do when everything is at its top free tier", () => {
     const { result } = setup(AFTER);
     expect(result.current.seed.mode).toBe("none");
