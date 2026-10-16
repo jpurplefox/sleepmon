@@ -17,7 +17,7 @@ const SEED_FAMILIES: readonly (readonly string[])[] = [
 
 export interface SeedResult {
   slots: string[];
-  /** Tiers raised in total: one seed each. 0 = nothing to seed. */
+  /** Sub skills raised: one seed each, however many tiers. 0 = nothing to seed. */
   seeds: number;
 }
 
@@ -33,10 +33,16 @@ export function seedSubSkills(slots: readonly string[]): SeedResult {
     for (let tier = family.length - 1; tier > own; tier--) {
       if (!next.includes(family[tier])) {
         next[i] = family[tier];
-        seeds += tier - own;
+        seeds += 1;
         return;
       }
     }
   });
   return { slots: next, seeds };
+}
+
+// Slots (0-based) whose sub skill differs between two lists; a missing slot counts as "".
+export function changedSlots(before: readonly string[], after: readonly string[]): number[] {
+  const length = Math.max(before.length, after.length);
+  return Array.from({ length }, (_, i) => i).filter((i) => (before[i] ?? "") !== (after[i] ?? ""));
 }

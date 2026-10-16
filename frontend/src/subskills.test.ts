@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { EVENT_KINDS, SPECIALTY_ICON } from "./eventBonus";
 import { NATURE_STATS, statIcon } from "./natures";
-import { seedSubSkills, subSkillIcon } from "./subskills";
+import { changedSlots, seedSubSkills, subSkillIcon } from "./subskills";
 
 // Every icon file under /public, as the URL the app serves it at.
 const PUBLIC_FILES = new Set(
@@ -107,13 +107,34 @@ describe("seedSubSkills", () => {
     expect(slots).toEqual(["Skill Level Up S"]);
   });
 
-  it("counts one seed per tier raised", () => {
-    expect(seedSubSkills(["Inventory Up S", "Inventory Up M", "Skill Trigger S"]).seeds).toBe(3);
+  it("counts one seed per sub skill raised, however many tiers it jumps", () => {
+    expect(seedSubSkills(["Inventory Up S", "Inventory Up M", "Skill Trigger S"]).seeds).toBe(2);
+    expect(seedSubSkills(["Inventory Up S"]).seeds).toBe(1);
     expect(seedSubSkills(["Inventory Up L", "Inventory Up S"]).seeds).toBe(1);
   });
 
   it("counts no seeds when everything is at its top free tier", () => {
     expect(seedSubSkills(["Inventory Up L", "Inventory Up M", "Skill Trigger M"]).seeds).toBe(0);
     expect(seedSubSkills([]).seeds).toBe(0);
+  });
+});
+
+describe("changedSlots", () => {
+  it("lists the slots whose sub skill differs", () => {
+    expect(
+      changedSlots(
+        ["Inventory Up S", "Inventory Up M", "Skill Trigger S"],
+        ["Inventory Up L", "Inventory Up M", "Skill Trigger M"],
+      ),
+    ).toEqual([0, 2]);
+  });
+
+  it("lists nothing for equal slots", () => {
+    expect(changedSlots(["Helping Bonus", ""], ["Helping Bonus", ""])).toEqual([]);
+  });
+
+  it("treats a missing slot as empty", () => {
+    expect(changedSlots(["Helping Bonus"], ["Helping Bonus", ""])).toEqual([]);
+    expect(changedSlots(["Helping Bonus"], ["Helping Bonus", "Inventory Up S"])).toEqual([1]);
   });
 });
