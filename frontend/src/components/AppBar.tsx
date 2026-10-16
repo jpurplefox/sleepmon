@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { useAuth } from "../auth/AuthContext";
 import { GoogleSignInButton } from "../auth/GoogleSignInButton";
 import { ProfileMenu } from "../auth/ProfileMenu";
-import { HOME } from "../routes";
+import { ROUTES } from "../routes";
 import { spriteUrl } from "../sprites";
 import { LanguageMenu } from "./LanguageMenu";
 import { NavTabs } from "./NavTabs";
@@ -16,7 +16,7 @@ export function AppBar() {
   return (
     <div className="appbar">
       <div className="appbar__inner">
-        <Link href={HOME} className="brand">
+        <Link href={ROUTES.home} className="brand">
           <img src={spriteUrl(SNORLAX_DEX)} alt="" width={30} height={30} />
           <span className="brand__name">sleepmon</span>
         </Link>

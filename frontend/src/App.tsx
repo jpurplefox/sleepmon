@@ -13,12 +13,13 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Placeholder } from "./components/Placeholder";
 import { useI18n } from "./i18n";
 import { Account } from "./pages/Account";
+import { Landing } from "./pages/landing/Landing";
 import { Privacy } from "./pages/Privacy";
 import { Production } from "./pages/Production";
 import { SavedTeams } from "./pages/SavedTeams";
 import { Team } from "./pages/Team";
 import { Teams } from "./pages/Teams";
-import { HOME, ROUTES } from "./routes";
+import { FIRST_TOOL, ROUTES } from "./routes";
 import { TelemetryBridge } from "./telemetry/TelemetryBridge";
 import { ComparisonSessionProvider } from "./comparisonSession";
 import { TeamSessionProvider } from "./teamSession";
@@ -99,7 +100,7 @@ function AppShell() {
             {gated(
               <Account
                 onDeleted={() => {
-                  navigate(HOME);
+                  navigate(FIRST_TOOL);
                   setAccountDeleted(true);
                 }}
               />,
@@ -108,12 +109,12 @@ function AppShell() {
           <Route path={ROUTES.privacy}>
             <Privacy />
           </Route>
-          {/* Default and unknown paths land on the first tool. */}
-          <Route path="/">
-            <Redirect to={HOME} />
+          <Route path={ROUTES.home}>
+            <Landing />
           </Route>
+          {/* Unknown paths land on the landing. */}
           <Route>
-            <Redirect to={HOME} />
+            <Redirect to={ROUTES.home} />
           </Route>
         </Switch>
       </main>

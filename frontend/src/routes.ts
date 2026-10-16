@@ -21,5 +21,5 @@ export const NAV_ITEMS: ReadonlyArray<{ path: string; labelKey: string; group: "
   { path: ROUTES.savedTeams, labelKey: "nav.savedTeams", group: "saved" },
 ];
 
-// Where "/" and unknown paths land: the first tool.
-export const HOME = NAV_ITEMS[0].path;
+// The first tool: where a deleted account lands (PRD 0018).
+export const FIRST_TOOL = NAV_ITEMS[0].path;

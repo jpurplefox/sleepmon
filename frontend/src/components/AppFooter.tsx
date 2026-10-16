@@ -2,6 +2,7 @@ import { Link } from "wouter";
 
 import { CONTACT_EMAIL } from "../contact";
 import { useI18n } from "../i18n";
+import { FAQ_HREF } from "../pages/landing/content";
 import { ROUTES } from "../routes";
 
 /** The line under every screen: privacy link, contact email and the fan-project notice. */
@@ -10,6 +11,8 @@ export function AppFooter({ email = CONTACT_EMAIL }: { email?: string | null }) 
   return (
     <footer className="app-footer">
       <Link href={ROUTES.privacy}>{t("footer.privacy")}</Link>
+      <span aria-hidden="true">·</span>
+      <Link href={FAQ_HREF}>{t("footer.faq")}</Link>
       {email && (
         <>
           <span aria-hidden="true">·</span>

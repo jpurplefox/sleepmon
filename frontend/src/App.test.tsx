@@ -30,7 +30,7 @@ vi.mock("./pages/SavedTeams", () => ({ SavedTeams: () => <h1>Teams tool</h1> }))
 import App from "./App";
 import { LanguageProvider } from "./i18n";
 import { EMPTY_PROGRESS } from "./progress";
-import { HOME, ROUTES } from "./routes";
+import { FIRST_TOOL, ROUTES } from "./routes";
 import { sessionHint, tokenStore } from "./auth/tokenStore";
 
 const USER = { id: "u1", email: "ana@example.com", display_name: "Ana Perez", avatar_url: null };
@@ -60,6 +60,36 @@ afterEach(() => {
 });
 
 describe("App shell", () => {
+  it("shows the landing at /", async () => {
+    renderAt("/");
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "The number you want, when you need it." }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole("navigation")[0].querySelector('[aria-current="page"]')).toBeNull();
+  });
+
+  it("sends an unknown address to the landing", async () => {
+    const loc = renderAt("/whatever");
+    expect(await screen.findByRole("heading", { level: 1, name: "The number you want, when you need it." })).toBeInTheDocument();
+    const history = loc.history ?? [];
+    expect(history[history.length - 1]).toBe("/");
+  });
+
+  it("links the brand to the landing", async () => {
+    renderAt(ROUTES.compare);
+    expect(await screen.findByRole("link", { name: "sleepmon" })).toHaveAttribute("href", "/");
+  });
+
+  it("offers the box on the landing when signed in", async () => {
+    sessionHint.mark();
+    authApi.postRefresh.mockResolvedValue({ access_token: "a-1", user: USER });
+    api.listMembers.mockResolvedValue([]);
+    api.listSavedTeams.mockResolvedValue([]);
+    api.getProgress.mockResolvedValue(EMPTY_PROGRESS);
+    renderAt("/");
+    expect(await screen.findByRole("link", { name: "Go to my box" })).toHaveAttribute("href", "/box");
+  });
+
   it("shows the footer on a tool", async () => {
     renderAt(ROUTES.compare);
     expect(await screen.findByRole("heading", { name: "Comparison tool" })).toBeInTheDocument();
@@ -106,7 +136,7 @@ describe("App shell", () => {
 
     expect(await screen.findByRole("dialog", { name: "Account deleted" })).toBeInTheDocument();
     const history = loc.history ?? [];
-    expect(history[history.length - 1]).toBe(HOME);
+    expect(history[history.length - 1]).toBe(FIRST_TOOL);
     expect(screen.getByRole("heading", { name: "Comparison tool" })).toBeInTheDocument();
     expect(api.deleteAccount).toHaveBeenCalledTimes(1);
     expect(tokenStore.get()).toBeNull();
