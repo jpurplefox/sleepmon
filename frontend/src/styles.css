@@ -2095,19 +2095,11 @@ button.shot--empty:focus-visible,
 .box-entry__build {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  /* Centered, as the cards center their build: with no labels beside the rows, the
+     shorter ones (ingredients, nature) sit over the sub skills' midline. */
+  align-items: center;
   gap: 0.3rem;
   min-width: 0;
-}
-
-/* Inside the build stack the nature goes last (ingredients · sub skills · nature,
-   the cards' order) and every row starts at the left edge. */
-.box-entry__build .box-entry__config.prod-box-item__config {
-  align-items: flex-start;
-}
-
-.box-entry__build .prod-box-item__nature {
-  order: 1;
 }
 
 .box-entry__ing-config {
@@ -2517,10 +2509,6 @@ button.shot--empty:focus-visible,
     display: contents;
   }
 
-  .box-entry__build .prod-box-item__nature {
-    order: 0;
-  }
-
   .box-entry {
     position: relative;
     grid-template-columns: 1fr 1fr;
@@ -2720,11 +2708,12 @@ button.shot--empty:focus-visible,
   .box-entry__divider--build {
     grid-row: 2;
   }
+  /* The cards' order: ingredients, sub skills, nature. */
   .box-entry__label--nature {
-    grid-row: 3;
+    grid-row: 5;
   }
   .box-entry__config > .prod-box-item__nature {
-    grid-row: 3;
+    grid-row: 5;
     grid-column: 2;
   }
   .box-entry__label--ss {
@@ -2735,12 +2724,12 @@ button.shot--empty:focus-visible,
     grid-column: 2;
   }
   .box-entry__label--ing-config {
-    grid-row: 5;
+    grid-row: 3;
   }
   /* Ya no necesita atenuarse para retroceder: la etiqueta a la izquierda es la
      que marca la jerarquía en esta forma. */
   .box-entry__ing-config {
-    grid-row: 5;
+    grid-row: 3;
     grid-column: 2;
     opacity: 1;
   }

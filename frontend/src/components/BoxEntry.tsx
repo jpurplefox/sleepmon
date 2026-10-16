@@ -296,11 +296,11 @@ export function BoxEntry({
       {isMobile && expanded && (
         <>
           <div className="box-entry__divider box-entry__divider--build" aria-hidden="true" />
-          <span className="box-entry__label box-entry__label--nature">{t("member.nature")}</span>
-          <span className="box-entry__label box-entry__label--ss">{t("member.subSkills")}</span>
           <span className="box-entry__label box-entry__label--ing-config">
             {t("member.ingredients")}
           </span>
+          <span className="box-entry__label box-entry__label--ss">{t("member.subSkills")}</span>
+          <span className="box-entry__label box-entry__label--nature">{t("member.nature")}</span>
           <div className="box-entry__divider box-entry__divider--prod" aria-hidden="true" />
           <span className="box-entry__label box-entry__label--berries">{t("card.berries")}</span>
           {hasStrength && (
@@ -351,6 +351,7 @@ export function BoxEntry({
           tierBySubSkill={tierBySubSkill}
           showSkillLevel={false}
           showIngredients={false}
+          natureAsCard
         />
       </div>
       </div>

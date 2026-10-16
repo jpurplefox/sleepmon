@@ -456,9 +456,10 @@ states · where it lives. Feature one-offs are intentionally not here.
   stat's icon (`--up`), `▼` + the lowered one's (`--down`), then the name (`--text`)
   after a hairline divider. Neutral → a white circled X on both sides (only the arrows carry
   color); no nature → `--empty` (muted marks, same footprint, so rows stay aligned).
-  Two versions: **with the name** (the card) or **effects only** where the row must
-  summarize more (the Box row) — the effects-only pill always sits in a `Tooltip` with
-  the nature's name. `NatureSelect` is the one place the name sits *outside* the pill:
+  Two versions: **with the name** (the card and the Box entry; no nature reads the
+  muted "Sin naturaleza" / "No nature" instead of a pill) or **effects only** where the
+  row must summarize more (the Box picker) — the effects-only pill always sits in a
+  `Tooltip` with the nature's name. `NatureSelect` is the one place the name sits *outside* the pill:
   trigger and options read as a list of names, each with its effects-only pill. Fill
   is `--surface-2`, or `--surface` on a `--surface-2` ground (`--pill-bg`).
 - **State vocabulary** shared across selects/menus/toggles: `.is-active`,
@@ -1083,10 +1084,21 @@ a real doubt gets settled. The screen is the occasion, not the subject.
 - **On desktop the Box entry's build is one stacked column, like the cards.** *Question:*
   with the level-up track added, the desktop row had no slack — the sub skills sat cramped
   and the cost line ran up to the `···`. *Resolution:* equipped ingredients, sub skills and
-  nature share **one** track (`.box-entry__build`), three rows in the cards' order; the
+  nature share **one** track (`.box-entry__build`), three rows in the cards' order and
+  centered like the cards (no labels beside them), the nature as the named pill; the
   grid is `14rem auto 5.5rem 6rem 7rem 9.5rem auto` with its `1.1rem` gap back, and
   identity widened to 14rem so the longest names with a ribbon read whole. Under 1100px
   the wrapper is `display: contents` and the parts go back to their own cells, side by
   side, as before. *Why:* the build is read as one block (it is what the cards show as
   one), and stacking it is the cheapest width on the row — a full column — which pays for
   the new track without shrinking any metric.
+- **The build reads in one order everywhere: ingredients, sub skills, nature.** *Question:*
+  the Box showed nature before the sub skills (the picker's order) while the cards show it
+  last; and the cards dropped empty sub skill slots while the Box drew placeholders.
+  *Resolution:* the cards' order wins in every Box layout — stacked on desktop, side by side
+  on tablet, labelled rows on the phone (left-aligned there, since the labels set the
+  edge). The order lives in the DOM, not in CSS `order`, so it also reads that way. Both
+  the Box and the cards always draw the five sub skill slots; an empty one is the dashed
+  `.ss-icon--empty` square (the cards' "no sub skills" note is gone). *Why:* the same
+  Pokémon should read the same in every tool, and five fixed slots keep rows aligned and
+  show at a glance how many are missing.

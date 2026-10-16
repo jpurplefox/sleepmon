@@ -326,3 +326,49 @@ describe("level-up cost", () => {
     expect(container.querySelector(".box-entry__divider--levelup")).toBeNull();
   });
 });
+
+describe("build", () => {
+  afterEach(() => localStorage.clear());
+
+  it("orders ingredients, sub skills, then nature", () => {
+    useEnglish();
+    setViewport(false);
+    const { container } = renderEntry();
+    const build = container.querySelector(".box-entry__build") as HTMLElement;
+    const parts = [
+      ...build.querySelectorAll(
+        ".box-entry__ing-config > .ingredient-row, .box-entry__config > .ingredient-row, .box-entry__config > .prod-box-item__nature",
+      ),
+    ].map((el) =>
+      el.classList.contains("prod-box-item__nature")
+        ? "nature"
+        : el.parentElement!.classList.contains("box-entry__ing-config")
+          ? "ingredients"
+          : "sub skills",
+    );
+    expect(parts).toEqual(["ingredients", "sub skills", "nature"]);
+  });
+
+  it("names the nature, or says there is none", () => {
+    useEnglish();
+    setViewport(false);
+    const { container, unmount } = renderEntry();
+    expect(within(container.querySelector(".prod-box-item__nature") as HTMLElement).getByText("No nature")).toBeInTheDocument();
+    unmount();
+    const adamant = render(
+      <LanguageProvider>
+        <BoxEntry
+          member={{ ...MEMBER, nature: "Adamant" }}
+          species={VENUSAUR}
+          nature={{ name: "Adamant", neutral: false, increased: "Speed of Help", decreased: "Main Skill Chance" }}
+          tierBySubSkill={() => "Blue"}
+          onEdit={() => {}}
+          onDelete={() => {}}
+          onCompare={() => {}}
+        />
+      </LanguageProvider>,
+    );
+    const pill = adamant.container.querySelector(".prod-box-item__nature .nature-pill") as HTMLElement;
+    expect(within(pill).getByText("Adamant")).toBeInTheDocument();
+  });
+});
