@@ -296,6 +296,11 @@ def _event_bonus(data: TeamProductionInput) -> EventBonus:
     return EventBonus(tuple(effects))
 
 
+def _main_ingredient_name(daily: DailyProduction) -> str | None:
+    main = main_ingredient(daily)
+    return main.value if main else None
+
+
 def _map_bonuses(
     *,
     island: str | None,
@@ -480,8 +485,7 @@ class DefaultTeamService(TeamService):
 
         now_daily = daily(member.level)
         at_60 = now_daily if member.level == ALL_INGREDIENTS_LEVEL else daily(ALL_INGREDIENTS_LEVEL)
-        main_60 = main_ingredient(at_60)
-        now = replace(_summarize(now_daily), main_ingredient_at_60=main_60 and main_60.value)
+        now = replace(_summarize(now_daily), main_ingredient_at_60=_main_ingredient_name(at_60))
         target = target_level(member.level, min_target)
         if target is None:
             return now
@@ -545,6 +549,7 @@ class DefaultProductionService(ProductionService):
     def compute_production(self, data: ProductionInput) -> ProductionResult:
         # Stateless: no repo access, so it serves a Box Pokémon and an ad-hoc one alike.
         cfg = _resolve_config(self._catalog, data)
+        sleep = parse_sleep(data.sleep)
         result = daily_production(
             cfg.species,
             cfg.ingredients,
@@ -559,7 +564,7 @@ class DefaultProductionService(ProductionService):
                 main_favorite=data.main_favorite,
                 weekly_bonus=data.weekly_bonus,
             ),
-            sleep=parse_sleep(data.sleep),
+            sleep=sleep,
         )
         # Matched with no map terms, so the base and the Box compare alike.
         at_60 = daily_production(
@@ -570,11 +575,10 @@ class DefaultProductionService(ProductionService):
             cfg.sub_skills,
             cfg.ribbon,
             cfg.skill_level,
-            sleep=parse_sleep(data.sleep),
+            sleep=sleep,
         )
-        main_60 = main_ingredient(at_60)
         return replace(
-            _production_result(result), main_ingredient_at_60=main_60 and main_60.value
+            _production_result(result), main_ingredient_at_60=_main_ingredient_name(at_60)
         )
 
     def list_recipes(self) -> list[RecipeDTO]:
