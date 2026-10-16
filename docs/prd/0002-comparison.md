@@ -245,7 +245,7 @@ for the rest.
   **1,803 candies · 535,149 dream shards**; with an EXP-up nature the figure is lower,
   as in [Level-up cost](0021-level-up-cost.md).
 - A level **25** card with three ingredients recorded, comparison level **30** → its
-  third ingredient joins the ingredients per day and shows unlocked; at comparison
+  second ingredient (the slot that unlocks at 30) joins the ingredients per day and shows unlocked; at comparison
   level **Off** it is locked again and out of the estimate.
 - A level **40** card with no sub skill recorded for 50, comparison level **50** →
   computed at 50 with no added sub skill.
