@@ -312,7 +312,7 @@ export function BoxEntry({
             {t("member.ingredients")}
           </span>
           <span className="box-entry__label box-entry__label--skill">{t("box.labelSkill")}</span>
-          {/* Third section: the level-up cost (absent at level 70+). */}
+          {/* Third section: the level-up cost, or "max level reached" at 70+. */}
           {prod && (
             <LevelUpCell
               member={member}
@@ -524,11 +524,11 @@ export function BoxEntry({
         </div>
       </div>
 
-      {/* Column 7 — level-up cost (PRD 0021). Every entry keeps the cell, empty at
-          level 70+ or without production, so the track stays aligned across Pokémon.
-          On a phone it's a section of the expanded detail instead. */}
+      {/* Column 7 — level-up cost (PRD 0021). Every entry keeps the cell so the track
+          stays aligned across Pokémon: at level 70+ it says the max is reached; empty
+          only without production. On a phone it's a section of the expanded detail. */}
       {!isMobile &&
-        (prod?.level_up ? (
+        (prod ? (
           <LevelUpCell
             member={member}
             specialty={species?.specialty}

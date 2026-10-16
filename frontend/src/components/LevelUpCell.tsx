@@ -219,11 +219,22 @@ interface Props {
   tierBySubSkill: (name: string) => string | undefined;
 }
 
-/** Renders nothing when there is no next level to reach (level 70+). */
+/** At level 70+ (no next level the cost tables reach) it says so instead of a cost. */
 export function LevelUpCell({ member, specialty, skill, production, layout, tierBySubSkill }: Props) {
   const { t } = useI18n();
   const levelUp = production.level_up;
-  if (!levelUp) return null;
+  if (!levelUp) {
+    const maxed = <span className="levelup-max muted">{t("levelUp.maxLevel")}</span>;
+    if (layout === "section")
+      return (
+        <>
+          <div className="box-entry__divider box-entry__divider--levelup" aria-hidden="true" />
+          <span className="box-entry__label box-entry__label--next">{t("box.labelNextLevel")}</span>
+          <span className="box-entry__levelup-next">{maxed}</span>
+        </>
+      );
+    return <div className="box-entry__levelup">{maxed}</div>;
+  }
   const gain = levelUpGain(member, specialty, skill, production, levelUp);
   const span = (
     <Tooltip

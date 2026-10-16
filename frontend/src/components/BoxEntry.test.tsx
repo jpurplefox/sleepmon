@@ -276,7 +276,7 @@ describe("level-up cost", () => {
     expect(screen.getByText(/With no sub skill recorded/)).toBeInTheDocument();
   });
 
-  it("keeps an empty cell at level 70+ so the column stays aligned", () => {
+  it("says the Pokémon is at max level at 70+, instead of an empty cell", () => {
     useEnglish();
     setViewport(false);
     const { container } = renderEntry({
@@ -285,7 +285,8 @@ describe("level-up cost", () => {
       production: { ...MEMBER.production!, level_up: null },
     });
     expect(screen.queryByText(/→/)).not.toBeInTheDocument();
-    expect(container.querySelector(".box-entry__levelup")).toBeEmptyDOMElement();
+    const cell = container.querySelector(".box-entry__levelup") as HTMLElement;
+    expect(within(cell).getByText("Max level reached")).toBeInTheDocument();
   });
 
   it("keeps an empty cell when production isn't computed", () => {
@@ -312,15 +313,26 @@ describe("level-up cost", () => {
     expect(container.querySelector(".box-entry__levelup")).toBeNull();
   });
 
-  it("has no Next level section on a phone at level 70+", async () => {
+  it("says max level in the phone's Next level section at 70+, with no cost", async () => {
     useEnglish();
     setViewport(true);
     const user = userEvent.setup();
-    const { container } = renderEntry({
+    renderEntry({
       ...MEMBER,
       level: 75,
       production: { ...MEMBER.production!, level_up: null },
     });
+    await user.click(screen.getByRole("button", { name: /^Venusaur/ }));
+    expect(screen.getByText("Next level")).toBeInTheDocument();
+    expect(screen.getByText("Max level reached")).toBeInTheDocument();
+    expect(screen.queryByText("Cost")).not.toBeInTheDocument();
+  });
+
+  it("has no Next level section on a phone without production", async () => {
+    useEnglish();
+    setViewport(true);
+    const user = userEvent.setup();
+    const { container } = renderEntry({ ...MEMBER, production: undefined });
     await user.click(screen.getByRole("button", { name: /^Venusaur/ }));
     expect(screen.queryByText("Next level")).not.toBeInTheDocument();
     expect(container.querySelector(".box-entry__divider--levelup")).toBeNull();

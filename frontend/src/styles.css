@@ -2340,6 +2340,11 @@ button.shot--empty:focus-visible,
 
 /* Span and gain share the cell's first line (as in the phone section); the cost
    sits under them. */
+/* Level 70+: no next level the cost tables reach — said in the column, not left blank. */
+.levelup-max {
+  font-size: var(--text-sm);
+}
+
 .box-entry__levelup-head {
   display: inline-flex;
   align-items: center;

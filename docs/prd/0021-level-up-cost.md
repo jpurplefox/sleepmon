@@ -42,8 +42,9 @@ The **unlock levels** are **10, 25, 30, 50, 60 and 70**: a sub skill unlocks at 
   target is the minimum; otherwise, the first unlock level above its current level.
   With a minimum of 60, a level 15 Pokémon targets **60**, and one already at 60
   targets **70**.
-- **At level 70 or above** there is no target and the entry shows no cost: 70 is the
-  last level the cost tables cover.
+- **At level 70 or above** there is no target: 70 is the last level the cost tables
+  cover. Instead of a cost the entry says **Max level reached**, so the place doesn't read
+  as missing data.
 
 The entry shows the span — **current level → target level** — and its cost. What each
 unlock level brings is already visible in the entry's build (locked slots are shown,
@@ -162,7 +163,8 @@ All costs below are for species candies, with no boost.
 - **Last span:** normal, neutral, **69 → 70** → **131 · 166,632**.
 - **Abbreviated cost:** 1,227 candies and 1,141,655 shards read **1,227 · 1.14M** in the
   entry; the comparison shows **1,227 · 1,141,655**. Below 10,000 a figure reads exact.
-- **Level 70 or above** → the entry shows **no cost** and no comparison, not an error.
+- **Level 70 or above** → the entry reads **Max level reached** (on the phone, as its
+  Next level row), with no cost and no comparison — not an error and not a blank.
 - **No minimum set** (a new account) → every entry targets its next unlock level.
 - **Span:** the entry reads its current and target level, e.g. **Lv. 15 → 25**.
 - **Gain by role:** a Berries specialist shows its strength gain; a Skills specialist with

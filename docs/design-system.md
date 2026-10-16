@@ -1071,7 +1071,7 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   section and the tooltip spell it out) share the first line; under them, the candy + shard figures at
   `--text-sm`, neutral, **abbreviated** from 10,000 up (three significant digits: `15.1K`,
   `535K`, `1.14M`; below that a K saves no room, so figures read exact) so the column never grows past its track — the exact figures head the
-  comparison tooltip. Rendered empty at level 70+ so the track stays aligned. The
+  comparison tooltip. At level 70+ the cell reads a muted **Max level reached** (`--text-sm`) instead of staying blank; it is empty only when there is no production at all. The
   gain's metric follows the Pokémon's **role**, Box coverage's rule (strength for berry
   roles, its main ingredient — or the new one the span unlocks — for ingredient roles,
   skill triggers otherwise). Tablet: a full-width last row after a `--divider` hairline;
