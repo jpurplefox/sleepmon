@@ -23,6 +23,10 @@ const BOX = [
   ["Charizard", 52, "Quiet", ["Bean Sausage", "Warming Ginger", "Fiery Herb"], ["Ingredient Finder M", "Helping Speed M", "Inventory Up L", "Ingredient Finder S"], 3],
   ["Pikachu", 38, "Brave", ["Fancy Apple", "Warming Ginger", "Fancy Egg"], ["Berry Finding S", "Helping Speed M", "Skill Trigger S"], 3],
   ["Arcanine", 30, "Brave", ["Fiery Herb", "Bean Sausage", "Fiery Herb"], ["Skill Trigger M", "Ingredient Finder S"], 3],
+  // The hero's comparison: Venusaur as base, the two Honey rivals beside it.
+  ["Venusaur", 62, "Modest", ["Honey", "Honey", "Honey"], ["Research EXP Bonus", "Dream Shard Bonus", "Ingredient Finder M", "Ingredient Finder S", "Inventory Up L"], 3, "500h"],
+  ["Pinsir", 60, "Serious", ["Honey", "Honey", "Honey"], ["Inventory Up S", "Ingredient Finder M", "Skill Level Up M", "Helping Bonus", "Skill Level Up S"], 1],
+  ["Ribombee", 60, "Quiet", ["Honey", "Honey", "Honey"], ["Dream Shard Bonus", "Helping Speed M", "Helping Speed S", "Ingredient Finder S", "Inventory Up S"], 7],
 ];
 
 async function api(path, init = {}, token) {
@@ -38,8 +42,8 @@ async function seed() {
   const { access_token: token } = await api("/auth/google", { method: "POST", body: '{"credential":"demo"}' });
   let box = await api("/team", {}, token);
   if (box.length) return;
-  for (const [species, level, nature, ingredients, sub_skills, skill_level] of BOX)
-    await api("/team", { method: "POST", body: JSON.stringify({ species, level, nature, ingredients, sub_skills, ribbon: "", skill_level }) }, token);
+  for (const [species, level, nature, ingredients, sub_skills, skill_level, ribbon = ""] of BOX)
+    await api("/team", { method: "POST", body: JSON.stringify({ species, level, nature, ingredients, sub_skills, ribbon, skill_level }) }, token);
   box = await api("/team", {}, token);
   const id = (s, lv) => box.find((m) => m.species === s && (!lv || m.level === lv)).id;
   await api("/saved-teams", {
@@ -94,10 +98,18 @@ async function capture(browser, dir, lang) {
     const last = await add.locator("button").last().boundingBox();
     const box = await add.boundingBox();
     await page.screenshot({ path: join(dir, "compare-suggestions.jpg"), ...JPEG, clip: { x: box.x, y: top, width: box.width, height: last.y + last.height + 16 - top } });
-    await page.locator(".sug-row").first().click();
-    await page.waitForTimeout(1200);
-    await page.locator(".sug-row").first().click();
-    await page.waitForTimeout(2000);
+  });
+
+  await scene(browser, lang, async (page) => {
+    await page.goto(`${APP}/box`);
+    const entry = page.locator(".box-entry", { hasText: "Venusaur" }).first();
+    await entry.locator("button").last().click();
+    await page.getByRole("menuitem").first().click();
+    const cards = page.locator(".prod-cards .prod-card:not(.prod-card--add)");
+    for (const rival of ["Pinsir", "Ribombee"]) {
+      await page.locator(".sug-row", { hasText: rival }).click();
+      await page.waitForTimeout(1500);
+    }
     await shot(cards.nth(1), "hero-card-1");
     await shot(cards.nth(0), "hero-card-2");
     await shot(cards.nth(2), "hero-card-3");

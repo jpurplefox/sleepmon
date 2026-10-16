@@ -21,11 +21,11 @@ export function LandingHero() {
         </h1>
         <p className="landing-hero__lead">{t("landing.lead")}</p>
         <div className="landing-hero__actions">
-          <Link href={ROUTES.compare} className="btn btn--primary landing-btn">
+          <Link href={ROUTES.compare} className="btn btn--primary">
             {t("landing.cta.compare")}
           </Link>
           {status === "authenticated" ? (
-            <Link href={ROUTES.box} className="btn btn--ghost landing-btn">
+            <Link href={ROUTES.box} className="btn btn--ghost">
               {t("landing.cta.box")}
             </Link>
           ) : status === "checking" ? (
@@ -47,10 +47,6 @@ export function LandingHero() {
         <img className="landing-shot landing-fan__side landing-fan__left" src={shotUrl("hero-card-1", lang)} alt="" />
         <img className="landing-shot landing-fan__center" src={shotUrl("hero-card-2", lang)} alt="" />
         <img className="landing-shot landing-fan__side landing-fan__right" src={shotUrl("hero-card-3", lang)} alt="" />
-        <span className="landing-callout landing-fan__callout">
-          <span className="landing-callout__up">▲</span>
-          {t("landing.callout.delta")}
-        </span>
       </div>
     </section>
   );

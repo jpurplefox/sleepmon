@@ -8038,7 +8038,6 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   background: var(--text); color: var(--bg); font-weight: 700; font-size: 0.78rem;
   padding: 0.4rem 0.7rem; border-radius: 999px; white-space: nowrap; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
 }
-.landing-callout__up { color: #0b8a6b; }
 
 /* Hero */
 .landing-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 1.5rem; align-items: center; padding: 3.5rem 0 2.5rem; }
@@ -8046,8 +8045,8 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 .landing-hero__accent { color: var(--up); }
 .landing-hero__lead { color: var(--muted); line-height: 1.65; margin: 1.15rem 0 1.6rem; max-width: 44ch; font-size: 1.04rem; }
 .landing-hero__actions { display: flex; flex-wrap: wrap; gap: 0.7rem; align-items: center; }
-.landing-hero__actions .btn { margin-top: 0; }
-.landing-btn { padding: 0.85rem 1.4rem; font-size: 1rem; border-radius: 12px; text-decoration: none; }
+/* Every hero action gets the large size, Google's sign-in included, so they share a height. */
+.landing-hero__actions .btn { margin-top: 0; padding: 0.85rem 1.4rem; font-size: 1rem; border-radius: 12px; text-decoration: none; }
 .landing-facts { list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; margin: 1.6rem 0 0; padding: 0; color: var(--muted); font-size: var(--text-sm); }
 .landing-facts li { display: inline-flex; gap: 0.4rem; align-items: center; }
 .landing-facts svg { width: 14px; height: 14px; color: var(--up); }
@@ -8056,7 +8055,6 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 .landing-fan__left { transform: translateX(-118%) rotate(-8deg) translateY(34px); }
 .landing-fan__center { transform: translateX(-50%); z-index: 2; width: 240px !important; top: 6px !important; }
 .landing-fan__right { transform: translateX(18%) rotate(8deg) translateY(34px); }
-.landing-fan__callout { top: 255px; left: calc(50% + 60px); transform: rotate(3deg); }
 
 /* Use cases (bento) */
 .landing-section-head { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; padding: 1.5rem 0 1rem; }
@@ -8108,7 +8106,6 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   .landing-fan { height: 360px; }
   .landing-fan .landing-shot { width: 160px; }
   .landing-fan__center { width: 172px !important; }
-  .landing-fan__callout { top: 200px; left: auto; right: 8px; }
   .landing-bento { grid-template-columns: minmax(0, 1fr); padding-bottom: 2rem; }
   .landing-tile--catch, .landing-tile--share, .landing-tile--plan, .landing-tile--levelup { grid-column: auto; }
   .landing-tile--catch { min-height: 560px; }
