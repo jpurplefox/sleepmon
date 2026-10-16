@@ -406,8 +406,7 @@ describe("ProgressModal — Leveling tab", () => {
     expect(options).toEqual(["None", "10", "25", "30", "50", "60", "70"]);
     await userEvent.click(within(group).getByRole("radio", { name: "60" }));
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
-    await waitFor(() => expect(api.patchProgress).toHaveBeenCalled());
-    expect(vi.mocked(api.patchProgress).mock.calls[0][0]).toEqual({ min_target_level: 60 });
+    await waitFor(() => expect(vi.mocked(api.patchProgress).mock.lastCall?.[0]).toEqual({ min_target_level: 60 }));
   });
 
   it("checks None when no minimum is set and the saved level otherwise", async () => {
@@ -425,8 +424,7 @@ describe("ProgressModal — Leveling tab", () => {
     const group = await openLeveling();
     await userEvent.click(within(group).getByRole("radio", { name: "None" }));
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
-    await waitFor(() => expect(api.patchProgress).toHaveBeenCalled());
-    expect(vi.mocked(api.patchProgress).mock.calls[0][0]).toEqual({ min_target_level: 0 });
+    await waitFor(() => expect(vi.mocked(api.patchProgress).mock.lastCall?.[0]).toEqual({ min_target_level: 0 }));
   });
 
   it("makes only the checked chip tabbable and moves selection with the arrows", async () => {
