@@ -115,11 +115,11 @@ function renderCompare(baseMemberId: string | null = null) {
 }
 
 describe("Comparison add cell", () => {
-  it("offers New, From screenshots and My Pokémon, in that order", async () => {
+  it("offers New, From screenshots and My box, in that order", async () => {
     renderCompare();
     const cell = (await screen.findByRole("button", { name: "+ New" })).parentElement!;
     expect(within(cell).getAllByRole("button").map((b) => b.textContent)).toEqual([
-      "+ New", "+ From screenshots", "+ My Pokémon",
+      "+ New", "+ From screenshots", "+ My box",
     ]);
   });
 });
@@ -131,12 +131,12 @@ describe("Comparison analytics", () => {
 
   const added = () => rec.events.filter((e) => e.name === "pokemon_added").map((e) => e.props);
 
-  it("records New, My Pokémon and clone with their sources", async () => {
+  it("records New, My box and clone with their sources", async () => {
     const user = userEvent.setup();
     renderCompare();
     await user.click(await screen.findByRole("button", { name: "+ New" }));
     await user.click(screen.getByRole("button", { name: "submit-form" }));
-    await user.click(screen.getByRole("button", { name: "+ My Pokémon" }));
+    await user.click(screen.getByRole("button", { name: "+ My box" }));
     await user.click(await screen.findByRole("option", { name: /Raichu/ }));
     await user.click(screen.getAllByRole("button", { name: "Clone" })[0]);
     expect(added()).toEqual([
@@ -175,7 +175,7 @@ describe("Comparison analytics", () => {
     const user = userEvent.setup();
     vi.spyOn(api, "listMembers").mockResolvedValue([{ ...raichu, id: "m-ghost", species: "Missingno" } as Member]);
     renderCompare();
-    await user.click(await screen.findByRole("button", { name: "+ My Pokémon" }));
+    await user.click(await screen.findByRole("button", { name: "+ My box" }));
     await user.click(await screen.findByRole("option", { name: /Missingno/ }));
     expect(rec.events).toEqual([
       { name: "species_missing", props: { species: "Missingno", tool: "compare" } },

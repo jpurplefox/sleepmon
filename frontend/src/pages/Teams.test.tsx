@@ -111,7 +111,7 @@ describe("Team Analysis analytics", () => {
   it("records an add from the Box as a single slot", async () => {
     const user = userEvent.setup();
     renderTeams();
-    await user.click(await screen.findByRole("button", { name: "+ My Pokémon" }));
+    await user.click(await screen.findByRole("button", { name: "+ My box" }));
     await user.click(await screen.findByRole("option", { name: /Raichu/ }));
     expect(added()).toEqual([{ tool: "team_analysis", source: "box", slot: "single", species: "Raichu" }]);
   });
@@ -133,7 +133,7 @@ describe("Team Analysis analytics", () => {
   it("shows the other half of a split when its sprite is clicked", async () => {
     const user = userEvent.setup();
     renderTeams();
-    await user.click(await screen.findByRole("button", { name: "+ My Pokémon" }));
+    await user.click(await screen.findByRole("button", { name: "+ My box" }));
     await user.click(await screen.findByRole("option", { name: /Raichu/ }));
     await user.click(screen.getByRole("button", { name: "Split" }));
     await user.click(screen.getByRole("menuitem", { name: "+ New" }));

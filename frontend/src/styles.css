@@ -325,6 +325,7 @@ button.shot--empty:focus-visible,
 .specialty-toggle__btn:focus-visible,
 .avatar-btn:focus-visible,
 .prod-box-item:focus-visible,
+.sug-row:focus-visible,
 .box-entry__identity--toggle:focus-visible,
 .filter-list__item:focus-visible,
 .btn--delete:focus-visible {
@@ -3049,6 +3050,72 @@ button.shot--empty:focus-visible,
 
 .prod-add__actions .btn {
   width: 100%;
+}
+
+/* Suggestions in the add card (PRD 0002): label, up to three rows, a hairline. */
+.prod-add__suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+}
+
+.prod-add__suggestions-label {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.prod-add__sep {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+/* A suggested Box Pokémon: the picker row's surface, the card's title and build. */
+.sug-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+  text-align: left;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text);
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .sug-row:hover {
+    border-color: var(--accent);
+  }
+}
+
+.sug-row__body {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.sug-row__sprite {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
+/* The Box build, left-aligned beside the sprite instead of centered. */
+.box-entry__build.sug-row__build,
+.sug-row__build .box-entry__config.prod-box-item__config {
+  align-items: flex-start;
 }
 
 .prod-member-select {
