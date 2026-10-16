@@ -2,7 +2,7 @@ import { berryIcon } from "../berries";
 import { useI18n } from "../i18n";
 import { ingredientIcon } from "../ingredients";
 import { mainIngredient } from "../ingredientProduction";
-import { contributesBerryRole, producesIngredients } from "../skills";
+import { countsAs } from "../role";
 import { SPECIALTIES, matchesSpecialty } from "../specialties";
 import type { Catalog, Member } from "../types";
 import { effectiveSkill } from "../versatile";
@@ -29,13 +29,9 @@ export function BoxCoverage({ members, catalog }: Props) {
   const specialtyCount = (sp: string) =>
     members.filter((m) => matchesSpecialty(specialtyOf(m), sp)).length;
 
-  // Cobertura de BAYAS: cuenta su baya si es especialista en Bayas, o si es
-  // especialista en Skills y su habilidad cumple el rol de bayas (Charge Strength /
-  // Berry Burst). Golem (Charge Strength pero especialidad Ingredientes) NO cuenta.
-  const coversBerry = (m: Member): boolean => {
-    const sp = specialtyOf(m);
-    return matchesSpecialty(sp, "Berries") || (sp === "Skills" && contributesBerryRole(skillOf(m)));
-  };
+  // Cobertura de BAYAS: Pokémon cuyo rol es Berries (PRD 0022), mitológicos incluidos.
+  // Golem (Charge Strength pero especialidad Ingredientes) NO cuenta.
+  const coversBerry = (m: Member): boolean => countsAs(specialtyOf(m), skillOf(m), "Berries");
   const allBerries = [...new Set(catalog.species.map((s) => s.berry))].sort();
   const coveredBerries = new Set(
     members
@@ -45,11 +41,11 @@ export function BoxCoverage({ members, catalog }: Props) {
   );
 
   // Cobertura de INGREDIENTES: cuenta su ingrediente PRINCIPAL (el de mayor
-  // producción combinada base+skill) si es especialista en Ingredientes o su
-  // habilidad produce ingredientes (Ingredient Draw/Magnet). Solo el principal: un
-  // ingrediente secundario de baja producción (la hierba de Dragonite) no cuenta.
+  // producción combinada base+skill) si su rol es Ingredients (PRD 0022). Solo el
+  // principal: un ingrediente secundario de baja producción (la hierba de Dragonite)
+  // no cuenta.
   const coversIngredient = (m: Member): boolean =>
-    matchesSpecialty(specialtyOf(m), "Ingredients") || producesIngredients(skillOf(m));
+    countsAs(specialtyOf(m), skillOf(m), "Ingredients");
   const allIngredients = catalog.ingredients;
   const coveredIngredients = new Set(
     members

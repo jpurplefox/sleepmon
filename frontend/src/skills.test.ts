@@ -13,7 +13,6 @@ import {
   ingredientMagnetAmount,
   magnetsDreamShards,
   maxSkillLevel,
-  producesIngredients,
   skillDescription,
   tastyChanceAmount,
   unmodeledSkillKey,
@@ -25,12 +24,6 @@ describe("main-skill predicates", () => {
     expect(drawsIngredients("Ingredient Draw S (Super Luck)")).toBe(true);
     expect(drawsIngredients("Charge Strength S")).toBe(false);
     expect(drawsIngredients(undefined)).toBe(false);
-  });
-
-  it("producesIngredients covers both Draw and Magnet", () => {
-    expect(producesIngredients("Ingredient Draw S")).toBe(true);
-    expect(producesIngredients("Ingredient Magnet S")).toBe(true);
-    expect(producesIngredients("Charge Strength S")).toBe(false);
   });
 
   it("contributesBerryRole covers Charge Strength and Berry Burst", () => {

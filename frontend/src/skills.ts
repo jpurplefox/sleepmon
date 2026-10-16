@@ -50,13 +50,6 @@ export function ingredientMagnetAmount(level: number): number {
   return INGREDIENT_MAGNET_AMOUNTS[i];
 }
 
-// La skill produce ingredientes (específicos o al azar): Ingredient Draw o Magnet.
-// Usado por la cobertura de la Caja para que un especialista en Skills que junta
-// ingredientes (Crustle, Plusle) cuente igual que un especialista en Ingredientes.
-export function producesIngredients(mainSkill: string | undefined): boolean {
-  return drawsIngredients(mainSkill) || magnetsIngredients(mainSkill);
-}
-
 // La skill cumple el rol de las bayas (darle Vigor a Snorlax o conseguir bayas):
 // Charge Strength (S/M y variantes) o Berry Burst. Usado por la cobertura de
 // bayas para incluir especialistas en Skills cuyo rol es ese (Noivern, Sceptile).
