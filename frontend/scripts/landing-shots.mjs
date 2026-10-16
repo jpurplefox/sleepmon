@@ -3,7 +3,6 @@
 //   cd backend && PYTHONPATH=. python scripts/landing_demo_server.py
 // Chrome: CHROME_PATH, default macOS Google Chrome.
 import { mkdtemp, mkdir, rename, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
@@ -134,7 +133,9 @@ async function capture(browser, dir, lang) {
 const browser = await chromium.launch({ executablePath: CHROME, headless: true }).catch((e) => {
   throw new Error(`Could not launch Chrome at ${CHROME} (set CHROME_PATH): ${e.message}`);
 });
-const tmp = await mkdtemp(join(tmpdir(), "landing-shots-"));
+// Temp dir beside the output so rename() stays on the same filesystem (no EXDEV).
+await mkdir(dirname(OUT), { recursive: true });
+const tmp = await mkdtemp(join(dirname(OUT), ".landing-shots-"));
 try {
   await seed();
   for (const lang of LANGS) {
@@ -142,7 +143,6 @@ try {
     await capture(browser, join(tmp, lang), lang);
   }
   await rm(OUT, { recursive: true, force: true });
-  await mkdir(dirname(OUT), { recursive: true });
   await rename(tmp, OUT);
   console.log(`Wrote captures to ${OUT}`);
 } finally {
