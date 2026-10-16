@@ -1155,3 +1155,20 @@ def test_team_production_accepts_a_sleep_schedule(client: TestClient) -> None:
     ).json()
     prod = body["members"][0]["production"]
     assert [s["kind"] for s in prod["sleep_sessions"]] == ["night", "nap"]
+
+
+def test_team_listing_carries_the_level_up(
+    client: TestClient, auth_header: dict[str, str]
+) -> None:
+    client.post(
+        "/team",
+        json=valid_payload(level=15, nature="Bashful", sub_skills=[]),
+        headers=auth_header,
+    )
+    client.post("/team", json=valid_payload(level=75), headers=auth_header)
+    rows = {m["level"]: m for m in client.get("/team", headers=auth_header).json()}
+    up = rows[15]["production"]["level_up"]
+    assert (up["target_level"], up["candies"], up["dream_shards"]) == (25, 129, 9987)
+    assert up["at_target"]["helps_per_day"] > rows[15]["production"]["helps_per_day"]
+    assert up["at_target"]["level_up"] is None
+    assert rows[75]["production"]["level_up"] is None

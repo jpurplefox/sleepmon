@@ -69,6 +69,17 @@ class MemberProductionOut(msgspec.Struct):
     skill_berry_amount: float | None = None
     skill_berries_per_teammate: float | None = None
     skill_help_targets: int | None = None
+    helps_per_day: float = 0.0
+    level_up: LevelUpOut | None = None
+
+
+class LevelUpOut(msgspec.Struct):
+    """A Box entry's next level-up: target, cost and production at the target level."""
+
+    target_level: int
+    candies: int
+    dream_shards: int
+    at_target: MemberProductionOut
 
 
 class MemberOut(msgspec.Struct):

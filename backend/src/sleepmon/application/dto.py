@@ -135,6 +135,18 @@ class MemberProduction:
     skill_berry_amount: float | None = None  # Berry Burst / Lunar Blessing: own (in ``berries``)
     skill_berries_per_teammate: float | None = None  # same skills: per teammate per day
     skill_help_targets: int | None = None  # members each grant reaches (5: whole team)
+    helps_per_day: float = 0.0
+    level_up: LevelUpProjection | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class LevelUpProjection:
+    """The Box entry's next level-up (PRD 0021): target, cost and production there."""
+
+    target_level: int
+    candies: int
+    dream_shards: int
+    at_target: MemberProduction  # same Pokémon with the level raised; its level_up is None
 
 
 @dataclass(frozen=True, slots=True)

@@ -22,6 +22,7 @@ from sleepmon.application.dto import (
     IngredientBalanceDTO,
     IngredientCountDTO,
     KitchenDTO,
+    LevelUpProjection,
     MealFeasibilityDTO,
     MemberContributionDTO,
     MemberProduction,
@@ -70,6 +71,7 @@ from sleepmon.domain.event_bonus import (
     EventScope,
     value_allowed,
 )
+from sleepmon.domain.leveling import exp_modifier, level_up_cost, target_level
 from sleepmon.domain.map_bonuses import MapBonuses
 from sleepmon.domain.ports import (
     PlayerProgressRepository,
@@ -448,50 +450,44 @@ class DefaultTeamService(TeamService):
     def list_members_with_production(
         self, user_id: UUID
     ) -> list[tuple[TeamMember, MemberProduction | None]]:
-        sleep = self._progress.get(user_id).sleep
-        return [(m, self._member_production(m, sleep)) for m in self._repo.list(user_id)]
+        progress = self._progress.get(user_id)
+        return [
+            (m, self._member_production(m, progress.sleep, progress.min_target_level))
+            for m in self._repo.list(user_id)
+        ]
 
     def _member_production(
-        self, member: TeamMember, sleep: SleepSchedule
+        self, member: TeamMember, sleep: SleepSchedule, min_target: int | None
     ) -> MemberProduction | None:
         species = self._catalog.get(member.species)
-        if species is None:  # especie fuera del catálogo curado: sin producción
+        if species is None:  # species outside the curated catalog: no production
             return None
-        result = daily_production(
-            resolve_versatile(species, member.versatile_skill),
-            member.ingredients,
-            member.level,
-            member.nature,
-            member.sub_skills,
-            member.ribbon,
-            member.skill_level,
-            sleep=sleep,
+        resolved = resolve_versatile(species, member.versatile_skill)
+
+        def at(level: int) -> MemberProduction:
+            return _summarize(
+                daily_production(
+                    resolved,
+                    member.ingredients,
+                    level,
+                    member.nature,
+                    member.sub_skills,
+                    member.ribbon,
+                    member.skill_level,
+                    sleep=sleep,
+                )
+            )
+
+        now = at(member.level)
+        target = target_level(member.level, min_target)
+        if target is None:
+            return now
+        cost = level_up_cost(
+            member.level, target, curve=species.growth, nature=exp_modifier(member.nature)
         )
-        return MemberProduction(
-            berries=result.berry_amount,
-            berry_strength=result.berry_strength,
-            ingredients=[
-                SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
-                for slot in result.ingredients
-            ],
-            ingredients_total=sum(slot.amount for slot in result.ingredients),
-            skill_triggers=result.skill_triggers,
-            skill_ingredients=[
-                SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
-                for slot in result.skill_ingredients
-            ],
-            skill_ingredient_total=result.skill_ingredient_total,
-            skill_energy=result.skill_energy,
-            skill_cooking_ingredients=result.skill_cooking_ingredients,
-            skill_strength=result.skill_strength,
-            skill_self_energy=result.skill_self_energy,
-            skill_dream_shards=result.skill_dream_shards,
-            skill_tasty_chance=result.skill_tasty_chance,
-            skill_extra_helpful=result.skill_extra_helpful,
-            skill_random_energy=result.skill_random_energy,
-            skill_berry_amount=result.skill_berry_amount,
-            skill_berries_per_teammate=result.skill_berries_per_teammate,
-            skill_help_targets=None if result.help_grant is None else result.help_grant.targets,
+        return replace(
+            now,
+            level_up=LevelUpProjection(target, cost.candies, cost.dream_shards, at(target)),
         )
 
     def update_member(self, user_id: UUID, member_id: UUID, data: TeamMemberInput) -> TeamMember:
@@ -834,3 +830,34 @@ class DefaultProductionService(ProductionService):
                 for r in aggregate.berries
             ],
         )
+
+
+def _summarize(result: DailyProduction) -> MemberProduction:
+    """Summarize a daily production for the Box overview."""
+    return MemberProduction(
+        berries=result.berry_amount,
+        berry_strength=result.berry_strength,
+        ingredients=[
+            SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
+            for slot in result.ingredients
+        ],
+        ingredients_total=sum(slot.amount for slot in result.ingredients),
+        skill_triggers=result.skill_triggers,
+        skill_ingredients=[
+            SlotAmount(ingredient=slot.ingredient.value, amount=slot.amount)
+            for slot in result.skill_ingredients
+        ],
+        skill_ingredient_total=result.skill_ingredient_total,
+        skill_energy=result.skill_energy,
+        skill_cooking_ingredients=result.skill_cooking_ingredients,
+        skill_strength=result.skill_strength,
+        skill_self_energy=result.skill_self_energy,
+        skill_dream_shards=result.skill_dream_shards,
+        skill_tasty_chance=result.skill_tasty_chance,
+        skill_extra_helpful=result.skill_extra_helpful,
+        skill_random_energy=result.skill_random_energy,
+        skill_berry_amount=result.skill_berry_amount,
+        skill_berries_per_teammate=result.skill_berries_per_teammate,
+        skill_help_targets=None if result.help_grant is None else result.help_grant.targets,
+        helps_per_day=result.helps_per_day,
+    )
