@@ -23,8 +23,9 @@ same calculation, but read off the Pokémon you actually own, with no inputs to 
    **minimum target level** when the Pokémon is still below it.
 2. **The cost to reach it** — candies and dream shards from the current level to the
    target, with no configuration.
-3. **What the target buys** — on demand, the entry's production now vs. at the target,
-   with the delta.
+3. **What the target buys** — at a glance, the gain in the metric that defines the
+   Pokémon; on demand, every unlock in the span and the entry's production now vs. at the
+   target, with the delta.
 4. **A minimum target level** — an optional setting in the [Player
    profile](0011-player-profile.md).
 
@@ -44,9 +45,9 @@ The **unlock levels** are **10, 25, 30, 50, 60 and 70**: a sub skill unlocks at 
 - **At level 70 or above** there is no target and the entry shows no cost: 70 is the
   last level the cost tables cover.
 
-The entry names the **target level** and **what unlocks there** (a sub skill or an
-ingredient). When the target is a minimum that skips over several unlocks, it names
-what unlocks **at the target level itself**.
+The entry shows the span — **current level → target level** — and its cost. What each
+unlock level brings is already visible in the entry's build (locked slots are shown,
+dimmed); the comparison lists it in full.
 
 ### How many candies
 
@@ -95,9 +96,24 @@ little less than shown: the figure always suffices, never falls short.
 
 ### What the target buys
 
-On demand (hover or keyboard focus on the cost), the entry compares its **production
-now** with its **production at the target level** — the same Pokémon, same config, only
-the level raised — in the same order as the entry's production:
+**At a glance**, beside the span, one gain: the metric that defines the Pokémon, from now
+to the target. The Pokémon's **role** decides it — the same rule Box coverage uses, so a
+Skills specialist that is really a berry or ingredient Pokémon reads as one:
+
+- **Strength / day** — a Berries specialist, or one whose main skill adds strength or
+  berries (Charge Strength, Berry Burst). An "All" specialist (Darkrai, Mew) reads here too.
+- **Its main ingredient / day** — an Ingredients specialist, or one whose main skill yields
+  ingredients. The main ingredient is the one it produces most at the target, skill
+  included. When the span **unlocks an ingredient**, the gain is that **new** ingredient
+  and its amount instead: a new slot splits the existing ones, so the main ingredient's own
+  figure usually falls even as the Pokémon gains.
+- **Skill triggers / day** — every other Skills specialist.
+
+**On demand** (hover, keyboard focus or a tap on the span), the comparison opens. It first
+lists **every unlock the span crosses**, in level order — each sub skill (or *not recorded*,
+for an empty slot) and each ingredient — then compares its **production now** with its
+**production at the target level** — the same Pokémon, same config, only the level
+raised — in the same order as the entry's production:
 
 - **Helps / day** — now › at target, and the delta.
 - **Strength / day** — the single total the entry reports (berries + skill), not split.
@@ -110,6 +126,7 @@ Because the Box stores every slot — all three ingredients and the sub skills f
 unlock level — the comparison counts what the target unlocks: the ingredient at 30/60,
 the sub skill at 10/25/50/70. If the sub skill slot the target unlocks is **empty** in
 the config, it says so (*not recorded*) and the gain comes from the level alone.
+The same holds when the span crosses several unlocks: the rows add them all up.
 
 The estimate is the shared [Production model](0008-production-model.md), under the same
 terms as the entry's own production (sleep schedule included).
@@ -141,6 +158,15 @@ All costs below are for species candies, with no boost.
 - **Last span:** normal, neutral, **69 → 70** → **131 · 166,632**.
 - **Level 70 or above** → the entry shows **no cost** and no comparison, not an error.
 - **No minimum set** (a new account) → every entry targets its next unlock level.
+- **Span:** the entry reads its current and target level, e.g. **Lv. 15 → 25**.
+- **Gain by role:** a Berries specialist shows its strength gain; a Skills specialist with
+  Charge Strength shows its strength gain too; a Skills specialist with Energy for Everyone
+  shows its skill-trigger gain; an Ingredients specialist shows its main ingredient's gain.
+- **Gain on an ingredient unlock:** an Ingredients specialist at level 25 targeting 30 shows
+  the ingredient that unlocks at 30 as **new**, with its amount at 30 — not a fall in its
+  main ingredient.
+- **Several unlocks:** with the minimum at **60**, a level 15 Pokémon's comparison lists the
+  unlocks at **25, 30, 50 and 60**, in that order, and its rows add up all of them.
 - **Comparison:** a level 25 Pokémon with three recorded ingredients targets 30; its
   comparison lists the third ingredient as **—** now, with its amount at 30, marked
   **new**.
