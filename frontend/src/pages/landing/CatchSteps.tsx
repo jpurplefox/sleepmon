@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { Fragment, type CSSProperties } from "react";
 
 import { useI18n } from "../../i18n";
 import { CATCH_STEPS, shotUrl } from "./content";
@@ -23,16 +23,23 @@ export function CatchSteps() {
       <div className="landing-stage">
         {CATCH_STEPS.map((s, i) => (
           <div key={s.id} className={`landing-stage__frame landing-stage__frame--${s.id}`} style={at(i)}>
-            {s.shots.map((name) => (
-              <img
-                key={name}
-                className={`landing-stage__shot landing-stage__shot--${name}`}
-                src={shotUrl(name, lang)}
-                // The last frame is the outcome; the steps above already narrate the rest.
-                alt={i === last ? t("landing.case.catch.alt") : ""}
-                loading="lazy"
-                decoding="async"
-              />
+            {s.shots.map((name, j) => (
+              <Fragment key={name}>
+                {/* Evolving shows a before and an after. */}
+                {s.id === "evolve" && j > 0 && (
+                  <span className="landing-stage__arrow" aria-hidden="true">
+                    ↓
+                  </span>
+                )}
+                <img
+                  className={`landing-stage__shot landing-stage__shot--${name}`}
+                  src={shotUrl(name, lang)}
+                  // The last frame is the outcome; the steps above already narrate the rest.
+                  alt={i === last ? t("landing.case.catch.alt") : ""}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </Fragment>
             ))}
           </div>
         ))}

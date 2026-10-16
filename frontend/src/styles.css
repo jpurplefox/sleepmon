@@ -8077,6 +8077,10 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 .landing-stage__frame--upload .landing-stage__shot { max-height: 92%; max-width: 46%; }
 .landing-stage__shot--game-1 { transform: rotate(-5deg); }
 .landing-stage__shot--game-2 { transform: rotate(4deg) translateY(14px); }
+.landing-stage__frame--evolve { flex-direction: column; gap: 0.6rem; }
+.landing-stage__frame--evolve .landing-stage__shot { max-height: 42%; }
+.landing-stage__frame--pick .landing-stage__shot { width: 72%; height: auto; }
+.landing-stage__arrow { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--accent-strong); color: #fff; font-weight: 700; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
 @keyframes landing-frame {
   0% { opacity: 0; transform: translateY(10px) scale(0.98); }
   4%, 22% { opacity: 1; transform: none; }

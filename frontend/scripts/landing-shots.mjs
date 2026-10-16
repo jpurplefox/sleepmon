@@ -114,9 +114,23 @@ async function capture(browser, dir, lang) {
     await page.locator('input[type="file"]').setInputFiles(GAME_SHOTS);
     await page.getByRole("button", { name: /Leer imágenes|Read screenshots/ }).click();
     await page.locator(".form-summary").waitFor();
+    // The species and level rows, before and after evolving: the step reads as Tyrunt → Tyrantrum.
+    const formTop = async (name) => {
+      const dialog = await page.getByRole("dialog").boundingBox();
+      const top = await page.locator(".form__row").first().boundingBox();
+      const level = await page.locator(".level-evolve").first().boundingBox();
+      await page.screenshot({
+        path: join(dir, `${name}.jpg`), ...JPEG,
+        clip: { x: dialog.x + 12, y: top.y - 12, width: dialog.width - 24, height: level.y + level.height - top.y + 24 },
+      });
+    };
+    // Let the dialog's entrance and the sprites settle first.
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1200);
+    await formTop("catch-evolve-before");
     await page.getByRole("button", { name: /Evolucionar a|Evolve to/ }).first().click();
     await page.waitForTimeout(600);
-    await shot(page.getByRole("dialog"), "catch-form");
+    await formTop("catch-evolve-after");
     await page.getByRole("button", { name: /Agregar a la comparación|Add to comparison/ }).click();
     const cards = page.locator(".prod-cards .prod-card:not(.prod-card--add)");
     await cards.first().waitFor();
@@ -134,7 +148,13 @@ async function capture(browser, dir, lang) {
       const bottom = Math.max(...boxes.map((b) => b.y + b.height));
       return { x, y: bar.y - 12, width: right - x, height: bottom - bar.y + 12 };
     };
-    await page.screenshot({ path: join(dir, "catch-level.jpg"), ...JPEG, clip: await clipTo([cards.first(), page.locator(".prod-card--add")]) });
+    // Close-up of the suggestion: it says where the rival comes from.
+    const add = await page.locator(".prod-card--add").boundingBox();
+    const sug = await page.locator(".sug-row", { hasText: "Sudowoodo" }).boundingBox();
+    await page.screenshot({
+      path: join(dir, "catch-pick.jpg"), ...JPEG,
+      clip: { x: add.x + 8, y: sug.y - 44, width: add.width - 16, height: sug.height + 60 },
+    });
     await page.locator(".sug-row", { hasText: "Sudowoodo" }).click();
     await cards.nth(1).waitFor();
     await page.waitForTimeout(1500);
