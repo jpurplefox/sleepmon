@@ -10,6 +10,8 @@ interface TooltipProps {
   children: React.ReactNode;
   /** Extra class on the trigger wrapper (e.g. a cursor/underline cue). */
   className?: string;
+  /** A wider bubble, for a multi-column comparison (default max width is 16rem). */
+  wide?: boolean;
 }
 
 // Keep the bubble this many px away from either viewport edge.
@@ -40,7 +42,7 @@ function horizontalBounds(el: HTMLElement): { min: number; max: number } {
  * ancestor, when one ends sooner) so it never overflows on either edge, for any bubble width. Rich content uses the
  * `Tooltip.Row` / `Tooltip.Label` / `Tooltip.Value` helpers.
  */
-export function Tooltip({ content, label, children, className }: TooltipProps) {
+export function Tooltip({ content, label, children, className, wide }: TooltipProps) {
   const wrapRef = useRef<HTMLSpanElement>(null);
   const bubbleRef = useRef<HTMLSpanElement>(null);
   const [left, setLeft] = useState<number | null>(null);
@@ -113,7 +115,7 @@ export function Tooltip({ content, label, children, className }: TooltipProps) {
       {children}
       <span
         ref={bubbleRef}
-        className="tooltip__bubble"
+        className={wide ? "tooltip__bubble tooltip__bubble--wide" : "tooltip__bubble"}
         style={{ display: open ? "flex" : "none", ...(left != null ? { left: `${left}px` } : {}) }}
         aria-hidden="true"
       >

@@ -119,6 +119,27 @@ describe("Tooltip", () => {
     expect(bubble.style.display).toBe("none");
   });
 
+  it("uses the wide bubble when asked", () => {
+    render(
+      <Tooltip content="Hint" wide>
+        <span>Trigger</span>
+      </Tooltip>,
+    );
+    const bubble = bubbleOf("Trigger");
+    fireEvent.pointerEnter(bubble.closest(".tooltip")!, { pointerType: "mouse" });
+    expect(bubble.style.display).toBe("flex");
+    expect(bubble).toHaveClass("tooltip__bubble--wide");
+  });
+
+  it("uses the default bubble otherwise", () => {
+    render(
+      <Tooltip content="Hint">
+        <span>Trigger</span>
+      </Tooltip>,
+    );
+    expect(bubbleOf("Trigger")).not.toHaveClass("tooltip__bubble--wide");
+  });
+
   describe("on a touch screen", () => {
     const tap = (el: Element) => {
       fireEvent.pointerDown(el, { pointerType: "touch" });

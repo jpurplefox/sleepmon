@@ -12,6 +12,7 @@ import { CHARGE_STRENGTH_ICON, GENERIC_BERRY_ICON, mainSkillIcon } from "../skil
 import { ActionMenu } from "./ActionMenu";
 import { IconChevronDown, IconCompare, IconEdit, IconTrash } from "./icons";
 import { IngredientLineup } from "./IngredientLineup";
+import { LevelUpCell } from "./LevelUpCell";
 import { MemberConfig } from "./MemberConfig";
 import { RibbonIcon } from "./RibbonIcon";
 
@@ -311,6 +312,17 @@ export function BoxEntry({
             {t("member.ingredients")}
           </span>
           <span className="box-entry__label box-entry__label--skill">{t("box.labelSkill")}</span>
+          {/* Third section: the level-up cost (absent at level 70+). */}
+          {prod && (
+            <LevelUpCell
+              member={member}
+              specialty={species?.specialty}
+              skill={skill}
+              production={prod}
+              layout="section"
+              tierBySubSkill={tierBySubSkill}
+            />
+          )}
         </>
       )}
 
@@ -506,6 +518,23 @@ export function BoxEntry({
           )}
         </div>
       </div>
+
+      {/* Column 7 — level-up cost (PRD 0021). Every entry keeps the cell, empty at
+          level 70+ or without production, so the track stays aligned across Pokémon.
+          On a phone it's a section of the expanded detail instead. */}
+      {!isMobile &&
+        (prod?.level_up ? (
+          <LevelUpCell
+            member={member}
+            specialty={species?.specialty}
+            skill={skill}
+            production={prod}
+            layout="cell"
+            tierBySubSkill={tierBySubSkill}
+          />
+        ) : (
+          <div className="box-entry__levelup" />
+        ))}
 
       {/* Acciones: overflow "···" con Comparar (primero) + Editar/Eliminar. */}
       <div className="box-entry__actions">
