@@ -345,6 +345,23 @@ states · where it lives. Feature one-offs are intentionally not here.
   everyone else (`--one`): a single **1 vez** column. Every card under the same sleep
   schedule has the same rows, so cards align without reserving space; the block keeps its
   40px floor.
+- **Comparison add card** (`.prod-card--add`) — the last cell of `.prod-cards`, a
+  dashed `.prod-card` holding the ways to add, vertically centered; its outline turns
+  `--accent` on hover, except over a `.sug-row`, where only the row lights up. With suggestions
+  (PRD 0002): a label (`--text-xs`, uppercase, `letter-spacing .04em`, 600, `--muted`,
+  "De tu caja, para comparar"), up to three `.sug-row`s (`gap .5rem`), a `--border`
+  hairline, then `.prod-add__actions` (`+ Nuevo` primary, `+ Desde imágenes` and
+  `+ Mi caja` ghost). Without suggestions the label, rows and hairline give way to the
+  muted hint. At five cards the add card is **not rendered** — no "already 5" hint.
+- **`.sug-row`** — a suggested Box Pokémon in the add card: a `<button>` on the picker
+  row's surface (`--surface-2`, `--border`, `--r-md`, `.6rem .75rem`, hover
+  `border-color: --accent`, unified focus). Line 1 is the card's title
+  (`.prod-card__title`: name `--text-lg` 700, `Nv. N` `--muted` `--text-sm`, ribbon
+  after the name). Line 2 (`gap .6rem`, centered): the sprite at **72px**, pixelated,
+  then the build stacked and **left-aligned** in the cards' order — ingredients, the
+  five sub skill slots (28px), the named `NaturePill` — at `opacity .85`, like the Box
+  entry's build. Accessible name "Agregar {species}, Nv. N". Not a `.prod-box-item`
+  variant: title on its own line, a large side sprite and a stacked build.
 - **`.team-rows`** — the Teams tool's list (PRD 0016): one `--surface` panel, a
   header row of `--text-xs` uppercase `--muted` column names, then one `.team-row` per
   team on the **same fixed grid** (header and rows are separate grids, so no track is
@@ -469,6 +486,9 @@ states · where it lives. Feature one-offs are intentionally not here.
   unless the name is written beside it (the selector's options). Sizes: 36px with a
   2px border in the selector; **28px with a 1.5px border** on the
   card and the Box row (the same proportions — never a 2px border on a compact tile).
+  `--empty` is an unloaded slot: a transparent square with a `dashed --divider` outline
+  at full opacity (the inert empty-slot language), same size as a filled tile, so rows
+  of five slots stay aligned on `--surface` and `--surface-2` alike.
 - **`NaturePill`** (`.nature-pill`) — a nature as one `999px` pill: `▲` + the raised
   stat's icon (`--up`), `▼` + the lowered one's (`--down`), then the name (`--text`)
   after a hairline divider. Neutral → a white circled X on both sides (only the arrows carry
@@ -478,7 +498,8 @@ states · where it lives. Feature one-offs are intentionally not here.
   row must summarize more (the Box picker) — the effects-only pill always sits in a
   `Tooltip` with the nature's name. `NatureSelect` is the one place the name sits *outside* the pill:
   trigger and options read as a list of names, each with its effects-only pill. Fill
-  is `--surface-2`, or `--surface` on a `--surface-2` ground (`--pill-bg`).
+  is `--surface-2` lifted with 8% `--text` and a `--divider` outline (it reads on a card
+  and on a suggestion row), or `--surface` inside the selector and the Box picker (`--pill-bg`).
 - **State vocabulary** shared across selects/menus/toggles: `.is-active`,
   `.is-selected`, `.is-highlighted`, `.is-locked`, `.is-on`.
 
@@ -1120,6 +1141,20 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   `.ss-icon--empty` square (the cards' "no sub skills" note is gone). *Why:* the same
   Pokémon should read the same in every tool, and five fixed slots keep rows aligned and
   show at a glance how many are missing.
+- **Suggestions read like small cards, not picker rows.** *Question:* the add card's
+  shortcuts to comparable Box Pokémon could reuse the picker row (sprite 32px, name,
+  level badge, one-line config), a compact row with the ranking metric, or tiles.
+  *Resolution:* a `.sug-row` with the card's title on top and a 72px sprite beside the
+  build stacked in the cards' order; no metric and no rank badge; the add card shows them
+  above its buttons and disappears at five cards. *Why:* a suggestion is a rival for the
+  card beside it, so it should read the way that card reads (same title, same build
+  order); the metric would turn shortcuts into a ranking, which the suggestions are not.
+- **The empty sub skill slot uses the empty-slot language.** *Question:* the dashed
+  `--border` square at `opacity .6` vanished on `--surface-2`, so a row of five slots
+  read as two or three. *Resolution:* `.ss-icon--empty` takes `dashed --divider` at full
+  opacity everywhere (cards, Box, picker, level-up tooltip, suggestions), the outline
+  other inert placeholders already use. *Why:* `--divider` holds on every surface; the
+  five fixed slots only say "how many are missing" if the missing ones can be seen.
 - **A short scale in the context bar is chips, not a dropdown.** *Question:* the context
   bar's rule made every choice a `.filter-btn`; Comparison's comparison level is seven
   ordered values (off and the six unlock levels), often switched back and forth while

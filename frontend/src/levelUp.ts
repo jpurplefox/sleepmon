@@ -1,12 +1,11 @@
 import { INGREDIENT_UNLOCK_LEVELS, SUB_SKILL_UNLOCK_LEVELS } from "./constants";
 import { combinedIngredientTotals, mainIngredient } from "./ingredientProduction";
-import { contributesBerryRole, producesIngredients } from "./skills";
-import { matchesSpecialty } from "./specialties";
+import { countsAs } from "./role";
 import type { LevelUp, Member, MemberProduction } from "./types";
 
 // PRD 0021 — the Box's level-up cost, presented: which unlocks a span crosses, the
 // gain that defines the Pokémon, and the now-vs-target rows. Pure; no game rule here
-// beyond the Box coverage's role rule, which this reuses.
+// beyond the Pokémon role (PRD 0022), which this reuses.
 
 export type Unlock =
   | { level: number; kind: "subSkill"; subSkill: string | null }
@@ -44,11 +43,10 @@ export function levelUpGain(
   levelUp: LevelUp,
 ): Gain {
   const then = levelUp.at_target;
-  // Same rule as Box coverage: the skill override only applies to Skills specialists
-  // for berries; for ingredients Box coverage applies it to any specialty.
-  if (matchesSpecialty(specialty, "Berries") || (specialty === "Skills" && contributesBerryRole(skill)))
+  // The role decides the gain (PRD 0022), as in Box coverage.
+  if (countsAs(specialty, skill, "Berries"))
     return { kind: "strength", now: strengthOf(now), then: strengthOf(then) };
-  if (matchesSpecialty(specialty, "Ingredients") || producesIngredients(skill)) {
+  if (countsAs(specialty, skill, "Ingredients")) {
     const thenTotals = combinedIngredientTotals(then);
     const nowTotals = combinedIngredientTotals(now);
     const unlocked = spanUnlocks(member, levelUp.target_level)

@@ -740,3 +740,19 @@ def daily_production(
         skill_berry_juice=None if per_juice is None else skill_triggers * per_juice,
         skill_energy_drain=None if per_drain is None else skill_triggers * per_drain,
     )
+
+
+def main_ingredient(result: DailyProduction) -> Ingredient | None:
+    """The ingredient with the highest combined amount (normal helps + main skill).
+
+    Random skill ingredients (Ingredient Magnet) belong to no ingredient; ties keep the first.
+    """
+    totals: dict[Ingredient, float] = {}
+    for slot in (*result.ingredients, *result.skill_ingredients):
+        totals[slot.ingredient] = totals.get(slot.ingredient, 0.0) + slot.amount
+    best: Ingredient | None = None
+    best_amount = 0.0
+    for ingredient, amount in totals.items():
+        if amount > best_amount:
+            best, best_amount = ingredient, amount
+    return best

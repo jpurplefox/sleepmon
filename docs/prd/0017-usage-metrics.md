@@ -69,7 +69,7 @@ event. Property values are closed sets (listed here) or numbers.
 
 | Event | When | Properties |
 |---|---|---|
-| `pokemon_added` | A Pokémon lands in a comparison or a team. Editing an existing one does not count. | `tool`: `compare` / `team_analysis`; `source`: `new` (MemberForm), `screenshots` (MemberForm opened by a screenshot import), `box` (picked with "My Pokémon"), `box_compare` (the Box's "Compare" action), `clone` (cloned card); `slot`: `single` / `split` (Team Analysis only); `species` |
+| `pokemon_added` | A Pokémon lands in a comparison or a team. Editing an existing one does not count. | `tool`: `compare` / `team_analysis`; `source`: `new` (MemberForm), `screenshots` (MemberForm opened by a screenshot import), `box` (picked with "My Pokémon"), `suggestion` (a shortcut in Comparison's add card), `box_compare` (the Box's "Compare" action), `clone` (cloned card); `slot`: `single` / `split` (Team Analysis only); `species` |
 
 Opening a saved team does **not** emit `pokemon_added` for its members — that is
 `team_opened`.
@@ -163,7 +163,7 @@ The analytics service — not sleepmon — turns the events into:
   `tool` = `compare`, `team_analysis`, `box`, `teams`; changing a Box filter sends
   `list_filtered`, not another `tool_viewed`.
 - Adding a Pokémon in Comparison with "New" → `pokemon_added` `{tool: compare,
-  source: new}`; with "My Pokémon" → `{source: box}`; via the Box's "Compare" →
+  source: new}`; with "My Pokémon" → `{source: box}`; a suggestion in the add card → `{source: suggestion}`; via the Box's "Compare" →
   `{source: box_compare}`; cloning a card → `{source: clone}`. Editing a card sends
   no `pokemon_added`.
 - In Team Analysis, filling an empty slot from the Box → `pokemon_added`

@@ -77,9 +77,14 @@ describe("levelUpGain", () => {
     const g = levelUpGain(member({ level: 25 }), "Ingredients", "Charge Strength S", now, up(then, 30));
     expect(g).toEqual({ kind: "newIngredient", ingredient: "Warming Ginger", then: 1.8 });
   });
-  it("reads the ingredient for a Skills specialist whose skill magnets ingredients", () => {
-    const then = prod({ ingredients: [{ ingredient: "Fancy Apple", amount: 3.9 }] });
+  it("reads skill triggers for a Skills specialist whose skill magnets ingredients", () => {
+    const then = prod({ skill_triggers: 5, ingredients: [{ ingredient: "Fancy Apple", amount: 3.9 }] });
     const g = levelUpGain(member({ level: 42 }), "Skills", "Ingredient Magnet S", now, up(then, 50));
+    expect(g).toEqual({ kind: "triggers", now: now.skill_triggers, then: 5 });
+  });
+  it("reads the ingredient for a Skills specialist that draws ingredients", () => {
+    const then = prod({ ingredients: [{ ingredient: "Fancy Apple", amount: 3.9 }] });
+    const g = levelUpGain(member({ level: 42 }), "Skills", "Ingredient Draw S", now, up(then, 50));
     expect(g).toEqual({ kind: "ingredient", ingredient: "Fancy Apple", now: 3.4, then: 3.9 });
   });
   it("reads strength for an All specialist", () => {

@@ -4,6 +4,7 @@ import math
 import pytest
 
 from sleepmon.domain.catalog_data import (
+    ALL_INGREDIENTS_LEVEL,
     FREQUENCY_REDUCTION_PER_LEVEL,
     max_ingredient_slots,
 )
@@ -21,6 +22,7 @@ from sleepmon.domain.production import (
     HelpGrant,
     SlotProduction,
     daily_production,
+    main_ingredient,
     scale_daily,
 )
 from sleepmon.domain.skills import TeamContext
@@ -1864,3 +1866,58 @@ def test_float_noise_does_not_read_as_overflow_when_a_sleep_fills_exactly() -> N
     # All 12 helps of the nap count as normal helps (none turned into overflow).
     rate = prod.effective_skill_percentage / 100
     assert nap.skill_chances[0] == pytest.approx(1 - math.exp(-12 * rate))
+
+
+# --- main_ingredient ------------------------------------------------------------
+
+
+def test_all_ingredients_level_is_the_last_unlock() -> None:
+    assert ALL_INGREDIENTS_LEVEL == 60
+
+
+def test_main_ingredient_sums_repeated_slots() -> None:
+    d = dataclasses.replace(
+        _daily(),
+        ingredients=(
+            SlotProduction(Ingredient.FANCY_APPLE, 4.35),
+            SlotProduction(Ingredient.WARMING_GINGER, 8.71),
+            SlotProduction(Ingredient.WARMING_GINGER, 13.06),
+        ),
+    )
+    assert main_ingredient(d) is Ingredient.WARMING_GINGER
+
+
+def test_main_ingredient_counts_skill_ingredients() -> None:
+    d = dataclasses.replace(
+        _daily(),
+        ingredients=(SlotProduction(Ingredient.PURE_OIL, 5.0),),
+        skill_ingredients=(
+            SlotProduction(Ingredient.GLOSSY_AVOCADO, 3.0),
+            SlotProduction(Ingredient.GLOSSY_AVOCADO, 3.0),
+        ),
+    )
+    assert main_ingredient(d) is Ingredient.GLOSSY_AVOCADO
+
+
+def test_main_ingredient_ignores_random_skill_ingredients() -> None:
+    d = dataclasses.replace(
+        _daily(),
+        ingredients=(SlotProduction(Ingredient.FANCY_EGG, 1.0),),
+        skill_ingredient_total=50.0,
+    )
+    assert main_ingredient(d) is Ingredient.FANCY_EGG
+
+
+def test_main_ingredient_none_without_ingredients() -> None:
+    assert main_ingredient(_daily()) is None
+
+
+def test_main_ingredient_tie_keeps_the_first() -> None:
+    d = dataclasses.replace(
+        _daily(),
+        ingredients=(
+            SlotProduction(Ingredient.HONEY, 2.0),
+            SlotProduction(Ingredient.FANCY_APPLE, 2.0),
+        ),
+    )
+    assert main_ingredient(d) is Ingredient.HONEY

@@ -1,9 +1,11 @@
 import math
+from typing import Any
 
 import pytest
 
 from sleepmon.adapters.outbound.catalog.static_catalog import StaticSpeciesCatalog
 from sleepmon.adapters.outbound.catalog.static_recipe_catalog import StaticRecipeCatalog
+from sleepmon.application import services
 from sleepmon.application.dto import (
     BerrySourceDTO,
     ComparisonRaise,
@@ -19,6 +21,7 @@ from sleepmon.application.dto import (
 from sleepmon.application.services import DefaultProductionService
 from sleepmon.domain.catalog_data import MAX_RECIPE_LEVEL
 from sleepmon.domain.errors import SpeciesNotFoundError, ValidationError
+from sleepmon.domain.map_bonuses import MapBonuses
 
 
 def _pokemon(**overrides: object) -> ProductionInput:
@@ -1490,6 +1493,43 @@ def test_versatile_skill_rejected_for_other_species(
 ) -> None:
     with pytest.raises(ValidationError):
         production_service.compute_production(_pokemon(versatile_skill="Charge Strength M"))
+
+
+def test_production_reports_main_ingredient_at_60(
+    production_service: DefaultProductionService,
+) -> None:
+    result = production_service.compute_production(
+        _pokemon(level=15, ingredients=["Fancy Apple", "Warming Ginger", "Warming Ginger"])
+    )
+    assert result.main_ingredient_at_60 == "Warming Ginger"
+
+
+def test_main_ingredient_at_60_ignores_map_terms(
+    production_service: DefaultProductionService, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    real = services.daily_production
+    calls: list[tuple[int, MapBonuses | None]] = []
+
+    def spy(*args: Any, **kwargs: Any) -> Any:
+        calls.append((args[2], kwargs.get("map_bonuses")))
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(services, "daily_production", spy)
+    plain = production_service.compute_production(_pokemon())
+    calls.clear()
+    on_map = production_service.compute_production(
+        _pokemon(
+            island="Cyan Beach (Expert)",
+            favorite_berries=["Grepa"],
+            main_favorite="Grepa",
+            weekly_bonus="ingredient",
+        )
+    )
+    assert on_map.main_ingredient_at_60 == plain.main_ingredient_at_60
+    (main_call, at_60_call) = calls
+    assert main_call[1] is not None and main_call[1] != MapBonuses()
+    assert at_60_call[0] == 60
+    assert at_60_call[1] is None or at_60_call[1] == MapBonuses()
 
 
 PIKA_INGS = ["Fancy Apple", "Warming Ginger", "Fancy Egg"]

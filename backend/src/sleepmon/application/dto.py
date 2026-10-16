@@ -138,6 +138,8 @@ class MemberProduction:
     skill_help_targets: int | None = None  # members each grant reaches (5: whole team)
     helps_per_day: float = 0.0
     level_up: LevelUpProjection | None = None
+    # The main ingredient with every slot unlocked (level 60): what Comparison matches on.
+    main_ingredient_at_60: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -209,6 +211,8 @@ class ProductionResult:
     skill_candy: float | None = None  # Present: candies per day (any Pokémon's)
     skill_berry_juice: float | None = None  # Berry Juice: juices per day
     skill_energy_drain: float | None = None  # Bad Dreams: energy off each non-Dark teammate
+    # The main ingredient with every slot unlocked (level 60): what Comparison matches on.
+    main_ingredient_at_60: str | None = None
     # Berries obtained from teammates: only for a burster inside a team, else None.
     teammate_berries: list[BerryYieldDTO] | None = None
     # Ingredients obtained from teammates (Extra Helpful): only inside a team, else None.

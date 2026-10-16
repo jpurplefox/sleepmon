@@ -3,7 +3,7 @@
 import type { Lang } from "../i18n";
 
 export type Tool = "compare" | "team_analysis" | "box" | "teams";
-export type AddSource = "new" | "box" | "box_compare" | "clone" | "screenshots";
+export type AddSource = "new" | "box" | "box_compare" | "clone" | "screenshots" | "suggestion";
 export type BoxOrigin = "box" | "compare" | "team_analysis" | "team_save";
 export type SignInReason = "page_gate" | "my_pokemon" | "save_to_box" | "import_screenshots" | "share_link";
 export type ProfileSection = "kitchen" | "recipes" | "areas" | "sleep";

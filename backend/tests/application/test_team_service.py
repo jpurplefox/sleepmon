@@ -459,3 +459,23 @@ def test_category_and_nature_shape_the_cost(service: DefaultTeamService) -> None
     level_up = _only(service).level_up
     assert level_up is not None
     assert (level_up.candies, level_up.dream_shards) == (193, 14935)
+
+
+def test_box_entry_reports_its_main_ingredient_at_level_60(service: DefaultTeamService) -> None:
+    # Level 15 only has Fancy Apple; at 60 the two Warming Ginger slots lead.
+    service.add_member(
+        UID,
+        valid_input(level=15, ingredients=["Fancy Apple", "Warming Ginger", "Warming Ginger"]),
+    )
+    production = _only(service)
+    assert production.main_ingredient_at_60 == "Warming Ginger"
+    assert production.level_up is not None
+    assert production.level_up.at_target.main_ingredient_at_60 is None
+
+
+def test_box_entry_at_60_reuses_its_own_production(service: DefaultTeamService) -> None:
+    service.add_member(
+        UID,
+        valid_input(level=60, ingredients=["Fancy Apple", "Warming Ginger", "Warming Ginger"]),
+    )
+    assert _only(service).main_ingredient_at_60 == "Warming Ginger"

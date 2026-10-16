@@ -102,13 +102,14 @@ little less than shown: the figure always suffices, never falls short.
 ### What the target buys
 
 **At a glance**, beside the span, one gain: the metric that defines the Pokémon, from now
-to the target. The Pokémon's **role** decides it — the same rule Box coverage uses, so a
-Skills specialist that is really a berry or ingredient Pokémon reads as one:
+to the target. The Pokémon's [role](0022-pokemon-role.md) decides it — the same rule Box
+coverage uses, so a Skills specialist that is really a berry or ingredient Pokémon reads as
+one:
 
 - **Strength / day** — a Berries specialist, or a Skills specialist whose main skill adds strength or
   berries (Charge Strength, Berry Burst). An "All" specialist (Darkrai, Mew) reads here too.
-- **Its main ingredient / day** — an Ingredients specialist, or a Skills specialist whose main skill yields
-  ingredients. The main ingredient is the one it produces most at the target, skill
+- **Its main ingredient / day** — an Ingredients specialist, or a Skills specialist with
+  Ingredient Draw (Ingredient Magnet's random ingredients don't count). The main ingredient is the one it produces most at the target, skill
   included. When the span **unlocks an ingredient**, the gain is that **new** ingredient
   and its amount instead: a new slot splits the existing ones, so the main ingredient's own
   figure usually falls even as the Pokémon gains.
@@ -169,7 +170,8 @@ All costs below are for species candies, with no boost.
 - **Span:** the entry reads its current and target level, e.g. **Lv. 15 → 25**.
 - **Gain by role:** a Berries specialist shows its strength gain; a Skills specialist with
   Charge Strength shows its strength gain too; a Skills specialist with Energy for Everyone
-  shows its skill-trigger gain; an Ingredients specialist shows its main ingredient's gain.
+  shows its skill-trigger gain; an Ingredients specialist shows its main ingredient's gain;
+  a Plusle (Skills, Ingredient Magnet) shows its skill-trigger gain.
 - **Gain on an ingredient unlock:** an Ingredients specialist at level 25 targeting 30 shows
   the ingredient that unlocks at 30 with its amount at 30 — not a fall in its main
   ingredient. The phone section and the comparison call it **new**; the desktop row keeps

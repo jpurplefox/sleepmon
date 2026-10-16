@@ -157,8 +157,6 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Sin especialistas en Ingredientes en la caja.",
     // Página Comparación
     "prod.title": "Comparación",
-    "prod.atMax":
-      "Ya hay 5 Pokémon: es el máximo del equipo en el juego. Quitá uno para agregar otro.",
     "prod.emptyLead": "Compará hasta 5 Pokémon lado a lado.",
     "prod.emptyBody":
       "La primera card es la base: el resto muestra la diferencia contra ella. Agregá uno de tu caja o configurá uno nuevo.",
@@ -167,7 +165,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "pager.show": "Ver {name}",
     "pager.add": "Agregar un Pokémon",
     "prod.new": "+ Nuevo",
-    "prod.myPokemon": "+ Mis Pokémon",
+    "prod.myPokemon": "+ Mi caja",
+    "prod.suggestionsLabel": "De tu caja, para comparar",
+    "prod.suggestionAdd": "Agregar {name}, Nv. {level}",
     "prod.addToComparison": "Agregar a la comparación",
     // Compartir (PRD 0020)
     "share.button": "Compartir",
@@ -887,8 +887,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "box.noIngredientSpecialists": "No Ingredient specialists in the box.",
     // Comparison page
     "prod.title": "Comparison",
-    "prod.atMax":
-      "There are already 5 Pokémon: that's the in-game team maximum. Remove one to add another.",
     "prod.emptyLead": "Compare up to 5 Pokémon side by side.",
     "prod.emptyBody":
       "The first card is the base: the rest show the difference against it. Add one from your box or set up a new one.",
@@ -897,7 +895,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "pager.show": "Show {name}",
     "pager.add": "Add a Pokémon",
     "prod.new": "+ New",
-    "prod.myPokemon": "+ My Pokémon",
+    "prod.myPokemon": "+ My box",
+    "prod.suggestionsLabel": "From your box, to compare",
+    "prod.suggestionAdd": "Add {name}, Lv. {level}",
     "prod.addToComparison": "Add to comparison",
     // Sharing (PRD 0020)
     "share.button": "Share",

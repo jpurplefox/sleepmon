@@ -46,6 +46,7 @@ from sleepmon.domain import analytics
 from sleepmon.domain.analytics import team_production
 from sleepmon.domain.berry_burst import BurstMember, team_context_for, teammate_berries
 from sleepmon.domain.catalog_data import (
+    ALL_INGREDIENTS_LEVEL,
     GOOD_CAMP_TICKET_POT_FACTOR,
     ISLAND_EXPERT,
     MAX_FAVORITE_BERRIES,
@@ -87,6 +88,7 @@ from sleepmon.domain.production import (
     DailyProduction,
     SlotProduction,
     daily_production,
+    main_ingredient,
     scale_daily,
 )
 from sleepmon.domain.progress import validate_pot_size
@@ -295,6 +297,11 @@ def _event_bonus(data: TeamProductionInput) -> EventBonus:
     return EventBonus(tuple(effects))
 
 
+def _main_ingredient_name(daily: DailyProduction) -> str | None:
+    main = main_ingredient(daily)
+    return main.value if main else None
+
+
 def _map_bonuses(
     *,
     island: str | None,
@@ -465,30 +472,33 @@ class DefaultTeamService(TeamService):
             return None
         resolved = resolve_versatile(species, member.versatile_skill)
 
-        def at(level: int) -> MemberProduction:
-            return _summarize(
-                daily_production(
-                    resolved,
-                    member.ingredients,
-                    level,
-                    member.nature,
-                    member.sub_skills,
-                    member.ribbon,
-                    member.skill_level,
-                    sleep=sleep,
-                )
+        def daily(level: int) -> DailyProduction:
+            return daily_production(
+                resolved,
+                member.ingredients,
+                level,
+                member.nature,
+                member.sub_skills,
+                member.ribbon,
+                member.skill_level,
+                sleep=sleep,
             )
 
-        now = at(member.level)
+        now_daily = daily(member.level)
+        at_60 = now_daily if member.level == ALL_INGREDIENTS_LEVEL else daily(ALL_INGREDIENTS_LEVEL)
+        now = replace(_summarize(now_daily), main_ingredient_at_60=_main_ingredient_name(at_60))
         target = target_level(member.level, min_target)
         if target is None:
             return now
         cost = level_up_cost(
             member.level, target, curve=species.growth, nature=exp_modifier(member.nature)
         )
+        at_target = at_60 if target == ALL_INGREDIENTS_LEVEL else daily(target)
         return replace(
             now,
-            level_up=LevelUpProjection(target, cost.candies, cost.dream_shards, at(target)),
+            level_up=LevelUpProjection(
+                target, cost.candies, cost.dream_shards, _summarize(at_target)
+            ),
         )
 
     def update_member(self, user_id: UUID, member_id: UUID, data: TeamMemberInput) -> TeamMember:
@@ -540,6 +550,7 @@ class DefaultProductionService(ProductionService):
     def compute_production(self, data: ProductionInput) -> ProductionResult:
         # Stateless: no repo access, so it serves a Box Pokémon and an ad-hoc one alike.
         cfg = _resolve_config(self._catalog, data)
+        sleep = parse_sleep(data.sleep)
         raised = comparison_raise(
             cfg.level,
             data.comparison_level,
@@ -560,9 +571,22 @@ class DefaultProductionService(ProductionService):
                 main_favorite=data.main_favorite,
                 weekly_bonus=data.weekly_bonus,
             ),
-            sleep=parse_sleep(data.sleep),
+            sleep=sleep,
         )
-        production = _production_result(result)
+        # Matched with no map terms, so the base and the Box compare alike.
+        at_60 = daily_production(
+            cfg.species,
+            cfg.ingredients,
+            ALL_INGREDIENTS_LEVEL,
+            cfg.nature,
+            cfg.sub_skills,
+            cfg.ribbon,
+            cfg.skill_level,
+            sleep=sleep,
+        )
+        production = replace(
+            _production_result(result), main_ingredient_at_60=_main_ingredient_name(at_60)
+        )
         if raised is None:
             return production
         return replace(

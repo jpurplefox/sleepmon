@@ -1,5 +1,5 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useSearch } from "wouter";
 
 import { api } from "../api/client";
@@ -15,8 +15,10 @@ import { Modal } from "../components/Modal";
 import { Placeholder } from "../components/Placeholder";
 import { ProductionCard } from "../components/ProductionCard";
 import { ShareDialog } from "../components/ShareDialog";
+import { SuggestionRow } from "../components/SuggestionRow";
 import { SwipePager } from "../components/SwipePager";
 import { ContextBar, ToolHeader } from "../components/ToolHeader";
+import { comparableOf, suggestComparables } from "../comparisonSuggestions";
 import { berryRoleOf, mapRequestFields } from "../comparisonMap";
 import { bakeRaisedLevels } from "../comparisonLevel";
 import { useComparisonSession } from "../comparisonSession";
@@ -33,6 +35,7 @@ import { useSaveToBox } from "../useSaveToBox";
 import { useScreenshotImport } from "../useScreenshotImport";
 import { useStickyData } from "../useStickyData";
 import { useProgress } from "../useProgress";
+import { effectiveSkill } from "../versatile";
 
 // Tope de la comparación: el máximo del equipo en el juego.
 const MAX_COMPARE = 5;
@@ -132,7 +135,44 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
 
   // Miembros de la caja que ya están como card (por su id de origen), para no
   // ofrecer agregarlos dos veces sin querer.
-  const inComparison = new Set(entries.map((e) => e.sourceId).filter(Boolean));
+  const inComparison = useMemo(
+    () => new Set(entries.map((e) => e.sourceId).filter((id): id is string => !!id)),
+    [entries],
+  );
+
+  // PRD 0002: Box Pokémon comparable to the base, signed in with room to add.
+  const speciesByName = useMemo(
+    () => new Map((catalog.data?.species ?? []).map((s) => [s.name, s])),
+    [catalog.data],
+  );
+  const baseEntry = entries[0];
+  const suggestions = useMemo(() => {
+    const baseSpecies = baseEntry && speciesByName.get(baseEntry.config.species);
+    if (atMax || !baseSpecies || !members.data || !baseProduction) return [];
+    const base = comparableOf(
+      baseSpecies,
+      baseEntry.config.versatile_skill,
+      baseProduction.main_ingredient_at_60,
+    );
+    return suggestComparables(
+      base,
+      members.data,
+      (m) => {
+        const s = speciesByName.get(m.species);
+        return s ? comparableOf(s, m.versatile_skill, m.production?.main_ingredient_at_60) : null;
+      },
+      (name) => speciesByName.get(name)?.dex ?? 0,
+      inComparison,
+    );
+  }, [atMax, baseEntry, baseProduction, members.data, speciesByName, inComparison]);
+  const tierBySubSkill = useMemo(
+    () => new Map((catalog.data?.sub_skills ?? []).map((s) => [s.name, s.tier])),
+    [catalog.data],
+  );
+  const natureByName = useMemo(
+    () => new Map((catalog.data?.natures ?? []).map((n) => [n.name, n])),
+    [catalog.data],
+  );
 
   // Swaps two cards without shifting the ones between: ‹ › swap neighbours,
   // "Make base" swaps with the first.
@@ -187,7 +227,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
     );
   };
 
-  const pickMember = (m: Member) => {
+  const pickMember = (m: Member, source: AddSource = "box") => {
     if (!catalog.data) return; // BoxPicker only renders once the catalog is loaded
     const config = configFromMember(catalog.data, m);
     if (!config) {
@@ -198,7 +238,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
       return;
     }
     setNotice(null);
-    recordAdded("box", config.species, entries.length);
+    recordAdded(source, config.species, entries.length);
     setEntries((prev) => (prev.length >= MAX_COMPARE ? prev : [...prev, newEntry(config, m.id)]));
     setModal(null);
     setEditIndex(null);
@@ -371,7 +411,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
                 icon: <span className="swipe-pager__sprites">{dex ? <img src={spriteUrl(dex)} alt="" /> : null}</span>,
               };
             }),
-            { key: "add", label: t("pager.add"), icon: <span aria-hidden="true">+</span> },
+            ...(atMax ? [] : [{ key: "add", label: t("pager.add"), icon: <span aria-hidden="true">+</span> }]),
           ]}
         />
 
@@ -404,45 +444,55 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
             />
           ))}
 
-          {/* El slot de "agregar" vive siempre en la grilla: cuando se llega al
-              tope muestra el límite ahí mismo, donde el usuario busca el botón, en
-              vez de un párrafo suelto arriba. */}
-          <div className="prod-card-cell">
-            {/* Placeholder de la barra de acciones: reserva su alto para que el
-                cuerpo de esta card quede alineado con las demás. */}
-            <div className="prod-card__toolbar prod-card__toolbar--empty" aria-hidden="true" />
-            <article className="prod-card prod-card--add">
-              {atMax ? (
-                <p className="muted prod-add__hint">{t("prod.atMax")}</p>
-              ) : (
-                <>
-                  {entries.length === 0 ? (
-                    <div className="prod-add__hint">
-                      <p className="prod-add__lead">{t("prod.emptyLead")}</p>
-                      <p className="muted">{t("prod.emptyBody")}</p>
-                    </div>
-                  ) : (
-                    <p className="muted prod-add__hint">{t("prod.addHintMore")}</p>
-                  )}
-                  <div className="prod-add__actions">
-                    <button type="button" className="btn btn--primary" onClick={() => openAdd("form")}>
-                      {t("prod.new")}
-                    </button>
-                    <button type="button" className="btn btn--ghost" onClick={shots.start}>
-                      {t("import.button")}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn--ghost"
-                      onClick={() => guard(() => openAdd("box"), "my_pokemon")}
-                    >
-                      {t("prod.myPokemon")}
-                    </button>
+          {/* The add card lives in the grid while there is room; at 5 it is gone. */}
+          {!atMax && (
+            <div className="prod-card-cell">
+              {/* No toolbar placeholder: the card spans the whole cell, as tall as a card plus its toolbar. */}
+              <article className="prod-card prod-card--add">
+                {entries.length === 0 ? (
+                  <div className="prod-add__hint">
+                    <p className="prod-add__lead">{t("prod.emptyLead")}</p>
+                    <p className="muted">{t("prod.emptyBody")}</p>
                   </div>
-                </>
-              )}
-            </article>
-          </div>
+                ) : suggestions.length > 0 ? (
+                  <>
+                    <div className="prod-add__suggestions">
+                      <p className="prod-add__suggestions-label">{t("prod.suggestionsLabel")}</p>
+                      {suggestions.map((m) => (
+                        <SuggestionRow
+                          key={m.id}
+                          member={m}
+                          dex={speciesByName.get(m.species)?.dex ?? 0}
+                          mainSkillName={effectiveSkill(speciesByName.get(m.species)?.main_skill, m.versatile_skill)}
+                          natureMeta={natureByName.get(m.nature)}
+                          tierBySubSkill={(name) => tierBySubSkill.get(name)}
+                          onPick={(picked) => pickMember(picked, "suggestion")}
+                        />
+                      ))}
+                    </div>
+                    <hr className="prod-add__sep" />
+                  </>
+                ) : (
+                  <p className="muted prod-add__hint">{t("prod.addHintMore")}</p>
+                )}
+                <div className="prod-add__actions">
+                  <button type="button" className="btn btn--primary" onClick={() => openAdd("form")}>
+                    {t("prod.new")}
+                  </button>
+                  <button type="button" className="btn btn--ghost" onClick={shots.start}>
+                    {t("import.button")}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={() => guard(() => openAdd("box"), "my_pokemon")}
+                  >
+                    {t("prod.myPokemon")}
+                  </button>
+                </div>
+              </article>
+            </div>
+          )}
         </div>
       </div>
 
