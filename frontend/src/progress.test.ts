@@ -21,6 +21,7 @@ const saved: PlayerProgress = {
   favorite_recipes: { Curry: "Beanburger Curry" },
   area_bonuses: { "Cyan Beach": 42 },
   sleep: { night_minutes: 510, nap_minutes: null },
+  min_target_level: null,
 };
 
 describe("effective", () => {
@@ -275,4 +276,12 @@ describe("sleep in the profile draft", () => {
     expect(next.sleep).toEqual({ night_minutes: 390, nap_minutes: 120 });
     expect(next.pot_size).toBe(withSleep.pot_size);
   });
+});
+
+it("diffs and applies the minimum target level (0 clears)", () => {
+  const saved = { ...EMPTY_PROGRESS, min_target_level: 60 };
+  expect(diffProgress(saved, { ...saved, min_target_level: null })).toEqual({ min_target_level: 0 });
+  expect(diffProgress(EMPTY_PROGRESS, { ...EMPTY_PROGRESS, min_target_level: 30 })).toEqual({ min_target_level: 30 });
+  expect(applyProgressPatch(saved, { min_target_level: 0 }).min_target_level).toBeNull();
+  expect(applyProgressPatch(EMPTY_PROGRESS, { min_target_level: 25 }).min_target_level).toBe(25);
 });

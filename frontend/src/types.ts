@@ -138,6 +138,18 @@ export interface MemberProduction {
   skill_tasty_chance: number | null;
   skill_extra_helpful: number | null;
   skill_random_energy: number | null;
+  // Helps per day (Box members); optional so older payloads and fixtures stay valid.
+  helps_per_day?: number;
+  // The cost and result of levelling to the minimum target level; null when not applicable.
+  level_up?: LevelUp | null;
+}
+
+// Level-up cost to reach a target level, with the production at that level.
+export interface LevelUp {
+  target_level: number;
+  candies: number;
+  dream_shards: number;
+  at_target: MemberProduction;
 }
 
 export interface Member {
@@ -446,6 +458,8 @@ export interface PlayerProgress {
   /** Keyed by area name, in percentage points (0–85). */
   area_bonuses: Record<string, number>;
   sleep: SleepSchedule;
+  /** Minimum target level for level-up estimates; null = none set. */
+  min_target_level: number | null;
 }
 
 /** A sparse change. An absent field is untouched; inside a mapping, a default removes. */
@@ -455,6 +469,8 @@ export interface ProgressPatch {
   favorite_recipes?: Record<string, string | null>;
   area_bonuses?: Record<string, number>;
   sleep?: SleepSchedule;
+  /** 0 clears. */
+  min_target_level?: number;
 }
 
 // A saved team (PRD 0016): a named line-up of Box members plus the map and meals.

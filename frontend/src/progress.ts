@@ -14,6 +14,7 @@ export const EMPTY_PROGRESS: PlayerProgress = {
   favorite_recipes: {},
   area_bonuses: {},
   sleep: DEFAULT_SLEEP,
+  min_target_level: null,
 };
 
 /** The value to show: the session's override, else what is saved, else the default. */
@@ -126,6 +127,10 @@ export function applyProgressPatch(
 
   if (patch.sleep !== undefined) next.sleep = patch.sleep;
 
+  if (patch.min_target_level !== undefined)
+    next.min_target_level =
+      patch.min_target_level === 0 ? null : patch.min_target_level;
+
   return next;
 }
 
@@ -177,6 +182,10 @@ export function diffProgress(
   if (Object.keys(areaBonuses).length > 0) patch.area_bonuses = areaBonuses;
 
   if (!sameSleep(saved.sleep, draft.sleep)) patch.sleep = draft.sleep;
+
+  const beforeMin = saved.min_target_level ?? null;
+  const afterMin = draft.min_target_level ?? null;
+  if (beforeMin !== afterMin) patch.min_target_level = afterMin ?? 0;
 
   return patch;
 }

@@ -76,6 +76,7 @@ function makeProgress(overrides: Partial<PlayerProgress> = {}): PlayerProgress {
     favorite_recipes: {},
     area_bonuses: {},
     sleep: { night_minutes: 510, nap_minutes: null },
+    min_target_level: null,
     ...overrides,
   };
 }
