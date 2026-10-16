@@ -3932,8 +3932,11 @@ button.prod-card__base-tag--action {
 .icon-row.prod-card__subskills {
   flex-wrap: nowrap;
 }
-/* Each icon sits in its tooltip's wrapper: that's the flex item that shrinks. */
-.prod-card__subskills > .tooltip {
+/* Each icon sits in its tooltip's wrapper: that's the flex item that shrinks. An
+   empty slot has no tooltip, so the placeholder itself is that flex item, at the
+   same 36px basis (without this its width: 100% takes the whole row). */
+.prod-card__subskills > .tooltip,
+.prod-card__subskills > .ss-icon--empty {
   flex: 0 1 36px;
   min-width: 0;
 }
