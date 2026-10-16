@@ -65,7 +65,7 @@ def test_invalid_samesite_is_rejected(monkeypatch) -> None:
         Settings.from_env()
 
 
-def test_screenshot_settings_default_to_haiku_in_us_east_1(monkeypatch) -> None:
+def test_screenshot_settings_default_to_qwen_in_us_east_1(monkeypatch) -> None:
     names = (
         "SCREENSHOT_TRIAGE_MODEL", "SCREENSHOT_MODEL", "SCREENSHOT_MODEL_OTHER_LANGUAGES",
         "BEDROCK_REGION", "SCREENSHOT_DAILY_LIMIT",
@@ -75,9 +75,9 @@ def test_screenshot_settings_default_to_haiku_in_us_east_1(monkeypatch) -> None:
     # The Lambda's own region doesn't move Bedrock.
     monkeypatch.setenv("AWS_REGION", "sa-east-1")
     s = Settings.from_env()
-    assert s.screenshot_triage_model == "us.anthropic.claude-haiku-4-5-20251001-v1:0"
-    assert s.screenshot_model == "us.anthropic.claude-haiku-4-5-20251001-v1:0"
-    assert s.screenshot_model_other_languages == "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+    assert s.screenshot_triage_model == "qwen.qwen3-vl-235b-a22b"
+    assert s.screenshot_model == "qwen.qwen3-vl-235b-a22b"
+    assert s.screenshot_model_other_languages == "qwen.qwen3-vl-235b-a22b"
     assert s.bedrock_region == "us-east-1"
     assert s.screenshot_daily_limit == 50
     monkeypatch.setenv("BEDROCK_REGION", "us-west-2")

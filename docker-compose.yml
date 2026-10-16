@@ -31,9 +31,9 @@ services:
       # Screenshot import (PRD 0019): a Bedrock bearer token to try it locally; empty = 503.
       AWS_BEARER_TOKEN_BEDROCK: ${AWS_BEARER_TOKEN_BEDROCK:-}
       BEDROCK_REGION: ${BEDROCK_REGION:-us-east-1}
-      SCREENSHOT_TRIAGE_MODEL: ${SCREENSHOT_TRIAGE_MODEL:-us.anthropic.claude-haiku-4-5-20251001-v1:0}
-      SCREENSHOT_MODEL: ${SCREENSHOT_MODEL:-us.anthropic.claude-haiku-4-5-20251001-v1:0}
-      SCREENSHOT_MODEL_OTHER_LANGUAGES: ${SCREENSHOT_MODEL_OTHER_LANGUAGES:-us.anthropic.claude-haiku-4-5-20251001-v1:0}
+      SCREENSHOT_TRIAGE_MODEL: ${SCREENSHOT_TRIAGE_MODEL:-qwen.qwen3-vl-235b-a22b}
+      SCREENSHOT_MODEL: ${SCREENSHOT_MODEL:-qwen.qwen3-vl-235b-a22b}
+      SCREENSHOT_MODEL_OTHER_LANGUAGES: ${SCREENSHOT_MODEL_OTHER_LANGUAGES:-qwen.qwen3-vl-235b-a22b}
       SCREENSHOT_DAILY_LIMIT: ${SCREENSHOT_DAILY_LIMIT:-50}
       # Human check for signed-out share links (ADR-0012). Default is Cloudflare's
       # always-pass test secret, for local dev only; empty = signed-out links refused.
