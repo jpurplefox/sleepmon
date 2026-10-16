@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { carryIngredients, devolvedSkillLevel, evolvedSkillLevel, ingredientsAfterChange } from "../evolution";
 import { useI18n } from "../i18n";
 import { unreadAfterChange } from "../screenshotImport";
+import { seedSubSkills } from "../subskills";
 import type { Catalog, ImportField, ImportedForm, MemberInput } from "../types";
 import { VERSATILE, effectiveSkill } from "../versatile";
 import { EvolveControl } from "./EvolveControl";
@@ -156,6 +157,8 @@ export function MemberForm({
     setSkillLevel(devolvedSkillLevel);
   }
 
+  const seed = seedSubSkills(subSkills);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const chosen = effectiveSkill(selectedSpecies?.main_skill, versatileSkill);
@@ -244,6 +247,17 @@ export function MemberForm({
           onChange={setSubSkills}
           ariaLabel={t("form.subSkills")}
         />
+        <div className="subskill-seed">
+          <button
+            type="button"
+            className="level-chip"
+            onClick={() => setSubSkills(seed.slots)}
+            disabled={seed.seeds === 0}
+            title={t("form.seedSubSkillsHint")}
+          >
+            {t("form.seedSubSkills")}
+          </button>
+        </div>
       </fieldset>
 
       <fieldset>

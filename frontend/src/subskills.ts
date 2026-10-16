@@ -5,3 +5,38 @@
 export function subSkillIcon(name: string): string {
   return `/subskill/${name.toLowerCase().replace(/\s+/g, "-")}.svg`;
 }
+
+// Sub skills a seed can raise, lowest tier first. Every other sub skill has no tiers.
+const SEED_FAMILIES: readonly (readonly string[])[] = [
+  ["Helping Speed S", "Helping Speed M"],
+  ["Ingredient Finder S", "Ingredient Finder M"],
+  ["Skill Trigger S", "Skill Trigger M"],
+  ["Skill Level Up S", "Skill Level Up M"],
+  ["Inventory Up S", "Inventory Up M", "Inventory Up L"],
+];
+
+export interface SeedResult {
+  slots: string[];
+  /** Tiers raised in total: one seed each. 0 = nothing to seed. */
+  seeds: number;
+}
+
+// Seeds every slot in unlock order: each tiered sub skill goes to the highest tier no
+// other slot holds, never below its own. Empty slots ("") are kept in place.
+export function seedSubSkills(slots: readonly string[]): SeedResult {
+  const next = [...slots];
+  let seeds = 0;
+  next.forEach((name, i) => {
+    const family = SEED_FAMILIES.find((f) => f.includes(name));
+    if (!family) return;
+    const own = family.indexOf(name);
+    for (let tier = family.length - 1; tier > own; tier--) {
+      if (!next.includes(family[tier])) {
+        next[i] = family[tier];
+        seeds += tier - own;
+        return;
+      }
+    }
+  });
+  return { slots: next, seeds };
+}
