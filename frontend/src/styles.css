@@ -614,12 +614,13 @@ button.shot--empty:focus-visible,
   object-fit: contain;
 }
 
-/* Slot de sub skill vacío (no cargado): cuadrado tenue, mismo tamaño que un
-   ss-icon, para que la fila quede alineada entre Pokémon. */
+/* Unloaded sub skill slot: the inert empty-slot language (dashed --divider), same
+   size as a filled tile so rows stay aligned on any surface. */
 .ss-icon--empty {
-  border-color: var(--border);
+  --tier: var(--divider);
+  border-color: var(--divider);
+  border-style: dashed;
   background: transparent;
-  opacity: 0.4;
 }
 
 .ss-icon--gold {
@@ -632,12 +633,6 @@ button.shot--empty:focus-visible,
 
 .ss-icon--regular {
   --tier: var(--muted);
-}
-
-.ss-icon--empty {
-  --tier: var(--border);
-  border-style: dashed;
-  opacity: 0.6;
 }
 
 .ss-icon.is-locked {
