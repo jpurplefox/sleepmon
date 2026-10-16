@@ -7,7 +7,7 @@ import { useI18n } from "../../i18n";
 import { ROUTES } from "../../routes";
 import { shotUrl } from "./content";
 
-const FACTS = ["landing.fact.noAccount", "landing.fact.sleep", "landing.fact.languages"];
+const FACTS = ["landing.fact.compare", "landing.fact.teams", "landing.fact.screenshot", "landing.fact.candies"];
 
 /** Pitch, the two ways in, and three Comparison cards fanned like a hand. */
 export function LandingHero() {
