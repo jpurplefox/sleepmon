@@ -1,13 +1,13 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Fragment, StrictMode } from "react";
+import { Fragment, StrictMode, useEffect } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 
 import { api, ApiError } from "../api/client";
-import { ComparisonSessionProvider } from "../comparisonSession";
+import { ComparisonSessionProvider, useComparisonSession } from "../comparisonSession";
 import { __resetShareCacheForTests } from "../comparisonShare";
 import { LanguageProvider } from "../i18n";
 import { recordEvents } from "../telemetry/testing";
@@ -633,5 +633,61 @@ describe("Sharing the comparison", () => {
     await openDialog();
     const sheet = document.querySelector(".share-sheet") as HTMLElement;
     expect(within(sheet).getByText("Sleep: two sessions (night 7:00 and nap 2:00)")).toBeInTheDocument();
+  });
+});
+
+describe("Comparison level and sharing", () => {
+  const created = { ...share, id: "new", url: "https://sleepmon.app/s/new" };
+  // Raised when below the level, as the backend does.
+  const raising = (input: { level: number; comparison_level?: number | null }) =>
+    Promise.resolve(
+      input.comparison_level && input.level < input.comparison_level
+        ? { ...production, comparison_raise: { from_level: input.level, to_level: input.comparison_level, candies: 1, dream_shards: 2 } }
+        : { ...production, comparison_raise: null },
+    );
+
+  it("opening a link turns the level off", async () => {
+    // The session held level 60 before the link opened.
+    function SeedLevel({ children }: { children: React.ReactNode }) {
+      const { setComparisonLevel } = useComparisonSession();
+      useEffect(() => setComparisonLevel(60), [setComparisonLevel]);
+      return <>{children}</>;
+    }
+    vi.spyOn(api, "getComparisonShare").mockResolvedValue(share);
+    const location = memoryLocation({ path: "/compare?share=abc123def456", record: true });
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <LanguageProvider>
+          <ComparisonSessionProvider>
+            <SeedLevel>
+              <Router hook={location.hook} searchHook={location.searchHook}>
+                <Production />
+              </Router>
+            </SeedLevel>
+          </ComparisonSessionProvider>
+        </LanguageProvider>
+      </QueryClientProvider>,
+    );
+    await waitFor(() => expect(screen.getAllByText("Raichu").length).toBeGreaterThan(0));
+    expect(screen.getByRole("radio", { name: "No comparison level" })).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("shares raised cards at their target level, with a new link for a new level", async () => {
+    vi.spyOn(api, "computeProduction").mockImplementation(raising as never);
+    const create = vi.spyOn(api, "createComparisonShare").mockResolvedValue(created);
+    vi.spyOn(api, "getComparisonShare").mockResolvedValue(share);
+    renderAt("/compare?share=abc123def456"); // Pikachu 30, Raichu 40
+    await userEvent.click(await screen.findByRole("radio", { name: "Level 60" }));
+
+    const button = (await screen.findAllByRole("button", { name: "Share" }))[0];
+    await waitFor(() => expect(button).toBeEnabled());
+    await userEvent.click(button);
+    await waitFor(() => expect(create).toHaveBeenCalled());
+
+    const sent = create.mock.calls[0][0];
+    expect(sent.members.map((m) => m.level)).toEqual([60, 60]);
+    const sheet = document.querySelector(".share-sheet") as HTMLElement;
+    expect(within(sheet).getAllByText("Lv. 60")).toHaveLength(2);
+    expect(sheet.querySelector(".raised-lv")).toBeNull();
   });
 });

@@ -194,3 +194,44 @@ describe("Comparison analytics", () => {
     expect(rec.events.filter((e) => e.name === "compare_limit_reached")).toHaveLength(1);
   });
 });
+
+describe("Comparison level", () => {
+  it("sends the level with every card and records it; save keeps the real level", async () => {
+    const rec = recordEvents();
+    // Signed in: the cards only compute once the profile's sleep schedule is known.
+    vi.spyOn(api, "getProgress").mockResolvedValue({ sleep: { night_minutes: 510, nap_minutes: null } } as never);
+    const compute = vi.spyOn(api, "computeProduction").mockReturnValue(new Promise(() => {}));
+    const user = userEvent.setup();
+    renderCompare();
+    await user.click(await screen.findByRole("button", { name: "+ New" }));
+    await user.click(screen.getByRole("button", { name: "submit-form" }));
+
+    await user.click(await screen.findByRole("radio", { name: "Level 60" }));
+
+    await waitFor(() =>
+      expect(compute).toHaveBeenLastCalledWith(expect.objectContaining({ level: 30, comparison_level: 60 })),
+    );
+    expect(rec.events).toContainEqual({ name: "comparison_level_set", props: { level: "60" } });
+    rec.restore();
+  });
+
+  it("keeps the level when Compare brings a Box Pokémon", async () => {
+    function SeedLevel({ children }: { children: React.ReactNode }) {
+      const { setComparisonLevel } = useComparisonSession();
+      useEffect(() => setComparisonLevel(50), [setComparisonLevel]);
+      return <>{children}</>;
+    }
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <LanguageProvider>
+          <ComparisonSessionProvider>
+            <SeedLevel>
+              <Production baseMemberId="m-raichu" onBaseConsumed={() => {}} />
+            </SeedLevel>
+          </ComparisonSessionProvider>
+        </LanguageProvider>
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByRole("radio", { name: "Level 50" })).toHaveAttribute("aria-checked", "true");
+  });
+});
