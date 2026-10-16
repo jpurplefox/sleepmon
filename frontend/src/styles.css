@@ -3053,6 +3053,11 @@ button.shot--empty:focus-visible,
   width: 100%;
 }
 
+/* The card's gap already spaces the buttons from what's above them. */
+.prod-add__actions .btn:first-child {
+  margin-top: 0;
+}
+
 /* Suggestions in the add card (PRD 0002): label, up to three rows, a hairline. */
 .prod-add__suggestions {
   display: flex;
