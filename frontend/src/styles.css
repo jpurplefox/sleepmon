@@ -8064,25 +8064,27 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 .landing-tile__go { color: var(--accent-text); font-weight: 600; text-decoration: none; margin-top: 0.3rem; }
 .landing-account { display: inline-flex; gap: 0.3rem; align-items: center; font-size: 0.7rem; font-weight: 600; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px; background: var(--bg); }
 .landing-account svg { width: 11px; height: 11px; }
-.landing-tile--catch { grid-column: span 4; }
-.landing-tile--catch .landing-tile__copy { max-width: 38%; }
+/* Full width: screenshots, then the card they become beside a Box rival. */
+.landing-tile--catch { grid-column: span 6; min-height: 480px; }
+.landing-tile--catch .landing-tile__copy { max-width: 30%; }
 /* Two game screenshots, an arrow, and the card they become. */
-.landing-shot--game-1 { width: 104px; right: 300px; top: 110px; transform: rotate(-7deg); border-radius: 12px; }
-.landing-shot--game-2 { width: 104px; right: 240px; top: 154px; transform: rotate(5deg); border-radius: 12px; }
-.landing-shot--import-card { width: 190px; right: 24px; top: 64px; z-index: 1; }
-.landing-tile__arrow { position: absolute; right: 198px; top: 250px; z-index: 2; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--accent-strong); color: #fff; font-size: 1.2rem; font-weight: 700; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
+.landing-shot--game-1 { width: 112px; right: calc(46% + 110px); top: 70px; transform: rotate(-7deg); border-radius: 12px; }
+.landing-shot--game-2 { width: 112px; right: calc(46% + 44px); top: 116px; transform: rotate(5deg); border-radius: 12px; }
+.landing-shot--import-compare { width: 43%; right: 2.5%; top: 28px; z-index: 1; }
+.landing-tile__arrow { position: absolute; right: calc(46% - 4px); top: 220px; z-index: 2; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--accent-strong); color: #fff; font-size: 1.2rem; font-weight: 700; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
 .landing-tile--share { grid-column: span 2; background: linear-gradient(165deg, #2a2f6d 0%, var(--surface) 62%); }
 /* Below the copy, whole: its link row at the bottom is the point. */
 .landing-shot--share-dialog { width: 280px; left: 50%; top: 152px; transform: translateX(-50%) rotate(-3deg); }
-.landing-tile--plan { grid-column: span 3; min-height: 540px; }
-.landing-shot--team-card-1, .landing-shot--team-card-2, .landing-shot--team-card-3 { width: 150px; top: 200px; }
-.landing-shot--team-card-1 { left: 6%; transform: rotate(-7deg); }
-.landing-shot--team-card-2 { left: 50%; transform: translateX(-50%); top: 188px; z-index: 1; }
-.landing-shot--team-card-3 { right: 6%; transform: rotate(7deg); }
+.landing-tile--plan { grid-column: span 4; min-height: 540px; }
+.landing-shot--team-card-1, .landing-shot--team-card-2, .landing-shot--team-card-3 { width: 160px; top: 138px; }
+.landing-shot--team-card-1 { left: 12%; transform: rotate(-7deg); }
+.landing-shot--team-card-2 { left: 50%; transform: translateX(-50%); top: 126px; z-index: 1; }
+.landing-shot--team-card-3 { right: 12%; transform: rotate(7deg); }
 .landing-shot--team-totals { left: 1.2rem; right: 1.2rem; width: calc(100% - 2.4rem); bottom: 1.2rem; z-index: 3; border-radius: 12px; }
-.landing-tile--levelup { grid-column: span 3; min-height: 540px; background: linear-gradient(200deg, rgba(94, 230, 196, 0.1), var(--surface) 55%); }
-.landing-shot--box-entry { width: 210%; right: -6%; bottom: 36px; border-radius: 14px; }
-.landing-shot--levelup-tip { width: 340px; right: 10%; top: 215px; transform: rotate(3deg); z-index: 2; border-radius: 10px; }
+/* Full width, so the Box row reads whole. */
+.landing-tile--levelup { grid-column: span 6; min-height: 400px; background: linear-gradient(200deg, rgba(94, 230, 196, 0.1), var(--surface) 55%); }
+.landing-shot--box-entry { width: calc(100% - 3.2rem); left: 1.6rem; bottom: 1.6rem; border-radius: 14px; }
+.landing-shot--levelup-tip { width: 340px; right: 4%; top: 40px; transform: rotate(3deg); z-index: 2; border-radius: 10px; }
 
 /* FAQ */
 .landing-faq { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 2.5rem; padding: 1rem 0 3.5rem; scroll-margin-top: calc(var(--appbar-h) + 1rem); }
@@ -8107,16 +8109,17 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   .landing-fan__center { width: 172px !important; }
   .landing-bento { grid-template-columns: minmax(0, 1fr); padding-bottom: 2rem; }
   .landing-tile--catch, .landing-tile--share, .landing-tile--plan, .landing-tile--levelup { grid-column: auto; }
-  .landing-tile--catch { min-height: 560px; }
+  .landing-tile--catch { min-height: 850px; }
   .landing-tile--catch .landing-tile__copy { max-width: none; }
-  .landing-shot--game-1 { top: auto; bottom: 110px; right: auto; left: 3%; width: 80px; }
-  .landing-shot--game-2 { top: auto; bottom: 56px; right: auto; left: 19%; width: 80px; }
-  .landing-shot--import-card { top: auto; bottom: 16px; right: 4%; width: 140px; }
-  .landing-tile__arrow { top: auto; bottom: 160px; right: calc(4% + 146px); }
+  .landing-shot--game-1 { top: 300px; right: auto; left: 18%; width: 84px; }
+  .landing-shot--game-2 { top: 320px; right: auto; left: 42%; width: 84px; }
+  .landing-shot--import-compare { top: auto; bottom: 16px; right: 4%; width: 92%; }
+  .landing-tile__arrow { top: auto; bottom: 318px; right: 46%; transform: rotate(90deg); }
   .landing-tile--share { min-height: 540px; }
   .landing-shot--share-dialog { width: 290px; top: 170px; }
   .landing-shot--team-card-1, .landing-shot--team-card-2, .landing-shot--team-card-3 { width: 110px; }
-  .landing-shot--box-entry { width: 260%; right: -4%; }
+  .landing-tile--levelup { min-height: 520px; }
+  .landing-shot--box-entry { width: 260%; left: auto; right: -4%; }
   .landing-shot--levelup-tip { width: 270px; right: 4%; top: 230px; }
   .landing-faq { grid-template-columns: minmax(0, 1fr); gap: 1rem; padding-bottom: 2.5rem; }
 }

@@ -740,7 +740,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.case.catch.title": "Atrapaste uno nuevo. ¿Vale la pena?",
     "landing.case.catch.body":
       "Cargalo desde una captura del juego y comparalo en un toque con los de tu caja que más se le parecen.",
-    "landing.case.catch.alt": "Una card de Comparación armada a partir de dos capturas del juego",
+    "landing.case.catch.alt": "Un Pokémon cargado desde dos capturas del juego, comparado con uno de tu caja",
     "landing.case.share.title": "Compartí con un link",
     "landing.case.share.body": "Tu amigo abre la misma comparación y la puede editar.",
     "landing.case.share.alt": "El diálogo para compartir una comparación",
@@ -1532,7 +1532,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.case.catch.title": "Caught a new one. Is it worth it?",
     "landing.case.catch.body":
       "Load it from a game screenshot and compare it in one tap with the most similar ones in your box.",
-    "landing.case.catch.alt": "A Comparison card built from two game screenshots",
+    "landing.case.catch.alt": "A Pokémon loaded from two game screenshots, compared with one from your box",
     "landing.case.share.title": "Share it with a link",
     "landing.case.share.body": "Your friend opens the same comparison and can edit it.",
     "landing.case.share.alt": "The dialog to share a comparison",

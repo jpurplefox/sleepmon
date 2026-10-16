@@ -30,6 +30,8 @@ const BOX = [
   ["Charizard", 52, "Quiet", ["Bean Sausage", "Warming Ginger", "Fiery Herb"], ["Ingredient Finder M", "Helping Speed M", "Inventory Up L", "Ingredient Finder S"], 3],
   ["Pikachu", 38, "Brave", ["Fancy Apple", "Warming Ginger", "Fancy Egg"], ["Berry Finding S", "Helping Speed M", "Skill Trigger S"], 3],
   ["Arcanine", 30, "Brave", ["Fiery Herb", "Bean Sausage", "Fiery Herb"], ["Skill Trigger M", "Ingredient Finder S"], 3],
+  // The Box rival the imported Tyrunt is compared with (Charge Strength files it with Sitrus berries).
+  ["Sudowoodo", 60, "Brave", ["Snoozy Tomato", "Greengrass Soybeans", "Tasty Mushroom"], ["Berry Finding S", "Skill Trigger M", "Helping Speed M", "Helping Bonus", "Skill Level Up M"], 7, "1000h"],
   // The hero's comparison: Venusaur as base, the two Honey rivals beside it.
   ["Venusaur", 62, "Modest", ["Honey", "Honey", "Honey"], ["Research EXP Bonus", "Dream Shard Bonus", "Ingredient Finder M", "Ingredient Finder S", "Inventory Up L"], 3, "500h"],
   ["Pinsir", 60, "Serious", ["Honey", "Honey", "Honey"], ["Inventory Up S", "Ingredient Finder M", "Skill Level Up M", "Helping Bonus", "Skill Level Up S"], 1],
@@ -113,10 +115,18 @@ async function capture(browser, dir, lang) {
     await page.getByRole("button", { name: /Leer imágenes|Read screenshots/ }).click();
     await page.locator(".form-summary").waitFor();
     await page.getByRole("button", { name: /Agregar a la comparación|Add to comparison/ }).click();
-    const card = page.locator(".prod-cards .prod-card:not(.prod-card--add)").first();
-    await card.waitFor();
+    const cards = page.locator(".prod-cards .prod-card:not(.prod-card--add)");
+    await cards.first().waitFor();
+    // One tap on the suggestion puts the Box rival beside it.
+    await page.locator(".sug-row", { hasText: "Sudowoodo" }).click();
+    await cards.nth(1).waitFor();
     await page.waitForTimeout(1500);
-    await shot(card, "import-card");
+    const a = await cards.nth(0).boundingBox();
+    const b = await cards.nth(1).boundingBox();
+    await page.screenshot({
+      path: join(dir, "import-compare.jpg"), ...JPEG,
+      clip: { x: a.x, y: Math.min(a.y, b.y), width: b.x + b.width - a.x, height: Math.max(a.y + a.height, b.y + b.height) - Math.min(a.y, b.y) },
+    });
   });
 
   await scene(browser, lang, async (page) => {

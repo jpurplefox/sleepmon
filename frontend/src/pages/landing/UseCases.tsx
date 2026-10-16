@@ -6,7 +6,7 @@ import { USE_CASES, shotUrl, type ShotName, type UseCaseId } from "./content";
 
 // Each tile's captures: the first carries the case's alt text, the rest are decoration.
 const SHOTS: Record<UseCaseId, readonly ShotName[]> = {
-  catch: ["import-card", "game-1", "game-2"],
+  catch: ["import-compare", "game-1", "game-2"],
   share: ["share-dialog"],
   plan: ["team-totals", "team-card-1", "team-card-2", "team-card-3"],
   levelup: ["levelup-tip", "box-entry"],
