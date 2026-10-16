@@ -606,6 +606,7 @@ button.shot--empty:focus-visible,
 @keyframes ss-flash {
   0%,
   15% {
+    filter: none; /* keep the peak at full brightness on locked slots */
     border-color: #fff;
     background: color-mix(in srgb, #fff 45%, var(--surface));
     box-shadow:
