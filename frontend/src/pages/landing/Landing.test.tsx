@@ -33,7 +33,7 @@ beforeEach(() => {
 describe("Landing", () => {
   it("leads to Comparison and offers sign-in when signed out", () => {
     renderLanding();
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("The number you want, when you need it.");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Compare your Pokémon in Pokémon Sleep and see what each one produces.");
     expect(screen.getByRole("link", { name: "Start comparing" })).toHaveAttribute("href", "/compare");
     expect(screen.getByRole("button", { name: "Sign in (landing)" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Go to my box" })).not.toBeInTheDocument();
@@ -73,9 +73,9 @@ describe("Landing", () => {
 
   it("speaks Spanish and shows the Spanish captures", () => {
     renderLanding("es");
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("El número que querés, cuando lo necesitás.");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Compará tus Pokémon de Pokémon Sleep y mirá qué produce cada uno.");
     expect(screen.getByText("¿Cómo se tiene en cuenta la energía?")).toBeInTheDocument();
     expect(screen.getByAltText("El diálogo para compartir una comparación")).toHaveAttribute("src", "/landing/es/share-dialog.jpg");
-    expect(document.title).toBe("sleepmon — El número que querés, cuando lo necesitás");
+    expect(document.title).toBe("sleepmon — Compará tus Pokémon de Pokémon Sleep");
   });
 });

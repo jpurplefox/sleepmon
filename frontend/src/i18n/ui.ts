@@ -718,12 +718,12 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Entrá a {link} (menú de la cuenta → Cuenta y privacidad) y elegí Borrar mi cuenta: se borra todo al instante.",
     "privacy.deleteMail": "También podés pedirlo por email a {email}.",
     "footer.faq": "Preguntas frecuentes",
-    "landing.meta.title": "sleepmon — El número que querés, cuando lo necesitás",
+    "landing.meta.title": "sleepmon — Compará tus Pokémon de Pokémon Sleep",
     "landing.meta.description":
       "Más que una calculadora para Pokémon Sleep: compará Pokémon, mirá qué sube y qué baja, planificá la semana y sabé cuánto cuesta subirlos.",
     "landing.eyebrow": "Para Pokémon Sleep",
-    "landing.title.lead": "El número que querés,",
-    "landing.title.accent": "cuando lo necesitás.",
+    "landing.title.lead": "Compará tus Pokémon de Pokémon Sleep",
+    "landing.title.accent": "y mirá qué produce cada uno.",
     "landing.lead":
       "Más que una calculadora: sleepmon pone lado a lado lo que produce cada Pokémon y marca qué sube y qué baja, para que lo entiendas de un vistazo y decidas.",
     "landing.cta.compare": "Empezar a comparar",
@@ -1512,12 +1512,12 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Open {link} (account menu → Account & privacy) and choose Delete my account: everything is deleted at once.",
     "privacy.deleteMail": "You can also ask by email at {email}.",
     "footer.faq": "Frequently asked questions",
-    "landing.meta.title": "sleepmon — The number you want, when you need it",
+    "landing.meta.title": "sleepmon — Compare your Pokémon in Pokémon Sleep",
     "landing.meta.description":
       "More than a calculator for Pokémon Sleep: compare Pokémon, see what goes up and what goes down, plan your week and know what leveling up costs.",
     "landing.eyebrow": "For Pokémon Sleep",
-    "landing.title.lead": "The number you want,",
-    "landing.title.accent": "when you need it.",
+    "landing.title.lead": "Compare your Pokémon in Pokémon Sleep",
+    "landing.title.accent": "and see what each one produces.",
     "landing.lead":
       "More than a calculator: sleepmon puts what each Pokémon produces side by side and marks what goes up and what goes down, so you get it at a glance and decide.",
     "landing.cta.compare": "Start comparing",

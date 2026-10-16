@@ -63,14 +63,14 @@ describe("App shell", () => {
   it("shows the landing at /", async () => {
     renderAt("/");
     expect(
-      await screen.findByRole("heading", { level: 1, name: "The number you want, when you need it." }),
+      await screen.findByRole("heading", { level: 1, name: "Compare your Pokémon in Pokémon Sleep and see what each one produces." }),
     ).toBeInTheDocument();
     expect(screen.getAllByRole("navigation")[0].querySelector('[aria-current="page"]')).toBeNull();
   });
 
   it("sends an unknown address to the landing", async () => {
     const loc = renderAt("/whatever");
-    expect(await screen.findByRole("heading", { level: 1, name: "The number you want, when you need it." })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Compare your Pokémon in Pokémon Sleep and see what each one produces." })).toBeInTheDocument();
     const history = loc.history ?? [];
     expect(history[history.length - 1]).toBe("/");
   });
