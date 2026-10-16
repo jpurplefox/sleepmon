@@ -9,6 +9,7 @@ import { ComparisonSessionProvider, useComparisonSession } from "../comparisonSe
 import { LanguageProvider } from "../i18n";
 import { newEntry } from "../roster";
 import { recordEvents } from "../telemetry/testing";
+import { production } from "../test/productionFixture";
 import type { Catalog, Member, MemberInput, Species } from "../types";
 
 const pikachuForm = vi.hoisted(() => ({
@@ -200,7 +201,9 @@ describe("Comparison level", () => {
     const rec = recordEvents();
     // Signed in: the cards only compute once the profile's sleep schedule is known.
     vi.spyOn(api, "getProgress").mockResolvedValue({ sleep: { night_minutes: 510, nap_minutes: null } } as never);
-    const compute = vi.spyOn(api, "computeProduction").mockReturnValue(new Promise(() => {}));
+    const raised = { ...production, comparison_raise: { from_level: 30, to_level: 60, candies: 1, dream_shards: 2 } };
+    const compute = vi.spyOn(api, "computeProduction").mockResolvedValue(raised as never);
+    const create = vi.spyOn(api, "createMember").mockResolvedValue(raichu);
     const user = userEvent.setup();
     renderCompare();
     await user.click(await screen.findByRole("button", { name: "+ New" }));
@@ -212,6 +215,15 @@ describe("Comparison level", () => {
       expect(compute).toHaveBeenLastCalledWith(expect.objectContaining({ level: 30, comparison_level: 60 })),
     );
     expect(rec.events).toContainEqual({ name: "comparison_level_set", props: { level: "60" } });
+
+    // Save and Clone use the card's real level, not the raised one.
+    await user.click(await screen.findByRole("button", { name: "Save as new to your box" }));
+    await waitFor(() => expect(create).toHaveBeenCalledWith(expect.objectContaining({ level: 30 })));
+    create.mockClear();
+    await user.click(screen.getAllByRole("button", { name: "Clone" })[0]);
+    // The saved original now offers "update"; the clone is the only unsaved card.
+    await user.click(await screen.findByRole("button", { name: "Save as new to your box" }));
+    await waitFor(() => expect(create).toHaveBeenCalledWith(expect.objectContaining({ level: 30 })));
     rec.restore();
   });
 

@@ -11,7 +11,8 @@ import { ComparisonSessionProvider, useComparisonSession } from "../comparisonSe
 import { __resetShareCacheForTests } from "../comparisonShare";
 import { LanguageProvider } from "../i18n";
 import { recordEvents } from "../telemetry/testing";
-import type { Catalog, ComparisonShare, MemberInput, Production as ProductionData, Species } from "../types";
+import { production } from "../test/productionFixture";
+import type { Catalog, ComparisonShare, MemberInput, Species } from "../types";
 
 const auth = vi.hoisted(() => ({ status: "authenticated" as "authenticated" | "anonymous" }));
 const gate = vi.hoisted(() => ({ guard: vi.fn((f: () => void) => f()) }));
@@ -96,68 +97,6 @@ const share: ComparisonShare = {
   weekly_bonus: "berry_strength",
   sleep: { night_minutes: 420, nap_minutes: 120 },
 };
-
-// A real /production response (the one ProductionCard.test uses).
-const production = {
-  "helps_per_day": 106.14250614250614,
-  "seconds_per_help": 814,
-  "berry": "Mago",
-  "berry_amount": 94.44390368550368,
-  "berry_strength": 10577.717212776413,
-  "berry_percentage": 88.48,
-  "ingredient_percentage": 11.520000000000003,
-  "skill_percentage": 4.2,
-  "effective_skill_percentage": 5.906909447664128,
-  "effective_skill_level": 3,
-  "skill_level_bonus": 0,
-  "ingredients": [
-    {
-      "ingredient": "Fancy Apple",
-      "amount": 3.899534152334153
-    },
-    {
-      "ingredient": "Greengrass Corn",
-      "amount": 3.899534152334153
-    },
-    {
-      "ingredient": "Large Leek",
-      "amount": 7.799068304668306
-    }
-  ],
-  "skill_triggers": 5.4869234009315555,
-  "skill_ingredients": [],
-  "skill_energy": 49.382310608384,
-  "skill_ingredient_total": null,
-  "skill_cooking_ingredients": null,
-  "skill_strength": null,
-  "skill_self_energy": null,
-  "skill_dream_shards": null,
-  "skill_tasty_chance": null,
-  "skill_extra_helpful": null,
-  "skill_random_energy": null,
-  "sleep_sessions": [
-    {
-      "kind": "night",
-      "hours": 8.5,
-      "overflow_hours": 1.0383333333333333,
-      "skill_chances": [
-        0.857623470957523,
-        0.5800917336637341
-      ]
-    }
-  ],
-  "inventory": 34,
-  "inventory_fill_hours": 7.461666666666667,
-  "skill_berry_amount": null,
-  "skill_berry_strength": null,
-  "skill_berries_per_teammate": null,
-  "skill_help_targets": null,
-  "skill_candy": null,
-  "skill_berry_juice": null,
-  "skill_energy_drain": null,
-  "teammate_berries": null,
-  "teammate_ingredients": null
-} as unknown as ProductionData;
 
 function renderAt(path: string, strict = false) {
   const location = memoryLocation({ path, record: true });
@@ -248,7 +187,7 @@ describe("Share placements and the sleep notice", () => {
       for (const b of screen.getAllByRole("button", { name: "Share" })) expect(b).toBeEnabled();
     });
 
-    let finish!: (p: ProductionData) => void;
+    let finish!: (p: typeof production) => void;
     vi.spyOn(api, "computeProduction").mockReturnValue(new Promise((r) => (finish = r)));
     // Dropping the shared favorite berry changes the map the numbers depend on.
     await dropGrepa();
@@ -670,6 +609,7 @@ describe("Comparison level and sharing", () => {
     );
     await waitFor(() => expect(screen.getAllByText("Raichu").length).toBeGreaterThan(0));
     expect(screen.getByRole("radio", { name: "No comparison level" })).toHaveAttribute("aria-checked", "true");
+    expect(recorder.events.some((e) => e.name === "comparison_level_set")).toBe(false);
   });
 
   it("shares raised cards at their target level, with a new link for a new level", async () => {
@@ -689,5 +629,15 @@ describe("Comparison level and sharing", () => {
     const sheet = document.querySelector(".share-sheet") as HTMLElement;
     expect(within(sheet).getAllByText("Lv. 60")).toHaveLength(2);
     expect(sheet.querySelector(".raised-lv")).toBeNull();
+
+    // A level that changes the cards' levels makes the next dialog create a new link.
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await userEvent.click(screen.getByRole("radio", { name: "Level 70" }));
+    const again = (await screen.findAllByRole("button", { name: "Share" }))[0];
+    await waitFor(() => expect(again).toBeEnabled());
+    await userEvent.click(again);
+    await waitFor(() => expect(create).toHaveBeenCalledTimes(2));
+    expect(create.mock.calls[1][0].members.map((m) => m.level)).toEqual([70, 70]);
   });
 });

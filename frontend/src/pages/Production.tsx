@@ -105,7 +105,7 @@ export function Production({ baseMemberId, onBaseConsumed }: ProductionProps = {
           versatile_skill: e.config.versatile_skill,
           ...mapFields,
           sleep: progress.sleep,
-          comparison_level: comparisonLevel,
+          ...(comparisonLevel !== null && { comparison_level: comparisonLevel }),
         }),
       // El resultado de una config es estable: no re-pedir ni reflashear
       // "Calculando…" al reordenar o revisitar una card ya calculada.

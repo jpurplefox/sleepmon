@@ -1542,6 +1542,25 @@ def test_comparison_level_unlocks_the_slots_it_reaches(
     assert [s.ingredient for s in result_60.ingredients] == PIKA_INGS
 
 
+def test_comparison_level_raises_with_sub_skills_recorded_for_earlier_slots(
+    production_service: DefaultProductionService,
+) -> None:
+    # Only the 10 / 25 slots are filled; the raise to 50 still computes like a plain level 50.
+    subs = ["Helping Speed S", "Ingredient Finder S"]
+    raised = production_service.compute_production(
+        ProductionInput(
+            species="Pikachu", level=40, ingredients=PIKA_INGS, sub_skills=subs, comparison_level=50
+        )
+    )
+    plain = production_service.compute_production(
+        ProductionInput(species="Pikachu", level=50, ingredients=PIKA_INGS, sub_skills=subs)
+    )
+    assert raised.helps_per_day == plain.helps_per_day
+    assert raised.ingredients == plain.ingredients
+    assert raised.comparison_raise is not None
+    assert (raised.comparison_raise.from_level, raised.comparison_raise.to_level) == (40, 50)
+
+
 def test_comparison_level_never_lowers(production_service: DefaultProductionService) -> None:
     result = production_service.compute_production(
         ProductionInput(species="Pikachu", level=62, ingredients=PIKA_INGS, comparison_level=60)
