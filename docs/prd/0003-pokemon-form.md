@@ -79,6 +79,21 @@ is assigned to the Pokémon and simply **takes effect when it reaches that level
 Such slots are shown **dimmed but interactive** (not disabled). The same applies to
 sub skills.
 
+### Sub skill seeds
+
+A sub skill seed raises a sub skill one tier, but only to a tier the Pokémon doesn't
+already have. To picture a Pokémon fully seeded without editing each slot, a shortcut
+seeds all the sub skills in one action:
+
+- It walks the slots **in unlock order** (the level 10 slot first) and raises each
+  tiered sub skill to the **highest tier no other slot holds**; if every higher tier is
+  taken it stays as is, and it never lowers one. The earliest slot gets the best tier.
+- Tiered families: Helping Speed S/M, Ingredient Finder S/M, Skill Trigger S/M, Skill
+  Level Up S/M, Inventory Up S/M/L. Every other sub skill is left as is.
+- It only changes the form's values: nothing is saved until the form is submitted.
+  It shows **how many seeds** it would apply (one per tier raised: Inventory Up S → L
+  is two) and is unavailable when seeding would change nothing.
+
 ### Catalog-driven
 
 Every field's options come from the **domain catalog**; the form is **dependent** —
@@ -124,6 +139,9 @@ entered values.
 - A slot or sub skill **above the current level** can still be set; it appears
   **dimmed but interactive** (never disabled by level).
 - **Sub skills** are capped at **5** and must be **unique**; a 6th cannot be added.
+- **Seeding** Inventory Up S, Inventory Up M (in that order) gives Inventory Up L,
+  Inventory Up M; Inventory Up L, Inventory Up S gives Inventory Up L, Inventory Up M;
+  Helping Speed S, Helping Speed M stays as is; untiered sub skills don't change.
 - **Level** accepts **1–100**; the quick buttons jump to 1 / 10 / 25 / 30 / 50 / 60
   / 70 / 80.
 - A **create** form opens with defaults: no species, **level 30**, no nature, no sub

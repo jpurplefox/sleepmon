@@ -16,6 +16,7 @@ import { RibbonSelect } from "./RibbonSelect";
 import { SkillLevelSelector } from "./SkillLevelSelector";
 import { SpeciesSelect } from "./SpeciesSelect";
 import { SubSkillSelect } from "./SubSkillSelect";
+import { SubSkillSeedButton } from "./SubSkillSeedButton";
 import { UnreadMark } from "./UnreadMark";
 
 interface Props {
@@ -240,23 +241,15 @@ export function MemberForm({
           {t("form.subSkills")}
           <UnreadMark unread={unread.includes("sub_skills")} />
         </legend>
-        <SubSkillSelect
-          subSkills={catalog.sub_skills}
-          value={subSkills}
-          level={level}
-          onChange={setSubSkills}
-          ariaLabel={t("form.subSkills")}
-        />
-        <div className="subskill-seed">
-          <button
-            type="button"
-            className="level-chip"
-            onClick={() => setSubSkills(seed.slots)}
-            disabled={seed.seeds === 0}
-            title={t("form.seedSubSkillsHint")}
-          >
-            {t("form.seedSubSkills")}
-          </button>
+        <div className="subskill-field">
+          <SubSkillSelect
+            subSkills={catalog.sub_skills}
+            value={subSkills}
+            level={level}
+            onChange={setSubSkills}
+            ariaLabel={t("form.subSkills")}
+          />
+          <SubSkillSeedButton seeds={seed.seeds} onSeed={() => setSubSkills(seed.slots)} />
         </div>
       </fieldset>
 

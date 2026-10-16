@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { maxSubSkillSlots, SUB_SKILL_UNLOCK_LEVELS } from "../constants";
+import { SUB_SKILL_UNLOCK_LEVELS } from "../constants";
 import { useI18n } from "../i18n";
 import { subSkillIcon } from "../subskills";
 import type { SubSkill } from "../types";
@@ -62,8 +62,6 @@ export function SubSkillSelect({ subSkills, value, level, onChange, ariaLabel }:
   // Slots de posición fija (con huecos). value puede traer "" en un slot vacío.
   const slots = Array.from({ length: MAX_SUB_SKILLS }, (_, i) => value[i] ?? "");
   const count = slots.filter(Boolean).length;
-  // Slots realmente disponibles al nivel actual (el resto se desbloquea al subir).
-  const available = maxSubSkillSlots(level);
 
   // Primer click: al primer slot libre. Re-click: limpia ESE slot (deja el hueco,
   // sin reacomodar los demás).
@@ -126,18 +124,6 @@ export function SubSkillSelect({ subSkills, value, level, onChange, ariaLabel }:
             );
           })}
         </div>
-        <span
-          className="subskill-trigger__hint"
-          title={
-            available < MAX_SUB_SKILLS
-              ? t("subSel.hintActive", { level, available })
-              : t("subSel.hintAllActive")
-          }
-        >
-          {count >= MAX_SUB_SKILLS
-            ? t("subSel.change", { count })
-            : t("subSel.choose", { count })}
-        </span>
       </button>
 
       {open && (

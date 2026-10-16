@@ -91,7 +91,12 @@ const mew: Species = {
 
 const catalog: Catalog = {
   natures: [{ name: "Bashful", neutral: true, increased: null, decreased: null }],
-  sub_skills: [{ name: "Helping Speed M", tier: "Blue" }],
+  sub_skills: [
+    { name: "Helping Speed M", tier: "Blue" },
+    { name: "Inventory Up S", tier: "Regular" },
+    { name: "Inventory Up M", tier: "Blue" },
+    { name: "Inventory Up L", tier: "Gold" },
+  ],
   ingredients: ["Fancy Apple", "Warming Ginger", "Honey", "Snoozy Tomato", "Soft Potato"],
   species: [pikachu, bulbasaur, ivysaur, venusaur, kirlia, gardevoir, gallade, mew],
   versatile_skills: ["Charge Strength M", "Metronome", "Berry Burst"],
@@ -538,5 +543,40 @@ describe("MemberForm evolution", () => {
     await user.click(screen.getByRole("button", { name: "Evolve to Venusaur" }));
 
     expect(screen.getByRole("button", { name: "Back to Ivysaur" })).toHaveFocus();
+  });
+});
+
+describe("MemberForm sub skill seeds", () => {
+  const initial: MemberInput = {
+    species: "Pikachu",
+    level: 30,
+    nature: "Bashful",
+    ingredients: ["Warming Ginger", "Fancy Apple", "Warming Ginger"],
+    sub_skills: ["Inventory Up S", "Inventory Up M"],
+    ribbon: "",
+    skill_level: 1,
+  };
+
+  it("applies every seed in one click and saves the raised sub skills", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderForm({ initial });
+    await user.click(screen.getByRole("button", { name: /Apply 2 seeds/ }));
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ sub_skills: ["Inventory Up L", "Inventory Up M"] }),
+    );
+  });
+
+  it("reads as maxed once seeded, and a second click changes nothing", async () => {
+    const user = userEvent.setup();
+    const { onSubmit } = renderForm({ initial });
+    await user.click(screen.getByRole("button", { name: /Apply 2 seeds/ }));
+    const maxed = screen.getByRole("button", { name: "Sub skills are already maxed" });
+    expect(maxed).toHaveAttribute("aria-disabled", "true");
+    await user.click(maxed);
+    await user.click(screen.getByRole("button", { name: "Add to my box" }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ sub_skills: ["Inventory Up L", "Inventory Up M"] }),
+    );
   });
 });

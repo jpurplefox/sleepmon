@@ -595,7 +595,20 @@ states · where it lives. Feature one-offs are intentionally not here.
   (Lv 1 / 30 / 60) still show, each with one dashed `--divider` placeholder per option
   it will hold (1 / 2 / 3), dimmed to `0.35` and inert, so the form keeps its shape
   before and after a species is picked.
-  **`SubSkillSelect`** — uses `.ss-icon`.
+  **`SubSkillSelect`** — uses `.ss-icon`. Its trigger hugs its five slots (no count
+  hint); in the Pokémon form it shares a row with the seed button (`.subskill-field`,
+  flex, `gap 0.5rem`, `align-items: stretch`).
+- **Sub skill seed button** (`.seed-btn`) — right after the `SubSkillSelect` trigger in
+  the Pokémon form: one click raises every sub skill to its highest free tier (PRD 0003).
+  `EvolveControl`'s box language (`--surface-2`, `1px --border`, `--r-md`, hover
+  `border-color: --accent`), **52px** wide and stretched to the trigger's height, the
+  game's **Sub Skill Seed** sprite (`public/sub-skill-seed.png`) at 30px. A **quantity
+  badge** — how many seeds it would apply — pinned top-right, absolute so it adds no
+  width, styled as `EvolveControl`'s `+N` badge (`--text-xs` bold, `--surface-2` pill,
+  `1px --divider`). Wrapped in `Tooltip`, which says what it does; the same text is its
+  `aria-label`.
+  - **At max** (nothing to seed): no badge, `opacity 0.35`, no hover. `aria-disabled`,
+    not `disabled`, so the tooltip still opens on hover and focus.
 - **`RibbonIcon`** — ribbon sprite with `--empty` variant.
 - **Screenshot slots** (`ShotSlots`, `.shot-slots` / `.shot`) — the images a user
   uploads for one job (first use: the screenshot import, PRD 0019): a row of **3**
@@ -1128,3 +1141,10 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   refusal rather than "each card at its own level". A `.filter-btn` stays the control for
   long or unordered choices (maps, dishes). *Why:* with a few ordered values all in sight,
   a dropdown only adds a tap and hides the scale the user is moving along.
+- **A one-click action beside a field is an icon button, not a chip.** *Question:* the
+  sub skill seeds shortcut first shipped as a `.level-chip` under the slots, right below
+  the level chips. *Resolution:* a square button in the field's own row, showing the
+  game item it stands for (the Sub Skill Seed) with a quantity badge, and a tooltip
+  naming the action; the field's count hint went to make room. *Why:* `.level-chip`
+  picks a value from a short scale, so an action dressed as one reads as another level;
+  the item sprite says what will be spent, and the badge says how much before the click.

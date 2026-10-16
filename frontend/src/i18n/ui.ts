@@ -233,6 +233,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "import.summaryCheck": "{summary} · revisá {fields}",
     "form.ingredients": "Ingredientes",
     "form.subSkills": "Sub skills",
+    "seed.apply": "Aplicar {n} seeds: sube cada sub skill al tier más alto libre",
+    "seed.maxed": "Las sub skills ya están al máximo",
     "form.skillLevel": "Nivel de skill",
     "form.ribbon": "Listón",
     "form.speciesUnknown":
@@ -376,11 +378,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "subSel.family.skillTrigger": "Activación",
     "subSel.family.others": "Otros",
     "subSel.slotEmpty": "Slot de nivel {unlock}",
-    "subSel.hintActive":
-      "El kit guarda hasta 5; al nivel {level} {available} de 5 slots están activos, el resto se activa al subir de nivel",
-    "subSel.hintAllActive": "Los 5 slots están activos",
-    "subSel.change": "{count}/5 · cambiar",
-    "subSel.choose": "{count}/5 · elegir",
     "subSel.aria": "Elegir sub skills",
     "subSel.remove": "Quitar {name}",
     // Ingredient slots
@@ -962,6 +959,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "import.summaryCheck": "{summary} · check {fields}",
     "form.ingredients": "Ingredients",
     "form.subSkills": "Sub skills",
+    "seed.apply": "Apply {n} seeds: raises each sub skill to its highest free tier",
+    "seed.maxed": "Sub skills are already maxed",
     "form.skillLevel": "Skill level",
     "form.ribbon": "Ribbon",
     "form.speciesUnknown":
@@ -1106,11 +1105,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "subSel.family.skillTrigger": "Skill Trigger",
     "subSel.family.others": "Others",
     "subSel.slotEmpty": "Level {unlock} slot",
-    "subSel.hintActive":
-      "The kit holds up to 5; at level {level} {available} of 5 slots are active, the rest unlock as you level up",
-    "subSel.hintAllActive": "All 5 slots are active",
-    "subSel.change": "{count}/5 · change",
-    "subSel.choose": "{count}/5 · choose",
     "subSel.aria": "Choose sub skills",
     "subSel.remove": "Remove {name}",
     // Ingredient slots

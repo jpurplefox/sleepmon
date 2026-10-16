@@ -44,6 +44,10 @@ describe("subSkillIcon", () => {
 });
 
 describe("icon files", () => {
+  it("serves the sub skill seed sprite", () => {
+    expect(served("/sub-skill-seed.png")).toBe(true);
+  });
+
   it.each(Object.keys(NATURE_STATS))("serves the nature stat icon for %s", (stat) => {
     expect(served(statIcon(stat))).toBe(true);
   });
