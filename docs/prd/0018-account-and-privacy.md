@@ -100,7 +100,7 @@ a short privacy page, and one footer line. Nothing more than that.
 
 - One discreet line at the bottom of every screen — tools, sign-in prompts and the
   privacy page:
-  *Privacy · contact@… · sleepmon is a fan project, not affiliated with Nintendo,
+  *Privacy · Frequently asked questions ([Landing](0023-landing.md)) · contact@… · sleepmon is a fan project, not affiliated with Nintendo,
   Creatures, GAME FREAK or The Pokémon Company. Pokémon and its names are trademarks of
   their respective owners.*
 - The contact email is a single value set by the maintainer, shown identically in the
