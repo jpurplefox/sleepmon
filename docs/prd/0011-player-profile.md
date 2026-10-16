@@ -26,7 +26,9 @@ recipe and area parts below are still its **progress**.)
 4. **Area bonus per area** — the bonus you have unlocked on each research area.
 5. **Sleep schedule** — how long you sleep at night and, optionally, your nap; see
    [Sleep schedule](0015-sleep-schedule.md).
-6. **Seeds Team Analysis** — the analysis starts from the progress values; what you
+6. **Minimum target level** — the level you level every Pokémon to at the least; it
+   sets the Box's [level-up cost](0021-level-up-cost.md) target.
+7. **Seeds Team Analysis** — the analysis starts from the progress values; what you
    change there stays in the session and offers to be saved back. The sleep schedule is
    not seeded but applied as saved, in every tool.
 
@@ -36,7 +38,7 @@ recipe and area parts below are still its **progress**.)
 
 The Player profile is its own screen, reached from the **account menu** as **Perfil de
 jugador** / **Player profile**, with one tab per area: **Kitchen · Recipes · Areas ·
-Sleep**. It belongs to *you*, not to any one tool. Like the Box and Team Analysis, it is available only when
+Sleep · Leveling**. It belongs to *you*, not to any one tool. Like the Box and Team Analysis, it is available only when
 signed in.
 
 It is a **draft**: what you change there is yours to review until you press **Guardar**,
@@ -89,6 +91,14 @@ with changes*).
 - Unlike the progress values, it is **not** a starting point for a session: every tool
   — Box, Comparison, Team Analysis — uses it exactly as saved, and none overrides it.
 
+### Minimum target level
+
+- The **Leveling** tab holds one value: **None** (untouched) or one of the unlock
+  levels **10, 25, 30, 50, 60, 70** — nothing in between.
+- It is how you play, not a "what if": the floor you level every Pokémon to. The
+  [Box](0001-box.md) uses it as saved — a Pokémon below it shows the cost straight to
+  it; see [Level-up cost](0021-level-up-cost.md). It seeds nothing in Team Analysis.
+
 ### The bridge to Team Analysis
 
 The progress is the analysis's **starting point**, never its master copy:
@@ -123,7 +133,7 @@ is what keeps a real change from going unnoticed.
 ## Acceptance criteria
 
 - A **new account** reads: pot **21**, every recipe at level **1**, no favorites, every
-  area at **0%**, Night **8:30** with no nap. This is an ordinary starting state, not an empty state or an error.
+  area at **0%**, Night **8:30** with no nap, no minimum target level. This is an ordinary starting state, not an empty state or an error.
 - The pot control offers **exactly** the 23 ladder steps (21, 23, 25, 27, 29, 31, 33,
   36, …, 81). A value off the ladder cannot be selected.
 - A recipe level outside **1–70** and an area bonus outside **0–85%** are **clamped to
@@ -156,7 +166,8 @@ is what keeps a real change from going unnoticed.
   draft; *cancelar* returns to the screen with the draft intact.
 - Leaving the Player profile with **nothing** changed closes it immediately, with no question.
 - The menu entry reads **Perfil de jugador** (ES) / **Player profile** (EN), and the
-  screen has the tabs **Kitchen · Recipes · Areas · Sleep**.
+  screen has the tabs **Kitchen · Recipes · Areas · Sleep · Leveling**.
+- The minimum target level offers exactly **None, 10, 25, 30, 50, 60, 70**.
 - Leaving Team Analysis's settings with values marked unsaved closes **immediately**,
   without a question, and keeps every one of those values in the session.
 
