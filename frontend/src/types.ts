@@ -142,6 +142,8 @@ export interface MemberProduction {
   helps_per_day?: number;
   // The cost and result of levelling to the minimum target level; null when not applicable.
   level_up?: LevelUp | null;
+  // The main ingredient with every slot unlocked (level 60); Comparison matches on it.
+  main_ingredient_at_60?: string | null;
 }
 
 // Level-up cost to reach a target level, with the production at that level.
@@ -447,6 +449,8 @@ export interface Production {
   effective_skill_level: number;
   /** Skill levels the bonuses add (main favorite + event), before the cap. */
   skill_level_bonus: number;
+  // The main ingredient with every slot unlocked (level 60); Comparison matches on it.
+  main_ingredient_at_60?: string | null;
 }
 
 /** The player profile (PRD 0011, 0015). Mappings hold only non-defaults. */
