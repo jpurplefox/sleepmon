@@ -4093,6 +4093,16 @@ button.prod-card__base-tag--action {
   white-space: nowrap;
 }
 
+/* In the name line the raise keeps the plain level's size and weight: only color moves. */
+.prod-card__title .raised-lv {
+  font-size: var(--text-sm);
+}
+
+.prod-card__title .raised-lv__set,
+.prod-card__title .raised-lv__used {
+  font-weight: 400;
+}
+
 /* Comparison's raise tooltip has only the head: no divider under it. */
 .levelup-tip__head--bare {
   padding-bottom: 0;

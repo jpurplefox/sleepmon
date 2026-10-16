@@ -452,8 +452,9 @@ states · where it lives. Feature one-offs are intentionally not here.
   `→`, the used level in `--up` (weight 600) — "Lv. 3 → 4". The used level is a good the
   rules give, hence `--up`; the arrow is the shape cue. Two uses: the **skill level** a
   bonus raises (main favorite, event), and the **Pokémon's level** in a card's name line
-  when Comparison's comparison level raises it — "Nv. 45 → 60". There both numbers carry
-  the tooltip cue, and the `Tooltip` (wide) shows the stretch and its exact cost, candies
+  when Comparison's comparison level raises it — "Nv. 45 → 60". There the run keeps the
+  plain level's size and weight (`--text-sm`, 400): a raise must not make the name line
+  grow, so only color and the arrow mark it. Both numbers carry the tooltip cue, and the `Tooltip` (wide) shows the stretch and its exact cost, candies
   and dream shards, as the head of the Box's level-up tooltip (`.levelup-tip__head`).
   Nothing raised → the plain level, no arrow; a picture (`--snapshot`) shows the used
   level plain.
