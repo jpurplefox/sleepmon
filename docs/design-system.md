@@ -305,7 +305,12 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **`.specialty-toggle`** — segmented toggle-button group; item state `.is-on`
   (accent-dim + accent text). Fills the role of a switch (no native toggle).
 - **Selection chips** — `.level-chip` / `.lang-chip` (quick pick of key levels,
-  language), state `--active` (solid accent fill).
+  language), state `--active` (solid accent fill). In a context bar a row of
+  `.level-chip`s (`gap: 0.3rem`, wraps as a whole under its label) is the field's control
+  when the choice is a **short ordered scale** — Comparison's *Comparar a nivel*: **—**,
+  10, 25, 30, 50, 60, 70. Their 30px height already matches the bar's controls. The
+  "off" value is a first chip reading **—**, wrapped in `Tooltip` with the same text as
+  its `aria-label` ("Sin nivel de comparación"), since a dash doesn't name itself.
 
 ### Containers
 - **`.card`** — generic surface (`--surface`, transparent 1px border, `--r-lg`,
@@ -370,8 +375,9 @@ states · where it lives. Feature one-offs are intentionally not here.
   shaping its numbers**, each setting as a **field** (`.ctx-field`: a `--muted`
   `--text-sm` label + an existing control). A layout, not a new control: choices are a
   `.filter-control`/`.filter-btn` (opening a `.filter-pop`, or the setting's own dialog —
-  one `Modal` per setting, titled after it, no tabs — when it has several parts), on/off is a
-  `.specialty-toggle` (No / Sí), and a rule's effect inside a trigger is its
+  one `Modal` per setting, titled after it, no tabs — when it has several parts), a
+  **short ordered scale** picked in one tap is a row of `.level-chip`s (see *Selection
+  chips*), on/off is a `.specialty-toggle` (No / Sí), and a rule's effect inside a trigger is its
   `.metric-mark` — a bare figure too (the area bonus is a "+35%" mark, named in full in its
   tooltip and accessible name). Flex, wraps (`gap: 0.6rem 1.5rem`); a field never splits
   across lines, and never grows past the bar's width: the Map trigger reserves the longest
@@ -441,6 +447,16 @@ states · where it lives. Feature one-offs are intentionally not here.
   `[icon] ▲519` beside a level span; and a **"new" form**, `+9.8 nuevo` / `new` in
   `--up` with **no triangle**, for a value that did not exist before (an ingredient a
   level unlocks) — the word carries the direction.
+- **Raised level** (`.prod-card__skill-lv-set` / `-boost`) — a level the rules raise
+  above the one set reads **set → used**: the set level in `--muted` (weight 500), a
+  `→`, the used level in `--up` (weight 600) — "Lv. 3 → 4". The used level is a good the
+  rules give, hence `--up`; the arrow is the shape cue. Two uses: the **skill level** a
+  bonus raises (main favorite, event), and the **Pokémon's level** in a card's name line
+  when Comparison's comparison level raises it — "Nv. 45 → 60". There both numbers carry
+  the tooltip cue, and the `Tooltip` (wide) shows the stretch and its exact cost, candies
+  and dream shards, as the head of the Box's level-up tooltip (`.levelup-tip__head`).
+  Nothing raised → the plain level, no arrow; a picture (`--snapshot`) shows the used
+  level plain.
 - **`.chip` / `.chips`** — small thematic tag (container wraps). Variants:
   `--ingredient` (`--surface-2`), `--subskill` (accent-dim).
 - **`.mini-icon`** — small inline icon (nature stat, ingredient, sub-skill) with
@@ -1103,3 +1119,11 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   `.ss-icon--empty` square (the cards' "no sub skills" note is gone). *Why:* the same
   Pokémon should read the same in every tool, and five fixed slots keep rows aligned and
   show at a glance how many are missing.
+- **A short scale in the context bar is chips, not a dropdown.** *Question:* the context
+  bar's rule made every choice a `.filter-btn`; Comparison's comparison level is seven
+  ordered values (off and the six unlock levels), often switched back and forth while
+  reading the cards. *Resolution:* a row of `.level-chip`s, one tap per value; the off
+  value is a **—** chip with a tooltip and an accessible name, since "No" read as a
+  refusal rather than "each card at its own level". A `.filter-btn` stays the control for
+  long or unordered choices (maps, dishes). *Why:* with a few ordered values all in sight,
+  a dropdown only adds a tap and hides the scale the user is moving along.
