@@ -15,8 +15,8 @@ import { NatureSelect } from "./NatureSelect";
 import { RibbonSelect } from "./RibbonSelect";
 import { SkillLevelSelector } from "./SkillLevelSelector";
 import { SpeciesSelect } from "./SpeciesSelect";
-import { SubSkillSelect } from "./SubSkillSelect";
 import { SubSkillSeedButton } from "./SubSkillSeedButton";
+import { SubSkillSelect } from "./SubSkillSelect";
 import { UnreadMark } from "./UnreadMark";
 
 interface Props {

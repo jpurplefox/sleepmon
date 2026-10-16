@@ -567,6 +567,11 @@ describe("MemberForm sub skill seeds", () => {
     );
   });
 
+  it("uses the singular copy when one seed is left", () => {
+    renderForm({ initial: { ...initial, sub_skills: ["Inventory Up L", "Inventory Up S"] } });
+    expect(screen.getByRole("button", { name: /^Apply 1 seed:/ })).toBeInTheDocument();
+  });
+
   it("reads as maxed once seeded, and a second click changes nothing", async () => {
     const user = userEvent.setup();
     const { onSubmit } = renderForm({ initial });

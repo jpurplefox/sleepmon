@@ -1347,9 +1347,15 @@ button.shot--empty:focus-visible,
 
 /* Sub skills row: the selector hugs its slots, the seed button follows (design-system §5). */
 .subskill-field {
+  position: relative;
   display: flex;
   align-items: stretch;
   gap: 0.5rem;
+}
+
+/* Static, so the dropdown anchors to the whole row (trigger + seed button). */
+.subskill-field > .subskill-select {
+  position: static;
 }
 
 .seed-btn {
@@ -1396,7 +1402,7 @@ button.shot--empty:focus-visible,
   color: var(--text);
 }
 
-/* The tooltip wrapper must stretch too, so the button matches the selector's height. */
+/* Keeps the wrapper at the button's width; the row's align-items stretches it to the selector's height. */
 .subskill-field > .tooltip {
   flex: none;
 }

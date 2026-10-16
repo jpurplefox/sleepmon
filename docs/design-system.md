@@ -1142,7 +1142,7 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   long or unordered choices (maps, dishes). *Why:* with a few ordered values all in sight,
   a dropdown only adds a tap and hides the scale the user is moving along.
 - **A one-click action beside a field is an icon button, not a chip.** *Question:* the
-  sub skill seeds shortcut first shipped as a `.level-chip` under the slots, right below
+  sub skill seeds shortcut was first drafted as a `.level-chip` under the slots, right below
   the level chips. *Resolution:* a square button in the field's own row, showing the
   game item it stands for (the Sub Skill Seed) with a quantity badge, and a tooltip
   naming the action; the field's count hint went to make room. *Why:* `.level-chip`

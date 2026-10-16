@@ -10,7 +10,12 @@ interface Props {
 // One click raises every sub skill to its highest free tier (PRD 0003).
 export function SubSkillSeedButton({ seeds, onSeed }: Props) {
   const { t } = useI18n();
-  const label = seeds > 0 ? t("seed.apply", { n: seeds }) : t("seed.maxed");
+  const label =
+    seeds === 0
+      ? t("seed.maxed")
+      : seeds === 1
+        ? t("seed.applyOne")
+        : t("seed.apply", { n: seeds });
   return (
     <Tooltip content={label}>
       {/* aria-disabled, not disabled: a disabled button would swallow the tooltip's hover. */}
