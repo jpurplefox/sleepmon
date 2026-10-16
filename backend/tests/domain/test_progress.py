@@ -7,6 +7,7 @@ import pytest
 from sleepmon.domain.catalog_data import POT_LADDER
 from sleepmon.domain.errors import ValidationError
 from sleepmon.domain.progress import (
+    CLEAR_MIN_TARGET,
     PlayerProgress,
     ProgressPatch,
     apply_patch,
@@ -146,3 +147,31 @@ def test_patching_sleep_replaces_it_whole_and_leaves_the_rest() -> None:
 def test_a_patch_without_sleep_keeps_it() -> None:
     current = PlayerProgress(sleep=SleepSchedule(night_minutes=390, nap_minutes=120))
     assert apply_patch(current, ProgressPatch(pot_size=33)).sleep == current.sleep
+
+
+def test_a_new_profile_has_no_minimum_target() -> None:
+    assert PlayerProgress().min_target_level is None
+
+
+@pytest.mark.parametrize("level", [10, 25, 30, 50, 60, 70])
+def test_minimum_target_accepts_unlock_levels(level: int) -> None:
+    assert PlayerProgress(min_target_level=level).min_target_level == level
+
+
+@pytest.mark.parametrize("level", [0, 40, 80, 1, True])
+def test_minimum_target_rejects_other_values(level: int) -> None:
+    with pytest.raises(ValidationError):
+        PlayerProgress(min_target_level=level)
+
+
+def test_patch_sets_keeps_and_clears_the_minimum() -> None:
+    with_60 = apply_patch(PlayerProgress(), ProgressPatch(min_target_level=60))
+    assert with_60.min_target_level == 60
+    assert apply_patch(with_60, ProgressPatch(pot_size=33)).min_target_level == 60
+    cleared = apply_patch(with_60, ProgressPatch(min_target_level=CLEAR_MIN_TARGET))
+    assert cleared.min_target_level is None
+
+
+def test_patch_rejects_a_level_off_the_list() -> None:
+    with pytest.raises(ValidationError):
+        apply_patch(PlayerProgress(), ProgressPatch(min_target_level=40))

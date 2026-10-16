@@ -344,6 +344,7 @@ class _ProgressRow:
     area_bonuses: dict[str, int]
     night_minutes: int
     nap_minutes: int | None
+    min_target_level: int | None
 
 
 def _decode_optional(enum_cls: type[_E], value: str) -> _E | None:
@@ -380,6 +381,7 @@ def _to_progress(row: _ProgressRow) -> PlayerProgress:
         favorites,
         bonuses,
         SleepSchedule(row.night_minutes, row.nap_minutes),
+        row.min_target_level,
     )
 
 
@@ -422,6 +424,7 @@ class PostgresPlayerProgressRepository(PlayerProgressRepository):
                         Jsonb({a.value: p for a, p in updated.area_bonuses.items()}),
                         updated.sleep.night_minutes,
                         updated.sleep.nap_minutes,
+                        updated.min_target_level,
                     ),
                 )
         return updated

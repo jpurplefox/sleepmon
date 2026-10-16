@@ -2,6 +2,7 @@
 // Sirven para que el formulario muestre la cantidad correcta de slots según nivel.
 
 export const SUB_SKILL_UNLOCK_LEVELS = [10, 25, 50, 70, 80];
+export const MIN_TARGET_LEVELS = [10, 25, 30, 50, 60, 70] as const;
 export const INGREDIENT_UNLOCK_LEVELS = [1, 30, 60];
 export const MAX_LEVEL = 100;
 // Nivel máximo de una main skill (espejo de sleepmon.domain.catalog_data).

@@ -383,3 +383,79 @@ def test_box_production_uses_the_saved_sleep_schedule() -> None:
     ((_, nap_prod),) = with_nap.list_members_with_production(UID)
     assert default_prod is not None and nap_prod is not None
     assert nap_prod.skill_triggers != default_prod.skill_triggers
+
+
+def test_level_up_target_uses_the_saved_sleep_schedule() -> None:
+    progress = InMemoryPlayerProgressRepository()
+    team = InMemoryTeamRepository()
+    plain = DefaultTeamService(
+        team,
+        StaticSpeciesCatalog(),
+        InMemoryPlayerProgressRepository(),
+        InMemorySavedTeamRepository(),
+    )
+    with_nap = DefaultTeamService(
+        team, StaticSpeciesCatalog(), progress, InMemorySavedTeamRepository()
+    )
+    plain.add_member(UID, valid_input(level=15))
+    progress.transform(UID, lambda _: PlayerProgress(sleep=SleepSchedule(390, 120)))
+
+    default_up = _only(plain).level_up
+    nap_up = _only(with_nap).level_up
+    assert default_up is not None and nap_up is not None
+    assert nap_up.at_target.skill_triggers != default_up.at_target.skill_triggers
+
+
+def _only(service: DefaultTeamService):  # type: ignore[no-untyped-def]
+    ((_, production),) = service.list_members_with_production(UID)
+    assert production is not None
+    return production
+
+
+def test_box_entry_aims_at_the_next_unlock(service: DefaultTeamService) -> None:
+    # Pikachu (normal curve), neutral nature (Bashful), level 15 -> 25 (PRD 0021).
+    service.add_member(UID, valid_input(level=15, nature="Bashful", sub_skills=[]))
+    level_up = _only(service).level_up
+    assert level_up is not None
+    assert (level_up.target_level, level_up.candies, level_up.dream_shards) == (25, 129, 9987)
+
+
+def test_box_entry_uses_the_profile_minimum() -> None:
+    progress = InMemoryPlayerProgressRepository()
+    service = DefaultTeamService(
+        InMemoryTeamRepository(), StaticSpeciesCatalog(), progress, InMemorySavedTeamRepository()
+    )
+    service.add_member(UID, valid_input(level=15, nature="Bashful", sub_skills=[]))
+    progress.transform(UID, lambda _: PlayerProgress(min_target_level=60))
+    level_up = _only(service).level_up
+    assert level_up is not None
+    assert (level_up.target_level, level_up.candies, level_up.dream_shards) == (60, 1803, 535149)
+
+
+def test_box_entry_at_70_has_no_level_up(service: DefaultTeamService) -> None:
+    service.add_member(UID, valid_input(level=70))
+    assert _only(service).level_up is None
+
+
+def test_at_target_is_the_same_pokemon_at_the_target_level(service: DefaultTeamService) -> None:
+    service.add_member(UID, valid_input(level=25))
+    production = _only(service)
+    assert production.level_up is not None
+    at = production.level_up.at_target
+    assert at.level_up is None
+    assert at.helps_per_day > production.helps_per_day > 0
+    # Level 30 unlocks the second ingredient slot (Warming Ginger).
+    assert {s.ingredient for s in at.ingredients} >= {"Fancy Apple", "Warming Ginger"}
+
+
+def test_category_and_nature_shape_the_cost(service: DefaultTeamService) -> None:
+    service.add_member(
+        UID,
+        valid_input(
+            species="Larvitar", level=15, nature="Bashful", sub_skills=[],
+            ingredients=["Warming Ginger", "Warming Ginger", "Warming Ginger"],
+        ),
+    )
+    level_up = _only(service).level_up
+    assert level_up is not None
+    assert (level_up.candies, level_up.dream_shards) == (193, 14935)

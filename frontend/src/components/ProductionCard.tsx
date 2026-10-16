@@ -516,8 +516,11 @@ export function ProductionCard({
               })}
             </div>
             <div className="icon-row prod-card__subskills">
-              {config.sub_skills.length === 0 && <span className="muted">{t("card.noSubSkills")}</span>}
-              {config.sub_skills.map((s, i) => {
+              {/* Always the five slots; an empty one is a placeholder square, as in the Box. */}
+              {SUB_SKILL_UNLOCK_LEVELS.map((_, i) => {
+                const s = config.sub_skills[i];
+                if (!s)
+                  return <span key={i} className="ss-icon ss-icon--empty" aria-hidden="true" />;
                 const unlock = SUB_SKILL_UNLOCK_LEVELS[i] ?? SUB_SKILL_NEVER_UNLOCKS;
                 const locked = config.level < unlock;
                 const title = !locked

@@ -27,6 +27,7 @@ from sleepmon.adapters.inbound.http.schemas import (
     IngredientCountOut,
     IslandOut,
     KitchenOut,
+    LevelUpOut,
     MealFeasibilityOut,
     MemberContributionOut,
     MemberIn,
@@ -69,6 +70,7 @@ from sleepmon.application.comparison_share_service import ComparisonShareService
 from sleepmon.application.dto import (
     ComparisonShareInput,
     EventEffectInput,
+    LevelUpProjection,
     MealSelectionInput,
     MemberProduction,
     ProductionInput,
@@ -179,6 +181,19 @@ def _full_production_out(result: ProductionResult) -> ProductionOut:
     )
 
 
+def _level_up_out(level_up: LevelUpProjection | None) -> LevelUpOut | None:
+    if level_up is None:
+        return None
+    at_target = _production_out(level_up.at_target)
+    assert at_target is not None  # the projection always carries a production
+    return LevelUpOut(
+        target_level=level_up.target_level,
+        candies=level_up.candies,
+        dream_shards=level_up.dream_shards,
+        at_target=at_target,
+    )
+
+
 def _production_out(production: MemberProduction | None) -> MemberProductionOut | None:
     if production is None:
         return None
@@ -207,6 +222,8 @@ def _production_out(production: MemberProduction | None) -> MemberProductionOut 
         skill_berry_amount=production.skill_berry_amount,
         skill_berries_per_teammate=production.skill_berries_per_teammate,
         skill_help_targets=production.skill_help_targets,
+        helps_per_day=production.helps_per_day,
+        level_up=_level_up_out(production.level_up),
     )
 
 
@@ -609,6 +626,7 @@ def _to_progress_out(progress: PlayerProgress) -> ProgressOut:
         sleep=SleepOut(
             night_minutes=progress.sleep.night_minutes, nap_minutes=progress.sleep.nap_minutes
         ),
+        min_target_level=progress.min_target_level,
     )
 
 
@@ -640,6 +658,7 @@ class ProgressController(Controller):
                     favorite_recipes=data.favorite_recipes,
                     area_bonuses=data.area_bonuses,
                     sleep=_sleep_input(data.sleep),
+                    min_target_level=data.min_target_level,
                 ),
             )
         )

@@ -12,6 +12,7 @@ import { CHARGE_STRENGTH_ICON, GENERIC_BERRY_ICON, mainSkillIcon } from "../skil
 import { ActionMenu } from "./ActionMenu";
 import { IconChevronDown, IconCompare, IconEdit, IconTrash } from "./icons";
 import { IngredientLineup } from "./IngredientLineup";
+import { LevelUpCell } from "./LevelUpCell";
 import { MemberConfig } from "./MemberConfig";
 import { RibbonIcon } from "./RibbonIcon";
 
@@ -295,11 +296,11 @@ export function BoxEntry({
       {isMobile && expanded && (
         <>
           <div className="box-entry__divider box-entry__divider--build" aria-hidden="true" />
-          <span className="box-entry__label box-entry__label--nature">{t("member.nature")}</span>
-          <span className="box-entry__label box-entry__label--ss">{t("member.subSkills")}</span>
           <span className="box-entry__label box-entry__label--ing-config">
             {t("member.ingredients")}
           </span>
+          <span className="box-entry__label box-entry__label--ss">{t("member.subSkills")}</span>
+          <span className="box-entry__label box-entry__label--nature">{t("member.nature")}</span>
           <div className="box-entry__divider box-entry__divider--prod" aria-hidden="true" />
           <span className="box-entry__label box-entry__label--berries">{t("card.berries")}</span>
           {hasStrength && (
@@ -311,11 +312,25 @@ export function BoxEntry({
             {t("member.ingredients")}
           </span>
           <span className="box-entry__label box-entry__label--skill">{t("box.labelSkill")}</span>
+          {/* Third section: the level-up cost, or "max level reached" at 70+. */}
+          {prod && (
+            <LevelUpCell
+              member={member}
+              specialty={species?.specialty}
+              skill={skill}
+              production={prod}
+              layout="section"
+              tierBySubSkill={tierBySubSkill}
+            />
+          )}
         </>
       )}
 
-      {/* Columna 2 — Ingredientes equipados: su propia columna (antes vivían arriba
-          de la config). Atenuada igual que la config. */}
+      {/* Column 2 — the build, as the cards stack it: equipped ingredients, sub
+          skills, nature. On desktop the three rows share one column (the grid has no
+          width for two); the narrow layouts drop the wrapper (display: contents) and
+          place each part side by side, as before. Dimmed to recede behind the metrics. */}
+      <div className="box-entry__build">
       <div className="box-entry__ing-config">
         <IngredientLineup level={member.level} ingredients={member.ingredients} />
       </div>
@@ -336,7 +351,9 @@ export function BoxEntry({
           tierBySubSkill={tierBySubSkill}
           showSkillLevel={false}
           showIngredients={false}
+          natureAsCard
         />
+      </div>
       </div>
 
       {/* Column 4 — berries + strength, two lines, neutral figures. */}
@@ -506,6 +523,23 @@ export function BoxEntry({
           )}
         </div>
       </div>
+
+      {/* Column 7 — level-up cost (PRD 0021). Every entry keeps the cell so the track
+          stays aligned across Pokémon: at level 70+ it says the max is reached; empty
+          only without production. On a phone it's a section of the expanded detail. */}
+      {!isMobile &&
+        (prod ? (
+          <LevelUpCell
+            member={member}
+            specialty={species?.specialty}
+            skill={skill}
+            production={prod}
+            layout="cell"
+            tierBySubSkill={tierBySubSkill}
+          />
+        ) : (
+          <div className="box-entry__levelup" />
+        ))}
 
       {/* Acciones: overflow "···" con Comparar (primero) + Editar/Eliminar. */}
       <div className="box-entry__actions">

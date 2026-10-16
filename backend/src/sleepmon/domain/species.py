@@ -20,7 +20,8 @@ per-member choice, resolved in ``domain/versatile.py``.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from typing import Final
 
 from sleepmon.domain.catalog_data import (
     INVENTORY_BONUS_PER_EVOLUTION,
@@ -32,6 +33,7 @@ from sleepmon.domain.catalog_data import (
 from sleepmon.domain.value_objects import (
     BERRY_TYPE,
     Berry,
+    GrowthCurve,
     Ingredient,
     SleepType,
     Specialty,
@@ -83,6 +85,8 @@ class Species:
     # Mythicals: each slot's own options (any pool ingredient fits any slot), aligned
     # with ``ingredient_amounts``. Empty = the prefix rule over ``ingredients``.
     pool_slots: tuple[tuple[Ingredient, ...], ...] = ()
+    # Experience curve (PRD 0021); drives the candy cost of levelling up.
+    growth: GrowthCurve = GrowthCurve.NORMAL
 
     def __post_init__(self) -> None:
         if not 0 <= self.evolution_stage <= MAX_EVOLUTION_STAGE:
@@ -1698,6 +1702,27 @@ SEED_SPECIES: tuple[Species, ...] = (
         26,
         pool_slots=(_MEW_EARLY_POOL, _MEW_EARLY_POOL, _MEW_POOL),
     ),
+)
+
+# Experience curve by species (PRD 0021); everything not listed is NORMAL.
+_PSEUDO = GrowthCurve.PSEUDO_LEGENDARY
+_GROWTH: Final[Mapping[str, GrowthCurve]] = {
+    **dict.fromkeys(
+        (
+            "Dratini", "Dragonair", "Dragonite", "Larvitar", "Pupitar", "Tyranitar",
+            "Bagon", "Shelgon", "Salamence",
+        ),
+        _PSEUDO,
+    ),
+    **dict.fromkeys(
+        ("Mewtwo", "Raikou", "Entei", "Suicune", "Latias", "Latios", "Cresselia"),
+        GrowthCurve.LEGENDARY,
+    ),
+    **dict.fromkeys(("Mew", "Darkrai"), GrowthCurve.MYTHICAL),
+}
+
+SEED_SPECIES = tuple(
+    replace(s, growth=_GROWTH[s.name]) if s.name in _GROWTH else s for s in SEED_SPECIES
 )
 
 

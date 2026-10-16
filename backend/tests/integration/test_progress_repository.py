@@ -228,3 +228,12 @@ def test_the_database_rejects_an_invalid_sleep(
             "UPDATE player_progress SET night_minutes = %s, nap_minutes = %s WHERE user_id = %s",
             (720, 240, user_id),
         )
+
+
+def test_the_minimum_target_round_trips_and_clears(
+    repo: PostgresPlayerProgressRepository, user_id: UUID
+) -> None:
+    repo.transform(user_id, lambda _: PlayerProgress(min_target_level=60))
+    assert repo.get(user_id).min_target_level == 60
+    repo.transform(user_id, lambda p: dataclasses.replace(p, min_target_level=None))
+    assert repo.get(user_id).min_target_level is None

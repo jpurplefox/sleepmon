@@ -435,7 +435,12 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **`.prod-delta`** — a comparison card's difference against the base: a pill
   (`999px`, `--text-xs`, weight 700) with `▲`/`▼` + the absolute difference.
   Variants: `--up` (`--up` on `--up-dim`), `--down` (`--down` on `--down-dim`),
-  `--same` (bare `≈` in `--muted`). The sign lives in `sr-only` text.
+  `--same` (bare `≈` in `--muted`). The sign lives in `sr-only` text. Two uses beyond
+  the card: as a **gain pill** it leads with the metric's icon (12px; `IconSparkle` at
+  11px in the pill's own color) when it stands apart from the figure it measures —
+  `[icon] ▲519` beside a level span; and a **"new" form**, `+9.8 nuevo` / `new` in
+  `--up` with **no triangle**, for a value that did not exist before (an ingredient a
+  level unlocks) — the word carries the direction.
 - **`.chip` / `.chips`** — small thematic tag (container wraps). Variants:
   `--ingredient` (`--surface-2`), `--subskill` (accent-dim).
 - **`.mini-icon`** — small inline icon (nature stat, ingredient, sub-skill) with
@@ -451,9 +456,10 @@ states · where it lives. Feature one-offs are intentionally not here.
   stat's icon (`--up`), `▼` + the lowered one's (`--down`), then the name (`--text`)
   after a hairline divider. Neutral → a white circled X on both sides (only the arrows carry
   color); no nature → `--empty` (muted marks, same footprint, so rows stay aligned).
-  Two versions: **with the name** (the card) or **effects only** where the row must
-  summarize more (the Box row) — the effects-only pill always sits in a `Tooltip` with
-  the nature's name. `NatureSelect` is the one place the name sits *outside* the pill:
+  Two versions: **with the name** (the card and the Box entry; no nature reads the
+  muted "Sin naturaleza" / "No nature" instead of a pill) or **effects only** where the
+  row must summarize more (the Box picker) — the effects-only pill always sits in a
+  `Tooltip` with the nature's name. `NatureSelect` is the one place the name sits *outside* the pill:
   trigger and options read as a list of names, each with its effects-only pill. Fill
   is `--surface-2`, or `--surface` on a `--surface-2` ground (`--pill-bg`).
 - **State vocabulary** shared across selects/menus/toggles: `.is-active`,
@@ -520,7 +526,10 @@ states · where it lives. Feature one-offs are intentionally not here.
   content via `Tooltip.Row / Tooltip.Label / Tooltip.Value` (e.g. a strength
   base/bonus breakdown). Wraps the trigger element (`.tooltip` + `.tooltip__bubble`).
   The bubble sets its own typography (weight 400, no uppercase, normal tracking), so a
-  trigger inside an uppercase block heading doesn't restyle it.
+  trigger inside an uppercase block heading doesn't restyle it. **Wide variant**
+  (`max-width: min(20rem, 90vw)`, padding `0.5rem 0.65rem`) for a comparison that needs
+  four columns — label · `now › target` · delta (the Box's level-up comparison); the
+  16rem default stays for everything else.
 
 ### Form controls
 - **`Stepper`** (`components/Stepper.tsx`) — the `‹ value ›` shell: two nav buttons
@@ -1050,3 +1059,47 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   a phone the cards are a long scroll and the title scrolls away with them, while the
   pager is always on screen — the action is at hand wherever you are on a card. On a wide
   screen the header is always visible, so the label can stay.
+- **What leveling costs gets its own column in the Box entry.** *Question:* the cost to
+  the next unlock (candies, dream shards) and what it buys — under the level badge, in a
+  strip under each entry, or as a column? *Resolution:* its own grid track,
+  `levelup`, between Skill and the `···` menu (`9.5rem`, with a `0.75rem` margin before the
+  menu; the room comes from stacking the build, below, and the narrow-layout breakpoint
+  moved from 1024px to 1099px): the span `Nv. 25 → 30`
+  (`--text-base`, 600, tabular, the tooltip cue opening the wide comparison `Tooltip`),
+  and a gain pill (`.prod-delta` with the metric's icon; a strength gain abbreviated like
+  the cost, `▲12.3K`; a new ingredient reads `+9.8` with no "new" word here, the phone
+  section and the tooltip spell it out) share the first line; under them, the candy + shard figures at
+  `--text-sm`, neutral, **abbreviated** from 10,000 up (three significant digits: `15.1K`,
+  `535K`, `1.14M`; below that a K saves no room, so figures read exact) so the column never grows past its track — the exact figures head the
+  comparison tooltip. At level 70+ the cell reads a muted **Max level reached** (`--text-sm`) instead of staying blank; it is empty only when there is no production at all. The
+  gain's metric follows the Pokémon's **role**, Box coverage's rule (strength for berry
+  roles, its main ingredient — or the new one the span unlocks — for ingredient roles,
+  skill triggers otherwise). Tablet: a full-width last row after a `--divider` hairline;
+  phone: a third section of the expanded entry ("Próximo nivel" · "Costo"), the folded
+  row unchanged. *Why:* deciding whom to level means scanning the box top to bottom, and a
+  column keeps the answer at the same spot on every Pokémon; under the badge it crowded
+  the identity, and a strip made every entry taller. What each unlock brings stays in
+  the build columns (locked slots already show) and the tooltip; the cost is neutral
+  because it is information, not a penalty the rules impose.
+- **On desktop the Box entry's build is one stacked column, like the cards.** *Question:*
+  with the level-up track added, the desktop row had no slack — the sub skills sat cramped
+  and the cost line ran up to the `···`. *Resolution:* equipped ingredients, sub skills and
+  nature share **one** track (`.box-entry__build`), three rows in the cards' order and
+  centered like the cards (no labels beside them), the nature as the named pill; the
+  grid is `14rem auto 5.5rem 6rem 7rem 9.5rem auto` with its `1.1rem` gap back, and
+  identity widened to 14rem so the longest names with a ribbon read whole. On tablet
+  (641–1099px) the same centered stack spans the card's full width (split into two
+  half-columns it read as two unrelated pieces); only the phone, with a label beside
+  each row, turns the wrapper into `display: contents` cells. *Why:* the build is read as one block (it is what the cards show as
+  one), and stacking it is the cheapest width on the row — a full column — which pays for
+  the new track without shrinking any metric.
+- **The build reads in one order everywhere: ingredients, sub skills, nature.** *Question:*
+  the Box showed nature before the sub skills (the picker's order) while the cards show it
+  last; and the cards dropped empty sub skill slots while the Box drew placeholders.
+  *Resolution:* the cards' order wins in every Box layout — stacked on desktop and
+  tablet, labelled rows on the phone (left-aligned there, since the labels set the
+  edge). The order lives in the DOM, not in CSS `order`, so it also reads that way. Both
+  the Box and the cards always draw the five sub skill slots; an empty one is the dashed
+  `.ss-icon--empty` square (the cards' "no sub skills" note is gone). *Why:* the same
+  Pokémon should read the same in every tool, and five fixed slots keep rows aligned and
+  show at a glance how many are missing.

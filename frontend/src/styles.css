@@ -2026,17 +2026,22 @@ button.shot--empty:focus-visible,
      posición en todos los Pokémon. El espacio libre se reparte ENTRE las columnas
      (space-between) en vez de acumularse en una sola, así en pantallas anchas no
      quedan todas amontonadas a la derecha. Centradas en vertical: cada columna
-     tiene distinta cantidad de líneas y se centra en el alto de la fila. */
-  grid-template-columns: 13rem auto auto 5.5rem 6rem 7rem auto;
+     tiene distinta cantidad de líneas y se centra en el alto de la fila.
+     The build (equipped ingredients, sub skills, nature) is ONE track on desktop,
+     stacked in three rows like the cards; the 6th track (before actions, the 7th)
+     is the level-up cost (PRD 0021). Identity is 14rem so the longest names with a
+     ribbon (Meowscarada) read whole. */
+  grid-template-columns: 14rem auto 5.5rem 6rem 7rem 9.5rem auto;
   align-items: center;
   justify-content: space-between;
   gap: 1rem 1.1rem;
 }
 
-/* El layout angosto (< 1024px) está consolidado en un único bloque al final de la
-   sección (busca "RESPONSIVE ANGOSTO"): se reorganiza en una grilla de 2 columnas en
-   vez de apilar las 7 zonas, así no se desperdicia el ancho. El salto se hace a
-   1024px porque desde ~980px las siete columnas ya se empiezan a superponer. */
+/* The narrow layout (< 1100px) lives in a single block at the end of the section
+   (search "RESPONSIVE ANGOSTO"): it regroups into a 2-column grid instead of
+   stacking every zone, so the width isn't wasted. The break is at 1100px (the
+   .layout max width) because with the level-up column the eight tracks start to
+   overlap below ~1090px. */
 
 /* Columna 1 — Identidad: sprite a la izquierda; a su derecha el nombre+listón en
    una línea y el badge de nivel debajo. */
@@ -2087,6 +2092,16 @@ button.shot--empty:focus-visible,
 
 /* Columna 2 — Ingredientes equipados: fila de íconos en una sola línea, atenuada
    igual que la config (es parte del "build", retrocede frente a las métricas). */
+.box-entry__build {
+  display: flex;
+  flex-direction: column;
+  /* Centered, as the cards center their build: with no labels beside the rows, the
+     shorter ones (ingredients, nature) sit over the sub skills' midline. */
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
 .box-entry__ing-config {
   opacity: 0.85;
 }
@@ -2233,6 +2248,9 @@ button.shot--empty:focus-visible,
   align-items: center;
   gap: 0.4rem;
   flex-shrink: 0;
+  /* Breathing room from the level-up column (desktop; narrower layouts pin the menu
+     absolutely, where this margin has no effect). */
+  margin-left: 0.75rem;
 }
 
 /* Menú overflow "···" para comparar/editar/eliminar. */
@@ -2310,19 +2328,194 @@ button.shot--empty:focus-visible,
   margin: 0 0.6rem;
 }
 
-/* ── RESPONSIVE ANGOSTO (< 1024px) ───────────────────────────────────────────
-   Desde ~980px las 7 columnas se empiezan a superponer, así que el salto se hace
-   acá. En vez de apilar las 7 zonas en una sola columna (mucho ancho desperdiciado y
+/* Column 7 — level-up cost (PRD 0021): span (tooltip trigger) · gain pill · cost,
+   stacked like the berries/ingredients columns. Empty at level 70+ (keeps the track). */
+.box-entry__levelup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+/* Span and gain share the cell's first line (as in the phone section); the cost
+   sits under them. */
+/* Level 70+: no next level the cost tables reach — said in the column, not left blank. */
+.levelup-max {
+  font-size: var(--text-sm);
+}
+
+.box-entry__levelup-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
+
+.levelup-span {
+  font-size: var(--text-base);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+/* A cost is information, not a penalty: neutral figures, no --down. */
+.levelup-cost {
+  display: inline-flex;
+  gap: 0.6rem;
+  /* Candies and shards stay on one line. */
+  white-space: nowrap;
+}
+
+.levelup-cost .box-entry__metric-value {
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+
+/* Gain pill: a .prod-delta that leads with its metric's 12px icon. */
+.levelup-gain {
+  gap: 0.2rem;
+}
+
+.levelup-gain img {
+  width: 12px;
+  height: 12px;
+  object-fit: contain;
+}
+
+.levelup-gain .levelup-gain__sparkle {
+  width: 11px;
+  height: 11px;
+}
+
+/* Tooltip wide variant: room for a four-column now-vs-target comparison. */
+.tooltip__bubble.tooltip__bubble--wide {
+  max-width: min(20rem, 90vw);
+  padding: 0.5rem 0.65rem;
+  gap: 0.3rem;
+}
+
+.levelup-tip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.levelup-tip__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--divider);
+}
+
+.levelup-tip__span {
+  color: var(--text);
+  font-weight: 600;
+}
+.levelup-tip__cost {
+  display: inline-flex;
+  gap: 0.75rem;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.levelup-tip__cost-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.levelup-tip__unlock {
+  display: grid;
+  grid-template-columns: 2.6rem 18px 1fr;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text);
+}
+
+.levelup-tip__lv {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.levelup-tip__ss.ss-icon {
+  width: 18px;
+  height: 18px;
+  border-width: 1.5px;
+}
+
+.levelup-tip__ss.ss-icon img {
+  width: 12px;
+  height: 12px;
+}
+
+.levelup-tip__img,
+.levelup-tip__label img,
+.levelup-tip__label svg {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.levelup-tip__row {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 1fr) auto 4rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.levelup-tip__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--muted);
+}
+
+.levelup-tip__vals {
+  display: inline-flex;
+  gap: 0.35rem;
+  justify-content: flex-end;
+  font-variant-numeric: tabular-nums;
+}
+
+.levelup-tip__now,
+.levelup-tip__sep {
+  color: var(--muted);
+}
+
+.levelup-tip__then {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.levelup-tip__delta {
+  display: inline-flex;
+  justify-content: flex-end;
+}
+
+.levelup-tip__note {
+  color: var(--muted);
+  padding-top: 0.3rem;
+  border-top: 1px solid var(--divider);
+}
+
+/* ── RESPONSIVE ANGOSTO (< 1100px) ───────────────────────────────────────────
+   With the level-up column the 8 tracks start to overlap below ~1090px, and the
+   page container (.layout) caps at 1100px, so the break is at 1099px.
+   En vez de apilar las zonas en una sola columna (mucho ancho desperdiciado y
    cards larguísimas), se reorganiza en una grilla de 2 columnas, agrupando por
    afinidad. Acá NO importa la alineación entre cards (cada card es más alta y la info
    queda lejos igual), así que priorizamos densidad y agrupación:
      fila 1: identidad             | menú "···"
-     fila 2: ingredientes equip.   | config (naturaleza + sub skills)   ← build
+     fila 2: build stacked and centered (ingredients · sub skills · nature) ← full width
      fila 3: bayas + fuerza        | skill                              ← producción
      fila 4: ingredientes producidos (ancho completo, en fila que envuelve)
    Va al final de la sección para ganarle por orden a las reglas base (las media
    queries no suman especificidad: decide el orden en el archivo). */
-@media (max-width: 1024px) {
+@media (max-width: 1099px) {
   .box-entry {
     position: relative;
     grid-template-columns: 1fr 1fr;
@@ -2347,16 +2540,12 @@ button.shot--empty:focus-visible,
     right: 1.25rem;
   }
 
-  .box-entry__ing-config {
-    grid-column: 1;
+  /* The build keeps the desktop stack (ingredients · sub skills · nature, centered)
+     across the card's full width: split into two half-columns it read as two
+     unrelated pieces. */
+  .box-entry__build {
+    grid-column: 1 / -1;
     grid-row: 2;
-  }
-
-  .box-entry__config.prod-box-item__config {
-    grid-column: 2;
-    grid-row: 2;
-    /* A la izquierda: centrada se vería flotando en su media columna. */
-    align-items: flex-start;
   }
 
   /* Sub skills un toque más chicos para que los 5 entren en media columna a ~375px
@@ -2386,6 +2575,23 @@ button.shot--empty:focus-visible,
     flex-wrap: wrap;
     gap: 0.3rem 0.9rem;
   }
+
+  /* Level-up cost: its own full-width row after a hairline, as one wrapping line
+     (span · gain pill · candies · shards). Empty at level 70+ → no row at all. */
+  .box-entry__levelup {
+    grid-column: 1 / -1;
+    grid-row: 5;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 0.9rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--divider);
+  }
+
+  .box-entry__levelup:empty {
+    display: none;
+  }
 }
 
 /* ── COMPACTO MOBILE (< 640px) ───────────────────────────────────────────────
@@ -2397,6 +2603,11 @@ button.shot--empty:focus-visible,
    (build y producción). Las etiquetas solo existen acá: en pantalla ancha, la
    posición de cada columna ya cumple ese papel. */
 @media (max-width: 640px) {
+  /* With labels beside each row, the build's parts become cells of their own. */
+  .box-entry__build {
+    display: contents;
+  }
+
   .box-entry {
     /* etiqueta | valor. Las filas se numeran explícitamente más abajo, así el
        orden visual no depende del orden del DOM. */
@@ -2505,11 +2716,12 @@ button.shot--empty:focus-visible,
   .box-entry__divider--build {
     grid-row: 2;
   }
+  /* The cards' order: ingredients, sub skills, nature. */
   .box-entry__label--nature {
-    grid-row: 3;
+    grid-row: 5;
   }
   .box-entry__config > .prod-box-item__nature {
-    grid-row: 3;
+    grid-row: 5;
     grid-column: 2;
   }
   .box-entry__label--ss {
@@ -2520,12 +2732,12 @@ button.shot--empty:focus-visible,
     grid-column: 2;
   }
   .box-entry__label--ing-config {
-    grid-row: 5;
+    grid-row: 3;
   }
   /* Ya no necesita atenuarse para retroceder: la etiqueta a la izquierda es la
      que marca la jerarquía en esta forma. */
   .box-entry__ing-config {
-    grid-row: 5;
+    grid-row: 3;
     grid-column: 2;
     opacity: 1;
   }
@@ -2560,6 +2772,31 @@ button.shot--empty:focus-visible,
   .box-entry__skill {
     grid-row: 10;
     grid-column: 2;
+  }
+
+  /* Third section: the level-up cost (absent at level 70+). */
+  .box-entry__divider--levelup {
+    grid-row: 11;
+  }
+  .box-entry__label--next {
+    grid-row: 12;
+  }
+  .box-entry__levelup-next {
+    grid-row: 12;
+    grid-column: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 0.6rem;
+    min-width: 0;
+  }
+  .box-entry__label--cost {
+    grid-row: 13;
+  }
+  .box-entry__levelup-cost {
+    grid-row: 13;
+    grid-column: 2;
+    min-width: 0;
   }
 
   /* Las cifras de la skill en una línea: ya tienen la etiqueta a la izquierda. */
@@ -3703,8 +3940,11 @@ button.prod-card__base-tag--action {
 .icon-row.prod-card__subskills {
   flex-wrap: nowrap;
 }
-/* Each icon sits in its tooltip's wrapper: that's the flex item that shrinks. */
-.prod-card__subskills > .tooltip {
+/* Each icon sits in its tooltip's wrapper: that's the flex item that shrinks. An
+   empty slot has no tooltip, so the placeholder itself is that flex item, at the
+   same 36px basis (without this its width: 100% takes the whole row). */
+.prod-card__subskills > .tooltip,
+.prod-card__subskills > .ss-icon--empty {
   flex: 0 1 36px;
   min-width: 0;
 }
@@ -5995,6 +6235,14 @@ button.prod-card__base-tag--action {
 .progress-section__head {
   font-size: var(--text-base);
   margin: 0 0 0.75rem;
+}
+
+.progress-hint {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  max-width: 60ch;
 }
 
 .progress-section__head .muted {

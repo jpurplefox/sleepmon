@@ -13,16 +13,18 @@ import { Modal } from "./Modal";
 import { Placeholder } from "./Placeholder";
 import { ProgressAreasTab } from "./ProgressAreasTab";
 import { ProgressKitchenTab } from "./ProgressKitchenTab";
+import { ProgressLevelingTab } from "./ProgressLevelingTab";
 import { ProgressRecipesTab } from "./ProgressRecipesTab";
 import { ProgressSleepTab } from "./ProgressSleepTab";
 
-type TabId = "kitchen" | "recipes" | "areas" | "sleep";
+type TabId = "kitchen" | "recipes" | "areas" | "sleep" | "leveling";
 
 const TABS: { id: TabId; labelKey: string }[] = [
   { id: "kitchen", labelKey: "progress.tabKitchen" },
   { id: "recipes", labelKey: "progress.tabRecipes" },
   { id: "areas", labelKey: "progress.tabAreas" },
   { id: "sleep", labelKey: "progress.tabSleep" },
+  { id: "leveling", labelKey: "progress.tabLeveling" },
 ];
 
 export function ProgressModal({ onClose }: { onClose: () => void }) {
@@ -168,6 +170,9 @@ export function ProgressModal({ onClose }: { onClose: () => void }) {
               )) ||
               (activeTab === "sleep" && (
                 <ProgressSleepTab draft={draft} onChange={onDraftChange} />
+              )) ||
+              (activeTab === "leveling" && (
+                <ProgressLevelingTab draft={draft} onChange={onDraftChange} />
               ))
             ) : (
               <Placeholder loading>{t("progress.loading")}</Placeholder>

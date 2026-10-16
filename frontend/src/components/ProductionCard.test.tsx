@@ -133,12 +133,13 @@ function renderCard(
   production: Production = PRODUCTION,
   map: { berryRole?: "main" | "sub" | "none"; expert?: boolean } = {},
   base?: Production,
+  config: MemberInput = CONFIG,
 ) {
   localStorage.setItem("sleepmon.lang", "en");
   return render(
     <LanguageProvider>
       <ProductionCard
-        config={CONFIG}
+        config={config}
         catalog={CATALOG}
         production={production}
         productionError={null}
@@ -265,5 +266,24 @@ describe("ProductionCard deltas", () => {
       li.textContent?.includes("10,578"),
     );
     expect(strengthLine?.querySelector(".prod-delta")?.textContent).toBe("≈");
+  });
+});
+
+describe("ProductionCard build", () => {
+  it("shows a placeholder for every sub skill slot left empty", () => {
+    const { container } = renderCard(PRODUCTION, {}, undefined, {
+      ...CONFIG,
+      sub_skills: ["Helping Speed M"],
+    });
+    const row = container.querySelector(".prod-card__subskills") as HTMLElement;
+    expect(row.querySelectorAll(".ss-icon")).toHaveLength(5);
+    expect(row.querySelectorAll(".ss-icon--empty")).toHaveLength(4);
+  });
+
+  it("shows five placeholders instead of a note when no sub skill is set", () => {
+    const { container } = renderCard();
+    const row = container.querySelector(".prod-card__subskills") as HTMLElement;
+    expect(row.querySelectorAll(".ss-icon--empty")).toHaveLength(5);
+    expect(within(row).queryByText("no sub skills")).toBeNull();
   });
 });

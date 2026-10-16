@@ -69,6 +69,17 @@ class MemberProductionOut(msgspec.Struct):
     skill_berry_amount: float | None = None
     skill_berries_per_teammate: float | None = None
     skill_help_targets: int | None = None
+    helps_per_day: float = 0.0
+    level_up: LevelUpOut | None = None
+
+
+class LevelUpOut(msgspec.Struct):
+    """A Box entry's next level-up: target, cost and production at the target level."""
+
+    target_level: int
+    candies: int
+    dream_shards: int
+    at_target: MemberProductionOut
 
 
 class MemberOut(msgspec.Struct):
@@ -257,6 +268,7 @@ class ProgressOut(msgspec.Struct):
     favorite_recipes: dict[str, str]
     area_bonuses: dict[str, int]
     sleep: SleepOut
+    min_target_level: int | None = None
 
 
 class ProgressPatchIn(msgspec.Struct, forbid_unknown_fields=True):
@@ -271,6 +283,7 @@ class ProgressPatchIn(msgspec.Struct, forbid_unknown_fields=True):
     favorite_recipes: dict[str, str | None] | None = None
     area_bonuses: dict[str, int] | None = None
     sleep: SleepIn | None = None
+    min_target_level: int | None = None  # 0 clears
 
 
 class GoogleLoginIn(msgspec.Struct, forbid_unknown_fields=True):

@@ -201,6 +201,7 @@ _PROGRESS_COLS = (
     progress.area_bonuses,
     progress.night_minutes,
     progress.nap_minutes,
+    progress.min_target_level,
 )
 
 SELECT_PROGRESS = (
@@ -244,8 +245,9 @@ UPSERT_PROGRESS = (
             "area_bonuses",
             "night_minutes",
             "nap_minutes",
+            "min_target_level",
         )
-        .insert(_P, _P, _P, _P, _P, _P, _P),
+        .insert(_P, _P, _P, _P, _P, _P, _P, _P),
     )
     .on_conflict(progress.user_id)
     .do_update("pot_size")
@@ -254,6 +256,7 @@ UPSERT_PROGRESS = (
     .do_update("area_bonuses")
     .do_update("night_minutes")
     .do_update("nap_minutes")
+    .do_update("min_target_level")
     .do_update("updated_at", Function("now"))
     .get_sql()
 )

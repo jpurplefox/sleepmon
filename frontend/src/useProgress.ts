@@ -52,8 +52,11 @@ export function useProgress(): {
     onMutate: () => ({ id: ++latestSend.current }),
     // Responses can land out of order; only the newest send may write the
     // cache, so a stale one never clobbers a fresher document.
-    onSuccess: (updated, _patch, context) => {
+    onSuccess: (updated, patch, context) => {
       if (context.id === latestSend.current) client.setQueryData(KEY, updated);
+      // The Box's numbers depend on the sleep schedule and the minimum target level.
+      if (patch.sleep !== undefined || patch.min_target_level !== undefined)
+        void client.invalidateQueries({ queryKey: ["members"] });
     },
   });
 

@@ -40,6 +40,10 @@ interface Props {
   // Si mostrar la fila de ingredientes equipados. El picker la quiere (true por
   // defecto); la Caja la apaga porque los muestra en su propia columna.
   showIngredients?: boolean;
+  // The Box: the nature after the sub skills (the cards' order) and with its name
+  // spelled out ("No nature" when there is none). The picker keeps the compact,
+  // effects-only pill before the sub skills.
+  natureAsCard?: boolean;
 }
 
 // Fila de config compartida entre el picker (BoxPicker) y la entrada de la Caja
@@ -58,6 +62,7 @@ export function MemberConfig({
   tierBySubSkill,
   showSkillLevel = true,
   showIngredients = true,
+  natureAsCard = false,
 }: Props) {
   const { t, nature: natureLabel, subSkill, mainSkill } = useI18n();
 
@@ -67,22 +72,25 @@ export function MemberConfig({
 
   return (
     <>
-      {/* Orden: ingredientes → naturaleza → sub skills → skill. La Caja apaga los
-          ingredientes (showIngredients=false): los muestra en su propia columna. */}
+      {/* Order: ingredients → nature → sub skills → skill (the Box, with natureAsCard:
+          sub skills → nature). The Box turns the ingredients off
+          (showIngredients=false): it shows them in their own cell. */}
       {showIngredients && <IngredientLineup level={level} ingredients={ingredients} />}
 
-      {/* Nature: the pill without its name (it goes in the tooltip, and sr-only
-          when the pill's images don't already say it). Without a nature the pill
-          keeps its shape, so the row stays aligned. */}
-      <Tooltip
-        content={nature ? natureLabel(nature) : t("card.noNature")}
-        className="tooltip--inline prod-box-item__nature icon-row"
-      >
-        <NaturePill nature={natureMeta} />
-        {(!natureMeta || natureMeta.neutral) && (
-          <span className="sr-only">{nature ? natureLabel(nature) : t("card.noNature")}</span>
-        )}
-      </Tooltip>
+      {/* Nature (picker): the pill without its name (it goes in the tooltip, and
+          sr-only when the pill's images don't already say it). Without a nature the
+          pill keeps its shape, so the row stays aligned. */}
+      {!natureAsCard && (
+        <Tooltip
+          content={nature ? natureLabel(nature) : t("card.noNature")}
+          className="tooltip--inline prod-box-item__nature icon-row"
+        >
+          <NaturePill nature={natureMeta} />
+          {(!natureMeta || natureMeta.neutral) && (
+            <span className="sr-only">{nature ? natureLabel(nature) : t("card.noNature")}</span>
+          )}
+        </Tooltip>
+      )}
 
       {/* Sub skills: siempre los 5 slots; los no cargados como cuadrado vacío. */}
       <span className="ingredient-row">
@@ -108,6 +116,18 @@ export function MemberConfig({
           );
         })}
       </span>
+
+      {/* Nature (Box): after the sub skills, as the cards show it — the named pill,
+          or the cards' "No nature". */}
+      {natureAsCard && (
+        <span className="prod-box-item__nature icon-row">
+          {nature ? (
+            <NaturePill nature={natureMeta} name={natureLabel(nature)} />
+          ) : (
+            <span className="muted">{t("card.noNature")}</span>
+          )}
+        </span>
+      )}
 
       {/* Skill: el ícono propio de la main skill + "Lv. N". Color neutro. El nombre de la skill va en
           sr-only/title para no depender solo del ícono. La Caja la apaga

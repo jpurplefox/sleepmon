@@ -49,6 +49,7 @@ class DefaultPlayerProgressService(PlayerProgressService):
             favorite_recipes=self._parse_favorites(data.favorite_recipes),
             area_bonuses=self._parse_bonuses(data.area_bonuses),
             sleep=None if data.sleep is None else parse_sleep(data.sleep),
+            min_target_level=data.min_target_level,
         )
 
     def _parse_levels(self, levels: Mapping[str, int] | None) -> Mapping[str, int] | None:
