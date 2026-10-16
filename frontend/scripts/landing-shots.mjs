@@ -157,6 +157,15 @@ async function capture(browser, dir, lang) {
     });
     await page.locator(".sug-row", { hasText: "Sudowoodo" }).click();
     await cards.nth(1).waitFor();
+    // Taupe Hollow favors Sitrus, the berry both of them gather.
+    await page.getByRole("button", { name: /^(Mapa|Map) Greengrass Isle/ }).click();
+    const mapDialog = page.getByRole("dialog");
+    await mapDialog.getByRole("button", { name: "Greengrass Isle" }).click();
+    await mapDialog.getByRole("option", { name: /^Taupe Hollow/ }).click();
+    await page.keyboard.press("Escape");
+    await mapDialog.waitFor({ state: "hidden" });
+    // Closing hands focus back to the map trigger; its ring doesn't belong in the picture.
+    await page.evaluate(() => document.activeElement?.blur());
     await page.waitForTimeout(1500);
     await page.screenshot({ path: join(dir, "catch-compare.jpg"), ...JPEG, clip: await clipTo([cards.first(), cards.nth(1)]) });
   });
