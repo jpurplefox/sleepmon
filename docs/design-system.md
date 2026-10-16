@@ -435,7 +435,12 @@ states · where it lives. Feature one-offs are intentionally not here.
 - **`.prod-delta`** — a comparison card's difference against the base: a pill
   (`999px`, `--text-xs`, weight 700) with `▲`/`▼` + the absolute difference.
   Variants: `--up` (`--up` on `--up-dim`), `--down` (`--down` on `--down-dim`),
-  `--same` (bare `≈` in `--muted`). The sign lives in `sr-only` text.
+  `--same` (bare `≈` in `--muted`). The sign lives in `sr-only` text. Two uses beyond
+  the card: as a **gain pill** it leads with the metric's icon (12px; `IconSparkle` at
+  11px in the pill's own color) when it stands apart from the figure it measures —
+  `[icon] ▲519` beside a level span; and a **"new" form**, `+9.8 nuevo` / `new` in
+  `--up` with **no triangle**, for a value that did not exist before (an ingredient a
+  level unlocks) — the word carries the direction.
 - **`.chip` / `.chips`** — small thematic tag (container wraps). Variants:
   `--ingredient` (`--surface-2`), `--subskill` (accent-dim).
 - **`.mini-icon`** — small inline icon (nature stat, ingredient, sub-skill) with
@@ -520,7 +525,10 @@ states · where it lives. Feature one-offs are intentionally not here.
   content via `Tooltip.Row / Tooltip.Label / Tooltip.Value` (e.g. a strength
   base/bonus breakdown). Wraps the trigger element (`.tooltip` + `.tooltip__bubble`).
   The bubble sets its own typography (weight 400, no uppercase, normal tracking), so a
-  trigger inside an uppercase block heading doesn't restyle it.
+  trigger inside an uppercase block heading doesn't restyle it. **Wide variant**
+  (`max-width: min(20rem, 90vw)`, padding `0.5rem 0.65rem`) for a comparison that needs
+  four columns — label · `now › target` · delta (the Box's level-up comparison); the
+  16rem default stays for everything else.
 
 ### Form controls
 - **`Stepper`** (`components/Stepper.tsx`) — the `‹ value ›` shell: two nav buttons
@@ -1050,3 +1058,19 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   a phone the cards are a long scroll and the title scrolls away with them, while the
   pager is always on screen — the action is at hand wherever you are on a card. On a wide
   screen the header is always visible, so the label can stay.
+- **What leveling costs gets its own column in the Box entry.** *Question:* the cost to
+  the next unlock (candies, dream shards) and what it buys — under the level badge, in a
+  strip under each entry, or as a column? *Resolution:* an **8th grid track,
+  `levelup`**, between Skill and the `···` menu (`8.5rem`): the span `Nv. 25 → 30`
+  (`--text-base`, 600, tabular, the tooltip cue opening the wide comparison `Tooltip`),
+  a gain pill (`.prod-delta` with the metric's icon) and the candy + shard figures at
+  `--text-sm`, neutral. Rendered empty at level 70+ so the track stays aligned. The
+  gain's metric follows the Pokémon's **role**, Box coverage's rule (strength for berry
+  roles, its main ingredient — or the new one the span unlocks — for ingredient roles,
+  skill triggers otherwise). Tablet: a full-width last row after a `--divider` hairline;
+  phone: a third section of the expanded entry ("Próximo nivel" · "Costo"), the folded
+  row unchanged. *Why:* deciding whom to level means scanning the box top to bottom, and a
+  column keeps the answer at the same spot on every Pokémon; under the badge it crowded
+  the identity, and a strip made every entry taller. What each unlock brings stays in
+  the build columns (locked slots already show) and the tooltip; the cost is neutral
+  because it is information, not a penalty the rules impose.
