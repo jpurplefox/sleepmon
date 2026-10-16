@@ -257,6 +257,7 @@ class ProgressOut(msgspec.Struct):
     favorite_recipes: dict[str, str]
     area_bonuses: dict[str, int]
     sleep: SleepOut
+    min_target_level: int | None = None
 
 
 class ProgressPatchIn(msgspec.Struct, forbid_unknown_fields=True):
@@ -271,6 +272,7 @@ class ProgressPatchIn(msgspec.Struct, forbid_unknown_fields=True):
     favorite_recipes: dict[str, str | None] | None = None
     area_bonuses: dict[str, int] | None = None
     sleep: SleepIn | None = None
+    min_target_level: int | None = None  # 0 clears
 
 
 class GoogleLoginIn(msgspec.Struct, forbid_unknown_fields=True):

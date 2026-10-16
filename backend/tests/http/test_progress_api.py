@@ -89,6 +89,7 @@ def test_a_new_account_reads_the_defaults(client: TestClient, auth_header: dict[
         "favorite_recipes": {},
         "area_bonuses": {},
         "sleep": {"night_minutes": 510, "nap_minutes": None},
+        "min_target_level": None,
     }
 
 
@@ -164,3 +165,20 @@ def test_patch_rejects_an_invalid_sleep(client: TestClient, auth_header: dict[st
         "/progress", json={"sleep": {"night_minutes": 500}}, headers=auth_header
     )
     assert response.status_code == 400
+
+
+def test_patch_sets_and_clears_the_minimum_target(
+    client: TestClient, auth_header: dict[str, str]
+) -> None:
+    body = client.patch("/progress", json={"min_target_level": 60}, headers=auth_header).json()
+    assert body["min_target_level"] == 60
+    assert client.get("/progress", headers=auth_header).json()["min_target_level"] == 60
+    body = client.patch("/progress", json={"min_target_level": 0}, headers=auth_header).json()
+    assert body["min_target_level"] is None
+
+
+def test_a_minimum_target_off_the_list_is_rejected(
+    client: TestClient, auth_header: dict[str, str]
+) -> None:
+    res = client.patch("/progress", json={"min_target_level": 40}, headers=auth_header)
+    assert res.status_code == 400

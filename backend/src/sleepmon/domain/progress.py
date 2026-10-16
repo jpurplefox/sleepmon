@@ -19,11 +19,13 @@ from sleepmon.domain.catalog_data import (
     POT_LADDER,
 )
 from sleepmon.domain.errors import ValidationError
+from sleepmon.domain.leveling import LEVEL_UP_TARGETS
 from sleepmon.domain.sleep import DEFAULT_SLEEP, SleepSchedule
 from sleepmon.domain.value_objects import Island, RecipeType
 
 DEFAULT_RECIPE_LEVEL: Final[int] = 1
 DEFAULT_AREA_BONUS: Final[int] = 0
+CLEAR_MIN_TARGET: Final[int] = 0  # a patch value that removes the minimum
 
 
 def _require_int(value: int, what: str) -> None:
@@ -60,6 +62,16 @@ def validate_area_bonus(pct: int) -> None:
         )
 
 
+def validate_min_target_level(level: int) -> None:
+    """The minimum is one of the unlock levels the cost can aim at."""
+    _require_int(level, "El nivel objetivo mínimo")
+    if level not in LEVEL_UP_TARGETS:
+        raise ValidationError(
+            "El nivel objetivo mínimo debe ser uno de "
+            f"{', '.join(map(str, LEVEL_UP_TARGETS))}; llegó {level}."
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class PlayerProgress:
     """One user's progress. Every mapping holds only what differs from the default."""
@@ -69,6 +81,7 @@ class PlayerProgress:
     favorite_recipes: Mapping[RecipeType, str] = field(default_factory=dict)
     area_bonuses: Mapping[Island, int] = field(default_factory=dict)
     sleep: SleepSchedule = DEFAULT_SLEEP
+    min_target_level: int | None = None
 
     def __post_init__(self) -> None:
         validate_pot_size(self.pot_size)
@@ -76,6 +89,8 @@ class PlayerProgress:
             validate_recipe_level(level)
         for pct in self.area_bonuses.values():
             validate_area_bonus(pct)
+        if self.min_target_level is not None:
+            validate_min_target_level(self.min_target_level)
 
 
 @dataclass(frozen=True, slots=True)
@@ -91,6 +106,7 @@ class ProgressPatch:
     favorite_recipes: Mapping[RecipeType, str | None] | None = None
     area_bonuses: Mapping[Island, int] | None = None
     sleep: SleepSchedule | None = None  # replaces the whole schedule
+    min_target_level: int | None = None  # None: untouched; CLEAR_MIN_TARGET: remove
 
 
 def apply_patch(current: PlayerProgress, patch: ProgressPatch) -> PlayerProgress:
@@ -126,4 +142,12 @@ def apply_patch(current: PlayerProgress, patch: ProgressPatch) -> PlayerProgress
 
     sleep = current.sleep if patch.sleep is None else patch.sleep
 
-    return PlayerProgress(pot, levels, favorites, bonuses, sleep)
+    if patch.min_target_level is None:
+        minimum = current.min_target_level
+    elif patch.min_target_level == CLEAR_MIN_TARGET:
+        minimum = None
+    else:
+        validate_min_target_level(patch.min_target_level)
+        minimum = patch.min_target_level
+
+    return PlayerProgress(pot, levels, favorites, bonuses, sleep, minimum)

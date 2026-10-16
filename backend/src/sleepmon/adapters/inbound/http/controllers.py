@@ -609,6 +609,7 @@ def _to_progress_out(progress: PlayerProgress) -> ProgressOut:
         sleep=SleepOut(
             night_minutes=progress.sleep.night_minutes, nap_minutes=progress.sleep.nap_minutes
         ),
+        min_target_level=progress.min_target_level,
     )
 
 
@@ -640,6 +641,7 @@ class ProgressController(Controller):
                     favorite_recipes=data.favorite_recipes,
                     area_bonuses=data.area_bonuses,
                     sleep=_sleep_input(data.sleep),
+                    min_target_level=data.min_target_level,
                 ),
             )
         )
