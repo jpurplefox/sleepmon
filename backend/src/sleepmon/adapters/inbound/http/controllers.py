@@ -162,6 +162,7 @@ def _full_production_out(result: ProductionResult) -> ProductionOut:
         skill_candy=result.skill_candy,
         skill_berry_juice=result.skill_berry_juice,
         skill_energy_drain=result.skill_energy_drain,
+        main_ingredient_at_60=result.main_ingredient_at_60,
         teammate_berries=(
             None
             if result.teammate_berries is None
@@ -224,6 +225,7 @@ def _production_out(production: MemberProduction | None) -> MemberProductionOut 
         skill_help_targets=production.skill_help_targets,
         helps_per_day=production.helps_per_day,
         level_up=_level_up_out(production.level_up),
+        main_ingredient_at_60=production.main_ingredient_at_60,
     )
 
 

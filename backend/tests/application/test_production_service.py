@@ -1489,3 +1489,27 @@ def test_versatile_skill_rejected_for_other_species(
 ) -> None:
     with pytest.raises(ValidationError):
         production_service.compute_production(_pokemon(versatile_skill="Charge Strength M"))
+
+
+def test_production_reports_main_ingredient_at_60(
+    production_service: DefaultProductionService,
+) -> None:
+    result = production_service.compute_production(
+        _pokemon(level=15, ingredients=["Fancy Apple", "Warming Ginger", "Warming Ginger"])
+    )
+    assert result.main_ingredient_at_60 == "Warming Ginger"
+
+
+def test_main_ingredient_at_60_ignores_map_terms(
+    production_service: DefaultProductionService,
+) -> None:
+    plain = production_service.compute_production(_pokemon())
+    on_map = production_service.compute_production(
+        _pokemon(
+            island="Cyan Beach (Expert)",
+            favorite_berries=["Grepa"],
+            main_favorite="Grepa",
+            weekly_bonus="ingredient",
+        )
+    )
+    assert on_map.main_ingredient_at_60 == plain.main_ingredient_at_60

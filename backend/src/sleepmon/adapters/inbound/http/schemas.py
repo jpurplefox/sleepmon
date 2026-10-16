@@ -71,6 +71,7 @@ class MemberProductionOut(msgspec.Struct):
     skill_help_targets: int | None = None
     helps_per_day: float = 0.0
     level_up: LevelUpOut | None = None
+    main_ingredient_at_60: str | None = None
 
 
 class LevelUpOut(msgspec.Struct):
@@ -235,6 +236,7 @@ class ProductionOut(msgspec.Struct):
     skill_candy: float | None = None
     skill_berry_juice: float | None = None
     skill_energy_drain: float | None = None
+    main_ingredient_at_60: str | None = None
     teammate_berries: list[BerryYieldOut] | None = None
     teammate_ingredients: list[SlotProductionOut] | None = None
 

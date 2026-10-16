@@ -45,6 +45,7 @@ from sleepmon.domain import analytics
 from sleepmon.domain.analytics import team_production
 from sleepmon.domain.berry_burst import BurstMember, team_context_for, teammate_berries
 from sleepmon.domain.catalog_data import (
+    ALL_INGREDIENTS_LEVEL,
     GOOD_CAMP_TICKET_POT_FACTOR,
     ISLAND_EXPERT,
     MAX_FAVORITE_BERRIES,
@@ -86,6 +87,7 @@ from sleepmon.domain.production import (
     DailyProduction,
     SlotProduction,
     daily_production,
+    main_ingredient,
     scale_daily,
 )
 from sleepmon.domain.progress import validate_pot_size
@@ -464,30 +466,34 @@ class DefaultTeamService(TeamService):
             return None
         resolved = resolve_versatile(species, member.versatile_skill)
 
-        def at(level: int) -> MemberProduction:
-            return _summarize(
-                daily_production(
-                    resolved,
-                    member.ingredients,
-                    level,
-                    member.nature,
-                    member.sub_skills,
-                    member.ribbon,
-                    member.skill_level,
-                    sleep=sleep,
-                )
+        def daily(level: int) -> DailyProduction:
+            return daily_production(
+                resolved,
+                member.ingredients,
+                level,
+                member.nature,
+                member.sub_skills,
+                member.ribbon,
+                member.skill_level,
+                sleep=sleep,
             )
 
-        now = at(member.level)
+        now_daily = daily(member.level)
+        at_60 = now_daily if member.level == ALL_INGREDIENTS_LEVEL else daily(ALL_INGREDIENTS_LEVEL)
+        main_60 = main_ingredient(at_60)
+        now = replace(_summarize(now_daily), main_ingredient_at_60=main_60 and main_60.value)
         target = target_level(member.level, min_target)
         if target is None:
             return now
         cost = level_up_cost(
             member.level, target, curve=species.growth, nature=exp_modifier(member.nature)
         )
+        at_target = at_60 if target == ALL_INGREDIENTS_LEVEL else daily(target)
         return replace(
             now,
-            level_up=LevelUpProjection(target, cost.candies, cost.dream_shards, at(target)),
+            level_up=LevelUpProjection(
+                target, cost.candies, cost.dream_shards, _summarize(at_target)
+            ),
         )
 
     def update_member(self, user_id: UUID, member_id: UUID, data: TeamMemberInput) -> TeamMember:
@@ -555,7 +561,21 @@ class DefaultProductionService(ProductionService):
             ),
             sleep=parse_sleep(data.sleep),
         )
-        return _production_result(result)
+        # Matched with no map terms, so the base and the Box compare alike.
+        at_60 = daily_production(
+            cfg.species,
+            cfg.ingredients,
+            ALL_INGREDIENTS_LEVEL,
+            cfg.nature,
+            cfg.sub_skills,
+            cfg.ribbon,
+            cfg.skill_level,
+            sleep=parse_sleep(data.sleep),
+        )
+        main_60 = main_ingredient(at_60)
+        return replace(
+            _production_result(result), main_ingredient_at_60=main_60 and main_60.value
+        )
 
     def list_recipes(self) -> list[RecipeDTO]:
         return [

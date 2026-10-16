@@ -1172,3 +1172,27 @@ def test_team_listing_carries_the_level_up(
     assert up["at_target"]["helps_per_day"] > rows[15]["production"]["helps_per_day"]
     assert up["at_target"]["level_up"] is None
     assert rows[75]["production"]["level_up"] is None
+
+
+def test_production_returns_main_ingredient_at_60(client: TestClient) -> None:
+    res = client.post(
+        "/production",
+        json=valid_payload(
+            level=15, ingredients=["Fancy Apple", "Warming Ginger", "Warming Ginger"]
+        ),
+    )
+    assert res.json()["main_ingredient_at_60"] == "Warming Ginger"
+
+
+def test_box_entries_return_main_ingredient_at_60(
+    client: TestClient, auth_header: dict[str, str]
+) -> None:
+    client.post(
+        "/team",
+        json=valid_payload(
+            level=15, ingredients=["Fancy Apple", "Warming Ginger", "Warming Ginger"]
+        ),
+        headers=auth_header,
+    )
+    (entry,) = client.get("/team", headers=auth_header).json()
+    assert entry["production"]["main_ingredient_at_60"] == "Warming Ginger"
