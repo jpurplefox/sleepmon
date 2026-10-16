@@ -1061,7 +1061,7 @@ a real doubt gets settled. The screen is the occasion, not the subject.
 - **What leveling costs gets its own column in the Box entry.** *Question:* the cost to
   the next unlock (candies, dream shards) and what it buys — under the level badge, in a
   strip under each entry, or as a column? *Resolution:* a **7th grid track,
-  `levelup`**, between Skill and the `···` menu (`9.5rem`; the Box entry's column gap narrowed from `1.1rem` to `0.8rem` so eight columns fit the 1100px layout, and the narrow-layout breakpoint moved from 1024px to 1099px): the span `Nv. 25 → 30`
+  `levelup`**, between Skill and the `···` menu (`9.5rem`; the Box entry's column gap narrowed from `1.1rem` to `0.8rem` and the ingredient production track from `6rem` to `5.25rem` so eight columns fit the 1100px layout with a `0.75rem` margin before the `···` menu, and the narrow-layout breakpoint moved from 1024px to 1099px): the span `Nv. 25 → 30`
   (`--text-base`, 600, tabular, the tooltip cue opening the wide comparison `Tooltip`),
   and a gain pill (`.prod-delta` with the metric's icon; a strength gain abbreviated like
   the cost, `▲12.3K`; a new ingredient reads `+9.8` with no "new" word here, the phone

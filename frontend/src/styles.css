@@ -2028,7 +2028,11 @@ button.shot--empty:focus-visible,
      quedan todas amontonadas a la derecha. Centradas en vertical: cada columna
      tiene distinta cantidad de líneas y se centra en el alto de la fila.
      The 7th track (before actions, the 8th) is the level-up cost (PRD 0021). */
-  grid-template-columns: 13rem auto auto 5.5rem 6rem 7rem 9.5rem auto;
+  /* Ingredient production gives up 0.75rem (icon + a two-digit amount + the skill
+     marker fit 5.25rem) so the menu can keep its own margin: at the 1100px layout
+     space-between has no slack left, and the level-up line would otherwise sit a
+     gap's width from the "···". Identity keeps 13rem: Meowscarada with a ribbon needs it. */
+  grid-template-columns: 13rem auto auto 5.5rem 5.25rem 7rem 9.5rem auto;
   align-items: center;
   justify-content: space-between;
   /* 0.8rem column gap (was 1.1rem): with the 9.5rem level-up track the eight
@@ -2237,6 +2241,9 @@ button.shot--empty:focus-visible,
   align-items: center;
   gap: 0.4rem;
   flex-shrink: 0;
+  /* Breathing room from the level-up column (desktop; narrower layouts pin the menu
+     absolutely, where this margin has no effect). */
+  margin-left: 0.75rem;
 }
 
 /* Menú overflow "···" para comparar/editar/eliminar. */
