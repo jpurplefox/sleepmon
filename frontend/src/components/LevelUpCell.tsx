@@ -8,6 +8,7 @@ import { subSkillIcon } from "../subskills";
 import type { LevelUp, Member, MemberProduction } from "../types";
 import { fcompact } from "../utils/format";
 import { IconHelp, IconSparkle, IconTriangle } from "./icons";
+import { LevelUpCostHead } from "./LevelUpCostHead";
 import { Tooltip } from "./Tooltip";
 
 // PRD 0021 — what leveling a Box entry costs and what it buys: the span (tooltip
@@ -163,27 +164,12 @@ function LevelUpTooltip({
   return (
     <span className="levelup-tip">
       <span className="levelup-tip__head">
-        <span className="levelup-tip__span">
-          {t("levelUp.spanFull", { from: member.level, to: levelUp.target_level })}
-        </span>
-        {/* The column abbreviates the cost; the exact figures live here, with the
-            column's own icons (the words stay for screen readers). */}
-        <span className="levelup-tip__cost">
-          <span className="levelup-tip__cost-item" aria-hidden="true">
-            <img className="levelup-tip__img" src={GENERIC_CANDY_ICON} alt="" />
-            <span>{fmtInt(levelUp.candies)}</span>
-          </span>
-          <span className="levelup-tip__cost-item" aria-hidden="true">
-            <img className="levelup-tip__img" src={SHARD_ICON} alt="" />
-            <span>{fmtInt(levelUp.dream_shards)}</span>
-          </span>
-          <span className="sr-only">
-            {t("levelUp.costFull", {
-              candies: fmtInt(levelUp.candies),
-              shards: fmtInt(levelUp.dream_shards),
-            })}
-          </span>
-        </span>
+        <LevelUpCostHead
+          from={member.level}
+          to={levelUp.target_level}
+          candies={levelUp.candies}
+          shards={levelUp.dream_shards}
+        />
         {unlocks.map((u) => (
           <span key={`${u.kind}-${u.level}`} className="levelup-tip__unlock">
             <span className="levelup-tip__lv">{t("common.level", { level: u.level })}</span>
