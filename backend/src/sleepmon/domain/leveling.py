@@ -147,3 +147,23 @@ def exp_modifier(nature: Nature | None) -> ExpNatureModifier:
     if effect.decreased is NatureStat.EXP_GAINS:
         return ExpNatureModifier.DOWN
     return ExpNatureModifier.NEUTRAL
+
+
+def comparison_raise(
+    level: int,
+    comparison_level: int | None,
+    *,
+    curve: GrowthCurve = GrowthCurve.NORMAL,
+    nature: ExpNatureModifier = ExpNatureModifier.NEUTRAL,
+) -> LevelUpCost | None:
+    """The raise Comparison's level imposes on a card (PRD 0002); None if it isn't raised."""
+    if comparison_level is None:
+        return None
+    if comparison_level not in LEVEL_UP_TARGETS:
+        allowed = ", ".join(str(t) for t in LEVEL_UP_TARGETS)
+        raise ValidationError(
+            f"El nivel de comparación debe ser uno de {allowed}; llegó {comparison_level}."
+        )
+    if level >= comparison_level:
+        return None
+    return level_up_cost(level, comparison_level, curve=curve, nature=nature)

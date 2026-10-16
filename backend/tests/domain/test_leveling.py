@@ -4,6 +4,7 @@ from sleepmon.domain.errors import ValidationError
 from sleepmon.domain.leveling import (
     LEVEL_UP_TARGETS,
     MAX_LEVELABLE_LEVEL,
+    comparison_raise,
     exp_modifier,
     level_up_cost,
     target_level,
@@ -88,3 +89,32 @@ def test_target_level(level: int, minimum: int | None, expected: int | None) -> 
 )
 def test_exp_modifier(nature: Nature | None, expected: ExpNatureModifier) -> None:
     assert exp_modifier(nature) == expected
+
+
+def test_comparison_raise_off_is_none() -> None:
+    assert comparison_raise(45, None) is None
+
+
+@pytest.mark.parametrize(("level", "target"), [(60, 60), (62, 60), (75, 70)])
+def test_comparison_raise_never_lowers(level: int, target: int) -> None:
+    assert comparison_raise(level, target) is None
+
+
+def test_comparison_raise_costs_the_stretch() -> None:
+    raised = comparison_raise(15, 60)
+    assert raised is not None
+    assert (raised.current_level, raised.target_level) == (15, 60)
+    assert (raised.candies, raised.dream_shards) == (1803, 535149)
+
+
+def test_comparison_raise_uses_curve_and_nature() -> None:
+    assert comparison_raise(15, 25, nature=UP) == level_up_cost(15, 25, nature=UP)
+    assert comparison_raise(15, 25, curve=GrowthCurve.MYTHICAL) == level_up_cost(
+        15, 25, curve=GrowthCurve.MYTHICAL
+    )
+
+
+@pytest.mark.parametrize("bad", [0, 40, 80])
+def test_comparison_raise_rejects_levels_off_the_list(bad: int) -> None:
+    with pytest.raises(ValidationError):
+        comparison_raise(15, bad)
