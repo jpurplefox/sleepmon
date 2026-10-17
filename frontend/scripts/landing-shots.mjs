@@ -25,12 +25,16 @@ const READING = {
 };
 
 const BOX = [
-  ["Sylveon", 50, "Modest", ["Moomoo Milk", "Soothing Cacao", "Moomoo Milk"], ["Skill Trigger M", "Helping Speed S", "Energy Recovery Bonus", "Inventory Up M"], 4],
   ["Gardevoir", 25, "Bold", ["Fancy Apple", "Greengrass Corn", "Fancy Apple"], ["Skill Trigger M", "Helping Speed S"], 3],
   ["Magnezone", 57, "Adamant", ["Pure Oil", "Fiery Herb", "Pure Oil"], ["Helping Speed M", "Skill Trigger M", "Helping Bonus", "Inventory Up L", "Skill Level Up M"], 4],
   // Level 57 with Ginger in every slot: the level-up tile shows a short step, 57 → 60.
   ["Tyranitar", 57, "Adamant", ["Warming Ginger", "Warming Ginger", "Warming Ginger"], ["Ingredient Finder M", "Helping Speed M", "Helping Bonus", "Inventory Up M", "Skill Level Up S"], 3],
-  ["Charizard", 52, "Quiet", ["Bean Sausage", "Warming Ginger", "Fiery Herb"], ["Ingredient Finder M", "Helping Speed M", "Inventory Up L", "Ingredient Finder S"], 3],
+  // The plan story's team: an "Inferno" Corn Keema Curry team.
+  ["Sylveon", 53, "Mild", ["Moomoo Milk", "Soothing Cacao", "Soothing Cacao"], ["Helping Bonus", "Skill Trigger M", "Skill Trigger S", "Inventory Up S", "Ingredient Finder S"], 6, "2000h"],
+  ["Charizard", 45, "Hasty", ["Bean Sausage", "Bean Sausage", "Bean Sausage"], ["Ingredient Finder M", "Helping Speed M", "Inventory Up L", "Skill Trigger S", "Sleep EXP Bonus"], 3, "500h"],
+  ["Gengar", 60, "", ["Fiery Herb", "Fiery Herb", "Fiery Herb"], ["Helping Speed S", "Ingredient Finder M", "Skill Trigger M", "Skill Trigger S", "Helping Speed M"], 2, "200h"],
+  ["Bewear", 47, "Relaxed", ["Greengrass Corn", "Greengrass Corn", "Greengrass Corn"], ["Energy Recovery Bonus", "Ingredient Finder M", "Inventory Up M", "Ingredient Finder S", "Helping Speed M"], 2],
+  ["Marowak", 50, "Hasty", ["Warming Ginger", "Warming Ginger", "Warming Ginger"], ["Berry Finding S", "Helping Speed M", "Ingredient Finder M", "Helping Speed S", "Skill Level Up M"], 2, "1000h"],
   // Second level-up card: a Berry Finding S Raichu whose next unlock, 50, brings Helping Speed M.
   ["Raichu", 45, "Brave", ["Fancy Apple", "Warming Ginger", "Fancy Egg"], ["Berry Finding S", "Skill Trigger S", "Helping Speed M", "Inventory Up M", "Helping Speed S"], 3],
   ["Pikachu", 38, "Brave", ["Fancy Apple", "Warming Ginger", "Fancy Egg"], ["Berry Finding S", "Helping Speed M", "Skill Trigger S"], 3],
@@ -53,6 +57,8 @@ async function api(path, init = {}, token) {
   return res.status === 204 ? null : res.json();
 }
 
+const CURRY = '"Inferno" Corn Keema Curry';
+
 async function seed() {
   const { access_token: token } = await api("/auth/google", { method: "POST", body: '{"credential":"demo"}' });
   let box = await api("/team", {}, token);
@@ -66,10 +72,13 @@ async function seed() {
     body: JSON.stringify({
       // No map yet: the plan story picks it, so its cards change on camera.
       name: "Verdegal", island: null, favorite_berries: [], main_favorite: null,
-      weekly_bonus: "berry_strength", dish_type: "Curry", meals: ["Beanburger Curry", '"Egg Bomb" Curry', '"Drought" Katsu Curry'],
-      slots: [id("Tyranitar"), id("Charizard"), id("Pikachu"), id("Magnezone"), id("Sylveon", 50)].map((m) => ({ members: [m], share: 1 })),
+      weekly_bonus: "berry_strength", dish_type: "Curry", meals: Array(3).fill(CURRY),
+      slots: ["Sylveon", "Charizard", "Gengar", "Bewear", "Marowak"].map((s) => ({ members: [id(s)], share: 1 })),
     }),
   }, token);
+  // A pot that fits the curry, cooked at recipe level 65, on a map with its area bonus maxed.
+  const progress = { pot_size: 81, recipe_levels: { [CURRY]: 65 }, area_bonuses: { "Greengrass Isle": 85 } };
+  await api("/progress", { method: "PATCH", body: JSON.stringify(progress) }, token);
 }
 
 // A fresh signed-in context per scene: the refresh token rotates, so a reused one signs out.
@@ -254,7 +263,8 @@ async function capture(browser, dir, lang) {
     await page.waitForTimeout(600);
     const dBox = await mapDialog.boundingBox();
     await shot(mapDialog, "plan-map-before");
-    const berries = lang === "es" ? ["Uvav", "Wiki", "Zanama"] : ["Grepa", "Wiki", "Leppa"];
+    // Taupe Hollow's berries, which favor Charizard and Marowak.
+    const berries = lang === "es" ? ["Higog", "Zanama", "Zidra"] : ["Figy", "Leppa", "Sitrus"];
     marks.planBerries = [];
     for (const name of berries) {
       const toggle = mapDialog.locator(".island-tab__berry-toggle", { hasText: name }).first();
@@ -295,6 +305,10 @@ async function capture(browser, dir, lang) {
       const bar = document.querySelector(".appbar")?.getBoundingClientRect().height ?? 0;
       window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - bar - 16);
     });
+    await page.waitForTimeout(300);
+    // Nothing hovered or focused, so the totals' breakdown tooltip stays closed.
+    await page.mouse.move(1, 1);
+    await page.evaluate(() => document.activeElement?.blur());
     await page.waitForTimeout(300);
     const tBox = await totals.boundingBox();
     await shot(totals, "plan-totals");
