@@ -788,9 +788,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.faq.expert.q": "¿Por qué los especialistas en ingredientes suman +1 y no +2 en mapas expertos?",
     "landing.faq.expert.a":
       "El juego les da una probabilidad de +2 pero no la publica; en vez de inventarla, todos suman +1.",
-    "landing.faq.sleep.q": "¿Los números siguen mi horario de sueño?",
-    "landing.faq.sleep.a":
-      "Sí: usan tu sueño nocturno y tu siesta, si dormís una, guardados en tu perfil de jugador. Sin cuenta, una noche de 8:30.",
+    "landing.faq.inventory.q": "¿Cómo se estima el inventario de los Pokémon?",
+    "landing.faq.inventory.a":
+      "Durante el día se supone que juntás los ingredientes antes de que se llene. Mientras dormís, se calcula cuándo se llena y cómo eso afecta la producción. En tu perfil podés configurar hasta 2 sesiones de sueño; por defecto se usa una sola de 8:30.",
     "landing.faq.event.q": "¿Puedo tener en cuenta un evento?",
     "landing.faq.event.a": "Sí: en Análisis de equipo cargás los bonus del evento activo y todo el equipo se recalcula.",
     "landing.faq.meals.q": "¿Me alcanzan los ingredientes para mis comidas?",
@@ -1605,9 +1605,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.faq.expert.q": "Why do Ingredients specialists get +1 ingredient on expert maps, not +2?",
     "landing.faq.expert.a":
       "The game gives them a chance at +2 but doesn't publish it; rather than invent the number, every member gets +1.",
-    "landing.faq.sleep.q": "Do the numbers follow my sleep?",
-    "landing.faq.sleep.a":
-      "Yes: they use your night sleep and, if you take one, your nap, saved in your Player profile. Signed out, a night of 8:30.",
+    "landing.faq.inventory.q": "How is the Pokémon's inventory estimated?",
+    "landing.faq.inventory.a":
+      "During the day it assumes you collect the ingredients before it fills up. While you sleep, it works out when it fills up and how that affects production. In your profile you can set up to 2 sleep sessions; by default it uses a single one of 8:30.",
     "landing.faq.event.q": "Can I account for an event?",
     "landing.faq.event.a": "Yes: in Team analysis you add the active event's bonuses and the whole team recomputes.",
     "landing.faq.meals.q": "Will my team's ingredients be enough for my meals?",

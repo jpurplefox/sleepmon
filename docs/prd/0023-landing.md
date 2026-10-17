@@ -94,7 +94,8 @@ account* and *with an account*. Rows that work signed out come first:
 ### Frequently asked questions
 
 Expandable questions, all closed at first, in this order — first how the numbers are
-made, then what they can take into account, then the account:
+made, then what they can take into account, then the account, and last the expert-map
+detail:
 
 1. **Where do the numbers come from?** They are an estimate of daily production — helps,
    day and night, inventory, skills ([Production model](0008-production-model.md)) —
@@ -104,28 +105,30 @@ made, then what they can take into account, then the account:
    the speed bonus of a well-rested Pokémon all day long, the way it plays out with a
    healer on the team that keeps energy topped up. Energy given by skills shows as the
    skill's output, but doesn't change anyone's speed.
-3. **Why do Ingredients specialists get +1 ingredient on expert maps, not +2?** The game
-   gives them a *chance* at +2 but doesn't publish it; rather than invent the number,
-   every member gets +1 ([Map bonuses & rating](0007-map-bonuses-rating.md)).
-4. **Do the numbers follow my sleep?** Yes: they use your night sleep and, if you take
-   one, your nap, saved in your Player profile
-   ([Sleep schedule](0015-sleep-schedule.md)); signed out, a night of 8:30.
-5. **Can I account for an event?** Yes: in Team Analysis you add the active event's
+3. **How is the Pokémon's inventory estimated?** During the day the model assumes you
+   collect the ingredients before the inventory fills up. While you sleep, it works out
+   when it fills up and how that affects production. The Player profile holds up to two
+   sleep sessions ([Sleep schedule](0015-sleep-schedule.md)); by default, a single one of
+   8:30.
+4. **Can I account for an event?** Yes: in Team Analysis you add the active event's
    bonuses (extra ingredients, skill boosts, a bigger pot…) and the whole team
    recomputes ([Event bonus](0012-event-bonus.md)).
-6. **Will my team's ingredients be enough for my meals?** Team Analysis checks the three
+5. **Will my team's ingredients be enough for my meals?** Team Analysis checks the three
    meals you choose against what the team gathers, and adds the cooking strength to the
    total ([Cooking plan](0006-cooking-plan.md)).
-7. **How do I know what my Box is missing?** The Box shows which berries, ingredients
+6. **How do I know what my Box is missing?** The Box shows which berries, ingredients
    and specialties your Pokémon cover and which they don't
    ([Box](0001-box.md)).
-8. **Do I need an account, and what is saved?** Comparison and Team Analysis work
+7. **Do I need an account, and what is saved?** Comparison and Team Analysis work
    without one. An account keeps your Box, saved teams and Player profile, and unlocks
    screenshot import; links to the [privacy page](0018-account-and-privacy.md).
-9. **How does screenshot import work?** An AI model reads the screenshots and fills the
+8. **How does screenshot import work?** An AI model reads the screenshots and fills the
    Pokémon form for you to review. The images are never stored, and the model only
    receives the images — nothing that says who uploaded them
    ([Screenshot import](0019-screenshot-import.md)). It needs an account.
+9. **Why do Ingredients specialists get +1 ingredient on expert maps, not +2?** The game
+   gives them a *chance* at +2 but doesn't publish it; rather than invent the number,
+   every member gets +1 ([Map bonuses & rating](0007-map-bonuses-rating.md)).
 
 - `/#faq` opens the landing at the FAQ.
 

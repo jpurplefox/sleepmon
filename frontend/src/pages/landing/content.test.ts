@@ -22,6 +22,12 @@ describe("landing content", () => {
     expect(USE_CASES.filter((c) => c.needsAccount).map((c) => c.id)).toEqual(["catch", "levelup"]);
   });
 
+  it("asks about the inventory third and leaves the expert-map detail for last", () => {
+    expect(FAQ_ITEMS.map((i) => i.id)).toEqual([
+      "numbers", "energy", "inventory", "event", "meals", "coverage", "account", "screenshots", "expert",
+    ]);
+  });
+
   it("lists nine FAQ items, every link pointing to an app route", () => {
     expect(FAQ_ITEMS).toHaveLength(9);
     for (const item of FAQ_ITEMS) if (item.link) expect(routeValues.has(item.link.to)).toBe(true);

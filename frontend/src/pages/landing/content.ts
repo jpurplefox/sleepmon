@@ -81,11 +81,11 @@ export interface FaqItem {
 export const FAQ_ITEMS: readonly FaqItem[] = [
   { id: "numbers" },
   { id: "energy" },
-  { id: "expert" },
-  { id: "sleep" },
+  { id: "inventory" },
   { id: "event" },
   { id: "meals" },
   { id: "coverage" },
   { id: "account", link: { to: ROUTES.privacy, labelKey: "landing.faq.account.link" } },
   { id: "screenshots" },
+  { id: "expert" },
 ];
