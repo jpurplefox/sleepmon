@@ -1,6 +1,5 @@
 import { Link } from "wouter";
 
-import { IconUser } from "../../components/icons";
 import { useI18n } from "../../i18n";
 import { CatchSteps } from "./CatchSteps";
 import { LevelupDemo } from "./LevelupDemo";
@@ -29,12 +28,6 @@ export function UseCases() {
         {USE_CASES.map((c) => (
           <article key={c.id} className={`landing-tile landing-tile--${c.id}`}>
             <div className="landing-tile__copy">
-              {c.needsAccount && (
-                <span className="landing-account">
-                  <IconUser aria-hidden="true" />
-                  {t("landing.withAccount")}
-                </span>
-              )}
               <h3>{t(`landing.case.${c.id}.title`)}</h3>
               <p>{t(`landing.case.${c.id}.body`)}</p>
               <Link href={c.to} className="landing-tile__go">

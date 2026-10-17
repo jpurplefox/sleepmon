@@ -28,7 +28,8 @@ const BOX = [
   ["Sylveon", 50, "Modest", ["Moomoo Milk", "Soothing Cacao", "Moomoo Milk"], ["Skill Trigger M", "Helping Speed S", "Energy Recovery Bonus", "Inventory Up M"], 4],
   ["Gardevoir", 25, "Bold", ["Fancy Apple", "Greengrass Corn", "Fancy Apple"], ["Skill Trigger M", "Helping Speed S"], 3],
   ["Magnezone", 57, "Adamant", ["Pure Oil", "Fiery Herb", "Pure Oil"], ["Helping Speed M", "Skill Trigger M", "Helping Bonus", "Inventory Up L", "Skill Level Up M"], 4],
-  ["Tyranitar", 60, "Adamant", ["Warming Ginger", "Greengrass Soybeans", "Bean Sausage"], ["Ingredient Finder M", "Helping Speed M", "Helping Bonus", "Inventory Up M", "Skill Level Up S"], 3],
+  // Level 50 with Ginger in every slot: the level-up tile shows its next unlock, 50 → 60.
+  ["Tyranitar", 50, "Adamant", ["Warming Ginger", "Warming Ginger", "Warming Ginger"], ["Ingredient Finder M", "Helping Speed M", "Helping Bonus", "Inventory Up M", "Skill Level Up S"], 3],
   ["Charizard", 52, "Quiet", ["Bean Sausage", "Warming Ginger", "Fiery Herb"], ["Ingredient Finder M", "Helping Speed M", "Inventory Up L", "Ingredient Finder S"], 3],
   ["Pikachu", 38, "Brave", ["Fancy Apple", "Warming Ginger", "Fancy Egg"], ["Berry Finding S", "Helping Speed M", "Skill Trigger S"], 3],
   ["Arcanine", 30, "Brave", ["Fiery Herb", "Bean Sausage", "Fiery Herb"], ["Skill Trigger M", "Ingredient Finder S"], 3],
@@ -254,14 +255,16 @@ async function capture(browser, dir, lang) {
       await page.waitForTimeout(800);
       const entryBox = await entry.boundingBox();
       await shot(entry, "levelup-entry");
-      const cell = entry.getByText(/60 → 70/).first();
+      const cell = entry.getByText(/50 → 60/).first();
       marks.levelupCell = rel(await cell.boundingBox(), entryBox);
       await cell.click();
       const tip = page.locator(".tooltip__bubble:visible").first();
       await tip.waitFor();
       await page.waitForTimeout(400);
-      const tipBox = await tip.boundingBox();
-      await shot(tip, "levelup-tip");
+      // The bubble's box starts a few px above its painted edge; trim them so nothing from below shows.
+      const bubble = await tip.boundingBox();
+      const tipBox = { x: bubble.x, y: bubble.y + 5, width: bubble.width, height: bubble.height - 5 };
+      await page.screenshot({ path: join(dir, "levelup-tip.jpg"), ...JPEG, clip: tipBox });
       const rows = await tip.locator(".levelup-tip__row").evaluateAll((els) =>
         els.map((e) => { const b = e.getBoundingClientRect(); return { x: b.x, y: b.y, width: b.width, height: b.height }; }),
       );

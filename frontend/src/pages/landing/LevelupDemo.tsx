@@ -5,11 +5,14 @@ import { shotUrl } from "./content";
 import { MARKS, Pointer, aim, box, prefersReducedMotion } from "./demo";
 
 const ROW_MS = 450;
-export const LEVELUP_LOOP_MS = 9000;
+export const LEVELUP_LOOP_MS = 10500;
 
-/** Phases in ms: 1 pointer to the level-up cell, 2 tap, 3 the gains open, then one per gain row lit. */
+/**
+ * Phases in ms: the entry shows alone first, then 1 pointer to the level-up cell, 2 tap,
+ * 3 the gains open, then one per gain row lit.
+ */
 export function levelupTimes(rows: number): number[] {
-  return [600, 1600, 1900, ...Array.from({ length: rows }, (_, k) => 2500 + k * ROW_MS)];
+  return [1800, 2800, 3100, ...Array.from({ length: rows }, (_, k) => 3700 + k * ROW_MS)];
 }
 
 /** The level-up tile's loop: a phone Box entry opens what the next unlock costs and gains. */
@@ -17,6 +20,9 @@ export function LevelupDemo() {
   const { t, lang } = useI18n();
   const { levelupCell: cell, levelupRows: rows } = MARKS[lang];
   const times = levelupTimes(rows.length);
+  // One band per row, all as wide as the widest: rows differ only by their delta pill.
+  const left = Math.min(...rows.map((r) => r.x));
+  const right = Math.max(...rows.map((r) => r.x + r.w));
   const [still] = useState(prefersReducedMotion);
   const [loop, setLoop] = useState(0);
   const [reached, setReached] = useState({ loop: 0, phase: 0 });
@@ -41,7 +47,7 @@ export function LevelupDemo() {
         <div className={"landing-levelup__tip" + (at(3) ? " is-on" : "")} style={{ bottom: `${100 - cell.y + 1}%` }}>
           <img className="landing-stage__shot" src={shotUrl("levelup-tip", lang)} alt="" loading="lazy" decoding="async" />
           {rows.map((r, k) => (
-            <span key={k} className={"landing-levelup__row" + (at(4 + k) ? " is-on" : "")} style={box(r)} />
+            <span key={k} className={"landing-levelup__row" + (at(4 + k) ? " is-on" : "")} style={box({ ...r, x: left, w: right - left })} />
           ))}
         </div>
         <Pointer style={at(1) ? aim(cell) : { left: "80%", top: "112%" }} clicking={at(2) && !at(3)} gone={at(3)} />

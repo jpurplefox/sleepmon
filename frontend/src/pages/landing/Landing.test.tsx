@@ -46,14 +46,13 @@ describe("Landing", () => {
     expect(screen.queryByRole("button", { name: /Sign in/ })).not.toBeInTheDocument();
   });
 
-  it("links each use case to its tool and marks the ones that need an account", () => {
+  it("links each use case to its tool", () => {
     renderLanding();
     const cases = screen.getAllByRole("article");
     expect(cases).toHaveLength(4);
     expect(cases.map((c) => within(c).getByRole("link").getAttribute("href"))).toEqual([
       "/compare", "/compare", "/team-analysis", "/box",
     ]);
-    expect(cases.map((c) => within(c).queryByText("with an account") !== null)).toEqual([true, false, false, true]);
   });
 
   it("lists nine closed FAQ questions that open on touch", async () => {
