@@ -53,7 +53,8 @@ function LevelupCard({ n, mark, phase, closed }: { n: number; mark: LevelupMark;
             <span key={k} className={"landing-levelup__row" + (at(4 + k) ? " is-on" : "")} style={box({ ...r, x: left, w: right - left })} />
           ))}
         </div>
-        <Pointer style={at(1) ? aim(mark.cell) : { left: "80%", top: "112%" }} clicking={at(2) && !at(3)} gone={closed || at(3)} />
+        {/* Hidden until its card's turn, so only one pointer is ever on screen; it fades in as it sets off. */}
+        <Pointer style={at(1) ? aim(mark.cell) : { left: "80%", top: "112%" }} clicking={at(2) && !at(3)} gone={!at(1) || at(3)} />
       </div>
     </div>
   );

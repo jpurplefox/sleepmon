@@ -61,6 +61,19 @@ describe("LevelupDemo", () => {
     expect(open(1)).toBe(false);
   });
 
+  it("shows one pointer at a time", () => {
+    renderDemo();
+    const shown = () => document.querySelectorAll(".landing-levelup .landing-pointer:not(.is-gone)").length;
+    expect(shown()).toBe(0);
+    // Step through every phase of the loop.
+    let elapsed = 0;
+    for (const ms of [...times, loopMs]) {
+      wait(ms - elapsed);
+      elapsed = ms;
+      expect(shown()).toBeLessThanOrEqual(1);
+    }
+  });
+
   it("with reduced motion holds both cards open with every gain lit", () => {
     renderDemo(true);
     expect(open(0) && open(1)).toBe(true);
