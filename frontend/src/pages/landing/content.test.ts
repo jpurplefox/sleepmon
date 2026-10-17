@@ -4,8 +4,6 @@ import { UI } from "../../i18n/ui";
 import { ROUTES } from "../../routes";
 import { ACCESS_ROWS, CATCH_STEPS, FAQ_HREF, FAQ_ITEMS, USE_CASES, shotUrl } from "./content";
 
-const routeValues = new Set<string>(Object.values(ROUTES));
-
 describe("landing content", () => {
   it("builds shot paths per language", () => {
     expect(shotUrl("hero-card-1", "es")).toBe("/landing/es/hero-card-1.jpg");
@@ -22,22 +20,14 @@ describe("landing content", () => {
     expect(USE_CASES.filter((c) => c.needsAccount).map((c) => c.id)).toEqual(["catch", "levelup"]);
   });
 
-  it("asks about the inventory third and leaves the expert-map detail for last", () => {
-    expect(FAQ_ITEMS.map((i) => i.id)).toEqual([
-      "numbers", "energy", "inventory", "event", "meals", "coverage", "account", "screenshots", "expert",
-    ]);
-  });
-
-  it("lists nine FAQ items, every link pointing to an app route", () => {
-    expect(FAQ_ITEMS).toHaveLength(9);
-    for (const item of FAQ_ITEMS) if (item.link) expect(routeValues.has(item.link.to)).toBe(true);
-    expect(FAQ_ITEMS.find((i) => i.id === "account")?.link?.to).toBe(ROUTES.privacy);
+  it("opens the FAQ with why sleepmon and leaves the expert-map detail for last", () => {
+    expect(FAQ_ITEMS.map((i) => i.id)).toEqual(["why", "numbers", "energy", "inventory", "event", "expert"]);
   });
 
   it("has every derived copy key in both languages", () => {
     const keys = [
       ...USE_CASES.flatMap((c) => [`landing.case.${c.id}.title`, `landing.case.${c.id}.body`, `landing.case.${c.id}.alt`, c.linkKey]),
-      ...FAQ_ITEMS.flatMap((i) => [`landing.faq.${i.id}.q`, `landing.faq.${i.id}.a`, ...(i.link ? [i.link.labelKey] : [])]),
+      ...FAQ_ITEMS.flatMap((i) => [`landing.faq.${i.id}.q`, `landing.faq.${i.id}.a`]),
     ];
     for (const lang of ["es", "en"] as const) for (const k of keys) expect(UI[lang][k], `${lang}:${k}`).toBeTruthy();
   });
@@ -54,10 +44,5 @@ describe("landing content", () => {
     expect(ACCESS_ROWS.findIndex((r) => !r.withoutAccount)).toBe(open.length);
     for (const lang of ["es", "en"] as const)
       for (const r of ACCESS_ROWS) expect(UI[lang][`landing.access.row.${r.id}`], `${lang}:${r.id}`).toBeTruthy();
-  });
-
-  it("marks where each FAQ link goes in its answer", () => {
-    for (const lang of ["es", "en"] as const)
-      for (const i of FAQ_ITEMS.filter((x) => x.link)) expect(UI[lang][`landing.faq.${i.id}.a`]).toContain("{link}");
   });
 });

@@ -73,19 +73,14 @@ export const ACCESS_ROWS: readonly AccessRow[] = [
 
 export interface FaqItem {
   id: string;
-  // The answer holds "{link}" where this in-app link goes.
-  link?: { to: string; labelKey: string };
 }
 
 // Copy keys: landing.faq.<id>.q / .a — order is the PRD's.
 export const FAQ_ITEMS: readonly FaqItem[] = [
+  { id: "why" },
   { id: "numbers" },
   { id: "energy" },
   { id: "inventory" },
   { id: "event" },
-  { id: "meals" },
-  { id: "coverage" },
-  { id: "account", link: { to: ROUTES.privacy, labelKey: "landing.faq.account.link" } },
-  { id: "screenshots" },
   { id: "expert" },
 ];

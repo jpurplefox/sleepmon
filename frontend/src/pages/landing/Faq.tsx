@@ -1,23 +1,7 @@
-import { Link } from "wouter";
-
 import { useI18n } from "../../i18n";
-import { FAQ_ID, FAQ_ITEMS, type FaqItem } from "./content";
+import { FAQ_ID, FAQ_ITEMS } from "./content";
 
-function Answer({ item }: { item: FaqItem }) {
-  const { t } = useI18n();
-  const text = t(`landing.faq.${item.id}.a`);
-  if (!item.link) return <p>{text}</p>;
-  const [before, after] = text.split("{link}");
-  return (
-    <p>
-      {before}
-      <Link href={item.link.to}>{t(item.link.labelKey)}</Link>
-      {after}
-    </p>
-  );
-}
-
-/** Nine closed questions on the model's assumptions and the account. */
+/** Closed questions: why sleepmon, then the model's assumptions. */
 export function Faq() {
   const { t } = useI18n();
   return (
@@ -36,7 +20,7 @@ export function Faq() {
                 </svg>
               </span>
             </summary>
-            <Answer item={item} />
+            <p>{t(`landing.faq.${item.id}.a`)}</p>
           </details>
         ))}
       </div>

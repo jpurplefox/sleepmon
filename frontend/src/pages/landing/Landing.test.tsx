@@ -56,20 +56,16 @@ describe("Landing", () => {
     ]);
   });
 
-  it("lists nine closed FAQ questions that open on touch", async () => {
+  it("lists six closed FAQ questions that open on touch", async () => {
     renderLanding();
     const faq = screen.getByRole("region", { name: "Frequently asked questions" });
     const groups = faq.querySelectorAll("details");
-    expect(groups).toHaveLength(9);
+    expect(groups).toHaveLength(6);
     groups.forEach((d) => expect(d.open).toBe(false));
     await userEvent.click(within(faq).getByText("How is energy taken into account?"));
-    expect(groups[1].open).toBe(true);
+    expect(groups[2].open).toBe(true);
   });
 
-  it("links the account answer to the privacy page", () => {
-    renderLanding();
-    expect(screen.getByRole("link", { name: "privacy page" })).toHaveAttribute("href", "/privacy");
-  });
 
   it("speaks Spanish and shows the Spanish captures", () => {
     renderLanding("es");

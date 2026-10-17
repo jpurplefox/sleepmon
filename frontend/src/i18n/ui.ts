@@ -779,6 +779,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.access.row.savedTeams": "Guardar equipos",
     "landing.access.row.profile": "Tu horario de sueño y tu progreso en el perfil",
     "landing.faq.title": "Preguntas frecuentes",
+    "landing.faq.why.q": "¿Por qué otra calculadora, si la comunidad ya tiene varias?",
+    "landing.faq.why.a":
+      "Las calculadoras que hay muestran mucha información, y eso puede abrumar o costar de leer. sleepmon no busca sumar herramientas sino responder las preguntas típicas: ¿vale la pena el Pokémon que atrapé?, ¿cómo planifico la semana?, ¿en qué Pokémon invierto mis caramelos? Siempre con la información justa para decidir, fácil de interpretar.",
     "landing.faq.numbers.q": "¿De dónde salen los números?",
     "landing.faq.numbers.a":
       "Son una estimación de la producción diaria (ayudas, día y noche, inventario, habilidades), no valores leídos del juego. Son promedios: tené en cuenta el factor RNG, porque las habilidades se activan al azar y un día puntual puede dar más o menos.",
@@ -793,18 +796,6 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Durante el día se supone que juntás los ingredientes antes de que se llene. Mientras dormís, se calcula cuándo se llena y cómo eso afecta la producción. En tu perfil podés configurar hasta 2 sesiones de sueño; por defecto se usa una sola de 8:30.",
     "landing.faq.event.q": "¿Puedo tener en cuenta un evento?",
     "landing.faq.event.a": "Sí: en las semanas de evento, Análisis de equipo ya trae sus bonus cargados, así que no tenés que hacer nada. Igual podés cargarlos o ajustarlos a mano, y todo el equipo se recalcula.",
-    "landing.faq.meals.q": "¿Me alcanzan los ingredientes para mis comidas?",
-    "landing.faq.meals.a":
-      "Análisis de equipo compara las tres comidas que elegís con lo que junta el equipo, y suma la fuerza de cocina al total.",
-    "landing.faq.coverage.q": "¿Cómo sé qué le falta a mi caja?",
-    "landing.faq.coverage.a": "Mi caja muestra qué bayas, ingredientes y especialidades cubren tus Pokémon y cuáles no.",
-    "landing.faq.account.q": "¿Necesito cuenta? ¿Qué se guarda?",
-    "landing.faq.account.a":
-      "Comparación y Análisis de equipo funcionan sin cuenta. Con cuenta se guardan tu caja, tus equipos y tu perfil de jugador, y podés importar desde capturas. Más en la {link}.",
-    "landing.faq.account.link": "página de privacidad",
-    "landing.faq.screenshots.q": "¿Cómo funciona importar desde capturas?",
-    "landing.faq.screenshots.a":
-      "Un modelo de IA lee las capturas y completa el formulario del Pokémon para que lo revises. Las imágenes nunca se guardan y el modelo solo recibe las imágenes, nada que diga quién las subió. Necesita cuenta.",
     "footer.privacy": "Privacidad",
     "footer.notice":
       "sleepmon es un proyecto de fans, sin afiliación con Nintendo, Creatures, GAME FREAK ni The Pokémon Company. Pokémon y sus nombres son marcas de sus respectivos dueños.",
@@ -1596,6 +1587,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.access.row.savedTeams": "Save teams",
     "landing.access.row.profile": "Your sleep schedule and progress in your profile",
     "landing.faq.title": "Frequently asked questions",
+    "landing.faq.why.q": "Why another calculator, when the community already has several?",
+    "landing.faq.why.a":
+      "The calculators out there show a lot of information, which can overwhelm or be hard to read. sleepmon isn't about adding more tools but about answering the usual questions: is the Pokémon I caught worth it? How do I plan my week? Which Pokémon do I spend my candies on? Always with just the information you need to decide, easy to read.",
     "landing.faq.numbers.q": "Where do the numbers come from?",
     "landing.faq.numbers.a":
       "They are an estimate of daily production (helps, day and night, inventory, skills), not values read from the game. They are averages: keep RNG in mind, since skills trigger at random and any single day can come out higher or lower.",
@@ -1610,18 +1604,6 @@ export const UI: Record<Lang, Record<string, string>> = {
       "During the day it assumes you collect the ingredients before it fills up. While you sleep, it calculates when it fills up and how that affects production. In your profile you can set up to 2 sleep sessions; by default it uses a single one of 8:30.",
     "landing.faq.event.q": "Can I account for an event?",
     "landing.faq.event.a": "Yes: during event weeks, Team analysis already has the event's bonuses set, so there's nothing to do. You can still set or adjust them by hand, and the whole team recomputes.",
-    "landing.faq.meals.q": "Will my team's ingredients be enough for my meals?",
-    "landing.faq.meals.a":
-      "Team analysis checks the three meals you choose against what the team gathers, and adds the cooking strength to the total.",
-    "landing.faq.coverage.q": "How do I know what my box is missing?",
-    "landing.faq.coverage.a": "My box shows which berries, ingredients and specialties your Pokémon cover and which they don't.",
-    "landing.faq.account.q": "Do I need an account, and what is saved?",
-    "landing.faq.account.a":
-      "Comparison and Team analysis work without one. An account keeps your box, saved teams and Player profile, and unlocks screenshot import. More on the {link}.",
-    "landing.faq.account.link": "privacy page",
-    "landing.faq.screenshots.q": "How does screenshot import work?",
-    "landing.faq.screenshots.a":
-      "An AI model reads the screenshots and fills the Pokémon form for you to review. The images are never stored, and the model only receives the images, nothing that says who uploaded them. It needs an account.",
     "footer.privacy": "Privacy",
     "footer.notice":
       "sleepmon is a fan project, not affiliated with Nintendo, Creatures, GAME FREAK or The Pokémon Company. Pokémon and its names are trademarks of their respective owners.",
