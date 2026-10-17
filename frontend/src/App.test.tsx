@@ -87,7 +87,7 @@ describe("App shell", () => {
     api.listSavedTeams.mockResolvedValue([]);
     api.getProgress.mockResolvedValue(EMPTY_PROGRESS);
     renderAt("/");
-    expect(await screen.findByRole("link", { name: "Go to my box" })).toHaveAttribute("href", "/box");
+    expect(await screen.findByRole("link", { name: "Go to My box" })).toHaveAttribute("href", "/box");
   });
 
   it("shows the footer on a tool", async () => {

@@ -726,7 +726,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.lead":
       "Más que una calculadora: sleepmon pone lado a lado lo que produce cada Pokémon y marca qué sube y qué baja, para que lo entiendas de un vistazo y decidas.",
     "landing.cta.compare": "Empezar a comparar",
-    "landing.cta.box": "Ir a mi caja",
+    "landing.cta.box": "Ir a Mi caja",
     "landing.fact.compare": "Compará tus Pokémon",
     "landing.fact.teams": "Creá y analizá equipos",
     "landing.fact.screenshot": "Subí tus Pokémon con una captura",
@@ -754,7 +754,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.case.plan.body":
       "Armá el equipo para tu mapa, elegí las comidas y mirá cuánto produce y qué rating alcanza.",
     "landing.case.plan.alt": "Un equipo en Análisis de equipo con su fuerza total y su rating",
-    "landing.case.levelup.title": "¿En quién gasto mis caramelos?",
+    "landing.case.levelup.title": "¿En quién gastás tus caramelos?",
     "landing.case.levelup.body":
       "Cada Pokémon de tu caja te muestra cuánto cuesta su próximo nivel y lo principal que gana al llegar; con un toque, todo el detalle.",
     "landing.case.levelup.alt": "El costo de subir de nivel y lo que gana un Pokémon de la caja",
@@ -1524,7 +1524,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.lead":
       "More than a calculator: sleepmon puts what each Pokémon produces side by side and marks what goes up and what goes down, so you get it at a glance and decide.",
     "landing.cta.compare": "Start comparing",
-    "landing.cta.box": "Go to my box",
+    "landing.cta.box": "Go to My box",
     "landing.fact.compare": "Compare your Pokémon",
     "landing.fact.teams": "Build and analyze teams",
     "landing.fact.screenshot": "Add your Pokémon from a screenshot",
@@ -1552,7 +1552,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.case.plan.body":
       "Build the team for your map, choose the meals and see what it produces and the rating it reaches.",
     "landing.case.plan.alt": "A team in Team analysis with its total strength and rating",
-    "landing.case.levelup.title": "Who gets the candies?",
+    "landing.case.levelup.title": "Who gets your candies?",
     "landing.case.levelup.body":
       "Every Pokémon in your box shows what its next level costs and the main thing it gains; one tap shows every detail.",
     "landing.case.levelup.alt": "The level-up cost and gain of a Pokémon in the box",

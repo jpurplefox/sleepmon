@@ -36,13 +36,13 @@ describe("Landing", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Analyze your Pokémon Sleep team and decide with data.");
     expect(screen.getByRole("link", { name: "Start comparing" })).toHaveAttribute("href", "/compare");
     expect(screen.getByRole("button", { name: "Sign in (landing)" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Go to my box" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Go to My box" })).not.toBeInTheDocument();
   });
 
   it("offers the box instead of sign-in when signed in", () => {
     auth.status = "authenticated";
     renderLanding();
-    expect(screen.getByRole("link", { name: "Go to my box" })).toHaveAttribute("href", "/box");
+    expect(screen.getByRole("link", { name: "Go to My box" })).toHaveAttribute("href", "/box");
     expect(screen.queryByRole("button", { name: /Sign in/ })).not.toBeInTheDocument();
   });
 
