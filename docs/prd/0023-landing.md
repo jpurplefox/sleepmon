@@ -93,8 +93,8 @@ account* and *with an account*. Rows that work signed out come first:
 
 ### Frequently asked questions
 
-Expandable questions, all closed at first, in this order — first why sleepmon exists,
-then how the numbers are made, then what they take into account, and last the
+Expandable questions, all closed at first, in this order — first why sleepmon exists
+and why it doesn't rank, then how the numbers are made, then what they take into account, and last the
 expert-map detail:
 
 1. **Why another calculator, when the community already has several?** The existing ones
@@ -102,24 +102,30 @@ expert-map detail:
    add tools; it answers the usual questions — is this catch worth it, how do I plan the
    week, which Pokémon gets the candies — with just the information needed to decide,
    easy to read.
-2. **Where do the numbers come from?** They are an estimate of daily production — helps,
+2. **Will there be a Pokémon ranking?** Other tools already rank them, but many Pokémon
+   can't be summed up in one number: context matters. A Charge Strength skill Pokémon is
+   worth the total strength it adds, not its number of procs — fewer procs with Berry
+   Finding S can add more; the same goes for skill Pokémon that gather ingredients. And
+   the map can flip the order, above all among berry and strength Pokémon. So sleepmon
+   compares them in the player's context.
+3. **Where do the numbers come from?** They are an estimate of daily production — helps,
    day and night, inventory, skills ([Production model](0008-production-model.md)) —
    not values read from the game. They are averages: skills trigger at random, so a single
    day can come out higher or lower.
-3. **How is energy taken into account?** As if it were always high: the model applies
+4. **How is energy taken into account?** As if it were always high: the model applies
    the speed bonus of a well-rested Pokémon all day long, the way it plays out with a
    healer on the team that keeps energy topped up. Energy given by skills shows as the
    skill's output, but doesn't change anyone's speed.
-4. **How is the Pokémon's inventory estimated?** During the day the model assumes you
+5. **How is the Pokémon's inventory estimated?** During the day the model assumes you
    collect the ingredients before the inventory fills up. While you sleep, it calculates
    when it fills up and how that affects production. The Player profile holds up to two
    sleep sessions ([Sleep schedule](0015-sleep-schedule.md)); by default, a single one of
    8:30.
-5. **Can I account for an event?** Yes: during event weeks Team Analysis already has the
+6. **Can I account for an event?** Yes: during event weeks Team Analysis already has the
    event's bonuses (extra ingredients, skill boosts, a bigger pot…) set, so there is
    nothing to load; they can still be set or adjusted by hand, and the whole team
    recomputes ([Event bonus](0012-event-bonus.md)).
-6. **Why do Ingredients specialists get +1 ingredient on expert maps, not +2?** The game
+7. **Why do Ingredients specialists get +1 ingredient on expert maps, not +2?** The game
    gives them a *chance* at +2 but doesn't publish it; rather than invent the number,
    every member gets +1 ([Map bonuses & rating](0007-map-bonuses-rating.md)).
 
@@ -136,7 +142,7 @@ expert-map detail:
 - **Signed out:** `/` shows the landing with **Start comparing** and **Sign in with
   Google**; the four use cases with no account marker; the account table with its
   first three rows marked in both columns and the other six only *with an account*,
-  closing with **Sign in with Google**; the FAQ with its six questions closed.
+  closing with **Sign in with Google**; the FAQ with its seven questions closed.
 - **Signed in:** `/` shows the same landing; the secondary action reads **Go to my Box**
   and opens `/box`; the account table has no sign-in.
 - **Main action:** **Start comparing** opens `/compare`.

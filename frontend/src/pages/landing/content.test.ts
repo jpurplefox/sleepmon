@@ -20,8 +20,8 @@ describe("landing content", () => {
     expect(USE_CASES.filter((c) => c.needsAccount).map((c) => c.id)).toEqual(["catch", "levelup"]);
   });
 
-  it("opens the FAQ with why sleepmon and leaves the expert-map detail for last", () => {
-    expect(FAQ_ITEMS.map((i) => i.id)).toEqual(["why", "numbers", "energy", "inventory", "event", "expert"]);
+  it("opens the FAQ with why sleepmon and why no ranking, and leaves the expert-map detail for last", () => {
+    expect(FAQ_ITEMS.map((i) => i.id)).toEqual(["why", "ranking", "numbers", "energy", "inventory", "event", "expert"]);
   });
 
   it("has every derived copy key in both languages", () => {
