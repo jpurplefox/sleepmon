@@ -754,7 +754,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.case.plan.body":
       "Armá el equipo para tu mapa, elegí las comidas y mirá cuánto produce y qué rating alcanza.",
     "landing.case.plan.alt": "Un equipo en Análisis de equipo con su fuerza total y su rating",
-    "landing.case.levelup.title": "¿Cuánto cuesta subirlo?",
+    "landing.case.levelup.title": "¿En quién gasto mis caramelos?",
     "landing.case.levelup.body":
       "No solo ves los caramelos que necesita: también lo principal que gana al llegar a ese nivel, y con un toque, todo el detalle. Así sabés cómo usar mejor tus caramelos.",
     "landing.case.levelup.alt": "El costo de subir de nivel y lo que gana un Pokémon de la caja",
@@ -1552,7 +1552,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.case.plan.body":
       "Build the team for your map, choose the meals and see what it produces and the rating it reaches.",
     "landing.case.plan.alt": "A team in Team analysis with its total strength and rating",
-    "landing.case.levelup.title": "What does it take to level it up?",
+    "landing.case.levelup.title": "Who gets my candies?",
     "landing.case.levelup.body":
       "Not just the candies it needs: also the main thing it gains at that level, and one tap shows every detail. So you know how to spend your candies best.",
     "landing.case.levelup.alt": "The level-up cost and gain of a Pokémon in the box",
