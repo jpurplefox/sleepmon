@@ -792,7 +792,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.faq.inventory.a":
       "Durante el día se supone que juntás los ingredientes antes de que se llene. Mientras dormís, se calcula cuándo se llena y cómo eso afecta la producción. En tu perfil podés configurar hasta 2 sesiones de sueño; por defecto se usa una sola de 8:30.",
     "landing.faq.event.q": "¿Puedo tener en cuenta un evento?",
-    "landing.faq.event.a": "Sí: en Análisis de equipo cargás los bonus del evento activo y todo el equipo se recalcula.",
+    "landing.faq.event.a": "Sí: en Análisis de equipo podés cargar los bonus del evento a mano, o dejar que se activen solos en las semanas de evento. Todo el equipo se recalcula.",
     "landing.faq.meals.q": "¿Me alcanzan los ingredientes para mis comidas?",
     "landing.faq.meals.a":
       "Análisis de equipo compara las tres comidas que elegís con lo que junta el equipo, y suma la fuerza de cocina al total.",
@@ -1609,7 +1609,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.faq.inventory.a":
       "During the day it assumes you collect the ingredients before it fills up. While you sleep, it calculates when it fills up and how that affects production. In your profile you can set up to 2 sleep sessions; by default it uses a single one of 8:30.",
     "landing.faq.event.q": "Can I account for an event?",
-    "landing.faq.event.a": "Yes: in Team analysis you add the active event's bonuses and the whole team recomputes.",
+    "landing.faq.event.a": "Yes: in Team analysis you can set the event's bonuses by hand, or let them switch on by themselves during event weeks. The whole team recomputes.",
     "landing.faq.meals.q": "Will my team's ingredients be enough for my meals?",
     "landing.faq.meals.a":
       "Team analysis checks the three meals you choose against what the team gathers, and adds the cooking strength to the total.",
