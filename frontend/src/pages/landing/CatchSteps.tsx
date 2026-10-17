@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
-
 import { useI18n } from "../../i18n";
 import { CATCH_STEPS, shotUrl, type CatchStepId, type ShotName } from "./content";
-import { MARKS, Pointer, aim, box, prefersReducedMotion } from "./demo";
+import { MARKS, Pointer, aim, box } from "./demo";
+import { StepStory } from "./StepStory";
 
 /** How long each step shows before the next one; the animated ones get more time. */
 export const STEP_DURATIONS: Record<CatchStepId, number> = {
@@ -41,37 +40,10 @@ export function timeline(id: CatchStepId, mapTarget: number): number[] {
   }
 }
 
-const LAST = CATCH_STEPS.length - 1;
-
-/** The catch tile's story: numbered steps that play their captures in turn, or on click. */
+/** The catch tile's story: from the game's screenshots to a comparison with a Box rival. */
 export function CatchSteps() {
   const { t, lang } = useI18n();
   const marks = MARKS[lang];
-  const [still] = useState(prefersReducedMotion);
-  // Reduced motion opens on the outcome, every step at its final phase, and never advances.
-  const [active, setActive] = useState(still ? LAST : 0);
-  // Bumped on every click, so picking the current step also restarts it.
-  const [round, setRound] = useState(0);
-  // A phase belongs to one run of one step, so a new run paints from phase 0.
-  const run = `${active}-${round}`;
-  const [reached, setReached] = useState({ run, phase: 0 });
-
-  const id = CATCH_STEPS[active].id;
-  const times = timeline(id, marks.maps.target);
-  const phase = still ? times.length : reached.run === run ? reached.phase : 0;
-
-  useEffect(() => {
-    if (still) return;
-    const ids = times.map((ms, k) => window.setTimeout(() => setReached({ run, phase: k + 1 }), ms));
-    ids.push(window.setTimeout(() => setActive((a) => (a + 1) % CATCH_STEPS.length), STEP_DURATIONS[id]));
-    return () => ids.forEach((t) => window.clearTimeout(t));
-    // `times` and `id` follow from `run`.
-  }, [run, still]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const pick = (i: number) => {
-    setActive(i);
-    setRound((r) => r + 1);
-  };
 
   const img = (name: ShotName, className = "", alt = "") => (
     <img
@@ -159,46 +131,14 @@ export function CatchSteps() {
   };
 
   return (
-    <>
-      <ol className="landing-steps">
-        {CATCH_STEPS.map((s, i) => (
-          <li key={s.id}>
-            <button
-              type="button"
-              className="landing-steps__item"
-              aria-current={i === active ? "step" : undefined}
-              onClick={() => pick(i)}
-            >
-              <span className="landing-steps__num">{i + 1}</span>
-              {t(`landing.catch.step.${s.id}`)}
-              {/* Keyed per run so its fill restarts with the step. */}
-              {i === active && !still && (
-                <span
-                  key={run}
-                  className="landing-steps__progress"
-                  style={{ animationDuration: `${STEP_DURATIONS[s.id]}ms` }}
-                  aria-hidden="true"
-                />
-              )}
-            </button>
-          </li>
-        ))}
-      </ol>
-      <div className="landing-stage">
-        {CATCH_STEPS.map((s, i) => (
-          <div
-            key={s.id}
-            className={`landing-stage__frame landing-stage__frame--${s.id}` + (i === active ? " is-active" : "")}
-            data-phase={i === active ? phase : undefined}
-            aria-hidden={i === active ? undefined : true}
-          >
-            {/* Remounted per run, so a restarted step begins from its first pose instead of rewinding. */}
-            <div key={i === active ? run : "idle"} className="landing-stage__content">
-              {frame(s.id, i === active ? phase : 0)}
-            </div>
-          </div>
-        ))}
-      </div>
-    </>
+    <StepStory
+      steps={CATCH_STEPS.map((s) => ({
+        id: s.id,
+        label: t(`landing.catch.step.${s.id}`),
+        durationMs: STEP_DURATIONS[s.id],
+        times: timeline(s.id, marks.maps.target),
+        render: (p: number) => frame(s.id, p),
+      }))}
+    />
   );
 }
