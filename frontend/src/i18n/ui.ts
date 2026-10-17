@@ -740,6 +740,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.case.catch.title": "Atrapaste uno nuevo. ¿Vale la pena?",
     "landing.case.catch.body":
       "Cargalo desde una captura, evolucionalo y comparalo en su máximo potencial contra lo que ya tenés en tu caja.",
+    "landing.plan.step.team": "Armá tu equipo",
+    "landing.plan.step.map": "Elegí el mapa y sus bayas",
+    "landing.plan.step.meals": "Revisá los ingredientes de tus comidas",
+    "landing.plan.step.week": "Mirá la fuerza de la semana",
     "landing.catch.step.upload": "Subí las capturas",
     "landing.catch.step.evolve": "Evolucionalo",
     "landing.catch.step.pick": "Elegí uno de tu caja",
@@ -752,7 +756,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.case.share.alt": "Se copia el link de una comparación y se ve con su vista previa",
     "landing.case.plan.title": "Planificá la semana",
     "landing.case.plan.body":
-      "Armá el equipo para tu mapa, elegí las comidas y mirá cuánto produce y qué rating alcanza.",
+      "Armá el equipo, elegí el mapa y las comidas, y mirá qué ingredientes te faltan y cuánta fuerza suma en la semana.",
     "landing.case.plan.alt": "Un equipo en Análisis de equipo con su fuerza total y su rating",
     "landing.case.levelup.title": "¿En quién gastás tus caramelos?",
     "landing.case.levelup.body":
@@ -1538,6 +1542,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.case.catch.title": "Caught a new one. Is it worth it?",
     "landing.case.catch.body":
       "Load it from a screenshot, evolve it, and compare it at its full potential against what's already in your box.",
+    "landing.plan.step.team": "Build your team",
+    "landing.plan.step.map": "Pick the map and its berries",
+    "landing.plan.step.meals": "Check your meals' ingredients",
+    "landing.plan.step.week": "See the week's strength",
     "landing.catch.step.upload": "Upload the screenshots",
     "landing.catch.step.evolve": "Evolve it",
     "landing.catch.step.pick": "Pick one from your box",
@@ -1550,7 +1558,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.case.share.alt": "A comparison's link is copied and shows its preview",
     "landing.case.plan.title": "Plan your week",
     "landing.case.plan.body":
-      "Build the team for your map, choose the meals and see what it produces and the rating it reaches.",
+      "Build the team, pick the map and meals, and see which ingredients you're short on and how much strength the week adds up to.",
     "landing.case.plan.alt": "A team in Team analysis with its total strength and rating",
     "landing.case.levelup.title": "Who gets your candies?",
     "landing.case.levelup.body":

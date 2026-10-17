@@ -11,7 +11,9 @@ export type ShotName =
   | "game-1" | "game-2" | "catch-evolve-before" | "catch-evolve-after" | "catch-pick"
   | "catch-map-list" | "catch-map" | "catch-settings" | "catch-card-base" | "catch-card-rival"
   | "share-dialog" | "share-copied" | "share-preview"
-  | "team-card-1" | "team-card-2" | "team-card-3" | "team-totals"
+  | "plan-card-1" | "plan-card-2" | "plan-card-3" | "plan-card-4" | "plan-card-5"
+  | "plan-fav-1" | "plan-fav-2" | "plan-fav-3" | "plan-fav-4" | "plan-fav-5"
+  | "plan-map-before" | "plan-map-after" | "plan-cooking" | "plan-totals"
   | "levelup-entry-1" | "levelup-tip-1" | "levelup-entry-2" | "levelup-tip-2";
 
 export function shotUrl(name: ShotName, lang: Lang): string {
@@ -21,6 +23,10 @@ export function shotUrl(name: ShotName, lang: Lang): string {
 export type UseCaseId = "catch" | "share" | "plan" | "levelup";
 
 /** The catch tile's story, step by step; copy keys: landing.catch.step.<id>. */
+/** The plan tile's story: build the team, pick the map, check the meals, see the week. */
+export type PlanStepId = "team" | "map" | "meals" | "week";
+export const PLAN_STEPS: readonly PlanStepId[] = ["team", "map", "meals", "week"];
+
 export type CatchStepId = "upload" | "evolve" | "pick" | "settings" | "compare";
 export const CATCH_STEPS: readonly { id: CatchStepId; shots: readonly ShotName[] }[] = [
   { id: "upload", shots: ["game-1", "game-2"] },

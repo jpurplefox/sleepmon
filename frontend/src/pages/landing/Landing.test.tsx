@@ -77,7 +77,7 @@ describe("Landing", () => {
     expect(screen.getByRole("img", { name: "Se copia el link de una comparación y se ve con su vista previa" })).toBeInTheDocument();
     expect(screen.getByAltText("Un equipo en Análisis de equipo con su fuerza total y su rating")).toHaveAttribute(
       "src",
-      "/landing/es/team-totals.jpg",
+      "/landing/es/plan-totals.jpg",
     );
     expect(document.title).toBe("sleepmon — Analizá tu equipo de Pokémon Sleep");
   });

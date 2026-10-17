@@ -64,7 +64,8 @@ async function seed() {
   await api("/saved-teams", {
     method: "POST",
     body: JSON.stringify({
-      name: "Verdegal", island: "Greengrass Isle", favorite_berries: ["Grepa", "Wiki", "Leppa"], main_favorite: null,
+      // No map yet: the plan story picks it, so its cards change on camera.
+      name: "Verdegal", island: null, favorite_berries: [], main_favorite: null,
       weekly_bonus: "berry_strength", dish_type: "Curry", meals: ["Beanburger Curry", '"Egg Bomb" Curry', '"Drought" Katsu Curry'],
       slots: [id("Tyranitar"), id("Charizard"), id("Pikachu"), id("Magnezone"), id("Sylveon", 50)].map((m) => ({ members: [m], share: 1 })),
     }),
@@ -233,16 +234,81 @@ async function capture(browser, dir, lang) {
     await shot(shareDialog, "share-copied");
   });
 
-  await scene(browser, lang, async (page) => {
+  // The plan story on a phone: cards, cooking and totals stack vertically, which suits the tile.
+  await scene(
+    browser,
+    lang,
+    async (page) => {
     await page.goto(`${APP}/teams`);
     await page.locator(".team-row button").last().click();
     await page.getByRole("menuitem").first().click();
     await page.locator(".teams-totals").waitFor();
     await page.waitForTimeout(1500);
+    // The plan story, step by step: the team's cards, the map and its berries, the meals' ingredients, the week.
     const cards = page.locator(".prod-cards .prod-card");
-    for (let i = 0; i < 3; i++) await shot(cards.nth(i), `team-card-${i + 1}`);
-    await shot(page.locator(".teams-totals"), "team-totals");
-  });
+    for (let i = 0; i < 5; i++) await shot(cards.nth(i), `plan-card-${i + 1}`);
+    await page.getByRole("button", { name: /^(Mapa|Map)\b/ }).first().click();
+    const mapDialog = page.getByRole("dialog");
+    await mapDialog.getByRole("button", { name: /Sin mapa|No map/ }).click();
+    await mapDialog.getByRole("option", { name: /^Greengrass Isle/ }).first().click();
+    await page.waitForTimeout(600);
+    const dBox = await mapDialog.boundingBox();
+    await shot(mapDialog, "plan-map-before");
+    const berries = lang === "es" ? ["Uvav", "Wiki", "Zanama"] : ["Grepa", "Wiki", "Leppa"];
+    marks.planBerries = [];
+    for (const name of berries) {
+      const toggle = mapDialog.locator(".island-tab__berry-toggle", { hasText: name }).first();
+      marks.planBerries.push(rel(await toggle.boundingBox(), dBox));
+      await toggle.click();
+      await page.waitForTimeout(300);
+    }
+    await page.evaluate(() => document.activeElement?.blur());
+    await page.waitForTimeout(400);
+    await shot(mapDialog, "plan-map-after");
+    await page.keyboard.press("Escape");
+    await mapDialog.waitFor({ state: "hidden" });
+    await page.evaluate(() => document.activeElement?.blur());
+    await page.waitForTimeout(1500);
+    for (let i = 0; i < 5; i++) await shot(cards.nth(i), `plan-fav-${i + 1}`);
+    // The Cooking card from its top through the missing ingredients: the recipes and what they lack.
+    const cooking = page.locator(".teams-aggregates__cooking");
+    // A clip only covers what is on screen: bring the card's top just under the sticky app bar first.
+    await cooking.evaluate((el) => {
+      const bar = document.querySelector(".appbar")?.getBoundingClientRect().height ?? 0;
+      window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - bar - 16);
+    });
+    await page.waitForTimeout(300);
+    const cBox = await cooking.boundingBox();
+    const missing = cooking.locator(".cook-result-block", { hasText: /Faltan|Missing/ }).first();
+    const mBox = await missing.boundingBox();
+    const cookClip = { x: cBox.x, y: cBox.y, width: cBox.width, height: mBox.y + mBox.height + 12 - cBox.y };
+    await page.screenshot({ path: join(dir, "plan-cooking.jpg"), ...JPEG, clip: cookClip });
+    const boxes = (loc) => loc.evaluateAll((els) => els.map((e) => { const b = e.getBoundingClientRect(); return { x: b.x, y: b.y, width: b.width, height: b.height }; }));
+    marks.planCooking = {
+      recipes: (await boxes(cooking.locator(".teams-plan-row"))).map((b) => rel(b, cookClip)),
+      strength: rel(await cooking.locator(".cook-result-row--strength").first().boundingBox(), cookClip),
+      missing: rel(mBox, cookClip),
+    };
+    // The week's totals card (stacked on a phone), and where each figure sits for the highlights.
+    const totals = page.locator(".teams-totals");
+    await totals.evaluate((el) => {
+      const bar = document.querySelector(".appbar")?.getBoundingClientRect().height ?? 0;
+      window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - bar - 16);
+    });
+    await page.waitForTimeout(300);
+    const tBox = await totals.boundingBox();
+    await shot(totals, "plan-totals");
+    const kpi = async (col) => rel(await page.locator(`.teams-totals__col--${col} .teams-totals__kpi`).first().boundingBox(), tBox);
+    marks.planWeek = {
+      berries: await kpi("berries"),
+      cooking: await kpi("cooking"),
+      grand: await kpi("grand"),
+      weekly: rel(await page.locator(".teams-totals__col--grand .teams-totals__aside").first().boundingBox(), tBox),
+      rating: rel(await totals.locator(".snorlax-rating-badge").first().boundingBox(), tBox),
+    };
+    },
+    PHONE,
+  );
 
   await scene(
     browser,
