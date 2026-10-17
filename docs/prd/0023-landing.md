@@ -110,10 +110,10 @@ detail:
    when it fills up and how that affects production. The Player profile holds up to two
    sleep sessions ([Sleep schedule](0015-sleep-schedule.md)); by default, a single one of
    8:30.
-4. **Can I account for an event?** Yes: in Team Analysis you set the event's bonuses
-   (extra ingredients, skill boosts, a bigger pot…) by hand, or during event weeks they
-   come already switched on; the whole team recomputes
-   ([Event bonus](0012-event-bonus.md)).
+4. **Can I account for an event?** Yes: during event weeks Team Analysis already has the
+   event's bonuses (extra ingredients, skill boosts, a bigger pot…) set, so there is
+   nothing to load; they can still be set or adjusted by hand, and the whole team
+   recomputes ([Event bonus](0012-event-bonus.md)).
 5. **Will my team's ingredients be enough for my meals?** Team Analysis checks the three
    meals you choose against what the team gathers, and adds the cooking strength to the
    total ([Cooking plan](0006-cooking-plan.md)).
