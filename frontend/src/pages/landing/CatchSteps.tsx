@@ -1,35 +1,169 @@
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
-import { useI18n } from "../../i18n";
-import { CATCH_STEPS, shotUrl } from "./content";
+import { useI18n, type Lang } from "../../i18n";
+import { CATCH_STEPS, shotUrl, type CatchStepId, type ShotName } from "./content";
+import shotMarks from "./shotMarks.json";
 
-/** How long each step shows before the next one. */
-export const STEP_MS = 5000;
+/** A box as % of its capture (written by scripts/landing-shots.mjs). */
+interface Rect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+interface Marks {
+  evolve: Rect;
+  maps: { options: Rect[]; target: number };
+  baseStrength: Rect;
+  rivalStrength: Rect;
+}
+const MARKS = shotMarks as Record<Lang, Marks>;
 
-const LAST = CATCH_STEPS.length - 1;
+/** How long each step shows before the next one; the animated ones get more time. */
+export const STEP_DURATIONS: Record<CatchStepId, number> = {
+  upload: 4500,
+  evolve: 6000,
+  pick: 4500,
+  settings: 8000,
+  compare: 8000,
+};
+
+const HOVER_MS = 450;
+
+/** When each phase of a step starts, in ms from the step's start; the phase is how many have passed. */
+export function timeline(id: CatchStepId, mapTarget: number): number[] {
+  switch (id) {
+    // 1 pointer to the evolve button, 2 click, 3 evolved.
+    case "evolve":
+      return [400, 1600, 2000];
+    // One phase per map the pointer passes on its way down to the target, then click, then applied.
+    case "settings": {
+      const hovers = Array.from({ length: mapTarget }, (_, k) => 900 + k * HOVER_MS);
+      const atTarget = 900 + mapTarget * HOVER_MS;
+      return [...hovers, atTarget + 300, atTarget + 900];
+    }
+    // 1 the newcomer slides in, 2 strength lights up, 3 it takes the front.
+    case "compare":
+      return [700, 1900, 3400];
+    default:
+      return [];
+  }
+}
 
 function prefersReducedMotion(): boolean {
   return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 }
 
+const LAST = CATCH_STEPS.length - 1;
+const box = (r: Rect): CSSProperties => ({ left: `${r.x}%`, top: `${r.y}%`, width: `${r.w}%`, height: `${r.h}%` });
+// Where a pointer rests on a box: right of center, like a hand reaching for a label.
+const aim = (r: Rect): CSSProperties => ({ left: `${r.x + r.w * 0.7}%`, top: `${r.y + r.h * 0.6}%` });
+
+function Pointer({ style, clicking, gone }: { style: CSSProperties; clicking: boolean; gone?: boolean }) {
+  return (
+    <span className={"landing-pointer" + (clicking ? " is-clicking" : "") + (gone ? " is-gone" : "")} style={style} aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <path d="M5 3l14 8-6.5 1.5L10 19z" />
+      </svg>
+    </span>
+  );
+}
+
 /** The catch tile's story: numbered steps that play their captures in turn, or on click. */
 export function CatchSteps() {
   const { t, lang } = useI18n();
+  const marks = MARKS[lang];
   const [still] = useState(prefersReducedMotion);
-  // Reduced motion opens on the outcome and never advances by itself.
+  // Reduced motion opens on the outcome, every step at its final phase, and never advances.
   const [active, setActive] = useState(still ? LAST : 0);
-  // Bumped on every click, so picking the current step also restarts its time.
+  // Bumped on every click, so picking the current step also restarts it.
   const [round, setRound] = useState(0);
+  // A phase belongs to one run of one step, so a new run paints from phase 0.
+  const run = `${active}-${round}`;
+  const [reached, setReached] = useState({ run, phase: 0 });
+
+  const id = CATCH_STEPS[active].id;
+  const times = timeline(id, marks.maps.target);
+  const phase = still ? times.length : reached.run === run ? reached.phase : 0;
 
   useEffect(() => {
     if (still) return;
-    const id = window.setTimeout(() => setActive((a) => (a + 1) % CATCH_STEPS.length), STEP_MS);
-    return () => window.clearTimeout(id);
-  }, [active, round, still]);
+    const ids = times.map((ms, k) => window.setTimeout(() => setReached({ run, phase: k + 1 }), ms));
+    ids.push(window.setTimeout(() => setActive((a) => (a + 1) % CATCH_STEPS.length), STEP_DURATIONS[id]));
+    return () => ids.forEach((t) => window.clearTimeout(t));
+    // `times` and `id` follow from `run`.
+  }, [run, still]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const pick = (i: number) => {
     setActive(i);
     setRound((r) => r + 1);
+  };
+
+  const img = (name: ShotName, className = "", alt = "") => (
+    <img
+      className={`landing-stage__shot landing-stage__shot--${name} ${className}`}
+      src={shotUrl(name, lang)}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+    />
+  );
+
+  // One frame per step, drawn at phase `p` (inactive frames wait at 0).
+  const frame = (step: CatchStepId, p: number) => {
+    const at = (n: number) => p >= n;
+    switch (step) {
+      case "upload":
+        return (
+          <>
+            {img("game-1")}
+            {img("game-2")}
+          </>
+        );
+      case "evolve":
+        return (
+          <div className="landing-demo">
+            {img("catch-evolve-before", "landing-demo__base")}
+            {img("catch-evolve-after", "landing-demo__over" + (at(3) ? " is-on" : ""))}
+            <span className={"landing-demo__target" + (at(1) && !at(3) ? " is-on" : "")} style={box(marks.evolve)} aria-hidden="true" />
+            <Pointer style={at(1) ? aim(marks.evolve) : { left: "88%", top: "118%" }} clicking={at(2) && !at(3)} gone={at(3)} />
+          </div>
+        );
+      case "pick":
+        return img("catch-pick");
+      case "settings": {
+        const { options, target } = marks.maps;
+        const hover = options[Math.min(p, target)];
+        const applied = at(target + 2);
+        return (
+          <>
+            <div className={"landing-demo landing-stage__layer" + (applied ? " is-off" : "")}>
+              {img("catch-map-list", "landing-demo__base")}
+              <span className={"landing-demo__hover" + (at(target + 1) ? " is-picked" : "")} style={box(hover)} aria-hidden="true" />
+              <Pointer style={aim(hover)} clicking={at(target + 1) && !applied} />
+            </div>
+            <div className={"landing-stage__layer landing-stage__layer--column" + (applied ? "" : " is-off")}>
+              {img("catch-map")}
+              {img("catch-settings")}
+            </div>
+          </>
+        );
+      }
+      case "compare":
+        return (
+          <div className={"landing-duel" + [1, 2, 3].map((n) => (at(n) ? ` is-p${n}` : "")).join("")}>
+            <div className="landing-duel__card landing-duel__card--rival">
+              {img("catch-card-rival")}
+              <span className="landing-duel__glow landing-duel__glow--down" style={box(marks.rivalStrength)} aria-hidden="true" />
+            </div>
+            <div className="landing-duel__card landing-duel__card--base">
+              {/* The outcome; the steps already narrate the rest. */}
+              {img("catch-card-base", "", t("landing.case.catch.alt"))}
+              <span className="landing-duel__glow landing-duel__glow--up" style={box(marks.baseStrength)} aria-hidden="true" />
+            </div>
+          </div>
+        );
+    }
   };
 
   return (
@@ -45,8 +179,15 @@ export function CatchSteps() {
             >
               <span className="landing-steps__num">{i + 1}</span>
               {t(`landing.catch.step.${s.id}`)}
-              {/* Keyed per round so its fill restarts with the step's time. */}
-              {i === active && !still && <span key={round} className="landing-steps__progress" aria-hidden="true" />}
+              {/* Keyed per run so its fill restarts with the step. */}
+              {i === active && !still && (
+                <span
+                  key={run}
+                  className="landing-steps__progress"
+                  style={{ animationDuration: `${STEP_DURATIONS[s.id]}ms` }}
+                  aria-hidden="true"
+                />
+              )}
             </button>
           </li>
         ))}
@@ -56,26 +197,13 @@ export function CatchSteps() {
           <div
             key={s.id}
             className={`landing-stage__frame landing-stage__frame--${s.id}` + (i === active ? " is-active" : "")}
+            data-phase={i === active ? phase : undefined}
             aria-hidden={i === active ? undefined : true}
           >
-            {s.shots.map((name, j) => (
-              <Fragment key={name}>
-                {/* Evolving shows a before and an after. */}
-                {s.id === "evolve" && j > 0 && (
-                  <span className="landing-stage__arrow" aria-hidden="true">
-                    ↓
-                  </span>
-                )}
-                <img
-                  className={`landing-stage__shot landing-stage__shot--${name}`}
-                  src={shotUrl(name, lang)}
-                  // The last frame is the outcome; the steps already narrate the rest.
-                  alt={i === LAST ? t("landing.case.catch.alt") : ""}
-                  loading="lazy"
-                  decoding="async"
-                />
-              </Fragment>
-            ))}
+            {/* Remounted per run, so a restarted step begins from its first pose instead of rewinding. */}
+            <div key={i === active ? run : "idle"} className="landing-stage__content">
+              {frame(s.id, i === active ? phase : 0)}
+            </div>
           </div>
         ))}
       </div>

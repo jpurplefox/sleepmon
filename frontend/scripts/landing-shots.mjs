@@ -2,12 +2,14 @@
 // Needs: the frontend dev server (--app, default http://localhost:5173) and the demo backend:
 //   cd backend && PYTHONPATH=. python scripts/landing_demo_server.py
 // Chrome: CHROME_PATH, default macOS Google Chrome.
-import { mkdtemp, mkdir, readFile, rename, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright-core";
 
 const OUT = join(dirname(fileURLToPath(import.meta.url)), "..", "public", "landing");
+// Where the catch story's pointer, clicks and highlights go, as % of each capture.
+const MARKS = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "pages", "landing", "shotMarks.json");
 const APP = process.argv.find((a) => a.startsWith("--app="))?.slice(6) ?? "http://localhost:5173";
 const DEMO = "http://127.0.0.1:8010";
 const CHROME = process.env.CHROME_PATH ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
@@ -99,8 +101,15 @@ async function scene(browser, lang, run) {
   }
 }
 
+// A box as % of the clip it was captured in, rounded to 0.1.
+const rel = (box, clip) => {
+  const r = (v) => Math.round(v * 1000) / 10;
+  return { x: r((box.x - clip.x) / clip.width), y: r((box.y - clip.y) / clip.height), w: r(box.width / clip.width), h: r(box.height / clip.height) };
+};
+
 async function capture(browser, dir, lang) {
   const shot = (loc, name, opts = {}) => loc.screenshot({ path: join(dir, `${name}.jpg`), ...JPEG, ...opts });
+  const marks = {};
 
   await scene(browser, lang, async (page) => {
     // The uploaded screenshots themselves, as the tile shows them.
@@ -120,16 +129,17 @@ async function capture(browser, dir, lang) {
       const dialog = await page.getByRole("dialog").boundingBox();
       const top = await page.locator(".form__row").first().boundingBox();
       const level = await page.locator(".level-evolve").first().boundingBox();
-      await page.screenshot({
-        path: join(dir, `${name}.jpg`), ...JPEG,
-        clip: { x: dialog.x + 12, y: top.y - 12, width: dialog.width - 24, height: level.y + level.height - top.y + 24 },
-      });
+      const clip = { x: dialog.x + 12, y: top.y - 12, width: dialog.width - 24, height: level.y + level.height - top.y + 24 };
+      await page.screenshot({ path: join(dir, `${name}.jpg`), ...JPEG, clip });
+      return clip;
     };
     // Let the dialog's entrance and the sprites settle first.
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1200);
-    await formTop("catch-evolve-before");
-    await page.getByRole("button", { name: /Evolucionar a|Evolve to/ }).first().click();
+    const beforeClip = await formTop("catch-evolve-before");
+    const evolveBtn = page.getByRole("button", { name: /Evolucionar a|Evolve to/ }).first();
+    marks.evolve = rel(await evolveBtn.boundingBox(), beforeClip);
+    await evolveBtn.click();
     await page.waitForTimeout(600);
     await formTop("catch-evolve-after");
     await page.getByRole("button", { name: /Agregar a la comparación|Add to comparison/ }).click();
@@ -137,17 +147,6 @@ async function capture(browser, dir, lang) {
     await cards.first().waitFor();
     await page.locator(".sug-row", { hasText: "Sudowoodo" }).waitFor();
     await page.waitForTimeout(1500);
-    // From the context bar down to the card row's bottom, across the given cards.
-    const clipTo = async (els) => {
-      const bar = await page.locator(".ctx-bar").first().boundingBox();
-      const boxes = await Promise.all(els.map((e) => e.boundingBox()));
-      const x = Math.min(bar.x, ...boxes.map((b) => b.x));
-      // Keep the active level chip in frame: the level is part of what is compared.
-      const chip = await page.locator(".ctx-levels .level-chip--active").boundingBox();
-      const right = Math.max(chip.x + chip.width + 8, ...boxes.map((b) => b.x + b.width));
-      const bottom = Math.max(...boxes.map((b) => b.y + b.height));
-      return { x, y: bar.y - 12, width: right - x, height: bottom - bar.y + 12 };
-    };
     // Close-up of the suggestion: it says where the rival comes from.
     const add = await page.locator(".prod-card--add").boundingBox();
     const sug = await page.locator(".sug-row", { hasText: "Sudowoodo" }).boundingBox();
@@ -161,6 +160,17 @@ async function capture(browser, dir, lang) {
     await page.getByRole("button", { name: /^(Mapa|Map) Greengrass Isle/ }).click();
     const mapDialog = page.getByRole("dialog");
     await mapDialog.getByRole("button", { name: "Greengrass Isle" }).click();
+    // The open list of maps, and where each one sits in it, for the pointer to walk down.
+    const options = page.getByRole("option");
+    await options.first().waitFor();
+    await page.waitForTimeout(500);
+    const dBox = await mapDialog.boundingBox();
+    const oBoxes = await options.evaluateAll((els) => els.map((e) => { const b = e.getBoundingClientRect(); return { x: b.x, y: b.y, width: b.width, height: b.height }; }));
+    const listBottom = Math.max(dBox.y + dBox.height, ...oBoxes.map((b) => b.y + b.height + 12));
+    const listClip = { x: dBox.x, y: dBox.y, width: dBox.width, height: listBottom - dBox.y };
+    await page.screenshot({ path: join(dir, "catch-map-list.jpg"), ...JPEG, clip: listClip });
+    const names = await options.allInnerTexts();
+    marks.maps = { options: oBoxes.map((b) => rel(b, listClip)), target: names.findIndex((n) => n.startsWith("Taupe Hollow")) };
     await mapDialog.getByRole("option", { name: /^Taupe Hollow/ }).click();
     await page.waitForTimeout(600);
     await shot(mapDialog, "catch-map");
@@ -176,7 +186,14 @@ async function capture(browser, dir, lang) {
       path: join(dir, "catch-settings.jpg"), ...JPEG,
       clip: { x: bar.x - 8, y: bar.y - 8, width: chip60.x + chip60.width + 16 - bar.x, height: bar.height + 16 },
     });
-    await page.screenshot({ path: join(dir, "catch-compare.jpg"), ...JPEG, clip: await clipTo([cards.first(), cards.nth(1)]) });
+    // Each card on its own, with its strength row: the page lights them up and swaps the two.
+    for (const [i, name] of [[0, "catch-card-base"], [1, "catch-card-rival"]]) {
+      const card = cards.nth(i);
+      const cBox = await card.boundingBox();
+      await shot(card, name);
+      const row = card.locator('li:has(img[src*="charge-strength"])').first();
+      marks[name === "catch-card-base" ? "baseStrength" : "rivalStrength"] = rel(await row.boundingBox(), cBox);
+    }
   });
 
   await scene(browser, lang, async (page) => {
@@ -219,6 +236,7 @@ async function capture(browser, dir, lang) {
     await tip.waitFor();
     await shot(tip, "levelup-tip");
   });
+  return marks;
 }
 
 const browser = await chromium.launch({ executablePath: CHROME, headless: true }).catch((e) => {
@@ -229,12 +247,14 @@ await mkdir(dirname(OUT), { recursive: true });
 const tmp = await mkdtemp(join(dirname(OUT), ".landing-shots-"));
 try {
   await seed();
+  const marks = {};
   for (const lang of LANGS) {
     await mkdir(join(tmp, lang), { recursive: true });
-    await capture(browser, join(tmp, lang), lang);
+    marks[lang] = await capture(browser, join(tmp, lang), lang);
   }
   await rm(OUT, { recursive: true, force: true });
   await rename(tmp, OUT);
+  await writeFile(MARKS, JSON.stringify(marks, null, 2) + "\n");
   console.log(`Wrote captures to ${OUT}`);
 } finally {
   await browser.close();

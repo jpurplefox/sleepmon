@@ -9,7 +9,7 @@ export const FAQ_HREF = `/#${FAQ_ID}`;
 export type ShotName =
   | "hero-card-1" | "hero-card-2" | "hero-card-3"
   | "game-1" | "game-2" | "catch-evolve-before" | "catch-evolve-after" | "catch-pick"
-  | "catch-map" | "catch-settings" | "catch-compare"
+  | "catch-map-list" | "catch-map" | "catch-settings" | "catch-card-base" | "catch-card-rival"
   | "share-dialog"
   | "team-card-1" | "team-card-2" | "team-card-3" | "team-totals"
   | "box-entry" | "levelup-tip";
@@ -27,9 +27,10 @@ export const CATCH_STEPS: readonly { id: CatchStepId; shots: readonly ShotName[]
   // Before and after: the form's species and level, Tyrunt then Tyrantrum.
   { id: "evolve", shots: ["catch-evolve-before", "catch-evolve-after"] },
   { id: "pick", shots: ["catch-pick"] },
-  // The map dialog on Taupe Hollow, then the bar with the island and level 60 set.
-  { id: "settings", shots: ["catch-map", "catch-settings"] },
-  { id: "compare", shots: ["catch-compare"] },
+  // The open map list walked down to Taupe Hollow, then the dialog and bar with it and level 60 set.
+  { id: "settings", shots: ["catch-map-list", "catch-map", "catch-settings"] },
+  // Each card alone, so the newcomer can push the rival aside.
+  { id: "compare", shots: ["catch-card-rival", "catch-card-base"] },
 ];
 
 export interface UseCase {
