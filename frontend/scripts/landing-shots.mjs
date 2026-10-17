@@ -69,8 +69,12 @@ async function seed() {
 }
 
 // A fresh signed-in context per scene: the refresh token rotates, so a reused one signs out.
-async function scene(browser, lang, run) {
-  const ctx = await browser.newContext({ viewport: { width: 1500, height: 1100 }, deviceScaleFactor: 2, colorScheme: "dark" });
+const DESKTOP = { viewport: { width: 1500, height: 1100 }, deviceScaleFactor: 2 };
+// The Box's phone layout: each entry stacks vertically, which reads better in a tile.
+const PHONE = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true };
+
+async function scene(browser, lang, run, device = DESKTOP) {
+  const ctx = await browser.newContext({ ...device, colorScheme: "dark" });
   // The share dialog's Copy writes to the clipboard.
   await ctx.grantPermissions(["clipboard-read", "clipboard-write"], { origin: new URL(APP).origin });
   await ctx.addInitScript((l) => { localStorage.setItem("sleepmon.session", "1"); localStorage.setItem("sleepmon.lang", l); }, lang);
@@ -237,16 +241,34 @@ async function capture(browser, dir, lang) {
     await shot(page.locator(".teams-totals"), "team-totals");
   });
 
-  await scene(browser, lang, async (page) => {
-    await page.goto(`${APP}/box`);
-    const entry = page.locator(".box-entry", { hasText: "Tyranitar" }).first();
-    await entry.waitFor();
-    await shot(entry, "box-entry");
-    await entry.getByText(/60 → 70/).first().hover();
-    const tip = entry.locator(".box-entry__levelup .tooltip__bubble:visible").first();
-    await tip.waitFor();
-    await shot(tip, "levelup-tip");
-  });
+  await scene(
+    browser,
+    lang,
+    async (page) => {
+      // Tyranitar's entry expanded on a phone, where its level-up cell sits, then the gains it opens.
+      await page.goto(`${APP}/box`);
+      const entry = page.locator(".box-entry", { hasText: "Tyranitar" }).first();
+      await entry.waitFor();
+      await entry.scrollIntoViewIfNeeded();
+      await entry.locator(".box-entry__chevron").click();
+      await page.waitForTimeout(800);
+      const entryBox = await entry.boundingBox();
+      await shot(entry, "levelup-entry");
+      const cell = entry.getByText(/60 → 70/).first();
+      marks.levelupCell = rel(await cell.boundingBox(), entryBox);
+      await cell.click();
+      const tip = page.locator(".tooltip__bubble:visible").first();
+      await tip.waitFor();
+      await page.waitForTimeout(400);
+      const tipBox = await tip.boundingBox();
+      await shot(tip, "levelup-tip");
+      const rows = await tip.locator(".levelup-tip__row").evaluateAll((els) =>
+        els.map((e) => { const b = e.getBoundingClientRect(); return { x: b.x, y: b.y, width: b.width, height: b.height }; }),
+      );
+      marks.levelupRows = rows.map((b) => rel(b, tipBox));
+    },
+    PHONE,
+  );
   return marks;
 }
 

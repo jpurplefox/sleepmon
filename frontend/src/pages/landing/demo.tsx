@@ -18,6 +18,8 @@ export interface Marks {
   baseStrength: Rect;
   rivalStrength: Rect;
   shareCopy: Rect;
+  levelupCell: Rect;
+  levelupRows: Rect[];
 }
 export const MARKS = shotMarks as Record<Lang, Marks>;
 

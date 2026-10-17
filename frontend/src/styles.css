@@ -8147,7 +8147,8 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 
 @media (prefers-reduced-motion: reduce) {
   .landing-stage__frame, .landing-steps__item, .landing-stage__layer, .landing-duel__card, .landing-duel__glow, .landing-pointer, .landing-demo__over,
-  .landing-upload .landing-stage__shot, .landing-demo__row, .landing-demo__check, .landing-chat { transition: none; }
+  .landing-upload .landing-stage__shot, .landing-demo__row, .landing-demo__check, .landing-chat,
+  .landing-levelup__tip, .landing-levelup__row { transition: none; }
   .landing-upload.is-p3 .landing-upload__scan { animation: none; }
   .landing-demo__target.is-on { animation: none; }
 }
@@ -8163,16 +8164,25 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 .landing-chat .landing-chat__preview { display: block; width: 100%; border-radius: 10px; box-shadow: none; }
 .landing-chat__site { font-size: var(--text-xs); font-weight: 700; color: var(--text); padding: 0 0.2rem; }
 .landing-chat__link { font-size: var(--text-xs); color: var(--accent-text); text-decoration: underline; padding: 0 0.2rem; }
-.landing-tile--plan { grid-column: span 4; min-height: 540px; }
+/* Visual rows: catch / share + level-up / plan. The DOM keeps the PRD order (catch, share, plan, level-up). */
+.landing-tile--plan { grid-column: span 6; order: 4; min-height: 540px; }
 .landing-shot--team-card-1, .landing-shot--team-card-2, .landing-shot--team-card-3 { width: 160px; top: 138px; }
 .landing-shot--team-card-1 { left: 12%; transform: rotate(-7deg); }
 .landing-shot--team-card-2 { left: 50%; transform: translateX(-50%); top: 126px; z-index: 1; }
 .landing-shot--team-card-3 { right: 12%; transform: rotate(7deg); }
 .landing-shot--team-totals { left: 1.2rem; right: 1.2rem; width: calc(100% - 2.4rem); bottom: 1.2rem; z-index: 3; border-radius: 12px; }
-/* Full width, so the Box row reads whole. */
-.landing-tile--levelup { grid-column: span 6; min-height: 400px; background: linear-gradient(200deg, rgba(94, 230, 196, 0.1), var(--surface) 55%); }
-.landing-shot--box-entry { width: calc(100% - 3.2rem); left: 1.6rem; bottom: 1.6rem; border-radius: 14px; }
-.landing-shot--levelup-tip { width: 340px; right: 4%; top: 40px; transform: rotate(3deg); z-index: 2; border-radius: 10px; }
+/* Level-up: copy beside a phone Box entry that opens what the next unlock costs and gains. */
+.landing-tile--levelup { grid-column: span 4; order: 3; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 1.5rem; align-items: center; background: linear-gradient(200deg, rgba(94, 230, 196, 0.1), var(--surface) 55%); }
+.landing-levelup { position: relative; justify-self: center; width: 100%; max-width: 360px; }
+.landing-levelup .landing-demo { display: block; }
+.landing-levelup .landing-demo .landing-stage__shot { width: 100%; max-height: none; border-radius: 16px; box-shadow: var(--shot-shadow); }
+.landing-levelup .landing-pointer { transition-duration: 0.8s; }
+.landing-levelup__tip { position: absolute; left: 3%; width: 92%; z-index: 2; opacity: 0; transform: translateY(14px) scale(0.92); transform-origin: 40% 100%; transition: opacity 0.3s ease-out, transform 0.45s cubic-bezier(0.3, 1.4, 0.5, 1); }
+.landing-levelup__tip.is-on { opacity: 1; transform: none; }
+.landing-levelup__tip .landing-stage__shot { border-radius: 12px; }
+/* Each gain lights up in turn, in the app's "goes up" color. */
+.landing-levelup__row { position: absolute; border-radius: 8px; opacity: 0; background: var(--up-dim); box-shadow: 0 0 0 1.5px var(--up-border), 0 0 18px var(--up-dim); transition: opacity 0.3s ease-out; }
+.landing-levelup__row.is-on { opacity: 1; }
 
 /* FAQ */
 .landing-faq { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 2.5rem; padding: 1rem 0 3.5rem; scroll-margin-top: calc(var(--appbar-h) + 1rem); }
@@ -8204,8 +8214,6 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   .landing-stage__layer--column .landing-stage__shot--catch-map { max-height: 260px; }
   .landing-tile--share { min-height: 540px; }
   .landing-shot--team-card-1, .landing-shot--team-card-2, .landing-shot--team-card-3 { width: 110px; }
-  .landing-tile--levelup { min-height: 520px; }
-  .landing-shot--box-entry { width: 260%; left: auto; right: -4%; }
-  .landing-shot--levelup-tip { width: 270px; right: 4%; top: 230px; }
+  .landing-tile--levelup { grid-template-columns: minmax(0, 1fr); }
   .landing-faq { grid-template-columns: minmax(0, 1fr); gap: 1rem; padding-bottom: 2.5rem; }
 }
