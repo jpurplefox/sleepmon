@@ -66,6 +66,28 @@ describe("CatchSteps", () => {
     expect(current()).toHaveTextContent("Upload the screenshots");
   });
 
+  it("brings the screenshots in one by one, then reads them", () => {
+    renderSteps();
+    const upload = () => shownFrame().querySelector(".landing-upload");
+    expect(upload()).not.toHaveClass("is-p1");
+    const times = timeline("upload", 0);
+    wait(times[0]);
+    expect(upload()).toHaveClass("is-p1");
+    expect(upload()).not.toHaveClass("is-p2");
+    wait(times[times.length - 1] - times[0]);
+    expect(upload()).toHaveClass("is-p3");
+  });
+
+  it("marks the Box suggestion as picked once the pointer clicks it", () => {
+    renderSteps();
+    step(/Pick one from your box/);
+    const row = () => shownFrame().querySelector(".landing-demo__row");
+    expect(row()).not.toHaveClass("is-picked");
+    const times = timeline("pick", 0);
+    wait(times[times.length - 1]);
+    expect(row()).toHaveClass("is-picked");
+  });
+
   it("evolves after the pointer clicks the evolve button", () => {
     renderSteps();
     step(/Evolve it/);

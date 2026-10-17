@@ -150,10 +150,9 @@ async function capture(browser, dir, lang) {
     // Close-up of the suggestion: it says where the rival comes from.
     const add = await page.locator(".prod-card--add").boundingBox();
     const sug = await page.locator(".sug-row", { hasText: "Sudowoodo" }).boundingBox();
-    await page.screenshot({
-      path: join(dir, "catch-pick.jpg"), ...JPEG,
-      clip: { x: add.x + 8, y: sug.y - 44, width: add.width - 16, height: sug.height + 60 },
-    });
+    const pickClip = { x: add.x + 8, y: sug.y - 44, width: add.width - 16, height: sug.height + 60 };
+    await page.screenshot({ path: join(dir, "catch-pick.jpg"), ...JPEG, clip: pickClip });
+    marks.pick = rel(sug, pickClip);
     await page.locator(".sug-row", { hasText: "Sudowoodo" }).click();
     await cards.nth(1).waitFor();
     // Taupe Hollow favors Sitrus, the berry both of them gather.

@@ -13,6 +13,7 @@ interface Rect {
 }
 interface Marks {
   evolve: Rect;
+  pick: Rect;
   maps: { options: Rect[]; target: number };
   baseStrength: Rect;
   rivalStrength: Rect;
@@ -21,9 +22,9 @@ const MARKS = shotMarks as Record<Lang, Marks>;
 
 /** How long each step shows before the next one; the animated ones get more time. */
 export const STEP_DURATIONS: Record<CatchStepId, number> = {
-  upload: 4500,
+  upload: 5000,
   evolve: 6000,
-  pick: 4500,
+  pick: 5500,
   settings: 8000,
   compare: 8000,
 };
@@ -33,9 +34,15 @@ const HOVER_MS = 450;
 /** When each phase of a step starts, in ms from the step's start; the phase is how many have passed. */
 export function timeline(id: CatchStepId, mapTarget: number): number[] {
   switch (id) {
+    // 1 first screenshot spins in, 2 the second, 3 the reading sweeps over them.
+    case "upload":
+      return [300, 1000, 1900];
     // 1 pointer to the evolve button, 2 click, 3 evolved.
     case "evolve":
       return [400, 1600, 2000];
+    // 1 pointer to the Box suggestion, 2 hover, 3 click, 4 picked.
+    case "pick":
+      return [400, 1500, 1900, 2300];
     // One phase per map the pointer passes on its way down to the target, then click, then applied.
     case "settings": {
       const hovers = Array.from({ length: mapTarget }, (_, k) => 900 + k * HOVER_MS);
@@ -115,10 +122,11 @@ export function CatchSteps() {
     switch (step) {
       case "upload":
         return (
-          <>
+          <div className={"landing-upload" + [1, 2, 3].map((n) => (at(n) ? ` is-p${n}` : "")).join("")}>
             {img("game-1")}
             {img("game-2")}
-          </>
+            <span className="landing-upload__scan" aria-hidden="true" />
+          </div>
         );
       case "evolve":
         return (
@@ -130,7 +138,24 @@ export function CatchSteps() {
           </div>
         );
       case "pick":
-        return img("catch-pick");
+        return (
+          <div className="landing-demo">
+            {img("catch-pick", "landing-demo__base")}
+            <span
+              className={"landing-demo__row" + (at(2) ? " is-hover" : "") + (at(4) ? " is-picked" : "")}
+              style={box(marks.pick)}
+              aria-hidden="true"
+            />
+            <span
+              className={"landing-demo__check" + (at(4) ? " is-on" : "")}
+              style={{ left: `${marks.pick.x + marks.pick.w - 7}%`, top: `${marks.pick.y + 6}%` }}
+              aria-hidden="true"
+            >
+              ✓
+            </span>
+            <Pointer style={at(1) ? aim(marks.pick) : { left: "92%", top: "125%" }} clicking={at(3) && !at(4)} gone={at(4)} />
+          </div>
+        );
       case "settings": {
         const { options, target } = marks.maps;
         const hover = options[Math.min(p, target)];
