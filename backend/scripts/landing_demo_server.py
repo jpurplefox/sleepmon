@@ -6,6 +6,14 @@ Run from backend/: PYTHONPATH=. python scripts/landing_demo_server.py  (port 801
 from datetime import UTC, datetime, timedelta
 
 import uvicorn
+from tests.fakes import (
+    InMemoryPlayerProgressRepository,
+    InMemoryRefreshTokenRepository,
+    InMemorySavedTeamRepository,
+    InMemoryTeamRepository,
+    InMemoryUserRepository,
+    StubIdentityProvider,
+)
 
 from sleepmon.adapters.inbound.http.app import create_app
 from sleepmon.adapters.outbound.auth.jwt_access_token import JwtAccessTokenService
@@ -17,14 +25,6 @@ from sleepmon.application.progress_service import DefaultPlayerProgressService
 from sleepmon.application.saved_team_service import DefaultSavedTeamService
 from sleepmon.application.services import DefaultProductionService, DefaultTeamService
 from sleepmon.domain.auth import ExternalIdentity
-from tests.fakes import (
-    InMemoryPlayerProgressRepository,
-    InMemoryRefreshTokenRepository,
-    InMemorySavedTeamRepository,
-    InMemoryTeamRepository,
-    InMemoryUserRepository,
-    StubIdentityProvider,
-)
 
 PORT = 8010
 
