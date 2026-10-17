@@ -90,6 +90,8 @@ async function seed() {
 const DESKTOP = { viewport: { width: 1500, height: 1100 }, deviceScaleFactor: 2 };
 // The Box's phone layout: each entry stacks vertically, which reads better in a tile.
 const PHONE = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true };
+// Still the phone layout, but wide enough for a recipe's ingredient chips on one line.
+const COOKING_WIDTH = 540;
 
 async function scene(browser, lang, run, device = DESKTOP) {
   const ctx = await browser.newContext({ ...device, colorScheme: "dark" });
@@ -288,6 +290,9 @@ async function capture(browser, dir, lang) {
     await page.waitForTimeout(1500);
     for (let i = 0; i < 5; i++) await shot(cards.nth(i), `plan-fav-${i + 1}`);
     // The Cooking card from its top through the missing ingredients: the recipes and what they lack.
+    // A wider phone, so each recipe's four ingredient chips fit on one line.
+    await page.setViewportSize({ width: COOKING_WIDTH, height: PHONE.viewport.height });
+    await page.waitForTimeout(600);
     const cooking = page.locator(".teams-aggregates__cooking");
     // A clip only covers what is on screen: bring the card's top just under the sticky app bar first.
     await cooking.evaluate((el) => {
@@ -306,6 +311,8 @@ async function capture(browser, dir, lang) {
       strength: rel(await cooking.locator(".cook-result-row--strength").first().boundingBox(), cookClip),
       missing: rel(mBox, cookClip),
     };
+    await page.setViewportSize(PHONE.viewport);
+    await page.waitForTimeout(600);
     // The week's totals card (stacked on a phone), and where each figure sits for the highlights.
     const totals = page.locator(".teams-totals");
     await totals.evaluate((el) => {
