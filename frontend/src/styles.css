@@ -2511,10 +2511,17 @@ button.shot--empty:focus-visible,
   gap: 0.3rem;
 }
 
+/* The rows share the card's columns (subgrid), so the delta column is as wide as the widest
+   pill and a long one ("▲7,041") can't push its row past the card's edge. */
 .levelup-tip {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 1fr) auto minmax(4rem, max-content);
+  row-gap: 0.3rem;
+  column-gap: 0.75rem;
+}
+
+.levelup-tip > * {
+  grid-column: 1 / -1;
 }
 
 .levelup-tip__head {
@@ -2577,9 +2584,8 @@ button.shot--empty:focus-visible,
 
 .levelup-tip__row {
   display: grid;
-  grid-template-columns: minmax(7.5rem, 1fr) auto 4rem;
+  grid-template-columns: subgrid;
   align-items: center;
-  gap: 0.75rem;
 }
 
 .levelup-tip__label {
