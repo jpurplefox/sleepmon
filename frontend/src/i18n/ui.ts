@@ -1552,7 +1552,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.case.plan.body":
       "Build the team for your map, choose the meals and see what it produces and the rating it reaches.",
     "landing.case.plan.alt": "A team in Team analysis with its total strength and rating",
-    "landing.case.levelup.title": "Who gets my candies?",
+    "landing.case.levelup.title": "Who gets the candies?",
     "landing.case.levelup.body":
       "Every Pokémon in your box shows what its next level costs and the main thing it gains; one tap shows every detail.",
     "landing.case.levelup.alt": "The level-up cost and gain of a Pokémon in the box",
