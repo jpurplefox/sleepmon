@@ -791,6 +791,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.faq.energy.q": "¿Cómo se tiene en cuenta la energía?",
     "landing.faq.energy.a":
       "Como si estuviera siempre alta: el modelo aplica todo el día el bonus de velocidad de un Pokémon descansado, como pasa con un healer en el equipo que la mantiene arriba. La energía que dan las habilidades se muestra como su resultado, pero no cambia la velocidad de nadie.",
+    "landing.faq.strength.q": "¿Por qué la fuerza de un Pokémon no cuenta sus ingredientes?",
+    "landing.faq.strength.a":
+      "La fuerza de bayas y skills va directo al Snorlax; la de los ingredientes, no. Depende del plato y del nivel de la receta, de si el ingrediente es parte de la receta o solo relleno, y muchas veces queda afuera porque no entra en la olla. Por eso no se suma: sería engañoso y no daría un número útil ni comparable con el resto.",
     "landing.faq.expert.q": "¿Por qué los especialistas en ingredientes suman +1 y no +2 en mapas expertos?",
     "landing.faq.expert.a":
       "El juego les da una probabilidad de +2 pero no la publica; en vez de inventarla, todos suman +1.",
@@ -1602,6 +1605,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.faq.energy.q": "How is energy taken into account?",
     "landing.faq.energy.a":
       "As if it were always high: the model applies the speed bonus of a well-rested Pokémon all day long, the way it plays out with a healer on the team that keeps energy topped up. Energy given by skills shows as the skill's output, but doesn't change anyone's speed.",
+    "landing.faq.strength.q": "Why doesn't a Pokémon's strength count its ingredients?",
+    "landing.faq.strength.a":
+      "Berry and skill strength goes straight to Snorlax; ingredient strength doesn't. It depends on the dish and the recipe's level, on whether the ingredient is part of the recipe or just filler, and it often gets left out because there's no room in the pot. So it isn't added: it would be misleading and wouldn't give a useful number, comparable with the rest.",
     "landing.faq.expert.q": "Why do Ingredients specialists get +1 ingredient on expert maps, not +2?",
     "landing.faq.expert.a":
       "The game gives them a chance at +2 but doesn't publish it; rather than invent the number, every member gets +1.",

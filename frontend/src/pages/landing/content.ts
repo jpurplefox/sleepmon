@@ -78,10 +78,11 @@ export interface FaqItem {
 // Copy keys: landing.faq.<id>.q / .a — order is the PRD's.
 export const FAQ_ITEMS: readonly FaqItem[] = [
   { id: "why" },
-  { id: "ranking" },
   { id: "numbers" },
+  { id: "ranking" },
   { id: "energy" },
   { id: "inventory" },
   { id: "event" },
+  { id: "strength" },
   { id: "expert" },
 ];
