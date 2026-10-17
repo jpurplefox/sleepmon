@@ -1607,7 +1607,7 @@ export const UI: Record<Lang, Record<string, string>> = {
       "The game gives them a chance at +2 but doesn't publish it; rather than invent the number, every member gets +1.",
     "landing.faq.inventory.q": "How is the Pokémon's inventory estimated?",
     "landing.faq.inventory.a":
-      "During the day it assumes you collect the ingredients before it fills up. While you sleep, it works out when it fills up and how that affects production. In your profile you can set up to 2 sleep sessions; by default it uses a single one of 8:30.",
+      "During the day it assumes you collect the ingredients before it fills up. While you sleep, it calculates when it fills up and how that affects production. In your profile you can set up to 2 sleep sessions; by default it uses a single one of 8:30.",
     "landing.faq.event.q": "Can I account for an event?",
     "landing.faq.event.a": "Yes: in Team analysis you add the active event's bonuses and the whole team recomputes.",
     "landing.faq.meals.q": "Will my team's ingredients be enough for my meals?",

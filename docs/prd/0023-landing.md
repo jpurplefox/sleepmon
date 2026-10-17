@@ -106,7 +106,7 @@ detail:
    healer on the team that keeps energy topped up. Energy given by skills shows as the
    skill's output, but doesn't change anyone's speed.
 3. **How is the Pokémon's inventory estimated?** During the day the model assumes you
-   collect the ingredients before the inventory fills up. While you sleep, it works out
+   collect the ingredients before the inventory fills up. While you sleep, it calculates
    when it fills up and how that affects production. The Player profile holds up to two
    sleep sessions ([Sleep schedule](0015-sleep-schedule.md)); by default, a single one of
    8:30.
