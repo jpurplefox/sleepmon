@@ -22,7 +22,7 @@ describe("landing content", () => {
 
   it("opens the FAQ with why sleepmon and leaves the expert-map detail for last", () => {
     expect(FAQ_ITEMS.map((i) => i.id)).toEqual([
-      "why", "numbers", "ranking", "energy", "inventory", "event", "strength", "expert",
+      "why", "numbers", "ranking", "energy", "inventory", "event", "split", "strength", "expert",
     ]);
   });
 

@@ -791,6 +791,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.faq.energy.q": "¿Cómo se tiene en cuenta la energía?",
     "landing.faq.energy.a":
       "Como si estuviera siempre alta: el modelo aplica todo el día el bonus de velocidad de un Pokémon descansado, como pasa con un healer en el equipo que la mantiene arriba. La energía que dan las habilidades se muestra como su resultado, pero no cambia la velocidad de nadie.",
+    "landing.faq.split.q": "¿Cómo funciona dividir un slot en Análisis de equipo?",
+    "landing.faq.split.a":
+      "Sirve para simular que dos Pokémon rotan en un mismo lugar del equipo. La cuenta está simplificada: se toma la producción de un día completo de cada uno y se la reparte según el porcentaje que pongas. No está pensado para cambiar de Pokémon cada tantas horas exactas: en la práctica, uno rota cuando cumplió su objetivo, como uno de ingredientes cuando ya juntó stock suficiente. Así, un reparto de 66% y 33% puede ser dos días completos de uno y un día del otro.",
     "landing.faq.strength.q": "¿Por qué la fuerza de un Pokémon no cuenta sus ingredientes?",
     "landing.faq.strength.a":
       "La fuerza de bayas y skills va directo al Snorlax; la de los ingredientes, no. Depende del plato y del nivel de la receta, de si el ingrediente es parte de la receta o solo relleno, y muchas veces queda afuera porque no entra en la olla. Por eso no se suma: sería engañoso y no daría un número útil ni comparable con el resto.",
@@ -1605,6 +1608,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.faq.energy.q": "How is energy taken into account?",
     "landing.faq.energy.a":
       "As if it were always high: the model applies the speed bonus of a well-rested Pokémon all day long, the way it plays out with a healer on the team that keeps energy topped up. Energy given by skills shows as the skill's output, but doesn't change anyone's speed.",
+    "landing.faq.split.q": "How does splitting a slot work in Team analysis?",
+    "landing.faq.split.a":
+      "It simulates two Pokémon rotating through the same team slot. The math is simplified: each one's full-day production is prorated by the percentage you set. It isn't meant for swapping Pokémon every so many exact hours: in practice one rotates out once it has done its job, like an ingredient Pokémon once it has stocked up enough. So a 66% / 33% split can mean two full days of one and a day of the other.",
     "landing.faq.strength.q": "Why doesn't a Pokémon's strength count its ingredients?",
     "landing.faq.strength.a":
       "Berry and skill strength goes straight to Snorlax; ingredient strength doesn't. It depends on the dish and the recipe's level, on whether the ingredient is part of the recipe or just filler, and it often gets left out because there's no room in the pot. So it isn't added: it would be misleading and wouldn't give a useful number, comparable with the rest.",

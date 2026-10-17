@@ -125,12 +125,18 @@ and last the expert-map detail:
    event's bonuses (extra ingredients, skill boosts, a bigger pot…) set, so there is
    nothing to load; they can still be set or adjusted by hand, and the whole team
    recomputes ([Event bonus](0012-event-bonus.md)).
-7. **Why doesn't a Pokémon's strength count its ingredients?** Berry and skill
+7. **How does splitting a slot work in Team Analysis?** It simulates two Pokémon
+   rotating through one slot. The math is simplified: each one's full-day production is
+   prorated by the chosen percentage ([Team Analysis](0005-team-analysis.md)). It isn't
+   meant for swaps every so many exact hours: in practice one rotates out once it has
+   done its job (an ingredient Pokémon once it has stocked up), so a 66% / 33% split can
+   mean two full days of one and a day of the other.
+8. **Why doesn't a Pokémon's strength count its ingredients?** Berry and skill
    strength goes straight to Snorlax; ingredient strength doesn't. It depends on the dish
    and the recipe's level, on whether the ingredient belongs to the recipe or is filler,
    and it is often left out for lack of room in the pot. Adding it would be misleading
    and not comparable with the rest, so it stays out.
-8. **Why do Ingredients specialists get +1 ingredient on expert maps, not +2?** The game
+9. **Why do Ingredients specialists get +1 ingredient on expert maps, not +2?** The game
    gives them a *chance* at +2 but doesn't publish it; rather than invent the number,
    every member gets +1 ([Map bonuses & rating](0007-map-bonuses-rating.md)).
 
@@ -147,7 +153,7 @@ and last the expert-map detail:
 - **Signed out:** `/` shows the landing with **Start comparing** and **Sign in with
   Google**; the four use cases with no account marker; the account table with its
   first three rows marked in both columns and the other six only *with an account*,
-  closing with **Sign in with Google**; the FAQ with its eight questions closed.
+  closing with **Sign in with Google**; the FAQ with its nine questions closed.
 - **Signed in:** `/` shows the same landing; the secondary action reads **Go to my Box**
   and opens `/box`; the account table has no sign-in.
 - **Main action:** **Start comparing** opens `/compare`.
