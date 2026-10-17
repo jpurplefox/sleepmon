@@ -2,6 +2,7 @@ import "@fontsource-variable/sora";
 
 import { useI18n } from "../../i18n";
 import { useDocumentMeta } from "../../useDocumentMeta";
+import { AccessTable } from "./AccessTable";
 import { FAQ_ID } from "./content";
 import { Faq } from "./Faq";
 import { LandingHero } from "./LandingHero";
@@ -18,6 +19,7 @@ export function Landing() {
       <div className="landing__inner">
         <LandingHero />
         <UseCases />
+        <AccessTable />
         <Faq />
       </div>
     </div>

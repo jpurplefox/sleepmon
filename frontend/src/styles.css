@@ -8209,6 +8209,25 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 .landing-levelup__row { position: absolute; border-radius: 8px; opacity: 0; background: var(--up-dim); box-shadow: 0 0 0 1.5px var(--up-border), 0 0 18px var(--up-dim); transition: opacity 0.3s ease-out; }
 .landing-levelup__row.is-on { opacity: 1; }
 
+/* Without and with an account: one card, a three-column table, the "with" column lightly tinted. */
+.landing-access { padding-bottom: 3rem; }
+.landing-access .landing-section-head span { max-width: 60ch; }
+.landing-access__card { background: var(--surface); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 24px; padding: 0.6rem 1.6rem 1.4rem; }
+.landing-access__table { width: 100%; border-collapse: collapse; }
+.landing-access__table th, .landing-access__table td { padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--border); text-align: center; }
+.landing-access__table tbody tr:last-child th, .landing-access__table tbody tr:last-child td { border-bottom: 0; }
+.landing-access__table thead th { font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.landing-access__table th[scope="row"], .landing-access__table thead th:first-child { text-align: left; font-weight: 600; color: var(--text); }
+.landing-access__table thead th:first-child { color: var(--muted); }
+.landing-access__table th:not(:first-child), .landing-access__table td { width: 22%; }
+.landing-access__with { background: var(--accent-dim); }
+.landing-access__table thead .landing-access__with { color: var(--accent-text); border-radius: 10px 10px 0 0; }
+.landing-access__table tbody tr:last-child .landing-access__with { border-radius: 0 0 10px 10px; }
+.landing-access__yes { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--up-dim); color: var(--up); }
+.landing-access__yes svg { width: 15px; height: 15px; }
+.landing-access__no::before { content: "—"; color: var(--muted); opacity: 0.6; }
+.landing-access__cta { display: flex; justify-content: flex-end; padding-top: 1rem; }
+
 /* FAQ */
 .landing-faq { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 2.5rem; padding: 1rem 0 3.5rem; scroll-margin-top: calc(var(--appbar-h) + 1rem); }
 .landing-faq__side h2 { margin: 0; font-size: 2.1rem; font-weight: 800; letter-spacing: -0.035em; line-height: 1.05; }
@@ -8240,4 +8259,8 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   .landing-stage__layer--column .landing-stage__shot--catch-map { max-height: 260px; }
   .landing-levelup-pair { grid-template-columns: minmax(0, 1fr); gap: 1.6rem; }
   .landing-faq { grid-template-columns: minmax(0, 1fr); gap: 1rem; padding-bottom: 2.5rem; }
+  .landing-access__card { padding: 0.4rem 0.9rem 1rem; }
+  .landing-access__table th, .landing-access__table td { padding: 0.65rem 0.3rem; font-size: var(--text-sm); }
+  .landing-access__table thead th { font-size: 0.62rem; letter-spacing: 0.03em; }
+  .landing-access__cta { justify-content: stretch; }
 }

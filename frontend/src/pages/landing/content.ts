@@ -54,6 +54,23 @@ export const USE_CASES: readonly UseCase[] = [
   { id: "levelup", to: ROUTES.box, needsAccount: true, linkKey: "landing.go.box" },
 ];
 
+/** What works without an account and what one adds; copy keys: landing.access.row.<id>. */
+export interface AccessRow {
+  id: string;
+  withoutAccount: boolean;
+}
+export const ACCESS_ROWS: readonly AccessRow[] = [
+  { id: "compare", withoutAccount: true },
+  { id: "teams", withoutAccount: true },
+  { id: "share", withoutAccount: true },
+  { id: "screenshots", withoutAccount: false },
+  { id: "box", withoutAccount: false },
+  { id: "suggestions", withoutAccount: false },
+  { id: "levelup", withoutAccount: false },
+  { id: "savedTeams", withoutAccount: false },
+  { id: "profile", withoutAccount: false },
+];
+
 export interface FaqItem {
   id: string;
   // The answer holds "{link}" where this in-app link goes.

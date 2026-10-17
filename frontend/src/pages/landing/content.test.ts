@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { UI } from "../../i18n/ui";
 import { ROUTES } from "../../routes";
-import { CATCH_STEPS, FAQ_HREF, FAQ_ITEMS, USE_CASES, shotUrl } from "./content";
+import { ACCESS_ROWS, CATCH_STEPS, FAQ_HREF, FAQ_ITEMS, USE_CASES, shotUrl } from "./content";
 
 const routeValues = new Set<string>(Object.values(ROUTES));
 
@@ -40,6 +40,14 @@ describe("landing content", () => {
     expect(CATCH_STEPS.map((s) => s.id)).toEqual(["upload", "evolve", "pick", "settings", "compare"]);
     for (const lang of ["es", "en"] as const)
       for (const s of CATCH_STEPS) expect(UI[lang][`landing.catch.step.${s.id}`], `${lang}:${s.id}`).toBeTruthy();
+  });
+
+  it("lists what works without an account first, then what an account adds, each in both languages", () => {
+    const open = ACCESS_ROWS.filter((r) => r.withoutAccount).map((r) => r.id);
+    expect(open).toEqual(["compare", "teams", "share"]);
+    expect(ACCESS_ROWS.findIndex((r) => !r.withoutAccount)).toBe(open.length);
+    for (const lang of ["es", "en"] as const)
+      for (const r of ACCESS_ROWS) expect(UI[lang][`landing.access.row.${r.id}`], `${lang}:${r.id}`).toBeTruthy();
   });
 
   it("marks where each FAQ link goes in its answer", () => {

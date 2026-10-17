@@ -21,9 +21,11 @@ why you'd open them.
 2. **What you can do** — four use cases, each with a short title, one or two lines, and
    a link that drops you where that use case starts, illustrated with real captures of
    the app.
-3. **Frequently asked questions** — the model's assumptions and the usual doubts in plain
+3. **Without and with an account** — a table of what you can do signed out and what an
+   account adds.
+4. **Frequently asked questions** — the model's assumptions and the usual doubts in plain
    language, as expandable questions, reachable at `/#faq`.
-4. **Ways back** — the **sleepmon** brand in the menu and a **Frequently asked
+5. **Ways back** — the **sleepmon** brand in the menu and a **Frequently asked
    questions** link in the footer.
 
 ## How it works
@@ -54,7 +56,7 @@ Four use cases, in this order — from deciding on a catch, to the week's plan, 
 1. **Caught a new one: is it worth it?** Load it from a game screenshot
    ([Screenshot import](0019-screenshot-import.md)) and compare it in one tap with your
    Box Pokémon through the suggestions ([Comparison](0002-comparison.md)). Links to
-   Comparison. *With an account.*
+   Comparison.
 2. **Compare and share.** Put two or more Pokémon side by side and send the comparison
    to a friend as a link, so they open the same Pokémon under the same map terms and can edit it
    ([Sharing a comparison](0020-share-comparison.md)). Links to Comparison.
@@ -64,11 +66,30 @@ Four use cases, in this order — from deciding on a catch, to the week's plan, 
    ([Saved teams](0016-saved-teams.md)). Links to Team Analysis.
 4. **What does it take to level it up?** See at a glance the candies and dream shards
    to its next unlock level, and what it gains when it gets there
-   ([Level-up cost](0021-level-up-cost.md)). Links to the Box. *With an account.*
+   ([Level-up cost](0021-level-up-cost.md)). Links to the Box.
 
-- A use case that needs an account is marked **with an account**. Signed out, its link
-  still opens the tool, which shows its own sign-in prompt
+- Use cases carry no account marker; the table below says what needs one. Signed out, a
+  link still opens the tool, which shows its own sign-in prompt
   ([Authentication](0010-authentication.md)) — the landing does not gate anything.
+
+### Without and with an account
+
+Right before the FAQ, a table with one row per feature and two columns, *without an
+account* and *with an account*. Rows that work signed out come first:
+
+| Feature | Without an account | With an account |
+|---|---|---|
+| Compare Pokémon | ✓ | ✓ |
+| Analyze teams, maps and meals | ✓ | ✓ |
+| Share comparisons with a link | ✓ | ✓ |
+| Load Pokémon from screenshots | — | ✓ |
+| Keep your Pokémon in the Box | — | ✓ |
+| Box suggestions while comparing | — | ✓ |
+| Level-up cost of each Pokémon | — | ✓ |
+| Save teams | — | ✓ |
+| Sleep schedule and progress in the Player profile | — | ✓ |
+
+- Signed out, the table closes with **Sign in with Google**; signed in, it has no action.
 
 ### Frequently asked questions
 
@@ -116,10 +137,11 @@ made, then what they can take into account, then the account:
 ## Acceptance criteria
 
 - **Signed out:** `/` shows the landing with **Start comparing** and **Sign in with
-  Google**; the four use cases with cases 1 and 4 marked *with an account*; the FAQ
-  with its nine questions closed.
+  Google**; the four use cases with no account marker; the account table with its
+  first three rows marked in both columns and the other six only *with an account*,
+  closing with **Sign in with Google**; the FAQ with its nine questions closed.
 - **Signed in:** `/` shows the same landing; the secondary action reads **Go to my Box**
-  and opens `/box`.
+  and opens `/box`; the account table has no sign-in.
 - **Main action:** **Start comparing** opens `/compare`.
 - **Use case links:** case 1 and 2 open `/compare`, case 3 opens `/team-analysis`, case 4 opens
   `/box`. Signed out, case 4 shows the Box's sign-in prompt — not an error.

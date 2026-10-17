@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 
-const auth = vi.hoisted(() => ({ status: "unauthenticated" as "unauthenticated" | "authenticated" | "checking" }));
+const auth = vi.hoisted(() => ({ status: "anonymous" as "anonymous" | "authenticated" | "checking" }));
 vi.mock("../../auth/AuthContext", () => ({ useAuth: () => ({ status: auth.status }) }));
 vi.mock("../../auth/GoogleSignInButton", () => ({
   GoogleSignInButton: ({ reason }: { reason: string }) => <button type="button">Sign in ({reason})</button>,
@@ -27,7 +27,7 @@ function renderLanding(lang: "es" | "en" = "en") {
 
 beforeEach(() => {
   localStorage.clear();
-  auth.status = "unauthenticated";
+  auth.status = "anonymous";
 });
 
 describe("Landing", () => {
@@ -35,7 +35,8 @@ describe("Landing", () => {
     renderLanding();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Analyze your Pokémon Sleep team and decide with data.");
     expect(screen.getByRole("link", { name: "Start comparing" })).toHaveAttribute("href", "/compare");
-    expect(screen.getByRole("button", { name: "Sign in (landing)" })).toBeInTheDocument();
+    // The hero and the access table each offer it.
+    expect(screen.getAllByRole("button", { name: "Sign in (landing)" })).toHaveLength(2);
     expect(screen.queryByRole("link", { name: "Go to My box" })).not.toBeInTheDocument();
   });
 
