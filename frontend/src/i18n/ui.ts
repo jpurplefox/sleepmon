@@ -782,7 +782,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.faq.subtitle": "Cómo se calculan los números, qué tiene en cuenta el modelo y qué pasa con tu cuenta.",
     "landing.faq.numbers.q": "¿De dónde salen los números?",
     "landing.faq.numbers.a":
-      "Son una estimación de la producción diaria (ayudas, día y noche, inventario, habilidades), no valores leídos del juego.",
+      "Son una estimación de la producción diaria (ayudas, día y noche, inventario, habilidades), no valores leídos del juego. Son promedios: tené en cuenta el factor RNG, porque las habilidades se activan al azar y un día puntual puede dar más o menos.",
     "landing.faq.energy.q": "¿Cómo se tiene en cuenta la energía?",
     "landing.faq.energy.a":
       "Como si estuviera siempre alta: el modelo aplica todo el día el bonus de velocidad de un Pokémon descansado, como pasa con un healer en el equipo que la mantiene arriba. La energía que dan las habilidades se muestra como su resultado, pero no cambia la velocidad de nadie.",
@@ -1600,7 +1600,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.faq.subtitle": "How the numbers are made, what the model takes into account and what happens with your account.",
     "landing.faq.numbers.q": "Where do the numbers come from?",
     "landing.faq.numbers.a":
-      "They are an estimate of daily production (helps, day and night, inventory, skills), not values read from the game.",
+      "They are an estimate of daily production (helps, day and night, inventory, skills), not values read from the game. They are averages: keep RNG in mind, since skills trigger at random and any single day can come out higher or lower.",
     "landing.faq.energy.q": "How is energy taken into account?",
     "landing.faq.energy.a":
       "As if it were always high: the model applies the speed bonus of a well-rested Pokémon all day long, the way it plays out with a healer on the team that keeps energy topped up. Energy given by skills shows as the skill's output, but doesn't change anyone's speed.",

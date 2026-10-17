@@ -98,7 +98,8 @@ made, then what they can take into account, then the account:
 
 1. **Where do the numbers come from?** They are an estimate of daily production — helps,
    day and night, inventory, skills ([Production model](0008-production-model.md)) —
-   not values read from the game.
+   not values read from the game. They are averages: skills trigger at random, so a single
+   day can come out higher or lower.
 2. **How is energy taken into account?** As if it were always high: the model applies
    the speed bonus of a well-rested Pokémon all day long, the way it plays out with a
    healer on the team that keeps energy topped up. Energy given by skills shows as the
