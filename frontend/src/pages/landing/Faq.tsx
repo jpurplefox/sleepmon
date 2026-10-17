@@ -24,7 +24,6 @@ export function Faq() {
     <section id={FAQ_ID} className="landing-faq" aria-labelledby="landing-faq-title">
       <div className="landing-faq__side">
         <h2 id="landing-faq-title">{t("landing.faq.title")}</h2>
-        <p>{t("landing.faq.subtitle")}</p>
       </div>
       <div className="landing-faq__list">
         {FAQ_ITEMS.map((item) => (

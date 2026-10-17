@@ -779,7 +779,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.access.row.savedTeams": "Guardar equipos",
     "landing.access.row.profile": "Tu horario de sueño y tu progreso en el perfil",
     "landing.faq.title": "Preguntas frecuentes",
-    "landing.faq.subtitle": "Cómo se calculan los números, qué tiene en cuenta el modelo y qué pasa con tu cuenta.",
     "landing.faq.numbers.q": "¿De dónde salen los números?",
     "landing.faq.numbers.a":
       "Son una estimación de la producción diaria (ayudas, día y noche, inventario, habilidades), no valores leídos del juego. Son promedios: tené en cuenta el factor RNG, porque las habilidades se activan al azar y un día puntual puede dar más o menos.",
@@ -1597,7 +1596,6 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.access.row.savedTeams": "Save teams",
     "landing.access.row.profile": "Your sleep schedule and progress in your profile",
     "landing.faq.title": "Frequently asked questions",
-    "landing.faq.subtitle": "How the numbers are made, what the model takes into account and what happens with your account.",
     "landing.faq.numbers.q": "Where do the numbers come from?",
     "landing.faq.numbers.a":
       "They are an estimate of daily production (helps, day and night, inventory, skills), not values read from the game. They are averages: keep RNG in mind, since skills trigger at random and any single day can come out higher or lower.",

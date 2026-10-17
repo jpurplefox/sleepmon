@@ -8232,7 +8232,6 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 /* FAQ */
 .landing-faq { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 2.5rem; padding: 1rem 0 3.5rem; scroll-margin-top: calc(var(--appbar-h) + 1rem); }
 .landing-faq__side h2 { margin: 0; font-size: 2.1rem; font-weight: 800; letter-spacing: -0.035em; line-height: 1.05; }
-.landing-faq__side p { color: var(--muted); line-height: 1.6; }
 .landing-faq__list details { border-bottom: 1px solid var(--border); }
 .landing-faq__list summary { list-style: none; cursor: pointer; display: flex; gap: 1rem; align-items: center; padding: 1.05rem 0.25rem; font-weight: 600; font-size: 1rem; }
 .landing-faq__list summary::-webkit-details-marker { display: none; }
