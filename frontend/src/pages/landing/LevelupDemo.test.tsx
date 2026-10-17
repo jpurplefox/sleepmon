@@ -2,7 +2,8 @@ import { act, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { LanguageProvider } from "../../i18n";
-import { LEVELUP_LOOP_MS, LevelupDemo, levelupTimes } from "./LevelupDemo";
+import { MARKS } from "./demo";
+import { LevelupDemo, levelupSchedule } from "./LevelupDemo";
 
 function renderDemo(reducedMotion = false) {
   window.matchMedia = ((query: string) => ({
@@ -19,8 +20,13 @@ function renderDemo(reducedMotion = false) {
   );
 }
 
-const tip = () => document.querySelector(".landing-levelup__tip");
-const lit = () => document.querySelectorAll(".landing-levelup__row.is-on").length;
+const card = (i: number) => document.querySelectorAll(".landing-levelup")[i];
+const open = (i: number) => card(i).querySelector(".landing-levelup__tip")!.classList.contains("is-on");
+const lit = (i: number) => card(i).querySelectorAll(".landing-levelup__row.is-on").length;
+const rowCounts = MARKS.en.levelup.map((c) => c.rows.length);
+const { times, firstPhase, loopMs } = levelupSchedule(rowCounts);
+// ms when phase `k` (1-based) starts.
+const phaseAt = (k: number) => times[k - 1];
 const wait = (ms: number) => act(() => vi.advanceTimersByTime(ms));
 
 beforeEach(() => vi.useFakeTimers());
@@ -29,27 +35,35 @@ afterEach(() => {
   localStorage.clear();
 });
 
+describe("levelupSchedule", () => {
+  it("runs the cards one after the other, each ending with a close", () => {
+    expect([...times].sort((a, b) => a - b)).toEqual(times);
+    expect(firstPhase).toEqual([0, rowCounts[0] + 4]);
+    expect(loopMs).toBeGreaterThan(times[times.length - 1]);
+  });
+});
+
 describe("LevelupDemo", () => {
-  it("opens the gains on tap, lights them one by one, and starts over", () => {
+  it("opens the first card's gains, lights them, closes, then does the second", () => {
     renderDemo();
-    const rows = document.querySelectorAll(".landing-levelup__row").length;
-    const times = levelupTimes(rows);
-    expect(tip()).not.toHaveClass("is-on");
-    wait(times[2]);
-    expect(tip()).toHaveClass("is-on");
-    expect(lit()).toBe(0);
-    wait(times[3] - times[2]);
-    expect(lit()).toBe(1);
-    wait(times[times.length - 1] - times[3]);
-    expect(lit()).toBe(rows);
-    wait(LEVELUP_LOOP_MS - times[times.length - 1]);
-    expect(tip()).not.toHaveClass("is-on");
+    expect(open(0)).toBe(false);
+    wait(phaseAt(3));
+    expect(open(0)).toBe(true);
+    expect(open(1)).toBe(false);
+    wait(phaseAt(3 + rowCounts[0]) - phaseAt(3));
+    expect(lit(0)).toBe(rowCounts[0]);
+    wait(phaseAt(firstPhase[1]) - phaseAt(3 + rowCounts[0]));
+    expect(open(0)).toBe(false);
+    wait(phaseAt(firstPhase[1] + 3) - phaseAt(firstPhase[1]));
+    expect(open(1)).toBe(true);
+    wait(loopMs - phaseAt(firstPhase[1] + 3));
+    expect(open(0)).toBe(false);
+    expect(open(1)).toBe(false);
   });
 
-  it("with reduced motion holds every gain lit", () => {
+  it("with reduced motion holds both cards open with every gain lit", () => {
     renderDemo(true);
-    const rows = document.querySelectorAll(".landing-levelup__row").length;
-    expect(tip()).toHaveClass("is-on");
-    expect(lit()).toBe(rows);
+    expect(open(0) && open(1)).toBe(true);
+    expect([lit(0), lit(1)]).toEqual(rowCounts);
   });
 });

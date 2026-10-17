@@ -31,6 +31,8 @@ const BOX = [
   // Level 57 with Ginger in every slot: the level-up tile shows a short step, 57 → 60.
   ["Tyranitar", 57, "Adamant", ["Warming Ginger", "Warming Ginger", "Warming Ginger"], ["Ingredient Finder M", "Helping Speed M", "Helping Bonus", "Inventory Up M", "Skill Level Up S"], 3],
   ["Charizard", 52, "Quiet", ["Bean Sausage", "Warming Ginger", "Fiery Herb"], ["Ingredient Finder M", "Helping Speed M", "Inventory Up L", "Ingredient Finder S"], 3],
+  // Second level-up card: a Berry Finding S Raichu whose next unlock, 50, brings Helping Speed M.
+  ["Raichu", 45, "Brave", ["Fancy Apple", "Warming Ginger", "Fancy Egg"], ["Berry Finding S", "Skill Trigger S", "Helping Speed M", "Inventory Up M", "Helping Speed S"], 3],
   ["Pikachu", 38, "Brave", ["Fancy Apple", "Warming Ginger", "Fancy Egg"], ["Berry Finding S", "Helping Speed M", "Skill Trigger S"], 3],
   ["Arcanine", 30, "Brave", ["Fiery Herb", "Bean Sausage", "Fiery Herb"], ["Skill Trigger M", "Ingredient Finder S"], 3],
   // The Box rival the imported Tyrunt is compared with (Charge Strength files it with Sitrus berries).
@@ -246,29 +248,43 @@ async function capture(browser, dir, lang) {
     browser,
     lang,
     async (page) => {
-      // Tyranitar's entry expanded on a phone, where its level-up cell sits, then the gains it opens.
+      // Each entry expanded on a phone, where its level-up cell sits, then the gains it opens.
       await page.goto(`${APP}/box`);
-      const entry = page.locator(".box-entry", { hasText: "Tyranitar" }).first();
-      await entry.waitFor();
-      await entry.scrollIntoViewIfNeeded();
-      await entry.locator(".box-entry__chevron").click();
-      await page.waitForTimeout(800);
-      const entryBox = await entry.boundingBox();
-      await shot(entry, "levelup-entry");
-      const cell = entry.getByText(/57 → 60/).first();
-      marks.levelupCell = rel(await cell.boundingBox(), entryBox);
-      await cell.click();
-      const tip = page.locator(".tooltip__bubble:visible").first();
-      await tip.waitFor();
-      await page.waitForTimeout(400);
-      // The bubble's box starts a few px above its painted edge; trim them so nothing from below shows.
-      const bubble = await tip.boundingBox();
-      const tipBox = { x: bubble.x, y: bubble.y + 5, width: bubble.width, height: bubble.height - 5 };
-      await page.screenshot({ path: join(dir, "levelup-tip.jpg"), ...JPEG, clip: tipBox });
-      const rows = await tip.locator(".levelup-tip__row").evaluateAll((els) =>
-        els.map((e) => { const b = e.getBoundingClientRect(); return { x: b.x, y: b.y, width: b.width, height: b.height }; }),
-      );
-      marks.levelupRows = rows.map((b) => rel(b, tipBox));
+      marks.levelup = [];
+      for (const [i, [species, step]] of [["Tyranitar", /57 → 60/], ["Raichu", /45 → 50/]].entries()) {
+        const entry = page.locator(".box-entry", { hasText: species }).first();
+        await entry.waitFor();
+        await entry.scrollIntoViewIfNeeded();
+        await entry.locator(".box-entry__chevron").click();
+        await page.waitForTimeout(800);
+        const entryBox = await entry.boundingBox();
+        await shot(entry, `levelup-entry-${i + 1}`);
+        const cell = entry.getByText(step).first();
+        const cellRect = rel(await cell.boundingBox(), entryBox);
+        await cell.click();
+        const tip = page.locator(".tooltip__bubble:visible").first();
+        await tip.waitFor();
+        await page.waitForTimeout(400);
+        // The bubble's box starts a few px above its painted edge; trim them so nothing from below shows.
+        const bubble = await tip.boundingBox();
+        const tipBox = { x: bubble.x, y: bubble.y + 5, width: bubble.width, height: bubble.height - 5 };
+        await page.screenshot({ path: join(dir, `levelup-tip-${i + 1}.jpg`), ...JPEG, clip: tipBox });
+        // A row's box plus everything inside it: the delta pill can overhang the row.
+        const rows = await tip.locator(".levelup-tip__row").evaluateAll((els) =>
+          els.map((e) => {
+            const rs = [e, ...e.querySelectorAll("*")].map((n) => n.getBoundingClientRect()).filter((r) => r.width > 0);
+            const x = Math.min(...rs.map((r) => r.left));
+            const y = Math.min(...rs.map((r) => r.top));
+            return { x, y, width: Math.max(...rs.map((r) => r.right)) - x, height: Math.max(...rs.map((r) => r.bottom)) - y };
+          }),
+        );
+        marks.levelup.push({ cell: cellRect, rows: rows.map((b) => rel(b, tipBox)) });
+        // Close the gains and fold the entry back before the next one.
+        await page.mouse.click(5, 5);
+        await tip.waitFor({ state: "hidden" });
+        await entry.locator(".box-entry__chevron").click();
+        await page.waitForTimeout(400);
+      }
     },
     PHONE,
   );

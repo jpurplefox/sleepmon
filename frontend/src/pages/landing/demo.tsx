@@ -11,6 +11,11 @@ export interface Rect {
   w: number;
   h: number;
 }
+/** A Box entry's level-up cell, and each gain row in the card it opens. */
+export interface LevelupMark {
+  cell: Rect;
+  rows: Rect[];
+}
 export interface Marks {
   evolve: Rect;
   pick: Rect;
@@ -18,8 +23,7 @@ export interface Marks {
   baseStrength: Rect;
   rivalStrength: Rect;
   shareCopy: Rect;
-  levelupCell: Rect;
-  levelupRows: Rect[];
+  levelup: LevelupMark[];
 }
 export const MARKS = shotMarks as Record<Lang, Marks>;
 

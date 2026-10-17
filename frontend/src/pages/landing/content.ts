@@ -12,7 +12,7 @@ export type ShotName =
   | "catch-map-list" | "catch-map" | "catch-settings" | "catch-card-base" | "catch-card-rival"
   | "share-dialog" | "share-copied" | "share-preview"
   | "team-card-1" | "team-card-2" | "team-card-3" | "team-totals"
-  | "levelup-entry" | "levelup-tip";
+  | "levelup-entry-1" | "levelup-tip-1" | "levelup-entry-2" | "levelup-tip-2";
 
 export function shotUrl(name: ShotName, lang: Lang): string {
   return `/landing/${lang}/${name}.jpg`;

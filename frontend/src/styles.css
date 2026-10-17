@@ -8170,13 +8170,10 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 .landing-shot--team-card-3 { right: 12%; transform: rotate(7deg); }
 .landing-shot--team-totals { left: 1.2rem; right: 1.2rem; width: calc(100% - 2.4rem); bottom: 1.2rem; z-index: 3; border-radius: 12px; }
 /* Level-up: copy beside a phone Box entry that opens what the next unlock costs and gains. */
-/* Title across the top; under it the copy and link beside the entry. */
-.landing-tile--levelup { grid-column: span 4; order: 3; display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.5fr); grid-template-areas: "title title" "body demo" "go demo"; grid-template-rows: auto auto 1fr; gap: 0.6rem 1.5rem; align-content: start; background: linear-gradient(200deg, rgba(94, 230, 196, 0.1), var(--surface) 55%); }
-.landing-tile--levelup .landing-tile__copy { display: contents; }
-.landing-tile--levelup h3 { grid-area: title; max-width: none; }
-.landing-tile--levelup p { grid-area: body; align-self: start; }
-.landing-tile--levelup .landing-tile__go { grid-area: go; align-self: start; }
-.landing-tile--levelup .landing-levelup { grid-area: demo; }
+/* Title, copy and link stacked, then two phone Box entries side by side. */
+.landing-tile--levelup { grid-column: span 4; order: 3; display: flex; flex-direction: column; gap: 1.2rem; background: linear-gradient(200deg, rgba(94, 230, 196, 0.1), var(--surface) 55%); }
+.landing-tile--levelup .landing-tile__copy p { max-width: 60ch; }
+.landing-levelup-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-items: start; }
 .landing-levelup { position: relative; justify-self: center; width: 100%; max-width: 440px; }
 .landing-levelup .landing-demo { display: block; }
 .landing-levelup .landing-demo .landing-stage__shot { width: 100%; max-height: none; border-radius: 16px; box-shadow: var(--shot-shadow); }
@@ -8217,7 +8214,6 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   .landing-duel__card { top: 8%; height: 84%; }
   .landing-stage__layer--column .landing-stage__shot--catch-map { max-height: 260px; }
   .landing-shot--team-card-1, .landing-shot--team-card-2, .landing-shot--team-card-3 { width: 110px; }
-  .landing-tile--levelup { grid-template-columns: minmax(0, 1fr); grid-template-areas: "title" "body" "go" "demo"; }
-  .landing-tile--levelup p { align-self: start; }
+  .landing-levelup-pair { grid-template-columns: minmax(0, 1fr); gap: 1.6rem; }
   .landing-faq { grid-template-columns: minmax(0, 1fr); gap: 1rem; padding-bottom: 2.5rem; }
 }

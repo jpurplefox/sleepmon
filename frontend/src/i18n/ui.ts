@@ -756,7 +756,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.case.plan.alt": "Un equipo en Análisis de equipo con su fuerza total y su rating",
     "landing.case.levelup.title": "¿Cuánto cuesta subirlo?",
     "landing.case.levelup.body":
-      "De un vistazo ves cuánto te cuesta el próximo desbloqueo y lo principal que gana; con un toque, todo el detalle.",
+      "No solo ves los caramelos que necesita: también lo principal que gana al llegar a ese nivel, y con un toque, todo el detalle. Así sabés cómo usar mejor tus caramelos.",
     "landing.case.levelup.alt": "El costo de subir de nivel y lo que gana un Pokémon de la caja",
     "landing.faq.title": "Preguntas frecuentes",
     "landing.faq.subtitle": "Cómo se calculan los números, qué tiene en cuenta el modelo y qué pasa con tu cuenta.",
@@ -1554,7 +1554,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.case.plan.alt": "A team in Team analysis with its total strength and rating",
     "landing.case.levelup.title": "What does it take to level it up?",
     "landing.case.levelup.body":
-      "At a glance, see what the next unlock costs and the main thing it gains; one tap shows every detail.",
+      "Not just the candies it needs: also the main thing it gains at that level, and one tap shows every detail. So you know how to spend your candies best.",
     "landing.case.levelup.alt": "The level-up cost and gain of a Pokémon in the box",
     "landing.faq.title": "Frequently asked questions",
     "landing.faq.subtitle": "How the numbers are made, what the model takes into account and what happens with your account.",

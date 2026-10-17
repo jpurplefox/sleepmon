@@ -9,7 +9,7 @@ const routeValues = new Set<string>(Object.values(ROUTES));
 describe("landing content", () => {
   it("builds shot paths per language", () => {
     expect(shotUrl("hero-card-1", "es")).toBe("/landing/es/hero-card-1.jpg");
-    expect(shotUrl("levelup-tip", "en")).toBe("/landing/en/levelup-tip.jpg");
+    expect(shotUrl("levelup-tip-1", "en")).toBe("/landing/en/levelup-tip-1.jpg");
   });
 
   it("links the FAQ anchor on the landing", () => {
