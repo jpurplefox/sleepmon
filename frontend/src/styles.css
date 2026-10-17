@@ -8153,7 +8153,8 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 }
 .landing-tile--share { grid-column: span 2; background: linear-gradient(165deg, #2a2f6d 0%, var(--surface) 62%); }
 /* Share: the real dialog copies its link, then the link lands in a chat bubble with its preview. */
-.landing-share { position: absolute; left: 50%; top: 152px; width: 280px; transform: translateX(-50%) rotate(-3deg); }
+/* In the flow under the copy, so longer copy pushes it down instead of covering it; room below for the bubble. */
+.landing-share { position: relative; width: 280px; max-width: 100%; margin: 1.4rem auto 2.6rem; transform: rotate(-3deg); }
 .landing-share .landing-demo { display: block; }
 .landing-share .landing-demo .landing-stage__shot { width: 100%; max-height: none; border-radius: 14px; box-shadow: var(--shot-shadow); }
 .landing-share .landing-pointer { transition-duration: 0.8s; }
@@ -8202,7 +8203,6 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   .landing-duel__card { top: 8%; height: 84%; }
   .landing-stage__layer--column .landing-stage__shot--catch-map { max-height: 260px; }
   .landing-tile--share { min-height: 540px; }
-  .landing-share { top: 170px; }
   .landing-shot--team-card-1, .landing-shot--team-card-2, .landing-shot--team-card-3 { width: 110px; }
   .landing-tile--levelup { min-height: 520px; }
   .landing-shot--box-entry { width: 260%; left: auto; right: -4%; }

@@ -746,9 +746,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.catch.step.settings": "Elegí tu mapa y el nivel de comparación",
     "landing.catch.step.compare": "Comparalos",
     "landing.case.catch.alt": "Tyrantrum, cargado desde capturas y llevado a nivel 60, comparado en Taupe Hollow con un Sudowoodo de tu caja",
-    "landing.case.share.title": "Compartí con un link",
-    "landing.case.share.body": "Tu amigo abre la misma comparación y la puede editar.",
-    "landing.case.share.alt": "Se copia el link de una comparación y llega a un chat con su vista previa",
+    "landing.case.share.title": "Compartí algo más que una captura",
+    "landing.case.share.body":
+      "El link se ve como una imagen, pero al abrirlo es la comparación de verdad: quien lo reciba puede probar sus propias variantes.",
+    "landing.case.share.alt": "Se copia el link de una comparación y se ve con su vista previa",
     "landing.case.plan.title": "Planificá la semana",
     "landing.case.plan.body":
       "Armá el equipo para tu mapa, elegí las comidas y mirá cuánto produce y qué rating alcanza.",
@@ -1543,9 +1544,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.catch.step.settings": "Pick your map and comparison level",
     "landing.catch.step.compare": "Compare them",
     "landing.case.catch.alt": "Tyrantrum, loaded from screenshots and taken to level 60, compared on Taupe Hollow with a Sudowoodo from your box",
-    "landing.case.share.title": "Share it with a link",
-    "landing.case.share.body": "Your friend opens the same comparison and can edit it.",
-    "landing.case.share.alt": "A comparison's link is copied and lands in a chat with its preview",
+    "landing.case.share.title": "Share more than a screenshot",
+    "landing.case.share.body":
+      "The link shows up as an image, but opening it brings up the real comparison: whoever gets it can try their own variants.",
+    "landing.case.share.alt": "A comparison's link is copied and shows its preview",
     "landing.case.plan.title": "Plan your week",
     "landing.case.plan.body":
       "Build the team for your map, choose the meals and see what it produces and the rating it reaches.",
