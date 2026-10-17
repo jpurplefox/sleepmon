@@ -748,7 +748,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.case.catch.alt": "Tyrantrum, cargado desde capturas y llevado a nivel 60, comparado en Taupe Hollow con un Sudowoodo de tu caja",
     "landing.case.share.title": "Compartí algo más que una captura",
     "landing.case.share.body":
-      "El link se ve como una imagen, pero al abrirlo es la comparación de verdad: quien lo reciba puede probar sus propias variantes.",
+      "Compartir una imagen estática está bien, pero compartir un link les deja a los demás probar sus propias variantes y sumar sus propias cards a la comparación.",
     "landing.case.share.alt": "Se copia el link de una comparación y se ve con su vista previa",
     "landing.case.plan.title": "Planificá la semana",
     "landing.case.plan.body":
@@ -1546,7 +1546,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.case.catch.alt": "Tyrantrum, loaded from screenshots and taken to level 60, compared on Taupe Hollow with a Sudowoodo from your box",
     "landing.case.share.title": "Share more than a screenshot",
     "landing.case.share.body":
-      "The link shows up as an image, but opening it brings up the real comparison: whoever gets it can try their own variants.",
+      "Sharing a static image is fine, but sharing a link lets others try their own variants and add their own cards to the comparison.",
     "landing.case.share.alt": "A comparison's link is copied and shows its preview",
     "landing.case.plan.title": "Plan your week",
     "landing.case.plan.body":
