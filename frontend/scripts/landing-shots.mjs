@@ -71,6 +71,8 @@ async function seed() {
 // A fresh signed-in context per scene: the refresh token rotates, so a reused one signs out.
 async function scene(browser, lang, run) {
   const ctx = await browser.newContext({ viewport: { width: 1500, height: 1100 }, deviceScaleFactor: 2, colorScheme: "dark" });
+  // The share dialog's Copy writes to the clipboard.
+  await ctx.grantPermissions(["clipboard-read", "clipboard-write"], { origin: new URL(APP).origin });
   await ctx.addInitScript((l) => { localStorage.setItem("sleepmon.session", "1"); localStorage.setItem("sleepmon.lang", l); }, lang);
   await ctx.route("http://localhost:8000/**", async (route) => {
     const req = route.request();
@@ -211,7 +213,17 @@ async function capture(browser, dir, lang) {
     await page.locator(".tool-head").getByRole("button", { name: /Compartir|Share/ }).click();
     await page.getByRole("dialog").locator('input[value="sleepmon.app/c/k3f9xq"], :text("sleepmon.app/c/k3f9xq")').first().waitFor();
     await page.waitForTimeout(800);
-    await shot(page.getByRole("dialog"), "share-dialog");
+    // The dialog, its link Copy button's place, the "copied" look, and the preview image a chat would unfurl.
+    const shareDialog = page.getByRole("dialog");
+    const dialogBox = await shareDialog.boundingBox();
+    await shot(shareDialog, "share-dialog");
+    await shot(shareDialog.locator(".share-dialog__preview"), "share-preview");
+    const copyLink = shareDialog.locator(".share-dialog__link button.btn--primary");
+    marks.shareCopy = rel(await copyLink.boundingBox(), dialogBox);
+    await copyLink.click();
+    await shareDialog.locator(".share-dialog__copied").waitFor();
+    await page.waitForTimeout(300);
+    await shot(shareDialog, "share-copied");
   });
 
   await scene(browser, lang, async (page) => {

@@ -1,24 +1,8 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 
-import { useI18n, type Lang } from "../../i18n";
+import { useI18n } from "../../i18n";
 import { CATCH_STEPS, shotUrl, type CatchStepId, type ShotName } from "./content";
-import shotMarks from "./shotMarks.json";
-
-/** A box as % of its capture (written by scripts/landing-shots.mjs). */
-interface Rect {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-interface Marks {
-  evolve: Rect;
-  pick: Rect;
-  maps: { options: Rect[]; target: number };
-  baseStrength: Rect;
-  rivalStrength: Rect;
-}
-const MARKS = shotMarks as Record<Lang, Marks>;
+import { MARKS, Pointer, aim, box, prefersReducedMotion } from "./demo";
 
 /** How long each step shows before the next one; the animated ones get more time. */
 export const STEP_DURATIONS: Record<CatchStepId, number> = {
@@ -57,24 +41,7 @@ export function timeline(id: CatchStepId, mapTarget: number): number[] {
   }
 }
 
-function prefersReducedMotion(): boolean {
-  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-}
-
 const LAST = CATCH_STEPS.length - 1;
-const box = (r: Rect): CSSProperties => ({ left: `${r.x}%`, top: `${r.y}%`, width: `${r.w}%`, height: `${r.h}%` });
-// Where a pointer rests on a box: right of center, like a hand reaching for a label.
-const aim = (r: Rect): CSSProperties => ({ left: `${r.x + r.w * 0.7}%`, top: `${r.y + r.h * 0.6}%` });
-
-function Pointer({ style, clicking, gone }: { style: CSSProperties; clicking: boolean; gone?: boolean }) {
-  return (
-    <span className={"landing-pointer" + (clicking ? " is-clicking" : "") + (gone ? " is-gone" : "")} style={style} aria-hidden="true">
-      <svg viewBox="0 0 24 24">
-        <path d="M5 3l14 8-6.5 1.5L10 19z" />
-      </svg>
-    </span>
-  );
-}
 
 /** The catch tile's story: numbered steps that play their captures in turn, or on click. */
 export function CatchSteps() {

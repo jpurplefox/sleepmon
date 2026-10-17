@@ -10,7 +10,7 @@ export type ShotName =
   | "hero-card-1" | "hero-card-2" | "hero-card-3"
   | "game-1" | "game-2" | "catch-evolve-before" | "catch-evolve-after" | "catch-pick"
   | "catch-map-list" | "catch-map" | "catch-settings" | "catch-card-base" | "catch-card-rival"
-  | "share-dialog"
+  | "share-dialog" | "share-copied" | "share-preview"
   | "team-card-1" | "team-card-2" | "team-card-3" | "team-totals"
   | "box-entry" | "levelup-tip";
 
