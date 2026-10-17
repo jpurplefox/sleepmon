@@ -13,7 +13,7 @@ export type ShotName =
   | "share-dialog" | "share-copied" | "share-preview"
   | "plan-card-1" | "plan-card-2" | "plan-card-3" | "plan-card-4" | "plan-card-5"
   | "plan-fav-1" | "plan-fav-2" | "plan-fav-3" | "plan-fav-4" | "plan-fav-5"
-  | "plan-map-before" | "plan-map-after" | "plan-cooking" | "plan-totals"
+  | "plan-map-list" | "plan-map" | "plan-cooking" | "plan-totals"
   | "levelup-entry-1" | "levelup-tip-1" | "levelup-entry-2" | "levelup-tip-2";
 
 export function shotUrl(name: ShotName, lang: Lang): string {

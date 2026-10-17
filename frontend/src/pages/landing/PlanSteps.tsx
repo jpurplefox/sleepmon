@@ -13,17 +13,20 @@ export const PLAN_DURATIONS: Record<PlanStepId, number> = {
 
 const CARDS = [1, 2, 3, 4, 5] as const;
 
+const HOVER_MS = 450;
+
 /** When each phase of a step starts, in ms from the step's start. */
-export function planTimeline(id: PlanStepId, berries: number): number[] {
+export function planTimeline(id: PlanStepId, mapTarget: number): number[] {
   switch (id) {
     // One card dealt per phase.
     case "team":
       return CARDS.map((k) => 300 + (k - 1) * 350);
-    // Per berry: the pointer reaches it, then clicks; then the dialog settles, the cards return, and they tint.
+    // One phase per map the pointer passes on its way down to the target, then click, the map
+    // applied, the cards back, and their tint.
     case "map": {
-      const clicks = Array.from({ length: berries }, (_, k) => [700 + k * 1100, 1300 + k * 1100]).flat();
-      const done = 1300 + (berries - 1) * 1100;
-      return [...clicks, done + 900, done + 1900, done + 2500];
+      const hovers = Array.from({ length: mapTarget }, (_, k) => 900 + k * HOVER_MS);
+      const atTarget = 900 + mapTarget * HOVER_MS;
+      return [...hovers, atTarget + 300, atTarget + 900, atTarget + 2600, atTarget + 3200];
     }
     // The three recipes, then the cooking strength, then what is missing.
     case "meals":
@@ -43,7 +46,7 @@ function Band({ rect, on, kind }: { rect: Rect; on: boolean; kind: "recipe" | "u
 export function PlanSteps() {
   const { t, lang } = useI18n();
   const marks = MARKS[lang];
-  const berries = marks.planBerries;
+  const maps = marks.planMaps;
 
   const img = (name: ShotName, className = "", alt = "") => (
     <img className={`landing-stage__shot landing-stage__shot--${name} ${className}`} src={shotUrl(name, lang)} alt={alt} loading="lazy" decoding="async" />
@@ -67,26 +70,19 @@ export function PlanSteps() {
       case "team":
         return deal(p, false);
       case "map": {
-        const n = berries.length;
-        // Phases 2k+1 (reach) and 2k+2 (click) belong to berry k.
-        const current = Math.min(Math.max(Math.ceil(p / 2) - 1, 0), n - 1);
-        const settled = at(2 * n + 1);
-        const back = at(2 * n + 2);
+        const { options, target } = maps;
+        const hover = options[Math.min(p, target)];
+        const applied = at(target + 2);
+        const back = at(target + 3);
         return (
           <>
             <div className={"landing-demo landing-stage__layer" + (back ? " is-off" : "")}>
-              {img("plan-map-before", "landing-demo__base")}
-              {img("plan-map-after", "landing-demo__over" + (settled ? " is-on" : ""))}
-              {berries.map((r, k) => (
-                <span key={k} className={"landing-demo__pick" + (at(2 * k + 2) && !settled ? " is-on" : "")} style={box(r)} aria-hidden="true" />
-              ))}
-              <Pointer
-                style={at(1) ? aim(berries[current]) : { left: "85%", top: "110%" }}
-                clicking={p >= 2 && p <= 2 * n && p % 2 === 0}
-                gone={!at(1) || settled}
-              />
+              {img("plan-map-list", "landing-demo__base")}
+              {img("plan-map", "landing-demo__over" + (applied ? " is-on" : ""))}
+              <span className={"landing-demo__hover" + (at(target + 1) ? " is-picked" : "") + (applied ? " is-off" : "")} style={box(hover)} aria-hidden="true" />
+              <Pointer style={aim(hover)} clicking={at(target + 1) && !applied} gone={applied} />
             </div>
-            <div className={"landing-stage__layer landing-stage__layer--wide" + (back ? "" : " is-off")}>{deal(CARDS.length, at(2 * n + 3))}</div>
+            <div className={"landing-stage__layer landing-stage__layer--wide" + (back ? "" : " is-off")}>{deal(CARDS.length, at(target + 4))}</div>
           </>
         );
       }
@@ -126,7 +122,7 @@ export function PlanSteps() {
         id,
         label: t(`landing.plan.step.${id}`),
         durationMs: PLAN_DURATIONS[id],
-        times: planTimeline(id, berries.length),
+        times: planTimeline(id, maps.target),
         render: (p: number) => frame(id, p),
       }))}
     />

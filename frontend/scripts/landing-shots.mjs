@@ -59,6 +59,12 @@ async function api(path, init = {}, token) {
 
 const CURRY = '"Inferno" Corn Keema Curry';
 
+// Patches the demo player's profile.
+async function patchProgress(patch) {
+  const { access_token: token } = await api("/auth/google", { method: "POST", body: '{"credential":"demo"}' });
+  await api("/progress", { method: "PATCH", body: JSON.stringify(patch) }, token);
+}
+
 async function seed() {
   const { access_token: token } = await api("/auth/google", { method: "POST", body: '{"credential":"demo"}' });
   let box = await api("/team", {}, token);
@@ -76,9 +82,8 @@ async function seed() {
       slots: ["Sylveon", "Charizard", "Gengar", "Bewear", "Marowak"].map((s) => ({ members: [id(s)], share: 1 })),
     }),
   }, token);
-  // A pot that fits the curry, cooked at recipe level 65, on a map with its area bonus maxed.
-  const progress = { pot_size: 81, recipe_levels: { [CURRY]: 65 }, area_bonuses: { "Greengrass Isle": 85 } };
-  await api("/progress", { method: "PATCH", body: JSON.stringify(progress) }, token);
+  // A pot that fits the curry, cooked at recipe level 65.
+  await api("/progress", { method: "PATCH", body: JSON.stringify({ pot_size: 81, recipe_levels: { [CURRY]: 65 } }) }, token);
 }
 
 // A fresh signed-in context per scene: the refresh token rotates, so a reused one signs out.
@@ -244,6 +249,8 @@ async function capture(browser, dir, lang) {
   });
 
   // The plan story on a phone: cards, cooking and totals stack vertically, which suits the tile.
+  // Its map carries a maxed area bonus only here, so the catch story's numbers stay as they are.
+  await patchProgress({ area_bonuses: { "Taupe Hollow": 85 } });
   await scene(
     browser,
     lang,
@@ -259,22 +266,22 @@ async function capture(browser, dir, lang) {
     await page.getByRole("button", { name: /^(Mapa|Map)\b/ }).first().click();
     const mapDialog = page.getByRole("dialog");
     await mapDialog.getByRole("button", { name: /Sin mapa|No map/ }).click();
-    await mapDialog.getByRole("option", { name: /^Greengrass Isle/ }).first().click();
-    await page.waitForTimeout(600);
+    // The open list of maps, and where each one sits in it, for the pointer to walk down to Taupe Hollow.
+    const options = page.getByRole("option");
+    await options.first().waitFor();
+    await page.waitForTimeout(500);
     const dBox = await mapDialog.boundingBox();
-    await shot(mapDialog, "plan-map-before");
-    // Taupe Hollow's berries, which favor Charizard and Marowak.
-    const berries = lang === "es" ? ["Higog", "Zanama", "Zidra"] : ["Figy", "Leppa", "Sitrus"];
-    marks.planBerries = [];
-    for (const name of berries) {
-      const toggle = mapDialog.locator(".island-tab__berry-toggle", { hasText: name }).first();
-      marks.planBerries.push(rel(await toggle.boundingBox(), dBox));
-      await toggle.click();
-      await page.waitForTimeout(300);
-    }
+    const oBoxes = await options.evaluateAll((els) => els.map((e) => { const b = e.getBoundingClientRect(); return { x: b.x, y: b.y, width: b.width, height: b.height }; }));
+    const listBottom = Math.max(dBox.y + dBox.height, ...oBoxes.map((b) => b.y + b.height + 12));
+    const listClip = { x: dBox.x, y: dBox.y, width: dBox.width, height: listBottom - dBox.y };
+    await page.screenshot({ path: join(dir, "plan-map-list.jpg"), ...JPEG, clip: listClip });
+    const names = await options.allInnerTexts();
+    marks.planMaps = { options: oBoxes.map((b) => rel(b, listClip)), target: names.findIndex((n) => n.startsWith("Taupe Hollow")) };
+    // Its berries favor Charizard and Marowak.
+    await mapDialog.getByRole("option", { name: /^Taupe Hollow/ }).click();
     await page.evaluate(() => document.activeElement?.blur());
-    await page.waitForTimeout(400);
-    await shot(mapDialog, "plan-map-after");
+    await page.waitForTimeout(600);
+    await shot(mapDialog, "plan-map");
     await page.keyboard.press("Escape");
     await mapDialog.waitFor({ state: "hidden" });
     await page.evaluate(() => document.activeElement?.blur());
@@ -323,6 +330,7 @@ async function capture(browser, dir, lang) {
     },
     PHONE,
   );
+  await patchProgress({ area_bonuses: { "Taupe Hollow": 0 } });
 
   await scene(
     browser,

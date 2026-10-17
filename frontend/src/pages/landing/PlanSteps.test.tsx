@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { LanguageProvider } from "../../i18n";
+import { MARKS } from "./demo";
 import { PLAN_DURATIONS, PlanSteps, planTimeline } from "./PlanSteps";
 
 function renderSteps(reducedMotion = false) {
@@ -24,9 +25,12 @@ const shownFrame = () => document.querySelector(".landing-stage__frame:not([aria
 const step = (name: RegExp) => fireEvent.click(screen.getByRole("button", { name }));
 const wait = (ms: number) => act(() => vi.advanceTimersByTime(ms));
 const lastTime = (id: Parameters<typeof planTimeline>[0]) => {
-  const t = planTimeline(id, 3);
+  const t = planTimeline(id, TARGET);
   return t[t.length - 1];
 };
+
+// Where Taupe Hollow sits in the captured list of maps.
+const TARGET = MARKS.en.planMaps.target;
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => {
@@ -54,15 +58,16 @@ describe("PlanSteps", () => {
     expect(dealt()).toBe(5);
   });
 
-  it("tints the cards only after the berries are picked", () => {
+  it("picks the map from the list, then tints the cards", () => {
     renderSteps();
     step(/Pick the map/);
     const tinted = () => shownFrame().querySelectorAll(".landing-deal__over.is-on").length;
-    const picked = () => shownFrame().querySelectorAll(".landing-demo__pick.is-on").length;
-    wait(planTimeline("map", 3)[5]);
-    expect(picked()).toBe(3);
+    const picked = () => shownFrame().querySelectorAll(".landing-demo__hover.is-picked").length;
+    const clickAt = planTimeline("map", TARGET)[TARGET];
+    wait(clickAt);
+    expect(picked()).toBe(1);
     expect(tinted()).toBe(0);
-    wait(lastTime("map") - planTimeline("map", 3)[5]);
+    wait(lastTime("map") - clickAt);
     expect(tinted()).toBe(5);
   });
 

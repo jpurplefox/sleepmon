@@ -8113,7 +8113,8 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 .landing-demo__target.is-on { opacity: 1; animation: landing-pulse 1.1s ease-in-out infinite; }
 @keyframes landing-pulse { 50% { box-shadow: 0 0 0 4px var(--accent), 0 0 32px rgba(99, 102, 241, 0.7); } }
 /* The list highlight walks down the options with the pointer, then turns into the pick. */
-.landing-demo__hover { position: absolute; border-radius: var(--r-sm); background: rgba(99, 102, 241, 0.22); box-shadow: inset 0 0 0 1px var(--accent-border); transition: top 0.3s ease-out; }
+.landing-demo__hover { position: absolute; border-radius: var(--r-sm); background: rgba(99, 102, 241, 0.22); box-shadow: inset 0 0 0 1px var(--accent-border); transition: top 0.3s ease-out, opacity 0.3s; }
+.landing-demo__hover.is-off { opacity: 0; }
 .landing-demo__hover.is-picked { background: rgba(99, 102, 241, 0.38); box-shadow: inset 0 0 0 2px var(--accent); }
 .landing-pointer { position: absolute; z-index: 3; width: 28px; height: 28px; margin: -4px 0 0 -4px; transition: left 0.9s cubic-bezier(0.4, 0, 0.2, 1), top 0.9s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.55)); pointer-events: none; }
 .landing-stage__frame--settings .landing-pointer { transition-duration: 0.3s; }

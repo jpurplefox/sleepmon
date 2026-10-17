@@ -24,7 +24,7 @@ export interface Marks {
   rivalStrength: Rect;
   shareCopy: Rect;
   levelup: LevelupMark[];
-  planBerries: Rect[];
+  planMaps: { options: Rect[]; target: number };
   planCooking: { recipes: Rect[]; strength: Rect; missing: Rect };
   planWeek: { berries: Rect; cooking: Rect; grand: Rect; weekly: Rect; rating: Rect };
 }
