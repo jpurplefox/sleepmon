@@ -8212,7 +8212,8 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
 
 /* Without and with an account: one card, a three-column table, the "with" column lightly tinted. */
 .landing-access { padding-bottom: 3rem; }
-.landing-access .landing-section-head span { flex: 1 1 18rem; min-width: 0; max-width: 60ch; }
+.landing-access .landing-section-head { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+.landing-access .landing-section-head span { max-width: 60ch; }
 .landing-access__card { background: var(--surface); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 24px; padding: 0.6rem 1.6rem 1.4rem; }
 .landing-access__table { width: 100%; border-collapse: collapse; }
 .landing-access__table th, .landing-access__table td { padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--border); text-align: center; }
