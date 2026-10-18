@@ -88,6 +88,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
   { id: "inventory" },
   { id: "event" },
   { id: "split" },
+  { id: "meals" },
   { id: "strength" },
   { id: "expert" },
   { id: "screenshots" },
