@@ -142,8 +142,9 @@ account, the expert-map detail and screenshot import, and last whether it is fre
 10. **How does loading Pokémon from screenshots work?** An AI model — Qwen3-VL 235B on
    Amazon Bedrock — reads the screenshots and fills the Pokémon form for the player to
    review ([Screenshot import](0019-screenshot-import.md)). The images are never stored,
-   and the model only receives the images — nothing that says who uploaded them. It needs
-   an account.
+   and the model only receives the images — nothing that says who uploaded them. It is
+   restricted to registered users, with a per-user limit against abuse that normal use
+   should never reach; the answer doesn't give the number.
 11. **Is it free?** Yes, and it stays free: it is a personal project, used daily, that
    already has the essentials. The servers (about 35 dollars a month) are paid from other
    income; if that ever falls short, other ways are sought, never paid plans. The code is
