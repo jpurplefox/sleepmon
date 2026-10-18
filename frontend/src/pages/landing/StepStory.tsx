@@ -55,7 +55,7 @@ export function StepStory({ steps }: { steps: readonly Step[] }) {
               onClick={() => pick(i)}
             >
               <span className="landing-steps__num">{i + 1}</span>
-              {s.label}
+              <span className="landing-steps__label">{s.label}</span>
               {/* Keyed per run so its fill restarts with the step. */}
               {i === active && !still && (
                 <span key={run} className="landing-steps__progress" style={{ animationDuration: `${s.durationMs}ms` }} aria-hidden="true" />
