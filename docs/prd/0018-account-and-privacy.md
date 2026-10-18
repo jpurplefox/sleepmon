@@ -89,8 +89,8 @@ a short privacy page, and one footer line. Nothing more than that.
      name; those tools do not store IP addresses. Metrics and reports already sent
      stay with those providers, tied to an id that no longer belongs to anyone once
      the account is deleted.
-  5. **Screenshot import:** screenshots you import are sent to an AI model (Anthropic's
-     Claude, through Amazon Web Services) only to be read, and discarded right after —
+  5. **Screenshot import:** screenshots you import are sent to an AI model (Qwen3-VL,
+     through Amazon Bedrock) only to be read, and discarded right after —
      neither sleepmon nor the provider keeps them ([Screenshot import](0019-screenshot-import.md)).
   6. **Deleting your data:** *Delete my account* at the end of *Your account* (account
      menu → Account & privacy), or write to the contact email.
