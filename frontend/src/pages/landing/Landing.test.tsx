@@ -56,14 +56,14 @@ describe("Landing", () => {
     ]);
   });
 
-  it("lists ten closed FAQ questions that open on touch", async () => {
+  it("lists eleven closed FAQ questions that open on touch", async () => {
     renderLanding();
     const faq = screen.getByRole("region", { name: "Frequently asked questions" });
     const groups = faq.querySelectorAll("details");
-    expect(groups).toHaveLength(10);
+    expect(groups).toHaveLength(11);
     groups.forEach((d) => expect(d.open).toBe(false));
     await userEvent.click(within(faq).getByText("How is energy taken into account?"));
-    expect(groups[4].open).toBe(true);
+    expect(groups[3].open).toBe(true);
   });
 
 

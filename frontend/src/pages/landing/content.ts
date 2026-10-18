@@ -82,7 +82,6 @@ export interface FaqItem {
 // Copy keys: landing.faq.<id>.q / .a — order is the PRD's.
 export const FAQ_ITEMS: readonly FaqItem[] = [
   { id: "why" },
-  { id: "free", link: { href: REPO_URL, labelKey: "landing.faq.free.link" } },
   { id: "numbers" },
   { id: "rater" },
   { id: "energy" },
@@ -91,4 +90,6 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
   { id: "split" },
   { id: "strength" },
   { id: "expert" },
+  { id: "screenshots" },
+  { id: "free", link: { href: REPO_URL, labelKey: "landing.faq.free.link" } },
 ];

@@ -20,9 +20,9 @@ describe("landing content", () => {
     expect(USE_CASES.filter((c) => c.needsAccount).map((c) => c.id)).toEqual(["catch", "levelup"]);
   });
 
-  it("opens the FAQ with why sleepmon and leaves the expert-map detail for last", () => {
+  it("opens the FAQ with why sleepmon and closes it with whether it is free", () => {
     expect(FAQ_ITEMS.map((i) => i.id)).toEqual([
-      "why", "free", "numbers", "rater", "energy", "inventory", "event", "split", "strength", "expert",
+      "why", "numbers", "rater", "energy", "inventory", "event", "split", "strength", "expert", "screenshots", "free",
     ]);
   });
 
