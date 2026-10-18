@@ -131,15 +131,15 @@ account, the expert-map detail and screenshot import, and last whether it is fre
    meant for swaps every so many exact hours: in practice one rotates out once it has
    done its job (an ingredient Pokémon once it has stocked up), so a 66% / 33% split can
    mean two full days of one and a day of the other.
-8. **Why do meals count even when ingredients are missing?** What is missing can come
+8. **Why doesn't Ingredient Magnet give specific ingredients?** They are too random to
+   plan around: with 19 ingredients, counting on a particular one is too optimistic. So
+   they show as generic ingredients and go into the pot as filler at the average value of
+   all ingredients ([Cooking plan](0006-cooking-plan.md)).
+9. **Why do meals count even when ingredients are missing?** What is missing can come
    from elsewhere — stock already on hand, ingredient tickets, daily login bonuses,
    Ingredient Magnet — so a meal adds its full strength anyway
    ([Cooking plan](0006-cooking-plan.md)). Team Analysis shows how much of each
    ingredient is missing; covering it is the player's call.
-9. **Why doesn't Ingredient Magnet give specific ingredients?** They are too random to
-   plan around: with 19 ingredients, counting on a particular one is too optimistic. So
-   they show as generic ingredients and go into the pot as filler at the average value of
-   all ingredients ([Cooking plan](0006-cooking-plan.md)).
 10. **Why doesn't a Pokémon's strength count its ingredients?** Berry and skill
    strength goes straight to Snorlax; ingredient strength doesn't. It depends on the dish
    and the recipe's level, on whether the ingredient belongs to the recipe or is filler,
