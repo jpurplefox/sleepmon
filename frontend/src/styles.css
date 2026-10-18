@@ -8254,18 +8254,20 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   .landing-tile--catch, .landing-tile--plan { grid-template-columns: minmax(0, 1fr); grid-template-areas: "copy" "steps" "stage"; }
   .landing-deal__card { width: 27%; }
   .landing-stage { height: 400px; }
-  /* Catch on a phone: the steps shrink to a row of numbers with the active step named under
-     it, so the stage right below stays on screen. */
-  .landing-tile--catch .landing-steps { display: flex; gap: 0.5rem; padding-bottom: 2.1rem; }
-  .landing-tile--catch .landing-steps__item { position: static; overflow: visible; width: auto; padding: 0.15rem; border: 0; background: transparent; }
-  .landing-tile--catch .landing-steps__item[aria-current="step"] { background: transparent; }
-  .landing-tile--catch .landing-steps__num { width: 30px; height: 30px; font-size: var(--text-sm); }
-  .landing-tile--catch .landing-steps__label { position: absolute; left: 0; right: 0; bottom: 0.55rem; color: var(--text); font-size: var(--text-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .landing-tile--catch .landing-steps__item:not([aria-current="step"]) .landing-steps__label { width: 1px; height: 1px; clip: rect(0 0 0 0); }
-  /* Its stage hugs the tallest step, each step's captures at full width and top-aligned. */
+  /* Catch and plan on a phone: the steps shrink to a row of numbers with the active step
+     named under it, so the stage right below stays on screen. */
+  .landing-tile--catch .landing-steps, .landing-tile--plan .landing-steps { display: flex; gap: 0.5rem; padding-bottom: 2.1rem; }
+  .landing-tile--catch .landing-steps__item, .landing-tile--plan .landing-steps__item { position: static; overflow: visible; width: auto; padding: 0.15rem; border: 0; background: transparent; }
+  .landing-tile--catch .landing-steps__item[aria-current="step"], .landing-tile--plan .landing-steps__item[aria-current="step"] { background: transparent; }
+  .landing-tile--catch .landing-steps__num, .landing-tile--plan .landing-steps__num { width: 30px; height: 30px; font-size: var(--text-sm); }
+  .landing-tile--catch .landing-steps__label, .landing-tile--plan .landing-steps__label { position: absolute; left: 0; right: 0; bottom: 0.55rem; color: var(--text); font-size: var(--text-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .landing-tile--catch .landing-steps__item:not([aria-current="step"]) .landing-steps__label, .landing-tile--plan .landing-steps__item:not([aria-current="step"]) .landing-steps__label { width: 1px; height: 1px; clip: rect(0 0 0 0); }
+  /* Their stages hug the tallest step, each step's captures top-aligned. */
   .landing-tile--catch .landing-stage { height: 260px; }
-  .landing-tile--catch .landing-stage__frame { align-items: flex-start; }
-  .landing-tile--catch .landing-stage__layer { margin: 0 auto; }
+  .landing-tile--plan .landing-stage { height: 300px; }
+  .landing-tile--plan .landing-demo .landing-stage__shot { max-height: 300px; }
+  .landing-tile--catch .landing-stage__frame, .landing-tile--plan .landing-stage__frame { align-items: flex-start; }
+  .landing-tile--catch .landing-stage__layer, .landing-tile--plan .landing-stage__layer { margin: 0 auto; }
   .landing-tile--catch .landing-stage__frame--pick .landing-demo { width: 100%; }
   .landing-tile--catch .landing-duel__card { top: 0; height: 100%; }
   .landing-demo .landing-stage__shot { max-height: 380px; }
