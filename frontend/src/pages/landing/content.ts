@@ -79,7 +79,7 @@ export interface FaqItem {
 export const FAQ_ITEMS: readonly FaqItem[] = [
   { id: "why" },
   { id: "numbers" },
-  { id: "ranking" },
+  { id: "rater" },
   { id: "energy" },
   { id: "inventory" },
   { id: "event" },

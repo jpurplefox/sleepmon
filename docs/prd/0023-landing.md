@@ -94,7 +94,7 @@ account* and *with an account*. Rows that work signed out come first:
 ### Frequently asked questions
 
 Expandable questions, all closed at first, in this order — first why sleepmon exists,
-then how the numbers are made and why they don't rank, then what they take into account,
+then how the numbers are made and why there is no rater, then what they take into account,
 and last the expert-map detail:
 
 1. **Why another calculator, when the community already has several?** The existing ones
@@ -106,7 +106,7 @@ and last the expert-map detail:
    day and night, inventory, skills ([Production model](0008-production-model.md)) —
    not values read from the game. They are averages: skills trigger at random, so a single
    day can come out higher or lower.
-3. **Will there be a Pokémon ranking?** Other tools already rank them, but many Pokémon
+3. **Will there be a Pokémon rater?** Other tools already rate them, but many Pokémon
    can't be summed up in one number: context matters. A Charge Strength skill Pokémon is
    worth the total strength it adds, not its number of procs — fewer procs with Berry
    Finding S can add more; the same goes for skill Pokémon that gather ingredients. And

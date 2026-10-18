@@ -782,9 +782,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.faq.why.q": "¿Por qué otra calculadora, si la comunidad ya tiene varias?",
     "landing.faq.why.a":
       "Las calculadoras que hay muestran mucha información, y eso puede abrumar o costar de leer. sleepmon no busca sumar herramientas sino responder las preguntas típicas: ¿vale la pena el Pokémon que atrapé?, ¿cómo planifico la semana?, ¿en qué Pokémon invierto mis caramelos? Siempre con la información justa para decidir, fácil de interpretar.",
-    "landing.faq.ranking.q": "¿Va a haber un ranking de Pokémon?",
-    "landing.faq.ranking.a":
-      "Ya hay herramientas que lo hacen, pero a muchos Pokémon no se los puede resumir en un solo número: depende del contexto. Un Pokémon de skill con Charge Strength no vale por cuántas veces la activa sino por la fuerza total que suma, y a veces suma más con menos activaciones pero con Berry Finding S. Lo mismo pasa con los de skill que consiguen ingredientes. Y el mapa también cuenta: uno que le gana a otro sin mapa puede perder cuando elegís uno, sobre todo entre los de bayas o de fuerza. Por eso sleepmon los compara en tu contexto.",
+    "landing.faq.rater.q": "¿Va a haber un rater de Pokémon?",
+    "landing.faq.rater.a":
+      "Ya hay herramientas que les ponen una nota, pero a muchos Pokémon no se los puede resumir en un solo número: depende del contexto. Un Pokémon de skill con Charge Strength no vale por cuántas veces la activa sino por la fuerza total que suma, y a veces suma más con menos activaciones pero con Berry Finding S. Lo mismo pasa con los de skill que consiguen ingredientes. Y el mapa también cuenta: uno que le gana a otro sin mapa puede perder cuando elegís uno, sobre todo entre los de bayas o de fuerza. Por eso sleepmon los compara en tu contexto.",
     "landing.faq.numbers.q": "¿De dónde salen los números?",
     "landing.faq.numbers.a":
       "Son una estimación de la producción diaria (ayudas, día y noche, inventario, habilidades), no valores leídos del juego. Son promedios: tené en cuenta el factor RNG, porque las habilidades se activan al azar y un día puntual puede dar más o menos.",
@@ -1599,9 +1599,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.faq.why.q": "Why another calculator, when the community already has several?",
     "landing.faq.why.a":
       "The calculators out there show a lot of information, which can overwhelm or be hard to read. sleepmon isn't about adding more tools but about answering the usual questions: is the Pokémon I caught worth it? How do I plan my week? Which Pokémon do I spend my candies on? Always with just the information you need to decide, easy to read.",
-    "landing.faq.ranking.q": "Will there be a Pokémon ranking?",
-    "landing.faq.ranking.a":
-      "Tools for that already exist, but many Pokémon can't be summed up in a single number: context matters. A skill Pokémon with Charge Strength isn't worth its number of procs but the total strength it adds, and sometimes it adds more with fewer procs but Berry Finding S. The same goes for skill Pokémon that gather ingredients. The map counts too: one that beats another with no map can lose once you pick one, especially among berry or strength Pokémon. That's why sleepmon compares them in your context.",
+    "landing.faq.rater.q": "Will there be a Pokémon rater?",
+    "landing.faq.rater.a":
+      "Tools that rate them already exist, but many Pokémon can't be summed up in a single number: context matters. A skill Pokémon with Charge Strength isn't worth its number of procs but the total strength it adds, and sometimes it adds more with fewer procs but Berry Finding S. The same goes for skill Pokémon that gather ingredients. The map counts too: one that beats another with no map can lose once you pick one, especially among berry or strength Pokémon. That's why sleepmon compares them in your context.",
     "landing.faq.numbers.q": "Where do the numbers come from?",
     "landing.faq.numbers.a":
       "They are an estimate of daily production (helps, day and night, inventory, skills), not values read from the game. They are averages: keep RNG in mind, since skills trigger at random and any single day can come out higher or lower.",
