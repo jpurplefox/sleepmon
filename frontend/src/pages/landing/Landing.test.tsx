@@ -56,16 +56,23 @@ describe("Landing", () => {
     ]);
   });
 
-  it("lists nine closed FAQ questions that open on touch", async () => {
+  it("lists ten closed FAQ questions that open on touch", async () => {
     renderLanding();
     const faq = screen.getByRole("region", { name: "Frequently asked questions" });
     const groups = faq.querySelectorAll("details");
-    expect(groups).toHaveLength(9);
+    expect(groups).toHaveLength(10);
     groups.forEach((d) => expect(d.open).toBe(false));
     await userEvent.click(within(faq).getByText("How is energy taken into account?"));
-    expect(groups[3].open).toBe(true);
+    expect(groups[4].open).toBe(true);
   });
 
+
+  it("links the free answer to the repository in a new tab", () => {
+    renderLanding();
+    const link = screen.getByRole("link", { name: "GitHub repository" });
+    expect(link).toHaveAttribute("href", "https://github.com/jpurplefox/sleepmon");
+    expect(link).toHaveAttribute("target", "_blank");
+  });
 
   it("speaks Spanish and shows the Spanish captures", () => {
     renderLanding("es");

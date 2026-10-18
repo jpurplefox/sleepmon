@@ -1,5 +1,21 @@
 import { useI18n } from "../../i18n";
-import { FAQ_ID, FAQ_ITEMS } from "./content";
+import { FAQ_ID, FAQ_ITEMS, type FaqItem } from "./content";
+
+function Answer({ item }: { item: FaqItem }) {
+  const { t } = useI18n();
+  const text = t(`landing.faq.${item.id}.a`);
+  if (!item.link) return <p>{text}</p>;
+  const [before, after] = text.split("{link}");
+  return (
+    <p>
+      {before}
+      <a href={item.link.href} target="_blank" rel="noreferrer">
+        {t(item.link.labelKey)}
+      </a>
+      {after}
+    </p>
+  );
+}
 
 /** Closed questions: why sleepmon, then the model's assumptions. */
 export function Faq() {
@@ -20,7 +36,7 @@ export function Faq() {
                 </svg>
               </span>
             </summary>
-            <p>{t(`landing.faq.${item.id}.a`)}</p>
+            <Answer item={item} />
           </details>
         ))}
       </div>

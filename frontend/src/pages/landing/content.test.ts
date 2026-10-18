@@ -22,14 +22,19 @@ describe("landing content", () => {
 
   it("opens the FAQ with why sleepmon and leaves the expert-map detail for last", () => {
     expect(FAQ_ITEMS.map((i) => i.id)).toEqual([
-      "why", "numbers", "rater", "energy", "inventory", "event", "split", "strength", "expert",
+      "why", "free", "numbers", "rater", "energy", "inventory", "event", "split", "strength", "expert",
     ]);
+  });
+
+  it("marks where each FAQ link goes in its answer", () => {
+    for (const lang of ["es", "en"] as const)
+      for (const i of FAQ_ITEMS.filter((x) => x.link)) expect(UI[lang][`landing.faq.${i.id}.a`]).toContain("{link}");
   });
 
   it("has every derived copy key in both languages", () => {
     const keys = [
       ...USE_CASES.flatMap((c) => [`landing.case.${c.id}.title`, `landing.case.${c.id}.body`, `landing.case.${c.id}.alt`, c.linkKey]),
-      ...FAQ_ITEMS.flatMap((i) => [`landing.faq.${i.id}.q`, `landing.faq.${i.id}.a`]),
+      ...FAQ_ITEMS.flatMap((i) => [`landing.faq.${i.id}.q`, `landing.faq.${i.id}.a`, ...(i.link ? [i.link.labelKey] : [])]),
     ];
     for (const lang of ["es", "en"] as const) for (const k of keys) expect(UI[lang][k], `${lang}:${k}`).toBeTruthy();
   });

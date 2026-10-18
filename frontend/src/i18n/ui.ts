@@ -785,6 +785,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.faq.rater.q": "¿Va a haber un rater de Pokémon?",
     "landing.faq.rater.a":
       "Ya hay herramientas que les ponen una nota, pero a muchos Pokémon no se los puede resumir en un solo número: depende del contexto. Un Pokémon de skill con Charge Strength no vale por cuántas veces la activa sino por la fuerza total que suma, y a veces suma más con menos activaciones pero con Berry Finding S. Lo mismo pasa con los de skill que consiguen ingredientes. Y el mapa también cuenta: uno que le gana a otro sin mapa puede perder cuando elegís uno, sobre todo entre los de bayas o de fuerza. Por eso sleepmon los compara en tu contexto.",
+    "landing.faq.free.q": "¿Es gratis?",
+    "landing.faq.free.a":
+      "Sí, y va a seguir siéndolo. Es un proyecto personal que se usa a diario y ya tiene lo principal; los servidores cuestan unos 35 dólares por mes y se pagan con otros ingresos. Si algún día eso no alcanza, se van a buscar otras formas, nunca planes pagos. Además, el código es abierto bajo licencia MIT: cualquiera puede desplegar su propio servidor desde el {link}.",
+    "landing.faq.free.link": "repositorio en GitHub",
     "landing.faq.numbers.q": "¿De dónde salen los números?",
     "landing.faq.numbers.a":
       "Son una estimación de la producción diaria (ayudas, día y noche, inventario, habilidades), no valores leídos del juego. Son promedios: tené en cuenta el factor RNG, porque las habilidades se activan al azar y un día puntual puede dar más o menos.",
@@ -1602,6 +1606,10 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.faq.rater.q": "Will there be a Pokémon rater?",
     "landing.faq.rater.a":
       "Tools that rate them already exist, but many Pokémon can't be summed up in a single number: context matters. A skill Pokémon with Charge Strength isn't worth its number of procs but the total strength it adds, and sometimes it adds more with fewer procs but Berry Finding S. The same goes for skill Pokémon that gather ingredients. The map counts too: one that beats another with no map can lose once you pick one, especially among berry or strength Pokémon. That's why sleepmon compares them in your context.",
+    "landing.faq.free.q": "Is it free?",
+    "landing.faq.free.a":
+      "Yes, and it will stay that way. It's a personal project, used every day, that already has the essentials; the servers cost about 35 dollars a month and are paid for with other income. If that ever falls short, other ways will be found, never paid plans. The code is also open source under the MIT license: anyone can run their own server from the {link}.",
+    "landing.faq.free.link": "GitHub repository",
     "landing.faq.numbers.q": "Where do the numbers come from?",
     "landing.faq.numbers.a":
       "They are an estimate of daily production (helps, day and night, inventory, skills), not values read from the game. They are averages: keep RNG in mind, since skills trigger at random and any single day can come out higher or lower.",

@@ -71,13 +71,18 @@ export const ACCESS_ROWS: readonly AccessRow[] = [
   { id: "profile", withoutAccount: false },
 ];
 
+export const REPO_URL = "https://github.com/jpurplefox/sleepmon";
+
 export interface FaqItem {
   id: string;
+  // The answer holds "{link}" where this outside link goes.
+  link?: { href: string; labelKey: string };
 }
 
 // Copy keys: landing.faq.<id>.q / .a — order is the PRD's.
 export const FAQ_ITEMS: readonly FaqItem[] = [
   { id: "why" },
+  { id: "free", link: { href: REPO_URL, labelKey: "landing.faq.free.link" } },
   { id: "numbers" },
   { id: "rater" },
   { id: "energy" },
