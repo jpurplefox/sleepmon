@@ -22,7 +22,7 @@ describe("landing content", () => {
 
   it("opens the FAQ with why sleepmon and closes it with whether it is free", () => {
     expect(FAQ_ITEMS.map((i) => i.id)).toEqual([
-      "why", "numbers", "rater", "energy", "inventory", "event", "split", "meals", "strength", "expert", "screenshots", "free",
+      "why", "numbers", "rater", "energy", "inventory", "event", "split", "meals", "magnet", "strength", "expert", "screenshots", "free",
     ]);
   });
 

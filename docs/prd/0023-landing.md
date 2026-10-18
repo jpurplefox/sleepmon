@@ -132,25 +132,29 @@ account, the expert-map detail and screenshot import, and last whether it is fre
    done its job (an ingredient Pokémon once it has stocked up), so a 66% / 33% split can
    mean two full days of one and a day of the other.
 8. **Why do meals count even when ingredients are missing?** What is missing can come
-   from elsewhere — stock already on hand, ingredient tickets, daily login bonuses — so a
-   meal adds its full strength anyway ([Cooking plan](0006-cooking-plan.md)). Team
-   Analysis shows how much of each ingredient is missing; covering it is the player's
-   call.
-9. **Why doesn't a Pokémon's strength count its ingredients?** Berry and skill
+   from elsewhere — stock already on hand, ingredient tickets, daily login bonuses,
+   Ingredient Magnet — so a meal adds its full strength anyway
+   ([Cooking plan](0006-cooking-plan.md)). Team Analysis shows how much of each
+   ingredient is missing; covering it is the player's call.
+9. **Why doesn't Ingredient Magnet give specific ingredients?** They are too random to
+   plan around: with 19 ingredients, counting on a particular one is too optimistic. So
+   they show as generic ingredients and go into the pot as filler at the average value of
+   all ingredients ([Cooking plan](0006-cooking-plan.md)).
+10. **Why doesn't a Pokémon's strength count its ingredients?** Berry and skill
    strength goes straight to Snorlax; ingredient strength doesn't. It depends on the dish
    and the recipe's level, on whether the ingredient belongs to the recipe or is filler,
    and it is often left out for lack of room in the pot. Adding it would be misleading
    and not comparable with the rest, so it stays out.
-10. **Why do Ingredients specialists get +1 ingredient on expert maps, not +2?** The game
+11. **Why do Ingredients specialists get +1 ingredient on expert maps, not +2?** The game
    gives them a *chance* at +2 but doesn't publish it; rather than invent the number,
    every member gets +1 ([Map bonuses & rating](0007-map-bonuses-rating.md)).
-11. **How does loading Pokémon from screenshots work?** An AI model — Qwen3-VL 235B on
+12. **How does loading Pokémon from screenshots work?** An AI model — Qwen3-VL 235B on
    Amazon Bedrock — reads the screenshots and fills the Pokémon form for the player to
    review ([Screenshot import](0019-screenshot-import.md)). The images are never stored,
    and the model only receives the images — nothing that says who uploaded them. It is
    restricted to registered users, with a per-user limit against abuse that normal use
    should never reach; the answer doesn't give the number.
-12. **Is it free?** Yes, and it stays free: it is a personal project, used daily, that
+13. **Is it free?** Yes, and it stays free: it is a personal project, used daily, that
    already has the essentials. The servers (about 35 dollars a month) are paid from other
    income; if that ever falls short, other ways are sought, never paid plans. The code is
    open source under the MIT license, so anyone can run their own server; the answer
@@ -169,7 +173,7 @@ account, the expert-map detail and screenshot import, and last whether it is fre
 - **Signed out:** `/` shows the landing with **Start comparing** and **Sign in with
   Google**; the four use cases with no account marker; the account table with its
   first three rows marked in both columns and the other six only *with an account*,
-  closing with **Sign in with Google**; the FAQ with its twelve questions closed.
+  closing with **Sign in with Google**; the FAQ with its thirteen questions closed.
 - **Signed in:** `/` shows the same landing; the secondary action reads **Go to my Box**
   and opens `/box`; the account table has no sign-in.
 - **Main action:** **Start comparing** opens `/compare`.
