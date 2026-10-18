@@ -114,7 +114,7 @@ no way to import again — to retry, the user closes it and starts a new import.
 
 ### Privacy
 
-Screenshots are sent to an AI model (Anthropic's Claude, through Amazon Web Services)
+Screenshots are sent to an AI model (Qwen3-VL, through Amazon Bedrock)
 only to be read, and are **discarded right after**: sleepmon never stores them, and
 the provider does not keep them or train on them. The
 [privacy page](0018-account-and-privacy.md) says so.

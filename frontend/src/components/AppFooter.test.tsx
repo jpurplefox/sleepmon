@@ -20,6 +20,11 @@ describe("AppFooter", () => {
     expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
   });
 
+  it("links to the FAQ on the landing", () => {
+    renderFooter(null);
+    expect(screen.getByRole("link", { name: "Frequently asked questions" })).toHaveAttribute("href", "/#faq");
+  });
+
   it("shows the contact email when configured", () => {
     renderFooter("hi@example.com");
     expect(screen.getByText("hi@example.com")).toBeInTheDocument();
@@ -28,7 +33,7 @@ describe("AppFooter", () => {
   it("omits the email and its dot when not configured", () => {
     const { container } = renderFooter(null);
     expect(screen.queryByText(/@/)).not.toBeInTheDocument();
-    expect(container.querySelectorAll('[aria-hidden="true"]')).toHaveLength(1);
+    expect(container.querySelectorAll('[aria-hidden="true"]')).toHaveLength(2);
   });
 
   it("shows the non-affiliation notice in English", () => {

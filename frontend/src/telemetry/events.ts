@@ -47,7 +47,7 @@ export type AnalyticsEvent =
   | { name: "profile_saved"; props: { from: "profile" | "team_analysis"; sections: ProfileSection[] } }
   | { name: "language_changed"; props: { language: Lang } }
   | { name: "sign_in_prompted"; props: { reason: SignInReason } }
-  | { name: "sign_in_completed"; props: { reason: SignInReason | "app_bar" } }
+  | { name: "sign_in_completed"; props: { reason: SignInReason | "app_bar" | "landing" } }
   | { name: "sign_in_abandoned"; props: { reason: SignInReason } }
   | { name: "sign_in_failed"; props: NoProps }
   | { name: "signed_out"; props: NoProps }

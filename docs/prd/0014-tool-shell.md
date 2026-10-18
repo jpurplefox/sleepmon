@@ -33,9 +33,9 @@ is data, the page is the data and what shapes it.
 
 ### Menu
 
-- Left: **sleepmon** with a sprite; it takes you to the Box.
-- Middle: **Box · Comparison · Team Analysis · Teams** ([Saved teams](0016-saved-teams.md)). The current tool reads as a filled
-  pill, not just brighter text.
+- Left: **sleepmon** with a sprite; it takes you to the [Landing](0023-landing.md).
+- Middle: **Comparison · Team Analysis · Box · Teams** ([Saved teams](0016-saved-teams.md)). The current tool reads as a filled
+  pill, not just brighter text; on the landing, none is marked.
 - Right: the **account**.
   - Signed in: the photo (or initials) **with the first name** opens the account menu —
     name, **Player profile**, **language (ES / EN)**, and sign out.
@@ -129,7 +129,7 @@ sign-in gate ([Authentication](0010-authentication.md)) in place of all of this.
   row; there is no second "Box" heading below it.
 - **Menu at scroll:** scrolled to the bottom of Team Analysis, the menu is still at the
   top and the current tool is marked as a filled pill.
-- **Brand:** touching "sleepmon" opens the Box.
+- **Brand:** touching "sleepmon" opens the landing (`/`).
 - **Language, signed in:** ES / EN is in the account menu, the current one marked;
   switching updates the page immediately and is remembered on the next visit.
 - **Language, signed out:** the small language button next to sign-in opens ES / EN,

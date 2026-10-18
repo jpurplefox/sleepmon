@@ -374,7 +374,7 @@ export function skillDescription(
     const n = num(BERRY_ZONE_PSYSTRIKE_STRENGTH[i]);
     const boost = num(BERRY_ZONE_PSYSTRIKE_BOOST[i]);
     return es
-      ? `Aumenta el Vigor de Snorlax en ${n} y la fuerza de las bayas Ango un ${boost}%, hasta un 24%, hasta que cambies de zona.`
+      ? `Aumenta el Vigor de Snorlax en ${n} y el vigor de las bayas Ango un ${boost}%, hasta un 24%, hasta que cambies de zona.`
       : `Increases Snorlax's Strength by ${n} and Mago Berry strength by ${boost}%, up to 24%, until you change sites.`;
   }
   if (boostsTastyChance(mainSkill)) {
