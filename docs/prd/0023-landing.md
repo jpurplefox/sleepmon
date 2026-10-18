@@ -134,7 +134,9 @@ account, the expert-map detail and screenshot import, and last whether it is fre
 8. **Why doesn't Ingredient Magnet give specific ingredients?** They are too random to
    plan around: with 19 ingredients, counting on a particular one is too optimistic. So
    they show as generic ingredients and go into the pot as filler at the average value of
-   all ingredients ([Cooking plan](0006-cooking-plan.md)).
+   all ingredients ([Cooking plan](0006-cooking-plan.md)). Ingredient Draw is the
+   exception: each Pokémon draws from a short list aimed at specific recipes, so its
+   ingredients count as specific ones.
 9. **Why do meals count even when ingredients are missing?** What is missing can come
    from elsewhere — stock already on hand, ingredient tickets, daily login bonuses,
    Ingredient Magnet — so a meal adds its full strength anyway
