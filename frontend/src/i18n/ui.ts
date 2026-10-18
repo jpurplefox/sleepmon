@@ -803,8 +803,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.faq.inventory.q": "¿Cómo se estima el inventario de los Pokémon?",
     "landing.faq.inventory.a":
       "Durante el día se supone que juntás los ingredientes antes de que se llene. Mientras dormís, se calcula cuándo se llena y cómo eso afecta la producción. En tu perfil podés configurar hasta 2 sesiones de sueño; por defecto se usa una sola de 8:30.",
-    "landing.faq.event.q": "¿Puedo tener en cuenta un evento?",
-    "landing.faq.event.a": "Sí: en las semanas de evento, Análisis de equipo ya trae sus bonus cargados, así que no tenés que hacer nada. Igual podés cargarlos o ajustarlos a mano, y todo el equipo se recalcula.",
+    "landing.faq.event.q": "¿Qué pasa en las semanas de evento?",
+    "landing.faq.event.a": "Análisis de equipo ya trae los bonus del evento cargados, así que no tenés que hacer nada. Igual podés cargarlos o ajustarlos a mano, y todo el equipo se recalcula.",
     "footer.privacy": "Privacidad",
     "footer.notice":
       "sleepmon es un proyecto de fans, sin afiliación con Nintendo, Creatures, GAME FREAK ni The Pokémon Company. Pokémon y sus nombres son marcas de sus respectivos dueños.",
@@ -1620,8 +1620,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.faq.inventory.q": "How is the Pokémon's inventory estimated?",
     "landing.faq.inventory.a":
       "During the day it assumes you collect the ingredients before it fills up. While you sleep, it calculates when it fills up and how that affects production. In your profile you can set up to 2 sleep sessions; by default it uses a single one of 8:30.",
-    "landing.faq.event.q": "Can I account for an event?",
-    "landing.faq.event.a": "Yes: during event weeks, Team analysis already has the event's bonuses set, so there's nothing to do. You can still set or adjust them by hand, and the whole team recomputes.",
+    "landing.faq.event.q": "What happens during event weeks?",
+    "landing.faq.event.a": "Team analysis already has the event's bonuses set, so there's nothing to do. You can still set or adjust them by hand, and the whole team recomputes.",
     "footer.privacy": "Privacy",
     "footer.notice":
       "sleepmon is a fan project, not affiliated with Nintendo, Creatures, GAME FREAK or The Pokémon Company. Pokémon and its names are trademarks of their respective owners.",

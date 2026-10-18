@@ -121,7 +121,7 @@ and last the expert-map detail:
    when it fills up and how that affects production. The Player profile holds up to two
    sleep sessions ([Sleep schedule](0015-sleep-schedule.md)); by default, a single one of
    8:30.
-6. **Can I account for an event?** Yes: during event weeks Team Analysis already has the
+6. **What happens during event weeks?** Team Analysis already has the
    event's bonuses (extra ingredients, skill boosts, a bigger pot…) set, so there is
    nothing to load; they can still be set or adjusted by hand, and the whole team
    recomputes ([Event bonus](0012-event-bonus.md)).
