@@ -79,7 +79,7 @@ describe("Landing", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Analizá tu equipo de Pokémon Sleep y decidí con datos.");
     expect(screen.getByText("¿Cómo se tiene en cuenta la energía?")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Se copia el link de una comparación y se ve con su vista previa" })).toBeInTheDocument();
-    expect(screen.getByAltText("Un equipo en Análisis de equipo con su fuerza total y su rating")).toHaveAttribute(
+    expect(screen.getByAltText("Un equipo en Análisis de equipo con su vigor total y su rating")).toHaveAttribute(
       "src",
       "/landing/es/plan-totals.jpg",
     );

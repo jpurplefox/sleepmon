@@ -743,7 +743,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.plan.step.team": "Armá tu equipo",
     "landing.plan.step.map": "Elegí el mapa y sus bayas",
     "landing.plan.step.meals": "Revisá los ingredientes de tus comidas",
-    "landing.plan.step.week": "Mirá la fuerza de la semana",
+    "landing.plan.step.week": "Mirá el vigor de la semana",
     "landing.catch.step.upload": "Subí las capturas",
     "landing.catch.step.evolve": "Evolucionalo",
     "landing.catch.step.pick": "Elegí uno de tu caja",
@@ -756,8 +756,8 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.case.share.alt": "Se copia el link de una comparación y se ve con su vista previa",
     "landing.case.plan.title": "Planificá la semana",
     "landing.case.plan.body":
-      "Armá el equipo, elegí el mapa y las comidas, y mirá qué ingredientes te faltan y cuánta fuerza suma en la semana.",
-    "landing.case.plan.alt": "Un equipo en Análisis de equipo con su fuerza total y su rating",
+      "Armá el equipo, elegí el mapa y las comidas, y mirá qué ingredientes te faltan y cuánto vigor suma en la semana.",
+    "landing.case.plan.alt": "Un equipo en Análisis de equipo con su vigor total y su rating",
     "landing.case.levelup.title": "¿En quién gastás tus caramelos?",
     "landing.case.levelup.body":
       "Cada Pokémon de tu caja te muestra cuánto cuesta su próximo nivel y lo principal que gana al llegar; con un toque, todo el detalle.",
@@ -784,7 +784,7 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Las calculadoras que hay muestran mucha información, y eso puede abrumar o costar de leer. sleepmon no busca sumar herramientas sino responder las preguntas típicas: ¿vale la pena el Pokémon que atrapé?, ¿cómo planifico la semana?, ¿en qué Pokémon invierto mis caramelos? Siempre con la información justa para decidir, fácil de interpretar.",
     "landing.faq.rater.q": "¿Va a haber un rater de Pokémon?",
     "landing.faq.rater.a":
-      "Ya hay herramientas que les ponen una nota, pero a muchos Pokémon no se los puede resumir en un solo número: depende del contexto. Un especialista en habilidades con Carga Vigor no vale por cuántas veces la activa sino por la fuerza total que suma, y a veces suma más con menos activaciones pero con Busca Bayas S. Lo mismo pasa con los especialistas en habilidades que consiguen ingredientes. Y el mapa también cuenta: uno que le gana a otro sin mapa puede perder cuando elegís uno, sobre todo entre los de bayas o de fuerza. Por eso sleepmon los compara en tu contexto.",
+      "Ya hay herramientas que les ponen una nota, pero a muchos Pokémon no se los puede resumir en un solo número: depende del contexto. Un especialista en habilidades con Carga Vigor no vale por cuántas veces la activa sino por el vigor total que suma, y a veces suma más con menos activaciones pero con Busca Bayas S. Lo mismo pasa con los especialistas en habilidades que consiguen ingredientes. Y el mapa también cuenta: uno que le gana a otro sin mapa puede perder cuando elegís uno, sobre todo entre los de bayas o de vigor. Por eso sleepmon los compara en tu contexto.",
     "landing.faq.screenshots.q": "¿Cómo funciona cargar Pokémon desde capturas?",
     "landing.faq.screenshots.a":
       "Subís las capturas del Pokémon y un modelo de IA, Qwen3-VL 235B en Amazon Bedrock, las lee y completa el formulario para que lo revises. Las imágenes no se guardan, y el modelo recibe solo las imágenes: nada que diga quién las subió. Está restringido a usuarios registrados, con un límite por usuario para evitar abusos que no debería alcanzarse nunca con un uso normal.",
@@ -807,9 +807,9 @@ export const UI: Record<Lang, Record<string, string>> = {
     "landing.faq.magnet.q": "¿Por qué Imán Ingredientes no da ingredientes concretos?",
     "landing.faq.magnet.a":
       "Porque son demasiado aleatorios para planificar con ellos: hay 19 ingredientes, y contar con que toque uno en particular es muy optimista. Por eso se muestran como ingredientes genéricos y entran en la olla como relleno, con el valor promedio de todos los ingredientes. Con Ingrediente Aleatorio es distinto: cada Pokémon tiene un grupo acotado de ingredientes, pensado para recetas concretas, así que es realista contar con ellos y se suman como ingredientes específicos.",
-    "landing.faq.strength.q": "¿Por qué la fuerza de un Pokémon no cuenta sus ingredientes?",
+    "landing.faq.strength.q": "¿Por qué el vigor de un Pokémon no cuenta sus ingredientes?",
     "landing.faq.strength.a":
-      "La fuerza de bayas y habilidades va directo al Snorlax; la de los ingredientes, no. Depende del plato y del nivel de la receta, de si el ingrediente es parte de la receta o solo relleno, y muchas veces queda afuera porque no entra en la olla. Por eso no se suma: sería engañoso y no daría un número útil ni comparable con el resto.",
+      "El vigor de bayas y habilidades va directo al Snorlax; el de los ingredientes, no. Depende del plato y del nivel de la receta, de si el ingrediente es parte de la receta o solo relleno, y muchas veces queda afuera porque no entra en la olla. Por eso no se suma: sería engañoso y no daría un número útil ni comparable con el resto.",
     "landing.faq.expert.q": "¿Por qué los especialistas en ingredientes suman +1 y no +2 en mapas expertos?",
     "landing.faq.expert.a":
       "El juego les da una probabilidad de +2 pero no la publica; en vez de inventarla, todos suman +1.",
