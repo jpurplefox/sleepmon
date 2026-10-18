@@ -34,7 +34,7 @@ export function levelupSchedule(rowCounts: readonly number[]) {
   return { times, firstPhase, loopMs: times[times.length - 1] + 1200 };
 }
 
-function LevelupCard({ n, mark, phase, closed }: { n: number; mark: LevelupMark; phase: number; closed: boolean }) {
+function LevelupCard({ n, mark, phase, closed, active }: { n: number; mark: LevelupMark; phase: number; closed: boolean; active: boolean }) {
   const { lang } = useI18n();
   const at = (k: number) => !closed && phase >= k;
   // One band per row, all as wide as the widest: rows differ only by their delta pill.
@@ -42,7 +42,7 @@ function LevelupCard({ n, mark, phase, closed }: { n: number; mark: LevelupMark;
   const right = Math.max(...mark.rows.map((r) => r.x + r.w));
   const src = (name: ShotName) => shotUrl(name, lang);
   return (
-    <div className="landing-levelup">
+    <div className={"landing-levelup" + (active ? " is-active" : "")}>
       <div className="landing-demo">
         <img className="landing-stage__shot landing-demo__base" src={src(n === 1 ? "levelup-entry-1" : "levelup-entry-2")} alt="" loading="lazy" decoding="async" />
         <span className={"landing-demo__target" + (at(1) && !at(3) ? " is-on" : "")} style={box(mark.cell)} />
@@ -80,8 +80,10 @@ export function LevelupDemo() {
 
   return (
     // One description for the whole animation; its pieces are decoration.
-    <div className="landing-levelup-pair" role="img" aria-label={t("landing.case.levelup.alt")}>
+    <div className={"landing-levelup-pair" + (still ? " is-still" : "")} role="img" aria-label={t("landing.case.levelup.alt")}>
       {cards.map((mark, i) => {
+        // The card whose turn it is; a phone shows only that one.
+        const active = i === firstPhase.filter((first) => phase >= first).length - 1;
         // Each card counts its own phases; it closes once the next card's run begins.
         const own = phase - firstPhase[i];
         const closeAt = mark.rows.length + 4;
@@ -92,6 +94,7 @@ export function LevelupDemo() {
             mark={mark}
             phase={still ? closeAt - 1 : Math.max(0, own)}
             closed={!still && own >= closeAt}
+            active={active}
           />
         );
       })}

@@ -74,6 +74,16 @@ describe("LevelupDemo", () => {
     }
   });
 
+  it("hands the turn from the first card to the second when the first closes", () => {
+    renderDemo();
+    const active = () => [0, 1].map((i) => card(i).classList.contains("is-active"));
+    expect(active()).toEqual([true, false]);
+    wait(phaseAt(firstPhase[1]));
+    expect(active()).toEqual([false, true]);
+    wait(loopMs - phaseAt(firstPhase[1]));
+    expect(active()).toEqual([true, false]);
+  });
+
   it("with reduced motion holds both cards open with every gain lit", () => {
     renderDemo(true);
     expect(open(0) && open(1)).toBe(true);

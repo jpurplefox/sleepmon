@@ -8272,6 +8272,9 @@ button.shot--empty { cursor: pointer; border-color: var(--muted); font-size: 1.6
   .landing-duel__card { top: 8%; height: 84%; }
   .landing-stage__layer--column .landing-stage__shot--catch-map { max-height: 260px; }
   .landing-levelup-pair { grid-template-columns: minmax(0, 1fr); gap: 1.6rem; }
+  /* One card at a time, in the same spot: each shows only on its turn. Without motion, both stack. */
+  .landing-levelup-pair:not(.is-still) .landing-levelup { grid-area: 1 / 1; opacity: 0; transform: translateY(10px); transition: opacity 0.4s ease-out, transform 0.4s ease-out; }
+  .landing-levelup-pair:not(.is-still) .landing-levelup.is-active { opacity: 1; transform: none; }
   .landing-faq { grid-template-columns: minmax(0, 1fr); gap: 1rem; padding-bottom: 2.5rem; }
   .landing-access__card { padding: 0.4rem 0.9rem 1rem; }
   .landing-access__table th, .landing-access__table td { padding: 0.65rem 0.3rem; font-size: var(--text-sm); }
