@@ -11,9 +11,19 @@ export interface PresetEvent {
   effects: Omit<EventEffect, "id">[];
 }
 
-// No production-affecting event is running: Pokémon Growth Week Vol. 6 (Oct 12–19) only
-// boosts sleep EXP and candies, and New Moon Day only raises mythical spawn rates.
-export const CURRENT_EVENT: PresetEvent | null = null;
+// Scheduled: Halloween 2026 Double Candy Research (Oct 26 – Nov 2, Greengrass Isle). Its Ghost
+// helper bonuses apply in every event area; the candy and Snorlax berry bonuses don't touch
+// production. Replace it with the next production-affecting event once this one ends.
+export const CURRENT_EVENT: PresetEvent | null = {
+  name: "Halloween 2026",
+  start: new Date(2026, 9, 26, 4, 0),
+  end: new Date(2026, 10, 2, 4, 0),
+  effects: [
+    { kind: "extra_ingredients", value: 1, scope: { kind: "type", type: "Ghost" } },
+    { kind: "skill_trigger", value: 1.25, scope: { kind: "type", type: "Ghost" } },
+    { kind: "skill_level", value: 3, scope: { kind: "type", type: "Ghost" } },
+  ],
+};
 
 /** The preset's effects if it is running at `now`; otherwise none. */
 export function presetEffects(
