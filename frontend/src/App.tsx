@@ -23,6 +23,7 @@ import { FIRST_TOOL, ROUTES } from "./routes";
 import { TelemetryBridge } from "./telemetry/TelemetryBridge";
 import { ComparisonSessionProvider } from "./comparisonSession";
 import { TeamSessionProvider } from "./teamSession";
+import { useSiteMeta } from "./useDocumentMeta";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false } },
@@ -59,6 +60,7 @@ function AppShell() {
   const [, navigate] = useLocation();
   // Shown after a successful account deletion, over the first tool.
   const [accountDeleted, setAccountDeleted] = useState(false);
+  useSiteMeta();
 
   const authenticated = status === "authenticated";
   const checking = status === "checking";

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { useI18n } from "../../i18n";
 import { shotUrl, type ShotName } from "./content";
-import { MARKS, Pointer, aim, box, prefersReducedMotion, type LevelupMark } from "./demo";
+import { MARKS, Pointer, aim, box, useReducedMotion, type LevelupMark } from "./demo";
 
 const ROW_MS = 400;
 // After its last gain lights up, a card's gains stay open this long before closing.
@@ -65,7 +65,7 @@ export function LevelupDemo() {
   const { t, lang } = useI18n();
   const cards = MARKS[lang].levelup;
   const { times, firstPhase, loopMs } = levelupSchedule(cards.map((c) => c.rows.length));
-  const [still] = useState(prefersReducedMotion);
+  const still = useReducedMotion();
   const [loop, setLoop] = useState(0);
   const [reached, setReached] = useState({ loop: 0, phase: 0 });
   const phase = still ? Infinity : reached.loop === loop ? reached.phase : 0;

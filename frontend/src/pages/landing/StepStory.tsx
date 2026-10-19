@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 
-import { prefersReducedMotion } from "./demo";
+import { useReducedMotion } from "./demo";
 
 /** One step of a story: its label, how long it shows, when its phases start, and how it draws at a phase. */
 export interface Step {
@@ -19,8 +19,10 @@ export interface Step {
  */
 export function StepStory({ steps }: { steps: readonly Step[] }) {
   const last = steps.length - 1;
-  const [still] = useState(prefersReducedMotion);
-  const [active, setActive] = useState(still ? last : 0);
+  const still = useReducedMotion();
+  // null until a click or the timer moves it: reduced motion rests on the last step, otherwise the first.
+  const [chosen, setChosen] = useState<number | null>(null);
+  const active = chosen ?? (still ? last : 0);
   // Bumped on every click, so picking the current step also restarts it.
   const [round, setRound] = useState(0);
   // A phase belongs to one run of one step, so a new run paints from phase 0.
@@ -33,13 +35,13 @@ export function StepStory({ steps }: { steps: readonly Step[] }) {
   useEffect(() => {
     if (still) return;
     const ids = step.times.map((ms, k) => window.setTimeout(() => setReached({ run, phase: k + 1 }), ms));
-    ids.push(window.setTimeout(() => setActive((a) => (a + 1) % steps.length), step.durationMs));
+    ids.push(window.setTimeout(() => setChosen((a) => ((a ?? 0) + 1) % steps.length), step.durationMs));
     return () => ids.forEach((t) => window.clearTimeout(t));
     // `step` follows from `run`.
   }, [run, still]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const pick = (i: number) => {
-    setActive(i);
+    setChosen(i);
     setRound((r) => r + 1);
   };
 

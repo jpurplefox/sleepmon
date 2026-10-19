@@ -170,6 +170,27 @@ account, the expert-map detail and screenshot import, and last whether it is fre
 - The footer ([Account & privacy](0018-account-and-privacy.md)) gains **Frequently asked
   questions**, opening `/#faq`, on every screen.
 
+### Search engines and link previews
+
+Search engines, link previews and AI crawlers often read a page without running the
+app. `/` is written out for them in advance, so what they read is the landing itself.
+
+- **Written out in English.** Until each language has its own address, `/` arrives with
+  the whole landing already in English: the header, the four use cases with each
+  story's steps, the account table and the thirteen questions with their answers. Its
+  language, title, description and preview card are English too.
+- **The same page comes alive.** Once the app loads, it takes over that page as it is:
+  the stories play, the actions work, and the language switches to the visitor's.
+- **No flash of the wrong page.** A visitor whose language is Spanish, or who opens a
+  tool's address directly, sees a blank screen until the app loads, as before — never
+  the English landing for an instant.
+- **The FAQ as structured data.** The thirteen questions and answers are also published
+  in the format search engines use for FAQs, with the same English text as the page.
+- **One official address.** Every page names `https://sleepmon.app/` as the official
+  address, and a sitemap listing it is announced to crawlers.
+- **The page's language follows the app.** Inside the app, the page declares the active
+  language, and the title and description follow it.
+
 ## Acceptance criteria
 
 - **Signed out:** `/` shows the landing with **Start comparing** and **Sign in with
@@ -192,6 +213,24 @@ account, the expert-map detail and screenshot import, and last whether it is fre
 - **Language:** switching to EN translates the whole page, FAQ included, and the
   page's title; switching back restores ES.
 - **Narrow screen:** at 375px the page never scrolls sideways.
+- **Without the app running:** fetching `https://sleepmon.app/` (e.g. with `curl`)
+  returns the hero's title, the four use case titles, the nine account table rows and
+  all thirteen questions with their answers, in English; the page declares English and
+  its title, description and preview card are English.
+- **Comes alive:** in a browser, that same page then plays its stories and its actions
+  work as on any other visit; with reduced motion, each story rests on its last step.
+- **Spanish visitor:** with Spanish as the saved or browser language, `/` shows a blank
+  screen until the app loads, then the Spanish landing — never English text first.
+- **Tool address:** reloading `/compare` never shows landing text, not even for an
+  instant.
+- **Structured data:** a structured-data validator (schema.org's Schema Markup
+  Validator, or Google's Rich Results Test) reads the FAQ from `/` with its thirteen
+  questions and reports no errors. Google may still not show it as a rich result: it
+  reserves FAQ results for a few kinds of sites.
+- **Official address and sitemap:** `/` names `https://sleepmon.app/` as its official
+  address; `/sitemap.xml` lists it and `/robots.txt` points to the sitemap.
+- **Declared language:** switching the app to ES makes the page declare Spanish and
+  shows the Spanish title and description; switching back to EN declares English.
 
 ## Guidelines
 
@@ -205,6 +244,9 @@ account, the expert-map detail and screenshot import, and last whether it is fre
 - **No personal data on the landing.** It looks the same to everyone except the
   secondary action.
 - **The landing never gates.** It links; the tools decide what needs an account.
+- **What crawlers read is what visitors see.** The written-out page and its structured
+  data come from the same copy as the live landing; nothing is written only for
+  crawlers.
 
 ## Out of scope
 
@@ -213,6 +255,9 @@ account, the expert-map detail and screenshot import, and last whether it is fre
 - A **separate `/faq` page**.
 - **Animations or interactive demos** of the tools.
 - New **usage events** ([Usage metrics](0017-usage-metrics.md)).
-- **How** the page becomes readable by search engines — a technical decision for
-  architecture.
+- **One address per language** (`/es`, `/en`) so each is indexed on its own: it changes
+  how the whole app picks its language ([Language](0009-language.md)).
+- Writing out **other pages** (the tools, privacy) in advance, or listing them in the
+  sitemap.
+- Answering an **unknown address** with "not found": it keeps showing the landing.
 - Sending a signed-in user **straight to a tool** from `/`.
