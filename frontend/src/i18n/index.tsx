@@ -21,7 +21,7 @@ const STORAGE_KEY = "sleepmon.lang";
 
 // Default: idioma guardado, si no el del navegador (español si empieza con "es"),
 // si no inglés.
-function detectLang(): Lang {
+export function detectLang(): Lang {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === "es" || saved === "en") return saved;
@@ -47,10 +47,22 @@ interface I18n {
   type: (name: string) => string;
 }
 
+/** UI copy for a key in a language, with {var} interpolated; falls back to English, then the key. */
+export function translate(lang: Lang, key: string, vars?: Record<string, string | number>): string {
+  let s = UI[lang][key] ?? UI.en[key] ?? key;
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      s = s.split(`{${k}}`).join(String(v));
+    }
+  }
+  return s;
+}
+
 const Ctx = createContext<I18n | null>(null);
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(detectLang);
+// `initialLang` skips detection: the build-time prerender renders a fixed language (ADR-0013).
+export function LanguageProvider({ children, initialLang }: { children: ReactNode; initialLang?: Lang }) {
+  const [lang, setLangState] = useState<Lang>(() => initialLang ?? detectLang());
 
   // Read by `setLang` so it keeps stable (empty) deps and can compare without
   // tracking from inside a state updater (React may call updaters twice).
@@ -74,18 +86,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setLangState(l);
   }, []);
 
-  const t = useCallback(
-    (key: string, vars?: Record<string, string | number>) => {
-      let s = UI[lang][key] ?? UI.en[key] ?? key;
-      if (vars) {
-        for (const [k, v] of Object.entries(vars)) {
-          s = s.split(`{${k}}`).join(String(v));
-        }
-      }
-      return s;
-    },
-    [lang],
-  );
+  const t = useCallback((key: string, vars?: Record<string, string | number>) => translate(lang, key, vars), [lang]);
 
   const value = useMemo<I18n>(
     () => ({

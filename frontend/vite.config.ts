@@ -7,10 +7,11 @@ import { defineConfig } from "vite";
 // token (local builds, forks) the plugin is skipped and no maps are emitted.
 const uploadSourceMaps = Boolean(process.env.SENTRY_AUTH_TOKEN);
 
-export default defineConfig({
+// The SSR build (the landing prerender, ADR-0013) is never deployed: no maps, no upload.
+export default defineConfig(({ isSsrBuild }) => ({
   plugins: [
     react(),
-    ...(uploadSourceMaps
+    ...(uploadSourceMaps && !isSsrBuild
       ? [
           sentryVitePlugin({
             org: process.env.SENTRY_ORG,
@@ -23,7 +24,8 @@ export default defineConfig({
       : []),
   ],
   build: {
-    sourcemap: uploadSourceMaps ? "hidden" : false,
+    sourcemap: uploadSourceMaps && !isSsrBuild ? "hidden" : false,
+    copyPublicDir: !isSsrBuild,
   },
   server: {
     host: true,
@@ -34,4 +36,4 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     css: false,
   },
-});
+}));

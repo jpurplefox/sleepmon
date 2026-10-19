@@ -1,5 +1,5 @@
 // Shared pieces of the landing's animated demos: the capture marks, a pointer, and placement.
-import type { CSSProperties } from "react";
+import { useSyncExternalStore, type CSSProperties } from "react";
 
 import type { Lang } from "../../i18n";
 import shotMarks from "./shotMarks.json";
@@ -30,8 +30,15 @@ export interface Marks {
 }
 export const MARKS = shotMarks as Record<Lang, Marks>;
 
-export function prefersReducedMotion(): boolean {
-  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+const REDUCE = "(prefers-reduced-motion: reduce)";
+function subscribe(onChange: () => void): () => void {
+  const mq = window.matchMedia?.(REDUCE);
+  mq?.addEventListener?.("change", onChange);
+  return () => mq?.removeEventListener?.("change", onChange);
+}
+/** Reduced-motion preference; false on the server and during hydration, so both render the same first frame. */
+export function useReducedMotion(): boolean {
+  return useSyncExternalStore(subscribe, () => window.matchMedia?.(REDUCE).matches ?? false, () => false);
 }
 
 export const box = (r: Rect): CSSProperties => ({ left: `${r.x}%`, top: `${r.y}%`, width: `${r.w}%`, height: `${r.h}%` });

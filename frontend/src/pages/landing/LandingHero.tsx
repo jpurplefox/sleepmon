@@ -44,9 +44,9 @@ export function LandingHero() {
         </ul>
       </div>
       <div className="landing-fan" aria-hidden="true">
-        <img className="landing-shot landing-fan__side landing-fan__left" src={shotUrl("hero-card-1", lang)} alt="" />
-        <img className="landing-shot landing-fan__center" src={shotUrl("hero-card-2", lang)} alt="" />
-        <img className="landing-shot landing-fan__side landing-fan__right" src={shotUrl("hero-card-3", lang)} alt="" />
+        <img className="landing-shot landing-fan__side landing-fan__left" src={shotUrl("hero-card-1", lang)} alt="" loading="lazy" />
+        <img className="landing-shot landing-fan__center" src={shotUrl("hero-card-2", lang)} alt="" loading="lazy" />
+        <img className="landing-shot landing-fan__side landing-fan__right" src={shotUrl("hero-card-3", lang)} alt="" loading="lazy" />
       </div>
     </section>
   );

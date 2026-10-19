@@ -718,8 +718,8 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Entrá a {link} (menú de la cuenta → Cuenta y privacidad) y elegí Borrar mi cuenta: se borra todo al instante.",
     "privacy.deleteMail": "También podés pedirlo por email a {email}.",
     "footer.faq": "Preguntas frecuentes",
-    "landing.meta.title": "sleepmon — Analizá tu equipo de Pokémon Sleep",
-    "landing.meta.description":
+    "meta.title": "sleepmon — Analizá tu equipo de Pokémon Sleep",
+    "meta.description":
       "Más que una calculadora para Pokémon Sleep: compará Pokémon, mirá qué sube y qué baja, planificá la semana y sabé cuánto cuesta subirlos.",
     "landing.title.lead": "Analizá tu equipo de Pokémon Sleep",
     "landing.title.accent": "y decidí con datos.",
@@ -1548,8 +1548,8 @@ export const UI: Record<Lang, Record<string, string>> = {
       "Open {link} (account menu → Account & privacy) and choose Delete my account: everything is deleted at once.",
     "privacy.deleteMail": "You can also ask by email at {email}.",
     "footer.faq": "Frequently asked questions",
-    "landing.meta.title": "sleepmon — Analyze your Pokémon Sleep team",
-    "landing.meta.description":
+    "meta.title": "sleepmon — Analyze your Pokémon Sleep team",
+    "meta.description":
       "More than a calculator for Pokémon Sleep: compare Pokémon, see what goes up and what goes down, plan your week and know what leveling up costs.",
     "landing.title.lead": "Analyze your Pokémon Sleep team",
     "landing.title.accent": "and decide with data.",

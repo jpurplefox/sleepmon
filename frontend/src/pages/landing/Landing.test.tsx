@@ -83,6 +83,5 @@ describe("Landing", () => {
       "src",
       "/landing/es/plan-totals.jpg",
     );
-    expect(document.title).toBe("sleepmon — Analizá tu equipo de Pokémon Sleep");
   });
 });

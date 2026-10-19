@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { useI18n } from "../../i18n";
 import { shotUrl } from "./content";
-import { MARKS, Pointer, aim, box, prefersReducedMotion } from "./demo";
+import { MARKS, Pointer, aim, box, useReducedMotion } from "./demo";
 
 /** Phases in ms from the loop's start: 1 pointer to Copy, 2 click, 3 copied, 4 the link lands in a chat. */
 export const SHARE_TIMES = [700, 1800, 2100, 3100] as const;
@@ -15,7 +15,7 @@ const LINK = "sleepmon.app/c/k3f9xq";
 export function ShareDemo() {
   const { t, lang } = useI18n();
   const copy = MARKS[lang].shareCopy;
-  const [still] = useState(prefersReducedMotion);
+  const still = useReducedMotion();
   const [loop, setLoop] = useState(0);
   const [reached, setReached] = useState({ loop: 0, phase: 0 });
   const phase = still ? FINAL : reached.loop === loop ? reached.phase : 0;

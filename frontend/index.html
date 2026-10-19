@@ -1,10 +1,14 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sleepmon — Analizá tu equipo de Pokémon Sleep</title>
-    <meta name="description" content="Más que una calculadora para Pokémon Sleep: compará Pokémon, mirá qué sube y qué baja, planificá la semana y sabé cuánto cuesta subirlos." />
+    <!-- Before the app loads: hide the prerendered English landing unless this is "/" in English (ADR-0013). Mirrors detectLang. -->
+    <script>(function(){var s;try{s=localStorage.getItem("sleepmon.lang")}catch(e){}var l=s==="es"||s==="en"?s:(navigator.language||"").toLowerCase().indexOf("es")===0?"es":"en";if(location.pathname!=="/"||l!=="en")document.documentElement.setAttribute("data-prerender","skip")})()</script>
+    <style>html[data-prerender="skip"] #root{display:none}</style>
+    <title>sleepmon — Analyze your Pokémon Sleep team</title>
+    <meta name="description" content="More than a calculator for Pokémon Sleep: compare Pokémon, see what goes up and what goes down, plan your week and know what leveling up costs." />
+    <link rel="canonical" href="https://sleepmon.app/" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#0e1220" />
