@@ -67,9 +67,9 @@ DEFAULT_NAP_MINUTES: Final[int] = 120  # where a nap starts when turned on
 # por encima de 1 resta 0.2% de la frecuencia base -> freq = base * (1 - 0.002*(lvl-1)).
 FREQUENCY_REDUCTION_PER_LEVEL: Final[float] = 0.002
 
-# Good Camp Ticket: los Pokémon ayudan 20% más rápido (intervalo × 0.8) y cargan
-# 20% más de inventario (carry size × 1.2). The pot factor is applied in domain/pot.py.
-GOOD_CAMP_TICKET_SPEED_FACTOR: Final[float] = 0.8
+# Good Camp Ticket: helpers work 20% faster (help interval ÷ 1.2, as Neroli's Lab models
+# it) and carry 20% more (carry size × 1.2). The pot factor is applied in domain/pot.py.
+GOOD_CAMP_TICKET_SPEED_BONUS: Final[float] = 1.2
 GOOD_CAMP_TICKET_INVENTORY_FACTOR: Final[float] = 1.2
 GOOD_CAMP_TICKET_POT_FACTOR: Final[float] = 1.5
 

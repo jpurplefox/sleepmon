@@ -41,7 +41,7 @@ schedule](0015-sleep-schedule.md): by default **8.5 h asleep at night and no nap
 
 - **Seconds per help** starts from the species' base interval and is **shortened** by:
   level (−0.2% per level above 1), **Helping Speed** sub skills, a helping **nature**,
-  a **higher ribbon** (500 h+), the **Good Camp Ticket** (×0.8), and an always-on
+  a **higher ribbon** (500 h+), the **Good Camp Ticket** (÷1.2), and an always-on
   **energy bonus** (~2.22×, standing in for a well-rested Pokémon).
 - **helps/day** = 86,400 s ÷ seconds-per-help, spread across the full day; those helps
   are then split into the awake and asleep phases.
@@ -172,7 +172,7 @@ skill trigger and level, scale skill ingredients, and add to the carry limit.
   Skill and All specialists — and shown as **probabilities**.
 - With the default schedule (8.5 h at night, no nap) the numbers are those of a day of
   **15.5 h awake + 8.5 h asleep**.
-- The **Good Camp Ticket** shortens the help interval (**×0.8**) and enlarges inventory
+- The **Good Camp Ticket** shortens the help interval (**÷1.2**) and enlarges inventory
   (**×1.2**).
 - **Total strength** counts **berries + strength skills only**; ingredients / energy /
   shards do not add strength.

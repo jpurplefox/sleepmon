@@ -27,7 +27,7 @@ from typing import Final
 from sleepmon.domain.catalog_data import (
     FREQUENCY_REDUCTION_PER_LEVEL,
     GOOD_CAMP_TICKET_INVENTORY_FACTOR,
-    GOOD_CAMP_TICKET_SPEED_FACTOR,
+    GOOD_CAMP_TICKET_SPEED_BONUS,
     MAX_ENERGY_BONUS,
     MAX_INGREDIENTS,
     MAX_LEVEL,
@@ -440,13 +440,13 @@ def daily_production(
         * ribbon_factor
         * _nature_factor(nature, NatureStat.SPEED_OF_HELP, *_NATURE_SPEED),
     )
-    camp_speed = GOOD_CAMP_TICKET_SPEED_FACTOR if good_camp_ticket else 1.0
+    camp_speed = GOOD_CAMP_TICKET_SPEED_BONUS if good_camp_ticket else 1.0
     seconds_per_help = math.floor(
         species.help_frequency_seconds
         * level_factor
         * speed_factor
-        * camp_speed
         * effects.speed_factor
+        / camp_speed
         / MAX_ENERGY_BONUS
     )
     helps_per_second = 1 / seconds_per_help
