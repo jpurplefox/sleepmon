@@ -515,6 +515,70 @@ def test_compute_team_production_split_weights_scale_contribution(
     )
 
 
+def _seconds_per_help(result: Any, entry_id: str) -> int:
+    return int(next(m for m in result.members if m.id == entry_id).production.seconds_per_help)
+
+
+def _with_helper(helper: SlotInput) -> TeamProductionInput:
+    """'a' (no Helping Bonus of its own) next to the given slot."""
+    return TeamProductionInput(
+        slots=[SlotInput(entries=[_entry("a", sub_skills=[])]), helper],
+        meals=[None, None, None],
+    )
+
+
+def test_teammates_helping_bonus_speeds_up_the_rest_of_the_team(
+    production_service: DefaultProductionService,
+) -> None:
+    plain = production_service.compute_team_production(
+        _with_helper(SlotInput(entries=[_entry("b", sub_skills=[])]))
+    )
+    helped = production_service.compute_team_production(
+        _with_helper(SlotInput(entries=[_entry("b", sub_skills=["Helping Bonus"])]))
+    )
+    own = production_service.compute_production(_pokemon(sub_skills=["Helping Bonus"]))
+    assert _seconds_per_help(helped, "a") < _seconds_per_help(plain, "a")
+    assert _seconds_per_help(helped, "a") == own.seconds_per_help
+    # The helper counts its own once, not again as a teammate.
+    assert _seconds_per_help(helped, "b") == own.seconds_per_help
+
+
+def test_a_locked_helping_bonus_does_not_help_the_team(
+    production_service: DefaultProductionService,
+) -> None:
+    plain = production_service.compute_team_production(
+        _with_helper(SlotInput(entries=[_entry("b", sub_skills=[], level=5)]))
+    )
+    locked = production_service.compute_team_production(
+        _with_helper(SlotInput(entries=[_entry("b", sub_skills=["Helping Bonus"], level=5)]))
+    )
+    assert _seconds_per_help(locked, "a") == _seconds_per_help(plain, "a")
+
+
+def test_an_alternates_helping_bonus_counts_by_its_slot_share(
+    production_service: DefaultProductionService,
+) -> None:
+    def a_with(slot: SlotInput) -> int:
+        result = production_service.compute_team_production(_with_helper(slot))
+        return _seconds_per_help(result, "a")
+
+    none = a_with(SlotInput(entries=[_entry("b", sub_skills=[])]))
+    full = a_with(SlotInput(entries=[_entry("b", sub_skills=["Helping Bonus"])]))
+    half_input = _with_helper(
+        SlotInput(
+            entries=[
+                _entry("b", weight=0.5, sub_skills=["Helping Bonus"]),
+                _entry("c", weight=0.5, sub_skills=[]),
+            ]
+        )
+    )
+    half = production_service.compute_team_production(half_input)
+    alone = production_service.compute_production(_pokemon(sub_skills=[]))
+    assert full < _seconds_per_help(half, "a") < none
+    # Slot partners are never on the team together: 'c' only gets 'a', which has none.
+    assert _seconds_per_help(half, "c") == alone.seconds_per_help
+
+
 def test_compute_team_production_rejects_single_entry_nonunit_weight(
     production_service: DefaultProductionService,
 ) -> None:
