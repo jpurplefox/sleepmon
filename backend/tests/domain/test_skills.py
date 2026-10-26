@@ -407,6 +407,9 @@ def test_bulk_up_also_raises_extra_tasty() -> None:
             BULK_UP_TASTY_CHANCE_AMOUNTS[level - 1]
         )
     assert cooking_assist_tasty_chance("Cooking Assist S", 7) is None
+    assert cooking_assist_tasty_chance("Cooking Power-Up S", 7) is None
+    for level, expected in enumerate((1, 2, 2, 3, 3, 4, 5), start=1):
+        assert cooking_assist_tasty_chance("Cooking Power-Up S (Extra Tasty)", level) == expected
 
 
 # --- Tasty Chance S (aumento de Extra Tasty, % por activación) -----------------

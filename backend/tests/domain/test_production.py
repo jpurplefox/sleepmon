@@ -1053,6 +1053,13 @@ def test_bulk_up_yields_random_ingredients_and_extra_tasty() -> None:
     assert prod.skill_cooking_ingredients is None
 
 
+def test_cooking_power_up_extra_tasty_adds_pot_and_extra_tasty() -> None:
+    species = _species(main_skill="Cooking Power-Up S (Extra Tasty)")
+    prod = daily_production(species, _INGREDIENTS, level=60, skill_level=7)
+    assert prod.skill_cooking_ingredients == pytest.approx(prod.skill_triggers * 31)
+    assert prod.skill_tasty_chance == pytest.approx(prod.skill_triggers * 5)
+
+
 # --- Charge Energy S: energía al propio Pokémon --------------------------------
 
 

@@ -289,6 +289,12 @@ export function skillDescription(
   }
   if (powersUpCooking(mainSkill)) {
     const n = cookingPowerUpAmount(level);
+    if (mainSkill?.startsWith("Cooking Power-Up S (Extra Tasty)")) {
+      const p = BULK_UP_TASTY_CHANCE_AMOUNTS[idx(level)];
+      return es
+        ? `Amplía la capacidad de la olla en ${n} ingredientes la próxima vez que cocines. Además aumenta la probabilidad de Plato riquísimo un ${p}%.`
+        : `Gives your pot room for ${n} more ingredients the next time you cook. Also raises your Extra Tasty rate by ${p}%.`;
+    }
     return es
       ? `Amplía la capacidad de la olla en ${n} ingredientes la próxima vez que cocines.`
       : `Gives your pot room for ${n} more ingredients the next time you cook.`;
