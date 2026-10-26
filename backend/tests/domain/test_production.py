@@ -6,6 +6,7 @@ import pytest
 from sleepmon.domain.catalog_data import (
     ALL_INGREDIENTS_LEVEL,
     FREQUENCY_REDUCTION_PER_LEVEL,
+    MAX_ENERGY_BONUS,
     max_ingredient_slots,
 )
 from sleepmon.domain.event_bonus import (
@@ -714,6 +715,53 @@ def test_helping_speed_subskill_lowers_interval() -> None:
         sub_skills=(SubSkill.HELPING_SPEED_M,),
     )
     assert fast.seconds_per_help < base.seconds_per_help
+
+
+def test_teammates_helping_bonus_speeds_up_like_an_own_one() -> None:
+    sp = _species(help_frequency_seconds=8000)
+    own = daily_production(sp, _INGREDIENTS, level=50, sub_skills=(SubSkill.HELPING_BONUS,))
+    from_team = daily_production(sp, _INGREDIENTS, level=50, team_helping_bonus=1)
+    assert from_team.seconds_per_help == own.seconds_per_help
+
+
+def test_teammates_helping_bonus_stacks_with_an_own_one() -> None:
+    sp = _species(help_frequency_seconds=8000)
+    own = daily_production(sp, _INGREDIENTS, level=50, sub_skills=(SubSkill.HELPING_BONUS,))
+    both = daily_production(
+        sp, _INGREDIENTS, level=50, sub_skills=(SubSkill.HELPING_BONUS,), team_helping_bonus=2
+    )
+    assert both.seconds_per_help == math.floor(
+        8000 * (1 - FREQUENCY_REDUCTION_PER_LEVEL * 49) * (1 - 0.15) / MAX_ENERGY_BONUS
+    )
+    assert both.seconds_per_help < own.seconds_per_help
+
+
+def test_speed_subskills_cap_at_35_percent() -> None:
+    # HS M + HS S + own HB + 2 from the team = 0.36; only 0.35 counts.
+    sp = _species(help_frequency_seconds=8000)
+    capped = daily_production(
+        sp, _INGREDIENTS, level=50,
+        sub_skills=(SubSkill.HELPING_SPEED_M, SubSkill.HELPING_SPEED_S, SubSkill.HELPING_BONUS),
+        team_helping_bonus=2,
+    )
+    beyond = daily_production(
+        sp, _INGREDIENTS, level=50,
+        sub_skills=(SubSkill.HELPING_SPEED_M, SubSkill.HELPING_SPEED_S, SubSkill.HELPING_BONUS),
+        team_helping_bonus=4,
+    )
+    assert capped.seconds_per_help == math.floor(
+        8000 * (1 - FREQUENCY_REDUCTION_PER_LEVEL * 49) * (1 - 0.35) / MAX_ENERGY_BONUS
+    )
+    assert beyond.seconds_per_help == capped.seconds_per_help
+
+
+def test_nature_still_speeds_up_past_the_subskill_cap() -> None:
+    sp = _species(help_frequency_seconds=8000)
+    capped = daily_production(sp, _INGREDIENTS, level=50, team_helping_bonus=5)
+    with_nature = daily_production(
+        sp, _INGREDIENTS, level=50, nature=Nature.ADAMANT, team_helping_bonus=5
+    )
+    assert with_nature.seconds_per_help < capped.seconds_per_help
 
 
 def test_locked_subskill_is_ignored() -> None:
