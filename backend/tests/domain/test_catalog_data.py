@@ -177,9 +177,29 @@ def test_species_names_are_unique() -> None:
 
 def test_catalog_covers_the_full_helper_roster() -> None:
     # Full game dataset (nitoyon cross-checked with nerolis-lab).
-    assert len(SEED_SPECIES) == 249
+    assert len(SEED_SPECIES) == 251
     assert {sp.specialty for sp in SEED_SPECIES} == set(Specialty)
     assert {sp.sleep_type for sp in SEED_SPECIES} == set(SleepType)
+
+
+def test_misdreavus_line_has_its_real_data() -> None:
+    # Halloween 2026 arrivals (RaenonX master data).
+    misdreavus = _by_name("Misdreavus")
+    assert misdreavus.specialty is Specialty.SKILLS
+    assert misdreavus.berry is Berry.BLUK
+    assert misdreavus.sleep_type is SleepType.DOZING
+    assert misdreavus.main_skill == "Cooking Power-Up S"
+    assert misdreavus.ingredients == (
+        Ingredient.SOFT_POTATO,
+        Ingredient.ROUSING_COFFEE,
+        Ingredient.SNOOZY_TOMATO,
+    )
+    assert misdreavus.help_frequency_seconds == 2800
+    assert misdreavus.ingredient_amounts == ((1,), (2, 2), (4, 3, 4))
+    mismagius = _by_name("Mismagius")
+    assert mismagius.help_frequency_seconds == 2400
+    assert mismagius.base_inventory == 17
+    assert previous_stage_of("Mismagius") == "Misdreavus"
 
 
 def test_known_species_have_the_correct_real_data() -> None:

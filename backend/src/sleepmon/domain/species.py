@@ -815,6 +815,12 @@ SEED_SPECIES: tuple[Species, ...] = (
         3400, 16.6, 8.7, ((1,), (2, 1), (4, 2, 5)), 17, 1, 1,
     ),
     Species(
+        "Misdreavus", 200, Specialty.SKILLS, Berry.BLUK, SleepType.DOZING,
+        "Cooking Power-Up S",
+        (I.SOFT_POTATO, I.ROUSING_COFFEE, I.SNOOZY_TOMATO),
+        2800, 15, 4.7, ((1,), (2, 2), (4, 3, 4)), 13, 0, 1,
+    ),
+    Species(
         "Wobbuffet", 202, Specialty.SKILLS, Berry.MAGO, SleepType.SNOOZING,
         "Energizing Cheer S",
         (I.FANCY_APPLE, I.TASTY_MUSHROOM, I.PURE_OIL),
@@ -1239,6 +1245,12 @@ SEED_SPECIES: tuple[Species, ...] = (
         "Charge Strength S (Stockpile)",
         (I.GREENGRASS_CORN, I.PURE_OIL, I.SOFT_POTATO),
         2500, 12.8, 6.3, ((1,), (2, 3), (4, 4, 4)), 17, 1, 1,
+    ),
+    Species(
+        "Mismagius", 429, Specialty.SKILLS, Berry.BLUK, SleepType.DOZING,
+        "Cooking Power-Up S (Extra Tasty)",
+        (I.SOFT_POTATO, I.ROUSING_COFFEE, I.SNOOZY_TOMATO),
+        2400, 14.2, 3.6, ((1,), (2, 2), (4, 3, 4)), 17, 1, 1,
     ),
     Species(
         "Honchkrow", 430, Specialty.SKILLS, Berry.WIKI, SleepType.DOZING,
@@ -1826,6 +1838,7 @@ PRE_EVOLUTIONS: Mapping[str, str] = {
     "Luxio": "Shinx",
     "Luxray": "Luxio",
     "Drifblim": "Drifloon",
+    "Mismagius": "Misdreavus",
     "Sudowoodo": "Bonsly",
     "Mr. Mime": "Mime Jr.",
     "Chansey": "Happiny",
