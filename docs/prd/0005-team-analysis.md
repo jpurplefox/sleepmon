@@ -111,7 +111,7 @@ slot, since those two are never on the team together.
 A **global toggle** modeling Pokémon Sleep's camp bonus. When on, it applies **three
 effects** to the whole team (not a single member):
 
-- **Helping 20% faster** — the help interval is scaled by **×0.8**, so each Pokémon
+- **Helping 20% faster** — the help interval is divided by **1.2**, so each Pokémon
   helps more often. This **cascades**: more helps/day means more **berries,
   ingredients, and skill triggers**.
 - **+20% inventory** — each Pokémon's carry size is **×1.2**, so it holds more before
@@ -159,7 +159,7 @@ says so where the decision is made, instead of leaving a silent hole in the team
   by 5% (one locked by level does nothing); in a split slot it counts by its weight
   and doesn't reach its slot partner. Speed sub skills never add up to more than 35%.
 - Turning on the **Good Camp Ticket** applies all three effects: help interval
-  **×0.8** (more helps/day → more berries, ingredients, skill triggers), inventory
+  **÷1.2** (more helps/day → more berries, ingredients, skill triggers), inventory
   **×1.2**, and pot **+50%** per meal.
 - The roster is **session state**: reloading restores neither the composition nor the
   Pokémon created in it; whatever was saved to the Box, or as a [saved

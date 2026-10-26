@@ -545,11 +545,11 @@ def test_a_berry_that_is_not_favorite_helps_less_often_on_an_expert_map() -> Non
 
 
 def test_the_speed_effects_compose_with_the_good_camp_ticket() -> None:
-    """PRD: la principal con el ticket ayuda a x0.8 * 0.9 del intervalo base.
+    """PRD: the main favorite with the ticket helps at x0.9 / 1.2 of the base interval.
 
     El esperado se deriva de la fórmula cruda (freq * level_factor * ... / BONUS),
     no de ``base.seconds_per_help`` — ese ya está truncado, y multiplicar un entero
-    ya truncado por 0.8*0.9 y volver a truncar puede diferir en 1s del resultado real
+    ya truncado por 0.9/1.2 y volver a truncar puede diferir en 1s del resultado real
     (que trunca una sola vez, al final, como hace la propia daily_production).
     """
     help_frequency_seconds = 3600
@@ -563,7 +563,7 @@ def test_the_speed_effects_compose_with_the_good_camp_ticket() -> None:
         good_camp_ticket=True,
     )
     level_factor = 1 - FREQUENCY_REDUCTION_PER_LEVEL * (level - 1)
-    expected = math.floor(help_frequency_seconds * level_factor * 0.8 * 0.9 / BONUS)
+    expected = math.floor(help_frequency_seconds * level_factor * 0.9 / 1.2 / BONUS)
     assert both.seconds_per_help == expected
 
 
@@ -1252,10 +1252,10 @@ def test_cooking_minus_pot_and_random_energy() -> None:
 
 
 def test_good_camp_ticket_speeds_up_helps() -> None:
-    # El 0.8 se aplica DENTRO del floor (antes de truncar), no sobre el entero ya truncado.
-    # hf=3750: hf/BONUS=1687.5 (no entero), así que:
-    #   inside  = floor(3750 * 0.8 / BONUS) = floor(1350.0) = 1350
-    #   outside = floor(floor(3750 / BONUS) * 0.8) = floor(1687 * 0.8) = floor(1349.6) = 1349
+    # The ÷1.2 applies INSIDE the floor (before truncating), not on the truncated integer.
+    # hf=3750: hf/BONUS=1687.5 (not an integer), so:
+    #   inside  = floor(3750 / 1.2 / BONUS) = floor(1406.25) = 1406
+    #   outside = floor(floor(3750 / BONUS) / 1.2) = floor(1687 / 1.2) = floor(1405.8) = 1405
     # → los dos resultados difieren; solo el modelo correcto (inside) pasa el assert.
     HF = 3750
     without = daily_production(_species(help_frequency_seconds=HF), _INGREDIENTS, level=1)
@@ -1263,8 +1263,8 @@ def test_good_camp_ticket_speeds_up_helps() -> None:
         _species(help_frequency_seconds=HF), _INGREDIENTS, level=1,
         good_camp_ticket=True,
     )
-    expected_inside = math.floor(HF * 0.8 / BONUS)
-    wrong_outside = math.floor(math.floor(HF / BONUS) * 0.8)
+    expected_inside = math.floor(HF / 1.2 / BONUS)
+    wrong_outside = math.floor(math.floor(HF / BONUS) / 1.2)
     assert expected_inside != wrong_outside, "la elección de HF debe distinguir inside/outside"
     assert with_gct.seconds_per_help == expected_inside
     assert with_gct.helps_per_day > without.helps_per_day
