@@ -108,6 +108,8 @@ _SPEED_SUBSKILLS: Final[Mapping[SubSkill, float]] = {
     SubSkill.HELPING_BONUS: 0.05,  # own; teammates' come in via ``team_helping_bonus``
 }
 _HELPING_BONUS_SPEED: Final[float] = _SPEED_SUBSKILLS[SubSkill.HELPING_BONUS]
+# Speed sub skills together shorten the interval by at most 35% (Neroli's Lab).
+_MAX_SPEED_SUBSKILLS: Final[float] = 0.35
 _INGREDIENT_SUBSKILLS: Final[Mapping[SubSkill, float]] = {
     SubSkill.INGREDIENT_FINDER_M: 0.36,
     SubSkill.INGREDIENT_FINDER_S: 0.18,
@@ -441,15 +443,14 @@ def daily_production(
     berry_finding = _BERRY_FINDING_S_BONUS if SubSkill.BERRY_FINDING_S in active else 0
 
     # Frecuencia: baja con el nivel (-0.2%/nivel), con las sub skills de velocidad
-    # ((1 − Σ)), con la naturaleza (factor compuesto) y con el listón (otro factor
+    # ((1 − Σ), Σ capped at 35%), con la naturaleza (factor compuesto) y con el listón (otro factor
     # compuesto). El intervalo (ya con el bonus de energía) se trunca a segundos
     # enteros —"cada mm:ss"— y de ahí salen las ayudas.
     level_factor = 1 - FREQUENCY_REDUCTION_PER_LEVEL * (level - 1)
-    speed_factor = max(
-        0.05,
-        (1 - speed_ss)
+    speed_factor = (
+        (1 - min(speed_ss, _MAX_SPEED_SUBSKILLS))
         * ribbon_factor
-        * _nature_factor(nature, NatureStat.SPEED_OF_HELP, *_NATURE_SPEED),
+        * _nature_factor(nature, NatureStat.SPEED_OF_HELP, *_NATURE_SPEED)
     )
     camp_speed = GOOD_CAMP_TICKET_SPEED_FACTOR if good_camp_ticket else 1.0
     seconds_per_help = math.floor(

@@ -100,8 +100,9 @@ that slot saves over it. Nothing goes back to the Box without that action.
 
 The **Helping Bonus** sub skill speeds up the **whole team**, as in the game: each
 unlocked Helping Bonus on the team shortens **every** member's help interval by
-**5%**, stacking with each other and with Helping Speed. The holder counts its own
-once. A Pokémon in a **split slot** brings its Helping Bonus **scaled by its weight**
+**5%**, stacking with each other and with Helping Speed. Together these speed sub
+skills shorten the interval by **at most 35%**; nature, ribbon, and the Good Camp
+Ticket still apply on top. The holder counts its own once. A Pokémon in a **split slot** brings its Helping Bonus **scaled by its weight**
 (at 50/50, half a bonus to the other slots), and never to the Pokémon sharing its
 slot, since those two are never on the team together.
 
@@ -156,7 +157,7 @@ says so where the decision is made, instead of leaving a silent hole in the team
 - The **grand total** is shown both **daily and weekly (×7)**.
 - A member with an **unlocked Helping Bonus** shortens every teammate's help interval
   by 5% (one locked by level does nothing); in a split slot it counts by its weight
-  and doesn't reach its slot partner.
+  and doesn't reach its slot partner. Speed sub skills never add up to more than 35%.
 - Turning on the **Good Camp Ticket** applies all three effects: help interval
   **×0.8** (more helps/day → more berries, ingredients, skill triggers), inventory
   **×1.2**, and pot **+50%** per meal.
