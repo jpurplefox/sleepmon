@@ -40,7 +40,8 @@ schedule](0015-sleep-schedule.md): by default **8.5 h asleep at night and no nap
 ### Help cadence
 
 - **Seconds per help** starts from the species' base interval and is **shortened** by:
-  level (−0.2% per level above 1), **Helping Speed** sub skills, a helping **nature**,
+  level (−0.2% per level above 1), **Helping Speed** and **Helping Bonus** sub skills
+  (in Team Analysis, teammates' Helping Bonus too), a helping **nature**,
   a **higher ribbon** (500 h+), the **Good Camp Ticket** (×0.8), and an always-on
   **energy bonus** (~2.22×, standing in for a well-rested Pokémon).
 - **helps/day** = 86,400 s ÷ seconds-per-help, spread across the full day; those helps

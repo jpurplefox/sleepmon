@@ -87,6 +87,7 @@ from sleepmon.domain.production import (
     BerryYield,
     DailyProduction,
     SlotProduction,
+    active_sub_skills,
     daily_production,
     main_ingredient,
     scale_daily,
@@ -666,6 +667,15 @@ class DefaultProductionService(ProductionService):
             for entry, weight, slot_index in flat
         ]
         roster = [(slot_index, cfg.species) for _, _, slot_index, cfg in configs]
+        # Helping Bonus speeds up the whole team; an alternate brings its slot share.
+        helping_bonuses = [
+            (
+                slot_index,
+                weight
+                * active_sub_skills(cfg.sub_skills, cfg.level).count(SubSkill.HELPING_BONUS),
+            )
+            for _, weight, slot_index, cfg in configs
+        ]
         members: list[BurstMember] = []
         for entry, weight, slot_index, cfg in configs:
             daily = daily_production(
@@ -681,6 +691,7 @@ class DefaultProductionService(ProductionService):
                 event=event,
                 team_context=team_context_for(slot_index, cfg.species, roster),
                 sleep=sleep,
+                team_helping_bonus=sum(n for s, n in helping_bonuses if s != slot_index),
             )
             scaled = scale_daily(daily, weight)
             members.append(

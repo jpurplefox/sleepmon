@@ -6,6 +6,7 @@ import pytest
 from sleepmon.domain.catalog_data import (
     ALL_INGREDIENTS_LEVEL,
     FREQUENCY_REDUCTION_PER_LEVEL,
+    MAX_ENERGY_BONUS,
     max_ingredient_slots,
 )
 from sleepmon.domain.event_bonus import (
@@ -714,6 +715,25 @@ def test_helping_speed_subskill_lowers_interval() -> None:
         sub_skills=(SubSkill.HELPING_SPEED_M,),
     )
     assert fast.seconds_per_help < base.seconds_per_help
+
+
+def test_teammates_helping_bonus_speeds_up_like_an_own_one() -> None:
+    sp = _species(help_frequency_seconds=8000)
+    own = daily_production(sp, _INGREDIENTS, level=50, sub_skills=(SubSkill.HELPING_BONUS,))
+    from_team = daily_production(sp, _INGREDIENTS, level=50, team_helping_bonus=1)
+    assert from_team.seconds_per_help == own.seconds_per_help
+
+
+def test_teammates_helping_bonus_stacks_with_an_own_one() -> None:
+    sp = _species(help_frequency_seconds=8000)
+    own = daily_production(sp, _INGREDIENTS, level=50, sub_skills=(SubSkill.HELPING_BONUS,))
+    both = daily_production(
+        sp, _INGREDIENTS, level=50, sub_skills=(SubSkill.HELPING_BONUS,), team_helping_bonus=2
+    )
+    assert both.seconds_per_help == math.floor(
+        8000 * (1 - FREQUENCY_REDUCTION_PER_LEVEL * 49) * (1 - 0.15) / MAX_ENERGY_BONUS
+    )
+    assert both.seconds_per_help < own.seconds_per_help
 
 
 def test_locked_subskill_is_ignored() -> None:
