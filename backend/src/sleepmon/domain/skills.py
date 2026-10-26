@@ -488,6 +488,8 @@ _COOKING_ASSIST_PREFIX = "Cooking Assist S"
 
 COOKING_ASSIST_S_INGREDIENTS: tuple[int, ...] = (6, 8, 11, 14, 17, 21, 24)
 BULK_UP_TASTY_CHANCE_AMOUNTS: tuple[int, ...] = (1, 2, 2, 3, 3, 4, 5)
+# Mismagius' Cooking Power-Up S (Extra Tasty) shares the same table.
+_EXTRA_TASTY_SKILL_PREFIXES = ("Cooking Assist S (Bulk Up)", "Cooking Power-Up S (Extra Tasty)")
 
 assert len(COOKING_ASSIST_S_INGREDIENTS) == MAX_SKILL_LEVEL
 assert len(BULK_UP_TASTY_CHANCE_AMOUNTS) == MAX_SKILL_LEVEL
@@ -505,8 +507,9 @@ def cooking_assist_ingredients(skill_level: int) -> int:
 
 
 def cooking_assist_tasty_chance(main_skill: str, skill_level: int) -> int | None:
-    """Extra Tasty points per trigger of Bulk Up; None for skills without it."""
-    if not main_skill.startswith("Cooking Assist S (Bulk Up)"):
+    """Extra Tasty points per trigger of Bulk Up and Cooking Power-Up S (Extra Tasty);
+    None for skills without it."""
+    if not main_skill.startswith(_EXTRA_TASTY_SKILL_PREFIXES):
         return None
     level = min(max(skill_level, 1), MAX_SKILL_LEVEL)
     return BULK_UP_TASTY_CHANCE_AMOUNTS[level - 1]

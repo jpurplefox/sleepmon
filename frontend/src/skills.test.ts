@@ -170,6 +170,12 @@ describe("skills with a second effect", () => {
     );
   });
 
+  it("describes Mismagius' pot expansion and Extra Tasty boost", () => {
+    expect(skillDescription("Cooking Power-Up S (Extra Tasty)", 7, "en")).toBe(
+      "Gives your pot room for 31 more ingredients the next time you cook. Also raises your Extra Tasty rate by 5%.",
+    );
+  });
+
   it("describes Psystrike's strength and Berry Zone", () => {
     expect(skillDescription("Berry Zone (Psystrike)", 1, "en")).toBe(
       "Increases Snorlax's Strength by 1,408 and Mago Berry strength by 0.6%, up to 24%, until you change sites.",
