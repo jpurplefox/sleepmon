@@ -33,3 +33,12 @@ def test_an_unknown_candy_has_no_line(name: str | None) -> None:
 def test_every_catalog_species_is_in_exactly_one_line() -> None:
     members = [m for line in _lines().values() for m in line]
     assert sorted(members) == sorted(s.name for s in StaticSpeciesCatalog().all())
+
+
+def test_every_line_has_its_sheet() -> None:
+    # find_line reads the sheet from disk: a line added to the JSON without one would
+    # crash the screenshot import (as Misdreavus did).
+    for candy in _lines():
+        line = find_line(candy)
+        assert line is not None
+        assert line.sheet_webp[:4] == b"RIFF", candy
