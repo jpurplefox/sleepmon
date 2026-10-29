@@ -17,6 +17,7 @@ from sleepmon.application.dto import (
     BerrySourceDTO,
     BerryYieldDTO,
     ComparisonRaise,
+    CoverageOddsDTO,
     Distributions,
     EventEffectInput,
     FillerDTO,
@@ -24,6 +25,7 @@ from sleepmon.application.dto import (
     IngredientCountDTO,
     KitchenDTO,
     LevelUpProjection,
+    MealCoverageDTO,
     MealFeasibilityDTO,
     MemberContributionDTO,
     MemberProduction,
@@ -75,6 +77,7 @@ from sleepmon.domain.event_bonus import (
 )
 from sleepmon.domain.leveling import comparison_raise, exp_modifier, level_up_cost, target_level
 from sleepmon.domain.map_bonuses import MapBonuses
+from sleepmon.domain.meal_coverage import MealCoverage
 from sleepmon.domain.ports import (
     PlayerProgressRepository,
     RecipeCatalog,
@@ -132,6 +135,16 @@ def _with_granted_helps(daily: DailyProduction, helped: HelpedYields) -> DailyPr
     )
 
 
+def _meal_coverage_dto(cov: MealCoverage | None) -> MealCoverageDTO | None:
+    if cov is None:
+        return None
+    two = cov.two_procs
+    return MealCoverageDTO(
+        one_proc=CoverageOddsDTO(cov.one_proc.day, cov.one_proc.week),
+        two_procs=None if two is None else CoverageOddsDTO(two.day, two.week),
+    )
+
+
 def _production_result(daily: DailyProduction, *, in_team: bool = False) -> ProductionResult:
     """Convierte un ``DailyProduction`` del dominio a ``ProductionResult`` (DTO).
 
@@ -174,6 +187,7 @@ def _production_result(daily: DailyProduction, *, in_team: bool = False) -> Prod
         ],
         inventory=daily.inventory,
         inventory_fill_hours=daily.inventory_fill_hours,
+        meal_coverage=_meal_coverage_dto(daily.meal_coverage),
         skill_berry_amount=daily.skill_berry_amount,
         skill_berry_strength=daily.skill_berry_strength,
         skill_berries_per_teammate=daily.skill_berries_per_teammate,

@@ -1216,3 +1216,23 @@ def test_production_without_comparison_level_has_no_raise(client: TestClient) ->
 
 def test_production_rejects_comparison_level_off_the_list(client: TestClient) -> None:
     assert client.post("/production", json=valid_payload(comparison_level=40)).status_code == 400
+
+
+def test_production_exposes_meal_coverage(client: TestClient) -> None:
+    body = client.post(
+        "/production",
+        json=valid_payload(
+            species="Magnezone",
+            level=60,
+            ingredients=["Pure Oil", "Pure Oil", "Pure Oil"],
+            sub_skills=[],
+        ),
+    ).json()
+    cov = body["meal_coverage"]
+    assert set(cov) == {"one_proc", "two_procs"}
+    assert 0 <= cov["one_proc"]["week"] <= cov["one_proc"]["day"] <= 1
+
+
+def test_production_without_cooking_power_up_has_no_meal_coverage(client: TestClient) -> None:
+    body = client.post("/production", json=valid_payload()).json()
+    assert body["meal_coverage"] is None

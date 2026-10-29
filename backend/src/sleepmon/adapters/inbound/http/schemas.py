@@ -203,6 +203,16 @@ class SleepSessionOut(msgspec.Struct):
     skill_chances: list[float]
 
 
+class CoverageOddsOut(msgspec.Struct):
+    day: float
+    week: float
+
+
+class MealCoverageOut(msgspec.Struct):
+    one_proc: CoverageOddsOut
+    two_procs: CoverageOddsOut | None
+
+
 class ComparisonRaiseOut(msgspec.Struct):
     from_level: int
     to_level: int
@@ -245,6 +255,7 @@ class ProductionOut(msgspec.Struct):
     skill_berry_juice: float | None = None
     skill_energy_drain: float | None = None
     main_ingredient_at_60: str | None = None
+    meal_coverage: MealCoverageOut | None = None
     teammate_berries: list[BerryYieldOut] | None = None
     teammate_ingredients: list[SlotProductionOut] | None = None
     comparison_raise: ComparisonRaiseOut | None = None
