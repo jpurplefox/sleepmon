@@ -4442,9 +4442,9 @@ button.prod-card__base-tag--action {
 }
 
 /* "week" labels the last two columns; plain label, no rule. */
+/* Starts with its first column, like the figures under it. */
 .prod-card__block--meals .night-grid__group {
   grid-column: 3 / span 2;
-  text-align: center;
 }
 
 /* Reserve two header lines + two rows: cards with and without the 2-proc row stay aligned. */

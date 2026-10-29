@@ -349,7 +349,8 @@ states · where it lives. Feature one-offs are intentionally not here.
   `.prod-card__night` + `.night-grid` right under the sleep one, only on Skill specialists
   with Cooking Power-Up S. Three value columns under a **two-level header**: **día**, then
   **sin fallas** and **≤ 1 falla** grouped under a **semana** label that spans both (each
-  leaf header a `Tooltip`, like *≥ 1 vez*; the group label `--text-xs` `--muted` too);
+  leaf header a `Tooltip`, like *≥ 1 vez*; the group label `--text-xs` `--muted` too,
+  left-aligned with its first column like the figures, with no rule under it);
   rows **1 proc/comida** and **2 procs/comida** — the second only when its
   *día* is over 75% — each led by the **pot expansion icon** (the image of the card's
   *ingredientes extra al pote* line, at the grid's 14px) instead of a sleep icon. Values
