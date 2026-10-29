@@ -6,7 +6,7 @@ from sleepmon.domain.meal_coverage import (
     meal_coverage,
     reliable_two_procs,
 )
-from sleepmon.domain.meal_coverage_table import FILL_HOURS, NIGHT_MINUTES, ODDS, RAW_PROCS
+from sleepmon.domain.meal_coverage_table import FILL_HOURS, NIGHT_MINUTES, RAW_PROCS, odds
 from sleepmon.domain.species import SEED_SPECIES
 
 _BY_NAME = {s.name: s for s in SEED_SPECIES}
@@ -37,8 +37,9 @@ def test_others_do_not(name: str) -> None:
 def test_a_grid_point_reads_its_table_value() -> None:
     n, f, r = NIGHT_MINUTES.index(510), FILL_HOURS.index(10.0), RAW_PROCS.index(5.5)
     cov = meal_coverage(5.5, 10.0, 510)
-    assert cov.one_proc.day == pytest.approx(ODDS[0][0][n][f][r] / 1000)
-    assert cov.one_proc.week == pytest.approx(ODDS[0][1][n][f][r] / 1000)
+    assert cov.one_proc.day == pytest.approx(odds(1, 0, n, f, r))
+    assert cov.one_proc.week == pytest.approx(odds(1, 1, n, f, r))
+    assert cov.one_proc.week_one_miss == pytest.approx(odds(1, 2, n, f, r))
 
 
 def test_between_grid_points_it_interpolates() -> None:
@@ -57,7 +58,7 @@ def test_inputs_clamp_to_the_table() -> None:
 
 def test_no_procs_covers_nothing() -> None:
     cov = meal_coverage(0.0, 10.0, 510)
-    assert cov.one_proc == CoverageOdds(0.0, 0.0)
+    assert cov.one_proc == CoverageOdds(0.0, 0.0, 0.0)
     assert cov.two_procs is None
 
 
@@ -79,11 +80,25 @@ def test_two_procs_hidden_below_the_bar() -> None:
 
 
 def test_two_procs_need_more_than_75_percent() -> None:
-    assert reliable_two_procs(CoverageOdds(0.75, 0.2)) is None
-    assert reliable_two_procs(CoverageOdds(0.751, 0.2)) == CoverageOdds(0.751, 0.2)
+    assert reliable_two_procs(CoverageOdds(0.75, 0.2, 0.4)) is None
+    assert reliable_two_procs(CoverageOdds(0.751, 0.2, 0.4)) == CoverageOdds(0.751, 0.2, 0.4)
 
 
 def test_week_never_above_day() -> None:
     for raw in (1.3, 4.7, 8.1):
         cov = meal_coverage(raw, 6.5, 500)
         assert cov.one_proc.week <= cov.one_proc.day
+
+
+def test_reference_one_miss() -> None:
+    cov = meal_coverage(5.0, 10.0, 510).one_proc
+    assert cov.day == pytest.approx(0.89, abs=0.015)
+    assert cov.week == pytest.approx(0.48, abs=0.015)
+    assert cov.week_one_miss == pytest.approx(0.74, abs=0.015)
+
+
+def test_week_one_miss_never_below_perfect_week() -> None:
+    for raw in (0.0, 1.3, 4.7, 5.0, 8.1, 12.0):
+        for fill, night in ((3.0, 300), (6.5, 500), (10.0, 510)):
+            cov = meal_coverage(raw, fill, night).one_proc
+            assert cov.week <= cov.week_one_miss <= 1.0
