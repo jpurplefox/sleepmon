@@ -41,6 +41,8 @@ def simulate(job: tuple[int, int, float]) -> tuple[np.ndarray, np.ndarray]:
     k, night_minutes, fill_hours = job
     bed = step(24 - night_minutes / 60)  # hours after waking
     checks = {step(h) for h in range(0, 24, 2) if step(h) < bed} | {0, step(5), step(11), bed}
+    if step(21) < bed:
+        checks.add(step(21))  # dinner's deadline is an awake check on short nights
     planned = np.array([0, step(5), step(11), 10**9])
     deadline = np.array([step(5), step(11), min(bed, step(21)), 10**9])
 
