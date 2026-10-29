@@ -4437,10 +4437,55 @@ button.prod-card__base-tag--action {
   column-gap: 0.5rem;
 }
 
-/* Reserve header + two rows: cards with and without the 2-proc row stay aligned. */
+.prod-card__block--meals .night-grid--meals {
+  grid-template-columns: minmax(0, 7.5rem) 3.6rem 3.6rem 3.6rem;
+}
+
+/* "week" labels the last two columns; plain label, no rule. */
+.night-grid__group {
+  grid-column: 3 / span 2;
+  text-align: center;
+}
+
+/* Reserve two header lines + two rows: cards with and without the 2-proc row stay aligned. */
 .prod-card__night--meals {
-  min-height: 56px;
+  min-height: 80px;
   justify-content: flex-start;
+}
+
+/* Narrow cards: each label takes its own row above its values; value tracks stay shared. */
+.prod-card__block--meals {
+  container-type: inline-size;
+}
+@container (max-width: 18rem) {
+  .prod-card__block--meals .night-grid {
+    grid-template-columns: 0 3rem 3rem;
+  }
+  .prod-card__block--meals .night-grid--one {
+    grid-template-columns: 0 3rem;
+  }
+  .prod-card__block--meals .night-grid--meals {
+    grid-template-columns: 0 3rem 3rem 3rem;
+  }
+  .prod-card__block--meals .night-grid__who {
+    grid-column: 1 / -1;
+  }
+  /* Values pin to tracks 2+ so they never land in the collapsed label track. */
+  .night-grid__row > :nth-child(2) {
+    grid-column: 2;
+  }
+  .night-grid__row > :nth-child(3) {
+    grid-column: 3;
+  }
+  .night-grid__row > :nth-child(4) {
+    grid-column: 4;
+  }
+  .night-grid__group {
+    grid-column: 3 / span 2;
+  }
+  .prod-card__night--meals {
+    min-height: 120px;
+  }
 }
 
 /* The inventory fills before a sleep ends: a red "+" is the only cue (design-system). */
@@ -5459,7 +5504,12 @@ button.prod-card__base-tag--action {
 }
 /* The meals block keeps its two-row reservation on read-only cards too. */
 .prod-card--readonly .prod-card__night--meals {
-  min-height: 56px;
+  min-height: 80px;
+}
+@container (max-width: 18rem) {
+  .prod-card--readonly .prod-card__night--meals {
+    min-height: 120px;
+  }
 }
 
 /* Grilla compacta del equipo: entran hasta 5 a lo ancho. */

@@ -222,6 +222,7 @@ export interface SleepSession {
 export interface CoverageOdds {
   day: number;
   week: number;
+  week_one_miss: number;
 }
 
 export interface MealCoverage {
