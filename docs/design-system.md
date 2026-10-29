@@ -345,6 +345,15 @@ states · where it lives. Feature one-offs are intentionally not here.
   everyone else (`--one`): a single **1 vez** column. Every card under the same sleep
   schedule has the same rows, so cards align without reserving space; the block keeps its
   40px floor.
+  **Meal coverage** (second use, [PRD 0024](prd/0024-meal-coverage.md)): a second
+  `.prod-card__night` + `.night-grid` right under the sleep one, only on Skill specialists
+  with Cooking Power-Up S. Columns **día** and **semana** (each header a `Tooltip`, like
+  *≥ 1 vez*); rows **1 proc/comida** and **2 procs/comida** — the second only when its
+  *día* is over 75% — each led by the **pot expansion icon** (the image of the card's
+  *ingredientes extra al pote* line, at the grid's 14px) instead of a sleep icon. Values
+  are whole percentages in `--text`, no color, no delta. The two grids share the label
+  column's width, so their value columns line up; since rows vary between cards here, the
+  meal grid reserves **two rows'** height so cards align in Comparison.
 - **Comparison add card** (`.prod-card--add`) — the last cell of `.prod-cards`, a
   dashed `.prod-card` holding the ways to add, vertically centered; its outline turns
   `--accent` on hover, except over a `.sug-row`, where only the row lights up. With suggestions
@@ -1202,3 +1211,12 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   feedback the eye has to catch after the click lands, not a hover cue — at 150ms it is
   over before the user looks; white, not indigo or `--up`, because the slot's tier color
   is game content and the highlight says "changed", not "better".
+- **Meal coverage reuses the sleep chances' grid.** *Question:* the card needs to show,
+  for Cooking Power-Up S specialists, the chance of covering a day's meals and a perfect
+  week, for 1 and 2 procs per meal; a new component, one line with the week in a tooltip,
+  and a "reliable / acceptable" badge were all mocked. *Resolution:* a second `.night-grid`
+  under the sleep one: rows per target (*1 proc/comida*, *2 procs/comida*), columns per
+  horizon (*día*, *semana*), the pot icon where the sleep's icon goes. *Why:* both are
+  probabilities read per condition, so the same table reads them the same way and names
+  the columns once; a tooltip would hide the week, the number players actually live, and a
+  badge needs thresholds the product doesn't define and blurs 80% vs 89% in a comparison.
