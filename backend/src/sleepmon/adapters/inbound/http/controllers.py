@@ -73,6 +73,7 @@ from sleepmon.application.comparison_share_service import ComparisonShareService
 from sleepmon.application.dto import (
     ComparisonRaise,
     ComparisonShareInput,
+    CoverageOddsDTO,
     EventEffectInput,
     LevelUpProjection,
     MealCoverageDTO,
@@ -128,13 +129,17 @@ def _comparison_raise_out(raised: ComparisonRaise | None) -> ComparisonRaiseOut 
     )
 
 
+def _coverage_odds_out(odds: CoverageOddsDTO) -> CoverageOddsOut:
+    return CoverageOddsOut(day=odds.day, week=odds.week, week_one_miss=odds.week_one_miss)
+
+
 def _meal_coverage_out(cov: MealCoverageDTO | None) -> MealCoverageOut | None:
     if cov is None:
         return None
     two = cov.two_procs
     return MealCoverageOut(
-        one_proc=CoverageOddsOut(day=cov.one_proc.day, week=cov.one_proc.week),
-        two_procs=None if two is None else CoverageOddsOut(day=two.day, week=two.week),
+        one_proc=_coverage_odds_out(cov.one_proc),
+        two_procs=None if two is None else _coverage_odds_out(two),
     )
 
 

@@ -166,6 +166,7 @@ class SleepSessionDTO:
 class CoverageOddsDTO:
     day: float
     week: float
+    week_one_miss: float
 
 
 @dataclass(frozen=True, slots=True)

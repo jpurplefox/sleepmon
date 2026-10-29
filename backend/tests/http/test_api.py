@@ -1230,7 +1230,10 @@ def test_production_exposes_meal_coverage(client: TestClient) -> None:
     ).json()
     cov = body["meal_coverage"]
     assert set(cov) == {"one_proc", "two_procs"}
-    assert 0 <= cov["one_proc"]["week"] <= cov["one_proc"]["day"] <= 1
+    one = cov["one_proc"]
+    assert set(one) == {"day", "week", "week_one_miss"}
+    assert 0 <= one["week"] <= one["day"] <= 1
+    assert one["week"] <= one["week_one_miss"] <= 1
 
 
 def test_production_without_cooking_power_up_has_no_meal_coverage(client: TestClient) -> None:
@@ -1251,4 +1254,7 @@ def test_team_production_members_carry_meal_coverage(client: TestClient) -> None
     )
     assert res.status_code == 200
     cov = res.json()["members"][0]["production"]["meal_coverage"]
-    assert 0 <= cov["one_proc"]["week"] <= cov["one_proc"]["day"] <= 1
+    one = cov["one_proc"]
+    assert set(one) == {"day", "week", "week_one_miss"}
+    assert 0 <= one["week"] <= one["day"] <= 1
+    assert one["week"] <= one["week_one_miss"] <= 1

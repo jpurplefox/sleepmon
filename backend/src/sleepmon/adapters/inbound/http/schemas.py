@@ -206,6 +206,7 @@ class SleepSessionOut(msgspec.Struct):
 class CoverageOddsOut(msgspec.Struct):
     day: float
     week: float
+    week_one_miss: float
 
 
 class MealCoverageOut(msgspec.Struct):

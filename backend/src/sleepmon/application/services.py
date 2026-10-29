@@ -77,7 +77,7 @@ from sleepmon.domain.event_bonus import (
 )
 from sleepmon.domain.leveling import comparison_raise, exp_modifier, level_up_cost, target_level
 from sleepmon.domain.map_bonuses import MapBonuses
-from sleepmon.domain.meal_coverage import MealCoverage
+from sleepmon.domain.meal_coverage import CoverageOdds, MealCoverage
 from sleepmon.domain.ports import (
     PlayerProgressRepository,
     RecipeCatalog,
@@ -135,13 +135,17 @@ def _with_granted_helps(daily: DailyProduction, helped: HelpedYields) -> DailyPr
     )
 
 
+def _coverage_odds_dto(odds: CoverageOdds) -> CoverageOddsDTO:
+    return CoverageOddsDTO(odds.day, odds.week, odds.week_one_miss)
+
+
 def _meal_coverage_dto(cov: MealCoverage | None) -> MealCoverageDTO | None:
     if cov is None:
         return None
     two = cov.two_procs
     return MealCoverageDTO(
-        one_proc=CoverageOddsDTO(cov.one_proc.day, cov.one_proc.week),
-        two_procs=None if two is None else CoverageOddsDTO(two.day, two.week),
+        one_proc=_coverage_odds_dto(cov.one_proc),
+        two_procs=None if two is None else _coverage_odds_dto(two),
     )
 
 
