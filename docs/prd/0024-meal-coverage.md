@@ -12,8 +12,9 @@ Cooking Power-Up S is played **per meal**, not per day: a recipe needs its procs
 one. Procs/day doesn't answer the question players actually have: *"will this Pokémon
 cover every meal?"*
 
-Meal coverage answers it with two numbers per Pokémon: how often it covers **all 3 meals
-of a day**, and how often it gets you through a **perfect week**. It also tells a player
+Meal coverage answers it with three numbers per Pokémon: how often it covers **all 3
+meals of a day**, how often it gets you through a **perfect week**, and how often a week
+costs you **at most one meal**. It also tells a player
 whether a Pokémon with fewer procs (say, a Mismagius) is reliable enough to replace a
 stronger one (say, a Magnezone) in weeks that need just 1 proc per meal.
 
@@ -23,8 +24,9 @@ stronger one (say, a Magnezone) in weeks that need just 1 proc per meal.
    variant: Magnemite, Magneton, Magnezone, Flareon, Glaceon, Misdreavus, Mismagius and
    Minun. Nobody else shows it.
 2. **1 proc per meal** — always shown for those Pokémon: the share of days with all 3
-   meals covered, and the chance of a perfect week.
-3. **2 procs per meal** — the same two numbers, shown only when more than **75%** of days
+   meals covered, the chance of a perfect week, and the chance of missing at most one
+   meal in the week.
+3. **2 procs per meal** — the same three numbers, shown only when more than **75%** of days
    are covered with 2 procs per meal.
 4. **Everywhere a card is** — the production card's Skill block in Comparison and Team
    Analysis, reading the same for the same Pokémon.
@@ -66,11 +68,14 @@ procs, not how much each one adds to the pot.
   got their procs.
 - **Perfect week** — the chance that all **18 meals** from Monday to Saturday got their
   procs. Sundays are left out: pot expansions are free on Sundays.
+- **At most one miss** — the chance that **no more than one** of those 18 meals went
+  without its procs: a week that went fine, if not perfectly.
 
 Misses come in bunches (a missed meal leaves nothing banked for the next one), so the
-perfect week is more likely than six independent good days would suggest.
+perfect week is more likely than six independent good days would suggest. That is why
+each number is simulated on its own; none is worked out from another.
 
-Both are estimates from simulating many days of this routine, shown as whole
+All three are estimates from simulating many days of this routine, shown as whole
 percentages.
 
 ## Acceptance criteria
@@ -84,17 +89,22 @@ percentages.
 - **2 procs shown:** with Night 8:30, **8.3** helps/day × skill chance and a **10 h**
   inventory read **80%** of days with 2 procs per meal, so the 2-proc row shows, with
   **34%** perfect weeks (±1.5 points each).
+- **At most one miss, reference point:** with Night 8:30, **5.0** helps/day × skill
+  chance and a **10 h** inventory read about **89%** of days, **48%** perfect weeks and
+  **74%** weeks with at most one miss, with 1 proc per meal (±1.5 points each).
 - **2 procs hidden:** with Night 8:30, **7.0** helps/day × skill chance and a **10 h**
   inventory cover about **62%** of days with 2 procs per meal: the 2-proc row doesn't
   show. Exactly **75%** doesn't show it either; it needs more than 75%.
 - **Monotonic:** with everything else equal, a higher skill chance or a
-  longer-lasting inventory never lowers either number.
-- **Skill level:** changing only the main skill's level leaves both numbers unchanged.
+  longer-lasting inventory never lowers any of the three numbers.
+- **Skill level:** changing only the main skill's level leaves all three numbers unchanged.
 - **Sleep schedule:** changing the night length in the profile changes the numbers;
   turning the nap on or off doesn't.
 - **Same everywhere:** the same Pokémon under the same conditions reads the same numbers
   in Comparison and Team Analysis.
 - **Perfect week ≤ days:** the perfect-week number is never above the days number.
+- **Perfect week ≤ at most one miss:** the perfect-week number is never above the
+  at-most-one-miss number.
 
 ## Guidelines
 
