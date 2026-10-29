@@ -347,8 +347,10 @@ states · where it lives. Feature one-offs are intentionally not here.
   40px floor.
   **Meal coverage** (second use, [PRD 0024](prd/0024-meal-coverage.md)): a second
   `.prod-card__night` + `.night-grid` right under the sleep one, only on Skill specialists
-  with Cooking Power-Up S. Columns **día** and **semana** (each header a `Tooltip`, like
-  *≥ 1 vez*); rows **1 proc/comida** and **2 procs/comida** — the second only when its
+  with Cooking Power-Up S. Three value columns under a **two-level header**: **día**, then
+  **sin fallas** and **≤ 1 falla** grouped under a **semana** label that spans both (each
+  leaf header a `Tooltip`, like *≥ 1 vez*; the group label `--text-xs` `--muted` too);
+  rows **1 proc/comida** and **2 procs/comida** — the second only when its
   *día* is over 75% — each led by the **pot expansion icon** (the image of the card's
   *ingredientes extra al pote* line, at the grid's 14px) instead of a sleep icon. Values
   are whole percentages in `--text`, no color, no delta. The two grids share the label
@@ -1220,3 +1222,10 @@ a real doubt gets settled. The screen is the occasion, not the subject.
   probabilities read per condition, so the same table reads them the same way and names
   the columns once; a tooltip would hide the week, the number players actually live, and a
   badge needs thresholds the product doesn't define and blurs 80% vs 89% in a comparison.
+- **A grid column reads with its group, not alone.** *Question:* meal coverage gained a
+  third column (a week with at most one miss); bare headers like *perfecta* or row labels
+  like *×1* were short enough for narrow cards but meant nothing to someone new.
+  *Resolution:* a two-level header, **semana** over **sin fallas** and **≤ 1 falla**, with
+  **día** alone; rows keep the full **1 proc/comida** and may wrap to two lines on narrow
+  cards. *Why:* every label has to make sense on first read; a wrapped label costs a line,
+  a cryptic one costs the meaning.
