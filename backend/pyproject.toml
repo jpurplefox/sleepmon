@@ -29,6 +29,8 @@ dev = [
     "mangum>=0.18",
     # Serves scripts/landing_demo_server.py.
     "uvicorn>=0.30",
+    # Generates the meal coverage table (scripts/meal_coverage_table.py); not a runtime dep.
+    "numpy>=1.26",
 ]
 # Solo para el empaquetado en AWS Lambda: adaptador ASGI→Lambda. No se instala en
 # el runtime local (docker compose corre Litestar directo con uvicorn).
