@@ -1236,3 +1236,19 @@ def test_production_exposes_meal_coverage(client: TestClient) -> None:
 def test_production_without_cooking_power_up_has_no_meal_coverage(client: TestClient) -> None:
     body = client.post("/production", json=valid_payload()).json()
     assert body["meal_coverage"] is None
+
+
+def test_team_production_members_carry_meal_coverage(client: TestClient) -> None:
+    magnezone = _pokemon_json(
+        species="Magnezone",
+        level=60,
+        ingredients=["Pure Oil", "Pure Oil", "Pure Oil"],
+        sub_skills=[],
+    )
+    res = client.post(
+        "/teams/production",
+        json={"slots": _slots_json(magnezone), "meals": [None, None, None]},
+    )
+    assert res.status_code == 200
+    cov = res.json()["members"][0]["production"]["meal_coverage"]
+    assert 0 <= cov["one_proc"]["week"] <= cov["one_proc"]["day"] <= 1

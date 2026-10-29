@@ -80,15 +80,15 @@ percentages.
   Skill specialists) shows none; a Pokémon with any other main skill shows none.
 - **1 proc, reference point:** with Night 8:30, a Pokémon with **5.4** helps/day × skill
   chance and an inventory that fills in **10 h** reads **90%** of days and **57%**
-  perfect weeks (±1 point each).
+  perfect weeks (±1.5 points each).
 - **2 procs shown:** with Night 8:30, **8.3** helps/day × skill chance and a **10 h**
   inventory read **80%** of days with 2 procs per meal, so the 2-proc row shows, with
-  **34%** perfect weeks (±1 point each).
+  **34%** perfect weeks (±1.5 points each).
 - **2 procs hidden:** with Night 8:30, **7.0** helps/day × skill chance and a **10 h**
   inventory cover about **62%** of days with 2 procs per meal: the 2-proc row doesn't
   show. Exactly **75%** doesn't show it either; it needs more than 75%.
-- **Monotonic:** with everything else equal, a higher skill chance, more helps per day or
-  a longer inventory never lowers either number.
+- **Monotonic:** with everything else equal, a higher skill chance or a
+  longer-lasting inventory never lowers either number.
 - **Skill level:** changing only the main skill's level leaves both numbers unchanged.
 - **Sleep schedule:** changing the night length in the profile changes the numbers;
   turning the nap on or off doesn't.

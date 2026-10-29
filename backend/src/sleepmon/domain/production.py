@@ -307,8 +307,8 @@ def scale_daily(daily: DailyProduction, weight: float) -> DailyProduction:
     Only scales *extensive* magnitudes (amounts/day, strength/day and
     ``helps_per_day``): berries, ingredients, triggers and main skill outputs.
     The *intensive* ones (percentages, ``seconds_per_help``, ``sleep_sessions``,
-    ``inventory``, ``inventory_fill_hours``, ``effective_skill_level``) are left
-    unchanged: they describe the Pokémon's pace, not its contribution to the team.
+    ``inventory``, ``inventory_fill_hours``, ``effective_skill_level``, ``meal_coverage``) are
+    left unchanged: they describe the Pokémon's pace, not its contribution to the team.
     ``weight == 1.0`` returns something equivalent to the original (identity).
     """
     if weight == 1.0:
@@ -515,7 +515,7 @@ def daily_production(
 
     coverage = (
         meal_coverage(
-            effective_skill_rate * helps_per_second * 86400,
+            effective_skill_rate * helps_per_second * 24 * _SECONDS_PER_HOUR,
             fill_seconds / _SECONDS_PER_HOUR,
             sleep.night_minutes,
         )
