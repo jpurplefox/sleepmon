@@ -40,6 +40,7 @@ from sleepmon.domain.catalog_data import (
 )
 from sleepmon.domain.event_bonus import NO_EVENT, EventBonus
 from sleepmon.domain.map_bonuses import MapBonuses, berry_effects
+from sleepmon.domain.meal_coverage import MealCoverage, covers_meals, meal_coverage
 from sleepmon.domain.skills import (
     NO_TEAM_CONTEXT,
     TeamContext,
@@ -299,6 +300,8 @@ class DailyProduction:
     skill_berry_juice: float | None = None
     # Energy per day each non-Dark teammate loses (Bad Dreams); None if not applicable.
     skill_energy_drain: float | None = None
+    # Chance of covering every meal (PRD 0024); only Cooking Power-Up S specialists.
+    meal_coverage: MealCoverage | None = None
 
 
 def scale_daily(daily: DailyProduction, weight: float) -> DailyProduction:
@@ -307,8 +310,8 @@ def scale_daily(daily: DailyProduction, weight: float) -> DailyProduction:
     Only scales *extensive* magnitudes (amounts/day, strength/day and
     ``helps_per_day``): berries, ingredients, triggers and main skill outputs.
     The *intensive* ones (percentages, ``seconds_per_help``, ``sleep_sessions``,
-    ``inventory``, ``inventory_fill_hours``, ``effective_skill_level``) are left
-    unchanged: they describe the Pokémon's pace, not its contribution to the team.
+    ``inventory``, ``inventory_fill_hours``, ``effective_skill_level``, ``meal_coverage``) are
+    left unchanged: they describe the Pokémon's pace, not its contribution to the team.
     ``weight == 1.0`` returns something equivalent to the original (identity).
     """
     if weight == 1.0:
@@ -521,6 +524,16 @@ def daily_production(
         fill_seconds = fill_helps / helps_per_second
     else:
         fill_seconds = float(max(session_seconds))
+
+    coverage = (
+        meal_coverage(
+            effective_skill_rate * helps_per_second * 24 * _SECONDS_PER_HOUR,
+            fill_seconds / _SECONDS_PER_HOUR,
+            sleep.night_minutes,
+        )
+        if covers_meals(species)
+        else None
+    )
 
     # Each sleep starts empty: it fills and overflows on its own, with its own skill cap.
     sleep_skill_cap = 2 if species.specialty in (Specialty.SKILLS, Specialty.ALL) else 1
@@ -751,6 +764,7 @@ def daily_production(
         skill_candy=None if per_candy is None else skill_triggers * per_candy,
         skill_berry_juice=None if per_juice is None else skill_triggers * per_juice,
         skill_energy_drain=None if per_drain is None else skill_triggers * per_drain,
+        meal_coverage=coverage,
     )
 
 
