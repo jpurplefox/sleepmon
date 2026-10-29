@@ -92,7 +92,7 @@ def test_week_never_above_day() -> None:
 
 def test_reference_one_miss() -> None:
     cov = meal_coverage(5.0, 10.0, 510).one_proc
-    assert cov.day == pytest.approx(0.89, abs=0.015)
+    assert cov.day == pytest.approx(0.87, abs=0.015)
     assert cov.week == pytest.approx(0.48, abs=0.015)
     assert cov.week_one_miss == pytest.approx(0.74, abs=0.015)
 

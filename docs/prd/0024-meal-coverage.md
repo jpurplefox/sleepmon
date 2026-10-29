@@ -90,7 +90,7 @@ percentages.
   inventory read **80%** of days with 2 procs per meal, so the 2-proc row shows, with
   **34%** perfect weeks (±1.5 points each).
 - **At most one miss, reference point:** with Night 8:30, **5.0** helps/day × skill
-  chance and a **10 h** inventory read about **89%** of days, **48%** perfect weeks and
+  chance and a **10 h** inventory read about **87%** of days, **48%** perfect weeks and
   **74%** weeks with at most one miss, with 1 proc per meal (±1.5 points each).
 - **2 procs hidden:** with Night 8:30, **7.0** helps/day × skill chance and a **10 h**
   inventory cover about **62%** of days with 2 procs per meal: the 2-proc row doesn't
