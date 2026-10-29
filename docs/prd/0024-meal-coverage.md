@@ -26,7 +26,7 @@ stronger one (say, a Magnezone) in weeks that need just 1 proc per meal.
    meals covered, and the chance of a perfect week.
 3. **2 procs per meal** — the same two numbers, shown only when more than **75%** of days
    are covered with 2 procs per meal.
-4. **Everywhere a card is** — the card's Skill block in the Box, Comparison and Team
+4. **Everywhere a card is** — the production card's Skill block in Comparison and Team
    Analysis, reading the same for the same Pokémon.
 
 ## How it works
@@ -93,7 +93,7 @@ percentages.
 - **Sleep schedule:** changing the night length in the profile changes the numbers;
   turning the nap on or off doesn't.
 - **Same everywhere:** the same Pokémon under the same conditions reads the same numbers
-  in the Box, Comparison and Team Analysis.
+  in Comparison and Team Analysis.
 - **Perfect week ≤ days:** the perfect-week number is never above the days number.
 
 ## Guidelines
@@ -108,6 +108,7 @@ percentages.
 
 ## Out of scope
 
+- The Box: its rows don't show the production card's Skill block.
 - Configurable meal times or collecting frequency.
 - Modeling the nap.
 - Non-Skill specialists with Cooking Power-Up S.
