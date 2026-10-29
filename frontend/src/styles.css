@@ -4442,7 +4442,7 @@ button.prod-card__base-tag--action {
 }
 
 /* "week" labels the last two columns; plain label, no rule. */
-.night-grid__group {
+.prod-card__block--meals .night-grid__group {
   grid-column: 3 / span 2;
   text-align: center;
 }
@@ -4471,16 +4471,16 @@ button.prod-card__base-tag--action {
     grid-column: 1 / -1;
   }
   /* Values pin to tracks 2+ so they never land in the collapsed label track. */
-  .night-grid__row > :nth-child(2) {
+  .prod-card__block--meals .night-grid__row > :nth-child(2) {
     grid-column: 2;
   }
-  .night-grid__row > :nth-child(3) {
+  .prod-card__block--meals .night-grid__row > :nth-child(3) {
     grid-column: 3;
   }
-  .night-grid__row > :nth-child(4) {
+  .prod-card__block--meals .night-grid__row > :nth-child(4) {
     grid-column: 4;
   }
-  .night-grid__group {
+  .prod-card__block--meals .night-grid__group {
     grid-column: 3 / span 2;
   }
   .prod-card__night--meals {

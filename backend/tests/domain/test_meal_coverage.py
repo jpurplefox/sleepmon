@@ -98,7 +98,10 @@ def test_reference_one_miss() -> None:
 
 
 def test_week_one_miss_never_below_perfect_week() -> None:
-    for raw in (0.0, 1.3, 4.7, 5.0, 8.1, 12.0):
+    for raw in (0.0, 1.3, 4.7, 5.0, 8.1, 9.0, 12.0):
         for fill, night in ((3.0, 300), (6.5, 500), (10.0, 510)):
-            cov = meal_coverage(raw, fill, night).one_proc
+            result = meal_coverage(raw, fill, night)
+            cov = result.one_proc
             assert cov.week <= cov.week_one_miss <= 1.0
+            if result.two_procs is not None:
+                assert result.two_procs.week <= result.two_procs.week_one_miss
