@@ -4430,9 +4430,11 @@ button.prod-card__base-tag--action {
   flex-shrink: 0;
 }
 
-/* With meal coverage, both grids share the label column so their figures line up. */
+/* With meal coverage, both grids share the label column so their figures line up.
+   The label track shrinks (labels wrap) so narrow cards don't overflow. */
 .prod-card__block--meals .night-grid {
-  grid-template-columns: 7.5rem 3.6rem 3.6rem;
+  grid-template-columns: minmax(0, 7.5rem) 3.6rem 3.6rem;
+  column-gap: 0.5rem;
 }
 
 /* Reserve header + two rows: cards with and without the 2-proc row stay aligned. */
@@ -5454,6 +5456,10 @@ button.prod-card__base-tag--action {
 }
 .prod-card--readonly .prod-card__night {
   min-height: 0;
+}
+/* The meals block keeps its two-row reservation on read-only cards too. */
+.prod-card--readonly .prod-card__night--meals {
+  min-height: 56px;
 }
 
 /* Grilla compacta del equipo: entran hasta 5 a lo ancho. */
