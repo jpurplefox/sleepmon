@@ -218,6 +218,17 @@ export interface SleepSession {
   skill_chances: number[];
 }
 
+/** Chance of covering every meal with N procs per meal (PRD 0024). */
+export interface CoverageOdds {
+  day: number;
+  week: number;
+}
+
+export interface MealCoverage {
+  one_proc: CoverageOdds;
+  two_procs: CoverageOdds | null;
+}
+
 /** A night and an optional nap, in minutes on a 15-minute grid (PRD 0015). */
 export interface SleepSchedule {
   night_minutes: number;
@@ -457,6 +468,8 @@ export interface Production {
   sleep_sessions: SleepSession[];
   inventory: number;
   inventory_fill_hours: number;
+  /** Cooking Power-Up S specialists only; null/absent for everyone else. */
+  meal_coverage?: MealCoverage | null;
   /** Skill level actually used (with the main favorite's +1, already capped). */
   effective_skill_level: number;
   /** Skill levels the bonuses add (main favorite + event), before the cap. */
