@@ -163,6 +163,21 @@ class SleepSessionDTO:
 
 
 @dataclass(frozen=True, slots=True)
+class CoverageOddsDTO:
+    day: float
+    week: float
+    week_one_miss: float
+
+
+@dataclass(frozen=True, slots=True)
+class MealCoverageDTO:
+    """Chance of covering every meal (PRD 0024)."""
+
+    one_proc: CoverageOddsDTO
+    two_procs: CoverageOddsDTO | None
+
+
+@dataclass(frozen=True, slots=True)
 class ComparisonRaise:
     """A card raised by Comparison's level: the stretch and what it costs."""
 
@@ -219,6 +234,7 @@ class ProductionResult:
     teammate_ingredients: list[SlotAmount] | None = None
     # Set only when Comparison's level raised this card.
     comparison_raise: ComparisonRaise | None = None
+    meal_coverage: MealCoverageDTO | None = None
 
 
 @dataclass(frozen=True, slots=True)

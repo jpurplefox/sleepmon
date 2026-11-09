@@ -21,6 +21,7 @@ from sleepmon.adapters.inbound.http.schemas import (
     ComparisonRaiseOut,
     ComparisonShareIn,
     ComparisonShareOut,
+    CoverageOddsOut,
     DistributionsOut,
     ExpertSpeedOut,
     FillerOut,
@@ -29,6 +30,7 @@ from sleepmon.adapters.inbound.http.schemas import (
     IslandOut,
     KitchenOut,
     LevelUpOut,
+    MealCoverageOut,
     MealFeasibilityOut,
     MemberContributionOut,
     MemberIn,
@@ -71,8 +73,10 @@ from sleepmon.application.comparison_share_service import ComparisonShareService
 from sleepmon.application.dto import (
     ComparisonRaise,
     ComparisonShareInput,
+    CoverageOddsDTO,
     EventEffectInput,
     LevelUpProjection,
+    MealCoverageDTO,
     MealSelectionInput,
     MemberProduction,
     ProductionInput,
@@ -122,6 +126,20 @@ def _comparison_raise_out(raised: ComparisonRaise | None) -> ComparisonRaiseOut 
         to_level=raised.to_level,
         candies=raised.candies,
         dream_shards=raised.dream_shards,
+    )
+
+
+def _coverage_odds_out(odds: CoverageOddsDTO) -> CoverageOddsOut:
+    return CoverageOddsOut(day=odds.day, week=odds.week, week_one_miss=odds.week_one_miss)
+
+
+def _meal_coverage_out(cov: MealCoverageDTO | None) -> MealCoverageOut | None:
+    if cov is None:
+        return None
+    two = cov.two_procs
+    return MealCoverageOut(
+        one_proc=_coverage_odds_out(cov.one_proc),
+        two_procs=None if two is None else _coverage_odds_out(two),
     )
 
 
@@ -176,6 +194,7 @@ def _full_production_out(result: ProductionResult) -> ProductionOut:
         skill_berry_juice=result.skill_berry_juice,
         skill_energy_drain=result.skill_energy_drain,
         main_ingredient_at_60=result.main_ingredient_at_60,
+        meal_coverage=_meal_coverage_out(result.meal_coverage),
         teammate_berries=(
             None
             if result.teammate_berries is None

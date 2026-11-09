@@ -37,6 +37,7 @@ import { RaisedLevel } from "./RaisedLevel";
 import { RibbonIcon } from "./RibbonIcon";
 import { FillTime } from "./FillTime";
 import { NaturePill } from "./NaturePill";
+import { MealCoverageGrid } from "./MealCoverageGrid";
 import { SleepSkillGrid } from "./SleepSkillGrid";
 import { Tooltip } from "./Tooltip";
 import {
@@ -717,7 +718,12 @@ export function ProductionCard({
             </ul>
           </div>
 
-          <div className="prod-card__block prod-card__block--skill">
+          <div
+            className={
+              "prod-card__block prod-card__block--skill" +
+              (d.meal_coverage ? " prod-card__block--meals" : "")
+            }
+          >
             <div className="prod-card__block-head">
               {t("card.skill")} <span className="muted">{pct(d.effective_skill_percentage)}</span>
               {species && (
@@ -877,6 +883,11 @@ export function ProductionCard({
             <div className="prod-card__night">
               <SleepSkillGrid sessions={d.sleep_sessions} />
             </div>
+            {d.meal_coverage && (
+              <div className="prod-card__night prod-card__night--meals">
+                <MealCoverageGrid coverage={d.meal_coverage} />
+              </div>
+            )}
           </div>
         </>
       )}
