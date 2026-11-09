@@ -11,17 +11,18 @@ export interface PresetEvent {
   effects: Omit<EventEffect, "id">[];
 }
 
-// Scheduled: Halloween 2026 Double Candy Research (Oct 26 – Nov 2, Greengrass Isle). Its Ghost
-// helper bonuses apply in every event area; the candy and Snorlax berry bonuses don't touch
-// production. Replace it with the next production-affecting event once this one ends.
+// Scheduled: Bountiful Banquet Week Vol. 1 (Nov 16 – Nov 23). Ingredient specialists bring 1
+// extra ingredient and carry 10 more. Not modeled: the Snackable Nut they also gather (not in the
+// catalogue yet), the +50% Snackable Nut dish strength and the +30 pot capacity (the pot size
+// effect is a multiplier and the base pot size varies). Replace it with the next
+// production-affecting event once this one ends.
 export const CURRENT_EVENT: PresetEvent | null = {
-  name: "Halloween 2026",
-  start: new Date(2026, 9, 26, 4, 0),
-  end: new Date(2026, 10, 2, 4, 0),
+  name: "Bountiful Banquet Week Vol. 1",
+  start: new Date(2026, 10, 16, 4, 0),
+  end: new Date(2026, 10, 23, 4, 0),
   effects: [
-    { kind: "extra_ingredients", value: 1, scope: { kind: "type", type: "Ghost" } },
-    { kind: "skill_trigger", value: 1.25, scope: { kind: "type", type: "Ghost" } },
-    { kind: "skill_level", value: 3, scope: { kind: "type", type: "Ghost" } },
+    { kind: "extra_ingredients", value: 1, scope: { kind: "specialty", specialty: "Ingredients" } },
+    { kind: "carry_limit", value: 10, scope: { kind: "specialty", specialty: "Ingredients" } },
   ],
 };
 
