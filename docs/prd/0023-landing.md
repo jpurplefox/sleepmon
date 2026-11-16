@@ -132,7 +132,7 @@ account, the expert-map detail and screenshot import, and last whether it is fre
    done its job (an ingredient Pokémon once it has stocked up), so a 66% / 33% split can
    mean two full days of one and a day of the other.
 8. **Why doesn't Ingredient Magnet give specific ingredients?** They are too random to
-   plan around: with 19 ingredients, counting on a particular one is too optimistic. So
+   plan around: with 20 ingredients, counting on a particular one is too optimistic. So
    they show as generic ingredients and go into the pot as filler at the average value of
    all ingredients ([Cooking plan](0006-cooking-plan.md)). Ingredient Draw is the
    exception: each Pokémon draws from a short list aimed at specific recipes, so its

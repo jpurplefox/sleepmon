@@ -43,7 +43,7 @@ const NATURE_STATS_ES: Record<string, string> = {
   "Main Skill Chance": "Activar habilidad",
 };
 
-// 19 ingredientes (Pokéxperto).
+// 20 ingredientes (Pokéxperto).
 const INGREDIENTS_ES: Record<string, string> = {
   "Large Leek": "Puerro Grueso",
   "Tasty Mushroom": "Seta Sabrosa",
@@ -64,6 +64,7 @@ const INGREDIENTS_ES: Record<string, string> = {
   "Rousing Coffee": "Café Estimulante",
   "Plump Pumpkin": "Calabaza Suculenta",
   "Glossy Avocado": "Aguacate",
+  "Snackable Nuts": "Frutos Secos de Picoteo",
 };
 
 // 19 bayas (Pokéxperto / WikiDex). El valor incluye solo el nombre propio; el prefijo

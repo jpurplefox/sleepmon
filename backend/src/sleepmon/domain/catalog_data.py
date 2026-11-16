@@ -389,6 +389,7 @@ INGREDIENT_STRENGTH: Final[dict[Ingredient, int]] = {
     Ingredient.BEAN_SAUSAGE: 103,
     Ingredient.WARMING_GINGER: 109,
     Ingredient.SNOOZY_TOMATO: 110,
+    Ingredient.SNACKABLE_NUTS: 112,
     Ingredient.FANCY_EGG: 115,
     Ingredient.PURE_OIL: 121,
     Ingredient.SOFT_POTATO: 124,

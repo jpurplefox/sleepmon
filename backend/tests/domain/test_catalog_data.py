@@ -49,7 +49,7 @@ _PREFIX_SPECIES = tuple(sp for sp in SEED_SPECIES if not sp.pool_slots)
 def test_closed_sets_have_expected_sizes() -> None:
     assert len(Nature) == 25
     assert len(SubSkill) == 17
-    assert len(Ingredient) == 19
+    assert len(Ingredient) == 20
 
 
 def test_every_nature_has_an_effect() -> None:
@@ -177,7 +177,7 @@ def test_species_names_are_unique() -> None:
 
 def test_catalog_covers_the_full_helper_roster() -> None:
     # Full game dataset (nitoyon cross-checked with nerolis-lab).
-    assert len(SEED_SPECIES) == 251
+    assert len(SEED_SPECIES) == 253
     assert {sp.specialty for sp in SEED_SPECIES} == set(Specialty)
     assert {sp.sleep_type for sp in SEED_SPECIES} == set(SleepType)
 
@@ -200,6 +200,33 @@ def test_misdreavus_line_has_its_real_data() -> None:
     assert mismagius.help_frequency_seconds == 2400
     assert mismagius.base_inventory == 17
     assert previous_stage_of("Mismagius") == "Misdreavus"
+
+
+def test_cottonee_line_has_its_real_data() -> None:
+    # Bountiful Banquet Week Vol. 1 arrivals (RaenonX Pokédex data).
+    cottonee = _by_name("Cottonee")
+    assert cottonee.dex == 546
+    assert cottonee.specialty is Specialty.INGREDIENTS
+    assert cottonee.berry is Berry.PECHA
+    assert cottonee.sleep_type is SleepType.SNOOZING
+    assert cottonee.main_skill == "Charge Energy S"
+    assert cottonee.ingredients == (
+        Ingredient.SNACKABLE_NUTS,
+        Ingredient.GLOSSY_AVOCADO,
+        Ingredient.SNOOZY_TOMATO,
+    )
+    assert cottonee.help_frequency_seconds == 4600
+    assert cottonee.ingredient_percentage == 20
+    assert cottonee.skill_percentage == 3.5
+    assert cottonee.ingredient_amounts == ((2,), (5, 3), (7, 5, 7))
+    assert cottonee.carry_limit == 10
+    whimsicott = _by_name("Whimsicott")
+    assert whimsicott.help_frequency_seconds == 2400
+    assert whimsicott.ingredient_percentage == 19.9
+    assert whimsicott.skill_percentage == 3.8
+    assert whimsicott.base_inventory == 17
+    assert whimsicott.evolution_stage == 1
+    assert previous_stage_of("Whimsicott") == "Cottonee"
 
 
 def test_known_species_have_the_correct_real_data() -> None:
