@@ -1373,6 +1373,18 @@ SEED_SPECIES: tuple[Species, ...] = (
         2800, 18.8, 4.1, ((1,), (2, 2), (4, 3, 2)), 24, 1, 1,
     ),
     Species(
+        "Cottonee", 546, Specialty.INGREDIENTS, Berry.PECHA, SleepType.SNOOZING,
+        "Charge Energy S",
+        (I.SNACKABLE_NUTS, I.GLOSSY_AVOCADO, I.SNOOZY_TOMATO),
+        4600, 20, 3.5, ((2,), (5, 3), (7, 5, 7)), 10, 0, 1,
+    ),
+    Species(
+        "Whimsicott", 547, Specialty.INGREDIENTS, Berry.PECHA, SleepType.SNOOZING,
+        "Charge Energy S",
+        (I.SNACKABLE_NUTS, I.GLOSSY_AVOCADO, I.SNOOZY_TOMATO),
+        2400, 19.9, 3.8, ((2,), (5, 3), (7, 5, 7)), 17, 1, 1,
+    ),
+    Species(
         "Dwebble", 557, Specialty.SKILLS, Berry.LUM, SleepType.DOZING,
         "Ingredient Draw S",
         (I.GLOSSY_AVOCADO, I.SOFT_POTATO, I.PURE_OIL),
@@ -1847,6 +1859,7 @@ PRE_EVOLUTIONS: Mapping[str, str] = {
     "Toxicroak": "Croagunk",
     "Abomasnow": "Snover",
     "Musharna": "Munna",
+    "Whimsicott": "Cottonee",
     "Crustle": "Dwebble",
     "Amoonguss": "Foongus",
     "Braviary": "Rufflet",

@@ -125,7 +125,7 @@ def test_catalog_endpoint_lists_reference_data(client: TestClient) -> None:
     body = res.json()
     assert len(body["natures"]) == 25
     assert len(body["sub_skills"]) == 17
-    assert len(body["ingredients"]) == 19
+    assert len(body["ingredients"]) == 20
     assert any(sp["name"] == "Pikachu" for sp in body["species"])
 
     # Los slots de ingrediente viajan EN ORDEN de juego (1º, 2º, 3º), como
@@ -143,7 +143,7 @@ def test_catalog_endpoint_lists_reference_data(client: TestClient) -> None:
 
     # Fuerza base por ingrediente: 19 entradas, una por ingrediente.
     ing_str = body["ingredient_strengths"]
-    assert len(ing_str) == 19
+    assert len(ing_str) == 20
     assert ing_str["Slowpoke Tail"] == 342
     assert ing_str["Fancy Apple"] == 90
 

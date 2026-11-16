@@ -109,7 +109,7 @@ class SubSkillTier(StrEnum):
 
 
 class Ingredient(StrEnum):
-    """Los 19 ingredientes del juego."""
+    """The game's 20 ingredients."""
 
     LARGE_LEEK = "Large Leek"
     TASTY_MUSHROOM = "Tasty Mushroom"
@@ -130,6 +130,7 @@ class Ingredient(StrEnum):
     ROUSING_COFFEE = "Rousing Coffee"
     PLUMP_PUMPKIN = "Plump Pumpkin"
     GLOSSY_AVOCADO = "Glossy Avocado"
+    SNACKABLE_NUTS = "Snackable Nuts"
 
 
 class Berry(StrEnum):
