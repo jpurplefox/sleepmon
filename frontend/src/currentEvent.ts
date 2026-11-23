@@ -11,19 +11,15 @@ export interface PresetEvent {
   effects: Omit<EventEffect, "id">[];
 }
 
-// Running: Bountiful Banquet Week Vol. 1 (Nov 16 – Nov 23). Ingredients specialists bring 1
-// extra ingredient and carry 10 more. Not modeled: the Snackable Nut they also gather (not in the
-// catalogue yet), the +50% Snackable Nut dish strength and the +30 pot capacity (the pot size
-// effect is a multiplier and the base pot size varies). Good Sleep Day and Dream Shard Week
-// Vol. 3 (from Nov 23) don't touch production; set this to `null` when it ends.
+// Running: Dream Shard Week Vol. 3 (Nov 23 – Nov 30). Every helper's main skill is 1.25× as
+// likely to trigger. Not modeled: the ×1.5 Dream Shards from sleep research and from main skills
+// (shards are not part of the production estimate) and the Mini Candy Boost. Good Sleep Day #41
+// (Nov 23 – 26) doesn't touch production; set this to `null` when the event ends.
 export const CURRENT_EVENT: PresetEvent | null = {
-  name: "Bountiful Banquet Week Vol. 1",
-  start: new Date(2026, 10, 16, 4, 0),
-  end: new Date(2026, 10, 23, 4, 0),
-  effects: [
-    { kind: "extra_ingredients", value: 1, scope: { kind: "specialty", specialty: "Ingredients" } },
-    { kind: "carry_limit", value: 10, scope: { kind: "specialty", specialty: "Ingredients" } },
-  ],
+  name: "Dream Shard Week Vol. 3",
+  start: new Date(2026, 10, 23, 4, 0),
+  end: new Date(2026, 10, 30, 4, 0),
+  effects: [{ kind: "skill_trigger", value: 1.25, scope: { kind: "team" } }],
 };
 
 /** The preset's effects if it is running at `now`; otherwise none. */
