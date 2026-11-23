@@ -15,7 +15,8 @@ dependencies = [
     "pyjwt[crypto]>=2.9",
     "google-auth[requests]>=2.34",
     "yoyo-migrations>=8.2",
-    "sentry-sdk[litestar]>=2.20",
+    # 3.x drops the litestar extra and several init() options observability.py relies on.
+    "sentry-sdk[litestar]>=2.20,<3",
     "anthropic[bedrock]>=1.13",
 ]
 
