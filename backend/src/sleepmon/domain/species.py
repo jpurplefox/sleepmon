@@ -542,7 +542,7 @@ SEED_SPECIES: tuple[Species, ...] = (
         "Gengar", 94, Specialty.INGREDIENTS, Berry.BLUK, SleepType.DOZING,
         "Charge Strength S (Random)",
         (I.FIERY_HERB, I.TASTY_MUSHROOM, I.PURE_OIL),
-        2200, 16.1, 2.4, ((2,), (5, 4), (7, 6, 8)), 18, 2, 2,
+        2200, 16.6, 2.4, ((2,), (5, 4), (7, 6, 8)), 18, 2, 2,
     ),
     Species(
         "Onix", 95, Specialty.BERRIES, Berry.SITRUS, SleepType.SLUMBERING,

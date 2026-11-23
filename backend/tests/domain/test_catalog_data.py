@@ -229,6 +229,14 @@ def test_cottonee_line_has_its_real_data() -> None:
     assert previous_stage_of("Whimsicott") == "Cottonee"
 
 
+def test_gengar_has_its_corrected_ingredient_rate() -> None:
+    # RaenonX and nitoyon both settled on 16.6% (the seed had 16.1%).
+    gengar = _by_name("Gengar")
+    assert gengar.ingredient_percentage == 16.6
+    assert gengar.skill_percentage == 2.4
+    assert gengar.help_frequency_seconds == 2200
+
+
 def test_known_species_have_the_correct_real_data() -> None:
     # Datos reales cruzados (nitoyon + nerolis-lab): regresión sobre correcciones a la
     # seed v1 vieja (Charmander era ingredient specialist, no berry; Bulbasaur es Dozing).
