@@ -28,7 +28,7 @@ from sleepmon.domain.production import (
 )
 from sleepmon.domain.skills import TeamContext
 from sleepmon.domain.sleep import SleepKind, SleepSchedule
-from sleepmon.domain.species import Species
+from sleepmon.domain.species import SEED_SPECIES, Species
 from sleepmon.domain.value_objects import (
     Berry,
     Ingredient,
@@ -1976,3 +1976,47 @@ def test_main_ingredient_tie_keeps_the_first() -> None:
         ),
     )
     assert main_ingredient(d) is Ingredient.HONEY
+
+
+_SEED = {s.name: s for s in SEED_SPECIES}
+
+
+def _magnezone(**kwargs: object) -> DailyProduction:
+    sp = _SEED["Magnezone"]
+    return daily_production(sp, (sp.ingredients[0],) * 3, 60, **kwargs)  # type: ignore[arg-type]
+
+
+def test_cooking_power_up_specialist_gets_meal_coverage() -> None:
+    cov = _magnezone().meal_coverage
+    assert cov is not None
+    assert 0 < cov.one_proc.week <= cov.one_proc.day <= 1
+
+
+def test_non_specialist_with_cooking_power_up_has_none() -> None:
+    sp = _SEED["Salamence"]
+    assert daily_production(sp, (sp.ingredients[0],) * 3, 60).meal_coverage is None
+
+
+def test_other_skills_have_none() -> None:
+    assert daily_production(_species(), _INGREDIENTS, level=60).meal_coverage is None
+
+
+def test_meal_coverage_ignores_the_skill_level() -> None:
+    assert _magnezone(skill_level=1).meal_coverage == _magnezone(skill_level=7).meal_coverage
+
+
+def test_meal_coverage_ignores_the_nap() -> None:
+    plain = _magnezone(sleep=SleepSchedule(night_minutes=510))
+    napping = _magnezone(sleep=SleepSchedule(night_minutes=510, nap_minutes=120))
+    assert plain.meal_coverage == napping.meal_coverage
+
+
+def test_meal_coverage_follows_the_night() -> None:
+    short = _magnezone(sleep=SleepSchedule(night_minutes=420)).meal_coverage
+    default = _magnezone(sleep=SleepSchedule(night_minutes=510)).meal_coverage
+    assert short != default
+
+
+def test_scale_daily_keeps_meal_coverage() -> None:
+    full = _magnezone()
+    assert scale_daily(full, 0.5).meal_coverage == full.meal_coverage
